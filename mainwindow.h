@@ -481,6 +481,7 @@ private:
     }
     m_QSOProgress;
 
+  int           m_extFreeTxtPos;
   int			m_ihsym;
   int			m_nzap;
   int			m_npts8;

@@ -2836,6 +2836,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
           if(!b65 and m_modeTx=="JT65") on_pbTxMode_clicked();
         }
         m_QSOText = decodedtext.string ().trimmed ();
+
+        ui->textEditRX->insertHtml(decodedtext.messageWords().first().trimmed() + " ");
       }
       if(m_mode=="FT8" or m_mode=="QRA64") auto_sequence (decodedtext, 25, 50);
       
@@ -3520,8 +3522,9 @@ void MainWindow::stopTx()
     //1. check to see if there are more messages to send
     //2. if there are, fixup next message and continue transmitting
     //3. if not, allow the transmission to stop
-    QString txt = ui->extFreeTextMsg->toPlainText().trimmed();
-    int sz = txt.size();
+    // TODO: refactor this to "count remaining"
+    QString txt = ui->extFreeTextMsg->toPlainText();
+    int sz = countFreeTextMsgs(txt.trimmed().mid(m_extFreeTxtPos).trimmed());
     if(sz > 0){
         splitNextFreeTextMsg();
         ui->txFirstCheckBox->setChecked(!m_txFirst);
@@ -3530,6 +3533,8 @@ void MainWindow::stopTx()
             ui->autoButton->click();
         }
         ui->nextFreeTextMsg->clear();
+        ui->extFreeTextMsg->clear();
+        m_extFreeTxtPos = 0;
     }
   }
 
@@ -4630,7 +4635,7 @@ void MainWindow::on_extFreeTextMsg_currentTextChanged (QString const& text)
     ui->extFreeTextMsg->setTextCursor(c);
   }
 
-  int count = countFreeTextMsgs(x);
+  int count = countFreeTextMsgs(x.trimmed().mid(m_extFreeTxtPos).trimmed());
   ui->lblTxNum->setText(QString("Remaining Tx Sequences: %1").arg(count));
 }
 
@@ -4671,12 +4676,24 @@ int MainWindow::countFreeTextMsgs(QString input){
 
 void MainWindow::splitNextFreeTextMsg()
 {
-  QString txt = ui->extFreeTextMsg->toPlainText().trimmed();
+  QString txt = ui->extFreeTextMsg->toPlainText().trimmed().mid(m_extFreeTxtPos).trimmed();
 
   QString nextTxt = parseFT8Message(txt);
   ui->nextFreeTextMsg->setText(nextTxt);
   QRegExp n = QRegExp("^" + QRegExp::escape(nextTxt));
-  ui->extFreeTextMsg->setPlainText(txt.remove(n).trimmed());
+  
+  //ui->extFreeTextMsg->setPlainText(txt.remove(n).trimmed());
+
+  if(txt.contains(n)){
+    QTextCursor tc = ui->extFreeTextMsg->textCursor();
+    tc.setPosition(0);
+    m_extFreeTxtPos += n.matchedLength();
+    tc.setPosition(m_extFreeTxtPos, QTextCursor::KeepAnchor);
+    QTextCharFormat cf = tc.charFormat();
+    cf.setFontStrikeOut(true);
+    tc.mergeCharFormat(cf);
+  }
+
 }
 
 void MainWindow::on_dxCallEntry_textChanged (QString const& call)
