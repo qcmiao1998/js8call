@@ -20,6 +20,9 @@
    <layout class="QVBoxLayout" name="verticalLayout_3">
     <item>
      <widget class="QTabWidget" name="mainTabWidget">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="tabPosition">
        <enum>QTabWidget::North</enum>
       </property>
@@ -28,6 +31,12 @@
       </property>
       <property name="currentIndex">
        <number>0</number>
+      </property>
+      <property name="tabsClosable">
+       <bool>true</bool>
+      </property>
+      <property name="tabBarAutoHide">
+       <bool>true</bool>
       </property>
       <widget class="QWidget" name="mainTabOne">
        <attribute name="title">
@@ -2384,6 +2393,9 @@ QPushButton[state=&quot;ok&quot;] {
        </layout>
       </widget>
       <widget class="QWidget" name="mainTabTwo">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <attribute name="title">
         <string>Free Text</string>
        </attribute>
