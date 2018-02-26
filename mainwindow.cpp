@@ -35,6 +35,7 @@
 #include "plotter.h"
 #include "echoplot.h"
 #include "echograph.h"
+#include "extendedqso.h"
 #include "fastplot.h"
 #include "fastgraph.h"
 #include "about.h"
@@ -201,6 +202,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       , MessageBox::Cancel | MessageBox::Ok | MessageBox::Retry},
   m_wideGraph (new WideGraph(m_settings)),
   m_echoGraph (new EchoGraph(m_settings)),
+  m_extendedQSO (new ExtendedQSO()),
   m_fastGraph (new FastGraph(m_settings)),
   m_logDlg (new LogQSO (program_title (), m_settings, &m_config, this)),
   m_lastDialFreq {0},
@@ -2102,6 +2104,11 @@ void MainWindow::on_actionWide_Waterfall_triggered()      //Display Waterfalls
 void MainWindow::on_actionEcho_Graph_triggered()
 {
   m_echoGraph->show();
+}
+
+void MainWindow::on_actionExtended_QSO_triggered()
+{
+  m_extendedQSO->show();
 }
 
 void MainWindow::on_actionFast_Graph_triggered()

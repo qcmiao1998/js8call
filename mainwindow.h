@@ -64,6 +64,7 @@ class QLineEdit;
 class QFont;
 class QHostInfo;
 class EchoGraph;
+class ExtendedQSO;
 class FastGraph;
 class WideGraph;
 class LogQSO;
@@ -272,6 +273,7 @@ private slots:
   void on_WSPRfreqSpinBox_valueChanged(int n);
   void on_pbTxNext_clicked(bool b);
   void on_actionEcho_Graph_triggered();
+  void on_actionExtended_QSO_triggered();
   void on_actionEcho_triggered();
   void on_actionISCAT_triggered();
   void on_actionFast_Graph_triggered();
@@ -340,6 +342,7 @@ private:
 
   QScopedPointer<WideGraph> m_wideGraph;
   QScopedPointer<EchoGraph> m_echoGraph;
+  QScopedPointer<ExtendedQSO> m_extendedQSO;
   QScopedPointer<FastGraph> m_fastGraph;
   QScopedPointer<LogQSO> m_logDlg;
   QScopedPointer<Astro> m_astroWidget;

@@ -27,7 +27,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="mainTabOne">
        <attribute name="title">
@@ -2571,6 +2571,7 @@ QPushButton[state=&quot;ok&quot;] {
     <addaction name="actionWide_Waterfall"/>
     <addaction name="actionAstronomical_data"/>
     <addaction name="actionMessage_averaging"/>
+    <addaction name="actionExtended_QSO"/>
     <addaction name="actionEcho_Graph"/>
     <addaction name="actionFast_Graph"/>
     <addaction name="separator"/>
@@ -3207,6 +3208,11 @@ QPushButton[state=&quot;ok&quot;] {
    </property>
    <property name="shortcut">
     <string>Shift+F1</string>
+   </property>
+  </action>
+  <action name="actionExtended_QSO">
+   <property name="text">
+    <string>Extended QSO</string>
    </property>
   </action>
  </widget>
