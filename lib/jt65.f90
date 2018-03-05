@@ -9,7 +9,7 @@ program jt65
   use readwav
 
   character c,mode
-  logical :: display_help=.false.,nrobust=.false.,single_decode=.false.
+  logical :: display_help=.false.,nrobust=.false.,single_decode=.false., ljt65apon=.false.
   type(wav_header) :: wav
   integer*2 id2(NZMAX)
   real*4 dd(NZMAX)
@@ -33,16 +33,17 @@ program jt65
                ,'experience decoding options (1..n), default FLAGS=0','FLAGS'),         &
        option ('single-signal-mode',.false.,'s','decode at signal frequency only','') ]
 
-  naggressive=0
+  naggressive=10
   nfqso=1500
-  ntrials=10000
+  ntrials=100000
   nexp_decode=0
-  ntol=1000
+  ntol=20
   nsubmode=0
   nlow=200
   nhigh=4000
-  n2pass=2
-  ndepth=3
+  n2pass=1
+  ndepth=1
+  nQSOProgress=6
 
   do
      call getopt('a:d:f:hm:n:rc:x:g:X:s',long_options,c,optarg,narglen,nstat,noffset,nremain,.true.)
@@ -125,8 +126,8 @@ program jt65
      dd(npts+1:)=0.
      call test(dd,nutc,nfa,nfb,nfqso,ntol,nsubmode, &
           n2pass,nrobust,ntrials,naggressive,ndepth, &
-          mycall,hiscall,hisgrid,nexp_decode)
-     if(nft.gt.0) exit
+          mycall,hiscall,hisgrid,nexp_decode,nQSOProgress,ljt65apon)
+!     if(nft.gt.0) exit
   enddo
 
   call timer('jt65    ',1)

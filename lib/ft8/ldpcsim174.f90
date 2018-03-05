@@ -3,10 +3,9 @@ program ldpcsim174
 use crc
 use packjt
 
-parameter(NRECENT=10)
-character*12 recent_calls(NRECENT)
 character*22 msg,msgsent,msgreceived
 character*8 arg
+character*6 grid
 integer*1, allocatable ::  codeword(:), decoded(:), message(:)
 integer*1, target:: i1Msg8BitBytes(11)
 integer*1 msgbits(87)
@@ -30,9 +29,6 @@ data colorder/            &
  140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,&
  160,161,162,163,164,165,166,167,168,169,170,171,172,173/
 
-do i=1,NRECENT
-  recent_calls(i)='            '
-enddo
 nerrtot=0
 nerrdec=0
 nmpcbad=0  ! Used to collect the number of errors in the message+crc part of the codeword
@@ -72,7 +68,7 @@ allocate ( rxdata(N), llr(N) )
   msg="K1JT K9AN EN50"
 !  msg="G4WJS K9AN EN50"
   call packmsg(msg,i4Msg6BitWords,itype,.false.) !Pack into 12 6-bit bytes
-  call unpackmsg(i4Msg6BitWords,msgsent,.false.,'') !Unpack to get msgsent
+  call unpackmsg(i4Msg6BitWords,msgsent,.false.,grid) !Unpack to get msgsent
   write(*,*) "message sent ",msgsent
 
   i4=0
@@ -164,7 +160,7 @@ do idb = 20,-10,-1
     do i=1,N
       if( rxdata(i)*(2*codeword(i)-1.0) .lt. 0 ) nerr=nerr+1
     enddo
-    nerrtot(nerr)=nerrtot(nerr)+1
+    if(nerr.ge.1) nerrtot(nerr)=nerrtot(nerr)+1
     nberr=nberr+nerr
 
 ! Correct signal normalization is important for this decoder.
@@ -193,7 +189,7 @@ do idb = 20,-10,-1
     if( ndepth .ge. 0 .and. nharderrors .lt. 0 ) call osd174(llr, apmask, ndepth, decoded, cw,  nharderrors, dmin)
 ! If the decoder finds a valid codeword, nharderrors will be .ge. 0.
     if( nharderrors .ge. 0 ) then
-      call extractmessage174(decoded,msgreceived,ncrcflag,recent_calls,nrecent)
+      call extractmessage174(decoded,msgreceived,ncrcflag)
       if( ncrcflag .ne. 1 ) then
         nbadcrc=nbadcrc+1
       endif
@@ -206,11 +202,11 @@ do idb = 20,-10,-1
           nerrmpc=nerrmpc+1 
         endif
       enddo
-      nmpcbad(nerrmpc)=nmpcbad(nerrmpc)+1
+      if(nerrmpc.ge.1) nmpcbad(nerrmpc)=nmpcbad(nerrmpc)+1
       if( ncrcflag .eq. 1 ) then
         if( nueflag .eq. 0 ) then
           ngood=ngood+1
-          nerrdec(nerr)=nerrdec(nerr)+1
+          if(nerr.ge.1) nerrdec(nerr)=nerrdec(nerr)+1
         else if( nueflag .eq. 1 ) then
           nue=nue+1;
         endif

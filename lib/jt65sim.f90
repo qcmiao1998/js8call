@@ -5,7 +5,7 @@ program jt65sim
   use wavhdr
   use packjt
   use options
-  parameter (NMAX=54*12000)              ! = 648,000
+  parameter (NMAX=54*12000)              ! = 648,000 @12kHz
   parameter (NFFT=10*65536,NH=NFFT/2)
   type(hdr) h                            !Header for .wav file
   integer*2 iwave(NMAX)                  !Generated waveform
@@ -21,15 +21,20 @@ program jt65sim
   character msg*22,fname*11,csubmode*1,c,optarg*500,numbuf*32
 !  character call1*5,call2*5
   logical :: display_help=.false.,seed_prngs=.true.
-  type (option) :: long_options(8) = [ &
+  type (option) :: long_options(12) = [ &
     option ('help',.false.,'h','Display this help message',''),                                &
     option ('sub-mode',.true.,'m','sub mode, default MODE=A','MODE'),                          &
     option ('num-sigs',.true.,'n','number of signals per file, default SIGNALS=10','SIGNALS'), &
+    option ('f0',.true.,'F','base frequency offset, default F0=1500.0','F0'), &
     option ('doppler-spread',.true.,'d','Doppler spread, default SPREAD=0.0','SPREAD'),        &
     option ('time-offset',.true.,'t','Time delta, default SECONDS=0.0','SECONDS'),             &
     option ('num-files',.true.,'f','Number of files to generate, default FILES=1','FILES'),    &
     option ('no-prng-seed',.false.,'p','Do not seed PRNGs (use for reproducible tests)',''),   &
-    option ('strength',.true.,'s','S/N in dB (2500Hz reference b/w), default SNR=0','SNR') ]
+    option ('strength',.true.,'s','S/N in dB (2500Hz reference b/w), default SNR=0','SNR'),    &
+    option ('11025',.false.,'S','Generate at 11025Hz sample rate, default 12000Hz',''),        &
+    option ('gain-offset',.true.,'G','Gain offset in dB, default GAIN=0dB','GAIN'),            &
+    option ('message',.true.,'M','Message text','Message') ]
+
   integer nprc(126)                                      !Sync pattern
   data nprc/1,0,0,1,1,0,0,0,1,1,1,1,1,1,0,1,0,1,0,0,  &
             0,1,0,1,1,0,0,1,0,0,0,1,1,1,0,0,1,1,1,1,  &
@@ -43,13 +48,17 @@ program jt65sim
   csubmode='A'
   mode65=1
   nsigs=10
+  bf0=1500.
   fspread=0.
   xdt=0.
   snrdb=0.
   nfiles=1
+  nsample_rate=12000
+  gain_offset=0.
+  msg="K1ABC W9XYZ EN37"
 
   do
-     call getopt('hm:n:d:t:f:ps:',long_options,c,optarg,narglen,nstat,noffset,nremain,.true.)
+     call getopt('hm:n:F:d:t:f:ps:SG:M:',long_options,c,optarg,narglen,nstat,noffset,nremain,.true.)
      if( nstat .ne. 0 ) then
         exit
      end if
@@ -63,11 +72,13 @@ program jt65sim
         if(csubmode.eq.'C') mode65=4
      case ('n')
         read (optarg(:narglen), *,err=10) nsigs
+     case ('F')
+        read (optarg(:narglen), *,err=10) bf0
      case ('d')
         read (optarg(:narglen), *,err=10) fspread
      case ('t')
         read (optarg(:narglen), *) numbuf
-        if (numbuf(1:1) == '\') then
+        if (numbuf(1:1) == '\') then !'\'
            read (numbuf(2:), *,err=10) xdt
         else
            read (numbuf, *,err=10) xdt
@@ -78,11 +89,23 @@ program jt65sim
         seed_prngs=.false.
      case ('s')
         read (optarg(:narglen), *) numbuf
-        if (numbuf(1:1) == '\') then
+        if (numbuf(1:1) == '\') then !'\'
            read (numbuf(2:), *,err=10) snrdb
         else
            read (numbuf, *,err=10) snrdb
         end if
+     case ('S')
+        nsample_rate=11025
+     case ('G')
+        read (optarg(:narglen), *) numbuf
+        if (numbuf(1:1) == '\') then !'\'
+           read (numbuf(2:), *, err=10) gain_offset
+        else
+           read (numbuf, *, err=10) gain_offset
+        end if
+     case ('M')
+        read (optarg(:narglen), '(A)',err=10) msg
+        write(*,*) msg 
      end select
      cycle
 10   display_help=.true.
@@ -110,15 +133,16 @@ program jt65sim
      call sgran()               ! see C rand generator (used in gran)
   end if
 
-  rms=100.
-  fsample=12000.d0                   !Sample rate (Hz)
+  rms=100. * 10. ** (gain_offset / 20.)
+
+  fsample=nsample_rate               !Sample rate (Hz)
   dt=1.d0/fsample                    !Sample interval (s)
   twopi=8.d0*atan(1.d0)
-  npts=54*12000                      !Total samples in .wav file
+  npts=54*nsample_rate               !Total samples in .wav file
   baud=11025.d0/4096.d0              !Keying rate
-  sps=12000.d0/baud                  !Samples per symbol, at fsample=12000 Hz
+  sps=real(nsample_rate)/baud        !Samples per symbol, at fsample=NSAMPLE_RATE Hz
   nsym=126                           !Number of channel symbols
-  h=default_header(12000,npts)
+  h=default_header(nsample_rate,npts)
   dfsig=2000.0/nsigs                 !Freq spacing between sigs in file (Hz)
 
   do ifile=1,nfiles                  !Loop over requested number of files
@@ -135,8 +159,8 @@ program jt65sim
      endif
 
      do isig=1,nsigs                        !Generate requested number of sigs
-        if(mod(nsigs,2).eq.0) f0=1500.0 + dfsig*(isig-0.5-nsigs/2)
-        if(mod(nsigs,2).eq.1) f0=1500.0 + dfsig*(isig-(nsigs+1)/2)
+        if(mod(nsigs,2).eq.0) f0=bf0 + dfsig*(isig-0.5-nsigs/2)
+        if(mod(nsigs,2).eq.1) f0=bf0 + dfsig*(isig-(nsigs+1)/2)
         xsnr=snrdb
         if(snrdb.eq.0.0) xsnr=-19 - isig
         if(csubmode.eq.'B' .and. snrdb.eq.0.0) xsnr=-21 - isig
@@ -150,9 +174,7 @@ program jt65sim
 !        call2="W9"//char(ic1)//char(ic2)//char(ic3)
 !        write(msg,1010) call1,call2,nint(xsnr)
 !1010    format(a5,1x,a5,1x,i3.2)
-        msg="K1ABC W9XYZ EN37"
 !###
-
         call packmsg(msg,dgen,itype,.false.) !Pack message into 12 six-bit bytes
         call rs_encode(dgen,sent)           !Encode using RS(63,12)
         call interleave63(sent,1)           !Interleave channel symbols
@@ -168,7 +190,7 @@ program jt65sim
            endif
         enddo
 
-        bandwidth_ratio=2500.0/6000.0
+        bandwidth_ratio=2500.0/(fsample/2.0)
         sig=sqrt(2*bandwidth_ratio)*10.0**(0.05*xsnr)
         if(xsnr.gt.90.0) sig=1.0
         write(*,1020) ifile,isig,f0,csubmode,xsnr,xdt,fspread,msg
@@ -176,7 +198,7 @@ program jt65sim
 
         phi=0.d0
         dphi=0.d0
-        k=12000 + xdt*12000                 !Start audio at t = xdt + 1.0 s
+        k=nsample_rate + xdt*nsample_rate     !Start audio at t = xdt + 1.0 s
         isym0=-99
         do i=1,npts                         !Add this signal into cdat()
            isym=floor(i/sps)+1
@@ -196,7 +218,7 @@ program jt65sim
      enddo
 
      if(fspread.ne.0) then                  !Apply specified Doppler spread
-        df=12000.0/nfft
+        df=real(nsample_rate)/nfft
         twopi=8*atan(1.0)
         cspread(0)=1.0
         cspread(NH)=0.
@@ -250,7 +272,7 @@ program jt65sim
         avep=sum/NFFT
         fac=sqrt(1.0/avep)
         cspread=fac*cspread                   !Normalize to constant avg power
-        cdat=cspread(1:npts)*cdat             !Apply Rayleigh fading
+        cdat(1:npts)=cspread(1:npts)*cdat(1:npts) !Apply Rayleigh fading
 
 !        do i=0,NFFT-1
 !           p=real(cspread(i))**2 + aimag(cspread(i))**2
@@ -261,9 +283,15 @@ program jt65sim
      endif
 
      dat=aimag(cdat) + xnoise                 !Add the generated noise
-     fac=32767.0/nsigs
-     if(snrdb.ge.90.0) iwave(1:npts)=nint(fac*dat(1:npts))
-     if(snrdb.lt.90.0) iwave(1:npts)=nint(rms*dat(1:npts))
+     if(snrdb.lt.90.0) then
+       dat=rms*dat(1:npts)
+     else
+       datpk=maxval(abs(dat(1:npts)))
+       fac=32766.9/datpk
+       dat(1:npts)=fac*dat(1:npts)
+     endif
+     if(any(abs(dat(1:npts)).gt.32767.0)) print*,"Warning - data will be clipped."
+     iwave(1:npts)=nint(dat(1:npts))
      write(10) h,iwave(1:npts)                !Save the .wav file
      close(10)
   enddo

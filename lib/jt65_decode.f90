@@ -37,7 +37,8 @@ contains
 
   subroutine decode(this,callback,dd0,npts,newdat,nutc,nf1,nf2,nfqso,     &
        ntol,nsubmode,minsync,nagain,n2pass,nrobust,ntrials,naggressive,   &
-       ndepth,emedelay,clearave,mycall,hiscall,hisgrid,nexp_decode)
+       ndepth,emedelay,clearave,mycall,hiscall,hisgrid,nexp_decode,       &
+       nQSOProgress,ljt65apon)
 
 !  Process dd0() data to find and decode JT65 signals.
 
@@ -51,8 +52,8 @@ contains
     real, intent(in) :: dd0(NZMAX),emedelay
     integer, intent(in) :: npts, nutc, nf1, nf2, nfqso, ntol     &
          , nsubmode, minsync, n2pass, ntrials, naggressive, ndepth      &
-         , nexp_decode
-    logical, intent(in) :: newdat, nagain, nrobust, clearave
+         , nexp_decode, nQSOProgress
+    logical, intent(in) :: newdat, nagain, nrobust, clearave, ljt65apon
     character(len=12), intent(in) :: mycall, hiscall
     character(len=6), intent(in) :: hisgrid
 
@@ -120,9 +121,26 @@ contains
        go to 900
     endif
 
-!    do ipass=1,n2pass                             !Two-pass decoding loop
-    npass=1
-    if(n2pass .gt. 1) npass=ndepth+1  !**** TEMPORARY ****
+    single_decode=iand(nexp_decode,32).ne.0 .or. nagain
+    bVHF=iand(nexp_decode,64).ne.0
+
+    if( bVHF ) then
+      nvec=ntrials
+      npass=1
+      if(n2pass.gt.1) npass=2
+    else
+      nvec=1000
+      if(ndepth.eq.1) then
+         npass=2
+         nvec=100
+      elseif(ndepth.eq.2) then
+         npass=2
+         nvec=1000
+      else 
+         npass=4
+         nvec=1000
+      endif
+    endif
     do ipass=1,npass 
        first_time=.true.
        if(ipass.eq.1) then                        !First-pass parameters
@@ -149,13 +167,10 @@ contains
 
        call timer('symsp65 ',0)
        ss=0.
-!       call symspec65(dd,npts,ss,nqsym,savg)    !Get normalized symbol spectra
        call symspec65(dd,npts,nqsym,savg)    !Get normalized symbol spectra
        call timer('symsp65 ',1)
        nfa=nf1
        nfb=nf2
-       single_decode=iand(nexp_decode,32).ne.0 .or. nagain
-       bVHF=iand(nexp_decode,64).ne.0
 
 !### Q: should either of the next two uses of "single_decode" be "bVHF" instead?       
        if(single_decode .or. (bVHF .and. ntol.lt.1000)) then
@@ -177,7 +192,6 @@ contains
 
        ncand=0
        call timer('sync65  ',0)
-!       call sync65(ss,nfa,nfb,naggressive,ntol,nqsym,ca,ncand,0,bVHF)
        call sync65(nfa,nfb,naggressive,ntol,nqsym,ca,ncand,nrob,bVHF)
        call timer('sync65  ',1)
 
@@ -187,7 +201,6 @@ contains
           if(ncand.eq.0) ncand=1
           if(abs(ca(1)%freq - f0).gt.width) width=2*df    !### ??? ###
        endif
-       nvec=ntrials
 
        mode65=2**nsubmode
        nflip=1
@@ -213,7 +226,6 @@ contains
           sync1=ca(icand)%sync
           dtx=ca(icand)%dt
           freq=ca(icand)%freq
-!write(*,*) icand,sync1,dtx,freq,ndepth,bVHF,mode65
           if(bVHF) then
              flip=ca(icand)%flip
              nflip=flip
@@ -225,8 +237,8 @@ contains
           nft=0
           nspecial=0
           call decode65a(dd,npts,first_time,nqd,freq,nflip,mode65,nvec,     &
-               naggressive,ndepth,ntol,mycall,hiscall,hisgrid,              &
-               nexp_decode,bVHF,sync2,a,dtx,nft,nspecial,qual,     &
+               naggressive,ndepth,ntol,mycall,hiscall,hisgrid,nQSOProgress, &
+               ljt65apon,nexp_decode,bVHF,sync2,a,dtx,nft,nspecial,qual,     &
                nhist,nsmo,decoded)
           if(nspecial.eq.2) decoded='RO'
           if(nspecial.eq.3) decoded='RRR'
@@ -244,7 +256,9 @@ contains
           nfreq=nint(freq+a(1))
           ndrift=nint(2.0*a(2))
           if(bVHF) then
-             s2db=sync1 - 30.0 + db(width/3.3)       !### VHF/UHF/microwave
+            xtmp=10**((sync1+16.0)/10.0) ! sync comes to us in dB
+            s2db=1.1*db(xtmp)+1.4*(dB(width)-4.3)-52.0 
+!             s2db=sync1 - 30.0 + db(width/3.3)       !### VHF/UHF/microwave
              if(nspecial.gt.0) s2db=sync2
           else
              s2db=10.0*log10(sync2) - 35             !### Empirical (HF) 
@@ -254,6 +268,7 @@ contains
           if(nsnr.gt.-1) nsnr=-1
           nftt=0
 
+!********* DOES THIS STILL WORK WHEN NFT INCLUDES # OF AP SYMBOLS USED??
           if(nft.ne.1 .and. iand(ndepth,16).eq.16 .and. (.not.prtavg)) then
 ! Single-sequence FT decode failed, so try for an average FT decode.
              if(nutc.ne.nutc0 .or. abs(nfreq-nfreq0).gt.ntol) then
@@ -264,7 +279,8 @@ contains
                 nsave=mod(nsave-1,64)+1
                 call avg65(nutc,nsave,sync1,dtx,nflip,nfreq,mode65,ntol,     &
                      ndepth,nagain,ntrials,naggressive,clearave,neme,mycall, &
-                     hiscall,hisgrid,nftt,avemsg,qave,deepave,nsum,ndeepave)
+                     hiscall,hisgrid,nftt,avemsg,qave,deepave,nsum,ndeepave, &
+                     nQSOProgress,ljt65apon)
                 nsmo=param(9)
                 nqave=qave
 
@@ -329,13 +345,13 @@ contains
           endif
        enddo                                 !Candidate loop
        if(ipass.eq.2 .and. ndecoded.lt.1) exit
-    enddo                                    !Two-pass loop
+    enddo                                    !Multiple-pass loop
 900 return
   end subroutine decode
 
   subroutine avg65(nutc,nsave,snrsync,dtxx,nflip,nfreq,mode65,ntol,ndepth,    &
        nagain, ntrials,naggressive,clearave,neme,mycall,hiscall,hisgrid,nftt, &
-       avemsg,qave,deepave,nsum,ndeepave)
+       avemsg,qave,deepave,nsum,ndeepave,nQSOProgress,ljt65apon)
 
 ! Decodes averaged JT65 data
 
@@ -358,7 +374,7 @@ contains
     real s3c(64,63)
     real dtsave(MAXAVE)
     real syncsave(MAXAVE)
-    logical first,clearave
+    logical first,clearave,ljt65apon
     data first/.true./
     save
 
@@ -475,7 +491,8 @@ contains
 
        nadd=nsum*ismo
        call extract(s3c,nadd,mode65,ntrials,naggressive,ndepth,nflip,mycall, &
-            hiscall,hisgrid,nexp_decode,ncount,nhist,avemsg,ltext,nftt,qual)
+            hiscall,hisgrid,nQSOProgress,ljt65apon,nexp_decode,ncount,nhist, &
+            avemsg,ltext,nftt,qual)
        if(nftt.eq.1) then
           nsmo=ismo
           param(9)=nsmo

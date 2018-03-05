@@ -295,12 +295,8 @@ int main(int argc, char *argv[])
           mem_jt9.setKey(a.applicationName ());
 
           if(!mem_jt9.attach()) {
-            std::cerr << QString("memory attach error: %1").arg(mem_jt9.error()).toLocal8Bit ().data () << std::endl;
-
             if (!mem_jt9.create(sizeof(struct dec_data))) {
               splash.hide ();
-              std::cerr << QString("memory create error: %1").arg(mem_jt9.error()).toLocal8Bit ().data () << std::endl;
-
               MessageBox::critical_message (nullptr, a.translate ("main", "Shared memory error"),
                                             a.translate ("main", "Unable to create shared memory segment"));
               throw std::runtime_error {"Shared memory error"};

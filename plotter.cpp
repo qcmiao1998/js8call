@@ -8,6 +8,11 @@
 
 #define MAX_SCREENSIZE 2048
 
+extern "C" {
+  void flat4_(float swide[], int* iz, int* nflatten);
+  void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
+}
+
 CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   QFrame {parent},
   m_set_freq_action {new QAction {tr ("&Set Rx && Tx Offset"), this}},
@@ -43,6 +48,7 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   setAutoFillBackground(false);
   setAttribute(Qt::WA_OpaquePaintEvent, false);
   setAttribute(Qt::WA_NoSystemBackground, true);
+  m_bReplot=false;
 
   // contextual pop up menu
   setContextMenuPolicy (Qt::CustomContextMenu);
@@ -83,6 +89,7 @@ void CPlotter::resizeEvent(QResizeEvent* )                    //resizeEvent()
     if(m_bReference) m_h2=m_h-30;
     if(m_h2<1) m_h2=1;
     m_h1=m_h-m_h2;
+//    m_line=0;
     m_2DPixmap = QPixmap(m_Size.width(), m_h2);
     m_2DPixmap.fill(Qt::black);
     m_WaterfallPixmap = QPixmap(m_Size.width(), m_h1);
@@ -114,14 +121,14 @@ void CPlotter::draw(float swide[], bool bScroll, bool bRed)
   static int ktop=0;
   float y,y2,ymin;
   double fac = sqrt(m_binsPerPixel*m_waterfallAvg/15.0);
-  double gain = fac*pow(10.0,0.02*m_plotGain);
+  double gain = fac*pow(10.0,0.015*m_plotGain);
   double gain2d = pow(10.0,0.02*(m_plot2dGain));
 
   if(m_bReference != m_bReference0) resizeEvent(NULL);
   m_bReference0=m_bReference;
 
 //move current data down one line (must do this before attaching a QPainter object)
-  if(bScroll) m_WaterfallPixmap.scroll(0,1,0,0,m_w,m_h1);
+  if(bScroll and !m_bReplot) m_WaterfallPixmap.scroll(0,1,0,0,m_w,m_h1);
   QPainter painter1(&m_WaterfallPixmap);
   m_2DPixmap = m_OverlayPixmap.copy(0,0,m_w,m_h2);
   QPainter painter2D(&m_2DPixmap);
@@ -146,24 +153,30 @@ void CPlotter::draw(float swide[], bool bScroll, bool bRed)
   int jz=iz*m_binsPerPixel;
   m_fMax=FreqfromX(iz);
 
-  m_line++;
-  if(bScroll) {
+  if(bScroll and swide[0]<1.e29) {
     flat4_(swide,&iz,&m_Flatten);
-    flat4_(&dec_data.savg[j0],&jz,&m_Flatten);
+    if(!m_bReplot) flat4_(&dec_data.savg[j0],&jz,&m_Flatten);
   }
 
   ymin=1.e30;
   if(swide[0]>1.e29 and swide[0]< 1.5e30) painter1.setPen(Qt::green);
   if(swide[0]>1.4e30) painter1.setPen(Qt::yellow);
+  if(!m_bReplot) {
+    m_j=0;
+    int irow=-1;
+    plotsave_(swide,&m_w,&m_h1,&irow);
+  }
   for(int i=0; i<iz; i++) {
     y=swide[i];
     if(y<ymin) ymin=y;
-    int y1 = 10.0*gain*y + 10*m_plotZero +40;
+    int y1 = 10.0*gain*y + m_plotZero;
     if (y1<0) y1=0;
     if (y1>254) y1=254;
     if (swide[i]<1.e29) painter1.setPen(g_ColorTbl[y1]);
-    painter1.drawPoint(i,0);
+    painter1.drawPoint(i,m_j);
   }
+
+  m_line++;
 
   float y2min=1.e30;
   float y2max=-1.e30;
@@ -213,6 +226,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool bRed)
     if(y2>y2max) y2max=y2;
     j++;
   }
+  if(m_bReplot) return;
 
   if(swide[0]>1.0e29) m_line=0;
   if(m_line == painter1.fontMetrics ().height ()) {
@@ -281,6 +295,19 @@ void CPlotter::drawRed(int ia, int ib, float swide[])
   m_ia=ia;
   m_ib=ib;
   draw(swide,false,true);
+}
+
+void CPlotter::replot()
+{
+  float swide[m_w];
+  m_bReplot=true;
+  for(int irow=0; irow<m_h1; irow++) {
+    m_j=irow;
+    plotsave_(swide,&m_w,&m_h1,&irow);
+    draw(swide,false,false);
+  }
+  update();                                    //trigger a new paintEvent
+  m_bReplot=false;
 }
 
 void CPlotter::DrawOverlay()                   //DrawOverlay()
@@ -629,7 +656,7 @@ int CPlotter::binsPerPixel()                                   //binsPerPixel
   return m_binsPerPixel;
 }
 
-void CPlotter::setWaterfallAvg(int n)                         //setBinsPerPixel
+void CPlotter::setWaterfallAvg(int n)                         //setNavg
 {
   m_waterfallAvg = n;
 }

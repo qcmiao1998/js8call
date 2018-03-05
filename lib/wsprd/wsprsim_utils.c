@@ -6,6 +6,13 @@
 #include "nhash.h"
 #include "fano.h"
 
+static char get_locator_character_code(char ch);
+static char get_callsign_character_code(char ch);
+static long unsigned int pack_grid4_power(char const *grid4, int power);
+static long unsigned int pack_call(char const *callsign);
+static void pack_prefix(char *callsign, int32_t *n, int32_t *m, int32_t *nadd );
+static void interleave(unsigned char *sym);
+
 char get_locator_character_code(char ch) {
     if( ch >=48 && ch <=57 ) { //0-9
         return ch-48;
@@ -32,7 +39,7 @@ char get_callsign_character_code(char ch) {
     return -1;
 }
 
-long unsigned int pack_grid4_power(char *grid4, int power) {
+long unsigned int pack_grid4_power(char const *grid4, int power) {
     long unsigned int m;
     
     m=(179-10*grid4[0]-grid4[2])*180+10*grid4[1]+grid4[3];
@@ -40,32 +47,23 @@ long unsigned int pack_grid4_power(char *grid4, int power) {
     return m;
 }
 
-long unsigned int pack_call(char *callsign) {
+long unsigned int pack_call(char const *callsign) {
     unsigned int i;
     long unsigned int n;
     char call6[6];
-    memset(call6,32,sizeof(char)*6);
+    memset(call6,' ',sizeof(call6));
     // callsign is 6 characters in length. Exactly.
     size_t call_len = strlen(callsign);
     if( call_len > 6 ) {
         return 0;
     }
-    if( isdigit(*(callsign+2)) ) {
+    if( isdigit(callsign[2]) ) {
         for (i=0; i<call_len; i++) {
-            if( callsign[i] == 0 ) {
-                call6[i]=32;
-            } else {
-                call6[i]=*(callsign+i);
-            }
+            call6[i]=callsign[i];
         }
-    } else if( isdigit(*(callsign+1)) ) {
-        call6[0]=32;
+    } else if( isdigit(callsign[1]) ) {
         for (i=1; i<call_len+1; i++) {
-            if( callsign[i-1]==0 ) {
-                call6[i]=32;
-            } else {
-                call6[i]=*(callsign+i-1);
-            }
+            call6[i]=callsign[i-1];
         }
     }
     for (i=0; i<6; i++) {
@@ -82,9 +80,7 @@ long unsigned int pack_call(char *callsign) {
 
 void pack_prefix(char *callsign, int32_t *n, int32_t *m, int32_t *nadd ) {
     size_t i;
-    char *call6;
-    call6=malloc(sizeof(char)*6);
-    memset(call6,32,sizeof(char)*6);
+    char * call6 = calloc(7,sizeof (char));
     size_t i1=strcspn(callsign,"/");
     
     if( callsign[i1+2] == 0 ) { 
@@ -92,6 +88,7 @@ void pack_prefix(char *callsign, int32_t *n, int32_t *m, int32_t *nadd ) {
         for (i=0; i<i1; i++) {
             call6[i]=callsign[i];
         }
+        call6[i] = '\0';
         *n=pack_call(call6);
         *nadd=1;
         int nc = callsign[i1+1];
@@ -113,10 +110,10 @@ void pack_prefix(char *callsign, int32_t *n, int32_t *m, int32_t *nadd ) {
         *m=10*(callsign[i1+1]-48)+(callsign[i1+2]-48);
         *m=60000 + 26 + *m;
     } else {
-        char* pfx=strtok(callsign,"/");
-        call6=strtok(NULL," ");
-        *n=pack_call(call6);
-        size_t plen=strlen(pfx);
+        char const * pfx = strtok (callsign,"/");
+        char const * call = strtok(NULL," ");
+        *n = pack_call (call);
+        size_t plen=strlen (pfx);
         if( plen ==1 ) {
             *m=36;
             *m=37*(*m)+36;
@@ -142,6 +139,7 @@ void pack_prefix(char *callsign, int32_t *n, int32_t *m, int32_t *nadd ) {
             *nadd=1;
         }
     }
+    free (call6);
 }
 
 void interleave(unsigned char *sym)
@@ -165,7 +163,8 @@ void interleave(unsigned char *sym)
 }
 
 int get_wspr_channel_symbols(char* rawmessage, char* hashtab, unsigned char* symbols) {
-    int m=0, n=0, ntype=0;
+    int m=0, ntype=0;
+    long unsigned int n=0;
     int i, j, ihash;
     unsigned char pr3[162]=
     {1,1,0,0,0,0,0,0,1,0,0,0,1,1,1,0,0,0,1,0,
@@ -197,7 +196,7 @@ int get_wspr_channel_symbols(char* rawmessage, char* hashtab, unsigned char* sym
     // Use the presence and/or absence of "<" and "/" to decide what
     // type of message. No sanity checks! Beware!
     
-    if( (i1>3) & (i1<7) & (i2==mlen) & (i3==mlen) ) {
+    if( i1 > 3 && i1 < 7 && i2 == mlen && i3 == mlen ) {
         // Type 1 message: K9AN EN50 33
         //                 xxnxxxx xxnn nn
         callsign = strtok(message," ");
@@ -227,20 +226,20 @@ int get_wspr_channel_symbols(char* rawmessage, char* hashtab, unsigned char* sym
         ihash=nhash(callsign,strlen(callsign),(uint32_t)146);
         m=128*ihash + ntype + 64;
         
-        char grid6[6];
-        memset(grid6,32,sizeof(char)*6);
+        char grid6[7];
+        memset(grid6,0,sizeof(char)*7);
         j=strlen(grid);
         for(i=0; i<j-1; i++) {
             grid6[i]=grid[i+1];
         }
         grid6[5]=grid[0];
-        n=pack_call(grid6);
+        n = pack_call(grid6);
     } else if ( i2 < mlen ) {  // just looks for a right slash
         // Type 2: PJ4/K1ABC 37
-        callsign=strtok(message," ");
-        if( strlen(callsign) < i2 ) return 0; //guards against pathological case
-        powstr=strtok(NULL," ");
-        int power = atoi(powstr);
+        callsign = strtok (message," ");
+        if( i2==0 || i2>strlen(callsign) ) return 0; //guards against pathological case
+        powstr = strtok (NULL," ");
+        int power = atoi (powstr);
         if( power < 0 ) power=0;
         if( power > 60 ) power=60;
         power=power+nu[power%10];
@@ -252,7 +251,7 @@ int get_wspr_channel_symbols(char* rawmessage, char* hashtab, unsigned char* sym
     } else {
         return 0;
     }
-    
+
     // pack 50 bits + 31 (0) tail bits into 11 bytes
     unsigned char it, data[11];
     memset(data,0,sizeof(char)*11);
@@ -292,20 +291,22 @@ int get_wspr_channel_symbols(char* rawmessage, char* hashtab, unsigned char* sym
     check_callsign=malloc(sizeof(char)*13);
     signed char check_data[11];
     memcpy(check_data,data,sizeof(char)*11);
+
     unpk_(check_data,hashtab,check_call_loc_pow,check_callsign);
 //    printf("Will decode as: %s\n",check_call_loc_pow);
-    
+ 
     unsigned int nbytes=11; // The message with tail is packed into almost 11 bytes.
     unsigned char channelbits[nbytes*8*2]; /* 162 rounded up */
-    memset(channelbits,0,sizeof channelbits);
+    memset(channelbits,0,sizeof(char)*nbytes*8*2);
     
     encode(channelbits,data,nbytes);
     
     interleave(channelbits);
-    
+
     for (i=0; i<162; i++) {
         symbols[i]=2*channelbits[i]+pr3[i];
     }
-    
+    free(check_call_loc_pow);
+    free(check_callsign); 
     return 1;
 }

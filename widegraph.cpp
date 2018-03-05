@@ -22,8 +22,8 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   m_settings (settings),
   m_palettes_path {":/Palettes"},
   m_ntr0 {0},
-  m_bHaveTransmitted {false},
-  m_n {0}
+  m_n {0},
+  m_bHaveTransmitted {false}
 {
   ui->setupUi(this);
 
@@ -169,12 +169,16 @@ void WideGraph::dataSink2(float s[], float df3, int ihsym, int ndiskdata)  //dat
     int i=int(ui->widePlot->startFreq()/df3 + 0.5);
     int jz=5000.0/(nbpp*df3);
 		if(jz>MAX_SCREENSIZE) jz=MAX_SCREENSIZE;
+    m_jz=jz;
     for (int j=0; j<jz; j++) {
-      float ss=0;
+      float ss=0.0;
+      float smax=0;
       for (int k=0; k<nbpp; k++) {
-        if(splot[i]>ss) ss=splot[i];
-        i++;
+        float sp=splot[i++];
+        ss += sp;
+        smax=qMax(smax,sp);
       }
+//      swide[j]=nbpp*smax;
       swide[j]=nbpp*ss;
     }
 
@@ -184,8 +188,11 @@ void WideGraph::dataSink2(float s[], float df3, int ihsym, int ndiskdata)  //dat
     if((ndiskdata && ihsym <= m_waterfallAvg) || (!ndiskdata && ntr<m_ntr0)) {
       float flagValue=1.0e30;
       if(m_bHaveTransmitted) flagValue=2.0e30;
-      for (int i=0; i<2048; i++) {
+      for(int i=0; i<MAX_SCREENSIZE; i++) {
         swide[i] = flagValue;
+      }
+      for(int i=0; i<NSMAX; i++) {
+        splot[i] = flagValue;
       }
       m_bHaveTransmitted=false;
     }
@@ -322,7 +329,7 @@ void WideGraph::on_spec2dComboBox_currentIndexChanged(const QString &arg1)
   if(arg1=="Reference") {
     ui->widePlot->setReference(true);
   }
-  if(ui->widePlot->scaleOK ()) ui->widePlot->draw(swide,false,false);
+  replot();
 }
 
 void WideGraph::on_fSplitSpinBox_valueChanged(int n)              //fSplit
@@ -387,6 +394,7 @@ void WideGraph::on_paletteComboBox_activated (QString const& palette)    //palet
 {
   m_waterfallPalette = palette;
   readPalette();
+  replot();
 }
 
 void WideGraph::on_cbFlatten_toggled(bool b)                          //Flatten On/Off
@@ -441,14 +449,21 @@ bool WideGraph::useRef()                                              //Flatten
   return m_bRef;
 }
 
+void WideGraph::replot()
+{
+  if(ui->widePlot->scaleOK()) ui->widePlot->replot();
+}
+
 void WideGraph::on_gainSlider_valueChanged(int value)                 //Gain
 {
   ui->widePlot->setPlotGain(value);
+  replot();
 }
 
 void WideGraph::on_zeroSlider_valueChanged(int value)                 //Zero
 {
   ui->widePlot->setPlotZero(value);
+  replot();
 }
 
 void WideGraph::on_gain2dSlider_valueChanged(int value)               //Gain2

@@ -54,10 +54,13 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
 10 if (params%nagain) then
      open(13,file=trim(temp_dir)//'/decoded.txt',status='unknown',            &
           position='append',iostat=ios)
+     if(params%nmode.eq.8) open(19,file=trim(temp_dir)//'/houndcallers.txt',  &
+          status='unknown',position='append',iostat=ios)
   else
-     open(13,file=trim(temp_dir)//'/decoded.txt',status='unknown',            &
-          iostat=ios)
-  end if
+     open(13,file=trim(temp_dir)//'/decoded.txt',status='unknown',iostat=ios)
+     if(params%nmode.eq.8) open(19,file=trim(temp_dir)//'/houndcallers.txt',  &
+          status='unknown',iostat=ios)
+  endif
   if(ios.ne.0) then
      nfail=nfail+1
      if(nfail.le.3) then
@@ -73,9 +76,38 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      call my_ft8%decode(ft8_decoded,id2,params%nQSOProgress,params%nfqso,    &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
-          logical(params%lapon),params%napwid,params%mycall,                 &
-          params%mygrid,params%hiscall,params%hisgrid)
+          logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
+          params%mycall,params%mygrid,params%hiscall,params%hisgrid)
      call timer('decft8  ',1)
+     if(nfox.gt.0) then
+        n30min=minval(n30fox(1:nfox))
+        n30max=maxval(n30fox(1:nfox))
+     endif
+     j=0
+     rewind 19
+     if(nfox.eq.0) then
+        endfile 19
+        rewind 19
+     else
+        do i=1,nfox
+           n=n30fox(i)
+           if(n30max-n30fox(i).le.4) then
+              j=j+1
+              c2fox(j)=c2fox(i)
+              g2fox(j)=g2fox(i)
+              nsnrfox(j)=nsnrfox(i)
+              nfreqfox(j)=nfreqfox(i)
+              n30fox(j)=n
+              m=n30max-n
+              call azdist(params%mygrid,g2fox(j),0.d0,nAz,nEl,nDmiles,nDkm,  &
+                   nHotAz,nHotABetter)
+              write(19,1004) c2fox(j),g2fox(j),nsnrfox(j),nfreqfox(j),nDkm,m
+1004          format(a12,1x,a4,i5,i6,i7,i3)
+           endif
+        enddo
+        nfox=j
+        flush(19)
+     endif
      go to 800
   endif
 
@@ -153,7 +185,8 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
           logical(params%nagain),params%n2pass,logical(params%nrobust),    &
           ntrials,params%naggressive,params%ndepth,params%emedelay,        &
           logical(params%nclearave),params%mycall,params%hiscall,          &
-          params%hisgrid,params%nexp_decode)
+          params%hisgrid,params%nexp_decode,params%nQSOProgress,           &
+          logical(params%ljt65apon))
      call timer('jt65a   ',1)
 
   else if(params%nmode.eq.9 .or. (params%nmode.eq.(65+9) .and. params%ntxmode.eq.9)) then
@@ -178,7 +211,8 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
              logical(params%nagain),params%n2pass,logical(params%nrobust), &
              ntrials,params%naggressive,params%ndepth,params%emedelay,     &
              logical(params%nclearave),params%mycall,params%hiscall,       &
-             params%hisgrid,params%nexp_decode)
+             params%hisgrid,params%nexp_decode,params%nQSOProgress,        &
+             logical(params%ljt65apon))
         call timer('jt65a   ',1)
      else
         call timer('decjt9  ',0)
@@ -197,7 +231,8 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   write(*,1010) nsynced,ndecoded
 1010 format('<DecodeFinished>',2i4)
   call flush(6)
-  close(13) 
+  close(13)
+  close(19)
   if(params%nmode.eq.4 .or. params%nmode.eq.65) close(14)
 
   return
@@ -290,7 +325,7 @@ contains
     integer, intent(in) :: nsum
     integer, intent(in) :: minsync
 
-    integer i,nft
+    integer i,nap,nft
     logical is_deep,is_average
     character decoded*22,csync*2,cflags*3
 
@@ -331,6 +366,10 @@ contains
           if(is_average) then
              write(cflags(2:2),'(i1)') min(nsum,9)
              if(nsum.ge.10) cflags(2:2)='*'
+          endif
+          nap=ishft(ft,-2)
+          if(nap.ne.0) then
+            write(cflags(1:3),'(a1,i1)') 'a',nap 
           endif
        endif
        csync='# '
@@ -399,22 +438,80 @@ contains
     integer, intent(in) :: snr
     real, intent(in) :: dt
     real, intent(in) :: freq
-    character(len=22), intent(in) :: decoded
+    character(len=37), intent(in) :: decoded
+    character c1*12,c2*6,g2*4,w*4
+    integer i0,i1,i2,i3,i4,i5,n30,nwrap
     integer, intent(in) :: nap 
     real, intent(in) :: qual 
     character*2 annot
-    character*22 decoded0
-  
-    decoded0=decoded 
+    character*37 decoded0
+    logical isgrid4,first,b0,b1,b2
+    data first/.true./
+    save
+
+    isgrid4(w)=(len_trim(w).eq.4 .and.                                        &
+         ichar(w(1:1)).ge.ichar('A') .and. ichar(w(1:1)).le.ichar('R') .and.  &
+         ichar(w(2:2)).ge.ichar('A') .and. ichar(w(2:2)).le.ichar('R') .and.  &
+         ichar(w(3:3)).ge.ichar('0') .and. ichar(w(3:3)).le.ichar('9') .and.  &
+         ichar(w(4:4)).ge.ichar('0') .and. ichar(w(4:4)).le.ichar('9'))
+
+    if(first) then
+       c2fox='            '
+       g2fox='    '
+       nsnrfox=-99
+       nfreqfox=-99
+       n30z=0
+       nwrap=0
+       nfox=0
+       first=.false.
+    endif
+    
+    decoded0=decoded
+
     annot='  ' 
     if(nap.ne.0) then
-      write(annot,'(a1,i1)') 'a',nap
-      if(qual.lt.0.17) decoded0(22:22)='?'
+       write(annot,'(a1,i1)') 'a',nap
+       if(qual.lt.0.17) decoded0(22:22)='?'
     endif
-    write(*,1000) params%nutc,snr,dt,nint(freq),decoded0,annot
+
+    i0=index(decoded0,';')
+    if(i0.le.0) write(*,1000) params%nutc,snr,dt,nint(freq),decoded0(1:22),annot
 1000 format(i6.6,i4,f5.1,i5,' ~ ',1x,a22,1x,a2)
+    if(i0.gt.0) write(*,1001) params%nutc,snr,dt,nint(freq),decoded0
+1001 format(i6.6,i4,f5.1,i5,' ~ ',1x,a37)
     write(13,1002) params%nutc,nint(sync),snr,dt,freq,0,decoded0
-1002 format(i6.6,i4,i5,f6.1,f8.0,i4,3x,a22,' FT8')
+1002 format(i6.6,i4,i5,f6.1,f8.0,i4,3x,a37,' FT8')
+
+    i1=index(decoded0,' ')
+    i2=i1 + index(decoded0(i1+1:),' ')
+    i3=i2 + index(decoded0(i2+1:),' ')
+    if(i1.ge.3 .and. i2.ge.7 .and. i3.ge.10) then
+       c1=decoded0(1:i1-1)//'            '
+       c2=decoded0(i1+1:i2-1)
+       g2=decoded0(i2+1:i3-1)
+       b0=c1.eq.params%mycall
+       if(len(trim(c1)).ne.len(trim(params%mycall))) then
+          i4=index(trim(c1),trim(params%mycall))
+          i5=index(trim(params%mycall),trim(c1))
+          if(i4.ge.1 .or. i5.ge.1) b0=.true.
+       endif
+       b1=i3-i2.eq.5 .and. isgrid4(g2)
+       b2=i3-i2.eq.1
+       if(b0 .and. (b1.or.b2) .and. nint(freq).ge.1000) then
+          n=params%nutc
+          n30=(3600*(n/10000) + 60*mod((n/100),100) + mod(n,100))/30
+          if(n30.lt.n30z) nwrap=nwrap+5760    !New UTC day, handle the wrap
+          n30z=n30
+          n30=n30+nwrap
+          nfox=nfox+1
+          c2fox(nfox)=c2
+          g2fox(nfox)=g2
+          nsnrfox(nfox)=snr
+          nfreqfox(nfox)=nint(freq)
+          n30fox(nfox)=n30
+       endif
+    endif
+    
     call flush(6)
     call flush(13)
     

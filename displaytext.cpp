@@ -1,5 +1,5 @@
 #include "displaytext.h"
-
+#include "mainwindow.h"
 #include <QMouseEvent>
 #include <QDateTime>
 #include <QTextCharFormat>
@@ -121,7 +121,6 @@ QString DisplayText::appendDXCCWorkedB4(QString message, QString const& callsign
   if(!call.contains(QRegExp("[0-9]|[A-Z]"))) return message;
 
   logBook.match(/*in*/call,/*out*/countryName,callWorkedBefore,countryWorkedBefore);
-
   message = message.trimmed ();
   QString appendage;
   if (!countryWorkedBefore) // therefore not worked call either
@@ -143,25 +142,32 @@ QString DisplayText::appendDXCCWorkedB4(QString message, QString const& callsign
         }
     }
 
+  int i1=countryName.indexOf(";");
+  if(m_bPrincipalPrefix) {
+    int i2=countryName.lastIndexOf(";");
+    if(i1>0) countryName=countryName.mid(i1+2,i2-i1-2);
+  } else {
+    if(i1>0) countryName=countryName.mid(0,i1);
   // do some obvious abbreviations
-  countryName.replace ("Islands", "Is.");
-  countryName.replace ("Island", "Is.");
-  countryName.replace ("North ", "N. ");
-  countryName.replace ("Northern ", "N. ");
-  countryName.replace ("South ", "S. ");
-  countryName.replace ("East ", "E. ");
-  countryName.replace ("Eastern ", "E. ");
-  countryName.replace ("West ", "W. ");
-  countryName.replace ("Western ", "W. ");
-  countryName.replace ("Central ", "C. ");
-  countryName.replace (" and ", " & ");
-  countryName.replace ("Republic", "Rep.");
-  countryName.replace ("United States", "U.S.A.");
-  countryName.replace ("Fed. Rep. of ", "");
-  countryName.replace ("French ", "Fr.");
-  countryName.replace ("Asiatic", "AS");
-  countryName.replace ("European", "EU");
-  countryName.replace ("African", "AF");
+    countryName.replace ("Islands", "Is.");
+    countryName.replace ("Island", "Is.");
+    countryName.replace ("North ", "N. ");
+    countryName.replace ("Northern ", "N. ");
+    countryName.replace ("South ", "S. ");
+    countryName.replace ("East ", "E. ");
+    countryName.replace ("Eastern ", "E. ");
+    countryName.replace ("West ", "W. ");
+    countryName.replace ("Western ", "W. ");
+    countryName.replace ("Central ", "C. ");
+    countryName.replace (" and ", " & ");
+    countryName.replace ("Republic", "Rep.");
+    countryName.replace ("United States", "U.S.A.");
+    countryName.replace ("Fed. Rep. of ", "");
+    countryName.replace ("French ", "Fr.");
+    countryName.replace ("Asiatic", "AS");
+    countryName.replace ("European", "EU");
+    countryName.replace ("African", "AF");
+  }
 
   appendage += countryName;
 
@@ -181,9 +187,11 @@ QString DisplayText::appendDXCCWorkedB4(QString message, QString const& callsign
 void DisplayText::displayDecodedText(DecodedText const& decodedText, QString const& myCall,
                                      bool displayDXCCEntity, LogBook const& logBook,
                                      QColor color_CQ, QColor color_MyCall,
-                                     QColor color_DXCC, QColor color_NewCall)
+                                     QColor color_DXCC, QColor color_NewCall, bool ppfx,
+                                     bool bCQonly)
 {
-  QColor bg {Qt::white};
+  m_bPrincipalPrefix=ppfx;
+  QColor bg {Qt::transparent};
   bool CQcall = false;
   if (decodedText.string ().contains (" CQ ")
       || decodedText.string ().contains (" CQDX ")
@@ -192,6 +200,7 @@ void DisplayText::displayDecodedText(DecodedText const& decodedText, QString con
       CQcall = true;
       bg = color_CQ;
     }
+  if(bCQonly and !CQcall) return;
   if (myCall != "" and (
                         decodedText.indexOf (" " + myCall + " ") >= 0
                         or decodedText.indexOf (" " + myCall + "/") >= 0
@@ -225,6 +234,9 @@ void DisplayText::displayTransmittedText(QString text, QString modeTx, qint32 tx
     if(bFastMode or modeTx=="FT8") {
       t = QDateTime::currentDateTimeUtc().toString("hhmmss") + \
         "  Tx      " + t2 + t1 + text;
+    } else if(modeTx.mid(0,6)=="FT8fox") {
+      t = QDateTime::currentDateTimeUtc().toString("hhmmss") + \
+        " Tx" + modeTx.mid(7) + " " + text;
     } else {
       t = QDateTime::currentDateTimeUtc().toString("hhmm") + \
         "  Tx      " + t2 + t1 + text;
@@ -236,4 +248,9 @@ void DisplayText::displayQSY(QString text)
 {
   QString t = QDateTime::currentDateTimeUtc().toString("hhmmss") + "            " + text;
   appendText (t, "hotpink");
+}
+
+void DisplayText::displayFoxToBeCalled(QString t, QColor bg)
+{
+  appendText(t,bg);
 }

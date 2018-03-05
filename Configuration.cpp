@@ -444,6 +444,10 @@ private:
   Q_SLOT void on_pbTxMsg_clicked();
   Q_SLOT void on_pbNewDXCC_clicked();
   Q_SLOT void on_pbNewCall_clicked();
+  Q_SLOT void on_cbFox_clicked (bool);
+  Q_SLOT void on_cbHound_clicked (bool);
+  Q_SLOT void on_cbx2ToneSpacing_clicked(bool);
+  Q_SLOT void on_cbx4ToneSpacing_clicked(bool);
 
   // typenames used as arguments must match registered type names :(
   Q_SIGNAL void start_transceiver (unsigned seqeunce_number) const;
@@ -520,6 +524,7 @@ private:
   CalibrationParams calibration_;
   bool frequency_calibration_disabled_; // not persistent
   unsigned transceiver_command_number_;
+  QString dynamic_grid_;
 
   // configuration fields that we publish
   QString my_callsign_;
@@ -550,6 +555,7 @@ private:
   bool prompt_to_log_;
   bool insert_blank_;
   bool DXCC_;
+  bool ppfx_;
   bool clear_DX_;
   bool miles_;
   bool quick_call_;
@@ -560,10 +566,21 @@ private:
   bool decode_at_52s_;
   bool single_decode_;
   bool twoPass_;
+  bool bFox_;
+  bool bHound_;
   bool x2ToneSpacing_;
-  bool realTimeDecode_;
+  bool x4ToneSpacing_;
+  bool use_dynamic_grid_;
+  QString opCall_;
   QString udp_server_name_;
   port_type udp_server_port_;
+//  QString n1mm_server_name () const;
+  QString n1mm_server_name_;
+  port_type n1mm_server_port_;
+  bool broadcast_to_n1mm_;
+//  port_type n1mm_server_port () const;
+//  bool valid_n1mm_info () const;
+//  bool broadcast_to_n1mm() const;
   bool accept_udp_requests_;
   bool udpWindowToFront_;
   bool udpWindowRestore_;
@@ -612,7 +629,6 @@ bool Configuration::restart_audio_input () const {return m_->restart_sound_input
 bool Configuration::restart_audio_output () const {return m_->restart_sound_output_device_;}
 auto Configuration::type_2_msg_gen () const -> Type2MsgGen {return m_->type_2_msg_gen_;}
 QString Configuration::my_callsign () const {return m_->my_callsign_;}
-QString Configuration::my_grid () const {return m_->my_grid_;}
 QColor Configuration::color_CQ () const {return m_->color_CQ_;}
 QColor Configuration::color_MyCall () const {return m_->color_MyCall_;}
 QColor Configuration::color_TxMsg () const {return m_->color_TxMsg_;}
@@ -640,6 +656,7 @@ bool Configuration::report_in_comments () const {return m_->report_in_comments_;
 bool Configuration::prompt_to_log () const {return m_->prompt_to_log_;}
 bool Configuration::insert_blank () const {return m_->insert_blank_;}
 bool Configuration::DXCC () const {return m_->DXCC_;}
+bool Configuration::ppfx() const {return m_->ppfx_;}
 bool Configuration::clear_DX () const {return m_->clear_DX_;}
 bool Configuration::miles () const {return m_->miles_;}
 bool Configuration::quick_call () const {return m_->quick_call_;}
@@ -650,12 +667,18 @@ bool Configuration::enable_VHF_features () const {return m_->enable_VHF_features
 bool Configuration::decode_at_52s () const {return m_->decode_at_52s_;}
 bool Configuration::single_decode () const {return m_->single_decode_;}
 bool Configuration::twoPass() const {return m_->twoPass_;}
+bool Configuration::bFox() const {return m_->bFox_;}
+bool Configuration::bHound() const {return m_->bHound_;}
 bool Configuration::x2ToneSpacing() const {return m_->x2ToneSpacing_;}
-bool Configuration::realTimeDecode() const {return m_->realTimeDecode_;}
+bool Configuration::x4ToneSpacing() const {return m_->x4ToneSpacing_;}
 bool Configuration::split_mode () const {return m_->split_mode ();}
+QString Configuration::opCall() const {return m_->opCall_;}
 QString Configuration::udp_server_name () const {return m_->udp_server_name_;}
 auto Configuration::udp_server_port () const -> port_type {return m_->udp_server_port_;}
 bool Configuration::accept_udp_requests () const {return m_->accept_udp_requests_;}
+QString Configuration::n1mm_server_name () const {return m_->n1mm_server_name_;}
+auto Configuration::n1mm_server_port () const -> port_type {return m_->n1mm_server_port_;}
+bool Configuration::broadcast_to_n1mm () const {return m_->broadcast_to_n1mm_;}
 bool Configuration::udpWindowToFront () const {return m_->udpWindowToFront_;}
 bool Configuration::udpWindowRestore () const {return m_->udpWindowRestore_;}
 Bands * Configuration::bands () {return &m_->bands_;}
@@ -764,6 +787,31 @@ void Configuration::sync_transceiver (bool force_signal, bool enforce_mode_and_s
     {
       m_->transceiver_tx_frequency (0);
     }
+}
+
+bool Configuration::valid_n1mm_info () const
+{
+  // do very rudimentary checking on the n1mm server name and port number.
+  //
+  auto server_name = m_->n1mm_server_name_;
+  auto port_number = m_->n1mm_server_port_;
+  return(!(server_name.trimmed().isEmpty() || port_number == 0));
+}
+
+QString Configuration::my_grid() const
+{
+  auto the_grid = m_->my_grid_;
+  if (m_->use_dynamic_grid_ && m_->dynamic_grid_.size () >= 4) {
+    the_grid = m_->dynamic_grid_;
+  }
+  return the_grid;
+}
+
+void Configuration::set_location (QString const& grid_descriptor)
+{
+  // change the dynamic grid
+  qDebug () << "Configuration::set_location - location:" << grid_descriptor;
+  m_->dynamic_grid_ = grid_descriptor.trimmed ();
 }
 
 namespace
@@ -900,6 +948,9 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
 
   ui_->udp_server_port_spin_box->setMinimum (1);
   ui_->udp_server_port_spin_box->setMaximum (std::numeric_limits<port_type>::max ());
+
+  ui_->n1mm_server_port_spin_box->setMinimum (1);
+  ui_->n1mm_server_port_spin_box->setMaximum (std::numeric_limits<port_type>::max ());
 
   //
   // assign ids to radio buttons
@@ -1068,6 +1119,7 @@ void Configuration::impl::initialize_models ()
   ui_->grid_line_edit->setPalette (pal);
   ui_->callsign_line_edit->setText (my_callsign_);
   ui_->grid_line_edit->setText (my_grid_);
+  ui_->use_dynamic_grid->setChecked(use_dynamic_grid_);
   ui_->labCQ->setStyleSheet(QString("background: %1").arg(color_CQ_.name()));
   ui_->labMyCall->setStyleSheet(QString("background: %1").arg(color_MyCall_.name()));
   ui_->labTx->setStyleSheet(QString("background: %1").arg(color_TxMsg_.name()));
@@ -1092,6 +1144,7 @@ void Configuration::impl::initialize_models ()
   ui_->prompt_to_log_check_box->setChecked (prompt_to_log_);
   ui_->insert_blank_check_box->setChecked (insert_blank_);
   ui_->DXCC_check_box->setChecked (DXCC_);
+  ui_->ppfx_check_box->setChecked (ppfx_);
   ui_->clear_DX_check_box->setChecked (clear_DX_);
   ui_->miles_check_box->setChecked (miles_);
   ui_->quick_call_check_box->setChecked (quick_call_);
@@ -1102,9 +1155,10 @@ void Configuration::impl::initialize_models ()
   ui_->decode_at_52s_check_box->setChecked(decode_at_52s_);
   ui_->single_decode_check_box->setChecked(single_decode_);
   ui_->cbTwoPass->setChecked(twoPass_);
+  ui_->cbFox->setChecked(bFox_);
+  ui_->cbHound->setChecked(bHound_);
   ui_->cbx2ToneSpacing->setChecked(x2ToneSpacing_);
-  ui_->cbRealTime->setChecked(realTimeDecode_);
-  ui_->cbRealTime->setVisible(false);                    //Tempoary -- probably will remove this control
+  ui_->cbx4ToneSpacing->setChecked(x4ToneSpacing_);
   ui_->type_2_msg_gen_combo_box->setCurrentIndex (type_2_msg_gen_);
   ui_->rig_combo_box->setCurrentText (rig_params_.rig_name);
   ui_->TX_mode_button_group->button (data_mode_)->setChecked (true);
@@ -1133,9 +1187,13 @@ void Configuration::impl::initialize_models ()
     }
   ui_->TX_audio_source_button_group->button (rig_params_.audio_source)->setChecked (true);
   ui_->CAT_poll_interval_spin_box->setValue (rig_params_.poll_interval);
+  ui_->opCallEntry->setText (opCall_);
   ui_->udp_server_line_edit->setText (udp_server_name_);
   ui_->udp_server_port_spin_box->setValue (udp_server_port_);
   ui_->accept_udp_requests_check_box->setChecked (accept_udp_requests_);
+  ui_->n1mm_server_name_line_edit->setText (n1mm_server_name_);
+  ui_->n1mm_server_port_spin_box->setValue (n1mm_server_port_);
+  ui_->enable_n1mm_broadcast_check_box->setChecked (broadcast_to_n1mm_);
   ui_->udpWindowToFront->setChecked(udpWindowToFront_);
   ui_->udpWindowRestore->setChecked(udpWindowRestore_);
   ui_->calibration_intercept_spin_box->setValue (calibration_.intercept);
@@ -1276,6 +1334,7 @@ void Configuration::impl::read_settings ()
   spot_to_psk_reporter_ = settings_->value ("PSKReporter", false).toBool ();
   id_after_73_ = settings_->value ("After73", false).toBool ();
   tx_QSY_allowed_ = settings_->value ("TxQSYAllowed", false).toBool ();
+  use_dynamic_grid_ = settings_->value ("AutoGrid", false).toBool ();
 
   macros_.setStringList (settings_->value ("Macros", QStringList {"TNX 73 GL"}).toStringList ());
 
@@ -1322,6 +1381,7 @@ void Configuration::impl::read_settings ()
   prompt_to_log_ = settings_->value ("PromptToLog", false).toBool ();
   insert_blank_ = settings_->value ("InsertBlank", false).toBool ();
   DXCC_ = settings_->value ("DXCCEntity", false).toBool ();
+  ppfx_ = settings_->value ("PrincipalPrefix", false).toBool ();
   clear_DX_ = settings_->value ("ClearCallGrid", false).toBool ();
   miles_ = settings_->value ("Miles", false).toBool ();
   quick_call_ = settings_->value ("QuickCall", false).toBool ();
@@ -1332,12 +1392,18 @@ void Configuration::impl::read_settings ()
   decode_at_52s_ = settings_->value("Decode52",false).toBool ();
   single_decode_ = settings_->value("SingleDecode",false).toBool ();
   twoPass_ = settings_->value("TwoPass",true).toBool ();
+  bFox_ = settings_->value("Fox",false).toBool ();
+  bHound_ = settings_->value("Hound",false).toBool ();
   x2ToneSpacing_ = settings_->value("x2ToneSpacing",false).toBool ();
-  realTimeDecode_ = settings_->value("RealTimeDecode",false).toBool ();
+  x4ToneSpacing_ = settings_->value("x4ToneSpacing",false).toBool ();
   rig_params_.poll_interval = settings_->value ("Polling", 0).toInt ();
   rig_params_.split_mode = settings_->value ("SplitMode", QVariant::fromValue (TransceiverFactory::split_mode_none)).value<TransceiverFactory::SplitMode> ();
+  opCall_ = settings_->value ("OpCall", "").toString ();
   udp_server_name_ = settings_->value ("UDPServer", "127.0.0.1").toString ();
   udp_server_port_ = settings_->value ("UDPServerPort", 2237).toUInt ();
+  n1mm_server_name_ = settings_->value ("N1MMServer", "127.0.0.1").toString ();
+  n1mm_server_port_ = settings_->value ("N1MMServerPort", 2333).toUInt ();
+  broadcast_to_n1mm_ = settings_->value ("BroadcastToN1MM", false).toBool ();
   accept_udp_requests_ = settings_->value ("AcceptUDPRequests", false).toBool ();
   udpWindowToFront_ = settings_->value ("udpWindowToFront",false).toBool ();
   udpWindowRestore_ = settings_->value ("udpWindowRestore",false).toBool ();
@@ -1413,6 +1479,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("PromptToLog", prompt_to_log_);
   settings_->setValue ("InsertBlank", insert_blank_);
   settings_->setValue ("DXCCEntity", DXCC_);
+  settings_->setValue ("PrincipalPrefix", ppfx_);
   settings_->setValue ("ClearCallGrid", clear_DX_);
   settings_->setValue ("Miles", miles_);
   settings_->setValue ("QuickCall", quick_call_);
@@ -1430,10 +1497,16 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("Decode52", decode_at_52s_);
   settings_->setValue ("SingleDecode", single_decode_);
   settings_->setValue ("TwoPass", twoPass_);
+  settings_->setValue ("Fox", bFox_);
+  settings_->setValue ("Hound", bHound_);
   settings_->setValue ("x2ToneSpacing", x2ToneSpacing_);
-  settings_->setValue ("RealTimeDecode", realTimeDecode_);
+  settings_->setValue ("x4ToneSpacing", x4ToneSpacing_);
+  settings_->setValue ("OpCall", opCall_);
   settings_->setValue ("UDPServer", udp_server_name_);
   settings_->setValue ("UDPServerPort", udp_server_port_);
+  settings_->setValue ("N1MMServer", n1mm_server_name_);
+  settings_->setValue ("N1MMServerPort", n1mm_server_port_);
+  settings_->setValue ("BroadcastToN1MM", broadcast_to_n1mm_);
   settings_->setValue ("AcceptUDPRequests", accept_udp_requests_);
   settings_->setValue ("udpWindowToFront", udpWindowToFront_);
   settings_->setValue ("udpWindowRestore", udpWindowRestore_);
@@ -1442,6 +1515,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("pwrBandTxMemory", pwrBandTxMemory_);
   settings_->setValue ("pwrBandTuneMemory", pwrBandTuneMemory_);
   settings_->setValue ("Region", QVariant::fromValue (region_));
+  settings_->setValue ("AutoGrid", use_dynamic_grid_);
 }
 
 void Configuration::impl::set_rig_invariants ()
@@ -1812,6 +1886,7 @@ void Configuration::impl::accept ()
   prompt_to_log_ = ui_->prompt_to_log_check_box->isChecked ();
   insert_blank_ = ui_->insert_blank_check_box->isChecked ();
   DXCC_ = ui_->DXCC_check_box->isChecked ();
+  ppfx_ = ui_->ppfx_check_box->isChecked ();
   clear_DX_ = ui_->clear_DX_check_box->isChecked ();
   miles_ = ui_->miles_check_box->isChecked ();
   quick_call_ = ui_->quick_call_check_box->isChecked ();
@@ -1825,12 +1900,15 @@ void Configuration::impl::accept ()
   decode_at_52s_ = ui_->decode_at_52s_check_box->isChecked ();
   single_decode_ = ui_->single_decode_check_box->isChecked ();
   twoPass_ = ui_->cbTwoPass->isChecked ();
+  bFox_ = ui_->cbFox->isChecked ();
+  bHound_ = ui_->cbHound->isChecked ();
   x2ToneSpacing_ = ui_->cbx2ToneSpacing->isChecked ();
-  realTimeDecode_ = ui_->cbRealTime->isChecked ();
+  x4ToneSpacing_ = ui_->cbx4ToneSpacing->isChecked ();
   calibration_.intercept = ui_->calibration_intercept_spin_box->value ();
   calibration_.slope_ppm = ui_->calibration_slope_ppm_spin_box->value ();
   pwrBandTxMemory_ = ui_->checkBoxPwrBandTxMemory->isChecked ();
   pwrBandTuneMemory_ = ui_->checkBoxPwrBandTuneMemory->isChecked ();
+  opCall_=ui_->opCallEntry->text();
   auto new_server = ui_->udp_server_line_edit->text ();
   if (new_server != udp_server_name_)
     {
@@ -1846,6 +1924,12 @@ void Configuration::impl::accept ()
     }
   
   accept_udp_requests_ = ui_->accept_udp_requests_check_box->isChecked ();
+  auto new_n1mm_server = ui_->n1mm_server_name_line_edit->text ();
+  n1mm_server_name_ = new_n1mm_server;
+  auto new_n1mm_port = ui_->n1mm_server_port_spin_box->value ();
+  n1mm_server_port_ = new_n1mm_port;
+  broadcast_to_n1mm_ = ui_->enable_n1mm_broadcast_check_box->isChecked ();
+
   udpWindowToFront_ = ui_->udpWindowToFront->isChecked ();
   udpWindowRestore_ = ui_->udpWindowRestore->isChecked ();
 
@@ -1867,7 +1951,14 @@ void Configuration::impl::accept ()
       stations_.station_list(next_stations_.station_list ());
       stations_.sort (StationList::band_column);
     }
- 
+
+  if (ui_->use_dynamic_grid->isChecked() && !use_dynamic_grid_ )
+  {
+    // turning on so clear it so only the next location update gets used
+    dynamic_grid_.clear ();
+  }
+  use_dynamic_grid_ = ui_->use_dynamic_grid->isChecked();
+
   write_settings ();		// make visible to all
 }
 
@@ -2293,6 +2384,26 @@ void Configuration::impl::on_calibration_intercept_spin_box_valueChanged (double
 void Configuration::impl::on_calibration_slope_ppm_spin_box_valueChanged (double)
 {
   rig_active_ = false;          // force reset
+}
+
+void Configuration::impl::on_cbFox_clicked (bool checked)
+{
+  if (checked) ui_->cbHound->setChecked (false);
+}
+
+void Configuration::impl::on_cbHound_clicked (bool checked)
+{
+  if (checked) ui_->cbFox->setChecked (false);
+}
+
+void Configuration::impl::on_cbx2ToneSpacing_clicked(bool b)
+{
+  if(b) ui_->cbx4ToneSpacing->setChecked(false);
+}
+
+void Configuration::impl::on_cbx4ToneSpacing_clicked(bool b)
+{
+  if(b) ui_->cbx2ToneSpacing->setChecked(false);
 }
 
 bool Configuration::impl::have_rig ()

@@ -1,4 +1,4 @@
-_WSJT-X_ v1.8 suppports a number of features designed for use
+_WSJT-X_ v1.9 suppports a number of features designed for use
 on the VHF and higher bands.  These features include:
 
 - *FT8*, a mode designed for making fast QSOs with weak, fading
@@ -7,6 +7,8 @@ signals
 - *JT4*, a mode particularly useful for EME on the microwave bands
 
 - *JT9* fast modes, useful for scatter propagation on VHF bands
+
+- *JT65*, widely used for EME on VHF and higher bands
 
 - *QRA64*, a mode for EME using a "`Q-ary Repeat Accumulate`" code,
 a low-density parity-check (LDPC) code using a 64-character symbol
@@ -24,6 +26,8 @@ propagation
 - *Doppler tracking*, which becomes increasingly important for EME
 on bands above 1.2 GHz.
 
+- Optional *Auto-Sequencing* in JT4, JT9, and JT65 as well as FT8 and QRA64.
+
 [[VHF_SETUP]]
 === VHF Setup
 
@@ -32,8 +36,8 @@ To activate the VHF-and-up features:
 - On the *Settings | General* tab check *Enable VHF/UHF/Microwave
 features* and *Single decode*.
 
-- For EME, check *Decode at t = 52 s* to allow for extra path delay on
-received signals.
+- For EME, check *Decode after EME delay* to allow for extra path
+delay on received signals.
 
 - If you will use automatic Doppler tracking and your radio accepts
 frequency-setting commands while transmitting, check *Allow Tx
@@ -77,19 +81,41 @@ becomes visible when you check *Doppler tracking*.
 
 image::Astronomical_data.png[align="center",alt="Astronomical data"]
 
-Three different types of Doppler tracking are provided:
+Five different types of Doppler tracking are provided:
 
 - Select *Full Doppler to DX Grid* if you know your QSO partner's locator
 and he/she will not be using any Doppler control.
 
-- Select *Receive only* to enable EME Doppler tracking of your receive
-frequency to a specific locator. Your Tx frequency will remain fixed.
+- Select *Own Echo* to enable EME Doppler tracking of your receive
+frequency to your own echo frequency. Your Tx frequency will remain fixed
+and is set to the Sked frequency.  This mode can be used when announcing 
+your CQ call on a specific frequency and listening on your own echo
+frequency.  It can also be used for echo testing with Echo mode.
 
 - Select *Constant frequency on Moon* to correct for your own one-way
 Doppler shift to or from the Moon.  If your QSO partner does the same
 thing, both stations will have the required Doppler compensation.
 Moreover, anyone else using this option will hear both of you
 without the need for manual frequency changes.
+
+- Select *On Dx Echo* when your QSO partner is not using automated 
+Doppler tracking, and announces his/her transmit frequency and listening
+on their own echo frequency. When clicked, this Doppler method will 
+set your rig frequency on receive to correct for the mutual Doppler 
+shift.  On transmit, your rig frequency will be set so that your
+QSO partner will receive you on the same frequency as their own echo
+at the start of the QSO. As the QSO proceeds, your QSO partner will 
+receive you on this starting frequency so that they do not have to 
+retune their receiver as the Doppler changes.  Sked frequency in this 
+case is set to that announced by your QSO partner.
+
+- Select *Call DX* after tuning the radio manually to find a station,
+with the Doppler mode initally set to *None*. You may be tuning the band
+looking for random stations, or to a frequency where a station has been
+seen on an SDR display.  It is usually necessary to hold down the Ctrl key
+while tuning the radio. From the moment *Call DX* is pressed, your 
+transmit frequency is set so that your echo will fall on the same 
+frequency you (and the DX station) are listening. 
 
 - See <<ASTRODATA,Astronomical Data>> for details on the quantities
 displayed in this window.
@@ -142,8 +168,9 @@ shorthand messages for RO, RRR, and 73.  These messages are always
 enabled for reception; they will be automatically generated for
 transmission if you check the shorthand message box *Sh*.
 
-Be sure to check *Deep* on the *Decode* menu; you may optionally
-include *Enable averaging* and *Deep search*.
+*Deep* on the *Decode* menu will be automatically selected.  You may
+optionally include *Enable averaging*, *Enable Deep search*, and
+*Enable AP*.
 
 The following screen shot shows three transmissions from a 144 MHz EME
 QSO using submode JT65B and shorthand messages.  Take note of the

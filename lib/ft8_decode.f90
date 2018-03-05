@@ -1,5 +1,14 @@
 module ft8_decode
 
+  parameter (MAXFOX=1000)
+  character*12 c2fox(MAXFOX)
+  character*4  g2fox(MAXFOX)
+  integer nsnrfox(MAXFOX)
+  integer nfreqfox(MAXFOX)
+  integer n30fox(MAXFOX)
+  integer n30z
+  integer nfox
+  
   type :: ft8_decoder
      procedure(ft8_decode_callback), pointer :: callback
    contains
@@ -15,7 +24,7 @@ module ft8_decode
        integer, intent(in) :: snr
        real, intent(in) :: dt
        real, intent(in) :: freq
-       character(len=22), intent(in) :: decoded
+       character(len=37), intent(in) :: decoded
        integer, intent(in) :: nap 
        real, intent(in) :: qual 
      end subroutine ft8_decode_callback
@@ -23,12 +32,12 @@ module ft8_decode
 
 contains
 
-  subroutine decode(this,callback,iwave,nQSOProgress,nfqso,nftx,newdat,    &
-       nutc,nfa,nfb,nexp_decode,ndepth,nagain,lapon,napwid,mycall12,       &
-       mygrid6,hiscall12,hisgrid6)
+  subroutine decode(this,callback,iwave,nQSOProgress,nfqso,nftx,newdat,  &
+       nutc,nfa,nfb,nexp_decode,ndepth,nagain,lft8apon,lapcqonly,napwid, &
+       mycall12,mygrid6,hiscall12,hisgrid6)
 !    use wavhdr
     use timer_module, only: timer
-    include 'fsk4hf/ft8_params.f90'
+    include 'ft8/ft8_params.f90'
 !    type(hdr) h
 
     class(ft8_decoder), intent(inout) :: this
@@ -37,13 +46,13 @@ contains
     real sbase(NH1)
     real candidate(3,200)
     real dd(15*12000)
-    logical, intent(in) :: lapon,nagain
+    logical, intent(in) :: lft8apon,lapcqonly,nagain
     logical newdat,lsubtract,ldupe,bcontest
     character*12 mycall12, hiscall12
     character*6 mygrid6,hisgrid6
     integer*2 iwave(15*12000)
     integer apsym(KK)
-    character datetime*13,message*22
+    character datetime*13,message*22,msg37*37
     character*22 allmessages(100)
     integer allsnrs(100)
     save s,dd
@@ -96,16 +105,21 @@ contains
         xbase=10.0**(0.1*(sbase(nint(f1/3.125))-40.0))
         nsnr0=min(99,nint(10.0*log10(sync) - 25.5))    !### empirical ###
         call timer('ft8b    ',0)
-        call ft8b(dd,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,napwid,    &
-             lsubtract,nagain,iaptype,mygrid6,bcontest,sync,f1,xdt,xbase,   &
-             apsym,nharderrors,dmin,nbadcrc,iappass,iera,message,xsnr)
+        call ft8b(dd,newdat,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &
+             lapcqonly,napwid,lsubtract,nagain,iaptype,mycall12,mygrid6,   &
+             hiscall12,bcontest,sync,f1,xdt,xbase,apsym,nharderrors,dmin,  &
+             nbadcrc,iappass,iera,msg37,xsnr)
+        message=msg37(1:22)   !###
         nsnr=nint(xsnr) 
         xdt=xdt-0.5
         hd=nharderrors+dmin
         call timer('ft8b    ',1)
         if(nbadcrc.eq.0) then
 !           call jtmsg(message,iflag)
-           if(bcontest) call fix_contest_msg(mygrid6,message)
+           if(bcontest) then
+              call fix_contest_msg(mygrid6,message)
+              msg37(1:22)=message
+           endif
 !           if(iand(iflag,31).ne.0) message(22:22)='?'
            ldupe=.false.
            do id=1,ndecodes
@@ -123,15 +137,10 @@ contains
 !           flush(81)
            if(.not.ldupe .and. associated(this%callback)) then
               qual=1.0-(nharderrors+dmin)/60.0 ! scale qual to [0.0,1.0]
-              call this%callback(sync,nsnr,xdt,f1,message,iaptype,qual)
+              call this%callback(sync,nsnr,xdt,f1,msg37,iaptype,qual)
            endif
         endif
       enddo
-!     h=default_header(12000,NMAX)
-!     open(10,file='subtract.wav',status='unknown',access='stream')
-!     iwave=nint(dd)
-!     write(10) h,iwave
-!     close(10)
   enddo
   return
   end subroutine decode

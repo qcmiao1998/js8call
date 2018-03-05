@@ -114,6 +114,7 @@ public:
   bool prompt_to_log () const;
   bool insert_blank () const;
   bool DXCC () const;
+  bool ppfx() const;
   bool clear_DX () const;
   bool miles () const;
   bool quick_call () const;
@@ -125,17 +126,24 @@ public:
   bool decode_at_52s () const;
   bool single_decode () const;
   bool twoPass() const;
+  bool bFox() const;
+  bool bHound() const;
   bool x2ToneSpacing() const;
+  bool x4ToneSpacing() const;
   bool contestMode() const;
-  bool realTimeDecode() const;
   bool MyDx() const;
   bool CQMyN() const;
   bool NDxG() const;
   bool NN() const;
   bool EMEonly() const;
   bool post_decodes () const;
+  QString opCall() const;
   QString udp_server_name () const;
   port_type udp_server_port () const;
+  QString n1mm_server_name () const;
+  port_type n1mm_server_port () const;
+  bool valid_n1mm_info () const;
+  bool broadcast_to_n1mm() const;
   bool accept_udp_requests () const;
   bool udpWindowToFront () const;
   bool udpWindowRestore () const;
@@ -183,6 +191,9 @@ public:
 
   // Set the calibration parameters and enable calibration corrections.
   void set_calibration (CalibrationParams);
+
+  // Set the dynamic grid which is only used if configuration setting is enabled.
+  void set_location (QString const&);
 
   // This method queries if a CAT and PTT connection is operational.
   bool is_transceiver_online () const;

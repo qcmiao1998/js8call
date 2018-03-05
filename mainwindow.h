@@ -49,7 +49,7 @@
 #define NUM_FT8_SYMBOLS 79
 #define NUM_CW_SYMBOLS 250
 #define TX_SAMPLE_RATE 48000
-#define N_WIDGETS 24
+#define N_WIDGETS 33
 
 extern int volatile itone[NUM_ISCAT_SYMBOLS];   //Audio tones for all Tx symbols
 extern int volatile icw[NUM_CW_SYMBOLS];	    //Dits for CW ID
@@ -109,6 +109,7 @@ public slots:
   void guiUpdate();
   void doubleClickOnCall (Qt::KeyboardModifiers);
   void doubleClickOnCall2(Qt::KeyboardModifiers);
+  void doubleClickOnFoxQueue(Qt::KeyboardModifiers);
   void readFromStdout();
   void p1ReadFromStdout();
   void setXIT(int n, Frequency base = 0u);
@@ -137,6 +138,7 @@ private slots:
   void on_stopTxButton_clicked();
   void on_stopButton_clicked();
   void on_actionRelease_Notes_triggered ();
+  void on_actionFT8_DXpedition_Mode_User_Guide_triggered();
   void on_actionOnline_User_Guide_triggered();
   void on_actionLocal_User_Guide_triggered();
   void on_actionWide_Waterfall_triggered();
@@ -178,8 +180,6 @@ private slots:
   void on_txb5_clicked();
   void on_txb5_doubleClicked ();
   void on_txb6_clicked();
-  void on_pbNextFreeTextMsg_clicked();
-  void on_rbNextFreeTextMsg_toggled (bool status);
   void on_lookupButton_clicked();
   void on_addButton_clicked();
   void on_dxCallEntry_textChanged (QString const&);
@@ -199,6 +199,7 @@ private slots:
   void on_actionDeepestDecode_toggled (bool);
   void bumpFqso(int n);
   void on_actionErase_ALL_TXT_triggered();
+  void on_actionErase_FoxQSO_txt_triggered();
   void on_actionErase_wsjtx_log_adi_triggered();
   void startTx2();
   void startP1();
@@ -213,27 +214,22 @@ private slots:
   void on_rbGenMsg_clicked(bool checked);
   void on_rbFreeText_clicked(bool checked);
   void on_freeTextMsg_currentTextChanged (QString const&);
-  void on_nextFreeTextMsg_currentTextChanged (QString const&);
-  void on_extFreeTextMsg_currentTextChanged (QString const&);
-  QString parseFT8Message(QString input);
-  int countFreeTextMsgs(QString input);
-  void splitNextFreeTextMsg();
   void on_rptSpinBox_valueChanged(int n);
   void killFile();
   void on_tuneButton_clicked (bool);
   void on_pbR2T_clicked();
   void on_pbT2R_clicked();
-  void acceptQSO2(QDateTime const&, QString const& call, QString const& grid
+  void acceptQSO (QDateTime const&, QString const& call, QString const& grid
                   , Frequency dial_freq, QString const& mode
                   , QString const& rpt_sent, QString const& rpt_received
                   , QString const& tx_power, QString const& comments
-                  , QString const& name, QDateTime const&);
+                  , QString const& name, QDateTime const& QSO_date_on, QString const& operator_call
+                  , QString const& my_call, QString const& my_grid, QByteArray const& ADIF);
   void on_bandComboBox_currentIndexChanged (int index);
   void on_bandComboBox_activated (int index);
   void on_readFreq_clicked();
   void on_pbTxMode_clicked();
   void on_RxFreqSpinBox_valueChanged(int n);
-  void on_cbHoldTxFreq_clicked(bool checked);
   void on_outAttenuation_valueChanged (int);
   void rigOpen ();
   void handle_transceiver_update (Transceiver::TransceiverState const&);
@@ -246,6 +242,7 @@ private slots:
   void stopTuneATU();
   void auto_tx_mode(bool);
   void on_actionMessage_averaging_triggered();
+  void on_actionFox_Log_triggered();
   void on_actionInclude_averaging_toggled (bool);
   void on_actionInclude_correlation_toggled (bool);
   void on_actionEnable_AP_DXcall_toggled (bool);
@@ -255,6 +252,7 @@ private slots:
   void on_cbSWL_toggled(bool b);
   void on_cbTx6_toggled(bool b);
   void on_cbMenus_toggled(bool b);
+  void on_cbCQonly_toggled(bool b);
   void on_cbFirst_toggled(bool b);
   void on_cbAutoSeq_toggled(bool b);
   void networkError (QString const&);
@@ -289,6 +287,12 @@ private slots:
   void on_actionFreqCal_triggered();
   void splash_done ();
   void on_measure_check_box_stateChanged (int);
+  void on_sbNlist_valueChanged(int n);
+  void on_sbNslots_valueChanged(int n);
+  void on_sbMax_dB_valueChanged(int n);
+  void on_pbFoxReset_clicked();
+  void on_comboBoxHoundSort_activated (int index);
+  void not_GA_warning_message ();
 
 private:
   Q_SIGNAL void initializeAudioOutputStream (QAudioDeviceInfo,
@@ -319,6 +323,7 @@ private:
   void writeAllTxt(QString message);
   void auto_sequence (DecodedText const& message, unsigned start_tolerance, unsigned stop_tolerance);
   void hideMenus(bool b);
+  void foxTest();
 
   NetworkAccessManager m_network_manager;
   bool m_valid;
@@ -364,6 +369,9 @@ private:
   qint64  m_msErase;
   qint64  m_secBandChanged;
   qint64  m_freqMoon;
+  qint64  m_msec0;
+  qint64  m_fullFoxCallTime;
+
   Frequency m_freqNominal;
   Frequency m_freqTxNominal;
   Astro::Correction m_astroCorrection;
@@ -414,6 +422,15 @@ private:
   qint32  m_UTCdisk;
   qint32  m_wait;
   qint32  m_i3bit;
+  qint32  m_isort;
+  qint32  m_max_dB;
+  qint32  m_nDXped=0;
+  qint32  m_nSortedHounds=0;
+  qint32  m_nHoundsCalling=0;
+  qint32  m_Nlist=12;
+  qint32  m_Nslots=5;
+  qint32  m_nFoxMsgTimes[5]={0,0,0,0,0};
+  qint32  m_tAutoOn;
 
   bool    m_btxok;		//True if OK to transmit
   bool    m_diskData;
@@ -438,7 +455,6 @@ private:
   QString m_currentMessage;
   int     m_lastMessageType;
   QString m_lastMessageSent;
-  bool    m_holdTxFreq;
   bool    m_bShMsgs;
   bool    m_bSWL;
   bool    m_uploadSpots;
@@ -468,7 +484,8 @@ private:
   bool    m_bCallingCQ;
   bool    m_bAutoReply;
   bool    m_bCheckedContest;
-  bool    m_bDXped;
+  bool    m_bWarnedSplit=false;
+  bool    m_bWarnedHound=false;
 
   enum
     {
@@ -481,7 +498,6 @@ private:
     }
     m_QSOProgress;
 
-  int           m_extFreeTxtPos;
   int			m_ihsym;
   int			m_nzap;
   int			m_npts8;
@@ -551,11 +567,32 @@ private:
   QString m_fileToSave;
   QString m_calls;
   QString m_CQtype;
+  QString m_opCall;
+  QString m_houndCallers;        //Sorted list of Hound callers
+  QString m_fm0;
+  QString m_fm1;
 
   QSet<QString> m_pfx;
   QSet<QString> m_sfx;
 
+  struct FoxQSO
+  {
+    QString grid;
+    QString sent;
+    QString rcvd;
+    qint32  ncall;
+  };
+
+  QMap<QString,FoxQSO> m_foxQSO;
+  QMap<QString,QString> m_loggedByFox;
+
+  QQueue<QString> m_houndQueue;
+  QQueue<QString> m_foxQSOqueue;
+  QQueue<QString> m_foxRR73Queue;
+  QQueue<qint64>  m_foxRateQueue;
+
   QDateTime m_dateTimeQSOOn;
+  QDateTime m_dateTimeLastTX;
 
   QSharedMemory *mem_jt9;
   LogBook m_logBook;
@@ -574,6 +611,7 @@ private:
   bool m_block_pwr_tooltip;
   bool m_PwrBandSetOK;
   bool m_bVHFwarned;
+  bool m_bDisplayedOnce;
   Frequency m_lastMonitoredFrequency;
   double m_toneSpacing;
   int m_firstDecode;
@@ -612,6 +650,7 @@ private:
   void transmitDisplay (bool);
   void processMessage(DecodedText const&, Qt::KeyboardModifiers = 0);
   void replyToCQ (QTime, qint32 snr, float delta_time, quint32 delta_frequency, QString const& mode, QString const& message_text, bool low_confidence, quint8 modifiers);
+  void locationChange(QString const& location);
   void replayDecodes ();
   void postDecode (bool is_new, QString const& message);
   void postWSPRDecode (bool is_new, QStringList message_parts);
@@ -634,6 +673,8 @@ private:
                           , Frequency frequency
                           , QString const& his_call
                           , QString const& his_grid) const;
+  QString sortHoundCalls(QString t, int isort, int max_dB);
+  void rm_tb4(QString houndCall);
   void read_wav_file (QString const& fname);
   void decodeDone ();
   void subProcessFailed (QProcess *, int exit_code, QProcess::ExitStatus);
@@ -645,12 +686,18 @@ private:
   void remove_child_from_event_filter (QObject *);
   void setup_status_bar (bool vhf);
   void tx_watchdog (bool triggered);
-  int  nWidgets(QString t);
-  void displayWidgets(int n);
+  qint64  nWidgets(QString t);
+  void displayWidgets(qint64 n);
   void vhfWarning();
   QChar current_submode () const; // returns QChar {0} if sub mode is
                                   // not appropriate
   void write_transmit_entry (QString const& file_name);
+  void selectHound(QString t);
+  void houndCallers();
+  void foxRxSequencer(QString msg, QString houndCall, QString rptRcvd);
+  void foxTxSequencer();
+  void foxGenWaveform(int i,QString fm);
+  void writeFoxQSO(QString msg);
 };
 
 extern int killbyname(const char* progName);

@@ -62,12 +62,21 @@ public:
   Q_SLOT void qso_logged (QDateTime time_off, QString const& dx_call, QString const& dx_grid
                           , Frequency dial_frequency, QString const& mode, QString const& report_sent
                           , QString const& report_received, QString const& tx_power, QString const& comments
-                          , QString const& name, QDateTime time_on);
+                          , QString const& name, QDateTime time_on, QString const& operator_call
+                          , QString const& my_call, QString const& my_grid);
+
+  // ADIF_record argument should be valid ADIF excluding any <EOR> end
+  // of record marker
+  Q_SLOT void logged_ADIF (QByteArray const& ADIF_record);
 
   // this slot may be used to send arbitrary UDP datagrams to and
   // destination allowing the underlying socket to be used for general
   // UDP messaging if desired
   Q_SLOT void send_raw_datagram (QByteArray const&, QHostAddress const& dest_address, port_type dest_port);
+
+  // disallowed message destination (does not block datagrams sent
+  // with send_raw_datagram() above)
+  Q_SLOT void add_blocked_destination (QHostAddress const&);
 
   // this signal is emitted if the server sends us a reply, the only
   // reply supported is reply to a prior CQ or QRZ message
@@ -89,6 +98,11 @@ public:
   // this signal is emitted when network errors occur or if a host
   // lookup fails
   Q_SIGNAL void error (QString const&) const;
+
+  // this signal is emitted if the message obtains a location from a
+  // server.  (It doesn't have to be new, could be a periodic location
+  // update)
+  Q_SIGNAL void location (QString const&);
 
 private:
   class impl;

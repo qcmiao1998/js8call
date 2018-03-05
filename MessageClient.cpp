@@ -1,6 +1,8 @@
 #include "MessageClient.hpp"
 
 #include <stdexcept>
+#include <vector>
+#include <algorithm>
 
 #include <QUdpSocket>
 #include <QHostInfo>
@@ -76,6 +78,7 @@ public:
   QHostAddress server_;
   quint32 schema_;
   QTimer * heartbeat_timer_;
+  std::vector<QHostAddress> blocked_addresses_;
 
   // hold messages sent before host lookup completes asynchronously
   QQueue<QByteArray> pending_messages_;
@@ -93,15 +96,24 @@ void MessageClient::impl::host_info_results (QHostInfo host_info)
     }
   else if (host_info.addresses ().size ())
     {
-      server_ = host_info.addresses ()[0];
-
-      // send initial heartbeat which allows schema negotiation
-      heartbeat ();
-
-      // clear any backlog
-      while (pending_messages_.size ())
+      auto server = host_info.addresses ()[0];
+      if (blocked_addresses_.end () == std::find (blocked_addresses_.begin (), blocked_addresses_.end (), server))
         {
-          send_message (pending_messages_.dequeue ());
+          server_ = server;
+
+          // send initial heartbeat which allows schema negotiation
+          heartbeat ();
+
+          // clear any backlog
+          while (pending_messages_.size ())
+            {
+              send_message (pending_messages_.dequeue ());
+            }
+        }
+      else
+        {
+          Q_EMIT self_->error ("UDP server blocked, please try another");
+          pending_messages_.clear (); // discard
         }
     }
 }
@@ -192,6 +204,17 @@ void MessageClient::impl::parse_message (QByteArray const& msg)
                   {
                     Q_EMIT self_->free_text (QString::fromUtf8 (message), send);
                   }
+              }
+              break;
+
+            case NetworkMessage::Location:
+              {
+                QByteArray location;
+                in >> location;
+                if (check_status (in) != Fail)
+                {
+                    Q_EMIT self_->location (QString::fromUtf8 (location));
+                }
               }
               break;
 
@@ -349,6 +372,17 @@ void MessageClient::send_raw_datagram (QByteArray const& message, QHostAddress c
     }
 }
 
+void MessageClient::add_blocked_destination (QHostAddress const& a)
+{
+  m_->blocked_addresses_.push_back (a);
+  if (a == m_->server_)
+    {
+      m_->server_.clear ();
+      Q_EMIT error ("UDP server blocked, please try another");
+      m_->pending_messages_.clear (); // discard
+    }
+}
+
 void MessageClient::status_update (Frequency f, QString const& mode, QString const& dx_call
                                    , QString const& report, QString const& tx_mode
                                    , bool tx_enabled, bool transmitting, bool decoding
@@ -410,7 +444,9 @@ void MessageClient::clear_decodes ()
 void MessageClient::qso_logged (QDateTime time_off, QString const& dx_call, QString const& dx_grid
                                 , Frequency dial_frequency, QString const& mode, QString const& report_sent
                                 , QString const& report_received, QString const& tx_power
-                                , QString const& comments, QString const& name, QDateTime time_on)
+                                , QString const& comments, QString const& name, QDateTime time_on
+                                , QString const& operator_call, QString const& my_call
+                                , QString const& my_grid)
 {
    if (m_->server_port_ && !m_->server_string_.isEmpty ())
     {
@@ -418,7 +454,19 @@ void MessageClient::qso_logged (QDateTime time_off, QString const& dx_call, QStr
       NetworkMessage::Builder out {&message, NetworkMessage::QSOLogged, m_->id_, m_->schema_};
       out << time_off << dx_call.toUtf8 () << dx_grid.toUtf8 () << dial_frequency << mode.toUtf8 ()
           << report_sent.toUtf8 () << report_received.toUtf8 () << tx_power.toUtf8 () << comments.toUtf8 ()
-          << name.toUtf8 () << time_on;
+          << name.toUtf8 () << time_on << operator_call.toUtf8 () << my_call.toUtf8 () << my_grid.toUtf8 ();
+      m_->send_message (out, message);
+    }
+}
+
+void MessageClient::logged_ADIF (QByteArray const& ADIF_record)
+{
+   if (m_->server_port_ && !m_->server_string_.isEmpty ())
+    {
+      QByteArray message;
+      NetworkMessage::Builder out {&message, NetworkMessage::LoggedADIF, m_->id_, m_->schema_};
+      QByteArray ADIF {"\n<adif_ver:5>3.0.7\n<programid:6>WSJT-X\n<EOH>\n" + ADIF_record + " <EOR>"};
+      out << ADIF;
       m_->send_message (out, message);
     }
 }

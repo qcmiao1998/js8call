@@ -11,7 +11,8 @@ module jt65_test
 contains
 
   subroutine test (dd,nutc,nflow,nfhigh,nfqso,ntol,nsubmode,n2pass,nrobust     &
-       ,ntrials,naggressive,ndepth,mycall,hiscall,hisgrid,nexp_decode)
+       ,ntrials,naggressive,ndepth,mycall,hiscall,hisgrid,nexp_decode,         &
+        nQSOProgress,ljt65apon)
     use timer_module, only: timer
     use jt65_decode
     implicit none
@@ -19,8 +20,8 @@ contains
     include 'constants.f90'
     real, intent(in) :: dd(NZMAX)
     integer, intent(in) :: nutc, nflow, nfhigh, nfqso, ntol, nsubmode, n2pass  &
-         , ntrials, naggressive, ndepth, nexp_decode
-    logical, intent(in) :: nrobust
+         , ntrials, naggressive, ndepth, nexp_decode, nQSOProgress
+    logical, intent(in) :: nrobust,ljt65apon
     character(len=12), intent(in) :: mycall, hiscall
     character(len=6), intent(in) :: hisgrid
     type(jt65_decoder) :: my_decoder
@@ -33,7 +34,8 @@ contains
          nsubmode=nsubmode, minsync=-1,nagain=.false.,n2pass=n2pass,       &
          nrobust=nrobust,ntrials=ntrials,naggressive=naggressive,          &
          ndepth=ndepth,emedelay=0.0,clearave=nclearave,mycall=mycall,      &
-         hiscall=hiscall,hisgrid=hisgrid,nexp_decode=nexp_decode)
+         hiscall=hiscall,hisgrid=hisgrid,nexp_decode=nexp_decode,          &
+         nQSOProgress=nQSOProgress,ljt65apon=ljt65apon)
     call timer('jt65a   ',1)
   end subroutine test
 
@@ -65,16 +67,11 @@ contains
     nwidth=max(nint(sqrt(t)),2)
 !### deal with nflip here! ###
 !### also single_decode, csync, etc... ###
-    write(*,1010) snr,dt,freq,decoded
-1010 format(i4,f5.1,i5,1x,'#',1x,a22)
-    write(13,1012) nint(sync),snr,dt,freq,drift,nwidth,         &
+    write(*,1012) nint(sync),snr,dt,freq,drift,nwidth,         &
          decoded,ft,sum,smo
 1012 format(i4,i5,f6.2,i5,i4,i3,1x,a22,' JT65',3i3)
     nft=ft
     call flush(6)
-!    write(79,3001) sync,snr,dt,freq,candidates,    &
-!         hard_min,total_min,rtt,tries,ft,qual,decoded
-!3001 format(f5.1,i4,f5.1,i5,i6,i3,i4,f6.3,i8,i2,i3,1x,a22)
 
   end subroutine my_callback
 

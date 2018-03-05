@@ -5,6 +5,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QDebug>
+#include <QUdpSocket>
 
 #include "logbook/adif.h"
 #include "MessageBox.hpp"
@@ -56,7 +57,7 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
                         QString const& rptSent, QString const& rptRcvd,
                         QDateTime const& dateTimeOn, QDateTime const& dateTimeOff,
                         Radio::Frequency dialFreq, QString const& myCall, QString const& myGrid,
-                        bool noSuffix, bool toRTTY, bool dBtoComments)
+                        bool noSuffix, bool toRTTY, bool dBtoComments, bool bFox, QString const& opCall)
 {
   if(!isHidden()) return;
   ui->call->setText(hisCall);
@@ -83,13 +84,17 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
   m_myCall=myCall;
   m_myGrid=myGrid;
   ui->band->setText (m_config->bands ()->find (dialFreq));
-
-  show ();
+  ui->loggedOperator->setText(opCall);
+  if(bFox) {
+    accept();
+  } else {
+    show ();
+  }
 }
 
 void LogQSO::accept()
 {
-  QString hisCall,hisGrid,mode,rptSent,rptRcvd,dateOn,dateOff,timeOn,timeOff,band;
+  QString hisCall,hisGrid,mode,rptSent,rptRcvd,dateOn,dateOff,timeOn,timeOff,band,operator_call;
   QString comments,name;
 
   hisCall=ui->call->text();
@@ -105,16 +110,30 @@ void LogQSO::accept()
   comments=ui->comments->text();
   m_comments=comments;
   QString strDialFreq(QString::number(m_dialFreq / 1.e6,'f',6));
-
+  operator_call = ui->loggedOperator->text();
   //Log this QSO to ADIF file "wsjtx_log.adi"
   QString filename = "wsjtx_log.adi";  // TODO allow user to set
   ADIF adifile;
   auto adifilePath = QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath ("wsjtx_log.adi");
   adifile.init(adifilePath);
-  if (!adifile.addQSOToFile(hisCall,hisGrid,mode,rptSent,rptRcvd,m_dateTimeOn,m_dateTimeOff,band,comments,name,strDialFreq,m_myCall,m_myGrid,m_txPower))
+
+  QByteArray ADIF {adifile.QSOToADIF (hisCall, hisGrid, mode, rptSent, rptRcvd, m_dateTimeOn, m_dateTimeOff, band
+                                      , comments, name, strDialFreq, m_myCall, m_myGrid, m_txPower, operator_call)};
+  if (!adifile.addQSOToFile (ADIF))
   {
     MessageBox::warning_message (this, tr ("Log file error"),
                                  tr ("Cannot open \"%1\"").arg (adifilePath));
+  }
+
+  // Log to N1MM Logger
+  if (m_config->broadcast_to_n1mm() && m_config->valid_n1mm_info())  {
+    const QHostAddress n1mmhost = QHostAddress(m_config->n1mm_server_name());
+    QUdpSocket _sock;
+    auto rzult = _sock.writeDatagram (ADIF + " <eor>", n1mmhost, quint16(m_config->n1mm_server_port()));
+    if (rzult == -1) {
+      MessageBox::warning_message (this, tr ("Error sending log to N1MM"),
+                                   tr ("Write returned \"%1\"").arg (rzult));
+    }
   }
 
 //Log this QSO to file "wsjtx.log"
@@ -137,7 +156,7 @@ void LogQSO::accept()
   }
 
 //Clean up and finish logging
-  Q_EMIT acceptQSO (m_dateTimeOff, hisCall, hisGrid, m_dialFreq, mode, rptSent, rptRcvd, m_txPower, comments, name,m_dateTimeOn);
+  Q_EMIT acceptQSO (m_dateTimeOff, hisCall, hisGrid, m_dialFreq, mode, rptSent, rptRcvd, m_txPower, comments, name,m_dateTimeOn, operator_call, m_myCall, m_myGrid, ADIF);
   QDialog::accept();
 }
 

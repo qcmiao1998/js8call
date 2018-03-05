@@ -1,5 +1,6 @@
 subroutine decode65a(dd,npts,newdat,nqd,f0,nflip,mode65,ntrials,     &
-     naggressive,ndepth,ntol,mycall,hiscall,hisgrid,nexp_decode,     &
+     naggressive,ndepth,ntol,mycall,hiscall,hisgrid,nQSOProgress,    &
+     ljt65apon, nexp_decode,  &
      bVHF,sync2,a,dt,nft,nspecial,qual,nhist,nsmo,decoded)
 
 ! Apply AFC corrections to a candidate JT65 signal, then decode it.
@@ -15,7 +16,7 @@ subroutine decode65a(dd,npts,newdat,nqd,f0,nflip,mode65,ntrials,     &
   complex c5a(512)
   real s2(66,126)
   real a(5)
-  logical bVHF,first
+  logical bVHF,first,ljt65apon
   character decoded*22,decoded_best*22
   character mycall*12,hiscall*12,hisgrid*6
   character*27 cr
@@ -122,10 +123,11 @@ subroutine decode65a(dd,npts,newdat,nqd,f0,nflip,mode65,ntrials,     &
         endif
         s2(i,1:126)=s1(jj,1:126)
      enddo
-
      nadd=ismo  !### ??? ###
      call decode65b(s2,nflip,nadd,mode65,ntrials,naggressive,ndepth,        &
-          mycall,hiscall,hisgrid,nexp_decode,nqd,nft,qual,nhist,decoded)
+          mycall,hiscall,hisgrid,nQSOProgress,ljt65apon,nexp_decode,        &
+          nqd,nft,qual,     &
+          nhist,decoded)
 
      if(nft.eq.1) then
         nsmo=ismo

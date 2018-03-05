@@ -20,11 +20,12 @@ public:
   void setContentFont (QFont const&);
   void insertLineSpacer(QString const&);
   void displayDecodedText(DecodedText const& decodedText, QString const& myCall, bool displayDXCCEntity,
-			  LogBook const& logBook, QColor color_CQ, QColor color_MyCall,
-			  QColor color_DXCC, QColor color_NewCall);
+        LogBook const& logBook, QColor color_CQ, QColor color_MyCall,
+        QColor color_DXCC, QColor color_NewCall, bool ppfx, bool bCQonly=false);
   void displayTransmittedText(QString text, QString modeTx, qint32 txFreq,
 			      QColor color_TxMsg, bool bFastMode);
   void displayQSY(QString text);
+  void displayFoxToBeCalled(QString t, QColor bg);
 
   Q_SIGNAL void selectCallsign (Qt::KeyboardModifiers);
   Q_SIGNAL void erased ();
@@ -36,6 +37,7 @@ protected:
   void mouseDoubleClickEvent(QMouseEvent *e);
 
 private:
+  bool m_bPrincipalPrefix;
   QString appendDXCCWorkedB4(QString message, QString const& callsign, QColor * bg, LogBook const& logBook,
 			     QColor color_CQ, QColor color_DXCC, QColor color_NewCall);
 

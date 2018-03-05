@@ -23,7 +23,9 @@
      integer(c_int) :: nsubmode
      logical(c_bool) :: nagain
      integer(c_int) :: ndepth
-     logical(c_bool) :: lapon 
+     logical(c_bool) :: lft8apon 
+     logical(c_bool) :: lapcqonly
+     logical(c_bool) :: ljt65apon 
      integer(c_int) :: napwid
      integer(c_int) :: ntxmode
      integer(c_int) :: nmode

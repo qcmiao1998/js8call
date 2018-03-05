@@ -41,7 +41,9 @@ extern struct dec_data {
     int nsubmode;
     bool nagain;
     int ndepth;
-    bool lapon;
+    bool lft8apon;
+    bool lapcqonly;
+    bool ljt65apon;
     int napwid;
     int ntxmode;
     int nmode;
@@ -77,6 +79,15 @@ extern struct {
   float blue[4096];
   float red[4096];
 } echocom_;
+
+extern struct {
+  float wave[606720];
+  int   nslots;
+  int   nfreq;
+  int   i3bit[5];
+  char  cmsg[5][40];
+  char  mycall[12];
+} foxcom_;
 
 #ifdef __cplusplus
 }

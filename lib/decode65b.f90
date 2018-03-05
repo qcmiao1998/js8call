@@ -1,10 +1,12 @@
 subroutine decode65b(s2,nflip,nadd,mode65,ntrials,naggressive,ndepth,      &
-     mycall,hiscall,hisgrid,nexp_decode,nqd,nft,qual,nhist,decoded)
+     mycall,hiscall,hisgrid,nQSOProgress,ljt65apon,nexp_decode,nqd,        &
+     nft,qual,         &
+     nhist,decoded)
 
   use jt65_mod
   real s2(66,126)
   real s3(64,63)
-  logical ltext
+  logical ltext,ljt65apon
   character decoded*22
   character mycall*12,hiscall*12,hisgrid*6
   save
@@ -19,7 +21,8 @@ subroutine decode65b(s2,nflip,nadd,mode65,ntrials,naggressive,ndepth,      &
   enddo
 
   call extract(s3,nadd,mode65,ntrials,naggressive,ndepth,nflip,mycall,   &
-       hiscall,hisgrid,nexp_decode,ncount,nhist,decoded,ltext,nft,qual)
+      hiscall,hisgrid,nQSOProgress,ljt65apon,nexp_decode,ncount,         &
+      nhist,decoded,ltext,nft,qual) 
 
 ! Suppress "birdie messages" and other garbage decodes:
   if(decoded(1:7).eq.'000AAA ') ncount=-1

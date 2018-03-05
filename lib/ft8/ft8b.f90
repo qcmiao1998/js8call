@@ -1,13 +1,16 @@
-subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,napwid,       &
-     lsubtract,nagain,iaptype,mygrid6,bcontest,sync0,f1,xdt,xbase,apsym,      &
-     nharderrors,dmin,nbadcrc,ipass,iera,message,xsnr)  
+subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
+     napwid,lsubtract,nagain,iaptype,mycall12,mygrid6,hiscall12,bcontest,    &
+     sync0,f1,xdt,xbase,apsym,nharderrors,dmin,nbadcrc,ipass,iera,msg37,xsnr)  
 
+  use crc
   use timer_module, only: timer
   include 'ft8_params.f90'
-  parameter(NRECENT=10,NP2=2812)
+  parameter(NP2=2812)
+  character*37 msg37
   character message*22,msgsent*22
-  character*12 recent_calls(NRECENT)
-  character*6 mygrid6
+  character*12 mycall12,hiscall12
+  character*6 mycall6,mygrid6,hiscall6,c1,c2
+  character*87 cbits
   logical bcontest
   real a(5)
   real s1(0:7,ND),s2(0:7,NN),s1sort(8*ND)
@@ -15,19 +18,20 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,napwid,       &
   real bmeta(3*ND),bmetb(3*ND),bmetap(3*ND)
   real llr(3*ND),llra(3*ND),llr0(3*ND),llr1(3*ND),llrap(3*ND)           !Soft symbols
   real dd0(15*12000)
-  integer*1 decoded(KK),apmask(3*ND),cw(3*ND)
+  integer*1 decoded(KK),decoded0(KK),apmask(3*ND),cw(3*ND)
   integer*1 msgbits(KK)
   integer apsym(KK)
   integer mcq(28),mde(28),mrrr(16),m73(16),mrr73(16)
   integer itone(NN)
   integer indxs1(8*ND)
   integer icos7(0:6),ip(1)
-  integer nappasses(0:5)  ! the number of decoding passes to use for each QSO state
+  integer nappasses(0:5)  !Number of decoding passes to use for each QSO state
   integer naptypes(0:5,4) ! (nQSOProgress, decoding pass)  maximum of 4 passes for now
+  integer*1, target:: i1hiscall(12)
   complex cd0(3200)
   complex ctwk(32)
   complex csymb(32)
-  logical first,newdat,lsubtract,lapon,nagain
+  logical first,newdat,lsubtract,lapon,lapcqonly,nagain
   equivalence (s1,s1sort)
   data icos7/2,5,6,0,4,1,3/
   data mcq/1,1,1,1,1,0,1,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,1,1,0,0,1/
@@ -66,7 +70,7 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,napwid,       &
      naptypes(2,1:4)=(/2,3,0,0/)
      naptypes(3,1:4)=(/3,4,5,6/)
      naptypes(4,1:4)=(/3,4,5,6/)
-     naptypes(5,1:4)=(/3,1,2,0/)  !?
+     naptypes(5,1:4)=(/3,1,2,0/)  
      first=.false.
   endif
 
@@ -265,7 +269,11 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,napwid,       &
 !   7        ap pass 4, etc.
 
   if(lapon) then 
-     npasses=4+nappasses(nQSOProgress)
+     if(.not.lapcqonly) then
+        npasses=4+nappasses(nQSOProgress)
+     else
+        npasses=5 
+     endif
   else
      npasses=4
   endif
@@ -283,7 +291,11 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,napwid,       &
      endif
         
      if(ipass .gt. 4) then
-        iaptype=naptypes(nQSOProgress,ipass-4)
+        if(.not.lapcqonly) then
+           iaptype=naptypes(nQSOProgress,ipass-4)
+        else
+           iaptype=1
+        endif
         if(iaptype.ge.3 .and. (abs(f1-nfqso).gt.napwid .and. abs(f1-nftx).gt.napwid) ) cycle 
         if(iaptype.eq.1 .or. iaptype.eq.2 ) then ! AP,???,??? 
            apmask=0
@@ -351,7 +363,6 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,napwid,       &
      message='                      '
      xsnr=-99.0
      if(count(cw.eq.0).eq.174) cycle           !Reject the all-zero codeword
-!###     if(any(decoded(73:75).ne.0)) cycle        !Reject if any of the 3 extra bits is nonzero
      if(nharderrors.ge.0 .and. nharderrors+dmin.lt.60.0 .and. &        
         .not.(sync.lt.2.0 .and. nharderrors.gt.35)      .and. &
         .not.(ipass.gt.2 .and. nharderrors.gt.39)       .and. &
@@ -362,17 +373,15 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,napwid,       &
         nharderrors=-1
         cycle 
      endif
-!###
      i3bit=4*decoded(73) + 2*decoded(74) + decoded(75)
      iFreeText=decoded(57)
-!     if(nbadcrc.eq.0) write(*,3001) nharderrors,nbadcrc,i3bit
-!3001 format('A',3i5)
-!###     
      if(nbadcrc.eq.0) then
-        call extractmessage174(decoded,message,ncrcflag,recent_calls,nrecent)
+        decoded0=decoded
+        if(i3bit.eq.1) decoded(57:)=0
+        call extractmessage174(decoded,message,ncrcflag)
+        decoded=decoded0
+! This needs fixing for messages with i3bit=1:        
         call genft8(message,mygrid6,bcontest,i3bit,msgsent,msgbits,itone)
-        if(i3bit.eq.1 .and. iFreeText.eq.0) message(21:21)='1'
-        if(i3bit.eq.2 .and. iFreeText.eq.0) message(21:21)='2'
         if(lsubtract) call subtractft8(dd0,itone,f1,xdt2)
         xsig=0.0
         xnoi=0.0
@@ -385,14 +394,48 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,napwid,       &
         if(xnoi.gt.0 .and. xnoi.lt.xsig) xsnr=xsig/xnoi-1.0
         xsnr=10.0*log10(xsnr)-27.0
         xsnr2=db(xsig/xbase - 1.0) - 32.0
-!        write(52,3052) f1,xdt,xsig,xnoi,xbase,xsnr,xsnr2
-!3052    format(7f10.2)
         if(.not.nagain) xsnr=xsnr2
         if(xsnr .lt. -24.0) xsnr=-24.0
+        
+        if(i3bit.eq.1) then
+           do i=1,12
+              i1hiscall(i)=ichar(hiscall12(i:i))
+           enddo
+           icrc10=crc10(c_loc(i1hiscall),12)
+           write(cbits,1001) decoded
+1001       format(87i1)
+           read(cbits,1002) ncrc10,nrpt
+1002       format(56x,b10,b6)
+           irpt=nrpt-30
+           i1=index(message,' ')
+           i2=index(message(i1+1:),' ') + i1
+           c1=message(1:i1)//'   '
+           c2=message(i1+1:i2)//'   '
+
+           if(ncrc10.eq.icrc10) msg37=c1//' RR73; '//c2//' <'//      &
+                trim(hiscall12)//'>    '
+           if(ncrc10.ne.icrc10) msg37=c1//' RR73; '//c2//' <...>    '
+           
+!           msg37=c1//' RR73; '//c2//' <...>    '
+           write(msg37(35:37),1010) irpt
+1010       format(i3.2)
+           if(msg37(35:35).ne.'-') msg37(35:35)='+'
+           
+           iz=len(trim(msg37))
+           do iter=1,10                           !Collapse multiple blanks
+              ib2=index(msg37(1:iz),'  ')
+              if(ib2.lt.1) exit
+              msg37=msg37(1:ib2)//msg37(ib2+2:)
+              iz=iz-1
+           enddo
+        else
+           msg37=message//'               '
+        endif
+        
         return
      endif
   enddo
- 
+
   return
 end subroutine ft8b
 

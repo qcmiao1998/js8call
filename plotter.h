@@ -37,6 +37,7 @@ public:
   QSize sizeHint() const;
 
   void draw(float swide[], bool bScroll, bool bRed);		//Update the waterfall
+  void replot();
   void SetRunningState(bool running);
   void setPlotZero(int plotZero);
   int  plotZero();
@@ -143,6 +144,7 @@ private:
   bool    m_Running;
   bool    m_paintEventBusy;
   bool    m_dataFromDisk;
+  bool    m_bReplot;
 
   double  m_fftBinWidth;
   double  m_dialFreq;
@@ -170,14 +172,11 @@ private:
   qint32  m_fMax;
   qint32  m_startFreq;
   qint32  m_tol;
+  qint32  m_j;
 
   char    m_sutc[6];
 };
 
 extern QVector<QColor> g_ColorTbl;
-
-extern "C" {
-  void flat4_(float swide[], int* iz, int* nflatten);
-}
 
 #endif // PLOTTER_H
