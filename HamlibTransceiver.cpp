@@ -804,9 +804,9 @@ void HamlibTransceiver::do_tx_frequency (Frequency tx, MODE mode, bool no_ignore
               if (UNK != mode)
                 {
                   auto new_mode = map_mode (mode);
-                  TRACE_CAT ("HamlibTransceiver", "rig_set_split_freq_mode freq = " << tx
-                             << " mode = " << rig_strrmode (new_mode));
-                  error_check (rig_set_split_freq_mode (rig_.data (), RIG_VFO_CURR, tx, new_mode, RIG_PASSBAND_NOCHANGE), tr ("setting split TX frequency and mode"));
+                  // TRACE_CAT ("HamlibTransceiver", "rig_set_split_freq_mode freq = " << tx
+                  //            << " mode = " << rig_strrmode (new_mode));
+                  // error_check (rig_set_split_freq_mode (rig_.data (), RIG_VFO_CURR, tx, new_mode, RIG_PASSBAND_NOCHANGE), tr ("setting split TX frequency and mode"));
                 }
               else
                 {
