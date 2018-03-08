@@ -50,6 +50,7 @@ public:
     QRA64,
     FreqCal,
     FT8,
+    FT8Free,
     MODES_END_SENTINAL_AND_COUNT // this must be last
   };
   Q_ENUM (Mode)

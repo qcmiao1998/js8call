@@ -180,6 +180,8 @@ private slots:
   void on_txb5_clicked();
   void on_txb5_doubleClicked ();
   void on_txb6_clicked();
+  void on_pbNextFreeTextMsg_clicked();
+  void on_rbNextFreeTextMsg_toggled (bool status);
   void on_lookupButton_clicked();
   void on_addButton_clicked();
   void on_dxCallEntry_textChanged (QString const&);
@@ -214,6 +216,11 @@ private slots:
   void on_rbGenMsg_clicked(bool checked);
   void on_rbFreeText_clicked(bool checked);
   void on_freeTextMsg_currentTextChanged (QString const&);
+  void on_nextFreeTextMsg_currentTextChanged (QString const&);
+  void on_extFreeTextMsg_currentTextChanged (QString const&);
+  QString parseFT8Message(QString input);
+  int countFreeTextMsgs(QString input);
+  void splitNextFreeTextMsg();
   void on_rptSpinBox_valueChanged(int n);
   void killFile();
   void on_tuneButton_clicked (bool);
@@ -498,6 +505,7 @@ private:
     }
     m_QSOProgress;
 
+  int           m_extFreeTxtPos;
   int			m_ihsym;
   int			m_nzap;
   int			m_npts8;

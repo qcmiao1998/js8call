@@ -664,6 +664,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->tx5->setValidator (new QRegExpValidator {message_alphabet, this});
   ui->tx6->setValidator (new QRegExpValidator {message_alphabet, this});
   ui->freeTextMsg->setValidator (new QRegExpValidator {message_alphabet, this});
+  ui->nextFreeTextMsg->setValidator (new QRegExpValidator {message_alphabet, this});
+  //ui->extFreeTextMsg->setValidator (new QRegExpValidator {message_alphabet, this});
 
   // Free text macros model to widget hook up.
   ui->tx5->setModel (m_config.macros ());
@@ -673,6 +675,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (ui->freeTextMsg->lineEdit ()
            , &QLineEdit::editingFinished
            , [this] () {on_freeTextMsg_currentTextChanged (ui->freeTextMsg->lineEdit ()->text ());});
+  connect (ui->nextFreeTextMsg
+           , &QLineEdit::editingFinished
+           , [this] () {on_nextFreeTextMsg_currentTextChanged (ui->nextFreeTextMsg->text ());});
+  connect (ui->extFreeTextMsg
+           , &QTextEdit::textChanged
+           , [this] () {on_extFreeTextMsg_currentTextChanged (ui->extFreeTextMsg->toPlainText ());});
 
   connect(&m_guiTimer, &QTimer::timeout, this, &MainWindow::guiUpdate);
   m_guiTimer.start(100);   //### Don't change the 100 ms! ###
@@ -917,10 +925,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   }
 */
 
+  /*
   if(QCoreApplication::applicationVersion().contains("-devel") or
      QCoreApplication::applicationVersion().contains("-rc")) {
     QTimer::singleShot (0, this, SLOT (not_GA_warning_message ()));
   }
+  */
 
   if(!ui->cbMenus->isChecked()) {
     ui->cbMenus->setChecked(true);
@@ -2959,6 +2969,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
           if(!b65 and m_modeTx=="JT65") on_pbTxMode_clicked();
         }
         m_QSOText = decodedtext.string ().trimmed ();
+
+        //ui->textEditRX->insertHtml(decodedtext.messageWords().first().trimmed() + " ");
       }
 
       if(m_mode=="FT8" and m_config.bHound()) {
@@ -3363,6 +3375,7 @@ void MainWindow::guiUpdate()
       if(m_ntx == 6) ba=ui->tx6->text().toLocal8Bit();
       if(m_ntx == 7) ba=ui->genMsg->text().toLocal8Bit();
       if(m_ntx == 8) ba=ui->freeTextMsg->currentText().toLocal8Bit();
+      if(m_ntx == 9) ba=ui->nextFreeTextMsg->text().toLocal8Bit();
     }
 
     ba2msg(ba,message);
@@ -3720,6 +3733,27 @@ void MainWindow::stopTx()
     tx_status_label.setStyleSheet("");
     tx_status_label.setText("");
   }
+
+  if(ui->tabWidget->currentIndex() == 3){
+    //1. check to see if there are more messages to send
+    //2. if there are, fixup next message and continue transmitting
+    //3. if not, allow the transmission to stop
+    // TODO: refactor this to "count remaining"
+    QString txt = ui->extFreeTextMsg->toPlainText();
+    int sz = countFreeTextMsgs(txt.trimmed().mid(m_extFreeTxtPos).trimmed());
+    if(sz > 0){
+        splitNextFreeTextMsg();
+        ui->txFirstCheckBox->setChecked(!m_txFirst);
+    } else {
+        if(ui->autoButton->isChecked()){
+            ui->autoButton->click();
+        }
+        ui->nextFreeTextMsg->clear();
+        ui->extFreeTextMsg->clear();
+        m_extFreeTxtPos = 0;
+    }
+  }
+
   ptt0Timer.start(200);                       //end-of-transmission sequencer delay
   monitor (true);
   statusUpdate ();
@@ -3942,6 +3976,35 @@ void MainWindow::on_txb6_clicked()
     set_dateTimeQSO(-1);
     ui->txrb6->setChecked(true);
     if (m_transmitting) m_restart=true;
+}
+
+void MainWindow::on_pbNextFreeTextMsg_clicked()
+{
+    m_ntx=9;
+    m_QSOProgress = CALLING;
+    set_dateTimeQSO(-1);
+    ui->rbNextFreeTextMsg->setChecked(true);
+    if (m_transmitting) m_restart=true;
+
+    splitNextFreeTextMsg();
+
+    // TODO: detect if we're currently in a possible transmit cycle...and if so, wait...
+    QDateTime now {QDateTime::currentDateTimeUtc()};
+    int s=now.time().second();
+    int n=s % (2*m_TRperiod);
+    if((n <= m_TRperiod && m_txFirst) || (n > m_TRperiod && !m_txFirst)){
+      ui->txFirstCheckBox->setChecked(!m_txFirst);
+    }
+    if(!ui->autoButton->isChecked()){
+      ui->autoButton->click();
+    }
+}
+
+void MainWindow::on_rbNextFreeTextMsg_toggled (bool status)
+{
+  if (status) {
+    m_ntx = 9;
+  }
 }
 
 void MainWindow::doubleClickOnCall2(Qt::KeyboardModifiers modifiers)
@@ -4794,6 +4857,92 @@ void MainWindow::on_tx6_editingFinished()                       //tx6 edited
   msgtype(t, ui->tx6);
 }
 
+void MainWindow::on_nextFreeTextMsg_currentTextChanged (QString const& text)
+{
+  msgtype(text, ui->nextFreeTextMsg);
+}
+
+void MainWindow::on_extFreeTextMsg_currentTextChanged (QString const& text)
+{
+  QString x;
+  QString::const_iterator i;
+  for(i = text.constBegin(); i != text.constEnd(); i++){
+      if(message_alphabet.exactMatch(QString(*i))){
+          x += (*i).toUpper();
+      }
+  }
+  if(x != text){
+    int pos = ui->extFreeTextMsg->textCursor().position();
+    int maxpos = x.size();
+    ui->extFreeTextMsg->setPlainText(x);
+    QTextCursor c = ui->extFreeTextMsg->textCursor();
+    c.setPosition(pos < maxpos ? pos : maxpos, QTextCursor::MoveAnchor);
+    ui->extFreeTextMsg->setTextCursor(c);
+  }
+
+  int count = countFreeTextMsgs(x.trimmed().mid(m_extFreeTxtPos).trimmed());
+  ui->lblTxNum->setText(QString("Remaining Tx Sequences: %1").arg(count));
+}
+
+QString MainWindow::parseFT8Message(QString input){
+  char message[29];
+  char msgsent[29];
+  char volatile ft8msgbits[75];
+  int volatile itone[NUM_ISCAT_SYMBOLS];
+
+  QByteArray ba = input.toLocal8Bit();
+  ba2msg(ba,message);
+
+  qint32  i3bit = 0;
+  bool bcontest=ui->cbVHFcontest->isChecked();
+  char MyGrid[6];
+  strncpy(MyGrid, (m_config.my_grid()+"      ").toLatin1(),6);
+  genft8_(message, MyGrid, &bcontest, &i3bit, msgsent, const_cast<char *> (ft8msgbits),
+        const_cast<int *> (itone), 22, 6, 22);
+  msgsent[22]=0;
+
+  return QString::fromLatin1(msgsent).trimmed();
+}
+
+int MainWindow::countFreeTextMsgs(QString input){
+  int count = 0;
+  while(input.size() > 0){
+    QString nextTxt = parseFT8Message(input);
+    QRegExp n = QRegExp("^" + QRegExp::escape(nextTxt));
+    int sz = input.size();
+    input = input.remove(n).trimmed();
+    count++;
+    if(input.size() == sz){
+        break;
+    }
+  }
+  return count;
+}
+
+void MainWindow::splitNextFreeTextMsg()
+{
+  QString txt = ui->extFreeTextMsg->toPlainText().trimmed().mid(m_extFreeTxtPos).trimmed();
+
+  QString nextTxt = parseFT8Message(txt);
+  ui->nextFreeTextMsg->setText(nextTxt);
+  QRegExp n = QRegExp("^" + QRegExp::escape(nextTxt));
+  
+  ui->extFreeTextMsg->setPlainText(txt.remove(n).trimmed());
+
+  /*
+  if(txt.contains(n)){
+    QTextCursor tc = ui->extFreeTextMsg->textCursor();
+    tc.setPosition(0);
+    m_extFreeTxtPos += n.matchedLength();
+    tc.setPosition(m_extFreeTxtPos, QTextCursor::KeepAnchor);
+    QTextCharFormat cf = tc.charFormat();
+    cf.setFontStrikeOut(true);
+    tc.mergeCharFormat(cf);
+  }
+  */
+
+}
+
 void MainWindow::on_dxCallEntry_textChanged (QString const& call)
 {
   m_hisCall = call;
@@ -4940,6 +5089,7 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==32) ui->cbCQonly->setVisible(b);
     j=j>>1;
   }
+  ui->tabWidget->setTabEnabled(2, "FT8" == m_mode);
   m_lastCallsign.clear ();     // ensures Tx5 is updated for new modes
   genStdMsgs (m_rpt, true);
 }
