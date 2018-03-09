@@ -936,6 +936,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     ui->cbMenus->setChecked(true);
     ui->cbMenus->setChecked(false);
   }
+
+
+  ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized();
+
   // this must be the last statement of constructor
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
@@ -5068,7 +5072,7 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==15) ui->sbSubmode->setVisible(b);
     if(i==16) ui->syncSpinBox->setVisible(b);
     if(i==17) ui->WSPR_controls_widget->setVisible(b);
-    if(i==18) ui->ClrAvgButton->setVisible(b);
+    //if(i==18) ui->ClrAvgButton->setVisible(b);
     if(i==19) ui->actionQuickDecode->setEnabled(b);
     if(i==19) ui->actionMediumDecode->setEnabled(b);
     if(i==19) ui->actionDeepestDecode->setEnabled(b);
@@ -5086,10 +5090,10 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==29) ui->measure_check_box->setVisible(b);
     if(i==30) ui->labDXped->setVisible(b);
     if(i==31) ui->cbRxAll->setVisible(b);
-    if(i==32) ui->cbCQonly->setVisible(b);
+    //if(i==32) ui->cbCQonly->setVisible(b);
     j=j>>1;
   }
-  ui->tabWidget->setTabEnabled(2, "FT8" == m_mode);
+  ui->tabWidget->setTabEnabled(3, "FT8" == m_mode);
   m_lastCallsign.clear ();     // ensures Tx5 is updated for new modes
   genStdMsgs (m_rpt, true);
 }
@@ -5622,12 +5626,12 @@ void MainWindow::WSPR_config(bool b)
   ui->decodedTextBrowser2->setVisible(!b);
   ui->decodedTextLabel2->setVisible(!b and ui->cbMenus->isChecked());
   ui->controls_stack_widget->setCurrentIndex (b && m_mode != "Echo" ? 1 : 0);
-  ui->QSO_controls_widget->setVisible (!b);
-  ui->DX_controls_widget->setVisible (!b);
+  //ui->QSO_controls_widget->setVisible (!b);
+  //ui->DX_controls_widget->setVisible (!b);
   ui->WSPR_controls_widget->setVisible (b);
   ui->label_6->setVisible(!b and ui->cbMenus->isChecked());
   ui->label_7->setVisible(!b and ui->cbMenus->isChecked());
-  ui->logQSOButton->setVisible(!b);
+  //ui->logQSOButton->setVisible(!b);
   ui->DecodeButton->setEnabled(!b);
   if(b and (m_mode!="Echo")) {
     QString t="UTC    dB   DT     Freq     Drift  Call          Grid    dBm    ";
@@ -6032,7 +6036,7 @@ void MainWindow::on_stopTxButton_clicked()                    //Stop Tx
 void MainWindow::rigOpen ()
 {
   update_dynamic_property (ui->readFreq, "state", "warning");
-  ui->readFreq->setText ("");
+  ui->readFreq->setText ("CAT");
   ui->readFreq->setEnabled (true);
   m_config.transceiver_online ();
   Q_EMIT m_config.sync_transceiver (true, true);
@@ -6214,7 +6218,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
   displayDialFrequency ();
   update_dynamic_property (ui->readFreq, "state", "ok");
   ui->readFreq->setEnabled (false);
-  ui->readFreq->setText (s.split () ? "S" : "");
+  ui->readFreq->setText (s.split () ? "CAT/S" : "CAT");
 }
 
 void MainWindow::handle_transceiver_failure (QString const& reason)
