@@ -294,7 +294,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   wsprNet {new WSPRNet {&m_network_manager, this}},
   m_appDir {QApplication::applicationDirPath ()},
   m_palette {"Linrad"},
-  m_mode {"JT9"},
+  m_mode {"FT8"},
   m_rpt {"-15"},
   m_pfx {
     "1A", "1S",
@@ -838,7 +838,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if(m_bFast9) m_bFastMode=true;
   ui->cbFast9->setChecked(m_bFast9 or m_bFastMode);
 
-  if(m_mode=="FT8") on_actionFT8_triggered();
+  if(true || m_mode=="FT8") on_actionFT8_triggered();
   if(m_mode=="JT4") on_actionJT4_triggered();
   if(m_mode=="JT9") on_actionJT9_triggered();
   if(m_mode=="JT65") on_actionJT65_triggered();

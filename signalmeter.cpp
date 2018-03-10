@@ -44,6 +44,7 @@ protected:
     QWidget::paintEvent (event);
 
     QPainter p {this};
+    p.setPen(Qt::white);
     auto const& target = contentsRect ();
     QFontMetrics font_metrics {p.font (), this};
     auto font_offset = font_metrics.ascent () / 2;
@@ -82,12 +83,18 @@ SignalMeter::SignalMeter (QWidget * parent)
 
   m_meter = new MeterWidget;
   m_meter->setSizePolicy (QSizePolicy::Minimum, QSizePolicy::Minimum);
-  inner_layout->addWidget (m_meter);
+  //inner_layout->addWidget (m_meter);
 
   m_scale = new Scale;
   inner_layout->addWidget (m_scale);
 
+  // add this second...
+  inner_layout->addWidget (m_meter);
+
   m_reading = new QLabel(this);
+  auto p = m_reading->palette();
+  p.setColor(m_reading->foregroundRole(), Qt::white);
+  m_reading->setPalette(p);
 
   outer_layout->addLayout (inner_layout);
   outer_layout->addWidget (m_reading);

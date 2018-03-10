@@ -57,12 +57,14 @@ void MeterWidget::paintEvent (QPaintEvent * event)
   auto const& target = contentsRect ();
   QRect r {QPoint {target.left (), static_cast<int> (target.top () + target.height () - m_signal / (double)MAXDB * target.height ())}
     , QPoint {target.right (), target.bottom ()}};
-  p.setBrush (QColor(85,170,85));
+  //p.setBrush (QColor(85,170,85));
+  p.setBrush (Qt::green);
   if (m_sigPeak > 85) {
       p.setBrush(Qt::red);
   }
   else if (m_noisePeak < 15) {
-      p.setBrush(QColor(232,81,0));
+      //p.setBrush(QColor(232,81,0));
+      p.setBrush(Qt::yellow);
   }
   p.drawRect (r);
 
@@ -70,9 +72,11 @@ void MeterWidget::paintEvent (QPaintEvent * event)
     {
       // Draw peak hold indicator
       auto peak = static_cast<int> (target.top () + target.height () - m_noisePeak / (double)MAXDB * target.height ());
-      p.setBrush (Qt::black);
+      //p.setBrush (Qt::black);
+      p.setBrush (Qt::white);
       p.translate (target.left (), peak);
-      p.drawPolygon (QPolygon {{{0, -4}, {0, 4}, {target.width (), 0}}});
+      //p.drawPolygon (QPolygon {{{0, -4}, {0, 4}, {target.width (), 0}}});
+      p.drawPolygon (QPolygon { { {target.width (), -4}, {target.width (), 4}, {0, 0} } });
     }
 }
 
