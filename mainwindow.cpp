@@ -588,7 +588,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
           });
 
   connect(&p1, &QProcess::readyReadStandardOutput, this, &MainWindow::p1ReadFromStdout);
-  connect(&proc_jt9, static_cast<void (QProcess::*) (QProcess::ProcessError)> (&QProcess::error),
+  connect(&p1, static_cast<void (QProcess::*) (QProcess::ProcessError)> (&QProcess::error),
           [this] (QProcess::ProcessError error) {
             subProcessError (&p1, error);
           });
@@ -1006,13 +1006,11 @@ void MainWindow::writeSettings()
   m_settings->setValue ("MsgAvgDisplayed", m_msgAvgWidget && m_msgAvgWidget->isVisible());
   m_settings->setValue ("FreeText", ui->freeTextMsg->currentText ());
   m_settings->setValue("ShowMenus",ui->cbMenus->isChecked());
-  m_settings->setValue("NoDupes",ui->cbNoDupes->isChecked());
   m_settings->setValue("CallFirst",ui->cbFirst->isChecked());
   m_settings->setValue("HoundSort",ui->comboBoxHoundSort->currentIndex());
   m_settings->setValue("FoxNlist",ui->sbNlist->value());
   m_settings->setValue("FoxNslots",ui->sbNslots->value());
   m_settings->setValue("FoxMaxDB",ui->sbMax_dB->value());
-  m_settings->setValue("FoxMaxCalls",ui->sbMaxCalls->value());
   m_settings->endGroup();
 
   m_settings->beginGroup("Common");
@@ -1080,13 +1078,11 @@ void MainWindow::readSettings()
   if (m_settings->contains ("FreeText")) ui->freeTextMsg->setCurrentText (
         m_settings->value ("FreeText").toString ());
   ui->cbMenus->setChecked(m_settings->value("ShowMenus",true).toBool());
-  ui->cbNoDupes->setChecked(m_settings->value("NoDupes",true).toBool());
   ui->cbFirst->setChecked(m_settings->value("CallFirst",true).toBool());
   ui->comboBoxHoundSort->setCurrentIndex(m_settings->value("HoundSort",3).toInt());
   ui->sbNlist->setValue(m_settings->value("FoxNlist",12).toInt());
   ui->sbNslots->setValue(m_settings->value("FoxNslots",5).toInt());
   ui->sbMax_dB->setValue(m_settings->value("FoxMaxDB",30).toInt());
-  ui->sbMaxCalls->setValue(m_settings->value("FoxMaxCalls",4).toInt());
   m_settings->endGroup();
 
   // do this outside of settings group because it uses groups internally
@@ -1925,6 +1921,7 @@ void MainWindow::displayDialFrequency ()
       ui->bandComboBox->setCurrentText (band_name);
       m_wideGraph->setRxBand (band_name);
       m_lastBand = band_name;
+      band_changed(dial_frequency);
     }
 
   // search working frequencies for one we are within 10kHz of (1 Mhz
@@ -1958,9 +1955,11 @@ void MainWindow::statusChanged()
   QFile f {m_config.temp_dir ().absoluteFilePath ("wsjtx_status.txt")};
   if(f.open(QFile::WriteOnly | QIODevice::Text)) {
     QTextStream out(&f);
+    QString tmpGrid = m_hisGrid;
+    if (!tmpGrid.size ()) tmpGrid="n/a"; // Not Available
     out << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6)
         << ";" << m_mode << ";" << m_hisCall << ";"
-        << ui->rptSpinBox->value() << ";" << m_modeTx << endl;
+        << ui->rptSpinBox->value() << ";" << m_modeTx << ";" << tmpGrid << endl;
     f.close();
   } else {
     if (m_splash && m_splash->isVisible ()) m_splash->hide ();
@@ -2990,39 +2989,43 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 auto_tx_mode(false);
                 on_logQSOButton_clicked();
               } else {
-                m_rptRcvd=w.at(2);
-                m_rptSent=decodedtext.string().mid(7,3);
-                //### Select TX3, set random TxFreq in [300-900], and Force Auto ON. ###
-                ui->txrb3->setChecked(true);
-                int fTx = 300.0 + 600.0*double(qrand())/RAND_MAX;
-                ui->TxFreqSpinBox->setValue(fTx);
-                if(!m_auto) auto_tx_mode(true);
+                if(w.at(1)==Radio::base_callsign(ui->dxCallEntry->text()) and
+                   (w.at(2).mid(0,1)=="+" or w.at(2).mid(0,1)=="-")) {
+                  m_rptRcvd=w.at(2);
+                  m_rptSent=decodedtext.string().mid(7,3);
+                  //### Select TX3, set random TxFreq in [300-900], and Force Auto ON. ###
+                  ui->txrb3->setChecked(true);
+                  int fTx = 300.0 + 600.0*double(qrand())/RAND_MAX;
+                  ui->TxFreqSpinBox->setValue(fTx);
+                  if(!m_auto) auto_tx_mode(true);
+                }
               }
             }
           }
         }
-        return;
       }
 
-      if(m_mode=="FT8" or m_mode=="QRA64" or m_mode=="JT4" or m_mode=="JT65" or m_mode=="JT9") auto_sequence (decodedtext, 25, 50);
-      
-      postDecode (true, decodedtext.string ());
+      if(m_mode!="FT8" or !m_config.bHound()) {
+        if(m_mode=="FT8" or m_mode=="QRA64" or m_mode=="JT4" or m_mode=="JT65" or
+           m_mode=="JT9") auto_sequence (decodedtext, 25, 50);
+        postDecode (true, decodedtext.string ());
 
-      // find and extract any report for myCall
-      bool stdMsg = decodedtext.report(m_baseCall,
-          Radio::base_callsign(ui->dxCallEntry->text()), m_rptRcvd);
-      // extract details and send to PSKreporter
-      int nsec=QDateTime::currentMSecsSinceEpoch()/1000-m_secBandChanged;
-      bool okToPost=(nsec>(4*m_TRperiod)/5);
-      if (stdMsg && okToPost) pskPost(decodedtext);
+        // find and extract any report for myCall
+        bool stdMsg = decodedtext.report(m_baseCall,
+            Radio::base_callsign(ui->dxCallEntry->text()), m_rptRcvd);
+        // extract details and send to PSKreporter
+        int nsec=QDateTime::currentMSecsSinceEpoch()/1000-m_secBandChanged;
+        bool okToPost=(nsec>(4*m_TRperiod)/5);
+        if (stdMsg && okToPost) pskPost(decodedtext);
 
-      if((m_mode=="JT4" or m_mode=="JT65" or m_mode=="QRA64") and m_msgAvgWidget!=NULL) {
-        if(m_msgAvgWidget->isVisible()) {
-          QFile f(m_config.temp_dir ().absoluteFilePath ("avemsg.txt"));
-          if(f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            QTextStream s(&f);
-            QString t=s.readAll();
-            m_msgAvgWidget->displayAvg(t);
+        if((m_mode=="JT4" or m_mode=="JT65" or m_mode=="QRA64") and m_msgAvgWidget!=NULL) {
+          if(m_msgAvgWidget->isVisible()) {
+            QFile f(m_config.temp_dir ().absoluteFilePath ("avemsg.txt"));
+            if(f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+              QTextStream s(&f);
+              QString t=s.readAll();
+              m_msgAvgWidget->displayAvg(t);
+            }
           }
         }
       }
@@ -3280,7 +3283,21 @@ void MainWindow::guiUpdate()
     }
 
     float fTR=float((ms%(1000*m_TRperiod)))/(1000*m_TRperiod);
-    if(g_iptt==0 and ((m_bTxTime and fTR<0.75) or m_tune )) {   //### Allow late starts
+
+    QString txMsg;
+    if(m_ntx == 1) txMsg=ui->tx1->text();
+    if(m_ntx == 2) txMsg=ui->tx2->text();
+    if(m_ntx == 3) txMsg=ui->tx3->text();
+    if(m_ntx == 4) txMsg=ui->tx4->text();
+    if(m_ntx == 5) txMsg=ui->tx5->currentText();
+    if(m_ntx == 6) txMsg=ui->tx6->text();
+    if(m_ntx == 7) txMsg=ui->genMsg->text();
+    if(m_ntx == 8) txMsg=ui->freeTextMsg->currentText();
+    int msgLength=txMsg.trimmed().length();
+    if(msgLength==0) on_stopTxButton_clicked();
+
+    if(g_iptt==0 and ((m_bTxTime and fTR<0.75) or m_tune ) and
+       (msgLength>0)) {                          //### Allow late starts
       icw[0]=m_ncw;
       g_iptt = 1;
       setRig ();
@@ -7400,6 +7417,7 @@ void MainWindow::selectHound(QString line)
   ui->textBrowser4->displayFoxToBeCalled(t1,"#ffffff");  // Add hound call and rpt to tb4
   t1=t1 + " " + houndGrid;                               // Append the grid
   m_houndQueue.enqueue(t1);                              // Put this hound into the queue
+  writeFoxQSO(" Sel:  " + t1);
   QTextCursor cursor = ui->textBrowser4->textCursor();
   cursor.setPosition(0);                                 // Scroll to top of list
   ui->textBrowser4->setTextCursor(cursor);
@@ -7435,8 +7453,7 @@ void MainWindow::houndCallers()
       paddedHoundCall=houndCall + " ";
       //Don't list a hound already in the queue
       if(!ui->textBrowser4->toPlainText().contains(paddedHoundCall)) {
-        if(m_loggedByFox[houndCall].contains(m_lastBand) and
-           ui->cbNoDupes->isChecked())   continue;   //already logged on this band
+        if(m_loggedByFox[houndCall].contains(m_lastBand))   continue;   //already logged on this band
         if(m_foxQSO.contains(houndCall)) continue;   //still in the QSO map
         QString countryName,continent;
         bool callWorkedBefore,countryWorkedBefore;
@@ -7483,10 +7500,14 @@ void MainWindow::foxRxSequencer(QString msg, QString houndCall, QString rptRcvd)
  * If houndCall matches a callsign in one of our active QSO slots, we
  * prepare to send "houndCall RR73" to that caller.
 */
+//  qDebug() << "foxRxSeq1" << houndCall << rptRcvd << m_foxQSO.contains(houndCall);
   if(m_foxQSO.contains(houndCall)) {
-    m_foxQSO[houndCall].rcvd=rptRcvd.mid(1);    //Save Fox's report for the log
-    m_foxRR73Queue.enqueue(houndCall);          //Request RR73 to be sent to Hound
-    writeFoxQSO("        " + msg.trimmed());
+    if(m_foxQSO[houndCall].ncall <= qMax(4,m_Nslots+1)) {  //### Not sure about "<=" ###
+      m_foxQSO[houndCall].rcvd=rptRcvd.mid(1);    //Save Fox's report for the log
+//      qDebug() << "foxRxSeq2" << houndCall << rptRcvd << m_foxQSO[houndCall].ncall;
+      m_foxRR73Queue.enqueue(houndCall);          //Request RR73 to be sent to Hound
+      writeFoxQSO(" Rx:   " + msg.trimmed());
+    }
   }
 }
 
@@ -7513,6 +7534,7 @@ void MainWindow::foxTxSequencer()
     if(m_houndQueue.isEmpty()) {
       fm = hc1 + " " + m_baseCall + " RR73";  //Send a standard FT8 message
     } else {
+      if(m_foxQSOqueue.count() >= m_Nslots+4) break;  //### Limit QSOs in progress to <= Nslots ???
       t=m_houndQueue.dequeue();             //Fetch new hound from queue
       hc2=t.mid(0,6).trimmed();             //hound call
       sentTo << hc2;
@@ -7537,6 +7559,7 @@ void MainWindow::foxTxSequencer()
       m_msgAvgWidget->foxAddLog(logLine);
     }
     on_logQSOButton_clicked();
+    writeFoxQSO(" Log:  " + logLine.mid(17));
 
     m_foxRateQueue.enqueue(now);             //Add present time in seconds to Rate queue.
     m_loggedByFox[hc1] += (m_lastBand + " ");
@@ -7566,7 +7589,7 @@ void MainWindow::foxTxSequencer()
   }
 
 //One or more Tx slots are still available
-  while (!m_houndQueue.isEmpty()) {
+  while (!m_houndQueue.isEmpty() and m_foxQSOqueue.count() < m_Nslots+4) {  //### ??? ###
     t=m_houndQueue.dequeue();             //Fetch new hound from queue
     hc1=t.mid(0,6).trimmed();             //hound call
     m_foxQSOqueue.enqueue(hc1);           //Put him in the QSO queue
@@ -7602,9 +7625,10 @@ Transmit:
 
   for(auto a: m_foxQSO.keys()) {
     int ncalls=m_foxQSO[a].ncall;
-    if(ncalls > ui->sbMaxCalls->value()) {
+    if(ncalls >= qMax(4,m_Nslots+1)) {            //### Not sure about ">=" ###
       m_foxQSO.remove(a);
       m_foxQSOqueue.removeOne(a);
+      if(m_foxRR73Queue.contains(a)) m_foxRR73Queue.removeOne(a);
     }
   }
   while(!m_foxRateQueue.isEmpty()) {
@@ -7671,11 +7695,14 @@ void MainWindow::foxGenWaveform(int i,QString fm)
 
 void MainWindow::writeFoxQSO(QString msg)
 {
+  QString t;
+  t.sprintf("%3d%3d%3d",m_houndQueue.count(),m_foxQSOqueue.count(),m_foxRR73Queue.count());
   QFile f {m_config.writeable_data_dir ().absoluteFilePath ("FoxQSO.txt")};
   if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
     QTextStream out(&f);
     out << QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
-        << "  " << fixed << qSetRealNumberPrecision (4) << (m_freqNominal/1.e6) << msg << endl;
+        << "  " << fixed << qSetRealNumberPrecision (3) << (m_freqNominal/1.e6)
+        << t << msg << endl;
     f.close();
   } else {
     MessageBox::warning_message (this, tr("File Open Error"),
@@ -7693,7 +7720,7 @@ void MainWindow::foxTest()
   while(!s.atEnd()) {
     line=s.readLine();
     selectHound(line);
-    if(line.contains("N7QT ")) break;
+    if(line.length()==0) break;
   }
   while(!s.atEnd()) {
     line=s.readLine();
@@ -7706,7 +7733,9 @@ void MainWindow::foxTest()
     int i0=hc1.indexOf(" ");
     hc1=hc1.mid(0,i0);
     i0=qMax(line.indexOf("R+"),line.indexOf("R-"));
-    QString rptRcvd=line.mid(i0,4);
-    foxRxSequencer(msg,hc1,rptRcvd);
+    if(i0>20) {
+      QString rptRcvd=line.mid(i0,4);
+      foxRxSequencer(msg,hc1,rptRcvd);
+    }
   }
 }
