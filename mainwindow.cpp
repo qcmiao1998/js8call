@@ -4557,7 +4557,7 @@ void MainWindow::genStdMsgs(QString rpt, bool unconditional)
       msgtype(t, ui->tx5->lineEdit ());
     }
   } else {
-    if (hisCall != hisBase) {
+    if (hisCall != hisBase and !m_config.bHound()) {
       if (shortList(hisCall)) {
         // cfm we know his full call with a type 1 tx1 message
         t = hisCall + " " + my_callsign;
@@ -4571,6 +4571,7 @@ void MainWindow::genStdMsgs(QString rpt, bool unconditional)
     }
   }
   m_rpt=rpt;
+  if(m_config.bHound() and is_compound) ui->tx1->setText("DE " + m_config.my_callsign());
 }
 
 void MainWindow::TxAgain()
@@ -7265,11 +7266,17 @@ void MainWindow::on_sbNlist_valueChanged(int n)
 void MainWindow::on_sbNslots_valueChanged(int n)
 {
   m_Nslots=n;
+  QString t;
+  t.sprintf(" NSlots %d",m_Nslots);
+  writeFoxQSO(t);
 }
 
 void MainWindow::on_sbMax_dB_valueChanged(int n)
 {
   m_max_dB=n;
+  QString t;
+  t.sprintf(" Max_dB %d",m_max_dB);
+  writeFoxQSO(t);
 }
 
 void MainWindow::on_pbFoxReset_clicked()
@@ -7277,6 +7284,7 @@ void MainWindow::on_pbFoxReset_clicked()
   ui->textBrowser4->setText("");
   m_houndQueue.clear();
   m_foxQSOqueue.clear();
+  writeFoxQSO(" Reset");
 }
 
 void MainWindow::on_comboBoxHoundSort_activated(int index)
@@ -7421,10 +7429,6 @@ void MainWindow::selectHound(QString line)
   QTextCursor cursor = ui->textBrowser4->textCursor();
   cursor.setPosition(0);                                 // Scroll to top of list
   ui->textBrowser4->setTextCursor(cursor);
-  if(m_msgAvgWidget != NULL and m_msgAvgWidget->isVisible()) {
-    m_msgAvgWidget->foxLabQueued(m_houndQueue.size());
-  }
-
 }
 
 //------------------------------------------------------------------------------
@@ -7553,7 +7557,7 @@ void MainWindow::foxTxSequencer()
     m_rptSent=m_foxQSO[hc1].sent;
     m_rptRcvd=m_foxQSO[hc1].rcvd;
     QDateTime logTime {QDateTime::currentDateTimeUtc ()};
-    QString logLine=logTime.toString("yyyy-MM-dd hh:mm") + " " + m_hisCall +
+    QString logLine=logTime.toString("yyyy-MM-dd hh:mm") + " " + (m_hisCall + "   ").mid(0,6) +
         "  " + m_hisGrid + "  " + m_rptSent + "  " + m_rptRcvd + " " + m_lastBand;
     if(m_msgAvgWidget != NULL and m_msgAvgWidget->isVisible()) {
       m_msgAvgWidget->foxAddLog(logLine);
@@ -7567,6 +7571,19 @@ void MainWindow::foxTxSequencer()
 
     islot++;
     foxGenWaveform(islot-1,fm);             //Generate tx waveform
+    if(islot >= m_Nslots) goto Transmit;
+  }
+
+
+//One or more Tx slots are still available.  See if it's time to call CQ.
+  if(m_nFoxTxSinceCQ >= 4) {
+    fm=ui->comboBoxCQ->currentText() + " " + m_config.my_callsign();
+    if(!fm.contains("/")) {
+      fm += " " + m_config.my_grid().mid(0,4);
+      m_fullFoxCallTime=now;
+    }
+    islot++;
+    foxGenWaveform(islot-1,fm);
     if(islot >= m_Nslots) goto Transmit;
   }
 
@@ -7622,6 +7639,7 @@ Transmit:
   QString foxCall=m_config.my_callsign() + "         ";
   strncpy(&foxcom_.mycall[0], foxCall.toLatin1(),12);   //Copy Fox callsign into foxcom_
   foxgen_();
+  m_nFoxTxSinceCQ++;
 
   for(auto a: m_foxQSO.keys()) {
     int ncalls=m_foxQSO[a].ncall;
@@ -7636,7 +7654,10 @@ Transmit:
     if(age < 3600) break;
     m_foxRateQueue.dequeue();
   }
-  m_msgAvgWidget->foxLabRate(m_foxRateQueue.size());
+  if(m_msgAvgWidget != NULL and m_msgAvgWidget->isVisible()) {
+    m_msgAvgWidget->foxLabRate(m_foxRateQueue.size());
+    m_msgAvgWidget->foxLabQueued(m_foxQSOqueue.count());
+  }
 }
 
 void MainWindow::rm_tb4(QString houndCall)
@@ -7665,6 +7686,7 @@ void MainWindow::doubleClickOnFoxQueue(Qt::KeyboardModifiers modifiers)
   cursor.setPosition(cursor.selectionStart());
   QString houndCall=cursor.block().text().mid(0,6).trimmed();
   rm_tb4(houndCall);
+  writeFoxQSO(" Del:  " + houndCall);
   QQueue<QString> tmpQueue;
   while(!m_houndQueue.isEmpty()) {
     QString t=m_houndQueue.dequeue();
@@ -7679,6 +7701,7 @@ void MainWindow::foxGenWaveform(int i,QString fm)
 //Generate and accumulate the Tx waveform
   fm += "                                        ";
   fm=fm.mid(0,40);
+  if(fm.mid(0,3)=="CQ ") m_nFoxTxSinceCQ=-1;
 
   QString txModeArg;
   txModeArg.sprintf("FT8fox %d",i+1);
@@ -7689,7 +7712,7 @@ void MainWindow::foxGenWaveform(int i,QString fm)
   strncpy(&foxcom_.cmsg[i][0],fm.toLatin1(),40);   //Copy this message into cmsg[i]
   if(i==0) m_fm1=fm;
   QString t;
-  t.sprintf(" Tx %d: ",i+1);
+  t.sprintf(" Tx%d:  ",i+1);
   writeFoxQSO(t + fm.trimmed());
 }
 
