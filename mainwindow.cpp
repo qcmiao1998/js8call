@@ -937,8 +937,14 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     ui->cbMenus->setChecked(false);
   }
 
-
+  //UI Customizations
   ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized();
+  ui->menuDecode->setEnabled(false);
+  ui->menuMode->setEnabled(false);
+  ui->menuSave->setEnabled(false);
+  ui->menuTools->setEnabled(false);
+  ui->menuView->setEnabled(false);
+
 
   // this must be the last statement of constructor
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
@@ -2974,7 +2980,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         }
         m_QSOText = decodedtext.string ().trimmed ();
 
-        //ui->textEditRX->insertHtml(decodedtext.messageWords().first().trimmed() + " ");
+        ui->textEditRXAll->insertHtml(decodedtext.messageWords().first().trimmed() + "\n");
       }
 
       if(m_mode=="FT8" and m_config.bHound()) {
@@ -6119,6 +6125,7 @@ void MainWindow::setXIT(int n, Frequency base)
 void MainWindow::setFreq4(int rxFreq, int txFreq)
 {
   if (ui->RxFreqSpinBox->isEnabled ()) ui->RxFreqSpinBox->setValue(rxFreq);
+  ui->labDialFreqOffset->setText(QString("%1 Hz").arg(rxFreq));
   if(m_mode.startsWith ("WSPR")) {
     ui->WSPRfreqSpinBox->setValue(txFreq);
   } else {
@@ -6506,7 +6513,7 @@ void MainWindow::transmitDisplay (bool transmitting)
     }
 
     // the following are always disallowed in transmit
-    ui->menuMode->setEnabled (!transmitting);
+    //ui->menuMode->setEnabled (!transmitting);
     //ui->bandComboBox->setEnabled (!transmitting);
     if (!transmitting) {
       if (m_mode == "JT9+JT65") {
