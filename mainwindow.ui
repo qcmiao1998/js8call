@@ -84,7 +84,7 @@
           <bool>true</bool>
          </property>
          <property name="placeholderText">
-          <string/>
+          <string>All band activity will appear here.</string>
          </property>
         </widget>
         <widget class="QTextEdit" name="textEditRX">
@@ -109,7 +109,7 @@
           <bool>true</bool>
          </property>
          <property name="placeholderText">
-          <string/>
+          <string>Incoming and outgoing directed messages will appear here.</string>
          </property>
         </widget>
         <widget class="QTextEdit" name="extFreeTextMsgEdit">
@@ -626,7 +626,7 @@ background-color: #6699ff;
 }</string>
                      </property>
                      <property name="text">
-                      <string>SND</string>
+                      <string>BCN</string>
                      </property>
                      <property name="checkable">
                       <bool>true</bool>

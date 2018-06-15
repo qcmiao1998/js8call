@@ -2939,6 +2939,11 @@ void MainWindow::readFromStdout()                             //readFromStdout
                m_logBook,m_config.color_CQ(),m_config.color_MyCall(),
                m_config.color_DXCC(), m_config.color_NewCall(),
                m_config.ppfx(),(ui->cbCQonly->isVisible() and ui->cbCQonly->isChecked()));
+          ui->textEditRXAll->append(decodedtext.messageWords().first().trimmed());
+          QString cqCall = decodedtext.CQersCall();
+          if(!cqCall.isEmpty()){
+            ui->listWidget->addItem(cqCall);
+          }
         }
       }
 
@@ -2980,7 +2985,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         }
         m_QSOText = decodedtext.string ().trimmed ();
 
-        ui->textEditRXAll->insertHtml(decodedtext.messageWords().first().trimmed() + "\n");
+        //ui->textEditRXAll->insertHtml(decodedtext.messageWords().first().trimmed() + "\n");
       }
 
       if(m_mode=="FT8" and m_config.bHound()) {
