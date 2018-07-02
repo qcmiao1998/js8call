@@ -16,6 +16,7 @@
 #include <QProgressDialog>
 #include <QAbstractSocket>
 #include <QHostAddress>
+#include <QPair>
 #include <QPointer>
 #include <QSet>
 #include <QVector>
@@ -37,6 +38,7 @@
 #include "astro.h"
 #include "MessageBox.hpp"
 #include "NetworkAccessManager.hpp"
+#include "qorderedmap.h"
 
 #define NUM_JT4_SYMBOLS 206                //(72+31)*2, embedded sync
 #define NUM_JT65_SYMBOLS 126               //63 data + 63 sync
@@ -135,6 +137,7 @@ private slots:
   void on_monitorButton_clicked (bool);
   void on_actionAbout_triggered();
   void on_autoButton_clicked (bool);
+  void on_labDialFreq_clicked();
   void on_stopTxButton_clicked();
   void on_stopButton_clicked();
   void on_actionRelease_Notes_triggered ();
@@ -226,6 +229,7 @@ private slots:
   void on_tuneButton_clicked (bool);
   void on_pbR2T_clicked();
   void on_pbT2R_clicked();
+  void on_beaconButton_clicked();
   void acceptQSO (QDateTime const&, QString const& call, QString const& grid
                   , Frequency dial_freq, QString const& mode
                   , QString const& rpt_sent, QString const& rpt_received
@@ -292,7 +296,7 @@ private slots:
   void on_actionMSK144_triggered();
   void on_actionQRA64_triggered();
   void on_actionFreqCal_triggered();
-  void splash_done ();
+  void splash_done (); 
   void on_measure_check_box_stateChanged (int);
   void on_sbNlist_valueChanged(int n);
   void on_sbNslots_valueChanged(int n);
@@ -591,6 +595,24 @@ private:
     qint32  ncall;
   };
 
+  struct CallDetail
+  {
+    QString call;
+    int freq;
+    int timestamp;
+    int snr;
+  };
+
+  struct ActivityDetail
+  {
+    int freq;
+    QString text;
+    int timestamp;
+    int snr;
+  };
+
+  QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
+  QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
   QMap<QString,FoxQSO> m_foxQSO;
   QMap<QString,QString> m_loggedByFox;
 
@@ -599,6 +621,7 @@ private:
   QQueue<QString> m_foxRR73Queue;
   QQueue<qint64>  m_foxRateQueue;
 
+  QDateTime m_nextBeacon;
   QDateTime m_dateTimeQSOOn;
   QDateTime m_dateTimeLastTX;
 

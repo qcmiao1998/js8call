@@ -83,7 +83,8 @@ HEADERS  += qt_helpers.hpp \
   logbook/logbook.h logbook/countrydat.h logbook/countriesworked.h logbook/adif.h \
   messageaveraging.h echoplot.h echograph.h fastgraph.h fastplot.h Modes.hpp WSPRBandHopping.hpp \
   WsprTxScheduler.h SampleDownloader.hpp MultiSettings.hpp PhaseEqualizationDialog.hpp \
-  IARURegions.hpp MessageBox.hpp EqualizationToolsDialog.hpp
+  IARURegions.hpp MessageBox.hpp EqualizationToolsDialog.hpp \
+    qorderedmap.h
 
 
 INCLUDEPATH += qmake_only

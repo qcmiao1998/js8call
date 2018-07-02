@@ -17,7 +17,7 @@
    <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout_6" stretch="1,0,0,0">
+   <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,0,0">
     <property name="spacing">
      <number>4</number>
     </property>
@@ -50,6 +50,645 @@
       <property name="childrenCollapsible">
        <bool>true</bool>
       </property>
+      <widget class="QWidget" name="logHorizontalWidget" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>120</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>120</height>
+        </size>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_16">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QFrame" name="logWidget">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Plain</enum>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_17">
+           <property name="spacing">
+            <number>4</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QFrame" name="frame">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="autoFillBackground">
+              <bool>false</bool>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color:white; background-color:rgb(0,0,0);</string>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Sunken</enum>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_12">
+              <item>
+               <widget class="QComboBox" name="bandComboBox">
+                <property name="minimumSize">
+                 <size>
+                  <width>75</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="visible">
+                 <bool>true</bool>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select operating band or enter frequency in MHz or enter kHz increment followed by k.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color:white;
+color:black;</string>
+                </property>
+                <property name="editable">
+                 <bool>true</bool>
+                </property>
+                <property name="insertPolicy">
+                 <enum>QComboBox::NoInsert</enum>
+                </property>
+                <property name="sizeAdjustPolicy">
+                 <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="labDialFreq">
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+ font-family: MS Shell Dlg 2;
+ font-size: 20pt;
+  color : white;
+  background-color : black;
+}
+QPushButton[oob=&quot;true&quot;] {
+ color : #EEEEEE;
+ font-style: italic;
+}
+</string>
+                </property>
+                <property name="text">
+                 <string>14.074 000</string>
+                </property>
+                <property name="flat">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="labDialFreqOffset">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="toolTip">
+                 <string>Current frequency offset</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QLabel {
+  font-family: MS Shell Dlg 2;
+  font-size: 12pt;
+  font-style: italic;
+  color : white;
+  background-color : black;
+}
+</string>
+                </property>
+                <property name="text">
+                 <string>1500 Hz</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+                <property name="margin">
+                 <number>0</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QFrame" name="frame_6">
+             <property name="styleSheet">
+              <string notr="true">background-color : black;
+o</string>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Plain</enum>
+             </property>
+             <property name="lineWidth">
+              <number>2</number>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_15">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="labUTC">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QLabel {
+font-family: MS Shell Dlg 2;
+font-size: 14pt;
+color : white;
+}</string>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Sunken</enum>
+                </property>
+                <property name="lineWidth">
+                 <number>2</number>
+                </property>
+                <property name="midLineWidth">
+                 <number>0</number>
+                </property>
+                <property name="text">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt; 2015 Jun 17 &lt;/p&gt;&lt;p align=&quot;center&quot;&gt; 01:23:45 &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+                <property name="margin">
+                 <number>5</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="labBeacon">
+                <property name="styleSheet">
+                 <string notr="true">QLabel {
+font-family: MS Shell Dlg 2;
+font-size: 12pt;
+color : white;
+}</string>
+                </property>
+                <property name="text">
+                 <string>Next Beacon: disabled</string>
+                </property>
+                <property name="textFormat">
+                 <enum>Qt::RichText</enum>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+                <property name="margin">
+                 <number>5</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QFrame" name="frame_2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color:white; background-color:rgb(0,0,0);</string>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Plain</enum>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_8">
+              <item row="0" column="0">
+               <widget class="QPushButton" name="readFreq">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If orange or red there has been a rig control failure, click to reset and read the dial frequency.  S implies split mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+font-family: helvetica;
+font-size: 9pt;
+font-weight: bold;
+background-color: white;
+color: black;
+border-style: solid;
+border-width:0px;
+border-color: gray;
+max-height:30px;
+min-width:40px;
+min-height:30px;
+max-width:40px;
+}
+QPushButton[state=&quot;error&quot;] {
+background-color: red;
+}
+QPushButton[state=&quot;warning&quot;] {
+background-color: orange;
+}
+QPushButton[state=&quot;ok&quot;] {
+background-color: #00ff00;
+}</string>
+                </property>
+                <property name="text">
+                 <string>CAT</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QPushButton" name="logButton">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+font-family: helvetica;
+font-size: 9pt;
+font-weight: bold;
+background-color: lightgray;
+color: black;
+border-style: solid;
+border-width:0px;
+border-color: gray;
+max-height:30px;
+min-width:40px;
+min-height:30px;
+max-width:40px;
+}
+QPushButton[state=&quot;error&quot;] {
+background-color: red;
+}
+QPushButton[state=&quot;warning&quot;] {
+background-color: orange;
+}
+QPushButton[state=&quot;ok&quot;] {
+background-color: #00ff00;
+}</string>
+                </property>
+                <property name="text">
+                 <string>LOG</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QPushButton" name="beaconButton">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+font-family: helvetica;
+font-size: 9pt;
+font-weight: bold;
+background-color: lightgray;
+color: black;
+border-style: solid;
+border-width:0px;
+border-color: gray;
+max-height:30px;
+min-width:40px;
+min-height:30px;
+max-width:40px;
+}
+QPushButton[state=&quot;error&quot;] {
+background-color: red;
+}
+QPushButton[state=&quot;warning&quot;] {
+background-color: orange;
+}
+QPushButton[state=&quot;ok&quot;] {
+background-color: #00ff00;
+}
+QPushButton:checked {
+background-color: #6699ff;
+}</string>
+                </property>
+                <property name="text">
+                 <string>BCN</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QPushButton" name="autoButton">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+font-family: helvetica;
+font-size: 9pt;
+font-weight: bold;
+background-color: lightgray;
+color: black;
+border-style: solid;
+border-width:0px;
+border-color: gray;
+max-height:30px;
+min-width:40px;
+min-height:30px;
+max-width:40px;
+}
+QPushButton[state=&quot;error&quot;] {
+background-color: red;
+}
+QPushButton[state=&quot;warning&quot;] {
+background-color: orange;
+}
+QPushButton[state=&quot;ok&quot;] {
+background-color: #00ff00;
+}
+QPushButton:checked {
+background-color: #00ff00;
+}</string>
+                </property>
+                <property name="text">
+                 <string>TX</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QPushButton" name="monitorButton">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+font-family: helvetica;
+font-size: 9pt;
+font-weight: bold;
+background-color: lightgray;
+color: black;
+border-style: solid;
+border-width:0px;
+border-color: gray;
+max-height:30px;
+min-width:40px;
+min-height:30px;
+max-width:40px;;
+}
+QPushButton[state=&quot;error&quot;] {
+background-color: red;
+}
+QPushButton[state=&quot;warning&quot;] {
+background-color: orange;
+}
+QPushButton[state=&quot;ok&quot;] {
+background-color: #00ff00;
+}
+QPushButton:checked {
+background-color: #00ff00;
+}</string>
+                </property>
+                <property name="text">
+                 <string>RX</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QPushButton" name="tuneButton">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+font-family: helvetica;
+font-size: 9pt;
+font-weight: bold;
+background-color: lightgray;
+color: black;
+border-style: solid;
+border-width:0px;
+border-color: gray;
+max-height:30px;
+min-width:40px;
+min-height:30px;
+max-width:40px;
+}
+QPushButton[state=&quot;error&quot;] {
+background-color: red;
+}
+QPushButton[state=&quot;warning&quot;] {
+background-color: orange;
+}
+QPushButton[state=&quot;ok&quot;] {
+background-color: #00ff00;
+}
+QPushButton:checked {
+background-color: yellow;
+}</string>
+                </property>
+                <property name="text">
+                 <string>TUNE</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QSplitter" name="textHorizontalSplitter">
        <property name="sizePolicy">
         <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
@@ -69,29 +708,80 @@
        <property name="handleWidth">
         <number>4</number>
        </property>
+       <widget class="QTableWidget" name="tableWidgetRXAll">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>6</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="showDropIndicator" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="dragDropOverwriteMode">
+         <bool>false</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <property name="textElideMode">
+         <enum>Qt::ElideLeft</enum>
+        </property>
+        <property name="gridStyle">
+         <enum>Qt::DotLine</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
+        <attribute name="horizontalHeaderVisible">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="horizontalHeaderStretchLastSection">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>Offset</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>SNR</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Text</string>
+         </property>
+        </column>
+       </widget>
        <widget class="QSplitter" name="textVerticalSplitter">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>10</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
         <property name="handleWidth">
          <number>4</number>
         </property>
-        <widget class="QTextEdit" name="textEditRXAll">
-         <property name="styleSheet">
-          <string notr="true">background-color: #dfe6e9;</string>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-         <property name="placeholderText">
-          <string>All band activity will appear here.</string>
-         </property>
-        </widget>
         <widget class="QTextEdit" name="textEditRX">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>4</horstretch>
+           <verstretch>2</verstretch>
           </sizepolicy>
          </property>
          <property name="font">
@@ -114,9 +804,9 @@
         </widget>
         <widget class="QTextEdit" name="extFreeTextMsgEdit">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>4</horstretch>
+           <verstretch>1</verstretch>
           </sizepolicy>
          </property>
          <property name="styleSheet">
@@ -133,15 +823,9 @@
        <widget class="QListWidget" name="listWidget">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-          <horstretch>0</horstretch>
+          <horstretch>1</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>50</width>
-          <height>0</height>
-         </size>
         </property>
         <property name="maximumSize">
          <size>
@@ -159,10 +843,153 @@
         </item>
        </widget>
       </widget>
-      <widget class="QWidget" name="widget" native="true">
-       <layout class="QHBoxLayout" name="horizontalLayoutBand">
-        <property name="spacing">
+      <widget class="QWidget" name="macroHorizonalWidget" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>30</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>30</height>
+        </size>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <property name="leftMargin">
          <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item row="1" column="1">
+         <widget class="QPushButton" name="qtcMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>QTC</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="6">
+         <widget class="QPushButton" name="stopTxButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Halt</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="cqMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>CQ</string>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="5">
+         <widget class="QPushButton" name="startTxButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Send</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="qthMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>QTH</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4">
+         <spacer name="horizontalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="3">
+         <widget class="QPushButton" name="snrMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>SNR</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QFrame" name="frame_5">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>2</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::NoFrame</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Plain</enum>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_14">
+        <property name="spacing">
+         <number>4</number>
         </property>
         <property name="leftMargin">
          <number>0</number>
@@ -177,58 +1004,30 @@
          <number>0</number>
         </property>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_13">
-          <property name="spacing">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QComboBox" name="bandComboBox">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select operating band or enter frequency in MHz or enter kHz increment followed by k.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="editable">
-             <bool>true</bool>
-            </property>
-            <property name="insertPolicy">
-             <enum>QComboBox::NoInsert</enum>
-            </property>
-            <property name="sizeAdjustPolicy">
-             <enum>QComboBox::AdjustToMinimumContentsLength</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QFrame" name="frame_4">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Plain</enum>
-            </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <widget class="QWidget" name="bandHorizontalWidget" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayoutBand">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_13">
              <property name="spacing">
               <number>0</number>
              </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
              <item>
-              <widget class="QFrame" name="frame_3">
+              <widget class="QFrame" name="frame_4">
                <property name="minimumSize">
                 <size>
                  <width>0</width>
@@ -241,7 +1040,7 @@
                <property name="frameShadow">
                 <enum>QFrame::Plain</enum>
                </property>
-               <layout class="QVBoxLayout" name="verticalLayout_11">
+               <layout class="QHBoxLayout" name="horizontalLayout_4">
                 <property name="spacing">
                  <number>0</number>
                 </property>
@@ -252,24 +1051,18 @@
                  <number>0</number>
                 </property>
                 <property name="rightMargin">
-                 <number>0</number>
+                 <number>4</number>
                 </property>
                 <property name="bottomMargin">
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QFrame" name="frame">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="autoFillBackground">
-                   <bool>false</bool>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">color:white; background-color:rgb(0,0,0);</string>
+                 <widget class="QFrame" name="frame_3">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
                   </property>
                   <property name="frameShape">
                    <enum>QFrame::NoFrame</enum>
@@ -277,152 +1070,50 @@
                   <property name="frameShadow">
                    <enum>QFrame::Plain</enum>
                   </property>
-                  <layout class="QVBoxLayout" name="verticalLayout_12">
-                   <item>
-                    <widget class="QLabel" name="labDialFreq">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="toolTip">
-                      <string>USB dial frequency</string>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">QLabel {
- font-family: MS Shell Dlg 2;
- font-size: 20pt;
-  color : white;
-  background-color : black;
-}
-QLabel[oob=&quot;true&quot;] {
- color : #EEEEEE;
- font-style: italic;
-}
-</string>
-                     </property>
-                     <property name="text">
-                      <string>14.078 000</string>
-                     </property>
-                     <property name="alignment">
-                      <set>Qt::AlignCenter</set>
-                     </property>
-                     <property name="margin">
-                      <number>0</number>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QLabel" name="labDialFreqOffset">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="toolTip">
-                      <string>Current frequency offset</string>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">QLabel {
-  font-family: MS Shell Dlg 2;
-  font-size: 12pt;
-  font-style: italic;
-  color : white;
-  background-color : black;
-}
-</string>
-                     </property>
-                     <property name="text">
-                      <string>1500 Hz</string>
-                     </property>
-                     <property name="alignment">
-                      <set>Qt::AlignCenter</set>
-                     </property>
-                     <property name="margin">
-                      <number>0</number>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <spacer name="verticalSpacer">
-                     <property name="orientation">
-                      <enum>Qt::Vertical</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>20</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
-                    <widget class="QLabel" name="labUTC">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">QLabel {
- font-family: MS Shell Dlg 2;
- font-size: 12pt;
- background-color : black;
- color : white;
-}</string>
-                     </property>
-                     <property name="frameShape">
-                      <enum>QFrame::StyledPanel</enum>
-                     </property>
-                     <property name="frameShadow">
-                      <enum>QFrame::Sunken</enum>
-                     </property>
-                     <property name="lineWidth">
-                      <number>2</number>
-                     </property>
-                     <property name="midLineWidth">
-                      <number>0</number>
-                     </property>
-                     <property name="text">
-                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt; 2015 Jun 17 &lt;/p&gt;&lt;p align=&quot;center&quot;&gt; 01:23:45 &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                     </property>
-                     <property name="alignment">
-                      <set>Qt::AlignCenter</set>
-                     </property>
-                     <property name="margin">
-                      <number>5</number>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <spacer name="verticalSpacer_4">
-                     <property name="orientation">
-                      <enum>Qt::Vertical</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>20</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
+                  <layout class="QVBoxLayout" name="verticalLayout_11">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
                   </layout>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QFrame" name="frame_2">
+                 <widget class="SignalMeter" name="signal_meter_widget">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
+                   <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>75</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;30dB recommended when only noise present&lt;br/&gt;Green when good&lt;br/&gt;Red when clipping may occur&lt;br/&gt;Yellow when too low&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
                   <property name="styleSheet">
-                   <string notr="true">color:white; background-color:rgb(0,0,0);</string>
+                   <string notr="true">background-color:black;</string>
                   </property>
                   <property name="frameShape">
                    <enum>QFrame::NoFrame</enum>
@@ -430,357 +1121,78 @@ QLabel[oob=&quot;true&quot;] {
                   <property name="frameShadow">
                    <enum>QFrame::Plain</enum>
                   </property>
-                  <layout class="QGridLayout" name="gridLayout_8">
-                   <item row="0" column="0">
-                    <widget class="QPushButton" name="readFreq">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="toolTip">
-                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If orange or red there has been a rig control failure, click to reset and read the dial frequency.  S implies split mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">QPushButton {
-font-family: helvetica;
-font-size: 9pt;
-font-weight: bold;
-background-color: white;
-color: black;
-border-style: solid;
-border-width:0px;
-border-color: gray;
-max-height:20px;
-min-width:20px;
-min-height:20px;
-max-width:40px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}</string>
-                     </property>
-                     <property name="text">
-                      <string>CAT</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="1">
-                    <widget class="QPushButton" name="monitorButton">
-                     <property name="enabled">
-                      <bool>true</bool>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">QPushButton {
-font-family: helvetica;
-font-size: 9pt;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-width:0px;
-border-color: gray;
-max-height:20px;
-min-width:20px;
-min-height:20px;
-max-width:40px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}
-QPushButton:checked {
-background-color: #00ff00;
-}</string>
-                     </property>
-                     <property name="text">
-                      <string>RX</string>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="2">
-                    <widget class="QPushButton" name="autoButton">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">QPushButton {
-font-family: helvetica;
-font-size: 9pt;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-width:0px;
-border-color: gray;
-max-height:20px;
-min-width:20px;
-min-height:20px;
-max-width:40px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}
-QPushButton:checked {
-background-color: #00ff00;
-}</string>
-                     </property>
-                     <property name="text">
-                      <string>TX</string>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="0">
-                    <widget class="QPushButton" name="tuneButton">
-                     <property name="enabled">
-                      <bool>true</bool>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">QPushButton {
-font-family: helvetica;
-font-size: 9pt;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-width:0px;
-border-color: gray;
-max-height:20px;
-min-width:20px;
-min-height:20px;
-max-width:40px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}
-QPushButton:checked {
-background-color: yellow;
-}</string>
-                     </property>
-                     <property name="text">
-                      <string>TUNE</string>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="1">
-                    <widget class="QPushButton" name="beaconButton">
-                     <property name="enabled">
-                      <bool>true</bool>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">QPushButton {
-font-family: helvetica;
-font-size: 9pt;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-width:0px;
-border-color: gray;
-max-height:20px;
-min-width:20px;
-min-height:20px;
-max-width:40px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}
-QPushButton:checked {
-background-color: #6699ff;
-}</string>
-                     </property>
-                     <property name="text">
-                      <string>BCN</string>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="2">
-                    <widget class="QPushButton" name="stopTxButton">
-                     <property name="enabled">
-                      <bool>true</bool>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">QPushButton {
-font-family: helvetica;
-font-size: 9pt;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-width:0px;
-border-color: gray;
-max-height:20px;
-min-width:20px;
-min-height:20px;
-max-width:40px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}</string>
-                     </property>
-                     <property name="text">
-                      <string>HALT</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                  <zorder>monitorButton</zorder>
-                  <zorder>readFreq</zorder>
-                  <zorder>beaconButton</zorder>
-                  <zorder>autoButton</zorder>
-                  <zorder>stopTxButton</zorder>
-                  <zorder>tuneButton</zorder>
                  </widget>
                 </item>
                </layout>
               </widget>
              </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QMdiArea" name="mdiArea">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>50</height>
+              </size>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Plain</enum>
+             </property>
+             <property name="background">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>0</red>
+                <green>0</green>
+                <blue>0</blue>
+               </color>
+              </brush>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_9">
              <item>
-              <widget class="SignalMeter" name="signal_meter_widget">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>75</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>16777215</height>
-                </size>
-               </property>
+              <widget class="QSlider" name="outAttenuation">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;30dB recommended when only noise present&lt;br/&gt;Green when good&lt;br/&gt;Red when clipping may occur&lt;br/&gt;Yellow when too low&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>Adjust Tx audio level</string>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color:black;</string>
+                <string notr="true">selection-background-color: rgb(70, 70, 70);</string>
                </property>
-               <property name="frameShape">
-                <enum>QFrame::NoFrame</enum>
+               <property name="maximum">
+                <number>450</number>
                </property>
-               <property name="frameShadow">
-                <enum>QFrame::Plain</enum>
+               <property name="value">
+                <number>0</number>
+               </property>
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="invertedAppearance">
+                <bool>true</bool>
+               </property>
+               <property name="invertedControls">
+                <bool>true</bool>
+               </property>
+               <property name="tickPosition">
+                <enum>QSlider::TicksBothSides</enum>
+               </property>
+               <property name="tickInterval">
+                <number>50</number>
                </property>
               </widget>
              </item>
             </layout>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QMdiArea" name="mdiArea">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>50</height>
-           </size>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Plain</enum>
-          </property>
-          <property name="background">
-           <brush brushstyle="SolidPattern">
-            <color alpha="255">
-             <red>0</red>
-             <green>0</green>
-             <blue>0</blue>
-            </color>
-           </brush>
-          </property>
+           </item>
+          </layout>
          </widget>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout_9">
-          <item>
-           <widget class="QSlider" name="outAttenuation">
-            <property name="toolTip">
-             <string>Adjust Tx audio level</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">selection-background-color: rgb(70, 70, 70);</string>
-            </property>
-            <property name="maximum">
-             <number>450</number>
-            </property>
-            <property name="value">
-             <number>0</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="invertedAppearance">
-             <bool>true</bool>
-            </property>
-            <property name="invertedControls">
-             <bool>true</bool>
-            </property>
-            <property name="tickPosition">
-             <enum>QSlider::TicksBothSides</enum>
-            </property>
-            <property name="tickInterval">
-             <number>50</number>
-            </property>
-           </widget>
-          </item>
-         </layout>
         </item>
        </layout>
       </widget>

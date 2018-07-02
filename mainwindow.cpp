@@ -909,6 +909,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (&splashTimer, &QTimer::timeout, this, &MainWindow::splash_done);
   splashTimer.setSingleShot (true);
   splashTimer.start (20 * 1000);
+
 /*
   if(m_config.my_callsign()=="K1JT" or m_config.my_callsign()=="K9AN" or
      m_config.my_callsign()=="G4WJS" || m_config.my_callsign () == "W9XYZ" or
@@ -2169,6 +2170,11 @@ void MainWindow::closeEvent(QCloseEvent * e)
   QMainWindow::closeEvent (e);
 }
 
+void MainWindow::on_labDialFreq_clicked()                       //dialFrequency
+{
+    ui->bandComboBox->setFocus();
+}
+
 void MainWindow::on_stopButton_clicked()                       //stopButton
 {
   monitor (false);
@@ -2939,10 +2945,45 @@ void MainWindow::readFromStdout()                             //readFromStdout
                m_logBook,m_config.color_CQ(),m_config.color_MyCall(),
                m_config.color_DXCC(), m_config.color_NewCall(),
                m_config.ppfx(),(ui->cbCQonly->isVisible() and ui->cbCQonly->isChecked()));
-          ui->textEditRXAll->append(decodedtext.messageWords().first().trimmed());
+
+          // TODO: parse decode...
+          //ui->textEditRXAll->append(decodedtext.messageWords().first().trimmed());
+          //ui->tableWidgetRXAll->insertRow(ui->tableWidgetRXAll->rowCount());
+          //ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount()-1, 0, new QTableWidgetItem(QString("%1").arg(decodedtext.frequencyOffset())));
+          //ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount()-1, 1, new QTableWidgetItem(decodedtext.messageWords().first().trimmed()));
+          if(decodedtext.messageWords().length() > 0){  
+            int offset = decodedtext.frequencyOffset();
+
+            if(!m_bandActivity.contains(offset)){
+                QList<int> offsets = {offset - 1, offset - 2, offset - 3, offset + 1, offset + 2, offset + 3};
+                foreach(int prevOffset, offsets){
+                    if(!m_bandActivity.contains(prevOffset)){ continue; }
+                    m_bandActivity[offset] = m_bandActivity[prevOffset];
+                    m_bandActivity.remove(prevOffset);
+                    break;
+                }
+            }
+
+            ActivityDetail d;
+            d.freq = offset;
+            d.text = decodedtext.messageWords().first().trimmed();
+            d.timestamp = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
+            d.snr = decodedtext.snr();
+            m_bandActivity[offset].append(d);
+
+            while(m_bandActivity[offset].count() > 10){
+                m_bandActivity[offset].removeFirst();
+            }
+          }
+
           QString cqCall = decodedtext.CQersCall();
           if(!cqCall.isEmpty()){
-            ui->listWidget->addItem(cqCall);
+            CallDetail d;
+            d.call = cqCall;
+            d.snr = decodedtext.snr();
+            d.freq = decodedtext.frequencyOffset();
+            d.timestamp = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
+            m_callActivity[cqCall] = d;
           }
         }
       }
@@ -2985,6 +3026,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         }
         m_QSOText = decodedtext.string ().trimmed ();
 
+        // TODO: parse decode...
         //ui->textEditRXAll->insertHtml(decodedtext.messageWords().first().trimmed() + "\n");
       }
 
@@ -3055,6 +3097,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
       }
     }
   }
+
+  // See MainWindow::postDecode for displaying the latest decodes
 }
 
 //
@@ -3700,6 +3744,11 @@ void MainWindow::guiUpdate()
     QString utc = t.date().toString("yyyy MMM dd") + "\n " +
       t.time().toString() + " ";
     ui->labUTC->setText(utc);
+
+    auto delta = t.msecsTo(m_nextBeacon)/1000;
+    auto beacon = ui->beaconButton->isChecked() ? delta > 0 ? QString("%1 s").arg(delta) : "queued!" : "disabled";
+    ui->labBeacon->setText(QString("Next Beacon: %1").arg(beacon));
+
     if(!m_monitoring and !m_diskData) {
       ui->signal_meter_widget->setValue(0,0);
     }
@@ -6066,6 +6115,13 @@ void MainWindow::on_pbT2R_clicked()
     }
 }
 
+void MainWindow::on_beaconButton_clicked()
+{
+    if(ui->beaconButton->isChecked()){
+        m_nextBeacon = QDateTime::currentDateTimeUtc().addSecs(300);
+    }
+}
+
 
 void MainWindow::on_readFreq_clicked()
 {
@@ -6812,6 +6868,50 @@ void MainWindow::postDecode (bool is_new, QString const& message)
                                , QChar {'?'} == decode.mid (has_seconds ? 24 + 21 : 22 + 21, 1)
                                , m_diskData);
     }
+
+
+
+
+  // TODO: keep track of selection
+  int now = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
+  for(int i = ui->tableWidgetRXAll->rowCount(); i >= 0; i--){
+    ui->tableWidgetRXAll->removeRow(i);
+  }
+  QList<int> keys = m_bandActivity.keys();
+  qSort(keys.begin(), keys.end());
+  foreach (int offset, keys) {
+      auto items = m_bandActivity[offset];
+      if(items.length() > 0){
+          QStringList text;
+          int snr = 0;
+          foreach(auto item, items){
+              if(now - item.timestamp > 90000){
+                  continue;
+              }
+              text.append(item.text);
+              snr = item.snr;
+          }
+          auto joined = text.join(" … ");
+          if(joined.isEmpty()){
+              continue;
+          }
+
+          ui->tableWidgetRXAll->insertRow(ui->tableWidgetRXAll->rowCount());
+          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, new QTableWidgetItem(QString("%1").arg(offset)));
+          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, new QTableWidgetItem(QString("%1").arg(snr)));
+          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, new QTableWidgetItem(joined));
+      }
+  }
+
+  // TODO: keep track of selection
+  ui->listWidget->clear();
+  ui->listWidget->addItem("allcall");
+  QList<QString> calls = m_callActivity.keys();
+  qSort(calls.begin(), calls.end());
+  foreach(QString call, calls){
+    ui->listWidget->addItem(call);
+  }
+
 }
 
 void MainWindow::postWSPRDecode (bool is_new, QStringList parts)
