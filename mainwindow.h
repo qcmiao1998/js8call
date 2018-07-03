@@ -613,6 +613,7 @@ private:
   struct CallDetail
   {
     QString call;
+    QString grid;
     int freq;
     int timestamp;
     int snr;

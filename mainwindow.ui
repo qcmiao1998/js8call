@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1195</width>
-    <height>709</height>
+    <width>960</width>
+    <height>514</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -742,6 +742,9 @@ background-color: yellow;
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QAbstractScrollArea::AdjustToContents</enum>
+        </property>
         <property name="editTriggers">
          <set>QAbstractItemView::NoEditTriggers</set>
         </property>
@@ -873,6 +876,9 @@ QTextEdit[readOnly=&quot;true&quot;] {
         </property>
         <property name="selectionBehavior">
          <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <property name="textElideMode">
+         <enum>Qt::ElideNone</enum>
         </property>
         <property name="gridStyle">
          <enum>Qt::DotLine</enum>
@@ -3796,7 +3802,7 @@ list. The list can be maintained in Settings (F2).</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1195</width>
+     <width>960</width>
      <height>22</height>
     </rect>
    </property>

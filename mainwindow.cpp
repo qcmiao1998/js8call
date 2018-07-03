@@ -953,6 +953,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->menuSave->setEnabled(false);
   ui->menuTools->setEnabled(false);
   ui->menuView->setEnabled(false);
+  ui->dxCallEntry->clear();
+  ui->dxGridEntry->clear();
 
 
   // this must be the last statement of constructor
@@ -2992,8 +2994,13 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
           QString cqCall = decodedtext.CQersCall();
           if(!cqCall.isEmpty()){
+            QString theircall;
+            QString theirgrid;
+            decodedtext.deCallAndGrid(/*out*/theircall,theirgrid);
+
             CallDetail d;
-            d.call = cqCall;
+            d.call = theircall;
+            d.grid = theirgrid;
             d.snr = decodedtext.snr();
             d.freq = decodedtext.frequencyOffset();
             d.timestamp = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
@@ -7127,7 +7134,8 @@ void MainWindow::postDecode (bool is_new, QString const& message)
               text.append(item.text);
               snr = item.snr;
           }
-          auto joined = text.join(" … ");
+
+          auto joined = text.join("     ");
           if(joined.isEmpty()){
               continue;
           }
@@ -7135,7 +7143,20 @@ void MainWindow::postDecode (bool is_new, QString const& message)
           ui->tableWidgetRXAll->insertRow(ui->tableWidgetRXAll->rowCount());
           ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, new QTableWidgetItem(QString("%1").arg(offset)));
           ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, new QTableWidgetItem(QString("%1").arg(snr)));
-          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, new QTableWidgetItem(joined));
+
+          // align right if eliding...
+          int colWidth = ui->tableWidgetRXAll->columnWidth(2);
+          auto textItem = new QTableWidgetItem(joined);
+          QFontMetrics fm(textItem->font());
+          auto elidedText = fm.elidedText(joined, Qt::ElideLeft, colWidth);
+          auto flag = Qt::AlignLeft|Qt::AlignVCenter;
+          if(elidedText != joined){
+              flag = Qt::AlignRight|Qt::AlignVCenter;
+              textItem->setText(elidedText);
+          }
+          textItem->setTextAlignment(flag);
+
+          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, textItem);
           if(offset == selectedOffset){
               ui->tableWidgetRXAll->selectRow(ui->tableWidgetRXAll->rowCount() - 1);
           }
@@ -7159,8 +7180,10 @@ void MainWindow::postDecode (bool is_new, QString const& message)
   QList<QString> calls = m_callActivity.keys();
   qSort(calls.begin(), calls.end());
   foreach(QString call, calls){
+      CallDetail d = m_callActivity[call];
       ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem(call));
+      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(d.grid));
       if(call == selectedCall){
           ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
       }
