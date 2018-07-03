@@ -228,6 +228,10 @@ private slots:
   void on_pbSend73_clicked();
   void on_rbGenMsg_clicked(bool checked);
   void on_rbFreeText_clicked(bool checked);
+  void on_tableWidgetRXAll_cellClicked(int row, int col);
+  void on_tableWidgetRXAll_cellDoubleClicked(int row, int col);
+  void on_tableWidgetCalls_cellClicked(int row, int col);
+  void on_tableWidgetCalls_cellDoubleClicked(int row, int col);
   void on_freeTextMsg_currentTextChanged (QString const&);
   void on_nextFreeTextMsg_currentTextChanged (QString const&);
   void on_extFreeTextMsg_currentTextChanged (QString const&);

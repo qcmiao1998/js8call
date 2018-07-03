@@ -5297,9 +5297,11 @@ void MainWindow::on_genStdMsgsPushButton_clicked()         //genStdMsgs button
 
 void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
 {
+  /*
   if (!m_hisCall.size ()) {
     MessageBox::warning_message (this, tr ("Warning:  DX Call field is empty."));
   }
+  */
   // m_dateTimeQSOOn should really already be set but we'll ensure it gets set to something just in case
   if (!m_dateTimeQSOOn.isValid ()) {
     m_dateTimeQSOOn = QDateTime::currentDateTimeUtc();
@@ -6244,6 +6246,52 @@ void MainWindow::on_rbFreeText_clicked(bool checked)
     // restored above in on_rbGenMsg_clicked
     if (m_transmitting) m_restart=true;
   }
+}
+
+void MainWindow::on_tableWidgetRXAll_cellClicked(int row, int col){
+    auto item = ui->tableWidgetRXAll->item(row, 0);
+    int offset = item->text().toInt();
+    setFreq4(offset, offset);
+
+    ui->tableWidgetCalls->selectionModel()->select(
+        ui->tableWidgetCalls->selectionModel()->selection(),
+        QItemSelectionModel::Deselect);
+}
+
+void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
+    on_tableWidgetRXAll_cellClicked(row, col);
+
+    // TODO: jsherer - could also parse the messages for the last callsign?
+    auto item = ui->tableWidgetRXAll->item(row, 0);
+    int offset = item->text().toInt();
+    foreach(auto d, m_callActivity.values()){
+        if(d.freq == offset){
+            ui->extFreeTextMsgEdit->append(d.call);
+            break;
+        }
+    }
+}
+
+void MainWindow::on_tableWidgetCalls_cellClicked(int row, int col){
+    auto item = ui->tableWidgetCalls->item(row, 0);
+    auto call = item->text();
+    if(!m_callActivity.contains(call)){
+        return;
+    }
+    int offset = m_callActivity[call].freq;
+    setFreq4(offset, offset);
+
+    ui->tableWidgetRXAll->selectionModel()->select(
+        ui->tableWidgetRXAll->selectionModel()->selection(),
+        QItemSelectionModel::Deselect);
+}
+
+void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
+    on_tableWidgetCalls_cellClicked(row, col);
+
+    auto item = ui->tableWidgetCalls->item(row, 0);
+    auto call = item->text();
+    ui->extFreeTextMsgEdit->append(call);
 }
 
 void MainWindow::on_freeTextMsg_currentTextChanged (QString const& text)
