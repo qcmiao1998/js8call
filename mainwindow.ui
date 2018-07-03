@@ -266,6 +266,7 @@ o</string>
                  <string notr="true">QLabel {
 font-family: MS Shell Dlg 2;
 font-size: 14pt;
+line-height:12pt;
 color : white;
 }</string>
                 </property>
@@ -297,7 +298,7 @@ color : white;
                 <property name="styleSheet">
                  <string notr="true">QLabel {
 font-family: MS Shell Dlg 2;
-font-size: 12pt;
+font-size: 11pt;
 color : white;
 }</string>
                 </property>
@@ -507,7 +508,7 @@ background-color: #6699ff;
               <item row="0" column="2">
                <widget class="QPushButton" name="autoButton">
                 <property name="enabled">
-                 <bool>false</bool>
+                 <bool>true</bool>
                 </property>
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -737,10 +738,19 @@ background-color: yellow;
          <enum>Qt::DotLine</enum>
         </property>
         <property name="sortingEnabled">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <attribute name="horizontalHeaderVisible">
-         <bool>true</bool>
+         <bool>false</bool>
+        </attribute>
+        <attribute name="horizontalHeaderCascadingSectionResizes">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="horizontalHeaderDefaultSectionSize">
+         <number>30</number>
+        </attribute>
+        <attribute name="horizontalHeaderMinimumSectionSize">
+         <number>20</number>
         </attribute>
         <attribute name="horizontalHeaderStretchLastSection">
          <bool>true</bool>
@@ -810,7 +820,12 @@ background-color: yellow;
           </sizepolicy>
          </property>
          <property name="styleSheet">
-          <string notr="true">QTextEdit { background:rgb(255, 255, 255); }</string>
+          <string notr="true">QTextEdit { background:rgb(255, 255, 255); }
+
+QTextEdit[readOnly=&quot;true&quot;] { 
+	background:#EEE;
+	font-style:italic;
+}</string>
          </property>
          <property name="acceptRichText">
           <bool>false</bool>
@@ -888,8 +903,8 @@ background-color: yellow;
           </property>
          </widget>
         </item>
-        <item row="1" column="6">
-         <widget class="QPushButton" name="stopTxButton">
+        <item row="1" column="3">
+         <widget class="QPushButton" name="snrMacroButton">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -897,7 +912,7 @@ background-color: yellow;
            </size>
           </property>
           <property name="text">
-           <string>Halt</string>
+           <string>SNR</string>
           </property>
          </widget>
         </item>
@@ -918,7 +933,47 @@ background-color: yellow;
          </widget>
         </item>
         <item row="1" column="5">
+         <spacer name="horizontalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="6">
          <widget class="QPushButton" name="startTxButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:checked {
+background-color: #00ff00;
+}</string>
+          </property>
+          <property name="text">
+           <string>Send</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="7">
+         <widget class="QPushButton" name="stopTxButton">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -926,7 +981,7 @@ background-color: yellow;
            </size>
           </property>
           <property name="text">
-           <string>Send</string>
+           <string>Halt</string>
           </property>
          </widget>
         </item>
@@ -944,23 +999,7 @@ background-color: yellow;
          </widget>
         </item>
         <item row="1" column="4">
-         <spacer name="horizontalSpacer_5">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="1" column="3">
-         <widget class="QPushButton" name="snrMacroButton">
+         <widget class="QPushButton" name="macrosMacroButton">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -968,7 +1007,7 @@ background-color: yellow;
            </size>
           </property>
           <property name="text">
-           <string>SNR</string>
+           <string>Macros</string>
           </property>
          </widget>
         </item>
@@ -1944,7 +1983,7 @@ background-color: yellow;
                  <enum>QTabWidget::Triangular</enum>
                 </property>
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>3</number>
                 </property>
                 <widget class="QWidget" name="tab">
                  <attribute name="title">
@@ -2831,7 +2870,7 @@ list. The list can be maintained in Settings (F2).</string>
                   <item>
                    <widget class="QLineEdit" name="nextFreeTextMsg">
                     <property name="maxLength">
-                     <number>100</number>
+                     <number>10000</number>
                     </property>
                     <property name="frame">
                      <bool>false</bool>
@@ -2875,7 +2914,7 @@ list. The list can be maintained in Settings (F2).</string>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="pbNextFreeTextMsg">
+                   <widget class="QPushButton" name="pbNextFreeTextMsg_old">
                     <property name="text">
                      <string>Next</string>
                     </property>

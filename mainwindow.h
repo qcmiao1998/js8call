@@ -119,6 +119,11 @@ public slots:
   void msgAvgDecode2();
   void fastPick(int x0, int x1, int y);
 
+  void resetMessage();
+  void resetMessageUI();
+  void createMessageTransmitQueue(QString const& text);
+  void resetMessageTransmitQueue();
+  QString popMessageFrame();
 protected:
   void keyPressEvent (QKeyEvent *) override;
   void closeEvent(QCloseEvent *) override;
@@ -183,7 +188,8 @@ private slots:
   void on_txb5_clicked();
   void on_txb5_doubleClicked ();
   void on_txb6_clicked();
-  void on_pbNextFreeTextMsg_clicked();
+  void on_startTxButton_toggled(bool checked);
+  void splitAndSendNextMessage();
   void on_rbNextFreeTextMsg_toggled (bool status);
   void on_lookupButton_clicked();
   void on_addButton_clicked();
@@ -206,8 +212,10 @@ private slots:
   void on_actionErase_ALL_TXT_triggered();
   void on_actionErase_FoxQSO_txt_triggered();
   void on_actionErase_wsjtx_log_adi_triggered();
+  void startTx();
   void startTx2();
   void startP1();
+  void continueTx();
   void stopTx();
   void stopTx2();
   void on_pbCallCQ_clicked();
@@ -221,9 +229,11 @@ private slots:
   void on_freeTextMsg_currentTextChanged (QString const&);
   void on_nextFreeTextMsg_currentTextChanged (QString const&);
   void on_extFreeTextMsg_currentTextChanged (QString const&);
+  void on_extFreeTextMsgEdit_currentTextChanged (QString const&);
+  QStringList buildFT8MessageFrames(QString const& text);
   QString parseFT8Message(QString input);
   int countFreeTextMsgs(QString input);
-  void splitNextFreeTextMsg();
+  bool prepareNextMessageFrame();
   void on_rptSpinBox_valueChanged(int n);
   void killFile();
   void on_tuneButton_clicked (bool);
@@ -611,6 +621,8 @@ private:
     int snr;
   };
 
+  int m_txFrameCount;
+  QQueue<QString> m_txFrameQueue;
   QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
   QMap<QString,FoxQSO> m_foxQSO;
@@ -729,6 +741,23 @@ private:
   void foxTxSequencer();
   void foxGenWaveform(int i,QString fm);
   void writeFoxQSO(QString msg);
+};
+
+class EscapeKeyPressEater : public QObject
+{
+    Q_OBJECT
+protected:
+    bool eventFilter(QObject *obj, QEvent *event){
+        if (event->type() == QEvent::KeyPress) {
+            QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+            if(keyEvent->key() == Qt::Key_Escape){
+                return true;
+            }
+        }
+
+        // standard event processing
+        return QObject::eventFilter(obj, event);
+    }
 };
 
 extern int killbyname(const char* progName);
