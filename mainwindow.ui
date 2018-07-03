@@ -255,6 +255,19 @@ o</string>
                <number>0</number>
               </property>
               <item>
+               <spacer name="verticalSpacer_4">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
                <widget class="QLabel" name="labUTC">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -315,6 +328,19 @@ color : white;
                  <number>5</number>
                 </property>
                </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
               </item>
              </layout>
             </widget>
@@ -394,7 +420,7 @@ background-color: #00ff00;
                </widget>
               </item>
               <item row="0" column="1">
-               <widget class="QPushButton" name="logButton">
+               <widget class="QPushButton" name="logQSOButton">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
@@ -836,6 +862,12 @@ QTextEdit[readOnly=&quot;true&quot;] {
         </widget>
        </widget>
        <widget class="QTableWidget" name="tableWidgetCalls">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="showDropIndicator" stdset="0">
+         <bool>false</bool>
+        </property>
         <property name="selectionMode">
          <enum>QAbstractItemView::SingleSelection</enum>
         </property>
@@ -3507,7 +3539,7 @@ list. The list can be maintained in Settings (F2).</string>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="logQSOButton">
+        <widget class="QPushButton" name="logQSOButton_old">
          <property name="minimumSize">
           <size>
            <width>50</width>

@@ -716,6 +716,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   TxAgainTimer.setSingleShot(true);
   connect(&TxAgainTimer, SIGNAL(timeout()), this, SLOT(TxAgain()));
 
+  beaconTimer.setSingleShot(true);
+  connect(&beaconTimer, &QTimer::timeout, this, &MainWindow::prepareBeacon);
+
   connect(m_wideGraph.data (), SIGNAL(setFreq3(int,int)),this,
           SLOT(setFreq4(int,int)));
 
@@ -4965,6 +4968,14 @@ void MainWindow::resetMessageUI(){
     }
 }
 
+void MainWindow::createMessage(QString const& text){
+    //resetMessage();
+
+    //ui->extFreeTextMsgEdit->setPlainText(text);
+
+    //createMessageTransmitQueue(text);
+}
+
 void MainWindow::createMessageTransmitQueue(QString const& text){
   resetMessageTransmitQueue();
 
@@ -5042,6 +5053,23 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
         ui->startTxButton->setText("Send");
         ui->startTxButton->setEnabled(false);
     }
+}
+
+void MainWindow::on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected){
+    /*
+    if(selected.isEmpty()){
+        return;
+    }
+    QString selectedCall = ui->tableWidgetCalls->selectedItems().first()->text();
+    int offset = m_callActivity[selectedCall].freq;
+
+    QList<QTableWidgetItem*> items = ui->tableWidgetRXAll->findItems(QString("%1").arg(offset), Qt::MatchExactly);
+    if(items.isEmpty()){
+        return;
+    }
+
+    ui->tableWidgetRXAll->setItemSelected(items.first(), true);
+    */
 }
 
 QStringList MainWindow::buildFT8MessageFrames(QString const& text){
@@ -5140,6 +5168,33 @@ bool MainWindow::prepareNextMessageFrame()
   }
   */
 
+}
+
+void MainWindow::scheduleBeacon(){
+    int timestamp = QDateTime::currentDateTimeUtc().addSecs(300).toSecsSinceEpoch();
+    m_nextBeacon = QDateTime::fromSecsSinceEpoch(roundUp(timestamp, 15) + 1, QTimeZone::utc());
+    beaconTimer.start(QDateTime::currentDateTimeUtc().msecsTo(m_nextBeacon) - 2*1000);
+}
+
+void MainWindow::prepareBeacon(){
+    if(!ui->beaconButton->isChecked()){
+        return;
+    }
+
+    if(QDateTime::currentDateTimeUtc().msecsTo(m_nextBeacon) > 15*1000){
+        return;
+    }
+
+    if(!m_txFrameQueue.isEmpty()){
+        beaconTimer.start(15*1000);
+        return;
+    }
+
+    QString message = QString("DE %1 %2\nDE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4));
+    ui->extFreeTextMsgEdit->setPlainText(message);
+    ui->startTxButton->setChecked(true);
+
+    scheduleBeacon();
 }
 
 // this function is called by auto_tx_mode, which is called by autoButton.clicked
@@ -6320,25 +6375,12 @@ void MainWindow::on_pbT2R_clicked()
     }
 }
 
-static int roundUp(int numToRound, int multiple)
-{
- if(multiple == 0)
- {
-  return numToRound;
- }
-
- int roundDown = ( (int) (numToRound) / multiple) * multiple;
- return roundDown + multiple;
-}
-
 void MainWindow::on_beaconButton_clicked()
 {
     if(ui->beaconButton->isChecked()){
-        int timestamp = QDateTime::currentDateTimeUtc().addSecs(300).toSecsSinceEpoch();
-        m_nextBeacon = QDateTime::fromSecsSinceEpoch(roundUp(timestamp, 15) + 1, QTimeZone::utc());
+        scheduleBeacon();
     }
 }
-
 
 void MainWindow::on_readFreq_clicked()
 {

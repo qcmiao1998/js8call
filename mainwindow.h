@@ -121,6 +121,7 @@ public slots:
 
   void resetMessage();
   void resetMessageUI();
+  void createMessage(QString const& text);
   void createMessageTransmitQueue(QString const& text);
   void resetMessageTransmitQueue();
   QString popMessageFrame();
@@ -188,6 +189,7 @@ private slots:
   void on_txb5_clicked();
   void on_txb5_doubleClicked ();
   void on_txb6_clicked();
+  void on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
   void on_startTxButton_toggled(bool checked);
   void splitAndSendNextMessage();
   void on_rbNextFreeTextMsg_toggled (bool status);
@@ -234,6 +236,8 @@ private slots:
   QString parseFT8Message(QString input);
   int countFreeTextMsgs(QString input);
   bool prepareNextMessageFrame();
+  void scheduleBeacon();
+  void prepareBeacon();
   void on_rptSpinBox_valueChanged(int n);
   void killFile();
   void on_tuneButton_clicked (bool);
@@ -567,6 +571,7 @@ private:
   QTimer minuteTimer;
   QTimer splashTimer;
   QTimer p1Timer;
+  QTimer beaconTimer;
 
   QString m_path;
   QString m_baseCall;
@@ -759,6 +764,18 @@ protected:
         return QObject::eventFilter(obj, event);
     }
 };
+
+
+static int roundUp(int numToRound, int multiple)
+{
+ if(multiple == 0)
+ {
+  return numToRound;
+ }
+
+ int roundDown = ( (int) (numToRound) / multiple) * multiple;
+ return roundDown + multiple;
+}
 
 extern int killbyname(const char* progName);
 extern void getDev(int* numDevices,char hostAPI_DeviceName[][50],
