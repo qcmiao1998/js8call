@@ -835,23 +835,36 @@ QTextEdit[readOnly=&quot;true&quot;] {
          </property>
         </widget>
        </widget>
-       <widget class="QListWidget" name="listWidget">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-          <horstretch>1</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+       <widget class="QTableWidget" name="tableWidgetCalls">
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
         </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>16777215</height>
-         </size>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
         </property>
-        <property name="styleSheet">
-         <string notr="true">QListWidget { background:rgb(255, 255, 255); }</string>
+        <property name="gridStyle">
+         <enum>Qt::DotLine</enum>
         </property>
-        <item>
+        <attribute name="horizontalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="horizontalHeaderStretchLastSection">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <row>
+         <property name="text">
+          <string>0</string>
+         </property>
+        </row>
+        <column>
+         <property name="text">
+          <string>Callsign</string>
+         </property>
+        </column>
+        <item row="0" column="0">
          <property name="text">
           <string>allcall</string>
          </property>

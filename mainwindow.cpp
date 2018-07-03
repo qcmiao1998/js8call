@@ -2860,7 +2860,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
 {
   while(proc_jt9.canReadLine()) {
     QByteArray t=proc_jt9.readLine();
-    qDebug()<< QString(t);
+    qDebug() << "JT9: " << QString(t);
     if(m_mode=="FT8" and !m_config.bHound() and t.contains(";")) {
       if(t.contains("<...>")) continue;
       if(!m_bWarnedHound) {
@@ -7090,6 +7090,11 @@ void MainWindow::postDecode (bool is_new, QString const& message)
 
 
   // TODO: keep track of selection
+  int selectedOffset = -1;
+  auto selectedItems = ui->tableWidgetRXAll->selectedItems();
+  if(!selectedItems.isEmpty()){
+      selectedOffset = selectedItems.first()->text().toInt();
+  }
   int now = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
   for(int i = ui->tableWidgetRXAll->rowCount(); i >= 0; i--){
     ui->tableWidgetRXAll->removeRow(i);
@@ -7117,17 +7122,34 @@ void MainWindow::postDecode (bool is_new, QString const& message)
           ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, new QTableWidgetItem(QString("%1").arg(offset)));
           ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, new QTableWidgetItem(QString("%1").arg(snr)));
           ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, new QTableWidgetItem(joined));
+          if(offset == selectedOffset){
+              ui->tableWidgetRXAll->selectRow(ui->tableWidgetRXAll->rowCount() - 1);
+          }
       }
   }
   ui->tableWidgetRXAll->resizeColumnsToContents();
 
   // TODO: keep track of selection
-  ui->listWidget->clear();
-  ui->listWidget->addItem("allcall");
+  QString selectedCall;
+  auto selectedCalls = ui->tableWidgetCalls->selectedItems();
+  if(!selectedCalls.isEmpty()){
+      selectedCall = selectedCalls.first()->text();
+  }
+  for(int i = ui->tableWidgetCalls->rowCount(); i >= 0; i--){
+    ui->tableWidgetCalls->removeRow(i);
+  }
+
+  ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+  ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("allcall"));
+
   QList<QString> calls = m_callActivity.keys();
   qSort(calls.begin(), calls.end());
   foreach(QString call, calls){
-    ui->listWidget->addItem(call);
+      ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem(call));
+      if(call == selectedCall){
+          ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
+      }
   }
 
 }
