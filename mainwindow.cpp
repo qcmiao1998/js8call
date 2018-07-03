@@ -5109,6 +5109,10 @@ bool MainWindow::prepareNextMessageFrame()
     return false;
   } else {
     ui->nextFreeTextMsg->setText(frame);
+
+    int count = m_txFrameCount;
+    int sent = count - m_txFrameQueue.count();
+    ui->startTxButton->setText(QString("Sending (%1/%2)").arg(sent).arg(count));
     return true;
   }
 
