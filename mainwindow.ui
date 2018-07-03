@@ -508,7 +508,7 @@ background-color: #6699ff;
               <item row="0" column="2">
                <widget class="QPushButton" name="autoButton">
                 <property name="enabled">
-                 <bool>true</bool>
+                 <bool>false</bool>
                 </property>
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
