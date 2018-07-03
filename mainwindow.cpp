@@ -2860,6 +2860,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
 {
   while(proc_jt9.canReadLine()) {
     QByteArray t=proc_jt9.readLine();
+    qDebug()<< QString(t);
     if(m_mode=="FT8" and !m_config.bHound() and t.contains(";")) {
       if(t.contains("<...>")) continue;
       if(!m_bWarnedHound) {
@@ -5149,6 +5150,7 @@ void MainWindow::on_startTxButton_toggled(bool checked)
         startTx();
     } else {
         resetMessage();
+        stopTx();
     }
 
     /*
