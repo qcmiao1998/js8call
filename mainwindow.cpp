@@ -955,7 +955,31 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->menuView->setEnabled(false);
   ui->dxCallEntry->clear();
   ui->dxGridEntry->clear();
+  ui->TxFreqSpinBox->setValue(1500);
+  ui->RxFreqSpinBox->setValue(1500);
 
+  //connect(ui->tableWidgetRXAll->horizontalHeader(), &QHeaderView::sectionResized, this, [this](){  });
+
+  // setup tablewidget context menus
+  auto clearAction1 = new QAction(QIcon::fromTheme("edit-clear"), "Clear");
+  connect(clearAction1, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->textEditRX); });
+  ui->textEditRX->setContextMenuPolicy(Qt::ActionsContextMenu);
+  ui->textEditRX->addAction(clearAction1);
+
+  auto clearAction2 = new QAction(QIcon::fromTheme("edit-clear"), "Clear");
+  connect(clearAction2, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->extFreeTextMsgEdit); });
+  ui->extFreeTextMsgEdit->setContextMenuPolicy(Qt::ActionsContextMenu);
+  ui->extFreeTextMsgEdit->addAction(clearAction2);
+
+  auto clearAction3 = new QAction(QIcon::fromTheme("edit-clear"), "Clear");
+  connect(clearAction3, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetRXAll); });
+  ui->tableWidgetRXAll->setContextMenuPolicy(Qt::ActionsContextMenu);
+  ui->tableWidgetRXAll->addAction(clearAction3);
+
+  auto clearAction4 = new QAction(QIcon::fromTheme("edit-clear"), "Clear");
+  connect(clearAction4, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetCalls); });
+  ui->tableWidgetCalls->setContextMenuPolicy(Qt::ActionsContextMenu);
+  ui->tableWidgetCalls->addAction(clearAction4);
 
   // this must be the last statement of constructor
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
@@ -963,12 +987,14 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
 void MainWindow::not_GA_warning_message ()
 {
+  /*
   MessageBox::critical_message (this,
                                 "This version of WSJT-X was built from code in the\n"
                                 "development branch, or is a beta-level Release Candidate.\n\n"
                                 "On-the-air use carries an obligation to report problems\n"
                                 "to the WSJT Development group and to upgrade to a GA\n"
                                 "(General Availability) release when that is released.\n\n");
+  */
 }
 
 void MainWindow::initialize_fonts ()
@@ -6248,6 +6274,34 @@ void MainWindow::on_rbFreeText_clicked(bool checked)
   }
 }
 
+void MainWindow::on_clearAction_triggered(QObject * sender){
+    // TODO: jsherer - abstract this into a tableWidgetRXAllReset function
+    if(sender == ui->tableWidgetRXAll){
+        m_bandActivity.clear();
+        for(int i = ui->tableWidgetRXAll->rowCount(); i >= 0; i--){
+          ui->tableWidgetRXAll->removeRow(i);
+        }
+    }
+
+    // TODO: jsherer - abstract this into a tableWidgetCallsReset function
+    if(sender == ui->tableWidgetCalls){
+        m_callActivity.clear();
+        for(int i = ui->tableWidgetCalls->rowCount(); i >= 0; i--){
+          ui->tableWidgetCalls->removeRow(i);
+        }
+        ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("allcall"));
+    }
+
+    if(sender == ui->extFreeTextMsgEdit){
+        resetMessage();
+    }
+
+    if(sender == ui->textEditRX){
+        ui->textEditRX->clear();
+    }
+}
+
 void MainWindow::on_tableWidgetRXAll_cellClicked(int row, int col){
     auto item = ui->tableWidgetRXAll->item(row, 0);
     int offset = item->text().toInt();
@@ -7179,6 +7233,9 @@ void MainWindow::postDecode (bool is_new, QString const& message)
               if(now - item.timestamp > 90000){
                   continue;
               }
+              if(item.text.isEmpty()){
+                  continue;
+              }
               text.append(item.text);
               snr = item.snr;
           }
@@ -7189,8 +7246,10 @@ void MainWindow::postDecode (bool is_new, QString const& message)
           }
 
           ui->tableWidgetRXAll->insertRow(ui->tableWidgetRXAll->rowCount());
-          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, new QTableWidgetItem(QString("%1").arg(offset)));
-          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, new QTableWidgetItem(QString("%1").arg(snr)));
+          auto offsetItem = new QTableWidgetItem(QString("%1").arg(offset));
+          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, offsetItem);
+          auto snrItem = new QTableWidgetItem(QString("%1").arg(snr));
+          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, snrItem);
 
           // align right if eliding...
           int colWidth = ui->tableWidgetRXAll->columnWidth(2);
@@ -7200,11 +7259,24 @@ void MainWindow::postDecode (bool is_new, QString const& message)
           auto flag = Qt::AlignLeft|Qt::AlignVCenter;
           if(elidedText != joined){
               flag = Qt::AlignRight|Qt::AlignVCenter;
-              textItem->setText(elidedText);
+              textItem->setText(joined);
           }
           textItem->setTextAlignment(flag);
 
+          if (text.last().contains(QRegularExpression {"^(CQ|QRZ|DE)\\s"})){
+              offsetItem->setBackground(QBrush(m_config.color_CQ()));
+              snrItem->setBackground(QBrush(m_config.color_CQ()));
+              textItem->setBackground(QBrush(m_config.color_CQ()));
+          }
+
+          if (text.last().contains(m_config.my_callsign())){
+              offsetItem->setBackground(QBrush(m_config.color_MyCall()));
+              snrItem->setBackground(QBrush(m_config.color_MyCall()));
+              textItem->setBackground(QBrush(m_config.color_MyCall()));
+          }
+
           ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, textItem);
+
           if(offset == selectedOffset){
               ui->tableWidgetRXAll->selectRow(ui->tableWidgetRXAll->rowCount() - 1);
           }
