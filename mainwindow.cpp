@@ -3040,7 +3040,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         }
         m_QSOText = decodedtext.string ().trimmed ();
 
-        // TODO: parse decode...
+        // TODO: jsherer - parse decode...
         //ui->textEditRXAll->insertHtml(decodedtext.messageWords().first().trimmed() + "\n");
       }
 
@@ -3800,6 +3800,9 @@ void MainWindow::startTx()
     ui->autoButton->click();
     ui->autoButton->setEnabled(false);
   }
+
+  // disallow editing of the text while transmitting
+  ui->extFreeTextMsgEdit->setReadOnly(true);
 }
 
 void MainWindow::startTx2()
@@ -3848,36 +3851,10 @@ void MainWindow::stopTx()
   if(prepareNextMessageFrame()){
       continueTx();
   } else {
+      // TODO: jsherer - split this up...
+      ui->extFreeTextMsgEdit->setReadOnly(false);
       on_stopTxButton_clicked();
   }
-
-  /*
-  if(true || ui->tabWidget->currentIndex() == 3){
-    //1. check to see if there are more messages to send
-    //2. if there are, fixup next message and continue transmitting
-    //3. if not, allow the transmission to stop
-    // TODO: refactor this to "count remaining"
-    QString txt = ui->extFreeTextMsg->toPlainText();
-    int sz = countFreeTextMsgs(txt.trimmed().mid(m_extFreeTxtPos).trimmed());
-    if(sz > 0){
-        splitNextFreeTextMsg();
-        ui->txFirstCheckBox->setChecked(!m_txFirst);
-    } else {
-        if(ui->autoButton->isChecked()){
-            ui->autoButton->click();
-            ui->autoButton->setEnabled(false);
-        }
-        if(ui->startTxButton->isChecked()){
-            ui->startTxButton->setChecked(false);
-        }
-        ui->nextFreeTextMsg->clear();
-        ui->extFreeTextMsg->clear();
-        ui->extFreeTextMsgEdit->clear();
-        ui->extFreeTextMsgEdit->setEnabled(true);
-        m_extFreeTxtPos = 0;
-    }
-  }
-  */
 
   ptt0Timer.start(200);                       //end-of-transmission sequencer delay
   monitor (true);
@@ -4969,16 +4946,11 @@ void MainWindow::resetMessageUI(){
 }
 
 void MainWindow::createMessage(QString const& text){
-    //resetMessage();
-
-    //ui->extFreeTextMsgEdit->setPlainText(text);
-
-    //createMessageTransmitQueue(text);
+    resetMessageTransmitQueue();
+    createMessageTransmitQueue(text);
 }
 
 void MainWindow::createMessageTransmitQueue(QString const& text){
-  resetMessageTransmitQueue();
-
   auto frames = buildFT8MessageFrames(text);
   m_txFrameQueue.append(frames);
   m_txFrameCount = frames.length();
@@ -5201,7 +5173,7 @@ void MainWindow::prepareBeacon(){
 void MainWindow::on_startTxButton_toggled(bool checked)
 {
     if(checked){
-        createMessageTransmitQueue(ui->extFreeTextMsgEdit->toPlainText());
+        createMessage(ui->extFreeTextMsgEdit->toPlainText());
         startTx();
     } else {
         resetMessage();
@@ -5241,7 +5213,7 @@ void MainWindow::splitAndSendNextMessage()
 
     splitNextFreeTextMsg();
 
-    // TODO: detect if we're currently in a possible transmit cycle...and if so, wait...
+    // TODO: jsherer - detect if we're currently in a possible transmit cycle...and if so, wait...
     QDateTime now {QDateTime::currentDateTimeUtc()};
     int s=now.time().second();
     int n=s % (2*m_TRperiod);
