@@ -3818,6 +3818,10 @@ void MainWindow::guiUpdate()
   }
   m_iptt0=g_iptt;
   m_btxok0=m_btxok;
+
+  // TODO: jsherer - is this the right place?
+  update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
+
 }               //End of guiUpdate
 
 

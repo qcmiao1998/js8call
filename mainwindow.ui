@@ -1048,6 +1048,9 @@ QTextEdit[readOnly=&quot;true&quot;] {
           <property name="styleSheet">
            <string notr="true">QPushButton:checked {
 background-color: #00ff00;
+}
+QPushButton[transmitting=&quot;true&quot;]{
+background:yellow;
 }</string>
           </property>
           <property name="text">
