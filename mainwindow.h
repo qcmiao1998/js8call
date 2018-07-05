@@ -119,6 +119,8 @@ public slots:
   void msgAvgDecode2();
   void fastPick(int x0, int x1, int y);
 
+  int logRxTxMessageText(QDateTime date, QString text, bool tx, int block=-1);
+  void addMessageText(QString text);
   void resetMessage();
   void resetMessageUI();
   void createMessage(QString const& text);
@@ -189,7 +191,6 @@ private slots:
   void on_txb5_clicked();
   void on_txb5_doubleClicked ();
   void on_txb6_clicked();
-  void on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
   void on_startTxButton_toggled(bool checked);
   void splitAndSendNextMessage();
   void on_rbNextFreeTextMsg_toggled (bool status);
@@ -229,10 +230,16 @@ private slots:
   void on_rbGenMsg_clicked(bool checked);
   void on_rbFreeText_clicked(bool checked);
   void on_clearAction_triggered(QObject * sender);
+  void on_cqMacroButton_clicked();
+  void on_replyMacroButton_clicked();
+  void on_snrMacroButton_clicked();
+  void on_macrosMacroButton_clicked();
   void on_tableWidgetRXAll_cellClicked(int row, int col);
   void on_tableWidgetRXAll_cellDoubleClicked(int row, int col);
+  void on_tableWidgetRXAll_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
   void on_tableWidgetCalls_cellClicked(int row, int col);
   void on_tableWidgetCalls_cellDoubleClicked(int row, int col);
+  void on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
   void on_freeTextMsg_currentTextChanged (QString const&);
   void on_nextFreeTextMsg_currentTextChanged (QString const&);
   void on_extFreeTextMsg_currentTextChanged (QString const&);
@@ -626,14 +633,25 @@ private:
 
   struct ActivityDetail
   {
+    QString firstCall;
+    QString secondCall;
     int freq;
     QString text;
     int timestamp;
     int snr;
   };
 
+  struct RXDetail
+  {
+      int freq;
+      QString text;
+      int timestamp;
+  };
+
   int m_txFrameCount;
   QQueue<QString> m_txFrameQueue;
+  QQueue<RXDetail> m_rxFrameQueue;
+  QMap<int, int> m_rxFrameBlockNumbers; // freq -> block
   QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
   QMap<QString,FoxQSO> m_foxQSO;

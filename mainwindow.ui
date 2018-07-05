@@ -742,6 +742,11 @@ background-color: yellow;
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
         <property name="sizeAdjustPolicy">
          <enum>QAbstractScrollArea::AdjustToContents</enum>
         </property>
@@ -825,6 +830,7 @@ background-color: yellow;
          </property>
          <property name="font">
           <font>
+           <pointsize>12</pointsize>
            <italic>true</italic>
           </font>
          </property>
@@ -833,6 +839,9 @@ background-color: yellow;
          </property>
          <property name="styleSheet">
           <string notr="true">background-color:#ffeaa7;</string>
+         </property>
+         <property name="undoRedoEnabled">
+          <bool>false</bool>
          </property>
          <property name="readOnly">
           <bool>true</bool>
@@ -847,6 +856,11 @@ background-color: yellow;
            <horstretch>4</horstretch>
            <verstretch>1</verstretch>
           </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
          </property>
          <property name="styleSheet">
           <string notr="true">QTextEdit { background:rgb(255, 255, 255); }
@@ -865,6 +879,11 @@ QTextEdit[readOnly=&quot;true&quot;] {
         </widget>
        </widget>
        <widget class="QTableWidget" name="tableWidgetCalls">
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
         <property name="editTriggers">
          <set>QAbstractItemView::NoEditTriggers</set>
         </property>
@@ -892,21 +911,11 @@ QTextEdit[readOnly=&quot;true&quot;] {
         <attribute name="verticalHeaderVisible">
          <bool>false</bool>
         </attribute>
-        <row>
-         <property name="text">
-          <string>0</string>
-         </property>
-        </row>
         <column>
          <property name="text">
           <string>Callsign</string>
          </property>
         </column>
-        <item row="0" column="0">
-         <property name="text">
-          <string>allcall</string>
-         </property>
-        </item>
        </widget>
       </widget>
       <widget class="QWidget" name="macroHorizonalWidget" native="true">
@@ -941,32 +950,6 @@ QTextEdit[readOnly=&quot;true&quot;] {
         <property name="bottomMargin">
          <number>0</number>
         </property>
-        <item row="1" column="1">
-         <widget class="QPushButton" name="qtcMacroButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>QTC</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QPushButton" name="snrMacroButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>SNR</string>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="0">
          <widget class="QPushButton" name="cqMacroButton">
           <property name="minimumSize">
@@ -983,7 +966,33 @@ QTextEdit[readOnly=&quot;true&quot;] {
           </property>
          </widget>
         </item>
-        <item row="1" column="5">
+        <item row="1" column="1">
+         <widget class="QPushButton" name="replyMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>REPLY</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="snrMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>SNR</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4">
          <spacer name="horizontalSpacer_5">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -1000,6 +1009,32 @@ QTextEdit[readOnly=&quot;true&quot;] {
          </spacer>
         </item>
         <item row="1" column="6">
+         <widget class="QPushButton" name="stopTxButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Halt</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QPushButton" name="macrosMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Macros</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="5">
          <widget class="QPushButton" name="startTxButton">
           <property name="enabled">
            <bool>false</bool>
@@ -1020,45 +1055,6 @@ background-color: #00ff00;
           </property>
           <property name="checkable">
            <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="7">
-         <widget class="QPushButton" name="stopTxButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Halt</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QPushButton" name="qthMacroButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>QTH</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="4">
-         <widget class="QPushButton" name="macrosMacroButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Macros</string>
           </property>
          </widget>
         </item>
@@ -3961,6 +3957,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionOpen">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Open</string>
    </property>
@@ -3969,6 +3968,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionOpen_next_in_directory">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Open next in directory</string>
    </property>
@@ -3977,6 +3979,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionDecode_remaining_files_in_directory">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Decode remaining files in directory</string>
    </property>
@@ -3985,6 +3990,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionDelete_all_wav_files_in_SaveDir">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Delete all *.wav &amp;&amp; *.c2 files in SaveDir</string>
    </property>
@@ -4496,6 +4504,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionErase_FoxQSO_txt">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Erase FoxQSO.txt</string>
    </property>

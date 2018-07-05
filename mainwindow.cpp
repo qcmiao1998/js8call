@@ -163,8 +163,8 @@ QVector<QColor> g_ColorTbl;
 namespace
 {
   Radio::Frequency constexpr default_frequency {14074000};
-  QRegExp message_alphabet {"[- @A-Za-z0-9+./?#<>]*"};
-  QRegExp message_input_alphabet {"[- @A-Za-z0-9+./?#<>\n]*"};
+  QRegExp message_alphabet {"[- A-Za-z0-9+./?]*"};
+  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n*]*"};
   // grid exact match excluding RR73
   QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
 
@@ -3007,6 +3007,15 @@ void MainWindow::readFromStdout()                             //readFromStdout
             }
 
             ActivityDetail d;
+            d.firstCall = decodedtext.CQersCall();
+            if(d.firstCall.isEmpty()){
+                auto words = decodedtext.messageWords();
+                if(words.length() > 1){
+                    d.firstCall = words.at(0);
+                    d.secondCall = words.at(1);
+                }
+            }
+
             d.freq = offset;
             d.text = decodedtext.messageWords().first().trimmed();
             d.timestamp = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
@@ -3074,7 +3083,12 @@ void MainWindow::readFromStdout()                             //readFromStdout
         m_QSOText = decodedtext.string ().trimmed ();
 
         // TODO: jsherer - parse decode...
-        //ui->textEditRXAll->insertHtml(decodedtext.messageWords().first().trimmed() + "\n");
+        //logRxTxMessageText(decodedtext.messageWords().first().trimmed(), false);
+        RXDetail d;
+        d.freq = audioFreq;
+        d.text = decodedtext.messageWords().first();
+        d.timestamp = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
+        m_rxFrameQueue.append(d);
       }
 
       if(m_mode=="FT8" and m_config.bHound()) {
@@ -4963,6 +4977,58 @@ void MainWindow::on_tx6_editingFinished()                       //tx6 edited
   msgtype(t, ui->tx6);
 }
 
+int MainWindow::logRxTxMessageText(QDateTime date, QString text, bool tx, int block){
+    auto c = ui->textEditRX->textCursor();
+
+    bool found = false;
+    if(block != -1){
+        QTextBlock b = c.document()->findBlockByNumber(block);
+        c.setPosition(b.position());
+        c.movePosition(QTextCursor::EndOfBlock);
+        found = true;
+    } else {
+        c.insertBlock();
+    }
+
+    if(tx){
+        text = "<strong>" + text + "</strong>";
+
+        // TODO: jsherer - move this out of this function
+        m_rxFrameBlockNumbers.clear();
+    }
+
+    if(found){
+        c.insertHtml(text);
+    } else {
+        c.insertHtml(QString("<strong>%1</strong> - %2").arg(date.time().toString()).arg(text));
+    }
+
+    return c.blockNumber(); // ui->textEditRX->document()->lineCount();
+}
+
+void MainWindow::addMessageText(QString text){
+    // TODO: jsherer - check to make sure we're not transmitting currently
+    QTextCursor c = ui->extFreeTextMsgEdit->textCursor();
+    if(c.hasSelection()){
+        c.removeSelectedText();
+    }
+
+    int pos = c.position();
+    c.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor);
+
+    bool isSpace = c.selectedText().isEmpty() || c.selectedText().at(0).isSpace();
+    c.clearSelection();
+
+    c.setPosition(pos);
+
+    if(!isSpace){
+        c.insertText(" ");
+    }
+
+    c.insertText(text);
+    ui->extFreeTextMsgEdit->setFocus();
+}
+
 void MainWindow::resetMessage(){
     resetMessageUI();
     resetMessageTransmitQueue();
@@ -4981,6 +5047,7 @@ void MainWindow::resetMessageUI(){
 void MainWindow::createMessage(QString const& text){
     resetMessageTransmitQueue();
     createMessageTransmitQueue(text);
+    logRxTxMessageText(QDateTime::currentDateTimeUtc(), text, true);
 }
 
 void MainWindow::createMessageTransmitQueue(QString const& text){
@@ -5058,23 +5125,6 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
         ui->startTxButton->setText("Send");
         ui->startTxButton->setEnabled(false);
     }
-}
-
-void MainWindow::on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected){
-    /*
-    if(selected.isEmpty()){
-        return;
-    }
-    QString selectedCall = ui->tableWidgetCalls->selectedItems().first()->text();
-    int offset = m_callActivity[selectedCall].freq;
-
-    QList<QTableWidgetItem*> items = ui->tableWidgetRXAll->findItems(QString("%1").arg(offset), Qt::MatchExactly);
-    if(items.isEmpty()){
-        return;
-    }
-
-    ui->tableWidgetRXAll->setItemSelected(items.first(), true);
-    */
 }
 
 QStringList MainWindow::buildFT8MessageFrames(QString const& text){
@@ -6289,8 +6339,8 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
         for(int i = ui->tableWidgetCalls->rowCount(); i >= 0; i--){
           ui->tableWidgetCalls->removeRow(i);
         }
-        ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
-        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("allcall"));
+        //ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+        //ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("allcall"));
     }
 
     if(sender == ui->extFreeTextMsgEdit){
@@ -6298,9 +6348,65 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
     }
 
     if(sender == ui->textEditRX){
+        // TODO: jsherer - move these
         ui->textEditRX->clear();
+        m_rxFrameBlockNumbers.clear();
+        m_rxFrameQueue.clear();
     }
 }
+
+void MainWindow::on_cqMacroButton_clicked(){
+    QString text = QString("CQ %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().left(4));
+    addMessageText(text);
+}
+
+void MainWindow::on_replyMacroButton_clicked(){
+    auto items = ui->tableWidgetCalls->selectedItems();
+    if(!items.isEmpty()){
+        QString selectedCall = items.first()->text();
+        addMessageText(selectedCall);
+        return;
+    }
+
+    int offset = ui->RxFreqSpinBox->value();
+    if(m_bandActivity.contains(offset)){
+        auto activity = m_bandActivity[offset].last();
+        if(!activity.firstCall.isEmpty()){
+            addMessageText(activity.firstCall);
+            return;
+        }
+    }
+}
+
+void MainWindow::on_snrMacroButton_clicked(){
+    auto items = ui->tableWidgetCalls->selectedItems();
+    if(!items.isEmpty()){
+        QString selectedCall = items.first()->text();
+        int snr = m_callActivity[selectedCall].snr;
+        QString text = QString("%1").arg(snr);
+        addMessageText(text);
+        return;
+    }
+
+    int offset = ui->RxFreqSpinBox->value();
+    if(m_bandActivity.contains(offset)){
+        int snr = m_bandActivity[offset].last().snr;
+        QString text = QString("%1").arg(snr);
+        addMessageText(text);
+        return;
+    }
+}
+
+void MainWindow::on_macrosMacroButton_clicked(){
+    QMenu *menu = new QMenu(ui->macrosMacroButton);
+    foreach(QString macro, m_config.macros()->stringList()){
+        QAction *action = menu->addAction(macro);
+        connect(action, &QAction::triggered, this, [this, macro](){ addMessageText(macro); });
+    }
+    ui->macrosMacroButton->setMenu(menu);
+    ui->macrosMacroButton->showMenu();
+}
+
 
 void MainWindow::on_tableWidgetRXAll_cellClicked(int row, int col){
     auto item = ui->tableWidgetRXAll->item(row, 0);
@@ -6320,9 +6426,19 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
     int offset = item->text().toInt();
     foreach(auto d, m_callActivity.values()){
         if(d.freq == offset){
-            ui->extFreeTextMsgEdit->append(d.call);
+            addMessageText(d.call);
             break;
         }
+    }
+}
+
+void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected){
+    if(ui->tableWidgetRXAll->selectedItems().isEmpty() && ui->tableWidgetCalls->selectedItems().isEmpty()){
+        ui->replyMacroButton->setDisabled(true);
+        ui->snrMacroButton->setDisabled(true);
+    } else {
+        ui->replyMacroButton->setDisabled(false);
+        ui->snrMacroButton->setDisabled(false);
     }
 }
 
@@ -6345,7 +6461,27 @@ void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
 
     auto item = ui->tableWidgetCalls->item(row, 0);
     auto call = item->text();
-    ui->extFreeTextMsgEdit->append(call);
+    addMessageText(call);
+}
+
+
+void MainWindow::on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected){
+    on_tableWidgetRXAll_selectionChanged(selected, deselected);
+
+    /*
+    if(selected.isEmpty()){
+        return;
+    }
+    QString selectedCall = ui->tableWidgetCalls->selectedItems().first()->text();
+    int offset = m_callActivity[selectedCall].freq;
+
+    QList<QTableWidgetItem*> items = ui->tableWidgetRXAll->findItems(QString("%1").arg(offset), Qt::MatchExactly);
+    if(items.isEmpty()){
+        return;
+    }
+
+    ui->tableWidgetRXAll->setItemSelected(items.first(), true);
+    */
 }
 
 void MainWindow::on_freeTextMsg_currentTextChanged (QString const& text)
@@ -7212,7 +7348,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
 
 
 
-  // TODO: keep track of selection
+  // TODO: jsherer - keep track of selection
   int selectedOffset = -1;
   auto selectedItems = ui->tableWidgetRXAll->selectedItems();
   if(!selectedItems.isEmpty()){
@@ -7284,7 +7420,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
   }
   ui->tableWidgetRXAll->resizeColumnsToContents();
 
-  // TODO: keep track of selection
+  // TODO: jsherer - keep track of selection
   QString selectedCall;
   auto selectedCalls = ui->tableWidgetCalls->selectedItems();
   if(!selectedCalls.isEmpty()){
@@ -7294,8 +7430,8 @@ void MainWindow::postDecode (bool is_new, QString const& message)
     ui->tableWidgetCalls->removeRow(i);
   }
 
-  ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
-  ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("allcall"));
+  //ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+  //ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("allcall"));
 
   QList<QString> calls = m_callActivity.keys();
   qSort(calls.begin(), calls.end());
@@ -7303,12 +7439,24 @@ void MainWindow::postDecode (bool is_new, QString const& message)
       CallDetail d = m_callActivity[call];
       ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem(call));
-      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(d.grid));
+      //ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(d.grid));
+
       if(call == selectedCall){
           ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
       }
   }
 
+  // RX Activity
+  while(!m_rxFrameQueue.isEmpty()){
+      RXDetail d = m_rxFrameQueue.first();
+      m_rxFrameQueue.removeFirst();
+
+      auto date = QDateTime::fromSecsSinceEpoch(d.timestamp).toUTC();
+      int freq = d.freq/10*10;
+      int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
+      block = logRxTxMessageText(date, d.text, false, block=block);
+      m_rxFrameBlockNumbers[freq] = block;
+  }
 }
 
 void MainWindow::postWSPRDecode (bool is_new, QStringList parts)
