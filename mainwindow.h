@@ -231,6 +231,7 @@ private slots:
   void on_rbFreeText_clicked(bool checked);
   void on_clearAction_triggered(QObject * sender);
   void on_cqMacroButton_clicked();
+  void on_deMacroButton_clicked();
   void on_replyMacroButton_clicked();
   void on_snrMacroButton_clicked();
   void on_macrosMacroButton_clicked();
@@ -651,6 +652,8 @@ private:
   int m_txFrameCount;
   QQueue<QString> m_txFrameQueue;
   QQueue<RXDetail> m_rxFrameQueue;
+  QCache<int, QDateTime> m_rxDirectedCache; // freq -> last directed rx
+  QCache<QString, int> m_rxCallCache; // call -> last freq seen
   QMap<int, int> m_rxFrameBlockNumbers; // freq -> block
   QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)

@@ -3021,7 +3021,6 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.timestamp = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
             d.snr = decodedtext.snr();
             m_bandActivity[offset].append(d);
-
             while(m_bandActivity[offset].count() > 10){
                 m_bandActivity[offset].removeFirst();
             }
@@ -3068,6 +3067,10 @@ void MainWindow::readFromStdout()                             //readFromStdout
         if(abs(audioFreq - m_wideGraph->rxFreq()) <= 10) bDisplayRight=true;
       }
 
+      if(!bDisplayRight){
+          bDisplayRight = m_rxDirectedCache.contains(audioFreq/10*10);
+      }
+
       if (bDisplayRight) {
         // This msg is within 10 hertz of our tuned frequency, or a JT4 or JT65 avg,
         // or contains MyCall
@@ -3083,12 +3086,15 @@ void MainWindow::readFromStdout()                             //readFromStdout
         m_QSOText = decodedtext.string ().trimmed ();
 
         // TODO: jsherer - parse decode...
-        //logRxTxMessageText(decodedtext.messageWords().first().trimmed(), false);
         RXDetail d;
         d.freq = audioFreq;
         d.text = decodedtext.messageWords().first();
         d.timestamp = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
         m_rxFrameQueue.append(d);
+
+        if(d.text.contains(m_config.my_callsign())){
+            m_rxDirectedCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+        }
       }
 
       if(m_mode=="FT8" and m_config.bHound()) {
@@ -6364,6 +6370,10 @@ void MainWindow::on_cqMacroButton_clicked(){
     addMessageText(text);
 }
 
+void MainWindow::on_deMacroButton_clicked(){
+    addMessageText(m_config.my_callsign());
+}
+
 void MainWindow::on_replyMacroButton_clicked(){
     auto items = ui->tableWidgetCalls->selectedItems();
     if(!items.isEmpty()){
@@ -6407,6 +6417,12 @@ void MainWindow::on_macrosMacroButton_clicked(){
         QAction *action = menu->addAction(macro);
         connect(action, &QAction::triggered, this, [this, macro](){ addMessageText(macro); });
     }
+    menu->addSeparator();
+    auto action = new QAction(QIcon::fromTheme("edit-edit"), "Edit");
+    menu->addAction(action);
+    connect(action, &QAction::triggered, this, &MainWindow::on_actionSettings_triggered);
+
+
     ui->macrosMacroButton->setMenu(menu);
     ui->macrosMacroButton->showMenu();
 }
@@ -7409,7 +7425,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
               textItem->setBackground(QBrush(m_config.color_CQ()));
           }
 
-          if (text.last().contains(m_config.my_callsign())){
+          if (text.last().contains(m_config.my_callsign()) || m_rxDirectedCache.contains(offset/10*10)){
               offsetItem->setBackground(QBrush(m_config.color_MyCall()));
               snrItem->setBackground(QBrush(m_config.color_MyCall()));
               textItem->setBackground(QBrush(m_config.color_MyCall()));
