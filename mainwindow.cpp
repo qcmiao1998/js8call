@@ -1732,6 +1732,7 @@ void MainWindow::on_actionSettings_triggered()               //Setup Dialog
     }
 
     displayDialFrequency ();
+
     bool vhf {m_config.enable_VHF_features()};
     m_wideGraph->setVHF(vhf);
     if (!vhf) ui->sbSubmode->setValue (0);
@@ -2037,6 +2038,9 @@ void MainWindow::displayDialFrequency ()
       ui->bandComboBox->setCurrentText (band_name);
       m_wideGraph->setRxBand (band_name);
       m_lastBand = band_name;
+
+      // TODO: jsherer - is this the only place?
+      clearActivity();
     }
 
   // search working frequencies for one we are within 10kHz of (1 Mhz
@@ -5045,6 +5049,19 @@ void MainWindow::on_tx6_editingFinished()                       //tx6 edited
   msgtype(t, ui->tx6);
 }
 
+void MainWindow::clearActivity(){
+    m_bandActivity.clear();
+    m_callActivity.clear();
+    m_rxCallCache.clear();
+    m_rxDirectedCache.clear();
+    m_rxFrameBlockNumbers.clear();
+    m_rxFrameQueue.clear();
+
+    ui->tableWidgetCalls->clear();
+    ui->tableWidgetRXAll->clear();
+    ui->extFreeTextMsg->clear();
+}
+
 int MainWindow::logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block){
     auto c = ui->textEditRX->textCursor();
 
@@ -5070,6 +5087,9 @@ int MainWindow::logRxTxMessageText(QDateTime date, QString text, int freq, bool 
     } else {
         c.insertHtml(QString("<strong>%1 - (%2)</strong> - %3").arg(date.time().toString()).arg(freq).arg(text));
     }
+
+    c.movePosition(QTextCursor::End);
+    ui->textEditRX->ensureCursorVisible();
 
     return c.blockNumber(); // ui->textEditRX->document()->lineCount();
 }

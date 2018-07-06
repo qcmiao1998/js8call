@@ -119,6 +119,7 @@ public slots:
   void msgAvgDecode2();
   void fastPick(int x0, int x1, int y);
 
+  void clearActivity();
   int logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block=-1);
   void addMessageText(QString text);
   void resetMessage();
