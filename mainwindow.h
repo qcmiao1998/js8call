@@ -120,7 +120,7 @@ public slots:
   void fastPick(int x0, int x1, int y);
 
   void clearActivity();
-  int logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block=-1);
+  int logRxTxMessageText(QDateTime date, bool isFree, QString text, int freq, bool tx, int block=-1);
   void addMessageText(QString text);
   void resetMessage();
   void resetMessageUI();
@@ -637,6 +637,7 @@ private:
 
   struct ActivityDetail
   {
+    bool isFree;
     QString firstCall;
     QString secondCall;
     int freq;
@@ -647,6 +648,7 @@ private:
 
   struct RXDetail
   {
+      bool isFree;
       int freq;
       QString text;
       QDateTime utcTimestamp;

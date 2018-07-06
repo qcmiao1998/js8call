@@ -213,6 +213,15 @@ namespace
 
       return QString {};
   }
+
+  void clearTableWidget(QTableWidget *widget){
+      if(!widget){
+          return;
+      }
+      for(int i = widget->rowCount(); i >= 0; i--){
+        widget->removeRow(i);
+      }
+  }
 }
 
 //--------------------------------------------------- MainWindow constructor
@@ -3061,6 +3070,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             }
 
             ActivityDetail d;
+            d.isFree = !decodedtext.isStandardMessage();
             d.firstCall = decodedtext.CQersCall();
             if(d.firstCall.isEmpty()){
                 auto words = decodedtext.messageWords();
@@ -3141,6 +3151,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
         // TODO: jsherer - parse decode...
         RXDetail d;
+        d.isFree = !decodedtext.isStandardMessage();
         d.freq = audioFreq;
         d.text = decodedtext.messageWords().first();
         d.utcTimestamp = QDateTime::currentDateTimeUtc();
@@ -5057,12 +5068,16 @@ void MainWindow::clearActivity(){
     m_rxFrameBlockNumbers.clear();
     m_rxFrameQueue.clear();
 
-    ui->tableWidgetCalls->clear();
-    ui->tableWidgetRXAll->clear();
+
+    clearTableWidget(ui->tableWidgetCalls);
+    clearTableWidget(ui->tableWidgetRXAll);
+
+    ui->textEditRX->clear();
+    ui->freeTextMsg->clear();
     ui->extFreeTextMsg->clear();
 }
 
-int MainWindow::logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block){
+int MainWindow::logRxTxMessageText(QDateTime date, bool isFree, QString text, int freq, bool tx, int block){
     auto c = ui->textEditRX->textCursor();
 
     bool found = false;
@@ -5083,6 +5098,9 @@ int MainWindow::logRxTxMessageText(QDateTime date, QString text, int freq, bool 
     }
 
     if(found){
+        if(!isFree){
+            c.insertText(" ");
+        }
         c.insertHtml(text);
     } else {
         c.insertHtml(QString("<strong>%1 - (%2)</strong> - %3").arg(date.time().toString()).arg(freq).arg(text));
@@ -5138,7 +5156,7 @@ void MainWindow::createMessage(QString const& text){
 
     // TODO: jsherer - ew
     int freq = ui->TxFreqSpinBox->value();
-    logRxTxMessageText(QDateTime::currentDateTimeUtc(), text, freq, true);
+    logRxTxMessageText(QDateTime::currentDateTimeUtc(), false, text, freq, true);
 }
 
 void MainWindow::createMessageTransmitQueue(QString const& text){
@@ -6476,17 +6494,13 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
     // TODO: jsherer - abstract this into a tableWidgetRXAllReset function
     if(sender == ui->tableWidgetRXAll){
         m_bandActivity.clear();
-        for(int i = ui->tableWidgetRXAll->rowCount(); i >= 0; i--){
-          ui->tableWidgetRXAll->removeRow(i);
-        }
+        clearTableWidget(ui->tableWidgetRXAll);
     }
 
     // TODO: jsherer - abstract this into a tableWidgetCallsReset function
     if(sender == ui->tableWidgetCalls){
         m_callActivity.clear();
-        for(int i = ui->tableWidgetCalls->rowCount(); i >= 0; i--){
-          ui->tableWidgetCalls->removeRow(i);
-        }
+        clearTableWidget((ui->tableWidgetCalls));
         //ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
         //ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("allcall"));
     }
@@ -7516,9 +7530,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
       selectedOffset = selectedItems.first()->text().toInt();
   }
   auto now = QDateTime::currentDateTimeUtc();
-  for(int i = ui->tableWidgetRXAll->rowCount(); i >= 0; i--){
-    ui->tableWidgetRXAll->removeRow(i);
-  }
+  clearTableWidget(ui->tableWidgetRXAll);
   QList<int> keys = m_bandActivity.keys();
   qSort(keys.begin(), keys.end());
   foreach (int offset, keys) {
@@ -7588,9 +7600,8 @@ void MainWindow::postDecode (bool is_new, QString const& message)
   if(!selectedCalls.isEmpty()){
       selectedCall = selectedCalls.first()->text();
   }
-  for(int i = ui->tableWidgetCalls->rowCount(); i >= 0; i--){
-    ui->tableWidgetCalls->removeRow(i);
-  }
+
+  clearTableWidget(ui->tableWidgetCalls);
 
   //ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
   //ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("allcall"));
@@ -7617,7 +7628,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
 
       int freq = d.freq/10*10;
       int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
-      block = logRxTxMessageText(d.utcTimestamp, d.text, d.freq, false, block=block);
+      block = logRxTxMessageText(d.utcTimestamp, d.isFree, d.text, d.freq, false, block);
       m_rxFrameBlockNumbers[freq] = block;
   }
 }
