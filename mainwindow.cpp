@@ -5296,6 +5296,44 @@ bool MainWindow::prepareNextMessageFrame()
 
 }
 
+bool MainWindow::isFreqOffsetFree(int f){
+    int bw = 50;
+    int pad = 5;
+
+    foreach(int offset, m_bandActivity.keys()){
+        if(qAbs(offset - f) < bw+pad){
+            return false;
+        }
+    }
+
+    return true;
+}
+
+int MainWindow::findFreeFreqOffset(){
+    int bw = 50;
+    int fmin = 100;
+    int fmax = 1000;
+    int nslots = (fmax-fmin)/bw;
+
+    int f = fmin;
+    for(int i = 0; i < nslots; i++){
+        f = bw*(qrand() % nslots);
+        if(isFreqOffsetFree(f)){
+            return f;
+        }
+    }
+
+    for(int i = 0; i < nslots; i++){
+        f = (qrand() % (fmax-fmin)) + fmin;
+        if(isFreqOffsetFree(f)){
+            return f;
+        }
+    }
+
+    // return 0 if there's no free offset
+    return 0;
+}
+
 void MainWindow::scheduleBeacon(bool first){
     auto timestamp = QDateTime::currentDateTimeUtc(); //.addSecs(first ? 15 : 300);
     auto orig = timestamp;
@@ -5325,16 +5363,17 @@ void MainWindow::prepareBeacon(){
         return;
     }
 
-    if(!m_txFrameQueue.isEmpty()){
+    int f = findFreeFreqOffset();
+
+    // delay beacon if there's not a free frequency or there's something the tx queue...
+    if(f == 0 || !m_txFrameQueue.isEmpty()){
         beaconTimer.start(15*1000);
         return;
     }
 
-    QString message = QString("DE %1 %2\nDE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4));
-
-    // TODO: jsherer - there's probably a better way...
-    int f = (qrand() % 900) + 100;
     setFreq4(f, f);
+
+    QString message = QString("DE %1 %2\nDE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4));
     ui->extFreeTextMsgEdit->setPlainText(message);
     ui->startTxButton->setChecked(true);
 
