@@ -65,6 +65,7 @@ QString revision (QString const& svn_rev_string)
 
 QString version (bool include_patch)
 {
+#if 0
 #if defined (CMAKE_BUILD)
   QString v {WSJTX_STRINGIZE (WSJTX_VERSION_MAJOR) "." WSJTX_STRINGIZE (WSJTX_VERSION_MINOR)};
   if (include_patch)
@@ -78,11 +79,15 @@ QString version (bool include_patch)
 #else
   QString v {"Not for Release"};
 #endif
+#endif
+
+  QString v {"0.0.1"};
+
   return v;
 }
 
 QString program_title (QString const& revision)
 {
-  QString id {"FT8Call by KN4CRD a derivative of WSJT-X"}; // v" + QCoreApplication::applicationVersion ()};
-  return id /*+ " " + revision*/ + " by K1JT";
+  QString id {"FT8Call (v%1) by KN4CRD a derivative of WSJT-X by K1JT"};
+  return id.arg(QCoreApplication::applicationVersion ());
 }
