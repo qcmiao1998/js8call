@@ -3068,7 +3068,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
             d.freq = offset;
             d.text = decodedtext.messageWords().first().trimmed();
-            d.timestamp = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
+            d.timestamp = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
             d.snr = decodedtext.snr();
             m_bandActivity[offset].append(d);
             while(m_bandActivity[offset].count() > 10){
@@ -3087,7 +3087,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.grid = theirgrid;
             d.snr = decodedtext.snr();
             d.freq = decodedtext.frequencyOffset();
-            d.timestamp = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
+            d.timestamp = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
             m_callActivity[cqCall] = d;
           }
         }
@@ -3139,7 +3139,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         RXDetail d;
         d.freq = audioFreq;
         d.text = decodedtext.messageWords().first();
-        d.timestamp = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
+        d.timestamp = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
         m_rxFrameQueue.append(d);
 
         if(d.text.contains(m_config.my_callsign())){
@@ -5297,8 +5297,8 @@ bool MainWindow::prepareNextMessageFrame()
 }
 
 void MainWindow::scheduleBeacon(bool first){
-    int timestamp = QDateTime::currentDateTimeUtc().addSecs(first ? 15 : 300).toSecsSinceEpoch();
-    m_nextBeacon = QDateTime::fromSecsSinceEpoch(roundUp(timestamp, 15) + 1, QTimeZone::utc());
+    int timestamp = QDateTime::currentDateTimeUtc().addSecs(first ? 15 : 300).toMSecsSinceEpoch();
+    m_nextBeacon = QDateTime::fromMSecsSinceEpoch(roundUp(timestamp, 15) + 1, QTimeZone::utc());
     beaconTimer.start(QDateTime::currentDateTimeUtc().msecsTo(m_nextBeacon) - 2*1000);
 }
 
@@ -7442,7 +7442,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
   if(!selectedItems.isEmpty()){
       selectedOffset = selectedItems.first()->text().toInt();
   }
-  int now = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
+  int now = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
   for(int i = ui->tableWidgetRXAll->rowCount(); i >= 0; i--){
     ui->tableWidgetRXAll->removeRow(i);
   }
@@ -7454,7 +7454,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
           QStringList text;
           int snr = 0;
           foreach(auto item, items){
-              if(now - item.timestamp > 90){
+              if(now - item.timestamp > 90*1000){
                   continue;
               }
               if(item.text.isEmpty()){
@@ -7528,7 +7528,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
       CallDetail d = m_callActivity[call];
       ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem(call));
-      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(QDateTime::fromSecsSinceEpoch(d.timestamp, QTimeZone::utc())))));
+      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(QDateTime::fromMSecsSinceEpoch(d.timestamp, QTimeZone::utc())))));
       //ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(d.grid));
 
       if(call == selectedCall){
@@ -7542,7 +7542,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
       RXDetail d = m_rxFrameQueue.first();
       m_rxFrameQueue.removeFirst();
 
-      auto date = QDateTime::fromSecsSinceEpoch(d.timestamp, QTimeZone::utc());
+      auto date = QDateTime::fromMSecsSinceEpoch(d.timestamp, QTimeZone::utc());
       int freq = d.freq/10*10;
       int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
       block = logRxTxMessageText(date, d.text, d.freq, false, block=block);
