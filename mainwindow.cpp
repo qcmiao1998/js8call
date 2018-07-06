@@ -913,9 +913,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   minuteTimer.setSingleShot (true);
   minuteTimer.start (ms_minute_error () + 60 * 1000);
 
-  connect (&splashTimer, &QTimer::timeout, this, &MainWindow::splash_done);
-  splashTimer.setSingleShot (true);
-  splashTimer.start (20 * 1000);
+  //connect (&splashTimer, &QTimer::timeout, this, &MainWindow::splash_done);
+  //splashTimer.setSingleShot (true);
+  //splashTimer.start (20 * 1000);
 
 /*
   if(m_config.my_callsign()=="K1JT" or m_config.my_callsign()=="K9AN" or

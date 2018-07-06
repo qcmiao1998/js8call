@@ -105,7 +105,8 @@ int main(int argc, char *argv[])
                                    // that GUI has correct l18n
 
       // Override programs executable basename as application name.
-      a.setApplicationName ("WSJT-X");
+      //a.setApplicationName ("WSJT-X");
+      a.setApplicationName("FT8Call");
       a.setApplicationVersion (version ());
 
 #if QT_VERSION >= 0x050200
@@ -259,7 +260,7 @@ int main(int argc, char *argv[])
                 multi_settings.set_common_value (splash_flag_name, false);
                 splash.close ();
               });
-            splash.show ();
+            //splash.show ();
             a.processEvents ();
           }
       }
@@ -328,7 +329,7 @@ int main(int argc, char *argv[])
           // run the application UI
           MainWindow w(temp_dir, multiple, &multi_settings, &mem_jt9, downSampleFactor, &splash);
           w.show();
-          splash.raise ();
+          //splash.raise ();
           QObject::connect (&a, SIGNAL (lastWindowClosed()), &a, SLOT (quit()));
           result = a.exec();
         }
