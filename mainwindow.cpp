@@ -3862,7 +3862,7 @@ void MainWindow::guiUpdate()
       t.time().toString() + " ";
     ui->labUTC->setText(utc);
 
-    auto delta = t.msecsTo(m_nextBeacon)/1000;
+    auto delta = t.secsTo(m_nextBeacon);
     auto beacon = ui->beaconButton->isChecked() ? delta > 0 ? QString("%1 s").arg(delta) : "queued!" : "disabled";
     ui->labBeacon->setText(QString("Next Beacon: %1").arg(beacon));
 
@@ -5297,8 +5297,22 @@ bool MainWindow::prepareNextMessageFrame()
 }
 
 void MainWindow::scheduleBeacon(bool first){
-    int timestamp = QDateTime::currentDateTimeUtc().addSecs(first ? 15 : 300).toMSecsSinceEpoch();
-    m_nextBeacon = QDateTime::fromMSecsSinceEpoch(roundUp(timestamp, 15) + 1, QTimeZone::utc());
+    auto timestamp = QDateTime::currentDateTimeUtc(); //.addSecs(first ? 15 : 300);
+    auto orig = timestamp;
+
+    // remove milliseconds
+    auto t = timestamp.time();
+    t.setHMS(t.hour(), t.minute(), t.second());
+    timestamp.setTime(t);
+
+    // round to 15 second increment
+
+    int secondsSinceEpoch = (timestamp.toMSecsSinceEpoch()/1000);
+    int delta = roundUp(secondsSinceEpoch, 15) + 1 + (first ? m_txFirst ? 15 : 30 : 300) - secondsSinceEpoch;
+    timestamp = timestamp.addSecs(delta);
+
+    // set the next beacon timestamp and timer
+    m_nextBeacon = timestamp;
     beaconTimer.start(QDateTime::currentDateTimeUtc().msecsTo(m_nextBeacon) - 2*1000);
 }
 
@@ -5307,7 +5321,7 @@ void MainWindow::prepareBeacon(){
         return;
     }
 
-    if(QDateTime::currentDateTimeUtc().msecsTo(m_nextBeacon) > 15*1000){
+    if(QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) > 15){
         return;
     }
 
