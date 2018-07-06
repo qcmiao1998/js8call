@@ -3068,7 +3068,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
             d.freq = offset;
             d.text = decodedtext.messageWords().first().trimmed();
-            d.timestamp = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
+            d.utcTimestamp = QDateTime::currentDateTimeUtc();
             d.snr = decodedtext.snr();
             m_bandActivity[offset].append(d);
             while(m_bandActivity[offset].count() > 10){
@@ -3087,7 +3087,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.grid = theirgrid;
             d.snr = decodedtext.snr();
             d.freq = decodedtext.frequencyOffset();
-            d.timestamp = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
+            d.utcTimestamp = QDateTime::currentDateTimeUtc();
             m_callActivity[cqCall] = d;
           }
         }
@@ -3139,7 +3139,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         RXDetail d;
         d.freq = audioFreq;
         d.text = decodedtext.messageWords().first();
-        d.timestamp = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
+        d.utcTimestamp = QDateTime::currentDateTimeUtc();
         m_rxFrameQueue.append(d);
 
         if(d.text.contains(m_config.my_callsign())){
@@ -7442,19 +7442,19 @@ void MainWindow::postDecode (bool is_new, QString const& message)
   if(!selectedItems.isEmpty()){
       selectedOffset = selectedItems.first()->text().toInt();
   }
-  int now = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
+  auto now = QDateTime::currentDateTimeUtc();
   for(int i = ui->tableWidgetRXAll->rowCount(); i >= 0; i--){
     ui->tableWidgetRXAll->removeRow(i);
   }
   QList<int> keys = m_bandActivity.keys();
   qSort(keys.begin(), keys.end());
   foreach (int offset, keys) {
-      auto items = m_bandActivity[offset];
+      QList<ActivityDetail> items = m_bandActivity[offset];
       if(items.length() > 0){
           QStringList text;
           int snr = 0;
-          foreach(auto item, items){
-              if(now - item.timestamp > 90*1000){
+          foreach(ActivityDetail item, items){
+              if(item.utcTimestamp.secsTo(now) > 90){
                   continue;
               }
               if(item.text.isEmpty()){
@@ -7528,7 +7528,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
       CallDetail d = m_callActivity[call];
       ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem(call));
-      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(QDateTime::fromMSecsSinceEpoch(d.timestamp, QTimeZone::utc())))));
+      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
       //ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(d.grid));
 
       if(call == selectedCall){
@@ -7542,10 +7542,9 @@ void MainWindow::postDecode (bool is_new, QString const& message)
       RXDetail d = m_rxFrameQueue.first();
       m_rxFrameQueue.removeFirst();
 
-      auto date = QDateTime::fromMSecsSinceEpoch(d.timestamp, QTimeZone::utc());
       int freq = d.freq/10*10;
       int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
-      block = logRxTxMessageText(date, d.text, d.freq, false, block=block);
+      block = logRxTxMessageText(d.utcTimestamp, d.text, d.freq, false, block=block);
       m_rxFrameBlockNumbers[freq] = block;
   }
 }

@@ -628,7 +628,7 @@ private:
     QString call;
     QString grid;
     int freq;
-    int timestamp;
+    QDateTime utcTimestamp;
     int snr;
   };
 
@@ -638,7 +638,7 @@ private:
     QString secondCall;
     int freq;
     QString text;
-    int timestamp;
+    QDateTime utcTimestamp;
     int snr;
   };
 
@@ -646,7 +646,7 @@ private:
   {
       int freq;
       QString text;
-      int timestamp;
+      QDateTime utcTimestamp;
   };
 
   int m_txFrameCount;
