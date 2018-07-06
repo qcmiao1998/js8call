@@ -119,7 +119,7 @@ public slots:
   void msgAvgDecode2();
   void fastPick(int x0, int x1, int y);
 
-  int logRxTxMessageText(QDateTime date, QString text, bool tx, int block=-1);
+  int logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block=-1);
   void addMessageText(QString text);
   void resetMessage();
   void resetMessageUI();
@@ -249,7 +249,7 @@ private slots:
   QString parseFT8Message(QString input);
   int countFreeTextMsgs(QString input);
   bool prepareNextMessageFrame();
-  void scheduleBeacon();
+  void scheduleBeacon(bool first=false);
   void prepareBeacon();
   void on_rptSpinBox_valueChanged(int n);
   void killFile();

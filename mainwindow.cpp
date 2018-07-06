@@ -183,6 +183,36 @@ namespace
     auto second = time.second ();
     return now.msecsTo (now.addSecs (second > 30 ? 60 - second : -second)) - time.msec ();
   }
+
+  QString since(QDateTime time){
+      int delta = time.toUTC().secsTo(QDateTime::currentDateTimeUtc());
+      if(delta < 30){
+          return QString("now");
+      }
+
+      int seconds = delta % 60;
+      delta = delta / 60;
+      int minutes = delta % 60;
+      delta = delta / 60;
+      int hours = delta % 24;
+      delta = delta / 24;
+      int days = delta;
+
+      if(days){
+          return QString("%1 d").arg(days);
+      }
+      if(hours){
+          return QString("%1 h").arg(hours);
+      }
+      if(minutes){
+          return QString("%1 m").arg(minutes);
+      }
+      if(seconds){
+          return QString("%1 s").arg(seconds - seconds%15);
+      }
+
+      return QString {};
+  }
 }
 
 //--------------------------------------------------- MainWindow constructor
@@ -1110,6 +1140,15 @@ void MainWindow::writeSettings()
   m_settings->setValue("pwrBandTuneMemory",m_pwrBandTuneMemory);
   m_settings->setValue ("FT8AP", ui->actionEnable_AP_FT8->isChecked ());
   m_settings->setValue ("JT65AP", ui->actionEnable_AP_JT65->isChecked ());
+
+  // TODO: jsherer - need any other customizations?
+  /*m_settings->setValue("PanelLeftGeometry", ui->tableWidgetRXAll->geometry());
+  m_settings->setValue("PanelRightGeometry", ui->tableWidgetCalls->geometry());
+  m_settings->setValue("PanelTopGeometry", ui->extFreeTextMsg->geometry());
+  m_settings->setValue("PanelBottomGeometry", ui->extFreeTextMsgEdit->geometry());
+  m_settings->setValue("PanelWaterfallGeometry", ui->bandHorizontalWidget->geometry());*/
+  //m_settings->setValue("MainSplitter", QVariant::fromValue(ui->mainSplitter->sizes()));
+
   {
     QList<QVariant> coeffs;     // suitable for QSettings
     for (auto const& coeff : m_phaseEqCoefficients)
@@ -1198,6 +1237,17 @@ void MainWindow::readSettings()
   m_pwrBandTuneMemory=m_settings->value("pwrBandTuneMemory").toHash();
   ui->actionEnable_AP_FT8->setChecked (m_settings->value ("FT8AP", false).toBool());
   ui->actionEnable_AP_JT65->setChecked (m_settings->value ("JT65AP", false).toBool());
+
+  // TODO: jsherer - any other customizations?
+  //ui->mainSplitter->setSizes(m_settings->value("MainSplitter", QVariant::fromValue(ui->mainSplitter->sizes())).value<QList<int> >());
+  //ui->tableWidgetRXAll->restoreGeometry(m_settings->value("PanelLeftGeometry", ui->tableWidgetRXAll->saveGeometry()).toByteArray());
+  //ui->tableWidgetCalls->restoreGeometry(m_settings->value("PanelRightGeometry", ui->tableWidgetCalls->saveGeometry()).toByteArray());
+  //ui->extFreeTextMsg->setGeometry( m_settings->value("PanelTopGeometry", ui->extFreeTextMsg->geometry()).toRect());
+  //ui->extFreeTextMsgEdit->setGeometry( m_settings->value("PanelBottomGeometry", ui->extFreeTextMsgEdit->geometry()).toRect());
+  //ui->bandHorizontalWidget->setGeometry( m_settings->value("PanelWaterfallGeometry", ui->bandHorizontalWidget->geometry()).toRect());
+  //qDebug() << m_settings->value("PanelTopGeometry") << ui->extFreeTextMsg;
+
+
   {
     auto const& coeffs = m_settings->value ("PhaseEqualizationCoefficients"
                                             , QList<QVariant> {0., 0., 0., 0., 0.}).toList ();
@@ -3018,7 +3068,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
             d.freq = offset;
             d.text = decodedtext.messageWords().first().trimmed();
-            d.timestamp = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
+            d.timestamp = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
             d.snr = decodedtext.snr();
             m_bandActivity[offset].append(d);
             while(m_bandActivity[offset].count() > 10){
@@ -3037,7 +3087,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.grid = theirgrid;
             d.snr = decodedtext.snr();
             d.freq = decodedtext.frequencyOffset();
-            d.timestamp = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
+            d.timestamp = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
             m_callActivity[cqCall] = d;
           }
         }
@@ -3822,12 +3872,20 @@ void MainWindow::guiUpdate()
     m_sec0=nsec;
     displayDialFrequency ();
   }
-  m_iptt0=g_iptt;
-  m_btxok0=m_btxok;
 
   // TODO: jsherer - is this the right place?
   update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
 
+  if(ui->tableWidgetCalls->selectedItems().isEmpty() && ui->tableWidgetRXAll->selectedItems().isEmpty()){
+      ui->replyMacroButton->setDisabled(true);
+      ui->snrMacroButton->setDisabled(true);
+  } else {
+      ui->replyMacroButton->setDisabled(false);
+      ui->snrMacroButton->setDisabled(false);
+  }
+
+  m_iptt0=g_iptt;
+  m_btxok0=m_btxok;
 }               //End of guiUpdate
 
 
@@ -4987,7 +5045,7 @@ void MainWindow::on_tx6_editingFinished()                       //tx6 edited
   msgtype(t, ui->tx6);
 }
 
-int MainWindow::logRxTxMessageText(QDateTime date, QString text, bool tx, int block){
+int MainWindow::logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block){
     auto c = ui->textEditRX->textCursor();
 
     bool found = false;
@@ -5010,7 +5068,7 @@ int MainWindow::logRxTxMessageText(QDateTime date, QString text, bool tx, int bl
     if(found){
         c.insertHtml(text);
     } else {
-        c.insertHtml(QString("<strong>%1</strong> - %2").arg(date.time().toString()).arg(text));
+        c.insertHtml(QString("<strong>%1 - (%2)</strong> - %3").arg(date.time().toString()).arg(freq).arg(text));
     }
 
     return c.blockNumber(); // ui->textEditRX->document()->lineCount();
@@ -5057,7 +5115,10 @@ void MainWindow::resetMessageUI(){
 void MainWindow::createMessage(QString const& text){
     resetMessageTransmitQueue();
     createMessageTransmitQueue(text);
-    logRxTxMessageText(QDateTime::currentDateTimeUtc(), text, true);
+
+    // TODO: jsherer - ew
+    int freq = ui->TxFreqSpinBox->value();
+    logRxTxMessageText(QDateTime::currentDateTimeUtc(), text, freq, true);
 }
 
 void MainWindow::createMessageTransmitQueue(QString const& text){
@@ -5229,14 +5290,14 @@ bool MainWindow::prepareNextMessageFrame()
     tc.setPosition(m_extFreeTxtPos, QTextCursor::KeepAnchor);
     QTextCharFormat cf = tc.charFormat();
     cf.setFontStrikeOut(true);
-    tc.mergeCharFormat(cf);
+    tc.mergeCharFormat(cf);call
   }
   */
 
 }
 
-void MainWindow::scheduleBeacon(){
-    int timestamp = QDateTime::currentDateTimeUtc().addSecs(300).toSecsSinceEpoch();
+void MainWindow::scheduleBeacon(bool first){
+    int timestamp = QDateTime::currentDateTimeUtc().addSecs(first ? 15 : 300).toSecsSinceEpoch();
     m_nextBeacon = QDateTime::fromSecsSinceEpoch(roundUp(timestamp, 15) + 1, QTimeZone::utc());
     beaconTimer.start(QDateTime::currentDateTimeUtc().msecsTo(m_nextBeacon) - 2*1000);
 }
@@ -5256,6 +5317,10 @@ void MainWindow::prepareBeacon(){
     }
 
     QString message = QString("DE %1 %2\nDE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4));
+
+    // TODO: jsherer - there's probably a better way...
+    int f = (qrand() % 900) + 100;
+    setFreq4(f, f);
     ui->extFreeTextMsgEdit->setPlainText(message);
     ui->startTxButton->setChecked(true);
 
@@ -6615,7 +6680,7 @@ void MainWindow::on_pbT2R_clicked()
 void MainWindow::on_beaconButton_clicked()
 {
     if(ui->beaconButton->isChecked()){
-        scheduleBeacon();
+        scheduleBeacon(true);
     }
 }
 
@@ -6681,6 +6746,9 @@ void MainWindow::setXIT(int n, Frequency base)
 
 void MainWindow::setFreq4(int rxFreq, int txFreq)
 {
+  if(rxFreq != txFreq){
+      txFreq = rxFreq;
+  }
   if (ui->RxFreqSpinBox->isEnabled ()) ui->RxFreqSpinBox->setValue(rxFreq);
   ui->labDialFreqOffset->setText(QString("%1 Hz").arg(rxFreq));
   if(m_mode.startsWith ("WSPR")) {
@@ -7374,7 +7442,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
   if(!selectedItems.isEmpty()){
       selectedOffset = selectedItems.first()->text().toInt();
   }
-  int now = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
+  int now = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
   for(int i = ui->tableWidgetRXAll->rowCount(); i >= 0; i--){
     ui->tableWidgetRXAll->removeRow(i);
   }
@@ -7386,7 +7454,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
           QStringList text;
           int snr = 0;
           foreach(auto item, items){
-              if(now - item.timestamp > 90000){
+              if(now - item.timestamp > 90){
                   continue;
               }
               if(item.text.isEmpty()){
@@ -7438,7 +7506,8 @@ void MainWindow::postDecode (bool is_new, QString const& message)
           }
       }
   }
-  ui->tableWidgetRXAll->resizeColumnsToContents();
+  ui->tableWidgetRXAll->resizeColumnToContents(0);
+  ui->tableWidgetRXAll->resizeColumnToContents(1); //resizeColumnsToContents();
 
   // TODO: jsherer - keep track of selection
   QString selectedCall;
@@ -7459,22 +7528,24 @@ void MainWindow::postDecode (bool is_new, QString const& message)
       CallDetail d = m_callActivity[call];
       ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem(call));
+      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(QDateTime::fromSecsSinceEpoch(d.timestamp, QTimeZone::utc())))));
       //ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(d.grid));
 
       if(call == selectedCall){
           ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
       }
   }
+  ui->tableWidgetCalls->resizeColumnToContents(1);
 
   // RX Activity
   while(!m_rxFrameQueue.isEmpty()){
       RXDetail d = m_rxFrameQueue.first();
       m_rxFrameQueue.removeFirst();
 
-      auto date = QDateTime::fromSecsSinceEpoch(d.timestamp).toUTC();
+      auto date = QDateTime::fromSecsSinceEpoch(d.timestamp, QTimeZone::utc());
       int freq = d.freq/10*10;
       int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
-      block = logRxTxMessageText(date, d.text, false, block=block);
+      block = logRxTxMessageText(date, d.text, d.freq, false, block=block);
       m_rxFrameBlockNumbers[freq] = block;
   }
 }

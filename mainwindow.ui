@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>960</width>
-    <height>514</height>
+    <height>534</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -759,6 +759,9 @@ background-color: yellow;
         <property name="dragDropOverwriteMode">
          <bool>false</bool>
         </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
         <property name="selectionMode">
          <enum>QAbstractItemView::SingleSelection</enum>
         </property>
@@ -890,6 +893,9 @@ QTextEdit[readOnly=&quot;true&quot;] {
         <property name="showDropIndicator" stdset="0">
          <bool>false</bool>
         </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
         <property name="selectionMode">
          <enum>QAbstractItemView::SingleSelection</enum>
         </property>
@@ -905,6 +911,9 @@ QTextEdit[readOnly=&quot;true&quot;] {
         <attribute name="horizontalHeaderVisible">
          <bool>false</bool>
         </attribute>
+        <attribute name="horizontalHeaderMinimumSectionSize">
+         <number>30</number>
+        </attribute>
         <attribute name="horizontalHeaderStretchLastSection">
          <bool>true</bool>
         </attribute>
@@ -914,6 +923,11 @@ QTextEdit[readOnly=&quot;true&quot;] {
         <column>
          <property name="text">
           <string>Callsign</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Age</string>
          </property>
         </column>
        </widget>
