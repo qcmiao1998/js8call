@@ -5120,7 +5120,7 @@ int MainWindow::logRxTxMessageText(QDateTime date, bool isFree, QString text, in
     c.movePosition(QTextCursor::End);
     ui->textEditRX->ensureCursorVisible();
 
-    return c.blockNumber(); // ui->textEditRX->document()->lineCount();
+    return c.blockNumber();
 }
 
 void MainWindow::addMessageText(QString text){
@@ -5366,14 +5366,14 @@ int MainWindow::findFreeFreqOffset(){
 
     int f = fmin;
     for(int i = 0; i < nslots; i++){
-        f = bw*(qrand() % nslots);
+        f = fmin + bw * (qrand() % nslots);
         if(isFreqOffsetFree(f)){
             return f;
         }
     }
 
     for(int i = 0; i < nslots; i++){
-        f = (qrand() % (fmax-fmin)) + fmin;
+        f = fmin + (qrand() % (fmax-fmin));
         if(isFreqOffsetFree(f)){
             return f;
         }
@@ -5384,7 +5384,7 @@ int MainWindow::findFreeFreqOffset(){
 }
 
 void MainWindow::scheduleBeacon(bool first){
-    auto timestamp = QDateTime::currentDateTimeUtc(); //.addSecs(first ? 15 : 300);
+    auto timestamp = QDateTime::currentDateTimeUtc();
     auto orig = timestamp;
 
     // remove milliseconds
@@ -5423,6 +5423,7 @@ void MainWindow::prepareBeacon(){
     setFreq4(f, f);
 
     QString message = QString("DE %1 %2\nDE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4));
+
     ui->extFreeTextMsgEdit->setPlainText(message);
     ui->startTxButton->setChecked(true);
 
