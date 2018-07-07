@@ -986,9 +986,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   /*
   if(QCoreApplication::applicationVersion().contains("-devel") or
      QCoreApplication::applicationVersion().contains("-rc")) {
-    QTimer::singleShot (0, this, SLOT (not_GA_warning_message ()));
   }
   */
+
+  // TODO: jsherer - need to remove this eventually...
+  QTimer::singleShot (0, this, SLOT (not_GA_warning_message ()));
 
   if(!ui->cbMenus->isChecked()) {
     ui->cbMenus->setChecked(true);
@@ -1037,14 +1039,21 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
 void MainWindow::not_GA_warning_message ()
 {
-  /*
+  QDate eol(2018, 7, 16);
+
+  if(QDate::currentDate() >= eol){
+      MessageBox::critical_message (this, QString("This pre-release development build of FT8Call has expired."));
+      close();
+      return;
+  }
+
   MessageBox::critical_message (this,
-                                "This version of WSJT-X was built from code in the\n"
-                                "development branch, or is a beta-level Release Candidate.\n\n"
-                                "On-the-air use carries an obligation to report problems\n"
-                                "to the WSJT Development group and to upgrade to a GA\n"
-                                "(General Availability) release when that is released.\n\n");
-  */
+                                QString("This version of FT8Call is a pre-release development\n"
+                                "build and will expire on %1. \n\n"
+                                "Use of development versions of FT8Call are at your own risk \n"
+                                "and carry a responsiblity to report any problems to:\n"
+                                "Jordan Sherer (KN4CRD) kn4crd@gmail.com\n\n").arg(eol.toString()));
+
 }
 
 void MainWindow::initialize_fonts ()
