@@ -234,6 +234,7 @@ private slots:
   void on_cqMacroButton_clicked();
   void on_deMacroButton_clicked();
   void on_replyMacroButton_clicked();
+  void on_qthMacroButton_clicked();
   void on_snrMacroButton_clicked();
   void on_macrosMacroButton_clicked();
   void on_tableWidgetRXAll_cellClicked(int row, int col);

@@ -6565,6 +6565,10 @@ void MainWindow::on_replyMacroButton_clicked(){
     }
 }
 
+void MainWindow::on_qthMacroButton_clicked(){
+    addMessageText(m_config.my_grid().left(4));
+}
+
 void MainWindow::on_snrMacroButton_clicked(){
     auto items = ui->tableWidgetCalls->selectedItems();
     if(!items.isEmpty()){
