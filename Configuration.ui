@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>785</width>
+    <width>825</width>
     <height>647</height>
    </rect>
   </property>
@@ -16,6 +16,9 @@
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <widget class="QTabWidget" name="configuration_tabs">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="toolTip">
       <string>Select tab to change configuration parameters.</string>
      </property>
@@ -117,6 +120,9 @@
            <layout class="QFormLayout" name="formLayout_13">
             <item row="0" column="0">
              <widget class="QLabel" name="label_5">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="text">
                <string>Message generation for type 2 compound callsign holders:</string>
               </property>
@@ -131,7 +137,7 @@
             <item row="0" column="1">
              <widget class="QComboBox" name="type_2_msg_gen_combo_box">
               <property name="enabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Type 2 compound callsigns are those with prefixes or suffixes not included in the allowed shortlist (See Help-&amp;gt;Add-on prefixes and suffixes).&lt;/p&gt;&lt;p&gt;This option determines which generated messages should contain your full type 2 compound call sign rather than your base callsign. It only applies if you have a type 2 compound callsign.&lt;/p&gt;&lt;p&gt;This option controls the way the messages that are used to answer CQ calls are generated. Generated messages 6 (CQ) and 5 (73) will always contain your full callsign. The JT65 and JT9 protocols allow for some standard messages with your full call at the expense of another piece of information such as the DX call or your locator.&lt;/p&gt;&lt;p&gt;Choosing message 1 omits the DX callsign which may be an issue when replying to CQ calls. Choosing message 3 also omits the DX callsign and many versions of this and other software will not extract the report. Choosing neither means that your full callsign only goes in your message 5 (73) so your QSO partner may log the wrong callsign.&lt;/p&gt;&lt;p&gt;None of these options are perfect, message 3 is usually best but be aware your QSO partner may not log the report you send them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -176,6 +182,9 @@
          <layout class="QGridLayout" name="gridLayout_4">
           <item row="0" column="0">
            <widget class="QCheckBox" name="insert_blank_check_box">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="toolTip">
              <string>Include a separator line between periods in the band activity window.</string>
             </property>
@@ -186,6 +195,9 @@
           </item>
           <item row="3" column="0">
            <widget class="QCheckBox" name="DXCC_check_box">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="toolTip">
              <string>Show if decoded stations are new DXCC entities or worked before.</string>
             </property>
@@ -212,6 +224,9 @@
           </item>
           <item row="1" column="0">
            <widget class="QCheckBox" name="miles_check_box">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="toolTip">
              <string>Show distance to DX station in miles rather than kilometers.</string>
             </property>
@@ -222,6 +237,9 @@
           </item>
           <item row="2" column="0">
            <widget class="QCheckBox" name="TX_messages_check_box">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="toolTip">
              <string>Show outgoing transmitted messages in the Rx frequency window.</string>
             </property>
@@ -234,6 +252,9 @@
            <layout class="QVBoxLayout" name="verticalLayout_6">
             <item>
              <widget class="QPushButton" name="font_push_button">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="toolTip">
                <string>Set the font characteristics for the application.</string>
               </property>
@@ -244,6 +265,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="decoded_text_font_push_button">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="toolTip">
                <string>Set the font characteristics for the Band Activity and Rx Frequency areas.</string>
               </property>
@@ -269,6 +293,9 @@
           </item>
           <item row="4" column="0">
            <widget class="QCheckBox" name="ppfx_check_box">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>Show principal prefix instead of country name</string>
             </property>
@@ -383,6 +410,9 @@
           </item>
           <item row="0" column="1">
            <widget class="QCheckBox" name="enable_VHF_features_check_box">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>Enable VHF/UHF/Microwave features</string>
             </property>
@@ -390,6 +420,9 @@
           </item>
           <item row="3" column="1">
            <widget class="QCheckBox" name="decode_at_52s_check_box">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>Decode after EME delay</string>
             </property>
@@ -404,6 +437,9 @@
           </item>
           <item row="1" column="1">
            <widget class="QCheckBox" name="tx_QSY_check_box">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Some rigs are not able to process CAT commands while transmitting. This means that if you are operating in split mode you may have to uncheck this option.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
@@ -416,6 +452,9 @@
            <layout class="QHBoxLayout" name="horizontalLayout_9">
             <item>
              <widget class="QCheckBox" name="CW_id_after_73_check_box">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="toolTip">
                <string>Send a CW ID after every 73 or free text message.</string>
               </property>
@@ -439,6 +478,9 @@
             </item>
             <item>
              <widget class="QLabel" name="label">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -455,6 +497,9 @@
             </item>
             <item>
              <widget class="QSpinBox" name="CW_id_interval_spin_box">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -483,6 +528,9 @@ quiet period when decoding is done.</string>
           </item>
           <item row="2" column="0">
            <widget class="QCheckBox" name="quick_call_check_box">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="toolTip">
              <string>Automatic transmission mode.</string>
             </property>
@@ -493,6 +541,9 @@ quiet period when decoding is done.</string>
           </item>
           <item row="3" column="0">
            <widget class="QCheckBox" name="disable_TX_on_73_check_box">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="toolTip">
              <string>Turns off automatic transmissions after sending a 73 or any other free
 text message.</string>
@@ -1676,6 +1727,9 @@ QListView::item:hover {
            <layout class="QGridLayout" name="gridLayout_14">
             <item row="0" column="0">
              <widget class="QCheckBox" name="prompt_to_log_check_box">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="toolTip">
                <string>The program will pop up a partially completed Log QSO dialog when you send a 73 or free text message.</string>
               </property>
@@ -2389,6 +2443,9 @@ Right click for insert and delete options.</string>
       <layout class="QGridLayout" name="gridLayout_9">
        <item row="0" column="1">
         <widget class="QGroupBox" name="groupBox_5">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="title">
           <string>Miscellaneous</string>
          </property>
@@ -2487,7 +2544,7 @@ Right click for insert and delete options.</string>
           <item row="8" column="0">
            <widget class="QCheckBox" name="cbx4ToneSpacing">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Generate Tx audio with four times the normal tone spacing. Intended for special LF/MF transmitters that use a divide-by-4 before generating RF.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -2502,6 +2559,9 @@ Right click for insert and delete options.</string>
        </item>
        <item row="0" column="0">
         <widget class="QGroupBox" name="groupBox_6">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;User-selectable parameters for JT65 VHF/UHF/Microwave decoding.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
@@ -2583,6 +2643,9 @@ Right click for insert and delete options.</string>
        </item>
        <item row="1" column="0">
         <widget class="QGroupBox" name="groupBox_7">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="minimumSize">
           <size>
            <width>0</width>
