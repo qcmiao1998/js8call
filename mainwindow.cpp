@@ -7578,7 +7578,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
           QStringList text;
           int snr = 0;
           foreach(ActivityDetail item, items){
-              if(item.utcTimestamp.secsTo(now)/60 > 5){
+              if(item.utcTimestamp.secsTo(now)/60 >= 2){
                   continue;
               }
               if(item.text.isEmpty()){
