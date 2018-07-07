@@ -5107,6 +5107,7 @@ int MainWindow::logRxTxMessageText(QDateTime date, bool isFree, QString text, in
         c.movePosition(QTextCursor::EndOfBlock);
         found = true;
     } else {
+        c.movePosition(QTextCursor::End);
         c.insertBlock();
     }
 
@@ -5354,12 +5355,9 @@ bool MainWindow::prepareNextMessageFrame()
 
 }
 
-bool MainWindow::isFreqOffsetFree(int f){
-    int bw = 50;
-    int pad = 5;
-
+bool MainWindow::isFreqOffsetFree(int f, int bw){
     foreach(int offset, m_bandActivity.keys()){
-        if(qAbs(offset - f) < bw+pad){
+        if(qAbs(offset - f) < bw){
             return false;
         }
     }
@@ -5367,23 +5365,20 @@ bool MainWindow::isFreqOffsetFree(int f){
     return true;
 }
 
-int MainWindow::findFreeFreqOffset(){
-    int bw = 50;
-    int fmin = 100;
-    int fmax = 1000;
+int MainWindow::findFreeFreqOffset(int fmin, int fmax, int bw){
     int nslots = (fmax-fmin)/bw;
 
     int f = fmin;
     for(int i = 0; i < nslots; i++){
         f = fmin + bw * (qrand() % nslots);
-        if(isFreqOffsetFree(f)){
+        if(isFreqOffsetFree(f, bw)){
             return f;
         }
     }
 
     for(int i = 0; i < nslots; i++){
         f = fmin + (qrand() % (fmax-fmin));
-        if(isFreqOffsetFree(f)){
+        if(isFreqOffsetFree(f, bw)){
             return f;
         }
     }
@@ -5402,10 +5397,15 @@ void MainWindow::scheduleBeacon(bool first){
     timestamp.setTime(t);
 
     // round to 15 second increment
-
     int secondsSinceEpoch = (timestamp.toMSecsSinceEpoch()/1000);
     int delta = roundUp(secondsSinceEpoch, 15) + 1 + (first ? m_txFirst ? 15 : 30 : qMax(1, m_config.beacon()) * 60) - secondsSinceEpoch;
     timestamp = timestamp.addSecs(delta);
+
+    // 25% of the time, switch intervals
+    float prob = (float) qrand() / (RAND_MAX+1);
+    if(prob < 0.25){
+        timestamp = timestamp.addSecs(15);
+    }
 
     // set the next beacon timestamp and timer
     m_nextBeacon = timestamp;
@@ -5421,7 +5421,11 @@ void MainWindow::prepareBeacon(){
         return;
     }
 
-    int f = findFreeFreqOffset();
+    int bw = 50 + 5;
+    int f = ui->TxFreqSpinBox->value();
+    if(!isFreqOffsetFree(f, bw)){
+        f = findFreeFreqOffset(250, 1500, bw);
+    }
 
     // delay beacon if there's not a free frequency or there's something the tx queue...
     if(f == 0 || !m_txFrameQueue.isEmpty()){

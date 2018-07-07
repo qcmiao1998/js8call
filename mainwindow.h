@@ -251,8 +251,8 @@ private slots:
   QString parseFT8Message(QString input);
   int countFreeTextMsgs(QString input);
   bool prepareNextMessageFrame();
-  bool isFreqOffsetFree(int f);
-  int findFreeFreqOffset();
+  bool isFreqOffsetFree(int f, int bw);
+  int findFreeFreqOffset(int fmin, int fmax, int bw);
   void scheduleBeacon(bool first=false);
   void prepareBeacon();
   void on_rptSpinBox_valueChanged(int n);
