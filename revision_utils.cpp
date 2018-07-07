@@ -81,13 +81,13 @@ QString version (bool include_patch)
 #endif
 #endif
 
-  QString v {"0.0.1"};
+  QString v {"0.0.2"};
 
   return v;
 }
 
 QString program_title (QString const& revision)
 {
-  QString id {"FT8Call (v%1) by KN4CRD a derivative of WSJT-X by K1JT"};
+  QString id {"FT8Call de KN4CRD (v%1) a derivative of WSJT-X by K1JT"};
   return id.arg(QCoreApplication::applicationVersion ());
 }
