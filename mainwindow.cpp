@@ -222,6 +222,17 @@ namespace
         widget->removeRow(i);
       }
   }
+
+  int roundUp(int numToRound, int multiple)
+  {
+   if(multiple == 0)
+   {
+    return numToRound;
+   }
+
+   int roundDown = ( (int) (numToRound) / multiple) * multiple;
+   return roundDown + multiple;
+  }
 }
 
 //--------------------------------------------------- MainWindow constructor
@@ -5384,7 +5395,7 @@ void MainWindow::scheduleBeacon(bool first){
     // round to 15 second increment
 
     int secondsSinceEpoch = (timestamp.toMSecsSinceEpoch()/1000);
-    int delta = roundUp(secondsSinceEpoch, 15) + 1 + (first ? m_txFirst ? 15 : 30 : 300) - secondsSinceEpoch;
+    int delta = roundUp(secondsSinceEpoch, 15) + 1 + (first ? m_txFirst ? 15 : 30 : qMax(1, m_config.beacon()) * 60) - secondsSinceEpoch;
     timestamp = timestamp.addSecs(delta);
 
     // set the next beacon timestamp and timer

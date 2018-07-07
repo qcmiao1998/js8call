@@ -119,6 +119,7 @@ public:
   bool miles () const;
   bool quick_call () const;
   bool disable_TX_on_73 () const;
+  int beacon () const;
   int watchdog () const;
   bool TX_messages () const;
   bool split_mode () const;

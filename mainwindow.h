@@ -797,18 +797,6 @@ protected:
     }
 };
 
-
-static int roundUp(int numToRound, int multiple)
-{
- if(multiple == 0)
- {
-  return numToRound;
- }
-
- int roundDown = ( (int) (numToRound) / multiple) * multiple;
- return roundDown + multiple;
-}
-
 extern int killbyname(const char* progName);
 extern void getDev(int* numDevices,char hostAPI_DeviceName[][50],
                    int minChan[], int maxChan[],
