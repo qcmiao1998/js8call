@@ -7544,7 +7544,17 @@ void MainWindow::postDecode (bool is_new, QString const& message)
   auto now = QDateTime::currentDateTimeUtc();
   clearTableWidget(ui->tableWidgetRXAll);
   QList<int> keys = m_bandActivity.keys();
-  qSort(keys.begin(), keys.end());
+
+  qSort(keys.begin(), keys.end(), [this](const int left, int right){
+      if(m_rxDirectedCache.contains(left/10*10)){
+          return true;
+      }
+      if(m_rxDirectedCache.contains(right/10*10)){
+          return false;
+      }
+      return left < right;
+  });
+
   foreach (int offset, keys) {
       QList<ActivityDetail> items = m_bandActivity[offset];
       if(items.length() > 0){
