@@ -1013,22 +1013,22 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   //connect(ui->tableWidgetRXAll->horizontalHeader(), &QHeaderView::sectionResized, this, [this](){  });
 
   // setup tablewidget context menus
-  auto clearAction1 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"));
+  auto clearAction1 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->textEditRX);
   connect(clearAction1, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->textEditRX); });
   ui->textEditRX->setContextMenuPolicy(Qt::ActionsContextMenu);
   ui->textEditRX->addAction(clearAction1);
 
-  auto clearAction2 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"));
+  auto clearAction2 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->extFreeTextMsgEdit);
   connect(clearAction2, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->extFreeTextMsgEdit); });
   ui->extFreeTextMsgEdit->setContextMenuPolicy(Qt::ActionsContextMenu);
   ui->extFreeTextMsgEdit->addAction(clearAction2);
 
-  auto clearAction3 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"));
+  auto clearAction3 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetRXAll);
   connect(clearAction3, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetRXAll); });
   ui->tableWidgetRXAll->setContextMenuPolicy(Qt::ActionsContextMenu);
   ui->tableWidgetRXAll->addAction(clearAction3);
 
-  auto clearAction4 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"));
+  auto clearAction4 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetCalls);
   connect(clearAction4, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetCalls); });
   ui->tableWidgetCalls->setContextMenuPolicy(Qt::ActionsContextMenu);
   ui->tableWidgetCalls->addAction(clearAction4);
@@ -6616,7 +6616,7 @@ void MainWindow::on_macrosMacroButton_clicked(){
         connect(action, &QAction::triggered, this, [this, macro](){ addMessageText(macro); });
     }
     menu->addSeparator();
-    auto action = new QAction(QIcon::fromTheme("edit-edit"), QString("Edit"));
+    auto action = new QAction(QIcon::fromTheme("edit-edit"), QString("Edit"), menu);
     menu->addAction(action);
     connect(action, &QAction::triggered, this, &MainWindow::on_actionSettings_triggered);
 
