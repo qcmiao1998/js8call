@@ -199,16 +199,16 @@ namespace
       int days = delta;
 
       if(days){
-          return QString("%1 d").arg(days);
+          return QString("%1d").arg(days);
       }
       if(hours){
-          return QString("%1 h").arg(hours);
+          return QString("%1h").arg(hours);
       }
       if(minutes){
-          return QString("%1 m").arg(minutes);
+          return QString("%1m").arg(minutes);
       }
       if(seconds){
-          return QString("%1 s").arg(seconds - seconds%15);
+          return QString("%1s").arg(seconds - seconds%15);
       }
 
       return QString {};
@@ -5443,6 +5443,23 @@ void MainWindow::prepareBeacon(){
     scheduleBeacon();
 }
 
+
+QString MainWindow::calculateDistance(QString const& grid)
+{
+    qint64 nsec = (QDateTime::currentMSecsSinceEpoch()/1000) % 86400;
+    double utch=nsec/3600.0;
+    int nAz,nEl,nDmiles,nDkm,nHotAz,nHotABetter;
+    azdist_(const_cast <char *> ((m_config.my_grid () + "      ").left (6).toLatin1().constData()),
+            const_cast <char *> ((grid + "      ").left (6).toLatin1().constData()),&utch,
+            &nAz,&nEl,&nDmiles,&nDkm,&nHotAz,&nHotABetter,6,6);
+
+    if(m_config.miles()){
+        return QString("%1 mi").arg(nDmiles);
+    }
+
+    return QString("%1 km").arg(nDkm);
+}
+
 // this function is called by auto_tx_mode, which is called by autoButton.clicked
 void MainWindow::on_startTxButton_toggled(bool checked)
 {
@@ -7652,7 +7669,10 @@ void MainWindow::postDecode (bool is_new, QString const& message)
       ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem(call));
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
-      //ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(d.grid));
+
+      auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
+      distanceItem->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
+      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 2, distanceItem);
 
       if(call == selectedCall){
           ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);

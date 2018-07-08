@@ -225,7 +225,7 @@
           <item row="1" column="0">
            <widget class="QCheckBox" name="miles_check_box">
             <property name="enabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="toolTip">
              <string>Show distance to DX station in miles rather than kilometers.</string>

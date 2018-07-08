@@ -936,6 +936,11 @@ QTextEdit[readOnly=&quot;true&quot;] {
           <string>Age</string>
          </property>
         </column>
+        <column>
+         <property name="text">
+          <string>Distance</string>
+         </property>
+        </column>
        </widget>
       </widget>
       <widget class="QWidget" name="macroHorizonalWidget" native="true">

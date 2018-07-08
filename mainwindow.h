@@ -255,6 +255,7 @@ private slots:
   int findFreeFreqOffset(int fmin, int fmax, int bw);
   void scheduleBeacon(bool first=false);
   void prepareBeacon();
+  QString calculateDistance(QString const& grid);
   void on_rptSpinBox_valueChanged(int n);
   void killFile();
   void on_tuneButton_clicked (bool);
