@@ -81,7 +81,7 @@ QString version (bool include_patch)
 #endif
 #endif
 
-  QString v {"0.0.2"};
+  QString v {"0.0.3"};
 
   return v;
 }
