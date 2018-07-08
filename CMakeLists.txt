@@ -45,10 +45,10 @@ message (STATUS "Building ${CMAKE_PROJECT_NAME}-${wsjtx_VERSION}")
 #
 # project information
 #
-set (PROJECT_NAME "WSJT-X")
-set (PROJECT_VENDOR "Joe Taylor, K1JT")
-set (PROJECT_CONTACT "Joe Taylor <k1jt@arrl.net>")
-set (PROJECT_COPYRIGHT "Copyright (C) 2001-2018 by Joe Taylor, K1JT")
+set (PROJECT_NAME "FT8Call")
+set (PROJECT_VENDOR "Jordan Sherer, KN4CRD")
+set (PROJECT_CONTACT "Jordan Sherer <kn4crd@gmail.com>")
+set (PROJECT_COPYRIGHT "Copyright (C) 2001-2018 by Joe Taylor, K1JT, (C) 2018 by Jordan Sherer, KN4CRD")
 set (PROJECT_HOMEPAGE http://www.physics.princeton.edu/pulsar/K1JT/wsjtx.html)
 set (PROJECT_MANUAL wsjtx-main)
 set (PROJECT_MANUAL_DIRECTORY_URL http://www.physics.princeton.edu/pulsar/K1JT/wsjtx-doc/)
