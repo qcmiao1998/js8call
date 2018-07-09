@@ -2060,18 +2060,18 @@ void MainWindow::displayDialFrequency ()
 
   // lookup band
   auto const& band_name = m_config.bands ()->find (dial_frequency);
-  if (m_lastBand != band_name)
-    {
+  if (m_lastBand != band_name){
       // only change this when necessary as we get called a lot and it
       // would trash any user input to the band combo box line edit
       ui->bandComboBox->setCurrentText (band_name);
       m_wideGraph->setRxBand (band_name);
       m_lastBand = band_name;
 
-      // TODO: jsherer - is this the only place?
       clearActivity();
-    }
+  }
 
+  // TODO: jsherer - this doesn't validate anything else right? we are disabling this because as long as you're in a band, it's valid.
+  /*
   // search working frequencies for one we are within 10kHz of (1 Mhz
   // of on VHF and up)
   bool valid {false};
@@ -2092,6 +2092,9 @@ void MainWindow::displayDialFrequency ()
   if (min_offset < 10000u || (m_config.enable_VHF_features() && min_offset < 1000000u)) {
     valid = true;
   }
+  */
+
+  bool valid = !band_name.isEmpty();
 
   update_dynamic_property (ui->labDialFreq, "oob", !valid);
   ui->labDialFreq->setText (Radio::pretty_frequency_MHz_string (dial_frequency));
@@ -6396,8 +6399,11 @@ void MainWindow::band_changed (Frequency f)
         m_send_RR73 = false;        // force user to reassess on new band
       }
     }
-    m_lastBand.clear ();
+
+    // TODO: jsherer - is this relied upon anywhere?
+    //m_lastBand.clear ();
     m_bandEdited = false;
+
     psk_Reporter->sendReport();      // Upload any queued spots before changing band
     if (!m_transmitting) monitor (true);
     if ("FreqCal" == m_mode)
