@@ -3171,8 +3171,14 @@ void MainWindow::readFromStdout()                             //readFromStdout
         if(abs(audioFreq - m_wideGraph->rxFreq()) <= 10) bDisplayRight=true;
       }
 
-      if(!bDisplayRight){
-          bDisplayRight = m_rxDirectedCache.contains(audioFreq/10*10);
+      // TODO: jsherer - this is duped...
+      // if this frequency offset is within our directed call cache in the last 2 minutes.
+      bool recentlyDirected = (
+          m_rxDirectedCache.contains(audioFreq/10*10) &&
+          m_rxDirectedCache[audioFreq/10*10]->secsTo(QDateTime::currentDateTimeUtc()) < 120
+      );
+      if(recentlyDirected){
+          bDisplayRight = true;
       }
 
       if (bDisplayRight) {
@@ -3197,7 +3203,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
         d.utcTimestamp = QDateTime::currentDateTimeUtc();
         m_rxFrameQueue.append(d);
 
-        if(!m_config.my_callsign().isEmpty() && d.text.contains(m_config.my_callsign())){
+        // bump the directed cache datetime if this is our callsign, or we've seen this recently...
+        if(recentlyDirected || (!m_config.my_callsign().isEmpty() && d.text.contains(m_config.my_callsign()))){
             m_rxDirectedCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
         }
       }
@@ -7679,9 +7686,11 @@ void MainWindow::postDecode (bool is_new, QString const& message)
               textItem->setBackground(QBrush(m_config.color_CQ()));
           }
 
-          if ((!m_config.my_callsign().isEmpty() && text.last().contains(m_config.my_callsign())) ||
-              (m_rxDirectedCache.contains(offset/10*10))
-          ){
+          bool recentlyDirected = (
+              m_rxDirectedCache.contains(offset/10*10) &&
+              m_rxDirectedCache[offset/10*10]->secsTo(QDateTime::currentDateTimeUtc()) < 120
+          );
+          if (recentlyDirected || (!m_config.my_callsign().isEmpty() && text.last().contains(m_config.my_callsign()))){
               offsetItem->setBackground(QBrush(m_config.color_MyCall()));
               snrItem->setBackground(QBrush(m_config.color_MyCall()));
               textItem->setBackground(QBrush(m_config.color_MyCall()));
