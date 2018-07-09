@@ -3180,7 +3180,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         d.utcTimestamp = QDateTime::currentDateTimeUtc();
         m_rxFrameQueue.append(d);
 
-        if(d.text.contains(m_config.my_callsign())){
+        if(!m_config.my_callsign().isEmpty() && d.text.contains(m_config.my_callsign())){
             m_rxDirectedCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
         }
       }
@@ -7640,7 +7640,9 @@ void MainWindow::postDecode (bool is_new, QString const& message)
               textItem->setBackground(QBrush(m_config.color_CQ()));
           }
 
-          if (text.last().contains(m_config.my_callsign()) || m_rxDirectedCache.contains(offset/10*10)){
+          if ((!m_config.my_callsign().isEmpty() && text.last().contains(m_config.my_callsign())) ||
+              (m_rxDirectedCache.contains(offset/10*10))
+          ){
               offsetItem->setBackground(QBrush(m_config.color_MyCall()));
               snrItem->setBackground(QBrush(m_config.color_MyCall()));
               textItem->setBackground(QBrush(m_config.color_MyCall()));
