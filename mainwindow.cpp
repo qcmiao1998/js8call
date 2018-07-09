@@ -5262,20 +5262,24 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 
 QStringList MainWindow::buildFT8MessageFrames(QString const& text){
     QStringList frames;
-    QString input = QString(text).replace("\n", " ").replace("  ", " ");
 
-    while(input.size() > 0){
-      QString frame = parseFT8Message(input);
-      if(frame.isEmpty()){
-        break;
-      }
-      frames.append(frame);
+    //QString input = QString(text); //.replace("\n", " ").replace("  ", " ");
+    //.split(QRegExp("\\n"))
 
-      int sz = input.size();
-      input = input.remove(QRegExp("^" + QRegExp::escape(frame))).trimmed();
-      if(input.size() == sz){
-        break;
-      }
+    foreach(QString input, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
+        while(input.size() > 0){
+          QString frame = parseFT8Message(input);
+          if(frame.isEmpty()){
+            break;
+          }
+          frames.append(frame);
+
+          int sz = input.size();
+          input = input.remove(QRegExp("^" + QRegExp::escape(frame))).trimmed();
+          if(input.size() == sz){
+            break;
+          }
+        }
     }
 
     return frames;
@@ -5284,7 +5288,7 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
 QString MainWindow::parseFT8Message(QString input){
   char message[29];
   char msgsent[29];
-  char volatile ft8msgbits[75];
+  char volatile ft8msgbits[75 + 12];
   int volatile itone[NUM_ISCAT_SYMBOLS];
 
   QByteArray ba = input.toLocal8Bit();
@@ -6616,16 +6620,26 @@ void MainWindow::on_snrMacroButton_clicked(){
 }
 
 void MainWindow::on_macrosMacroButton_clicked(){
-    QMenu *menu = new QMenu(ui->macrosMacroButton);
+    if(m_config.macros()->stringList().isEmpty()){
+        on_actionSettings_triggered();
+        return;
+    }
+
+    QMenu *menu = ui->macrosMacroButton->menu();
+    if(!menu){
+        menu = new QMenu(ui->macrosMacroButton);
+    }
+    menu->clear();
+
     foreach(QString macro, m_config.macros()->stringList()){
         QAction *action = menu->addAction(macro);
         connect(action, &QAction::triggered, this, [this, macro](){ addMessageText(macro); });
     }
+
     menu->addSeparator();
     auto action = new QAction(QIcon::fromTheme("edit-edit"), QString("Edit"), menu);
     menu->addAction(action);
     connect(action, &QAction::triggered, this, &MainWindow::on_actionSettings_triggered);
-
 
     ui->macrosMacroButton->setMenu(menu);
     ui->macrosMacroButton->showMenu();
