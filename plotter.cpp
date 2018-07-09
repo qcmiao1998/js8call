@@ -36,7 +36,7 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_line {0},
   m_fSample {12000},
   m_nsps {6912},
-  m_Percent2DScreen {30},      //percent of screen used for 2D display
+  m_Percent2DScreen {0},      //percent of screen used for 2D display
   m_Percent2DScreen0 {0},
   m_rxFreq {1020},
   m_txFreq {0},

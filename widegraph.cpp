@@ -64,8 +64,8 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     ui->bppSpinBox->setValue(n);
     m_nsmo=m_settings->value("SmoothYellow",1).toInt();
     ui->smoSpinBox->setValue(m_nsmo);
-    m_Percent2DScreen=m_settings->value("Percent2D",30).toInt();
-    m_waterfallAvg = m_settings->value("WaterfallAvg",5).toInt();
+    m_Percent2DScreen=m_settings->value("Percent2D", 0).toInt();
+    m_waterfallAvg = m_settings->value("WaterfallAvg", 1).toInt();
     ui->waterfallAvgSpinBox->setValue(m_waterfallAvg);
     ui->widePlot->setWaterfallAvg(m_waterfallAvg);
     ui->widePlot->setCurrent(m_settings->value("Current",false).toBool());
@@ -76,17 +76,18 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     if(ui->widePlot->cumulative()) ui->spec2dComboBox->setCurrentIndex(1);
     if(ui->widePlot->linearAvg()) ui->spec2dComboBox->setCurrentIndex(2);
     if(ui->widePlot->Reference()) ui->spec2dComboBox->setCurrentIndex(3);
-    int nbpp=m_settings->value("BinsPerPixel",2).toInt();
+    int nbpp=m_settings->value("BinsPerPixel", 4).toInt();
     ui->widePlot->setBinsPerPixel(nbpp);
     ui->sbPercent2dPlot->setValue(m_Percent2DScreen);
+    ui->widePlot->SetPercent2DScreen(m_Percent2DScreen);
     ui->widePlot->setStartFreq(m_settings->value("StartFreq",0).toInt());
     ui->fStartSpinBox->setValue(ui->widePlot->startFreq());
     m_waterfallPalette=m_settings->value("WaterfallPalette","Default").toString();
     m_userPalette = WFPalette {m_settings->value("UserPalette").value<WFPalette::Colours> ()};
     m_fMinPerBand = m_settings->value ("FminPerBand").toHash ();
     setRxRange ();
-    ui->controls_widget->setVisible(!m_settings->value("HideControls",false).toBool());
-    ui->cbControls->setChecked(!m_settings->value("HideControls",false).toBool());
+    ui->controls_widget->setVisible(!m_settings->value("HideControls", true).toBool());
+    ui->cbControls->setChecked(!m_settings->value("HideControls", true).toBool());
   }
 
   int index=0;

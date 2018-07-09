@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>799</width>
+    <width>942</width>
     <height>337</height>
    </rect>
   </property>
@@ -68,7 +68,7 @@
        <string>Controls</string>
       </property>
       <property name="checked">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
      </widget>
     </widget>
@@ -219,7 +219,7 @@
          <number>5</number>
         </property>
         <property name="value">
-         <number>30</number>
+         <number>0</number>
         </property>
        </widget>
       </item>
@@ -293,7 +293,7 @@
          <number>1</number>
         </property>
         <property name="value">
-         <number>2</number>
+         <number>5</number>
         </property>
        </widget>
       </item>
