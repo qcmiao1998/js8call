@@ -650,6 +650,14 @@ bool Configuration::spot_to_psk_reporter () const
   // rig must be open and working to spot externally
   return is_transceiver_online () && m_->spot_to_psk_reporter_;
 }
+void Configuration::set_spot_to_psk_reporter (bool spot)
+{
+    if(m_->spot_to_psk_reporter_ != spot){
+        m_->spot_to_psk_reporter_ = spot;
+        m_->write_settings();
+    }
+}
+
 bool Configuration::monitor_off_at_startup () const {return m_->monitor_off_at_startup_;}
 bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->monitor_last_used_;}
 bool Configuration::log_as_RTTY () const {return m_->log_as_RTTY_;}
@@ -1390,7 +1398,7 @@ void Configuration::impl::read_settings ()
   quick_call_ = settings_->value ("QuickCall", false).toBool ();
   disable_TX_on_73_ = settings_->value ("73TxDisable", false).toBool ();
   beacon_ = settings_->value ("TxBeacon", 5).toInt ();
-  watchdog_ = settings_->value ("TxWatchdog", 6).toInt ();
+  watchdog_ = settings_->value ("TxWatchdog", 0).toInt ();
   TX_messages_ = settings_->value ("Tx2QSO", true).toBool ();
   enable_VHF_features_ = settings_->value("VHFUHF",false).toBool ();
   decode_at_52s_ = settings_->value("Decode52",false).toBool ();

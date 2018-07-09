@@ -107,6 +107,7 @@ public:
   bool id_after_73 () const;
   bool tx_QSY_allowed () const;
   bool spot_to_psk_reporter () const;
+  void set_spot_to_psk_reporter (bool);
   bool monitor_off_at_startup () const;
   bool monitor_last_used () const;
   bool log_as_RTTY () const;

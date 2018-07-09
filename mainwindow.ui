@@ -532,9 +532,9 @@ background-color: #6699ff;
                </widget>
               </item>
               <item row="0" column="2">
-               <widget class="QPushButton" name="autoButton">
+               <widget class="QPushButton" name="spotButton">
                 <property name="enabled">
-                 <bool>false</bool>
+                 <bool>true</bool>
                 </property>
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -583,7 +583,7 @@ background-color: #00ff00;
 }</string>
                 </property>
                 <property name="text">
-                 <string>TX</string>
+                 <string>SPOT</string>
                 </property>
                 <property name="checkable">
                  <bool>true</bool>
@@ -591,6 +591,7 @@ background-color: #00ff00;
                </widget>
               </item>
               <item row="1" column="2">
+              <widget class="QWidget" name="monitorContainer" native="true">
                <widget class="QPushButton" name="monitorButton">
                 <property name="enabled">
                  <bool>true</bool>
@@ -632,7 +633,7 @@ QPushButton[state=&quot;error&quot;] {
 background-color: red;
 }
 QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
+background-color: yellow;
 }
 QPushButton[state=&quot;ok&quot;] {
 background-color: #00ff00;
@@ -648,6 +649,56 @@ background-color: #00ff00;
                  <bool>true</bool>
                 </property>
                </widget>
+               <widget class="QPushButton" name="monitorTxButton">
+               <property name="visible">
+                <bool>false</bool>
+               </property>
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+font-family: helvetica;
+font-size: 9pt;
+font-weight: bold;
+color: black;
+border-style: solid;
+border-width:0px;
+border-color: gray;
+max-height:30px;
+min-width:40px;
+min-height:30px;
+max-width:40px;;
+background-color: yellow;
+}
+</string>
+                </property>
+                <property name="text">
+                 <string>TX</string>
+                </property>
+                <property name="checkable">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </widget>
               </item>
               <item row="1" column="0">
                <widget class="QPushButton" name="tuneButton">
@@ -3747,7 +3798,7 @@ list. The list can be maintained in Settings (F2).</string>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="autoButton_old">
+        <widget class="QPushButton" name="autoButton">
          <property name="minimumSize">
           <size>
            <width>50</width>

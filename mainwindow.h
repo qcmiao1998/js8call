@@ -143,10 +143,13 @@ private slots:
   void on_tx5_currentTextChanged (QString const&);
   void on_tx6_editingFinished();
   void on_actionSettings_triggered();
+  void preparePSKReporter();
+  void on_spotButton_clicked(bool checked);
   void on_monitorButton_clicked (bool);
   void on_actionAbout_triggered();
   void on_autoButton_clicked (bool);
   void on_labDialFreq_clicked();
+  void on_monitorTxButton_clicked();
   void on_stopTxButton_clicked();
   void on_stopButton_clicked();
   void on_actionRelease_Notes_triggered ();

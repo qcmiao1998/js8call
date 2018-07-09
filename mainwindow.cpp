@@ -1010,7 +1010,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->TxFreqSpinBox->setValue(1500);
   ui->RxFreqSpinBox->setValue(1500);
 
-  //connect(ui->tableWidgetRXAll->horizontalHeader(), &QHeaderView::sectionResized, this, [this](){  });
+  ui->spotButton->setChecked(m_config.spot_to_psk_reporter());
 
   // setup tablewidget context menus
   auto clearAction1 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->textEditRX);
@@ -1746,7 +1746,7 @@ void MainWindow::on_actionSettings_triggered()               //Setup Dialog
     on_dxGridEntry_textChanged (m_hisGrid); // recalculate distances in case of units change
     enable_DXCC_entity (m_config.DXCC ());  // sets text window proportions and (re)inits the logbook
 
-    if(m_config.spot_to_psk_reporter ()) pskSetLocal ();
+    preparePSKReporter();
 
     if(m_config.restart_audio_input ()) {
       Q_EMIT startAudioInputStream (m_config.audio_input_device (),
@@ -1804,6 +1804,23 @@ void MainWindow::on_actionSettings_triggered()               //Setup Dialog
     }
     m_opCall=m_config.opCall();
   }
+}
+
+void MainWindow::preparePSKReporter(){
+    if(m_config.spot_to_psk_reporter ()){
+        pskSetLocal ();
+        ui->spotButton->setChecked(true);
+    } else {
+        ui->spotButton->setChecked(false);
+    }
+}
+
+void MainWindow::on_spotButton_clicked(bool checked){
+    // 1. save setting
+    m_config.set_spot_to_psk_reporter(checked);
+
+    // 2. prepare
+    preparePSKReporter();
 }
 
 void MainWindow::on_monitorButton_clicked (bool checked)
@@ -1882,8 +1899,8 @@ void MainWindow::on_autoButton_clicked (bool checked)
 
 void MainWindow::auto_tx_mode (bool state)
 {
-  ui->autoButton->setChecked (state);
-  on_autoButton_clicked (state);
+    ui->autoButton->setChecked (state);
+    on_autoButton_clicked (state);
 }
 
 void MainWindow::keyPressEvent (QKeyEvent * e)
@@ -6796,6 +6813,10 @@ void MainWindow::stopTuneATU()
   m_bTxTime=false;
 }
 
+void MainWindow::on_monitorTxButton_clicked(){
+    on_stopTxButton_clicked();
+}
+
 void MainWindow::on_stopTxButton_clicked()                    //Stop Tx
 {
   if (m_tune) stop_tuning ();
@@ -7302,6 +7323,10 @@ void MainWindow::transmitDisplay (bool transmitting)
       ui->pbTxMode->setEnabled (false);
     }
   }
+
+  // TODO: jsherer - encapsulate this in a function?
+  ui->monitorButton->setVisible(!transmitting);
+  ui->monitorTxButton->setVisible(transmitting);
 }
 
 void MainWindow::on_sbFtol_valueChanged(int value)
