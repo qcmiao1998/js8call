@@ -27,6 +27,7 @@ namespace
 QString revision (QString const& svn_rev_string)
 {
   QString result;
+#if 0
   auto revision_from_svn = revision_extract_number (svn_rev_string);
 
 #if defined (CMAKE_BUILD)
@@ -60,28 +61,27 @@ QString revision (QString const& svn_rev_string)
       result = revision_from_svn;
     }
 #endif
+#endif
   return result.trimmed ();
 }
 
 QString version (bool include_patch)
 {
-#if 0
 #if defined (CMAKE_BUILD)
   QString v {WSJTX_STRINGIZE (WSJTX_VERSION_MAJOR) "." WSJTX_STRINGIZE (WSJTX_VERSION_MINOR)};
   if (include_patch)
     {
       v += "." WSJTX_STRINGIZE (WSJTX_VERSION_PATCH)
+#if 0
 # if defined (WSJTX_RC)
         + "-rc" WSJTX_STRINGIZE (WSJTX_RC)
 # endif
+#endif
         ;
     }
 #else
   QString v {"Not for Release"};
 #endif
-#endif
-
-  QString v {"0.0.3"};
 
   return v;
 }
