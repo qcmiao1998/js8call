@@ -3854,6 +3854,7 @@ void MainWindow::guiUpdate()
       //To keep calling Fox, Hound must reactivate Enable Tx at least once every 2 minutes
       if(tHound >= 120 and m_ntx==1) auto_tx_mode(false);
     }
+
     if(m_auto and m_mode=="Echo" and m_bEchoTxOK) {
       progressBar.setMaximum(6);
       progressBar.setValue(int(m_s6));
@@ -3931,19 +3932,14 @@ void MainWindow::guiUpdate()
     if(!m_monitoring and !m_diskData) {
       ui->signal_meter_widget->setValue(0,0);
     }
+
     m_sec0=nsec;
+
     displayDialFrequency ();
-  }
 
-  // TODO: jsherer - is this the right place?
-  update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
-
-  if(ui->tableWidgetCalls->selectedItems().isEmpty() && ui->tableWidgetRXAll->selectedItems().isEmpty()){
-      ui->replyMacroButton->setDisabled(true);
-      ui->snrMacroButton->setDisabled(true);
-  } else {
-      ui->replyMacroButton->setDisabled(false);
-      ui->snrMacroButton->setDisabled(false);
+    if(nsec % 15 == 0){
+        displayActivity();
+    }
   }
 
   m_iptt0=g_iptt;
@@ -7617,11 +7613,10 @@ void MainWindow::postDecode (bool is_new, QString const& message)
                                , QChar {'?'} == decode.mid (has_seconds ? 24 + 21 : 22 + 21, 1)
                                , m_diskData);
     }
+}
 
-
-
-
-  // TODO: jsherer - keep track of selection
+void MainWindow::displayActivity(){
+  // RX Activity
   int selectedOffset = -1;
   auto selectedItems = ui->tableWidgetRXAll->selectedItems();
   if(!selectedItems.isEmpty()){
@@ -7706,7 +7701,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
   ui->tableWidgetRXAll->resizeColumnToContents(0);
   ui->tableWidgetRXAll->resizeColumnToContents(1); //resizeColumnsToContents();
 
-  // TODO: jsherer - keep track of selection
+  // Call Activity
   QString selectedCall;
   auto selectedCalls = ui->tableWidgetCalls->selectedItems();
   if(!selectedCalls.isEmpty()){
@@ -7745,6 +7740,17 @@ void MainWindow::postDecode (bool is_new, QString const& message)
       int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
       block = logRxTxMessageText(d.utcTimestamp, d.isFree, d.text, d.freq, false, block);
       m_rxFrameBlockNumbers[freq] = block;
+  }
+
+  // Transmit Activity
+  update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
+
+  if(ui->tableWidgetCalls->selectedItems().isEmpty() && ui->tableWidgetRXAll->selectedItems().isEmpty()){
+    ui->replyMacroButton->setDisabled(true);
+    ui->snrMacroButton->setDisabled(true);
+  } else {
+    ui->replyMacroButton->setDisabled(false);
+    ui->snrMacroButton->setDisabled(false);
   }
 }
 
