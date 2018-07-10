@@ -738,6 +738,7 @@ private:
   void locationChange(QString const& location);
   void replayDecodes ();
   void postDecode (bool is_new, QString const& message);
+  void displayTransmit();
   void displayActivity();
   void postWSPRDecode (bool is_new, QStringList message_parts);
   void enable_DXCC_entity (bool on);

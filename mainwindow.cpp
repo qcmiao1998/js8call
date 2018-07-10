@@ -3942,6 +3942,8 @@ void MainWindow::guiUpdate()
     }
   }
 
+  displayTransmit();
+
   m_iptt0=g_iptt;
   m_btxok0=m_btxok;
 }               //End of guiUpdate
@@ -7615,6 +7617,19 @@ void MainWindow::postDecode (bool is_new, QString const& message)
     }
 }
 
+void MainWindow::displayTransmit(){
+    // Transmit Activity
+    update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
+
+    if(ui->tableWidgetCalls->selectedItems().isEmpty() && ui->tableWidgetRXAll->selectedItems().isEmpty()){
+      ui->replyMacroButton->setDisabled(true);
+      ui->snrMacroButton->setDisabled(true);
+    } else {
+      ui->replyMacroButton->setDisabled(false);
+      ui->snrMacroButton->setDisabled(false);
+    }
+}
+
 void MainWindow::displayActivity(){
   // RX Activity
   int selectedOffset = -1;
@@ -7740,17 +7755,6 @@ void MainWindow::displayActivity(){
       int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
       block = logRxTxMessageText(d.utcTimestamp, d.isFree, d.text, d.freq, false, block);
       m_rxFrameBlockNumbers[freq] = block;
-  }
-
-  // Transmit Activity
-  update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
-
-  if(ui->tableWidgetCalls->selectedItems().isEmpty() && ui->tableWidgetRXAll->selectedItems().isEmpty()){
-    ui->replyMacroButton->setDisabled(true);
-    ui->snrMacroButton->setDisabled(true);
-  } else {
-    ui->replyMacroButton->setDisabled(false);
-    ui->snrMacroButton->setDisabled(false);
   }
 }
 
