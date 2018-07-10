@@ -719,10 +719,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   //ui->extFreeTextMsg->setValidator (new QRegExpValidator {message_alphabet, this});
 
   // Free text macros model to widget hook up.
-  ui->tx5->setModel (m_config.macros ());
-  connect (ui->tx5->lineEdit(), &QLineEdit::editingFinished,
-           [this] () {on_tx5_currentTextChanged (ui->tx5->lineEdit()->text());});
-  ui->freeTextMsg->setModel (m_config.macros ());
+  //ui->tx5->setModel (m_config.macros ());
+  //connect (ui->tx5->lineEdit(), &QLineEdit::editingFinished,
+  //         [this] () {on_tx5_currentTextChanged (ui->tx5->lineEdit()->text());});
+  //ui->freeTextMsg->setModel (m_config.macros ());
   connect (ui->freeTextMsg->lineEdit ()
            , &QLineEdit::editingFinished
            , [this] () {on_freeTextMsg_currentTextChanged (ui->freeTextMsg->lineEdit ()->text ());});
@@ -3092,11 +3092,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                m_config.ppfx(),(ui->cbCQonly->isVisible() and ui->cbCQonly->isChecked()));
 
           // TODO: parse decode...
-          //ui->textEditRXAll->append(decodedtext.messageWords().first().trimmed());
-          //ui->tableWidgetRXAll->insertRow(ui->tableWidgetRXAll->rowCount());
-          //ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount()-1, 0, new QTableWidgetItem(QString("%1").arg(decodedtext.frequencyOffset())));
-          //ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount()-1, 1, new QTableWidgetItem(decodedtext.messageWords().first().trimmed()));
-          if(decodedtext.messageWords().length() > 0){  
+          if(decodedtext.messageWords().length() > 0){
             int offset = decodedtext.frequencyOffset();
 
             if(!m_bandActivity.contains(offset)){
@@ -3110,6 +3106,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             }
 
             ActivityDetail d;
+            d.isLowConfidence = decodedtext.isLowConfidence();
             d.isFree = !decodedtext.isStandardMessage();
             d.firstCall = decodedtext.CQersCall();
             if(d.firstCall.isEmpty()){
@@ -6641,7 +6638,7 @@ void MainWindow::on_snrMacroButton_clicked(){
     }
 }
 
-void MainWindow::on_macrosMacroButton_clicked(){
+void MainWindow::on_macrosMacroButton_pressed(){
     if(m_config.macros()->stringList().isEmpty()){
         on_actionSettings_triggered();
         return;
@@ -7641,6 +7638,7 @@ void MainWindow::displayActivity(){
   clearTableWidget(ui->tableWidgetRXAll);
   QList<int> keys = m_bandActivity.keys();
 
+  // sort directed messages first
   qSort(keys.begin(), keys.end(), [this](const int left, int right){
       if(m_rxDirectedCache.contains(left/10*10)){
           return true;
@@ -7662,6 +7660,9 @@ void MainWindow::displayActivity(){
               }
               if(item.text.isEmpty()){
                   continue;
+              }
+              if(item.isLowConfidence){
+                  item.text = QString("[%1]").arg(item.text);
               }
               text.append(item.text);
               snr = item.snr;

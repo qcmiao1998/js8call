@@ -239,7 +239,7 @@ private slots:
   void on_replyMacroButton_clicked();
   void on_qthMacroButton_clicked();
   void on_snrMacroButton_clicked();
-  void on_macrosMacroButton_clicked();
+  void on_macrosMacroButton_pressed();
   void on_tableWidgetRXAll_cellClicked(int row, int col);
   void on_tableWidgetRXAll_cellDoubleClicked(int row, int col);
   void on_tableWidgetRXAll_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
@@ -643,6 +643,7 @@ private:
   struct ActivityDetail
   {
     bool isFree;
+    bool isLowConfidence;
     QString firstCall;
     QString secondCall;
     int freq;

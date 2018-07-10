@@ -1347,7 +1347,9 @@ void Configuration::impl::read_settings ()
   tx_QSY_allowed_ = settings_->value ("TxQSYAllowed", false).toBool ();
   use_dynamic_grid_ = settings_->value ("AutoGrid", false).toBool ();
 
-  macros_.setStringList (settings_->value ("Macros", QStringList {"TNX 73 GL"}).toStringList ());
+  auto loadedMacros = settings_->value ("Macros", QStringList {"TNX 73 GL"}).toStringList();
+
+  macros_.setStringList (loadedMacros);
 
   region_ = settings_->value ("Region", QVariant::fromValue (IARURegions::ALL)).value<IARURegions::Region> ();
 
