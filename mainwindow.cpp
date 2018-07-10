@@ -1012,26 +1012,41 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   ui->spotButton->setChecked(m_config.spot_to_psk_reporter());
 
+  auto clearActionSep = new QAction(nullptr);
+  clearActionSep->setSeparator(true);
+
+  auto clearActionAll = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear All"), nullptr);
+  connect(clearActionAll, &QAction::triggered, this, &MainWindow::clearActivity);
+
   // setup tablewidget context menus
   auto clearAction1 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->textEditRX);
   connect(clearAction1, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->textEditRX); });
   ui->textEditRX->setContextMenuPolicy(Qt::ActionsContextMenu);
   ui->textEditRX->addAction(clearAction1);
+  ui->textEditRX->addAction(clearActionSep);
+  ui->textEditRX->addAction(clearActionAll);
 
   auto clearAction2 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->extFreeTextMsgEdit);
   connect(clearAction2, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->extFreeTextMsgEdit); });
   ui->extFreeTextMsgEdit->setContextMenuPolicy(Qt::ActionsContextMenu);
   ui->extFreeTextMsgEdit->addAction(clearAction2);
+  ui->extFreeTextMsgEdit->addAction(clearActionSep);
+  ui->extFreeTextMsgEdit->addAction(clearActionAll);
+
 
   auto clearAction3 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetRXAll);
   connect(clearAction3, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetRXAll); });
   ui->tableWidgetRXAll->setContextMenuPolicy(Qt::ActionsContextMenu);
   ui->tableWidgetRXAll->addAction(clearAction3);
+  ui->tableWidgetRXAll->addAction(clearActionSep);
+  ui->tableWidgetRXAll->addAction(clearActionAll);
 
   auto clearAction4 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetCalls);
   connect(clearAction4, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetCalls); });
   ui->tableWidgetCalls->setContextMenuPolicy(Qt::ActionsContextMenu);
   ui->tableWidgetCalls->addAction(clearAction4);
+  ui->tableWidgetCalls->addAction(clearActionSep);
+  ui->tableWidgetCalls->addAction(clearActionAll);
 
   // this must be the last statement of constructor
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
@@ -5117,6 +5132,7 @@ void MainWindow::clearActivity(){
     ui->textEditRX->clear();
     ui->freeTextMsg->clear();
     ui->extFreeTextMsg->clear();
+    ui->extFreeTextMsgEdit->clear();
 }
 
 int MainWindow::logRxTxMessageText(QDateTime date, bool isFree, QString text, int freq, bool tx, int block){
