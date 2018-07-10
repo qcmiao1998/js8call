@@ -22,7 +22,7 @@ Change this to the newest SDK available that you can install on your system (10.
 Do not override this if you intend to build an official deployable installer.")
 endif (APPLE)
 
-project (wsjtx C CXX Fortran)
+project (wsjtx-ft8call C CXX Fortran)
 
 #
 # CMake policies
@@ -1298,7 +1298,7 @@ else (${OPENMP_FOUND} OR APPLE)
 endif (${OPENMP_FOUND} OR APPLE)
 
 # build the main application
-add_executable (wsjtx MACOSX_BUNDLE
+add_executable (wsjtx-ft8call MACOSX_BUNDLE
   ${wsjtx_CXXSRCS}
   ${wsjtx_GENUISRCS}
   wsjtx.rc
@@ -1307,10 +1307,10 @@ add_executable (wsjtx MACOSX_BUNDLE
   )
 
 if (WSJT_CREATE_WINMAIN)
-  set_target_properties (wsjtx PROPERTIES WIN32_EXECUTABLE ON)
+  set_target_properties (wsjtx-ft8call PROPERTIES WIN32_EXECUTABLE ON)
 endif (WSJT_CREATE_WINMAIN)
 
-set_target_properties (wsjtx PROPERTIES
+set_target_properties (wsjtx-ft8call PROPERTIES
   MACOSX_BUNDLE_INFO_STRING "${WSJTX_DESCRIPTION_SUMMARY}"
   MACOSX_BUNDLE_ICON_FILE "${WSJTX_ICON_FILE}"
   MACOSX_BUNDLE_BUNDLE_VERSION ${wsjtx_VERSION}
@@ -1321,27 +1321,27 @@ set_target_properties (wsjtx PROPERTIES
   MACOSX_BUNDLE_GUI_IDENTIFIER "org.k1jt.wsjtx"
   )
 
-target_include_directories (wsjtx PRIVATE ${FFTW3_INCLUDE_DIRS})
+target_include_directories (wsjtx-ft8call PRIVATE ${FFTW3_INCLUDE_DIRS})
 if (APPLE)
-  target_link_libraries (wsjtx wsjt_fort wsjt_cxx wsjt_qt wsjt_qtmm ${hamlib_LIBRARIES} ${FFTW3_LIBRARIES})
+  target_link_libraries (wsjtx-ft8call wsjt_fort wsjt_cxx wsjt_qt wsjt_qtmm ${hamlib_LIBRARIES} ${FFTW3_LIBRARIES})
 else ()
-  target_link_libraries (wsjtx wsjt_fort_omp wsjt_cxx wsjt_qt wsjt_qtmm ${hamlib_LIBRARIES} ${FFTW3_LIBRARIES})
+  target_link_libraries (wsjtx-ft8call wsjt_fort_omp wsjt_cxx wsjt_qt wsjt_qtmm ${hamlib_LIBRARIES} ${FFTW3_LIBRARIES})
   if (OpenMP_C_FLAGS)
-    set_target_properties (wsjtx PROPERTIES
+    set_target_properties (wsjtx-ft8call PROPERTIES
       COMPILE_FLAGS "${OpenMP_C_FLAGS}"
       LINK_FLAGS "${OpenMP_C_FLAGS}"
       )
   endif ()
-  set_target_properties (wsjtx PROPERTIES
+  set_target_properties (wsjtx-ft8call PROPERTIES
     Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/fortran_modules_omp
     )
   if (WIN32)
-    set_target_properties (wsjtx PROPERTIES
+    set_target_properties (wsjtx-ft8call PROPERTIES
       LINK_FLAGS -Wl,--stack,16777216
       )
   endif ()
 endif ()
-qt5_use_modules (wsjtx SerialPort) # not sure why the interface link library syntax above doesn't work
+qt5_use_modules (wsjtx-ft8call SerialPort) # not sure why the interface link library syntax above doesn't work
 
 # make a library for WSJT-X UDP servers
 # add_library (wsjtx_udp SHARED ${UDP_library_CXXSRCS})
@@ -1386,18 +1386,18 @@ endif (WSJT_CREATE_WINMAIN)
 if (UNIX)
   if (NOT WSJT_SKIP_MANPAGES)
     add_subdirectory (manpages)
-    add_dependencies (wsjtx manpages)
+    add_dependencies (wsjtx-ft8call manpages)
   endif (NOT WSJT_SKIP_MANPAGES)
   if (NOT APPLE)
     add_subdirectory (debian)
-    add_dependencies (wsjtx debian)
+    add_dependencies (wsjtx-ft8call debian)
   endif (NOT APPLE)
 endif (UNIX)
 
 #
 # installation
 #
-install (TARGETS wsjtx
+install (TARGETS wsjtx-ft8call
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
   BUNDLE DESTINATION . COMPONENT runtime
   )
@@ -1511,7 +1511,7 @@ if (NOT WIN32 AND NOT APPLE)
   # install a desktop file so wsjtx appears in the application start
   # menu with an icon
   install (
-    FILES wsjtx.desktop message_aggregator.desktop
+    FILES wsjtx-ft8call.desktop message_aggregator.desktop
     DESTINATION share/applications
     #COMPONENT runtime
     )
