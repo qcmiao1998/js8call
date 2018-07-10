@@ -7278,7 +7278,7 @@ void MainWindow::pskSetLocal ()
   }
   // qDebug() << "To PSKreporter: local station details";
   psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (),
-        antenna_description, QString {"WSJT-X v" + version() + " " +
+        antenna_description, QString { QApplication::applicationName() + " v" + version() + " " +
         m_revision}.simplified ());
 }
 
