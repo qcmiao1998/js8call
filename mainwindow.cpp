@@ -1009,6 +1009,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->dxGridEntry->clear();
   ui->TxFreqSpinBox->setValue(1500);
   ui->RxFreqSpinBox->setValue(1500);
+  ui->cbVHFcontest->setChecked(false); // this needs to always be false
 
   ui->spotButton->setChecked(m_config.spot_to_psk_reporter());
 
@@ -3183,13 +3184,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
         if(abs(audioFreq - m_wideGraph->rxFreq()) <= 10) bDisplayRight=true;
       }
 
-      // TODO: jsherer - this is duped...
       // if this frequency offset is within our directed call cache in the last 2 minutes.
-      bool recentlyDirected = (
-          m_rxDirectedCache.contains(audioFreq/10*10) &&
-          m_rxDirectedCache[audioFreq/10*10]->secsTo(QDateTime::currentDateTimeUtc()) < 120
-      );
-      if(recentlyDirected){
+      if(isRecentlyDirected(audioFreq)){
           bDisplayRight = true;
       }
 
@@ -3657,7 +3653,7 @@ void MainWindow::guiUpdate()
         if(m_modeTx=="WSPR-LF") genwspr_fsk8_(message, msgsent, const_cast<int *> (itone),
                                     22, 22);
         if(m_modeTx=="MSK144" or m_modeTx=="FT8") {
-          bool bcontest=ui->cbVHFcontest->isChecked();
+          bool bcontest = false; //ui->cbVHFcontest->isChecked();
           char MyCall[6];
           char MyGrid[6];
           strncpy(MyCall, (m_config.my_callsign()+"      ").toLatin1(),6);
@@ -3675,6 +3671,8 @@ void MainWindow::guiUpdate()
             if(m_config.bFox() and ui->tabWidget->currentIndex()==2) {
               foxTxSequencer();
             } else {
+              // 0:   [000] <- this is standard set
+              // 1:   [001] <- this is fox/hound
               m_i3bit=0;
               char ft8msgbits[75 + 12]; //packed 75 bit ft8 message plus 12-bit CRC
               genft8_(message, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
@@ -7645,6 +7643,13 @@ void MainWindow::displayTransmit(){
     }
 }
 
+bool MainWindow::isRecentlyDirected(int offset){
+    return (
+        m_rxDirectedCache.contains(offset/10*10) &&
+        m_rxDirectedCache[offset/10*10]->secsTo(QDateTime::currentDateTimeUtc()) < 120
+    );
+}
+
 void MainWindow::displayActivity(){
   if(!m_rxDirty){
     return;
@@ -7736,11 +7741,7 @@ void MainWindow::displayActivity(){
               textItem->setBackground(QBrush(m_config.color_CQ()));
           }
 
-          bool recentlyDirected = (
-              m_rxDirectedCache.contains(offset/10*10) &&
-              m_rxDirectedCache[offset/10*10]->secsTo(QDateTime::currentDateTimeUtc()) < 120
-          );
-          if (recentlyDirected || (!m_config.my_callsign().isEmpty() && text.last().contains(m_config.my_callsign()))){
+          if (isRecentlyDirected(offset) || (!m_config.my_callsign().isEmpty() && text.last().contains(m_config.my_callsign()))){
               offsetItem->setBackground(QBrush(m_config.color_MyCall()));
               //ageItem->setBackground(QBrush(m_config.color_MyCall()));
               snrItem->setBackground(QBrush(m_config.color_MyCall()));
