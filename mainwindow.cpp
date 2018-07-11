@@ -3212,7 +3212,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         m_rxFrameQueue.append(d);
 
         // bump the directed cache datetime if this is our callsign, or we've seen this recently...
-        if(recentlyDirected || (!m_config.my_callsign().isEmpty() && d.text.contains(m_config.my_callsign()))){
+        if(isRecentlyDirected(audioFreq) || isMyCallIncluded(d.text)){
             m_rxDirectedCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
         }
       }
@@ -7650,6 +7650,16 @@ bool MainWindow::isRecentlyDirected(int offset){
     );
 }
 
+bool MainWindow::isMyCallIncluded(const QString &text){
+    QString myCall = m_config.my_callsign();
+
+    if(myCall.isEmpty()){
+        return false;
+    }
+
+    return text.contains(myCall);
+}
+
 void MainWindow::displayActivity(){
   if(!m_rxDirty){
     return;
@@ -7741,7 +7751,7 @@ void MainWindow::displayActivity(){
               textItem->setBackground(QBrush(m_config.color_CQ()));
           }
 
-          if (isRecentlyDirected(offset) || (!m_config.my_callsign().isEmpty() && text.last().contains(m_config.my_callsign()))){
+          if (isRecentlyDirected(offset) || isMyCallIncluded(text.last())){
               offsetItem->setBackground(QBrush(m_config.color_MyCall()));
               //ageItem->setBackground(QBrush(m_config.color_MyCall()));
               snrItem->setBackground(QBrush(m_config.color_MyCall()));

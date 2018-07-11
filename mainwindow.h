@@ -741,6 +741,7 @@ private:
   void replayDecodes ();
   void postDecode (bool is_new, QString const& message);
   void displayTransmit();
+  bool isMyCallIncluded(QString const &text);
   bool isRecentlyDirected(int offset);
   void displayActivity();
   void postWSPRDecode (bool is_new, QStringList message_parts);
