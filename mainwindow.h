@@ -660,6 +660,7 @@ private:
       QDateTime utcTimestamp;
   };
 
+  bool m_rxDirty;
   int m_txFrameCount;
   QQueue<QString> m_txFrameQueue;
   QQueue<RXDetail> m_rxFrameQueue;

@@ -3949,9 +3949,7 @@ void MainWindow::guiUpdate()
 
     displayDialFrequency ();
 
-    if(nsec % 15 == 0){
-        displayActivity();
-    }
+    displayActivity();
   }
 
   displayTransmit();
@@ -7618,7 +7616,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
   auto const& decode = message.trimmed ();
   auto const& parts = decode.left (22).split (' ', QString::SkipEmptyParts);
   if (parts.size () >= 5)
-    {
+  {
       auto has_seconds = parts[0].size () > 4;
       m_messageClient->decode (is_new
                                , QTime::fromString (parts[0], has_seconds ? "hhmmss" : "hhmm")
@@ -7627,7 +7625,11 @@ void MainWindow::postDecode (bool is_new, QString const& message)
                                , decode.mid (has_seconds ? 24 : 22, 21)
                                , QChar {'?'} == decode.mid (has_seconds ? 24 + 21 : 22 + 21, 1)
                                , m_diskData);
-    }
+  }
+
+  if(is_new){
+      m_rxDirty = true;
+  }
 }
 
 void MainWindow::displayTransmit(){
@@ -7644,6 +7646,11 @@ void MainWindow::displayTransmit(){
 }
 
 void MainWindow::displayActivity(){
+  if(!m_rxDirty){
+    return;
+  }
+  m_rxDirty = false;
+
   // RX Activity
   int selectedOffset = -1;
   auto selectedItems = ui->tableWidgetRXAll->selectedItems();
@@ -7669,6 +7676,7 @@ void MainWindow::displayActivity(){
       QList<ActivityDetail> items = m_bandActivity[offset];
       if(items.length() > 0){
           QStringList text;
+          QString age;
           int snr = 0;
           foreach(ActivityDetail item, items){
               if(item.utcTimestamp.secsTo(now)/60 >= 2){
@@ -7682,6 +7690,7 @@ void MainWindow::displayActivity(){
               }
               text.append(item.text);
               snr = item.snr;
+              age = since(item.utcTimestamp);
           }
 
           auto joined = text.join("     ");
@@ -7689,11 +7698,24 @@ void MainWindow::displayActivity(){
               continue;
           }
 
+          // TODO: jsherer - maybe parse for callsigns in the text?
+          // /^((\d|[A-Z])+\/)?((\d|[A-Z]){3,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?$/
+          // from https://groups.io/g/hamauth/topic/call_sign_pattern_matching/6060598?p=,,,20,0,0,0::recentpostdate%2Fsticky,,,20,2,0,6060598
+
           ui->tableWidgetRXAll->insertRow(ui->tableWidgetRXAll->rowCount());
+
           auto offsetItem = new QTableWidgetItem(QString("%1").arg(offset));
           ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, offsetItem);
+
           auto snrItem = new QTableWidgetItem(QString("%1").arg(snr));
+          snrItem->setTextAlignment(Qt::AlignCenter|Qt::AlignVCenter);
           ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, snrItem);
+
+          /*
+          auto ageItem = new QTableWidgetItem(QString("(%1)").arg(age));
+          ageItem->setTextAlignment(Qt::AlignCenter|Qt::AlignVCenter);
+          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, ageItem);
+          */
 
           // align right if eliding...
           int colWidth = ui->tableWidgetRXAll->columnWidth(2);
@@ -7709,6 +7731,7 @@ void MainWindow::displayActivity(){
 
           if (text.last().contains(QRegularExpression {"^(CQ|QRZ|DE)\\s"})){
               offsetItem->setBackground(QBrush(m_config.color_CQ()));
+              //ageItem->setBackground(QBrush(m_config.color_CQ()));
               snrItem->setBackground(QBrush(m_config.color_CQ()));
               textItem->setBackground(QBrush(m_config.color_CQ()));
           }
@@ -7719,11 +7742,12 @@ void MainWindow::displayActivity(){
           );
           if (recentlyDirected || (!m_config.my_callsign().isEmpty() && text.last().contains(m_config.my_callsign()))){
               offsetItem->setBackground(QBrush(m_config.color_MyCall()));
+              //ageItem->setBackground(QBrush(m_config.color_MyCall()));
               snrItem->setBackground(QBrush(m_config.color_MyCall()));
               textItem->setBackground(QBrush(m_config.color_MyCall()));
           }
 
-          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, textItem);
+          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2/*3*/, textItem);
 
           if(offset == selectedOffset){
               ui->tableWidgetRXAll->selectRow(ui->tableWidgetRXAll->rowCount() - 1);
@@ -7731,7 +7755,8 @@ void MainWindow::displayActivity(){
       }
   }
   ui->tableWidgetRXAll->resizeColumnToContents(0);
-  ui->tableWidgetRXAll->resizeColumnToContents(1); //resizeColumnsToContents();
+  ui->tableWidgetRXAll->resizeColumnToContents(1);
+  ui->tableWidgetRXAll->resizeColumnToContents(2);
 
   // Call Activity
   QString selectedCall;
