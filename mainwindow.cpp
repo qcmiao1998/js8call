@@ -3108,7 +3108,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                m_config.color_DXCC(), m_config.color_NewCall(),
                m_config.ppfx(),(ui->cbCQonly->isVisible() and ui->cbCQonly->isChecked()));
 
-          // TODO: parse decode...
+          // Parse General Activity
           if(decodedtext.messageWords().length() > 0){
             int offset = decodedtext.frequencyOffset();
 
@@ -3144,6 +3144,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             }
           }
 
+          // Parse CQs
           QString cqCall = decodedtext.CQersCall();
           if(!cqCall.isEmpty()){
             QString theircall;
@@ -3158,6 +3159,19 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.utcTimestamp = QDateTime::currentDateTimeUtc();
             m_callActivity[cqCall] = d;
           }
+
+          // TOD0: jsherer - parse for callsigns?
+          // K1JT KN4CRD EM73
+          // KN4CRD K1JT -21
+          // K1JT KN4CRD R-12
+          // DE KN4CRD
+          // KN4CRD
+          QString messageText = decodedtext.string();
+
+          // TOD0: jsherer - parse for commands?
+          // KN4CRD K1JT ?
+
+
         }
       }
 
@@ -3839,7 +3853,7 @@ void MainWindow::guiUpdate()
     }
   }
 
-//Once per second:
+  //Once per second:
   if(nsec != m_sec0) {
     if(m_freqNominal!=0 and m_freqNominal<50000000 and m_config.enable_VHF_features()) {
       if(!m_bVHFwarned) vhfWarning();
@@ -3945,6 +3959,12 @@ void MainWindow::guiUpdate()
     }
 
     m_sec0=nsec;
+
+
+    // once per period
+    if(m_sec0 % m_TRperiod == 0){
+        m_rxDirty = true;
+    }
 
     displayDialFrequency ();
 
