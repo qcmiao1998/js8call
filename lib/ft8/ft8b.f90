@@ -380,6 +380,7 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
         if(i3bit.eq.1) decoded(57:)=0
         call extractmessage174(decoded,message,ncrcflag)
         decoded=decoded0
+
 ! This needs fixing for messages with i3bit=1:        
         call genft8(message,mygrid6,bcontest,i3bit,msgsent,msgbits,itone)
         if(lsubtract) call subtractft8(dd0,itone,f1,xdt2)
@@ -396,6 +397,7 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
         xsnr2=db(xsig/xbase - 1.0) - 32.0
         if(.not.nagain) xsnr=xsnr2
         if(xsnr .lt. -24.0) xsnr=-24.0
+        
         
         if(i3bit.eq.1) then
            do i=1,12
@@ -430,6 +432,10 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
            enddo
         else
            msg37=message//'               '
+        endif
+
+        if(i3bit.gt.1) then
+            msg37(22:22) = char(48 + i3bit)
         endif
         
         return
