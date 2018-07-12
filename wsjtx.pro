@@ -67,7 +67,8 @@ SOURCES += \
   echoplot.cpp echograph.cpp fastgraph.cpp fastplot.cpp Modes.cpp \
   WSPRBandHopping.cpp MessageAggregator.cpp SampleDownloader.cpp qt_helpers.cpp\
   MultiSettings.cpp PhaseEqualizationDialog.cpp IARURegions.cpp MessageBox.cpp \
-  EqualizationToolsDialog.cpp
+  EqualizationToolsDialog.cpp \
+    varicode.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -84,7 +85,8 @@ HEADERS  += qt_helpers.hpp \
   messageaveraging.h echoplot.h echograph.h fastgraph.h fastplot.h Modes.hpp WSPRBandHopping.hpp \
   WsprTxScheduler.h SampleDownloader.hpp MultiSettings.hpp PhaseEqualizationDialog.hpp \
   IARURegions.hpp MessageBox.hpp EqualizationToolsDialog.hpp \
-    qorderedmap.h
+    qorderedmap.h \
+    varicode.h
 
 
 INCLUDEPATH += qmake_only

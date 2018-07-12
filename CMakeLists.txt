@@ -303,6 +303,7 @@ set (wsjtx_CXXSRCS
   astro.cpp
   messageaveraging.cpp
   WsprTxScheduler.cpp
+  varicode.cpp
   mainwindow.cpp
   Configuration.cpp
   main.cpp
