@@ -252,7 +252,6 @@ private slots:
   void on_extFreeTextMsgEdit_currentTextChanged (QString const&);
   QStringList buildFT8MessageFrames(QString const& text);
   QString parseFT8Message(QString input);
-  int countFreeTextMsgs(QString input);
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);
   int findFreeFreqOffset(int fmin, int fmax, int bw);

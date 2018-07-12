@@ -5295,9 +5295,6 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 QStringList MainWindow::buildFT8MessageFrames(QString const& text){
     QStringList frames;
 
-    //QString input = QString(text); //.replace("\n", " ").replace("  ", " ");
-    //.split(QRegExp("\\n"))
-
     foreach(QString input, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
         while(input.size() > 0){
           QString frame = parseFT8Message(input);
@@ -5335,23 +5332,6 @@ QString MainWindow::parseFT8Message(QString input){
   msgsent[22]=0;
 
   return QString::fromLatin1(msgsent).trimmed();
-}
-
-int MainWindow::countFreeTextMsgs(QString input){
-  /*
-  int count = 0;
-  while(input.size() > 0){
-    QString nextTxt = parseFT8Message(input);
-    QRegExp n = QRegExp("^" + QRegExp::escape(nextTxt));
-    int sz = input.size();
-    input = input.remove(n).trimmed();
-    count++;
-    if(input.size() == sz){
-        break;
-    }
-  }
-  return count;
-  */
 }
 
 bool MainWindow::prepareNextMessageFrame()
