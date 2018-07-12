@@ -6,6 +6,46 @@
 
 const int nalphabet = 41;
 QString alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-./?"};
+QString grid_pattern = {R"((?<grid>[A-R]{2}[0-9]{2})+)"};
+QString callsign_pattern1 = {R"((?<callsign>[A-Z0-9/]{2,}))"};
+QString callsign_pattern2 = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){3,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
+
+QStringList Varicode::parseCallsigns(QString const &input){
+    QStringList callsigns;
+    QRegularExpression re(callsign_pattern2);
+    QRegularExpressionMatchIterator iter = re.globalMatch(input);
+    while(iter.hasNext()){
+        QRegularExpressionMatch match = iter.next();
+        if(!match.hasMatch()){
+            continue;
+        }
+        QString callsign = match.captured("callsign");
+        QRegularExpression m(grid_pattern);
+        if(m.match(callsign).hasMatch()){
+            continue;
+        }
+        callsigns.append(callsign);
+    }
+    return callsigns;
+}
+
+QStringList Varicode::parseGrids(const QString &input){
+    QStringList grids;
+    QRegularExpression re(grid_pattern);
+    QRegularExpressionMatchIterator iter = re.globalMatch(input);
+    while(iter.hasNext()){
+        QRegularExpressionMatch match = iter.next();
+        if(!match.hasMatch()){
+            continue;
+        }
+        auto grid = match.captured("grid");
+        if(grid == "RR73"){
+            continue;
+        }
+        grids.append(grid);
+    }
+    return grids;
+}
 
 QVector<bool> Varicode::intToBits(qint64 value, int expected){
     QVector<bool> bits;
@@ -62,7 +102,7 @@ QString Varicode::pack16bits(qint16 packed){
 }
 
 qint32 Varicode::unpack32bits(QString const& value){
-    return unpack16bits(value.left(3)) << 16 | unpack16bits(value.right(3));
+    return (qint32)unpack16bits(value.left(3)) << 16 | unpack16bits(value.right(3));
 }
 
 QString Varicode::pack32bits(qint32 packed){
@@ -72,10 +112,11 @@ QString Varicode::pack32bits(qint32 packed){
 }
 
 qint64 Varicode::unpack64bits(QString const& value){
-    return unpack16bits(value.left(6)) << 32 | unpack16bits(value.right(6));
+    return (qint64)unpack16bits(value.left(6)) << 32 | unpack16bits(value.right(6));
 }
 
 QString Varicode::pack64bits(qint64 packed){
     qint32 a = (packed & 0xFFFFFFFF00000000) >> 32;
     qint32 b = packed & 0xFFFFFFFF;
+    return pack32bits(a) + pack32bits(b);
 }

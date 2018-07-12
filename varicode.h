@@ -6,13 +6,20 @@
  **/
 
 #include <QBitArray>
+#include <QRegularExpression>
+#include <QRegExp>
 #include <QString>
 #include <QVector>
+
 
 class Varicode
 {
 public:
     //Varicode();
+
+    static QStringList parseCallsigns(QString const &input);
+    static QStringList parseGrids(QString const &input);
+
 
     QVector<bool> intToBits(qint64 value, int expected=0);
     qint64 bitsToInt(QVector<bool> const value);

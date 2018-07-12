@@ -3166,11 +3166,49 @@ void MainWindow::readFromStdout()                             //readFromStdout
           // K1JT KN4CRD R-12
           // DE KN4CRD
           // KN4CRD
-          QString messageText = decodedtext.string();
+
+          QStringList callsigns = Varicode::parseCallsigns(decodedtext.message());
+          if(!callsigns.isEmpty()){
+              // one callsign
+              // de [from]
+              // cq [from]
+
+              // two callsigns
+              // [from]: [to] ...
+              // [to] [from] [grid|signal]
+
+              QStringList grids = Varicode::parseGrids(decodedtext.message());
+
+              // one callsigns are handled above... so we only need to handle two callsigns if it's a standard message
+              if(decodedtext.isStandardMessage()){
+                  if(callsigns.length() == 2){
+                      auto de_callsign = callsigns.last();
+
+                      // TODO: jsherer - put this in a function to record a callsign...
+                      CallDetail d;
+                      d.call = de_callsign;
+                      d.grid = !grids.empty() ? grids.first() : "";
+                      d.snr = decodedtext.snr();
+                      d.freq = decodedtext.frequencyOffset();
+                      d.utcTimestamp = QDateTime::currentDateTimeUtc();
+                      m_callActivity[de_callsign] = d;
+
+                      /*
+                      //auto to_callsign = callsigns.first();
+                      CallDetail d2;
+                      d2.call = to_callsign;
+                      d2.grid = "";
+                      d2.snr = -100;
+                      d2.freq = decodedtext.frequencyOffset();
+                      d2.utcTimestamp = QDateTime::currentDateTimeUtc();
+                      m_callActivity[to_callsign] = d2;
+                      */
+                  }
+              }
+          }
 
           // TOD0: jsherer - parse for commands?
           // KN4CRD K1JT ?
-
 
         }
       }
@@ -5485,6 +5523,10 @@ void MainWindow::prepareBeacon(){
 
 QString MainWindow::calculateDistance(QString const& grid)
 {
+    if(grid.isEmpty()){
+        return QString();
+    }
+
     qint64 nsec = (QDateTime::currentMSecsSinceEpoch()/1000) % 86400;
     double utch=nsec/3600.0;
     int nAz,nEl,nDmiles,nDkm,nHotAz,nHotABetter;
@@ -7662,6 +7704,9 @@ bool MainWindow::isMyCallIncluded(const QString &text){
 }
 
 QString formatSNR(int snr){
+    if(snr < -60 || snr > 60){
+        return QString();
+    }
     return QString("%1%2").arg(snr >= 0 ? "+" : "").arg(snr);
 }
 
@@ -7717,10 +7762,6 @@ void MainWindow::displayActivity(){
           if(joined.isEmpty()){
               continue;
           }
-
-          // TODO: jsherer - maybe parse for callsigns in the text?
-          // /^((\d|[A-Z])+\/)?((\d|[A-Z]){3,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?$/
-          // from https://groups.io/g/hamauth/topic/call_sign_pattern_matching/6060598?p=,,,20,0,0,0::recentpostdate%2Fsticky,,,20,2,0,6060598
 
           ui->tableWidgetRXAll->insertRow(ui->tableWidgetRXAll->rowCount());
 

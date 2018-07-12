@@ -51,7 +51,7 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
                               , grid_c_string.constData ()
                               , 22, 6);
     }
-};
+}
 
 QStringList DecodedText::messageWords () const
 {

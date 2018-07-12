@@ -32,6 +32,7 @@ public:
   explicit DecodedText (QString const& message, bool, QString const& my_grid);
 
   QString string() const { return string_; };
+  QString message() const { return message_; };
   QStringList messageWords () const;
   int indexOf(QString s) const { return string_.indexOf(s); };
   int indexOf(QString s, int i) const { return string_.indexOf(s,i); };
