@@ -7641,6 +7641,10 @@ bool MainWindow::isMyCallIncluded(const QString &text){
     return text.contains(myCall);
 }
 
+QString formatSNR(int snr){
+    return QString("%1%2").arg(snr >= 0 ? "+" : "").arg(snr);
+}
+
 void MainWindow::displayActivity(){
   if(!m_rxDirty){
     return;
@@ -7703,7 +7707,7 @@ void MainWindow::displayActivity(){
           auto offsetItem = new QTableWidgetItem(QString("%1").arg(offset));
           ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, offsetItem);
 
-          auto snrItem = new QTableWidgetItem(QString("%1").arg(snr));
+          auto snrItem = new QTableWidgetItem(QString("%1").arg(formatSNR(snr)));
           snrItem->setTextAlignment(Qt::AlignCenter|Qt::AlignVCenter);
           ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, snrItem);
 
@@ -7748,7 +7752,6 @@ void MainWindow::displayActivity(){
   }
   ui->tableWidgetRXAll->resizeColumnToContents(0);
   ui->tableWidgetRXAll->resizeColumnToContents(1);
-  ui->tableWidgetRXAll->resizeColumnToContents(2);
 
   // Call Activity
   QString selectedCall;
@@ -7769,16 +7772,21 @@ void MainWindow::displayActivity(){
       ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem(call));
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
+      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 2, new QTableWidgetItem(QString("%1").arg(formatSNR(d.snr))));
+      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 3, new QTableWidgetItem(QString("%1").arg(d.grid)));
 
       auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
       distanceItem->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
-      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 2, distanceItem);
+      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 4, distanceItem);
 
       if(call == selectedCall){
           ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
       }
   }
+  ui->tableWidgetCalls->resizeColumnToContents(0);
   ui->tableWidgetCalls->resizeColumnToContents(1);
+  ui->tableWidgetCalls->resizeColumnToContents(2);
+  ui->tableWidgetCalls->resizeColumnToContents(3);
 
   // RX Activity
   while(!m_rxFrameQueue.isEmpty()){

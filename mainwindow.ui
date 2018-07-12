@@ -827,7 +827,10 @@ background-color: yellow;
          </font>
         </property>
         <property name="sizeAdjustPolicy">
-         <enum>QAbstractScrollArea::AdjustToContents</enum>
+         <enum>QAbstractScrollArea::AdjustToContentsOnFirstShow</enum>
+        </property>
+        <property name="autoScroll">
+         <bool>false</bool>
         </property>
         <property name="editTriggers">
          <set>QAbstractItemView::NoEditTriggers</set>
@@ -923,7 +926,7 @@ background-color: yellow;
           <bool>true</bool>
          </property>
          <property name="styleSheet">
-          <string notr="true">background-color:#ffeaa7;</string>
+          <string notr="true">QTextEdit { background-color:#ffeaa7; }</string>
          </property>
          <property name="undoRedoEnabled">
           <bool>false</bool>
@@ -969,6 +972,9 @@ QTextEdit[readOnly=&quot;true&quot;] {
           <pointsize>12</pointsize>
          </font>
         </property>
+        <property name="autoScroll">
+         <bool>false</bool>
+        </property>
         <property name="editTriggers">
          <set>QAbstractItemView::NoEditTriggers</set>
         </property>
@@ -985,7 +991,7 @@ QTextEdit[readOnly=&quot;true&quot;] {
          <enum>QAbstractItemView::SelectRows</enum>
         </property>
         <property name="textElideMode">
-         <enum>Qt::ElideNone</enum>
+         <enum>Qt::ElideRight</enum>
         </property>
         <property name="gridStyle">
          <enum>Qt::DotLine</enum>
@@ -996,8 +1002,11 @@ QTextEdit[readOnly=&quot;true&quot;] {
         <attribute name="horizontalHeaderVisible">
          <bool>false</bool>
         </attribute>
-        <attribute name="horizontalHeaderMinimumSectionSize">
+        <attribute name="horizontalHeaderDefaultSectionSize">
          <number>30</number>
+        </attribute>
+        <attribute name="horizontalHeaderMinimumSectionSize">
+         <number>20</number>
         </attribute>
         <attribute name="horizontalHeaderStretchLastSection">
          <bool>true</bool>
@@ -1013,6 +1022,16 @@ QTextEdit[readOnly=&quot;true&quot;] {
         <column>
          <property name="text">
           <string>Age</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>SNR</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Grid</string>
          </property>
         </column>
         <column>
