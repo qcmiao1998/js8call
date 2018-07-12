@@ -425,7 +425,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         m_config.udp_server_name (), m_config.udp_server_port (),
         this}},
   psk_Reporter {new PSK_Reporter {m_messageClient, this}},
-  m_manual {&m_network_manager}
+  m_manual {&m_network_manager},
+  m_i3bit {0}
 {
   ui->setupUi(this);
   createStatusBar();
@@ -3673,7 +3674,7 @@ void MainWindow::guiUpdate()
             } else {
               // 0:   [000] <- this is standard set
               // 1:   [001] <- this is fox/hound
-              m_i3bit=0;
+              //m_i3bit=0;
               char ft8msgbits[75 + 12]; //packed 75 bit ft8 message plus 12-bit CRC
               genft8_(message, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
                       const_cast<int *> (itone), 22, 6, 22);
@@ -5326,7 +5327,7 @@ QString MainWindow::parseFT8Message(QString input){
   ba2msg(ba,message);
 
   qint32  i3bit = 0;
-  bool bcontest=ui->cbVHFcontest->isChecked();
+  bool bcontest = false;
   char MyGrid[6];
   strncpy(MyGrid, (m_config.my_grid()+"      ").toLatin1(),6);
   genft8_(message, MyGrid, &bcontest, &i3bit, msgsent, const_cast<char *> (ft8msgbits),
