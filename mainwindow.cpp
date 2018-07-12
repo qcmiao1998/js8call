@@ -3235,18 +3235,22 @@ void MainWindow::readFromStdout()                             //readFromStdout
           if(m_config.bFox() and for_us and (audioFreq<1000)) bDisplayRight=true;
           if(!m_config.bFox() and (for_us or (abs(audioFreq - m_wideGraph->rxFreq()) <= 10))) bDisplayRight=true;
         }
-      } else {
-        if(abs(audioFreq - m_wideGraph->rxFreq()) <= 10) bDisplayRight=true;
+      }
+
+      if(abs(audioFreq - m_wideGraph->rxFreq()) <= 10){
+          bDisplayRight=true;
       }
 
       // if this frequency offset is within our directed call cache in the last 2 minutes.
-      if(isRecentlyDirected(audioFreq)){
+      if(isRecentlyDirected(audioFreq) || isMyCallIncluded(decodedtext.message())){
           bDisplayRight = true;
       }
 
+      qDebug() << bDisplayRight;
+
       if (bDisplayRight) {
         // This msg is within 10 hertz of our tuned frequency, or a JT4 or JT65 avg,
-        // or contains MyCall
+        // or Words().first()contains MyCall
         ui->decodedTextBrowser2->displayDecodedText(decodedtext,m_baseCall,false,
                m_logBook,m_config.color_CQ(),m_config.color_MyCall(),
                m_config.color_DXCC(),m_config.color_NewCall(),m_config.ppfx());
@@ -3262,14 +3266,12 @@ void MainWindow::readFromStdout()                             //readFromStdout
         RXDetail d;
         d.isFree = !decodedtext.isStandardMessage();
         d.freq = audioFreq;
-        d.text = decodedtext.messageWords().first();
+        d.text = decodedtext.message();
         d.utcTimestamp = QDateTime::currentDateTimeUtc();
         m_rxFrameQueue.append(d);
 
         // bump the directed cache datetime if this is our callsign, or we've seen this recently...
-        if(isRecentlyDirected(audioFreq) || isMyCallIncluded(d.text)){
-            m_rxDirectedCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
-        }
+        m_rxDirectedCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
       }
 
       if(m_mode=="FT8" and m_config.bHound()) {
