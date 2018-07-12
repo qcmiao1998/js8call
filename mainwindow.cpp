@@ -3246,8 +3246,6 @@ void MainWindow::readFromStdout()                             //readFromStdout
           bDisplayRight = true;
       }
 
-      qDebug() << bDisplayRight;
-
       if (bDisplayRight) {
         // This msg is within 10 hertz of our tuned frequency, or a JT4 or JT65 avg,
         // or Words().first()contains MyCall
