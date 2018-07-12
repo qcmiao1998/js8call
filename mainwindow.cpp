@@ -3167,8 +3167,10 @@ void MainWindow::readFromStdout()                             //readFromStdout
           // DE KN4CRD
           // KN4CRD
 
-          QStringList callsigns = Varicode::parseCallsigns(decodedtext.message());
-          if(!callsigns.isEmpty()){
+          bool shouldParseCallsigns = false;
+          if(shouldParseCallsigns){
+              QStringList callsigns = Varicode::parseCallsigns(decodedtext.message());
+              if(!callsigns.isEmpty()){
               // one callsign
               // de [from]
               // cq [from]
@@ -3206,7 +3208,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                   }
               }
           }
-
+          }
           // TOD0: jsherer - parse for commands?
           // KN4CRD K1JT ?
 
