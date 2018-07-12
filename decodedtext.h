@@ -50,6 +50,8 @@ public:
   bool isLowConfidence () const;
   int frequencyOffset() const;  // hertz offset from the tuned dial or rx frequency, aka audio frequency
   int snr() const;
+  bool hasBits() const { return !string_.right(5).trimmed().isEmpty(); }
+  int bits() const { return string_.right(5).trimmed().toShort(); }
   float dt() const;
 
   // find and extract any report. Returns true if this is a standard message
