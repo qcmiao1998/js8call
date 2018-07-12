@@ -20,21 +20,26 @@ public:
     static QStringList parseCallsigns(QString const &input);
     static QStringList parseGrids(QString const &input);
 
+    static QVector<bool> huffEncode(QString const& text);
+    static QString huffDecode(QVector<bool> const& bitvec);
 
-    QVector<bool> intToBits(qint64 value, int expected=0);
-    qint64 bitsToInt(QVector<bool> const value);
+    static QVector<bool> strToBits(QString const& bitvec);
+    static QString bitsToStr(QVector<bool> const& bitvec);
 
-    qint8 unpack5bits(QString const& value);
-    QString pack5bits(qint8 packed);
+    static QVector<bool> intToBits(quint64 value, int expected=0);
+    static quint64 bitsToInt(QVector<bool> const value);
 
-    qint16 unpack16bits(QString const& value);
-    QString pack16bits(qint16 packed);
+    static quint8 unpack5bits(QString const& value);
+    static QString pack5bits(quint8 packed);
 
-    qint32 unpack32bits(QString const& value);
-    QString pack32bits(qint32 packed);
+    static quint16 unpack16bits(QString const& value);
+    static QString pack16bits(quint16 packed);
 
-    qint64 unpack64bits(QString const& value);
-    QString pack64bits(qint64 packed);
+    static quint32 unpack32bits(QString const& value);
+    static QString pack32bits(quint32 packed);
+
+    static quint64 unpack64bits(QString const& value);
+    static QString pack64bits(quint64 packed);
 };
 
 #endif // VARICODE_H
