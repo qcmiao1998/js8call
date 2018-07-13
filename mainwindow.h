@@ -240,6 +240,7 @@ private slots:
   void on_replyMacroButton_clicked();
   void on_qthMacroButton_clicked();
   void on_snrMacroButton_clicked();
+  void on_queryButton_pressed();
   void on_macrosMacroButton_pressed();
   void on_tableWidgetRXAll_cellClicked(int row, int col);
   void on_tableWidgetRXAll_cellDoubleClicked(int row, int col);
@@ -640,6 +641,15 @@ private:
     int snr;
   };
 
+  struct CommandDetail
+  {
+    QString call;
+    QString command;
+    int freq;
+    QDateTime utcTimestamp;
+    int snr;
+  };
+
   struct ActivityDetail
   {
     bool isFree;
@@ -664,6 +674,7 @@ private:
   int m_txFrameCount;
   QQueue<QString> m_txFrameQueue;
   QQueue<RXDetail> m_rxFrameQueue;
+  QQueue<CommandDetail> m_rxCommandQueue;
   QCache<int, QDateTime> m_rxDirectedCache; // freq -> last directed rx
   QCache<QString, int> m_rxCallCache; // call -> last freq seen
   QMap<int, int> m_rxFrameBlockNumbers; // freq -> block
@@ -741,6 +752,7 @@ private:
   void replayDecodes ();
   void postDecode (bool is_new, QString const& message);
   void displayTransmit();
+  void updateButtonDisplay();
   bool isMyCallIncluded(QString const &text);
   bool isRecentlyDirected(int offset);
   void displayActivity();

@@ -164,7 +164,7 @@ namespace
 {
   Radio::Frequency constexpr default_frequency {14074000};
   QRegExp message_alphabet {"[- A-Za-z0-9+./?]*"};
-  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n*]*"};
+  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:]*"};
   // grid exact match excluding RR73
   QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
 
@@ -212,6 +212,13 @@ namespace
       }
 
       return QString {};
+  }
+
+  QString formatSNR(int snr){
+      if(snr < -60 || snr > 60){
+          return QString();
+      }
+      return QString("%1%2").arg(snr >= 0 ? "+" : "").arg(snr);
   }
 
   void clearTableWidget(QTableWidget *widget){
@@ -1003,13 +1010,13 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized();
   ui->menuDecode->setEnabled(false);
   ui->menuMode->setEnabled(false);
-  ui->menuSave->setEnabled(false);
+  ui->menuSave->setEnabled(true);
   ui->menuTools->setEnabled(false);
   ui->menuView->setEnabled(false);
   ui->dxCallEntry->clear();
   ui->dxGridEntry->clear();
-  ui->TxFreqSpinBox->setValue(1500);
-  ui->RxFreqSpinBox->setValue(1500);
+  auto f = findFreeFreqOffset(500, 2000, 50);
+  setFreq4(f, f);
   ui->cbVHFcontest->setChecked(false); // this needs to always be false
 
   ui->spotButton->setChecked(m_config.spot_to_psk_reporter());
@@ -1060,6 +1067,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto decoded = Varicode::huffDecode(Varicode::huffFlatten(encoded));
   qDebug() << input << Varicode::bitsToStr(Varicode::huffFlatten(encoded)) << decoded;
   qDebug() << Varicode::packCallsign("JY1") << Varicode::unpackCallsign(Varicode::packCallsign("JY1"));
+
+  auto frames = buildFT8MessageFrames("OH8STN:KN4CRD?");
+  qDebug() << frames.first() << Varicode::unpackDirectedMessage(frames.first());
 #endif
 
   // this must be the last statement of constructor
@@ -3221,9 +3231,40 @@ void MainWindow::readFromStdout()                             //readFromStdout
               }
           }
           }
+
           // TOD0: jsherer - parse for commands?
           // KN4CRD K1JT ?
+          bool shouldParseDirected = false;
+          if(shouldParseDirected){
+              // can this be decoded as a directed message?
+              if(!decodedtext.isStandardMessage()){
+                QStringList parts = Varicode::unpackDirectedMessage(decodedtext.message());
 
+                if(!parts.isEmpty()){
+                    if(parts.at(1) == m_config.my_callsign()){
+                        CommandDetail d;
+                        d.call = parts.at(0);
+                        d.command = parts.at(2);
+                        d.freq = decodedtext.frequencyOffset();
+                        d.snr = decodedtext.snr();
+                        d.utcTimestamp = QDateTime::currentDateTimeUtc();
+                        m_rxCommandQueue.append(d);
+
+                        // TODO: jsherer - don't hardcode this here...
+                        if(m_txFrameQueue.isEmpty() && QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) > 0){
+                            QString text = QString("%1 %2 %3").arg(d.call.trimmed()).arg(m_config.my_callsign().trimmed()).arg(d.snr);
+
+                            setFreq4(d.freq, d.freq);
+                            m_bandActivity[decodedtext.frequencyOffset()].last().text = QString("%1:%2%3").arg(d.call.trimmed()).arg(m_config.my_callsign()).arg(d.command);
+                            m_rxDirectedCache.insert(decodedtext.frequencyOffset()/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+
+                            ui->extFreeTextMsgEdit->setPlainText(text);
+                            ui->startTxButton->setChecked(true);
+                        }
+                    }
+                }
+              }
+          }
         }
       }
 
@@ -5367,24 +5408,35 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 QStringList MainWindow::buildFT8MessageFrames(QString const& text){
     QStringList frames;
 
-    foreach(QString input, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
-        while(input.size() > 0){
-          QString frame = parseFT8Message(input);
-          if(frame.isEmpty()){
-            break;
-          }
-          frames.append(frame);
+    foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
+        while(line.size() > 0){
+          int n = 0;
+          QString frame = Varicode::packDirectedMessage(line, &n);
+          if(n > 0){
+              frames.append(frame);
+              line = line.mid(n).trimmed();
+          } else {
+              frame = parseFT8Message(line);
+              if(frame.isEmpty()){
+                break;
+              }
+              frames.append(frame);
 
-          int sz = input.size();
-          input = input.remove(QRegExp("^" + QRegExp::escape(frame))).trimmed();
-          if(input.size() == sz){
-            break;
+              if(!line.startsWith(frame)){
+                  line = (
+                    line.left(frame.length()).replace(':', ' ') +
+                    line.mid(frame.length())
+                  ).trimmed();
+              }
+
+              line = line.mid(frame.length()).trimmed();
           }
         }
     }
 
     return frames;
 }
+
 
 QString MainWindow::parseFT8Message(QString input){
   char message[29];
@@ -6693,7 +6745,7 @@ void MainWindow::on_snrMacroButton_clicked(){
     if(!items.isEmpty()){
         QString selectedCall = items.first()->text();
         int snr = m_callActivity[selectedCall].snr;
-        QString text = QString("%1").arg(snr);
+        QString text = QString("%1").arg(formatSNR(snr));
         addMessageText(text);
         return;
     }
@@ -6705,6 +6757,36 @@ void MainWindow::on_snrMacroButton_clicked(){
         addMessageText(text);
         return;
     }
+}
+
+void MainWindow::on_queryButton_pressed(){
+    QMenu *menu = ui->queryButton->menu();
+    if(!menu){
+        menu = new QMenu(ui->queryButton);
+    }
+    menu->clear();
+
+    auto snrAction = menu->addAction("? - What is my signal report?");
+
+    // TODO: jsherer - this should be extracted
+    connect(snrAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall;
+        auto items = ui->tableWidgetCalls->selectedItems();
+        if(!items.isEmpty()){
+            selectedCall = items.first()->text();
+        }
+
+        addMessageText(QString("%1:%2?").arg(m_config.my_callsign(), selectedCall));
+    });
+
+    menu->addAction("$ - What stations are you hearing?")->setEnabled(false);
+    menu->addAction("@ - What is your QTH?")->setEnabled(false);
+    menu->addAction("&& - What is your message?")->setEnabled(false);
+    menu->addAction("| - Relay the following message")->setEnabled(false);
+
+    ui->queryButton->setMenu(menu);
+    ui->queryButton->showMenu();
 }
 
 void MainWindow::on_macrosMacroButton_pressed(){
@@ -6759,13 +6841,7 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
 }
 
 void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected){
-    if(ui->tableWidgetRXAll->selectedItems().isEmpty() && ui->tableWidgetCalls->selectedItems().isEmpty()){
-        ui->replyMacroButton->setDisabled(true);
-        ui->snrMacroButton->setDisabled(true);
-    } else {
-        ui->replyMacroButton->setDisabled(false);
-        ui->snrMacroButton->setDisabled(false);
-    }
+    updateButtonDisplay();
 }
 
 void MainWindow::on_tableWidgetCalls_cellClicked(int row, int col){
@@ -7691,12 +7767,18 @@ void MainWindow::displayTransmit(){
     // Transmit Activity
     update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
 
-    if(ui->tableWidgetCalls->selectedItems().isEmpty() && ui->tableWidgetRXAll->selectedItems().isEmpty()){
-      ui->replyMacroButton->setDisabled(true);
-      ui->snrMacroButton->setDisabled(true);
+    updateButtonDisplay();
+}
+
+void MainWindow::updateButtonDisplay(){
+    if(ui->tableWidgetRXAll->selectedItems().isEmpty() && ui->tableWidgetCalls->selectedItems().isEmpty()){
+        ui->replyMacroButton->setDisabled(true);
+        ui->snrMacroButton->setDisabled(true);
+        ui->queryButton->setDisabled(true);
     } else {
-      ui->replyMacroButton->setDisabled(false);
-      ui->snrMacroButton->setDisabled(false);
+        ui->replyMacroButton->setDisabled(false);
+        ui->snrMacroButton->setDisabled(false);
+        ui->queryButton->setDisabled(false);
     }
 }
 
@@ -7715,13 +7797,6 @@ bool MainWindow::isMyCallIncluded(const QString &text){
     }
 
     return text.contains(myCall);
-}
-
-QString formatSNR(int snr){
-    if(snr < -60 || snr > 60){
-        return QString();
-    }
-    return QString("%1%2").arg(snr >= 0 ? "+" : "").arg(snr);
 }
 
 void MainWindow::displayActivity(){
