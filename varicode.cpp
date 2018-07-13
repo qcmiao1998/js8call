@@ -11,6 +11,8 @@ QString alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-./?"};
 QString grid_pattern = {R"((?<grid>[A-R]{2}[0-9]{2})+)"};
 QString callsign_pattern1 = {R"((?<callsign>[A-Z0-9/]{2,}))"};
 QString callsign_pattern2 = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){3,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
+QString callsign_pattern3 = {R"(([0-9A-Z ])([0-9A-Z])([0-9])([A-Z ])([A-Z ])([A-Z ]))"};
+QString callsign_alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "};
 
 QMap<QChar, QString> huff = {
     // char   code                 weight
@@ -63,6 +65,14 @@ QMap<QChar, QString> huff = {
 };
 
 QChar huffeot = '\x04';
+
+quint32 nbasecall = 37 * 36 * 10 * 27 * 27 * 27;
+
+QMap<QString, quint32> basecalls = {
+    { "CQ DX",   nbasecall + 1 },
+    { "CQCQCQ",  nbasecall + 2 },
+    { "ALLCALL", nbasecall + 3 },
+};
 
 QStringList Varicode::parseCallsigns(QString const &input){
     QStringList callsigns;
@@ -216,8 +226,6 @@ QString Varicode::pack16bits(quint16 packed){
     tmp = packed % nalphabet;
     out.append(alphabet.at(tmp));
 
-
-
     return out;
 }
 
@@ -239,4 +247,114 @@ QString Varicode::pack64bits(quint64 packed){
     quint32 a = (packed & 0xFFFFFFFF00000000) >> 32;
     quint32 b = packed & 0xFFFFFFFF;
     return pack32bits(a) + pack32bits(b);
+}
+
+quint32 Varicode::packCallsign(QString const& value){
+    quint32 packed = 0;
+
+    QString callsign = value.toUpper().trimmed();
+
+    if(basecalls.contains(callsign)){
+        return basecalls[callsign];
+    }
+
+    // workaround for swaziland
+    if(callsign.startsWith("3DA0")){
+        callsign = "3D0" + callsign.mid(4);
+    }
+
+    // workaround for guinea
+    if(callsign.startsWith("3X") && 'A' <= callsign.at(2) && callsign.at(2) <= 'Z'){
+        callsign = "Q" + callsign.mid(2);
+    }
+
+    int slen = callsign.length();
+    if(slen < 2){
+        return packed;
+    }
+
+    if(slen > 6){
+        return packed;
+    }
+
+    QStringList permutations = { callsign };
+    if(slen == 2){
+        permutations.append(" " + callsign + "   ");
+    }
+    if(slen == 3){
+        permutations.append(" " + callsign + "  ");
+        permutations.append(callsign + "   ");
+    }
+    if(slen == 4){
+        permutations.append(" " + callsign + " ");
+        permutations.append(callsign + "  ");
+    }
+    if(slen == 5){
+        permutations.append(" " + callsign);
+        permutations.append(callsign + " ");
+    }
+
+    QString matched;
+    QRegularExpression m(callsign_pattern3);
+    foreach(auto permutation, permutations){
+        auto match = m.match(permutation);
+        if(match.hasMatch()){
+            matched = match.captured(0);
+        }
+    }
+    if(matched.isEmpty()){
+        return packed;
+    }
+
+    packed = callsign_alphabet.indexOf(matched.at(0));
+    packed = 36*packed + callsign_alphabet.indexOf(matched.at(1));
+    packed = 10*packed + callsign_alphabet.indexOf(matched.at(2));
+    packed = 27*packed + callsign_alphabet.indexOf(matched.at(3)) - 10;
+    packed = 27*packed + callsign_alphabet.indexOf(matched.at(4)) - 10;
+    packed = 27*packed + callsign_alphabet.indexOf(matched.at(5)) - 10;
+
+    return packed;
+}
+
+QString Varicode::unpackCallsign(quint32 value){
+    foreach(auto key, basecalls.keys()){
+        if(basecalls[key] == value){
+            return key;
+        }
+    }
+
+    QChar word[6];
+    quint32 tmp = value % 27 + 10;
+    word[5] = callsign_alphabet.at(tmp);
+    value = value/27;
+
+    tmp = value % 27 + 10;
+    word[4] = callsign_alphabet.at(tmp);
+    value = value/27;
+
+    tmp = value % 27 + 10;
+    word[3] = callsign_alphabet.at(tmp);
+    value = value/27;
+
+    tmp = value % 10;
+    word[2] = callsign_alphabet.at(tmp);
+    value = value/10;
+
+    tmp = value % 36;
+    word[1] = callsign_alphabet.at(tmp);
+    value = value/36;
+
+    tmp = value;
+    word[0] = callsign_alphabet.at(tmp);
+
+    QString callsign(word, 6);
+    if(callsign.startsWith("3D0")){
+        callsign = "3DA0" + callsign.mid(3);
+    }
+
+    if(callsign.startsWith("Q") and 'A' <= callsign.at(1) && callsign.at(1) <= 'Z'){
+        callsign = "3X" + callsign.mid(1);
+    }
+
+    return callsign;
 }

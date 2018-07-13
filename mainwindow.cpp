@@ -1059,6 +1059,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto encoded = Varicode::huffEncode(input) + QList<QVector<bool>> {Varicode::strToBits("000000000")};
   auto decoded = Varicode::huffDecode(Varicode::huffFlatten(encoded));
   qDebug() << input << Varicode::bitsToStr(Varicode::huffFlatten(encoded)) << decoded;
+  qDebug() << Varicode::packCallsign("JY1") << Varicode::unpackCallsign(Varicode::packCallsign("JY1"));
 #endif
 
   // this must be the last statement of constructor
