@@ -756,7 +756,7 @@ private:
   void updateButtonDisplay();
   bool isMyCallIncluded(QString const &text);
   bool isRecentlyDirected(int offset);
-  void displayActivity();
+  void displayActivity(bool force=false);
   void postWSPRDecode (bool is_new, QStringList message_parts);
   void enable_DXCC_entity (bool on);
   void switch_mode (Mode);

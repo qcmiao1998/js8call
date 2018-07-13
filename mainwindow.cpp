@@ -1042,7 +1042,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->extFreeTextMsgEdit->addAction(clearActionSep);
   ui->extFreeTextMsgEdit->addAction(clearActionAll);
 
-
   auto clearAction3 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetRXAll);
   connect(clearAction3, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetRXAll); });
   ui->tableWidgetRXAll->setContextMenuPolicy(Qt::ActionsContextMenu);
@@ -1056,6 +1055,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->tableWidgetCalls->addAction(clearAction4);
   ui->tableWidgetCalls->addAction(clearActionSep);
   ui->tableWidgetCalls->addAction(clearActionAll);
+
+  displayActivity(true);
 
 #if 0
   // TESTING :P
@@ -5234,6 +5235,11 @@ void MainWindow::clearActivity(){
     m_rxCommandQueue.clear();
 
     clearTableWidget(ui->tableWidgetCalls);
+    // this is now duplicated in three places :(
+    ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+    ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("ALLCALL"));
+    ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
+
     clearTableWidget(ui->tableWidgetRXAll);
 
     ui->textEditRX->clear();
@@ -6690,8 +6696,10 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
     if(sender == ui->tableWidgetCalls){
         m_callActivity.clear();
         clearTableWidget((ui->tableWidgetCalls));
-        //ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
-        //ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("allcall"));
+
+        ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("ALLCALL"));
+        ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
     }
 
     if(sender == ui->extFreeTextMsgEdit){
@@ -7795,18 +7803,25 @@ bool MainWindow::isMyCallIncluded(const QString &text){
     return text.contains(myCall);
 }
 
-void MainWindow::displayActivity(){
-  if(!m_rxDirty){
+void MainWindow::displayActivity(bool force){
+  if(!m_rxDirty && !force){
     return;
   }
-  m_rxDirty = false;
 
-  // RX Activity
+  // Selected Rows
   int selectedOffset = -1;
   auto selectedItems = ui->tableWidgetRXAll->selectedItems();
   if(!selectedItems.isEmpty()){
       selectedOffset = selectedItems.first()->text().toInt();
   }
+
+  QString selectedCall;
+  auto selectedCalls = ui->tableWidgetCalls->selectedItems();
+  if(!selectedCalls.isEmpty()){
+      selectedCall = selectedCalls.first()->text();
+  }
+
+  // Band Activity
   auto now = QDateTime::currentDateTimeUtc();
   clearTableWidget(ui->tableWidgetRXAll);
   QList<int> keys = m_bandActivity.keys();
@@ -7899,17 +7914,18 @@ void MainWindow::displayActivity(){
   ui->tableWidgetRXAll->resizeColumnToContents(0);
   ui->tableWidgetRXAll->resizeColumnToContents(1);
 
+
+
   // Call Activity
-  QString selectedCall;
-  auto selectedCalls = ui->tableWidgetCalls->selectedItems();
-  if(!selectedCalls.isEmpty()){
-      selectedCall = selectedCalls.first()->text();
-  }
 
   clearTableWidget(ui->tableWidgetCalls);
 
-  //ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
-  //ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("allcall"));
+  ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+  ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("ALLCALL"));
+  ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
+  if(selectedCall == "ALLCALL"){
+      ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
+  }
 
   QList<QString> calls = m_callActivity.keys();
   qSort(calls.begin(), calls.end());
@@ -7934,7 +7950,9 @@ void MainWindow::displayActivity(){
   ui->tableWidgetCalls->resizeColumnToContents(2);
   ui->tableWidgetCalls->resizeColumnToContents(3);
 
-  // RX Activity
+
+
+  // Recently Directed Activity
   while(!m_rxFrameQueue.isEmpty()){
       RXDetail d = m_rxFrameQueue.first();
       m_rxFrameQueue.removeFirst();
@@ -7945,21 +7963,9 @@ void MainWindow::displayActivity(){
       m_rxFrameBlockNumbers[freq] = block;
   }
 
-#if 0
-  // Directed Activity
-  // TODO: jsherer - don't hardcode this here...
-  if(m_txFrameQueue.isEmpty() && QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) > 0){
-      // construct a reply
-      QString text = QString("%1 %2 %3").arg(d.call.trimmed()).arg(m_config.my_callsign().trimmed()).arg(d.snr);
 
-      setFreq4(d.freq, d.freq);
-      m_bandActivity[decodedtext.frequencyOffset()].last().text = QString("%1:%2%3").arg(d.call.trimmed()).arg(m_config.my_callsign()).arg(d.command);
-      m_rxDirectedCache.insert(decodedtext.frequencyOffset()/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
 
-      ui->extFreeTextMsgEdit->setPlainText(text);
-      ui->startTxButton->setChecked(true);
-  }
-#endif
+  // Command Activity
 
   if(m_txFrameQueue.isEmpty()){
     int f;
@@ -8002,6 +8008,9 @@ void MainWindow::displayActivity(){
         ui->startTxButton->setChecked(true);
     }
   }
+
+
+  m_rxDirty = false;
 }
 
 void MainWindow::postWSPRDecode (bool is_new, QStringList parts)
