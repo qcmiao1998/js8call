@@ -45,6 +45,8 @@ public:
     static quint32 packCallsign(QString const& value);
     static QString unpackCallsign(quint32 value);
 
+    static QString packDirectedMessage(QString const& text, int *n);
+    static QStringList unpackDirectedMessage(QString const& text);
 };
 
 #endif // VARICODE_H
