@@ -305,6 +305,9 @@ quint32 Varicode::packCallsign(QString const& value){
     if(matched.isEmpty()){
         return packed;
     }
+    if(matched.length() < 6){
+        return packed;
+    }
 
     packed = callsign_alphabet.indexOf(matched.at(0));
     packed = 36*packed + callsign_alphabet.indexOf(matched.at(1));
@@ -404,7 +407,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
 
     unpacked.append(Varicode::unpackCallsign(packed_from).trimmed());
     unpacked.append(Varicode::unpackCallsign(packed_to).trimmed());
-    unpacked.append(QString(cmds.at(packed_cmd & 7)));
+    unpacked.append(QString(cmds.at(packed_cmd & 5)));
 
     return unpacked;
 }
