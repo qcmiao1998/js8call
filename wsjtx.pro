@@ -86,7 +86,8 @@ HEADERS  += qt_helpers.hpp \
   WsprTxScheduler.h SampleDownloader.hpp MultiSettings.hpp PhaseEqualizationDialog.hpp \
   IARURegions.hpp MessageBox.hpp EqualizationToolsDialog.hpp \
     qorderedmap.h \
-    varicode.h
+    varicode.h \
+    qpriorityqueue.h
 
 
 INCLUDEPATH += qmake_only
