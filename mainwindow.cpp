@@ -1050,15 +1050,16 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->tableWidgetCalls->addAction(clearActionSep);
   ui->tableWidgetCalls->addAction(clearActionAll);
 
+#if 0
   // TESTING :P
   qint64 a = QDateTime::currentSecsSinceEpoch();
   qDebug() << a << Varicode::pack64bits(a) << Varicode::unpack64bits(Varicode::pack64bits(a));
   qDebug() << a << Varicode::bitsToStr(Varicode::intToBits(a)) << Varicode::bitsToInt(Varicode::strToBits(Varicode::bitsToStr(Varicode::intToBits(a))));
-
-  auto input = "HELLO BRAVE NEW WORLD!";
-  auto encoded = Varicode::huffEncode(input);
-  auto decoded = Varicode::huffDecode(encoded);
-  qDebug() << input << Varicode::bitsToStr(encoded) << decoded;
+  auto input = "HELLO BRAVE NEW WORLD!\x04";
+  auto encoded = Varicode::huffEncode(input) + QList<QVector<bool>> {Varicode::strToBits("000000000")};
+  auto decoded = Varicode::huffDecode(Varicode::huffFlatten(encoded));
+  qDebug() << input << Varicode::bitsToStr(Varicode::huffFlatten(encoded)) << decoded;
+#endif
 
   // this must be the last statement of constructor
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};

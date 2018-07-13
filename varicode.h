@@ -20,7 +20,8 @@ public:
     static QStringList parseCallsigns(QString const &input);
     static QStringList parseGrids(QString const &input);
 
-    static QVector<bool> huffEncode(QString const& text);
+    static QList<QVector<bool>> huffEncode(QString const& text);
+    static QVector<bool> huffFlatten(QList<QVector<bool>> &list);
     static QString huffDecode(QVector<bool> const& bitvec);
 
     static QVector<bool> strToBits(QString const& bitvec);

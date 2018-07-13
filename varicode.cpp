@@ -62,6 +62,8 @@ QMap<QChar, QString> huff = {
     {'\x04' , "110101100010" }, // 1       <- eot
 };
 
+QChar huffeot = '\x04';
+
 QStringList Varicode::parseCallsigns(QString const &input){
     QStringList callsigns;
     QRegularExpression re(callsign_pattern2);
@@ -99,16 +101,24 @@ QStringList Varicode::parseGrids(const QString &input){
     return grids;
 }
 
-QVector<bool> Varicode::huffEncode(QString const& text){
-    QVector<bool> out;
+QList<QVector<bool>> Varicode::huffEncode(QString const& text){
+    QList<QVector<bool>> out;
 
     foreach(auto ch, text){
         if(!huff.contains(ch)){
             continue;
         }
-        out += strToBits(huff[ch]);
+        out.append(strToBits(huff[ch]));
     }
 
+    return out;
+}
+
+QVector<bool> Varicode::huffFlatten(QList<QVector<bool>> &list){
+    QVector<bool> out;
+    foreach(auto vec, list){
+        out += vec;
+    }
     return out;
 }
 
@@ -122,6 +132,9 @@ QString Varicode::huffDecode(QVector<bool> const& bitvec){
         bool found = false;
         foreach(auto key, huff.keys()){
             if(bits.startsWith(huff[key])){
+                if(key == huffeot){
+                    break;
+                }
                 out.append(key);
                 bits = bits.mid(huff[key].length());
                 found = true;
