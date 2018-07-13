@@ -402,8 +402,8 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
     quint32 packed_to = Varicode::bitsToInt(Varicode::strToBits(bits.mid(31, 28)));
     quint8 packed_cmd = Varicode::bitsToInt(Varicode::strToBits(bits.mid(59, 5)));
 
-    unpacked.append(Varicode::unpackCallsign(packed_from));
-    unpacked.append(Varicode::unpackCallsign(packed_to));
+    unpacked.append(Varicode::unpackCallsign(packed_from).trimmed());
+    unpacked.append(Varicode::unpackCallsign(packed_to).trimmed());
     unpacked.append(QString(cmds.at(packed_cmd & 7)));
 
     return unpacked;

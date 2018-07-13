@@ -643,7 +643,8 @@ private:
 
   struct CommandDetail
   {
-    QString call;
+    QString from;
+    QString to;
     QString command;
     int freq;
     QDateTime utcTimestamp;

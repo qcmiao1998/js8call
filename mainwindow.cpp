@@ -2030,6 +2030,7 @@ void MainWindow::keyPressEvent (QKeyEvent * e)
         foxTest();
         return;
       }
+      break;
     case Qt::Key_E:
       if(e->modifiers() & Qt::ShiftModifier) {
           ui->txFirstCheckBox->setChecked(false);
@@ -3150,9 +3151,12 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.firstCall = decodedtext.CQersCall();
             if(d.firstCall.isEmpty()){
                 auto words = decodedtext.messageWords();
-                if(words.length() > 1){
+                if(words.length() == 2){
                     d.firstCall = words.at(0);
                     d.secondCall = words.at(1);
+                } else if(words.length() == 3){
+                    d.firstCall = words.at(1);
+                    d.secondCall = words.at(2);
                 }
             }
 
@@ -3161,6 +3165,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.utcTimestamp = QDateTime::currentDateTimeUtc();
             d.snr = decodedtext.snr();
             m_bandActivity[offset].append(d);
+
             while(m_bandActivity[offset].count() > 10){
                 m_bandActivity[offset].removeFirst();
             }
@@ -3234,36 +3239,26 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
           // TOD0: jsherer - parse for commands?
           // KN4CRD K1JT ?
-          bool shouldParseDirected = false;
-          if(shouldParseDirected){
-              // can this be decoded as a directed message?
-              if(!decodedtext.isStandardMessage()){
-                QStringList parts = Varicode::unpackDirectedMessage(decodedtext.message());
+          bool shouldProcessDirected = true;
+          if(shouldProcessDirected && decodedtext.isDirectedMessage()){
+              auto parts = decodedtext.directedMessage();
 
-                if(!parts.isEmpty()){
-                    if(parts.at(1) == m_config.my_callsign()){
-                        CommandDetail d;
-                        d.call = parts.at(0);
-                        d.command = parts.at(2);
-                        d.freq = decodedtext.frequencyOffset();
-                        d.snr = decodedtext.snr();
-                        d.utcTimestamp = QDateTime::currentDateTimeUtc();
-                        m_rxCommandQueue.append(d);
+              CommandDetail d;
+              d.from = parts.at(0);
+              d.to = parts.at(1);
+              d.command = parts.at(2);
+              d.freq = decodedtext.frequencyOffset();
+              d.snr = decodedtext.snr();
+              d.utcTimestamp = QDateTime::currentDateTimeUtc();
+              m_rxCommandQueue.append(d);
 
-                        // TODO: jsherer - don't hardcode this here...
-                        if(m_txFrameQueue.isEmpty() && QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) > 0){
-                            QString text = QString("%1 %2 %3").arg(d.call.trimmed()).arg(m_config.my_callsign().trimmed()).arg(d.snr);
-
-                            setFreq4(d.freq, d.freq);
-                            m_bandActivity[decodedtext.frequencyOffset()].last().text = QString("%1:%2%3").arg(d.call.trimmed()).arg(m_config.my_callsign()).arg(d.command);
-                            m_rxDirectedCache.insert(decodedtext.frequencyOffset()/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
-
-                            ui->extFreeTextMsgEdit->setPlainText(text);
-                            ui->startTxButton->setChecked(true);
-                        }
-                    }
-                }
-              }
+              CallDetail cd;
+              cd.call = d.from;
+              cd.grid = "";
+              cd.snr = decodedtext.snr();
+              cd.freq = decodedtext.frequencyOffset();
+              cd.utcTimestamp = d.utcTimestamp;
+              m_callActivity[cd.call] = cd;
           }
         }
       }
@@ -4059,11 +4054,13 @@ void MainWindow::guiUpdate()
         m_rxDirty = true;
     }
 
+    // once per second
     displayDialFrequency ();
 
     displayActivity();
   }
 
+  // once per 100ms
   displayTransmit();
 
   m_iptt0=g_iptt;
@@ -5234,7 +5231,7 @@ void MainWindow::clearActivity(){
     m_rxDirectedCache.clear();
     m_rxFrameBlockNumbers.clear();
     m_rxFrameQueue.clear();
-
+    m_rxCommandQueue.clear();
 
     clearTableWidget(ui->tableWidgetCalls);
     clearTableWidget(ui->tableWidgetRXAll);
@@ -5545,7 +5542,7 @@ void MainWindow::scheduleBeacon(bool first){
     timestamp = timestamp.addSecs(delta);
 
     // 25% of the time, switch intervals
-    float prob = (float) qrand() / (RAND_MAX+1);
+    float prob = (float) qrand() / (RAND_MAX);
     if(prob < 0.25){
         timestamp = timestamp.addSecs(15);
     }
@@ -5580,7 +5577,9 @@ void MainWindow::prepareBeacon(){
 
     QString message = QString("DE %1 %2\nDE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4));
 
-    ui->extFreeTextMsgEdit->setPlainText(message);
+    //ui->extFreeTextMsgEdit->setPlainText(message);
+
+    addMessageText(message);
     ui->startTxButton->setChecked(true);
 
     scheduleBeacon();
@@ -7946,6 +7945,64 @@ void MainWindow::displayActivity(){
       int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
       block = logRxTxMessageText(d.utcTimestamp, d.isFree, d.text, d.freq, false, block);
       m_rxFrameBlockNumbers[freq] = block;
+  }
+
+#if 0
+  // Directed Activity
+  // TODO: jsherer - don't hardcode this here...
+  if(m_txFrameQueue.isEmpty() && QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) > 0){
+      // construct a reply
+      QString text = QString("%1 %2 %3").arg(d.call.trimmed()).arg(m_config.my_callsign().trimmed()).arg(d.snr);
+
+      setFreq4(d.freq, d.freq);
+      m_bandActivity[decodedtext.frequencyOffset()].last().text = QString("%1:%2%3").arg(d.call.trimmed()).arg(m_config.my_callsign()).arg(d.command);
+      m_rxDirectedCache.insert(decodedtext.frequencyOffset()/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+
+      ui->extFreeTextMsgEdit->setPlainText(text);
+      ui->startTxButton->setChecked(true);
+  }
+#endif
+
+  if(m_txFrameQueue.isEmpty()){
+    int f;
+
+    while(!m_rxCommandQueue.isEmpty()){
+      auto d = m_rxCommandQueue.head();
+      m_rxCommandQueue.pop_front();
+
+      qDebug() << "processing command" << d.from << d.to << d.command;
+
+      // we're only processing queries at this point
+      if(d.command != "?"){
+         continue;
+      }
+
+      // we're only processing allcall and our callsign at this point
+      if(d.to != "ALLCALL" && d.to != m_config.my_callsign().trimmed()){
+         continue;
+      }
+
+      // TODO: jsherer - check to make sure we haven't replied to their allcall recently
+
+
+      // construct reply
+      auto reply = QString("%1 %2 %3").arg(d.from).arg(d.to).arg(d.snr);
+      addMessageText(reply);
+
+      // use the last frequency
+      f = d.freq;
+
+      // if we're responding via allcall, pick a different frequency.
+      if(d.to == "ALLCALL"){
+        f = findFreeFreqOffset(qMax(0, f-100), qMin(f+100, 2500), 50);
+      }
+    }
+
+    // if we have beacon turned on, and it's more than 15 seconds away, automatically reply now
+    if(QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) > 15){
+        setFreq4(f, f);
+        ui->startTxButton->setChecked(true);
+    }
   }
 }
 

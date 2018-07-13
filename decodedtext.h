@@ -10,6 +10,7 @@
 #define DECODEDTEXT_H
 
 #include <QString>
+#include <QStringList>
 
 
 
@@ -31,15 +32,20 @@ class DecodedText
 public:
   explicit DecodedText (QString const& message, bool, QString const& my_grid);
 
-  QString string() const { return string_; };
-  QString message() const { return message_; };
-  QStringList messageWords () const;
-  int indexOf(QString s) const { return string_.indexOf(s); };
-  int indexOf(QString s, int i) const { return string_.indexOf(s,i); };
-  QString mid(int f, int t) const { return string_.mid(f,t); };
-  QString left(int i) const { return string_.left(i); };
+  void tryUnpackDirected();
 
-  void clear() { string_.clear(); };
+  QStringList directedMessage() const { return directed_; }
+  bool isDirectedMessage() const { return !directed_.isEmpty(); }
+
+  QString string() const { return string_; }
+  QString message() const { return message_; }
+  QStringList messageWords () const;
+  int indexOf(QString s) const { return string_.indexOf(s); }
+  int indexOf(QString s, int i) const { return string_.indexOf(s,i); }
+  QString mid(int f, int t) const { return string_.mid(f,t); }
+  QString left(int i) const { return string_.left(i); }
+
+  void clear() { string_.clear(); }
 
   QString CQersCall() const;
 
@@ -78,6 +84,7 @@ private:
       column_mode    = 19,
       column_qsoText = 22 };
 
+  QStringList directed_;
   QString string_;
   int padding_;
   bool contest_mode_;

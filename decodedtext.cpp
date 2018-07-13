@@ -4,6 +4,8 @@
 #include <QRegularExpression>
 #include <QDebug>
 
+#include <varicode.h>
+
 extern "C" {
   bool stdmsg_(char const * msg, bool contest_mode, char const * mygrid, fortran_charlen_t, fortran_charlen_t);
 }
@@ -51,6 +53,22 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
                               , grid_c_string.constData ()
                               , 22, 6);
     }
+
+    if(!is_standard_){
+      tryUnpackDirected();
+    }
+}
+
+void DecodedText::tryUnpackDirected(){
+  QStringList parts = Varicode::unpackDirectedMessage(message());
+
+  if(parts.isEmpty()){
+    return;
+  }
+
+  // replace it with the correct unpacked
+  message_ = QString("%1:%2%3").arg(parts.at(0), parts.at(1), parts.at(2));
+  directed_ = parts;
 }
 
 QStringList DecodedText::messageWords () const
