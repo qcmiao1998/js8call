@@ -5577,8 +5577,6 @@ void MainWindow::prepareBeacon(){
 
     QString message = QString("DE %1 %2\nDE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4));
 
-    //ui->extFreeTextMsgEdit->setPlainText(message);
-
     addMessageText(message);
     ui->startTxButton->setChecked(true);
 
