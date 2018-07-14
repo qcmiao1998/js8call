@@ -3293,8 +3293,13 @@ void MainWindow::readFromStdout()                             //readFromStdout
           bDisplayRight=true;
       }
 
-      // if this frequency offset is within our directed call cache in the last 2 minutes.
-      if(isRecentlyDirected(audioFreq) || isMyCallIncluded(decodedtext.message())){
+      if(isRecentOffset(audioFreq)){
+         m_rxRecentCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+         bDisplayRight = true;
+      }
+
+      if(isDirectedOffset(audioFreq/10*10) || isMyCallIncluded(decodedtext.message())){
+          m_rxDirectedCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
           bDisplayRight = true;
       }
 
@@ -3319,9 +3324,6 @@ void MainWindow::readFromStdout()                             //readFromStdout
         d.text = decodedtext.message();
         d.utcTimestamp = QDateTime::currentDateTimeUtc();
         m_rxFrameQueue.append(d);
-
-        // bump the directed cache datetime if this is our callsign, or we've seen this recently...
-        m_rxDirectedCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
       }
 
       if(m_mode=="FT8" and m_config.bHound()) {
@@ -5232,6 +5234,7 @@ void MainWindow::clearActivity(){
     m_bandActivity.clear();
     m_callActivity.clear();
     m_rxCallCache.clear();
+    m_rxRecentCache.clear();
     m_rxDirectedCache.clear();
     m_rxFrameBlockNumbers.clear();
     m_rxFrameQueue.clear();
@@ -7431,7 +7434,7 @@ void MainWindow::pskSetLocal ()
   }
   // qDebug() << "To PSKreporter: local station details";
   psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (),
-        antenna_description, QString { QApplication::applicationName() + " v" + version() }.simplified ());
+        antenna_description, QString {"FT8Call v" + version() }.simplified ());
 }
 
 void MainWindow::transmitDisplay (bool transmitting)
@@ -7789,7 +7792,14 @@ void MainWindow::updateButtonDisplay(){
     }
 }
 
-bool MainWindow::isRecentlyDirected(int offset){
+bool MainWindow::isRecentOffset(int offset){
+    return (
+        m_rxRecentCache.contains(offset/10*10) &&
+        m_rxRecentCache[offset/10*10]->secsTo(QDateTime::currentDateTimeUtc()) < 120
+    );
+}
+
+bool MainWindow::isDirectedOffset(int offset){
     return (
         m_rxDirectedCache.contains(offset/10*10) &&
         m_rxDirectedCache[offset/10*10]->secsTo(QDateTime::currentDateTimeUtc()) < 120
@@ -7829,12 +7839,18 @@ void MainWindow::displayActivity(bool force){
   clearTableWidget(ui->tableWidgetRXAll);
   QList<int> keys = m_bandActivity.keys();
 
-  // sort directed messages first
+  // sort directed & recent messages first
   qSort(keys.begin(), keys.end(), [this](const int left, int right){
       if(m_rxDirectedCache.contains(left/10*10)){
           return true;
       }
       if(m_rxDirectedCache.contains(right/10*10)){
+          return false;
+      }
+      if(m_rxRecentCache.contains(left/10*10)){
+          return true;
+      }
+      if(m_rxRecentCache.contains(right/10*10)){
           return false;
       }
       return left < right;
@@ -7900,7 +7916,7 @@ void MainWindow::displayActivity(bool force){
               textItem->setBackground(QBrush(m_config.color_CQ()));
           }
 
-          if (isRecentlyDirected(offset) || isMyCallIncluded(text.last())){
+          if(m_rxDirectedCache.contains(offset/10*10)){
               offsetItem->setBackground(QBrush(m_config.color_MyCall()));
               //ageItem->setBackground(QBrush(m_config.color_MyCall()));
               snrItem->setBackground(QBrush(m_config.color_MyCall()));
@@ -7990,7 +8006,10 @@ void MainWindow::displayActivity(bool force){
          continue;
       }
 
-      // TODO: jsherer - check to make sure we haven't replied to their allcall recently
+      // TODO: jsherer - check to make sure we haven't replied to their allcall recently (in the past 5 minutes)
+      if(m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(QDateTime::currentDateTimeUtc()) < 300){
+          continue;
+      }
 
       // construct reply
       auto reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(d.snr);
@@ -8004,6 +8023,7 @@ void MainWindow::displayActivity(bool force){
         f = findFreeFreqOffset(qMax(0, f-100), qMin(f+100, 2500), 50);
       }
 
+      m_txAllcallCommandCache.insert(d.from, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
       processed = true;
     }
 

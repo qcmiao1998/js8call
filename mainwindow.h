@@ -676,6 +676,8 @@ private:
   QQueue<QString> m_txFrameQueue;
   QQueue<RXDetail> m_rxFrameQueue;
   QQueue<CommandDetail> m_rxCommandQueue;
+  QCache<QString, QDateTime> m_txAllcallCommandCache; // callsign -> last tx
+  QCache<int, QDateTime> m_rxRecentCache; // freq -> last rx
   QCache<int, QDateTime> m_rxDirectedCache; // freq -> last directed rx
   QCache<QString, int> m_rxCallCache; // call -> last freq seen
   QMap<int, int> m_rxFrameBlockNumbers; // freq -> block
@@ -755,7 +757,8 @@ private:
   void displayTransmit();
   void updateButtonDisplay();
   bool isMyCallIncluded(QString const &text);
-  bool isRecentlyDirected(int offset);
+  bool isRecentOffset(int offset);
+  bool isDirectedOffset(int offset);
   void displayActivity(bool force=false);
   void postWSPRDecode (bool is_new, QStringList message_parts);
   void enable_DXCC_entity (bool on);
