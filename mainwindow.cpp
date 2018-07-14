@@ -1080,7 +1080,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
 void MainWindow::not_GA_warning_message ()
 {
-  QDate eol(2018, 7, 20);
+  QDate eol(2018, 7, 23);
 
   if(QDate::currentDate() >= eol){
       MessageBox::critical_message (this, QString("This pre-release development build of FT8Call has expired."));
@@ -1089,11 +1089,11 @@ void MainWindow::not_GA_warning_message ()
   }
 
   MessageBox::critical_message (this,
-                                QString("This version of FT8Call is a pre-release development\n"
-                                "build and will expire on %1. \n\n"
+                                QString("This version of %1 is a pre-release development\n"
+                                "build and will expire on %2. \n\n"
                                 "Use of development versions of FT8Call are at your own risk \n"
                                 "and carry a responsiblity to report any problems to:\n"
-                                "Jordan Sherer (KN4CRD) kn4crd@gmail.com\n\n").arg(eol.toString()));
+                                "Jordan Sherer (KN4CRD) kn4crd@gmail.com\n\n").arg(QApplication::applicationName()).arg(eol.toString()));
 
 }
 
