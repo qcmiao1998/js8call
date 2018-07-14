@@ -3191,13 +3191,13 @@ void MainWindow::readFromStdout()                             //readFromStdout
             m_callActivity[cqCall] = d;
           }
 
-          // TOD0: jsherer - parse for callsigns?
+
+          // Parse standard message callsigns
           // K1JT KN4CRD EM73
           // KN4CRD K1JT -21
           // K1JT KN4CRD R-12
           // DE KN4CRD
           // KN4CRD
-
           bool shouldParseCallsigns = true;
           if(shouldParseCallsigns){
               QStringList callsigns = Varicode::parseCallsigns(decodedtext.message());
@@ -3230,7 +3230,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
               }
           }
 
-          // TOD0: jsherer - parse for commands?
+          // Parse commands
           // KN4CRD K1JT ?
           bool shouldProcessDirected = true;
           if(shouldProcessDirected && decodedtext.isDirectedMessage()){
