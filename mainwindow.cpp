@@ -2457,7 +2457,7 @@ void MainWindow::on_actionSolve_FreqCal_triggered()
 
 void MainWindow::on_actionCopyright_Notice_triggered()
 {
-  auto const& message = tr("If you make fair use of any part of WSJT-X under terms of the GNU "
+  auto const& message = tr("If you make fair use of any part of this program under terms of the GNU "
                            "General Public License, you must display the following copyright "
                            "notice prominently in your derivative work:\n\n"
                            "\"The algorithms, source code, look-and-feel of WSJT-X and related "
@@ -2466,7 +2466,9 @@ void MainWindow::on_actionCopyright_Notice_triggered()
                            "2001-2018 by one or more of the following authors: Joseph Taylor, "
                            "K1JT; Bill Somerville, G4WJS; Steven Franke, K9AN; Nico Palermo, "
                            "IV3NWV; Greg Beam, KI7MT; Michael Black, W9MDB; Edson Pereira, PY2SDR; "
-                           "Philip Karn, KA9Q; and other members of the WSJT Development Group.\"");
+                           "Philip Karn, KA9Q; and other members of the WSJT Development Group.\n\n"
+                           "Further, the source code of FT8Call contains material Copyright (C) "
+                           "2018 by Jordan Sherer, KN4CRD.\"");
   MessageBox::warning_message(this, message);
 }
 

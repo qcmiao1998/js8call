@@ -4139,8 +4139,11 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionAbout">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
-    <string>About WSJT-X</string>
+    <string>About FT8Call</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+F1</string>
@@ -4232,6 +4235,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionOnline_User_Guide">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Online User Guide</string>
    </property>
@@ -4240,6 +4246,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionKeyboard_shortcuts">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Keyboard shortcuts</string>
    </property>
@@ -4248,6 +4257,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionSpecial_mouse_commands">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Special mouse commands</string>
    </property>
@@ -4457,6 +4469,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionShort_list_of_add_on_prefixes_and_suffixes">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>List of Type 1 prefixes and suffixes</string>
    </property>
@@ -4470,6 +4485,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionLocal_User_Guide">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Local User Guide</string>
    </property>
@@ -4555,6 +4573,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="download_samples_action">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>&amp;Download Samples ...</string>
    </property>
@@ -4579,6 +4600,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionRelease_Notes">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Release Notes</string>
    </property>
@@ -4710,6 +4734,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionFT8_DXpedition_Mode_User_Guide">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>FT8 DXpedition Mode User Guide</string>
    </property>
