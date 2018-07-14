@@ -3198,47 +3198,36 @@ void MainWindow::readFromStdout()                             //readFromStdout
           // DE KN4CRD
           // KN4CRD
 
-          bool shouldParseCallsigns = false;
+          bool shouldParseCallsigns = true;
           if(shouldParseCallsigns){
               QStringList callsigns = Varicode::parseCallsigns(decodedtext.message());
               if(!callsigns.isEmpty()){
-              // one callsign
-              // de [from]
-              // cq [from]
+                  // one callsign
+                  // de [from]
+                  // cq [from]
 
-              // two callsigns
-              // [from]: [to] ...
-              // [to] [from] [grid|signal]
+                  // two callsigns
+                  // [from]: [to] ...
+                  // [to] [from] [grid|signal]
 
-              QStringList grids = Varicode::parseGrids(decodedtext.message());
+                  QStringList grids = Varicode::parseGrids(decodedtext.message());
 
-              // one callsigns are handled above... so we only need to handle two callsigns if it's a standard message
-              if(decodedtext.isStandardMessage()){
-                  if(callsigns.length() == 2){
-                      auto de_callsign = callsigns.last();
+                  // one callsigns are handled above... so we only need to handle two callsigns if it's a standard message
+                  if(decodedtext.isStandardMessage()){
+                      if(callsigns.length() == 2){
+                          auto de_callsign = callsigns.last();
 
-                      // TODO: jsherer - put this in a function to record a callsign...
-                      CallDetail d;
-                      d.call = de_callsign;
-                      d.grid = !grids.empty() ? grids.first() : "";
-                      d.snr = decodedtext.snr();
-                      d.freq = decodedtext.frequencyOffset();
-                      d.utcTimestamp = QDateTime::currentDateTimeUtc();
-                      m_callActivity[de_callsign] = d;
-
-                      /*
-                      //auto to_callsign = callsigns.first();
-                      CallDetail d2;
-                      d2.call = to_callsign;
-                      d2.grid = "";
-                      d2.snr = -100;
-                      d2.freq = decodedtext.frequencyOffset();
-                      d2.utcTimestamp = QDateTime::currentDateTimeUtc();
-                      m_callActivity[to_callsign] = d2;
-                      */
+                          // TODO: jsherer - put this in a function to record a callsign...
+                          CallDetail d;
+                          d.call = de_callsign;
+                          d.grid = !grids.empty() ? grids.first() : "";
+                          d.snr = decodedtext.snr();
+                          d.freq = decodedtext.frequencyOffset();
+                          d.utcTimestamp = QDateTime::currentDateTimeUtc();
+                          m_callActivity[de_callsign] = d;
+                      }
                   }
               }
-          }
           }
 
           // TOD0: jsherer - parse for commands?
