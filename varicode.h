@@ -45,6 +45,9 @@ public:
     static quint32 packCallsign(QString const& value);
     static QString unpackCallsign(quint32 value);
 
+    static quint16 packGrid(QString const& value);
+    static QString unpackGrid(quint16 value);
+
     static QString packDirectedMessage(QString const& text, int *n);
     static QStringList unpackDirectedMessage(QString const& text);
 };

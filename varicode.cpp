@@ -1,6 +1,23 @@
 /**
+ * This file is part of FT8Call.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  * (C) 2018 Jordan Sherer <kn4crd@gmail.com> - All Rights Reserved
+ *
  **/
+
 #include <QDebug>
 #include <QMap>
 
@@ -361,6 +378,90 @@ QString Varicode::unpackCallsign(quint32 value){
 
     return callsign;
 }
+
+QString deg2grid(float dlong, float dlat){
+    QChar grid[6];
+
+    if(dlong < -180){
+        dlong += 360;
+    }
+    if(dlong > 180){
+        dlong -= 360;
+    }
+
+    int nlong = int(60.0*(180.0-dlong)/5);
+
+    int n1 = nlong/240;
+    int n2 = (nlong-240*n1)/24;
+    int n3 = (nlong-240*n1-24*n2);
+
+    grid[0] = QChar('A' + n1);
+    grid[2] = QChar('0' + n2);
+    grid[4] = QChar('a' + n3);
+
+    int nlat=int(60.0*(dlat+90)/2.5);
+
+    n1 = nlat/240;
+    n2 = (nlat-240*n1)/24;
+    n3 = (nlat-240*n1-24*n2);
+
+    grid[1] = QChar('A' + n1);
+    grid[3] = QChar('0' + n2);
+    grid[5] = QChar('a' + n3);
+
+    return QString(grid, 6);
+}
+
+QPair<float, float> grid2deg(QString const &grid){
+    QPair<float, float> longLat;
+
+    QString g = grid;
+    if(g.length() < 6){
+        g = grid.left(4) + "mm";
+    }
+
+    g = g.left(4).toUpper() + g.right(2).toLower();
+
+    int nlong = 180 - 20 * (g.at(0).toLatin1() - 'A');
+    int n20d  = 2 * (g.at(2).toLatin1() - '0');
+    float xminlong  = 5 * (g.at(4).toLatin1() - 'a' + 0.5);
+    float dlong = nlong - n20d - xminlong/60.0;
+
+    int nlat = -90 + 10*(g.at(1).toLatin1() - 'A') + g.at(3).toLatin1() - '0';
+    float xminlat = 2.5 * (g.at(5).toLatin1() - 'a' + 0.5);
+    float dlat = nlat + xminlat/60.0;
+
+    longLat.first = dlong;
+    longLat.second = dlat;
+
+    return longLat;
+}
+
+quint16 Varicode::packGrid(QString const& grid){
+    // TODO: validate grid...
+
+    // TODO: encode non-grid data...
+
+    auto pair = grid2deg(grid.left(4));
+    int ilong = pair.first;
+    int ilat = pair.second + 90;
+
+    return ((ilong + 180)/2) * 180 + ilat;
+}
+
+QString Varicode::unpackGrid(quint16 value){
+    if(value > 180*180){
+        // TODO: decode non-grid data...
+        return "";
+    }
+
+    float dlat = value % 180 - 90;
+    float dlong = value / 180 * 2 - 180 + 2;
+
+    return deg2grid(dlong, dlat).left(4);g
+}
+
+
 
 QString Varicode::packDirectedMessage(const QString &text, int *n){
     QString frame;
