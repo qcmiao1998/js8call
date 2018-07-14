@@ -60,7 +60,12 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
 }
 
 void DecodedText::tryUnpackDirected(){
-  QStringList parts = Varicode::unpackDirectedMessage(message());
+  QString m = message().trimmed();
+  if(m.length() < 12 || m.contains(' ')){
+    return;
+  }
+
+  QStringList parts = Varicode::unpackDirectedMessage(m);
 
   if(parts.isEmpty()){
     return;
@@ -68,6 +73,7 @@ void DecodedText::tryUnpackDirected(){
 
   // replace it with the correct unpacked
   message_ = QString("%1:%2%3").arg(parts.at(0), parts.at(1), parts.at(2));
+
   directed_ = parts;
 }
 
