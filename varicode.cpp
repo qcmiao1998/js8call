@@ -458,10 +458,8 @@ QString Varicode::unpackGrid(quint16 value){
     float dlat = value % 180 - 90;
     float dlong = value / 180 * 2 - 180 + 2;
 
-    return deg2grid(dlong, dlat).left(4);g
+    return deg2grid(dlong, dlat).left(4);
 }
-
-
 
 QString Varicode::packDirectedMessage(const QString &text, int *n){
     QString frame;
