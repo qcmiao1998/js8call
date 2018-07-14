@@ -461,11 +461,13 @@ QString Varicode::unpackGrid(quint16 value){
     return deg2grid(dlong, dlat).left(4);
 }
 
+
+QString directed_cmds("?$@&| ");
+QRegularExpression directed_re(R"((?<from>[A-Z0-9/]+):(?<to>[A-Z0-9/]+)(?<cmd>[?$@&| ]))");
+
 QString Varicode::packDirectedMessage(const QString &text, int *n){
     QString frame;
-    QString cmds("?$@&| ");
-    QRegularExpression r(R"((?<from>[A-Z0-9/]+):(?<to>[A-Z0-9/]+)(?<cmd>[?$@&| ]))");
-    auto match = r.match(text);
+    auto match = directed_re.match(text);
     if(match.hasMatch()){
         QString from = match.captured("from");
         QString to = match.captured("to");
@@ -479,7 +481,7 @@ QString Varicode::packDirectedMessage(const QString &text, int *n){
         quint8 packed_flag = 0;
         quint32 packed_from = Varicode::packCallsign(from);
         quint32 packed_to = Varicode::packCallsign(to);
-        quint8 packed_cmd = cmds.indexOf(cmd.at(0));
+        quint8 packed_cmd = directed_cmds.indexOf(cmd.at(0));
 
         // 3 + 28 + 28 + 5 = 64
         auto bits = (
@@ -496,7 +498,6 @@ QString Varicode::packDirectedMessage(const QString &text, int *n){
 
 QStringList Varicode::unpackDirectedMessage(const QString &text){
     QStringList unpacked;
-    QString cmds("?$@&| ");
     auto bits = Varicode::bitsToStr(Varicode::intToBits(Varicode::unpack64bits(text), 64));
 
     quint8 flag = Varicode::bitsToInt(Varicode::strToBits(bits.left(3)));
@@ -506,7 +507,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
 
     unpacked.append(Varicode::unpackCallsign(packed_from).trimmed());
     unpacked.append(Varicode::unpackCallsign(packed_to).trimmed());
-    unpacked.append(QString(cmds.at(packed_cmd & 5)));
+    unpacked.append(QString(directed_cmds.at(packed_cmd & 5)));
 
     return unpacked;
 }
