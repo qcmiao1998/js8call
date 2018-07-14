@@ -1071,6 +1071,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   auto frames = buildFT8MessageFrames("OH8STN:KN4CRD?");
   qDebug() << frames.first() << Varicode::unpackDirectedMessage(frames.first());
+  qDebug() << Varicode::packGrid("EM73tu") << Varicode::unpackGrid(Varicode::packGrid("EM73tu"));
 #endif
 
   // this must be the last statement of constructor
@@ -7967,14 +7968,15 @@ void MainWindow::displayActivity(bool force){
 
   // Command Activity
 
-  if(m_txFrameQueue.isEmpty()){
-    int f;
+  if(m_txFrameQueue.isEmpty() && !m_rxCommandQueue.isEmpty()){
+    int f = ui->TxFreqSpinBox->value(); // ew
+
+    bool processed = false;
 
     while(!m_rxCommandQueue.isEmpty()){
-      auto d = m_rxCommandQueue.head();
-      m_rxCommandQueue.pop_front();
+      auto d = m_rxCommandQueue.dequeue();
 
-      qDebug() << "processing command" << d.from << d.to << d.command;
+      qDebug() << "processing command" << d.from << d.to << d.command << d.freq;
 
       // we're only processing queries at this point
       if(d.command != "?"){
@@ -7988,9 +7990,8 @@ void MainWindow::displayActivity(bool force){
 
       // TODO: jsherer - check to make sure we haven't replied to their allcall recently
 
-
       // construct reply
-      auto reply = QString("%1 %2 %3").arg(d.from).arg(d.to).arg(d.snr);
+      auto reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(d.snr);
       addMessageText(reply);
 
       // use the last frequency
@@ -8000,12 +8001,17 @@ void MainWindow::displayActivity(bool force){
       if(d.to == "ALLCALL"){
         f = findFreeFreqOffset(qMax(0, f-100), qMin(f+100, 2500), 50);
       }
+
+      processed = true;
     }
 
-    // if we have beacon turned on, and it's more than 15 seconds away, automatically reply now
-    if(QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) > 15){
-        setFreq4(f, f);
-        ui->startTxButton->setChecked(true);
+    if(processed){
+        // if we have beacon turned on, and it's more than 15 seconds away, automatically reply now, and bump the beacon
+        if(QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) >= 15){
+            setFreq4(f, f);
+            ui->startTxButton->setChecked(true);
+            scheduleBeacon(false);
+        }
     }
   }
 
