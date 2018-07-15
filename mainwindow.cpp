@@ -1071,7 +1071,31 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto frames = buildFT8MessageFrames("OH8STN:KN4CRD?");
   qDebug() << frames.first() << Varicode::unpackDirectedMessage(frames.first());
   qDebug() << Varicode::packGrid("EM73tu") << Varicode::unpackGrid(Varicode::packGrid("EM73tu"));
+
+  auto allbits = Varicode::huffEncode(QString("When simple things need instructions, it is a certain sign of poor design.\x04").toUpper());
+  qDebug() << "FTFrames" << qCeil((allbits.length()+(6+6+1))/13.0);
+  int lasti = 0;
+  int i = 0;
+  int frames = 0;
+  QVector<bool> nextFrame;
+  foreach(auto bits, allbits){
+      if(nextFrame.length() + bits.length() > (frames == 0 ? (8-3) : 64)){
+          // emit frame
+          qDebug() << "frame ready at" << i << "chars" << i-lasti << "size" << nextFrame.length() << "->" << Varicode::bitsToStr(nextFrame);
+          nextFrame.clear();
+          lasti = i;
+          frames++;
+      }
+
+      nextFrame += bits;
+      i++;
+  }
+  qDebug() << "frame ready at" << i << "size" << nextFrame.length() << "->" << Varicode::bitsToStr(nextFrame);
+  frames++;
+  qDebug() << "HuffFrames" << frames;
 #endif
+
+
 
   // this must be the last statement of constructor
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};

@@ -489,7 +489,7 @@ QString Varicode::packDirectedMessage(const QString &text, int *n){
         quint8 packed_cmd = directed_cmds.indexOf(cmd.at(0));
         quint8 packed_extra = fromCRC;
 
-        // 3 + 28 + 28 + 5 = 64
+        // [3][28][28][5],[5] = 69
         auto bits = (
             Varicode::intToBits(packed_flag, 3)    +
             Varicode::intToBits(packed_from, 28)   +
@@ -509,6 +509,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
         return unpacked;
     }
 
+    // [3][28][28][5],[5] = 69
     auto bits = Varicode::bitsToStr(Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64));
     quint8 extra = Varicode::unpack5bits(text.right(1));
 
