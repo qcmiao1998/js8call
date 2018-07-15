@@ -198,6 +198,16 @@ QString Varicode::huffDecode(QVector<bool> const& bitvec){
     return out;
 }
 
+// convert char* array of 0 bytes and 1 bytes to bool vector
+QVector<bool> Varicode::bytesToBits(char *bitvec, int n){
+    QVector<bool> bits;
+    for(int i = 0; i < n; i++){
+        bits.append(bitvec[i] == 0x01);
+    }
+    return bits;
+}
+
+// convert string of 0s and 1s to bool vector
 QVector<bool> Varicode::strToBits(QString const& bitvec){
     QVector<bool> bits;
     foreach(auto ch, bitvec){
@@ -238,6 +248,17 @@ quint64 Varicode::bitsToInt(QVector<bool> const value){
     }
     return v;
 }
+
+quint64 Varicode::bitsToInt(QVector<bool>::ConstIterator start, int n){
+    quint64 v = 0;
+    for(int i = 0; i < n; i++){
+        int bit = (int)(*start);
+        v = (v << 1) + (int)(bit);
+        start++;
+    }
+    return v;
+}
+
 
 quint8 Varicode::unpack5bits(QString const& value){
     return alphabet.indexOf(value.at(0));

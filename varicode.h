@@ -24,11 +24,13 @@ public:
     static QVector<bool> huffFlatten(QList<QVector<bool>> &list);
     static QString huffDecode(QVector<bool> const& bitvec);
 
+    static QVector<bool> bytesToBits(char * bitvec, int n);
     static QVector<bool> strToBits(QString const& bitvec);
     static QString bitsToStr(QVector<bool> const& bitvec);
 
     static QVector<bool> intToBits(quint64 value, int expected=0);
     static quint64 bitsToInt(QVector<bool> const value);
+    static quint64 bitsToInt(QVector<bool>::ConstIterator start, int n);
 
     static quint8 unpack5bits(QString const& value);
     static QString pack5bits(quint8 packed);

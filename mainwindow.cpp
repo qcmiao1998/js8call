@@ -164,7 +164,7 @@ namespace
 {
   Radio::Frequency constexpr default_frequency {14074000};
   QRegExp message_alphabet {"[- A-Za-z0-9+./?]*"};
-  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:]*"};
+  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:@&]*"};
   // grid exact match excluding RR73
   QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
 
@@ -5434,13 +5434,27 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
     QString mycall = m_config.my_callsign();
     foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
         while(line.size() > 0){
+          QString frame;
+
+          bool useStd = false;
+          bool isFree = false;
+          QString stdFrame = parseFT8Message(line, &isFree);
+
           int n = 0;
-          QString frame = Varicode::packDirectedMessage(line, mycall, &n);
-          if(n > 0){
-              frames.append(frame);
-              line = line.mid(n).trimmed();
+          QString dirFrame = Varicode::packDirectedMessage(line, mycall, &n);
+
+          // if this parses to a standard FT8 free text message
+          // but it can be parsed as a directed message, then we
+          // should send the directed version
+          if(isFree && n > 0){
+              useStd = false;
+              frame = dirFrame;
           } else {
-              frame = parseFT8Message(line);
+              useStd = true;
+              frame = stdFrame;
+          }
+
+          if(useStd){
               if(frame.isEmpty()){
                 break;
               }
@@ -5454,15 +5468,25 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
               }
 
               line = line.mid(frame.length()).trimmed();
+          } else {
+              frames.append(frame);
+              line = line.mid(n).trimmed();
           }
         }
     }
+
+#if 0
+    qDebug() << "parsed frames:";
+    foreach(auto frame, frames){
+        qDebug() << "->" << frame;
+    }
+#endif
 
     return frames;
 }
 
 
-QString MainWindow::parseFT8Message(QString input){
+QString MainWindow::parseFT8Message(QString input, bool *isFree){
   char message[29];
   char msgsent[29];
   char volatile ft8msgbits[75 + 12];
@@ -5478,6 +5502,28 @@ QString MainWindow::parseFT8Message(QString input){
   genft8_(message, MyGrid, &bcontest, &i3bit, msgsent, const_cast<char *> (ft8msgbits),
         const_cast<int *> (itone), 22, 6, 22);
   msgsent[22]=0;
+
+  // decode the msg bits into 6-bit bytes so we can check to see if its a free text message or not...
+  // see extractmessage1764.f90 for the original implementation. we could technically add a boolean output
+  // from the fortran code, but this avoids having to modify that so we can easily apply updates to the
+  // signal functions in the future without incurring too much cognitive overhead of merge conflicts.
+  char msgbytes[12];
+  for(int ibyte = 1; ibyte <= 12; ibyte++){
+      int itmp = 0;
+      for(int ibit = 1; ibit <= 6; ibit++){
+          itmp = (itmp << 1) + (1 & (ft8msgbits[((ibyte-1) * 6 + ibit)-1]));
+      }
+      msgbytes[ibyte-1] = itmp;
+  }
+
+  int a = msgbytes[9];
+  int b = msgbytes[10];
+  int c = msgbytes[11];
+  int d = ((a & 15) << 12) + (b << 6) + c;
+
+  if(isFree){
+      *isFree = (d >= 32768);
+  }
 
   return QString::fromLatin1(msgsent).trimmed();
 }
@@ -6801,17 +6847,26 @@ void MainWindow::on_queryButton_pressed(){
     // TODO: jsherer - this should be extracted
     connect(snrAction, &QAction::triggered, this, [this](){
 
-        QString selectedCall;
-        auto items = ui->tableWidgetCalls->selectedItems();
-        if(!items.isEmpty()){
-            selectedCall = items.first()->text();
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
         }
 
-        addMessageText(QString("%1:%2?").arg(m_config.my_callsign(), selectedCall));
+        addMessageText(QString("%1?").arg(selectedCall));
+    });
+
+    auto qthAction = menu->addAction("@ - What is your QTH?");
+    connect(qthAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1@").arg(selectedCall));
     });
 
     menu->addAction("$ - What stations are you hearing?")->setEnabled(false);
-    menu->addAction("@ - What is your QTH?")->setEnabled(false);
     menu->addAction("&& - What is your message?")->setEnabled(false);
     menu->addAction("| - Relay the following message")->setEnabled(false);
 
@@ -8041,7 +8096,7 @@ void MainWindow::displayActivity(bool force){
       qDebug() << "processing command" << d.from << d.to << d.command << d.freq;
 
       // we're only processing queries at this point
-      if(d.command != "?"){
+      if(d.command != "?" && d.command != "@"){
          continue;
       }
 
@@ -8056,7 +8111,12 @@ void MainWindow::displayActivity(bool force){
       }
 
       // construct reply
-      auto reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(d.snr);
+      auto reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign());
+      if(d.command == "?"){
+          reply = reply.arg(d.snr);
+      } else if(d.command == "@"){
+          reply = reply.arg(m_config.my_grid());
+      }
       addMessageText(reply);
 
       // use the last frequency
