@@ -7847,23 +7847,25 @@ void MainWindow::postDecode (bool is_new, QString const& message)
 }
 
 void MainWindow::displayTransmit(){
-    // Transmit Activity
-    update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
+
 
     updateButtonDisplay();
 }
 
 void MainWindow::updateButtonDisplay(){
-    QString callsign = callsignSelected();
-    if(callsign.isEmpty()){
-        ui->replyMacroButton->setDisabled(true);
-        ui->snrMacroButton->setDisabled(true);
-        ui->queryButton->setDisabled(true);
-    } else {
-        ui->replyMacroButton->setDisabled(false);
-        ui->snrMacroButton->setDisabled(false);
-        ui->queryButton->setDisabled(false);
-    }
+    // Transmit Activity
+    update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
+
+    bool isTransmitting = m_transmitting || m_txFrameCount > 0;
+    bool emptyCallsign = callsignSelected().isEmpty();
+
+    ui->cqMacroButton->setDisabled(isTransmitting);
+    ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
+    ui->deMacroButton->setDisabled(isTransmitting);
+    ui->qthMacroButton->setDisabled(isTransmitting);
+    ui->snrMacroButton->setDisabled(isTransmitting || emptyCallsign);
+    ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
+    ui->macrosMacroButton->setDisabled(isTransmitting);
 }
 
 QString MainWindow::callsignSelected(){
