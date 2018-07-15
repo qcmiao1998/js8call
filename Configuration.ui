@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>6</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -2298,6 +2298,9 @@ Right click for insert and delete options.</string>
          </item>
          <item row="2" column="0">
           <widget class="QPushButton" name="pbTxMsg">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="minimumSize">
             <size>
              <width>140</width>
@@ -2311,6 +2314,9 @@ Right click for insert and delete options.</string>
          </item>
          <item row="2" column="1">
           <widget class="QLabel" name="labTx">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="minimumSize">
             <size>
              <width>80</width>
@@ -2330,6 +2336,9 @@ Right click for insert and delete options.</string>
          </item>
          <item row="3" column="1">
           <widget class="QLabel" name="labDXCC">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="minimumSize">
             <size>
              <width>80</width>
@@ -2349,6 +2358,9 @@ Right click for insert and delete options.</string>
          </item>
          <item row="4" column="0">
           <widget class="QPushButton" name="pbNewCall">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="minimumSize">
             <size>
              <width>140</width>
@@ -2362,6 +2374,9 @@ Right click for insert and delete options.</string>
          </item>
          <item row="3" column="0">
           <widget class="QPushButton" name="pbNewDXCC">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="minimumSize">
             <size>
              <width>140</width>
@@ -2375,6 +2390,9 @@ Right click for insert and delete options.</string>
          </item>
          <item row="4" column="1">
           <widget class="QLabel" name="labNewCall">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="minimumSize">
             <size>
              <width>80</width>
