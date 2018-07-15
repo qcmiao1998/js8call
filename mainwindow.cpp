@@ -1103,7 +1103,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
 void MainWindow::not_GA_warning_message ()
 {
-  QDate eol(2018, 7, 23);
+  QDate eol(2018, 7, 30);
 
   if(QDate::currentDate() >= eol){
       MessageBox::critical_message (this, QString("This pre-release development build of FT8Call has expired."));
