@@ -3305,7 +3305,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
           bDisplayRight=true;
       }
 
-      if(isRecentOffset(audioFreq)){
+      if(isRecentOffset(audioFreq) || isAllCallIncluded(decodedtext.message())){
          m_rxRecentCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
          bDisplayRight = true;
       }
@@ -5431,10 +5431,11 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 QStringList MainWindow::buildFT8MessageFrames(QString const& text){
     QStringList frames;
 
+    QString mycall = m_config.my_callsign();
     foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
         while(line.size() > 0){
           int n = 0;
-          QString frame = Varicode::packDirectedMessage(line, &n);
+          QString frame = Varicode::packDirectedMessage(line, mycall, &n);
           if(n > 0){
               frames.append(frame);
               line = line.mid(n).trimmed();
@@ -5493,6 +5494,10 @@ bool MainWindow::prepareNextMessageFrame()
     int count = m_txFrameCount;
     int sent = count - m_txFrameQueue.count();
     ui->startTxButton->setText(QString("Sending (%1/%2)").arg(sent).arg(count));
+
+    // bump beacon
+    m_nextBeacon = m_nextBeacon.addSecs(15);
+
     return true;
   }
 
@@ -7848,6 +7853,11 @@ bool MainWindow::isMyCallIncluded(const QString &text){
     }
 
     return text.contains(myCall);
+}
+
+
+bool MainWindow::isAllCallIncluded(const QString &text){
+    return text.contains("ALLCALL");
 }
 
 void MainWindow::displayActivity(bool force){

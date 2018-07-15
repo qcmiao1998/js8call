@@ -20,6 +20,7 @@
 
 #include <QDebug>
 #include <QMap>
+#include <QSet>
 
 #define CRCPP_INCLUDE_ESOTERIC_CRC_DEFINITIONS
 #include "crc.h"
@@ -33,8 +34,25 @@ QString callsign_pattern1 = {R"((?<callsign>[A-Z0-9/]{2,}))"};
 QString callsign_pattern2 = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){3,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
 QString callsign_pattern3 = {R"(([0-9A-Z ])([0-9A-Z])([0-9])([A-Z ])([A-Z ])([A-Z ]))"};
 QString callsign_alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "};
-QString directed_cmds("?$@&| ");
-QRegularExpression directed_re(R"((?<from>[A-Z0-9/]+):(?<to>[A-Z0-9/]+)(?<cmd>[?$@&| ]))");
+
+QMap<QString, int> directed_cmds = {
+    // any changes here need to be made also in the directed regular xpression for parsing
+    {"?",     0  }, // query snr
+    {"$",     1  }, // query stations heard
+    {"@",     2  }, // query qth
+    {"&",     3  }, // query station message
+    {"|",     4  }, // relay message
+    {":+",    5  }, // report +snr
+    {":-",    6  }, // report -snr
+    {":ACK",  7  }, // ack message
+    {":NACK", 8  }, // nack message
+    // ...
+    {" ",     31 }, // send freetext
+};
+
+QSet<int> allowed_cmds = {0, 2, 31};
+
+QRegularExpression directed_re(R"(^(?:(?<from>[A-Z0-9/]+):\s?)?(?<to>[A-Z0-9/]+)(?<cmd>([?$@&| ]|:N?ACK|:[-+])))");
 
 QMap<QChar, QString> huff = {
     // char   code                 weight
@@ -466,16 +484,20 @@ QString Varicode::unpackGrid(quint16 value){
     return deg2grid(dlong, dlat).left(4);
 }
 
-QString Varicode::packDirectedMessage(const QString &text, int *n){
+QString Varicode::packDirectedMessage(const QString &text, const QString &callsign, int *n){
     QString frame;
 
     auto match = directed_re.match(text);
     if(match.hasMatch()){
         QString from = match.captured("from");
+        if(from.isEmpty()){
+            from = callsign;
+        }
         QString to = match.captured("to");
         QString cmd = match.captured("cmd");
-        if(cmd.at(0) != '?'){
-            // this is the only allowed one at this point...
+
+        bool validToCallsign = basecalls.contains(to) || QRegularExpression(callsign_pattern2).match(to).hasMatch();
+        if(!validToCallsign || !directed_cmds.contains(cmd) || !allowed_cmds.contains(directed_cmds[cmd])){
             *n = 0;
             return frame;
         }
@@ -486,7 +508,13 @@ QString Varicode::packDirectedMessage(const QString &text, int *n){
         quint8 packed_flag = 0;
         quint32 packed_from = Varicode::packCallsign(from);
         quint32 packed_to = Varicode::packCallsign(to);
-        quint8 packed_cmd = directed_cmds.indexOf(cmd.at(0));
+
+        if(packed_from == 0 || packed_to == 0){
+            *n = 0;
+            return frame;
+        }
+
+        quint8 packed_cmd = directed_cmds[cmd];
         quint8 packed_extra = fromCRC;
 
         // [3][28][28][5],[5] = 69
@@ -494,7 +522,7 @@ QString Varicode::packDirectedMessage(const QString &text, int *n){
             Varicode::intToBits(packed_flag, 3)    +
             Varicode::intToBits(packed_from, 28)   +
             Varicode::intToBits(packed_to, 28)     +
-            Varicode::intToBits(packed_cmd & 5, 5)
+            Varicode::intToBits(packed_cmd & 31, 5)
         );
         frame = Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_extra & 31);
         *n = match.captured(0).length();
@@ -528,7 +556,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
 
     unpacked.append(from);
     unpacked.append(Varicode::unpackCallsign(packed_to).trimmed());
-    unpacked.append(QString(directed_cmds.at(packed_cmd & 5)));
+    unpacked.append(directed_cmds.key(packed_cmd & 31));
 
     return unpacked;
 }

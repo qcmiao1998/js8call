@@ -48,7 +48,7 @@ public:
     static quint16 packGrid(QString const& value);
     static QString unpackGrid(quint16 value);
 
-    static QString packDirectedMessage(QString const& text, int *n);
+    static QString packDirectedMessage(QString const& text, QString const& callsign, int *n);
     static QStringList unpackDirectedMessage(QString const& text);
 };
 

@@ -61,6 +61,8 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
 
 void DecodedText::tryUnpackDirected(){
   QString m = message().trimmed();
+
+  // directed calls will always be 12+ chars and contain no spaces.
   if(m.length() < 12 || m.contains(' ')){
     return;
   }
@@ -71,8 +73,13 @@ void DecodedText::tryUnpackDirected(){
     return;
   }
 
-  // replace it with the correct unpacked
-  message_ = QString("%1:%2%3").arg(parts.at(0), parts.at(1), parts.at(2));
+  if(parts.length() == 3){
+    // replace it with the correct unpacked (query)
+    message_ = QString("%1: %2%3").arg(parts.at(0), parts.at(1), parts.at(2));
+  } else {
+    // replace it with the correct unpacked (freetext)
+    message_ = QString(parts.join(QChar()));
+  }
 
   directed_ = parts;
 }
