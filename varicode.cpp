@@ -21,6 +21,9 @@
 #include <QDebug>
 #include <QMap>
 
+#define CRCPP_INCLUDE_ESOTERIC_CRC_DEFINITIONS
+#include "crc.h"
+
 #include "varicode.h"
 
 const int nalphabet = 41;
@@ -30,6 +33,8 @@ QString callsign_pattern1 = {R"((?<callsign>[A-Z0-9/]{2,}))"};
 QString callsign_pattern2 = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){3,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
 QString callsign_pattern3 = {R"(([0-9A-Z ])([0-9A-Z])([0-9])([A-Z ])([A-Z ])([A-Z ]))"};
 QString callsign_alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "};
+QString directed_cmds("?$@&| ");
+QRegularExpression directed_re(R"((?<from>[A-Z0-9/]+):(?<to>[A-Z0-9/]+)(?<cmd>[?$@&| ]))");
 
 QMap<QChar, QString> huff = {
     // char   code                 weight
@@ -461,12 +466,9 @@ QString Varicode::unpackGrid(quint16 value){
     return deg2grid(dlong, dlat).left(4);
 }
 
-
-QString directed_cmds("?$@&| ");
-QRegularExpression directed_re(R"((?<from>[A-Z0-9/]+):(?<to>[A-Z0-9/]+)(?<cmd>[?$@&| ]))");
-
 QString Varicode::packDirectedMessage(const QString &text, int *n){
     QString frame;
+
     auto match = directed_re.match(text);
     if(match.hasMatch()){
         QString from = match.captured("from");
@@ -478,19 +480,23 @@ QString Varicode::packDirectedMessage(const QString &text, int *n){
             return frame;
         }
 
+        auto fromBytes = from.toLocal8Bit();
+        auto fromCRC = CRC::Calculate(fromBytes.data(), fromBytes.length(), CRC::CRC_5_ITU());
+
         quint8 packed_flag = 0;
         quint32 packed_from = Varicode::packCallsign(from);
         quint32 packed_to = Varicode::packCallsign(to);
         quint8 packed_cmd = directed_cmds.indexOf(cmd.at(0));
+        quint8 packed_extra = fromCRC;
 
         // 3 + 28 + 28 + 5 = 64
         auto bits = (
             Varicode::intToBits(packed_flag, 3)    +
             Varicode::intToBits(packed_from, 28)   +
             Varicode::intToBits(packed_to, 28)     +
-            Varicode::intToBits(packed_cmd & 7, 5)
+            Varicode::intToBits(packed_cmd & 5, 5)
         );
-        frame = Varicode::pack64bits(Varicode::bitsToInt(bits));
+        frame = Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_extra & 31);
         *n = match.captured(0).length();
     }
     return frame;
@@ -498,14 +504,28 @@ QString Varicode::packDirectedMessage(const QString &text, int *n){
 
 QStringList Varicode::unpackDirectedMessage(const QString &text){
     QStringList unpacked;
-    auto bits = Varicode::bitsToStr(Varicode::intToBits(Varicode::unpack64bits(text), 64));
+
+    if(text.length() < 13){
+        return unpacked;
+    }
+
+    auto bits = Varicode::bitsToStr(Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64));
+    quint8 extra = Varicode::unpack5bits(text.right(1));
 
     quint8 flag = Varicode::bitsToInt(Varicode::strToBits(bits.left(3)));
     quint32 packed_from = Varicode::bitsToInt(Varicode::strToBits(bits.mid(3, 28)));
     quint32 packed_to = Varicode::bitsToInt(Varicode::strToBits(bits.mid(31, 28)));
     quint8 packed_cmd = Varicode::bitsToInt(Varicode::strToBits(bits.mid(59, 5)));
 
-    unpacked.append(Varicode::unpackCallsign(packed_from).trimmed());
+    QString from = Varicode::unpackCallsign(packed_from).trimmed();
+
+    auto fromBytes = from.toLocal8Bit();
+    auto fromCRC = CRC::Calculate(fromBytes.data(), fromBytes.length(), CRC::CRC_5_ITU());
+    if(fromCRC != extra){
+        return unpacked;
+    }
+
+    unpacked.append(from);
     unpacked.append(Varicode::unpackCallsign(packed_to).trimmed());
     unpacked.append(QString(directed_cmds.at(packed_cmd & 5)));
 

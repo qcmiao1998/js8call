@@ -87,7 +87,8 @@ HEADERS  += qt_helpers.hpp \
   IARURegions.hpp MessageBox.hpp EqualizationToolsDialog.hpp \
     qorderedmap.h \
     varicode.h \
-    qpriorityqueue.h
+    qpriorityqueue.h \
+    crc.h
 
 
 INCLUDEPATH += qmake_only

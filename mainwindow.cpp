@@ -1068,7 +1068,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto decoded = Varicode::huffDecode(Varicode::huffFlatten(encoded));
   qDebug() << input << Varicode::bitsToStr(Varicode::huffFlatten(encoded)) << decoded;
   qDebug() << Varicode::packCallsign("JY1") << Varicode::unpackCallsign(Varicode::packCallsign("JY1"));
-
   auto frames = buildFT8MessageFrames("OH8STN:KN4CRD?");
   qDebug() << frames.first() << Varicode::unpackDirectedMessage(frames.first());
   qDebug() << Varicode::packGrid("EM73tu") << Varicode::unpackGrid(Varicode::packGrid("EM73tu"));
