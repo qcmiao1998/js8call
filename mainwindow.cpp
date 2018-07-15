@@ -5541,8 +5541,10 @@ bool MainWindow::prepareNextMessageFrame()
     int sent = count - m_txFrameQueue.count();
     ui->startTxButton->setText(QString("Sending (%1/%2)").arg(sent).arg(count));
 
-    // bump beacon
-    m_nextBeacon = m_nextBeacon.addSecs(15);
+    if(ui->beaconButton->isChecked()){
+        // bump beacon
+        setBeaconTimer(m_nextBeacon.addSecs(15));
+    }
 
     return true;
   }
@@ -5624,7 +5626,12 @@ void MainWindow::scheduleBeacon(bool first){
         timestamp = timestamp.addSecs(15);
     }
 
+    setBeaconTimer(timestamp);
+}
+
+void MainWindow::setBeaconTimer(QDateTime timestamp){
     // set the next beacon timestamp and timer
+    beaconTimer.stop();
     m_nextBeacon = timestamp;
     beaconTimer.start(QDateTime::currentDateTimeUtc().msecsTo(m_nextBeacon) - 2*1000);
 }
