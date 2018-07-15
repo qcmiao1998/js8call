@@ -433,7 +433,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         this}},
   psk_Reporter {new PSK_Reporter {m_messageClient, this}},
   m_manual {&m_network_manager},
-  m_i3bit {0}
+  m_i3bit {0},
+  m_txFrameCount {0}
 {
   ui->setupUi(this);
   createStatusBar();
@@ -7854,8 +7855,6 @@ void MainWindow::postDecode (bool is_new, QString const& message)
 }
 
 void MainWindow::displayTransmit(){
-
-
     updateButtonDisplay();
 }
 
