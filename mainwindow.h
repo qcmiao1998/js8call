@@ -757,6 +757,7 @@ private:
   void displayTransmit();
   void updateButtonDisplay();
   bool isMyCallIncluded(QString const &text);
+  QString callsignSelected();
   bool isRecentOffset(int offset);
   bool isDirectedOffset(int offset);
   void displayActivity(bool force=false);

@@ -4115,6 +4115,7 @@ void MainWindow::startTx()
 
   // disallow editing of the text while transmitting
   ui->extFreeTextMsgEdit->setReadOnly(true);
+  update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", true);
 }
 
 void MainWindow::startTx2()
@@ -4165,6 +4166,7 @@ void MainWindow::stopTx()
   } else {
       // TODO: jsherer - split this up...
       ui->extFreeTextMsgEdit->setReadOnly(false);
+      update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", false);
       on_stopTxButton_clicked();
   }
 
@@ -6889,7 +6891,6 @@ void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
     addMessageText(call);
 }
 
-
 void MainWindow::on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected){
     on_tableWidgetRXAll_selectionChanged(selected, deselected);
 
@@ -7793,7 +7794,8 @@ void MainWindow::displayTransmit(){
 }
 
 void MainWindow::updateButtonDisplay(){
-    if(ui->tableWidgetRXAll->selectedItems().isEmpty() && ui->tableWidgetCalls->selectedItems().isEmpty()){
+    QString callsign = callsignSelected();
+    if(callsign.isEmpty()){
         ui->replyMacroButton->setDisabled(true);
         ui->snrMacroButton->setDisabled(true);
         ui->queryButton->setDisabled(true);
@@ -7802,6 +7804,26 @@ void MainWindow::updateButtonDisplay(){
         ui->snrMacroButton->setDisabled(false);
         ui->queryButton->setDisabled(false);
     }
+}
+
+QString MainWindow::callsignSelected(){
+    if(!ui->tableWidgetCalls->selectedItems().isEmpty()){
+        auto selectedCalls = ui->tableWidgetCalls->selectedItems();
+        return selectedCalls.first()->text();
+    }
+
+    if(!ui->tableWidgetRXAll->selectedItems().isEmpty()){
+        int selectedOffset = -1;
+        auto selectedItems = ui->tableWidgetRXAll->selectedItems();
+        selectedOffset = selectedItems.first()->text().toInt();
+        foreach(auto call, m_callActivity.keys()){
+            if(m_callActivity[call].freq == selectedOffset){
+                return call;
+            }
+        }
+    }
+
+    return QString();
 }
 
 bool MainWindow::isRecentOffset(int offset){

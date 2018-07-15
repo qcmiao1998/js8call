@@ -956,6 +956,11 @@ background-color: yellow;
 QTextEdit[readOnly=&quot;true&quot;] { 
 	background:#EEE;
 	font-style:italic;
+}
+
+QTextEdit[transmitting=&quot;true&quot;] { 
+	background:#EEE;
+	font-style:italic;
 }</string>
          </property>
          <property name="acceptRichText">
