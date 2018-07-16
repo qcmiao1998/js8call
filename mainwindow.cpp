@@ -5346,16 +5346,18 @@ void MainWindow::resetMessageUI(){
 void MainWindow::createMessage(QString const& text){
     resetMessageTransmitQueue();
     createMessageTransmitQueue(text);
-
-    // TODO: jsherer - ew
-    int freq = ui->TxFreqSpinBox->value();
-    logRxTxMessageText(QDateTime::currentDateTimeUtc(), false, text, freq, true);
 }
 
 void MainWindow::createMessageTransmitQueue(QString const& text){
-  auto frames = buildFT8MessageFrames(text);
+  auto pair = buildFT8MessageFrames(text);
+  auto frames = pair.first;
+  auto lines = pair.second;
   m_txFrameQueue.append(frames);
   m_txFrameCount = frames.length();
+
+  // TODO: jsherer - ew
+  int freq = ui->TxFreqSpinBox->value();
+  logRxTxMessageText(QDateTime::currentDateTimeUtc(), false, lines.join(""), freq, true);
 }
 
 void MainWindow::resetMessageTransmitQueue(){
@@ -5419,7 +5421,7 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
       ui->extFreeTextMsgEdit->setTextCursor(c);
     }
 
-    int count = buildFT8MessageFrames(x).length();
+    int count = buildFT8MessageFrames(x).first.length();
     if(count > 0){
         ui->startTxButton->setText(QString("Send (%1)").arg(count));
         ui->startTxButton->setEnabled(true);
@@ -5429,8 +5431,9 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
     }
 }
 
-QStringList MainWindow::buildFT8MessageFrames(QString const& text){
+QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const& text){
     QStringList frames;
+    QStringList lines;
 
     QString mycall = m_config.my_callsign();
     foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
@@ -5460,6 +5463,7 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
                 break;
               }
               frames.append(frame);
+              lines.append(line.left(frame.length()));
 
               if(!line.startsWith(frame)){
                   line = (
@@ -5471,6 +5475,11 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
               line = line.mid(frame.length()).trimmed();
           } else {
               frames.append(frame);
+              // TODO: jsherer - would be nice to clean this up and have an object that can just decode the actual transmitted frames instead.
+              if(!line.startsWith(mycall)){
+                  lines.append(QString("%1: ").arg(mycall));
+              }
+              lines.append(line.left(n));
               line = line.mid(n).trimmed();
           }
         }
@@ -5483,7 +5492,7 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
     }
 #endif
 
-    return frames;
+    return {frames,lines};
 }
 
 
@@ -5699,55 +5708,10 @@ void MainWindow::on_startTxButton_toggled(bool checked)
         resetMessage();
         stopTx();
     }
-
-    /*
-    if(ui->startTxButton->isChecked()){
-        ui->extFreeTextMsg->setPlainText(ui->extFreeTextMsgEdit->toPlainText());
-        ui->extFreeTextMsgEdit->clear();
-        on_pbExtFreeTextMsg_clicked();
-    } else {
-        ui->stopTxButton->click();
-    }
-    */
-
-    /*
-    if(ui->startTxButton->isChecked()) {
-        ui->extFreeTextMsgEdit->setEnabled(false);
-        on_pbExtFreeTextMsg_clicked();
-    } else {
-        ui->extFreeTextMsgEdit->setEnabled(true);
-        ui->extFreeTextMsgEdit->clear();
-        on_stopTxButton_clicked();
-    }
-    */
 }
 
 void MainWindow::splitAndSendNextMessage()
 {
-    /*
-    m_ntx=9;
-    m_QSOProgress = CALLING;
-    set_dateTimeQSO(-1);
-    ui->rbNextFreeTextMsg->setChecked(true);
-    if (m_transmitting) m_restart=true;
-
-    splitNextFreeTextMsg();
-
-    // TODO: jsherer - detect if we're currently in a possible transmit cycle...and if so, wait...
-    QDateTime now {QDateTime::currentDateTimeUtc()};
-    int s=now.time().second();
-    int n=s % (2*m_TRperiod);
-    if((n <= m_TRperiod && m_txFirst) || (n > m_TRperiod && !m_txFirst)){
-      ui->txFirstCheckBox->setChecked(!m_txFirst);
-    }
-    if(!ui->autoButton->isEnabled()){
-        ui->autoButton->setEnabled(true);
-    }
-    if(!ui->autoButton->isChecked()){
-      ui->autoButton->click();
-      ui->autoButton->setEnabled(false);
-    }
-    */
 }
 
 void MainWindow::on_rbNextFreeTextMsg_toggled (bool status)

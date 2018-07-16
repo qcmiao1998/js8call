@@ -517,6 +517,11 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         QString to = match.captured("to");
         QString cmd = match.captured("cmd");
 
+        if(to == callsign){
+            *n = 0;
+            return frame;
+        }
+
         bool validToCallsign = basecalls.contains(to) || QRegularExpression(callsign_pattern2).match(to).hasMatch();
         if(!validToCallsign || !directed_cmds.contains(cmd) || !allowed_cmds.contains(directed_cmds[cmd])){
             *n = 0;
