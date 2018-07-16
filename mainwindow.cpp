@@ -433,7 +433,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         this}},
   psk_Reporter {new PSK_Reporter {m_messageClient, this}},
   m_manual {&m_network_manager},
-  m_i3bit {0}
+  m_i3bit {0},
+  m_txFrameCount {0}
 {
   ui->setupUi(this);
   createStatusBar();
@@ -7854,8 +7855,6 @@ void MainWindow::postDecode (bool is_new, QString const& message)
 }
 
 void MainWindow::displayTransmit(){
-
-
     updateButtonDisplay();
 }
 
@@ -8131,12 +8130,12 @@ void MainWindow::displayActivity(bool force){
       // use the last frequency
       f = d.freq;
 
-      // if we're responding via allcall, pick a different frequency.
+      // if we're responding via allcall, pick a different frequency and mark it in the cache.
       if(d.to == "ALLCALL"){
         f = findFreeFreqOffset(qMax(0, f-100), qMin(f+100, 2500), 50);
+        m_txAllcallCommandCache.insert(d.from, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
       }
 
-      m_txAllcallCommandCache.insert(d.from, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
       processed = true;
     }
 
