@@ -423,7 +423,9 @@ subroutine packbits(dbits,nsymd,m0,sym)
 
    itype=1
    if(bcontest) then
-      call to_contest_msg(msg0,msg)
+      !call to_contest_msg(msg0,msg)
+      ! this causes problems with freetext ala, KN4CRD DE KN4CRD -13 R
+      msg=msg0
    else
       msg=msg0
    end if
