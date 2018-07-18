@@ -656,6 +656,7 @@ private:
   {
     bool isFree;
     bool isLowConfidence;
+    int bits;
     QString firstCall;
     QString secondCall;
     int freq;
@@ -667,6 +668,8 @@ private:
   struct RXDetail
   {
       bool isFree;
+      bool isLowConfidence;
+      int bits;
       int freq;
       QString text;
       QDateTime utcTimestamp;

@@ -15,6 +15,17 @@
 class Varicode
 {
 public:
+    enum FrameType{
+        FT8              = 0, // [000]
+        FT8Fox           = 1, // [001]
+        FT8Call          = 2, // [010]
+        FT8CallLast      = 3, // [011] <- used to indicate last frame in transmission
+        FT8CallReservedA = 4, // [100]
+        FT8CallReservedB = 5, // [101]
+        FT8CallReservedC = 6, // [110]
+        FT8CallReservedD = 7, // [111]
+    };
+
     //Varicode();
 
     static QStringList parseCallsigns(QString const &input);

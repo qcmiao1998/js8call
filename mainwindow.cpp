@@ -3176,6 +3176,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             ActivityDetail d;
             d.isLowConfidence = decodedtext.isLowConfidence();
             d.isFree = !decodedtext.isStandardMessage();
+            d.bits = decodedtext.bits();
             d.firstCall = decodedtext.CQersCall();
             if(d.firstCall.isEmpty()){
                 auto words = decodedtext.messageWords();
@@ -3333,6 +3334,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         // TODO: jsherer - parse decode...
         RXDetail d;
         d.isFree = !decodedtext.isStandardMessage();
+        d.bits = decodedtext.bits();
         d.freq = audioFreq;
         d.text = decodedtext.message();
         d.utcTimestamp = QDateTime::currentDateTimeUtc();
@@ -5546,6 +5548,7 @@ bool MainWindow::prepareNextMessageFrame()
 {
   QString frame = popMessageFrame();
   if(frame.isEmpty()){
+    m_i3bit = Varicode::FT8;
     ui->nextFreeTextMsg->clear();
     return false;
   } else {
@@ -5553,6 +5556,12 @@ bool MainWindow::prepareNextMessageFrame()
 
     int count = m_txFrameCount;
     int sent = count - m_txFrameQueue.count();
+
+    m_i3bit = Varicode::FT8Call;
+    if(count == sent){
+        m_i3bit = Varicode::FT8CallLast;
+    }
+
     ui->startTxButton->setText(QString("Sending (%1/%2)").arg(sent).arg(count));
 
     if(ui->beaconButton->isChecked()){
@@ -7959,6 +7968,9 @@ void MainWindow::displayActivity(bool force){
               if(item.isLowConfidence){
                   item.text = QString("[%1]").arg(item.text);
               }
+              if(item.bits == Varicode::FT8CallLast){
+                  item.text = QString("%1 \u220E ").arg(item.text);
+              }
               text.append(item.text);
               snr = item.snr;
               age = since(item.utcTimestamp);
@@ -8062,6 +8074,10 @@ void MainWindow::displayActivity(bool force){
   while(!m_rxFrameQueue.isEmpty()){
       RXDetail d = m_rxFrameQueue.first();
       m_rxFrameQueue.removeFirst();
+
+      if(d.bits == Varicode::FT8CallLast){
+          d.text = QString("%1 \u220E ").arg(d.text);
+      }
 
       int freq = d.freq/10*10;
       int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
