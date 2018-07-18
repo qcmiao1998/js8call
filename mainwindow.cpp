@@ -5660,7 +5660,7 @@ void MainWindow::prepareBeacon(){
     }
 
     int bw = 50 + 5;
-    int f = ui->TxFreqSpinBox->value();
+    int f = ui->TxFreqSpinBox->value(); // TODO: jsherer - ew
     if(!isFreqOffsetFree(f, bw)){
         f = findFreeFreqOffset(250, 1500, bw);
     }
@@ -7135,6 +7135,13 @@ void MainWindow::setFreq4(int rxFreq, int txFreq)
   if(rxFreq != txFreq){
       txFreq = rxFreq;
   }
+
+  // Don't go below 450 Hz if not in split mode
+  if(!m_config.split_mode()){
+    rxFreq = qMax(450, rxFreq);
+    txFreq = qMax(450, txFreq);
+  }
+
   if (ui->RxFreqSpinBox->isEnabled ()) ui->RxFreqSpinBox->setValue(rxFreq);
   ui->labDialFreqOffset->setText(QString("%1 Hz").arg(rxFreq));
   if(m_mode.startsWith ("WSPR")) {
