@@ -3942,6 +3942,10 @@ void MainWindow::guiUpdate()
         case 6: m_QSOProgress = CALLING; break;
         default: break;             // determined elsewhere
         }
+
+      // TODO: jsherer - perhaps an on_transmitting signal?
+      m_lastTxTime = QDateTime::currentDateTimeUtc();
+
       m_transmitting = true;
       transmitDisplay (true);
       statusUpdate ();
@@ -5661,9 +5665,14 @@ void MainWindow::prepareBeacon(){
         f = findFreeFreqOffset(250, 1500, bw);
     }
 
-    // delay beacon if there's not a free frequency or there's something the tx queue...
-    if(f == 0 || !m_txFrameQueue.isEmpty()){
-        beaconTimer.start(15*1000);
+    // delay beacon if there's not a free frequency or there's something the tx queue or we just recently transmitted
+    if(
+        f == 0 ||
+        !m_txFrameQueue.isEmpty() ||
+        !ui->extFreeTextMsgEdit->toPlainText().isEmpty() ||
+        m_lastTxTime.secsTo(QDateTime::currentDateTimeUtc()) < 30
+    ){
+        setBeaconTimer(QDateTime::currentDateTimeUtc().addSecs(30));
         return;
     }
 
