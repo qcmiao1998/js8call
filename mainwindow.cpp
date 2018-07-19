@@ -3264,7 +3264,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
               CommandDetail d;
               d.from = parts.at(0);
               d.to = parts.at(1);
-              d.command = parts.at(2);
+              d.cmd = parts.at(2);
               d.freq = decodedtext.frequencyOffset();
               d.snr = decodedtext.snr();
               d.utcTimestamp = QDateTime::currentDateTimeUtc();
@@ -5311,7 +5311,11 @@ int MainWindow::logRxTxMessageText(QDateTime date, bool isFree, QString text, in
     return c.blockNumber();
 }
 
-void MainWindow::addMessageText(QString text){
+void MainWindow::addMessageText(QString text, bool clear){
+    if(clear){
+        ui->extFreeTextMsgEdit->clear();
+    }
+
     // TODO: jsherer - check to make sure we're not transmitting currently
     QTextCursor c = ui->extFreeTextMsgEdit->textCursor();
     if(c.hasSelection()){
@@ -5437,6 +5441,17 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
     }
 }
 
+QString trimWithPeriods(QString value){
+    QRegularExpression re("^\\s+");
+    auto match = re.match(value);
+    if(match.hasMatch()){
+        int count = match.captured(0).length();
+        return value.replace(0, count, QString(".").repeated(count));
+    }
+
+    return value;
+}
+
 QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const& text){
     QStringList frames;
     QStringList lines;
@@ -5473,7 +5488,7 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 
               if(!line.startsWith(frame)){
                   line = (
-                    line.left(frame.length()).replace(':', ' ') +
+                    line.left(frame.length()).replace(':', ' ') + // is this the only case where we could have a mismatch?
                     line.mid(frame.length())
                   ).trimmed();
               }
@@ -5493,6 +5508,11 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 
 #if 0
     qDebug() << "parsed frames:";
+    foreach(auto frame, frames){
+        qDebug() << "->" << frame;
+    }
+
+    qDebug() << "lines:";
     foreach(auto frame, frames){
         qDebug() << "->" << frame;
     }
@@ -6842,7 +6862,7 @@ void MainWindow::on_queryButton_pressed(){
             return;
         }
 
-        addMessageText(QString("%1?").arg(selectedCall));
+        addMessageText(QString("%1?").arg(selectedCall), true);
     });
 
     auto qthAction = menu->addAction("@ - What is your QTH?");
@@ -6853,12 +6873,47 @@ void MainWindow::on_queryButton_pressed(){
             return;
         }
 
-        addMessageText(QString("%1@").arg(selectedCall));
+        addMessageText(QString("%1@").arg(selectedCall), true);
+    });
+
+    auto stationAction = menu->addAction("&& - What is your station message?");
+    connect(stationAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1&").arg(selectedCall), true);
     });
 
     menu->addAction("$ - What stations are you hearing?")->setEnabled(false);
-    menu->addAction("&& - What is your message?")->setEnabled(false);
-    menu->addAction("| - Relay the following message")->setEnabled(false);
+
+    menu->addAction("| - Please relay the following message")->setEnabled(false);
+
+    menu->addSeparator();
+
+    auto rrAction = menu->addAction("RR - I acknowledge your last transmission");
+    connect(rrAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 RR").arg(selectedCall), true);
+    });
+
+    auto agnAction = menu->addAction("AGN? - Please repeat your last transmission");
+    connect(agnAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 AGN?").arg(selectedCall), true);
+    });
 
     ui->queryButton->setMenu(menu);
     ui->queryButton->showMenu();
@@ -8086,7 +8141,6 @@ void MainWindow::displayActivity(bool force){
   }
 
 
-
   // Command Activity
 
   if(m_txFrameQueue.isEmpty() && !m_rxCommandQueue.isEmpty()){
@@ -8097,10 +8151,10 @@ void MainWindow::displayActivity(bool force){
     while(!m_rxCommandQueue.isEmpty()){
       auto d = m_rxCommandQueue.dequeue();
 
-      qDebug() << "processing command" << d.from << d.to << d.command << d.freq;
+      qDebug() << "processing command" << d.from << d.to << d.cmd << d.freq;
 
-      // we're only processing queries at this point
-      if(d.command != "?" && d.command != "@"){
+      // we're only processing a subset of queries at this point
+      if(!Varicode::isCommandAllowed(d.cmd)){
          continue;
       }
 
@@ -8110,17 +8164,25 @@ void MainWindow::displayActivity(bool force){
       }
 
       // TODO: jsherer - check to make sure we haven't replied to their allcall recently (in the past 5 minutes)
-      if(m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(QDateTime::currentDateTimeUtc()) < 300){
+      if(d.to == "ALLCALL" && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(QDateTime::currentDateTimeUtc()) < 300){
           continue;
       }
 
       // construct reply
-      auto reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign());
-      if(d.command == "?"){
-          reply = reply.arg(d.snr);
-      } else if(d.command == "@"){
-          reply = reply.arg(m_config.my_grid());
+      QString reply;
+
+      if(d.cmd == "?"){
+          reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(d.snr);
       }
+      else if(d.cmd == "@"){
+          reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(m_config.my_grid());
+      }
+      else if(d.cmd == "&"){
+          reply = QString("%1 %2").arg(d.from).arg(m_config.my_station());
+      } else {
+          continue;
+      }
+
       addMessageText(reply);
 
       // use the last frequency

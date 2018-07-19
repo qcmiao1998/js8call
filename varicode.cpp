@@ -38,21 +38,24 @@ QString callsign_alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "};
 QMap<QString, int> directed_cmds = {
     // any changes here need to be made also in the directed regular xpression for parsing
     {"?",     0  }, // query snr
-    {"$",     1  }, // query stations heard
+    //{"$",     1  }, // query stations heard
     {"@",     2  }, // query qth
     {"&",     3  }, // query station message
-    {"|",     4  }, // relay message
-    {":+",    5  }, // report +snr
-    {":-",    6  }, // report -snr
-    {":ACK",  7  }, // ack message
-    {":NACK", 8  }, // nack message
+    //{"|",     4  }, // relay message
+
+    //{"+",     5  }, // report +snr
+    //{"-",     6  }, // report -snr
+
     // ...
-    {" ",     31 }, // send freetext
+    {" RR",   29  }, // confirm message
+    {" AGN",  30  }, // repeat message
+    {" AGN?", 30  }, // repeat message
+    {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 2, 31};
+QSet<int> allowed_cmds = {0, 2, 3, 29, 30, 31};
 
-QRegularExpression directed_re(R"(^(?:(?<from>[A-Z0-9/]+):\s?)?(?<to>[A-Z0-9/]+)(?<cmd>([?$@&| ]|:N?ACK|:[-+])))");
+QRegularExpression directed_re(R"(^(?:(?<from>[A-Z0-9/]+):\s?)?(?<to>[A-Z0-9/]+)(?<cmd>(\s(?:RR|AGN[?]?)|[?$@&| ])))");
 
 QMap<QChar, QString> huff = {
     // char   code                 weight
@@ -505,6 +508,10 @@ QString Varicode::unpackGrid(quint16 value){
     return deg2grid(dlong, dlat).left(4);
 }
 
+bool Varicode::isCommandAllowed(const QString &cmd){
+    return directed_cmds.contains(cmd) && allowed_cmds.contains(directed_cmds[cmd]);
+}
+
 QString Varicode::packDirectedMessage(const QString &text, const QString &callsign, int *n){
     QString frame;
 
@@ -523,7 +530,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         }
 
         bool validToCallsign = basecalls.contains(to) || QRegularExpression(callsign_pattern2).match(to).hasMatch();
-        if(!validToCallsign || !directed_cmds.contains(cmd) || !allowed_cmds.contains(directed_cmds[cmd])){
+        if(!validToCallsign || !Varicode::isCommandAllowed(cmd)){
             *n = 0;
             return frame;
         }
@@ -553,6 +560,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         frame = Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_extra & 31);
         *n = match.captured(0).length();
     }
+
     return frame;
 }
 

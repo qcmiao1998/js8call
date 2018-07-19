@@ -122,7 +122,7 @@ public slots:
 
   void clearActivity();
   int logRxTxMessageText(QDateTime date, bool isFree, QString text, int freq, bool tx, int block=-1);
-  void addMessageText(QString text);
+  void addMessageText(QString text, bool clear=false);
   void resetMessage();
   void resetMessageUI();
   void createMessage(QString const& text);
@@ -646,7 +646,7 @@ private:
   {
     QString from;
     QString to;
-    QString command;
+    QString cmd;
     int freq;
     QDateTime utcTimestamp;
     int snr;

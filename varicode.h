@@ -11,7 +11,6 @@
 #include <QString>
 #include <QVector>
 
-
 class Varicode
 {
 public:
@@ -61,6 +60,7 @@ public:
     static quint16 packGrid(QString const& value);
     static QString unpackGrid(quint16 value);
 
+    static bool isCommandAllowed(const QString &cmd);
     static QString packDirectedMessage(QString const& text, QString const& callsign, int *n);
     static QStringList unpackDirectedMessage(QString const& text);
 };
