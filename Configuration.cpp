@@ -140,6 +140,7 @@
 #include <QSettings>
 #include <QAudioDeviceInfo>
 #include <QAudioInput>
+#include <QDebug>
 #include <QDialog>
 #include <QAction>
 #include <QFileDialog>
@@ -160,7 +161,6 @@
 #include <QColorDialog>
 #include <QSerialPortInfo>
 #include <QScopedPointer>
-#include <QDebug>
 
 #include "pimpl_impl.hpp"
 #include "qt_helpers.hpp"
@@ -430,6 +430,7 @@ private:
   Q_SLOT void on_add_macro_push_button_clicked (bool = false);
   Q_SLOT void on_delete_macro_push_button_clicked (bool = false);
   Q_SLOT void on_PTT_method_button_group_buttonClicked (int);
+  Q_SLOT void on_station_message_line_edit_textChanged(QString const&);
   Q_SLOT void on_add_macro_line_edit_editingFinished ();
   Q_SLOT void delete_macro ();
   void delete_selected_macros (QModelIndexList);
@@ -529,6 +530,7 @@ private:
   // configuration fields that we publish
   QString my_callsign_;
   QString my_grid_;
+  QString my_station_;
   QColor color_CQ_;
   QColor next_color_CQ_;
   QColor color_MyCall_;
@@ -817,6 +819,11 @@ QString Configuration::my_grid() const
   return the_grid;
 }
 
+QString Configuration::my_station() const
+{
+    return m_->my_station_;
+}
+
 void Configuration::set_location (QString const& grid_descriptor)
 {
   // change the dynamic grid
@@ -955,6 +962,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   ui_->callsign_line_edit->setValidator (new CallsignValidator {this});
   ui_->grid_line_edit->setValidator (new MaidenheadLocatorValidator {this});
   ui_->add_macro_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
+  ui_->station_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
 
   ui_->udp_server_port_spin_box->setMinimum (1);
   ui_->udp_server_port_spin_box->setMaximum (std::numeric_limits<port_type>::max ());
@@ -1129,6 +1137,7 @@ void Configuration::impl::initialize_models ()
   ui_->grid_line_edit->setPalette (pal);
   ui_->callsign_line_edit->setText (my_callsign_);
   ui_->grid_line_edit->setText (my_grid_);
+  ui_->station_message_line_edit->setText (my_station_.toUpper());
   ui_->use_dynamic_grid->setChecked(use_dynamic_grid_);
   ui_->labCQ->setStyleSheet(QString("background: %1").arg(color_CQ_.name()));
   ui_->labMyCall->setStyleSheet(QString("background: %1").arg(color_MyCall_.name()));
@@ -1247,6 +1256,7 @@ void Configuration::impl::read_settings ()
 
   my_callsign_ = settings_->value ("MyCall", QString {}).toString ();
   my_grid_ = settings_->value ("MyGrid", QString {}).toString ();
+  my_station_ = settings_->value("MyStation", QString {}).toString();
   next_color_CQ_ = color_CQ_ = settings_->value("colorCQ","#66ff66").toString();
   next_color_MyCall_ = color_MyCall_ = settings_->value("colorMyCall","#ff6666").toString();
   next_color_TxMsg_ = color_TxMsg_ = settings_->value("colorTxMsg","#ffff00").toString();
@@ -1433,6 +1443,7 @@ void Configuration::impl::write_settings ()
 
   settings_->setValue ("MyCall", my_callsign_);
   settings_->setValue ("MyGrid", my_grid_);
+  settings_->setValue ("MyStation", my_station_);
   settings_->setValue("colorCQ",color_CQ_);
   settings_->setValue("colorMyCall",color_MyCall_);
   settings_->setValue("colorTxMsg",color_TxMsg_);
@@ -1884,6 +1895,7 @@ void Configuration::impl::accept ()
 
   my_callsign_ = ui_->callsign_line_edit->text ();
   my_grid_ = ui_->grid_line_edit->text ();
+  my_station_ = ui_->station_message_line_edit->text().toUpper();
   spot_to_psk_reporter_ = ui_->psk_reporter_check_box->isChecked ();
   id_interval_ = ui_->CW_id_interval_spin_box->value ();
   ntrials_ = ui_->sbNtrials->value ();
@@ -2165,6 +2177,14 @@ void Configuration::impl::on_sound_input_combo_box_currentTextChanged (QString c
 void Configuration::impl::on_sound_output_combo_box_currentTextChanged (QString const& text)
 {
   default_audio_output_device_selected_ = QAudioDeviceInfo::defaultOutputDevice ().deviceName () == text;
+}
+
+void Configuration::impl::on_station_message_line_edit_textChanged(QString const &text)
+{
+  QString upper = text.toUpper();
+  if(text != upper){
+    ui_->station_message_line_edit->setText (upper);
+  }
 }
 
 void Configuration::impl::on_add_macro_line_edit_editingFinished ()
