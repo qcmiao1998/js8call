@@ -6888,7 +6888,7 @@ void MainWindow::on_queryButton_pressed(){
         addMessageText(QString("%1?").arg(selectedCall), true);
     });
 
-    auto qthAction = menu->addAction("@ - What is your QTH?");
+    auto qthAction = menu->addAction("@ - What is your QTH message?");
     qthAction->setDisabled(isAllCall);
     connect(qthAction, &QAction::triggered, this, [this](){
 
