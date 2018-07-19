@@ -5458,8 +5458,6 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
     QString mycall = m_config.my_callsign();
     foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
 
-
-
         while(line.size() > 0){
           QString frame;
 
@@ -5513,7 +5511,7 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
                   lines.append(QString("%1: ").arg(mycall));
               }
               lines.append(line.left(n));
-              line = line.mid(n).trimmed();
+              line = line.mid(n);
           }
 
           if(useDat){
@@ -6870,6 +6868,13 @@ void MainWindow::on_queryButton_pressed(){
     }
     menu->clear();
 
+    QString call = callsignSelected();
+    if(call.isEmpty()){
+        return;
+    }
+
+    bool isAllCall = call == "ALLCALL";
+
     auto snrAction = menu->addAction("? - What is my signal report?");
 
     // TODO: jsherer - this should be extracted
@@ -6884,6 +6889,7 @@ void MainWindow::on_queryButton_pressed(){
     });
 
     auto qthAction = menu->addAction("@ - What is your QTH?");
+    qthAction->setDisabled(isAllCall);
     connect(qthAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -6895,6 +6901,7 @@ void MainWindow::on_queryButton_pressed(){
     });
 
     auto stationAction = menu->addAction("&& - What is your station message?");
+    stationAction->setDisabled(isAllCall);
     connect(stationAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -6905,11 +6912,21 @@ void MainWindow::on_queryButton_pressed(){
         addMessageText(QString("%1&").arg(selectedCall), true);
     });
 
-    menu->addAction("$ - What stations are you hearing?")->setEnabled(false);
-
-    menu->addAction("| - Please relay the following message")->setEnabled(false);
+    //menu->addAction("$ - What stations are you hearing?")->setEnabled(false);
+    //menu->addAction("| - Please relay the following message")->setEnabled(false);
 
     menu->addSeparator();
+
+    auto agnAction = menu->addAction("AGN? - Please repeat your last transmission");
+    connect(agnAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 AGN?").arg(selectedCall), true);
+    });
 
     auto rrAction = menu->addAction("RR - I acknowledge your last transmission");
     connect(rrAction, &QAction::triggered, this, [this](){
@@ -6922,15 +6939,15 @@ void MainWindow::on_queryButton_pressed(){
         addMessageText(QString("%1 RR").arg(selectedCall), true);
     });
 
-    auto agnAction = menu->addAction("AGN? - Please repeat your last transmission");
-    connect(agnAction, &QAction::triggered, this, [this](){
+    auto sevenThreeAction = menu->addAction("73 - Best regards / end of contact");
+    connect(sevenThreeAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
         if(selectedCall.isEmpty()){
             return;
         }
 
-        addMessageText(QString("%1 AGN?").arg(selectedCall), true);
+        addMessageText(QString("%1 73").arg(selectedCall), true);
     });
 
     ui->queryButton->setMenu(menu);
@@ -8148,7 +8165,9 @@ void MainWindow::displayActivity(bool force){
       RXDetail d = m_rxFrameQueue.first();
       m_rxFrameQueue.removeFirst();
 
-      if(d.bits == Varicode::FT8CallLast){
+      bool isLast = d.bits == Varicode::FT8CallLast;
+
+      if(isLast){
           d.text = QString("%1 \u220E ").arg(d.text);
       }
 
@@ -8156,6 +8175,10 @@ void MainWindow::displayActivity(bool force){
       int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
       block = logRxTxMessageText(d.utcTimestamp, d.isFree, d.text, d.freq, false, block);
       m_rxFrameBlockNumbers[freq] = block;
+
+      if(isLast){
+          m_rxFrameBlockNumbers.remove(freq);
+      }
   }
 
 
@@ -8169,6 +8192,8 @@ void MainWindow::displayActivity(bool force){
     while(!m_rxCommandQueue.isEmpty()){
       auto d = m_rxCommandQueue.dequeue();
 
+      bool isAllCall = d.to == "ALLCALL";
+
       qDebug() << "processing command" << d.from << d.to << d.cmd << d.freq;
 
       // we're only processing a subset of queries at this point
@@ -8177,25 +8202,39 @@ void MainWindow::displayActivity(bool force){
       }
 
       // we're only processing allcall and our callsign at this point
-      if(d.to != "ALLCALL" && d.to != m_config.my_callsign().trimmed()){
+      if(!isAllCall && d.to != m_config.my_callsign().trimmed()){
          continue;
       }
 
       // TODO: jsherer - check to make sure we haven't replied to their allcall recently (in the past 5 minutes)
-      if(d.to == "ALLCALL" && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(QDateTime::currentDateTimeUtc()) < 300){
+      if(isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(QDateTime::currentDateTimeUtc()) < 300){
           continue;
       }
 
       // construct reply
       QString reply;
 
+      // SNR
       if(d.cmd == "?"){
+          // standard FT8 reply
           reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(d.snr);
       }
-      else if(d.cmd == "@"){
-          reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(m_config.my_grid());
+      // QTH
+      else if(d.cmd == "@" && !isAllCall){
+          QString qth = m_config.my_qth();
+          if(qth.isEmpty()){
+              QString grid = m_config.my_grid();
+              if(grid.isEmpty()){
+                  continue;
+              }
+              // standard FT8 reply
+              reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(grid);
+          } else {
+            reply = QString("%1 %2").arg(d.from).arg(qth);
+          }
       }
-      else if(d.cmd == "&"){
+      // STATION MESSAGE
+      else if(d.cmd == "&" && !isAllCall){
           reply = QString("%1 %2").arg(d.from).arg(m_config.my_station());
       } else {
           continue;

@@ -47,15 +47,15 @@ QMap<QString, int> directed_cmds = {
     //{"-",     6  }, // report -snr
 
     // ...
+    {" 73",   28  }, // best regards, end of contact
     {" RR",   29  }, // confirm message
-    {" AGN",  30  }, // repeat message
     {" AGN?", 30  }, // repeat message
     {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 2, 3, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 2, 3, 28, 29, 30, 31};
 
-QRegularExpression directed_re(R"(^(?:(?<from>[A-Z0-9/]+):\s?)?(?<to>[A-Z0-9/]+)(?<cmd>(\s(?:RR|AGN[?]?)|[?$@&| ])))");
+QRegularExpression directed_re(R"(^(?:(?<from>[A-Z0-9/]+):\s?)?(?<to>[A-Z0-9/]+)(?<cmd>(\s?(?:RR|AGN[?]|73)|[?$@&| ])))");
 
 QMap<QChar, QString> huff = {
     // char   code                 weight
