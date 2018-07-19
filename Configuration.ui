@@ -171,18 +171,33 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_17">
-            <item>
-             <widget class="QLabel" name="label_14">
-              <property name="text">
-               <string>Station Message:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="station_message_line_edit"/>
-            </item>
-           </layout>
+           <widget class="QWidget" name="widget" native="true">
+            <layout class="QFormLayout" name="formLayout_16">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_14">
+               <property name="text">
+                <string>QTH Message:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="qth_message_line_edit"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_15">
+               <property name="text">
+                <string>Station Message:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="station_message_line_edit"/>
+             </item>
+            </layout>
+           </widget>
           </item>
          </layout>
         </widget>
