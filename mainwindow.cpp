@@ -3337,6 +3337,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         d.bits = decodedtext.bits();
         d.freq = audioFreq;
         d.text = decodedtext.message();
+        qDebug() << d.text;
         d.utcTimestamp = QDateTime::currentDateTimeUtc();
         m_rxFrameQueue.append(d);
       }
@@ -5297,10 +5298,8 @@ int MainWindow::logRxTxMessageText(QDateTime date, bool isFree, QString text, in
     }
 
     if(found){
-        if(!isFree){
-            c.insertText(" ");
-        }
-        c.insertHtml(text);
+        c.clearSelection();
+        c.insertText(text);
     } else {
         c.insertHtml(QString("<strong>%1 - (%2)</strong> - %3").arg(date.time().toString()).arg(freq).arg(text));
     }
@@ -5458,22 +5457,33 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 
     QString mycall = m_config.my_callsign();
     foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
+
+
+
         while(line.size() > 0){
           QString frame;
 
           bool useStd = false;
+          bool useDir = false;
+          bool useDat = false;
           bool isFree = false;
           QString stdFrame = parseFT8Message(line, &isFree);
 
           int n = 0;
           QString dirFrame = Varicode::packDirectedMessage(line, mycall, &n);
 
+          int m = 0;
+          QString datFrame = Varicode::packDataMessage(line.left(21) + "\x04", &m); //  63 / 3 = 21 (maximum number of 3bit chars we could possibly stuff in here)
+
           // if this parses to a standard FT8 free text message
           // but it can be parsed as a directed message, then we
           // should send the directed version
           if(isFree && n > 0){
-              useStd = false;
+              useDir = true;
               frame = dirFrame;
+          } else if (isFree && m > 0) {
+              useDat = true;
+              frame = datFrame;
           } else {
               useStd = true;
               frame = stdFrame;
@@ -5494,7 +5504,9 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
               }
 
               line = line.mid(frame.length()).trimmed();
-          } else {
+          }
+
+          if(useDir){
               frames.append(frame);
               // TODO: jsherer - would be nice to clean this up and have an object that can just decode the actual transmitted frames instead.
               if(!line.startsWith(mycall)){
@@ -5503,18 +5515,24 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
               lines.append(line.left(n));
               line = line.mid(n).trimmed();
           }
+
+          if(useDat){
+              frames.append(frame);
+              lines.append(line.left(m));
+              line = line.mid(m);
+          }
         }
     }
 
-#if 0
+#if 1
     qDebug() << "parsed frames:";
     foreach(auto frame, frames){
-        qDebug() << "->" << frame;
+        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame);
     }
 
     qDebug() << "lines:";
-    foreach(auto frame, frames){
-        qDebug() << "->" << frame;
+    foreach(auto line, lines){
+        qDebug() << "->" << line;
     }
 #endif
 

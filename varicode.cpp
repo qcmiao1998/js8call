@@ -175,10 +175,10 @@ QVector<bool> Varicode::huffFlatten(QList<QVector<bool>> &list){
     return out;
 }
 
-QString Varicode::huffDecode(QVector<bool> const& bitvec){
+QString Varicode::huffDecode(QVector<bool> const& bitvec, int pad){
     QString out;
 
-    QString bits = bitsToStr(bitvec);
+    QString bits = bitsToStr(bitvec).mid(0, bitvec.length()-pad);
 
     // TODO: jsherer - this is naive...
     while(bits.length() > 0){
@@ -538,6 +538,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         auto fromBytes = from.toLocal8Bit();
         auto fromCRC = CRC::Calculate(fromBytes.data(), fromBytes.length(), CRC::CRC_5_ITU());
 
+        quint8 packed_is_data = 0;
         quint8 packed_flag = 0;
         quint32 packed_from = Varicode::packCallsign(from);
         quint32 packed_to = Varicode::packCallsign(to);
@@ -550,18 +551,18 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         quint8 packed_cmd = directed_cmds[cmd];
         quint8 packed_extra = fromCRC;
 
-        // [3][28][28][5],[5] = 69
+        // [1][2][28][28][5],[5] = 69
         auto bits = (
-            Varicode::intToBits(packed_flag, 3)    +
+            Varicode::intToBits(packed_is_data, 1) +
+            Varicode::intToBits(packed_flag, 2)    +
             Varicode::intToBits(packed_from, 28)   +
             Varicode::intToBits(packed_to, 28)     +
             Varicode::intToBits(packed_cmd & 31, 5)
         );
         frame = Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_extra & 31);
         *n = match.captured(0).length();
+        return frame;
     }
-
-    return frame;
 }
 
 QStringList Varicode::unpackDirectedMessage(const QString &text){
@@ -571,11 +572,15 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
         return unpacked;
     }
 
-    // [3][28][28][5],[5] = 69
+    // [1][2][28][28][5],[5] = 69
     auto bits = Varicode::bitsToStr(Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64));
     quint8 extra = Varicode::unpack5bits(text.right(1));
 
-    quint8 flag = Varicode::bitsToInt(Varicode::strToBits(bits.left(3)));
+    quint8 is_data = Varicode::bitsToInt(Varicode::strToBits(bits.left(1)));
+    if(is_data != 0){
+        return unpacked;
+    }
+    quint8 flag = Varicode::bitsToInt(Varicode::strToBits(bits.mid(1,2)));
     quint32 packed_from = Varicode::bitsToInt(Varicode::strToBits(bits.mid(3, 28)));
     quint32 packed_to = Varicode::bitsToInt(Varicode::strToBits(bits.mid(31, 28)));
     quint8 packed_cmd = Varicode::bitsToInt(Varicode::strToBits(bits.mid(59, 5)));
@@ -591,6 +596,59 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
     unpacked.append(from);
     unpacked.append(Varicode::unpackCallsign(packed_to).trimmed());
     unpacked.append(directed_cmds.key(packed_cmd & 31));
+
+    return unpacked;
+}
+
+QString Varicode::packDataMessage(const QString &text, int *n){
+    QString frame;
+
+    // [1][63],[5]
+    quint8 is_data = 1;
+    auto frameBits = (
+        Varicode::intToBits(is_data, 1)
+    );
+
+    int i = 0;
+    foreach(auto charBits, Varicode::huffEncode(text)){
+        if(frameBits.length() + charBits.length() < 63){
+            frameBits += charBits;
+            i++;
+            continue;
+        }
+        break;
+    }
+
+    int pad = 64 - frameBits.length();
+    if(pad){
+        frameBits += Varicode::intToBits(1, pad);
+    }
+
+    frame = Varicode::pack64bits(Varicode::bitsToInt(frameBits)) + Varicode::pack5bits(pad & 31);
+    *n = i;
+
+    return frame;
+}
+
+QString Varicode::unpackDataMessage(const QString &text){
+    QString unpacked;
+
+    if(text.length() < 13){
+        return unpacked;
+    }
+
+    auto bits = Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64);
+    quint8 pad = Varicode::unpack5bits(text.right(1));
+
+    quint8 is_data = (int)bits.at(0);
+    if(is_data != 1){
+        return unpacked;
+    }
+
+    // pop off the is_data bit
+    bits.removeAt(0);
+
+    unpacked = Varicode::huffDecode(bits, pad);
 
     return unpacked;
 }

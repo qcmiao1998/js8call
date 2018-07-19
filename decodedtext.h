@@ -32,7 +32,8 @@ class DecodedText
 public:
   explicit DecodedText (QString const& message, bool, QString const& my_grid);
 
-  void tryUnpackDirected();
+  bool tryUnpackDirected();
+  bool tryUnpackData();
 
   QStringList directedMessage() const { return directed_; }
   bool isDirectedMessage() const { return !directed_.isEmpty(); }

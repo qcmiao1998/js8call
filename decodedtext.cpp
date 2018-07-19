@@ -55,33 +55,60 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
     }
 
     if(!is_standard_){
-      tryUnpackDirected();
+      bool unpacked = false;
+
+      if(!unpacked){
+        unpacked = tryUnpackDirected();
+      }
+      if(!unpacked){
+        unpacked = tryUnpackData();
+      }
+
     }
 }
 
-void DecodedText::tryUnpackDirected(){
-  QString m = message().trimmed();
+bool DecodedText::tryUnpackDirected(){
+    QString m = message().trimmed();
 
-  // directed calls will always be 12+ chars and contain no spaces.
-  if(m.length() < 12 || m.contains(' ')){
-    return;
-  }
+    // directed calls will always be 12+ chars and contain no spaces.
+    if(m.length() < 12 || m.contains(' ')){
+      return false;
+    }
 
-  QStringList parts = Varicode::unpackDirectedMessage(m);
+    QStringList parts = Varicode::unpackDirectedMessage(m);
 
-  if(parts.isEmpty()){
-    return;
-  }
+    if(parts.isEmpty()){
+      return false;
+    }
 
-  if(parts.length() == 3){
-    // replace it with the correct unpacked (query)
-    message_ = QString("%1: %2%3").arg(parts.at(0), parts.at(1), parts.at(2));
-  } else {
-    // replace it with the correct unpacked (freetext)
-    message_ = QString(parts.join(QChar()));
-  }
+    if(parts.length() == 3){
+      // replace it with the correct unpacked (query)
+      message_ = QString("%1: %2%3").arg(parts.at(0), parts.at(1), parts.at(2));
+    } else {
+      // replace it with the correct unpacked (freetext)
+      message_ = QString(parts.join(QChar()));
+    }
 
-  directed_ = parts;
+    directed_ = parts;
+    return true;
+}
+
+bool DecodedText::tryUnpackData(){
+    QString m = message().trimmed();
+
+    // data frames calls will always be 12+ chars and contain no spaces.
+    if(m.length() < 12 || m.contains(' ')){
+      return false;
+    }
+
+    QString data = Varicode::unpackDataMessage(m);
+
+    if(data.isEmpty()){
+      return false;
+    }
+
+    message_ = data;
+    return true;
 }
 
 QStringList DecodedText::messageWords () const

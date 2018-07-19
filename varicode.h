@@ -32,7 +32,7 @@ public:
 
     static QList<QVector<bool>> huffEncode(QString const& text);
     static QVector<bool> huffFlatten(QList<QVector<bool>> &list);
-    static QString huffDecode(QVector<bool> const& bitvec);
+    static QString huffDecode(QVector<bool> const& bitvec, int pad=0);
 
     static QVector<bool> bytesToBits(char * bitvec, int n);
     static QVector<bool> strToBits(QString const& bitvec);
@@ -63,6 +63,9 @@ public:
     static bool isCommandAllowed(const QString &cmd);
     static QString packDirectedMessage(QString const& text, QString const& callsign, int *n);
     static QStringList unpackDirectedMessage(QString const& text);
+
+    static QString packDataMessage(QString const& text, int *n);
+    static QString unpackDataMessage(QString const& text);
 };
 
 #endif // VARICODE_H
