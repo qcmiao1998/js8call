@@ -38,9 +38,10 @@ QString callsign_alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "};
 QMap<QString, int> directed_cmds = {
     // any changes here need to be made also in the directed regular xpression for parsing
     {"?",     0  }, // query snr
-    //{"$",     1  }, // query stations heard
-    {"@",     2  }, // query qth
-    {"&",     3  }, // query station message
+    {"@",     1  }, // query qth
+    {"&",     2  }, // query station message
+
+    //{"$",     3  }, // query stations heard
     //{"|",     4  }, // relay message
 
     // ...
@@ -188,6 +189,8 @@ QString Varicode::huffDecode(QVector<bool> const& bitvec, int pad){
         foreach(auto key, huff.keys()){
             if(bits.startsWith(huff[key])){
                 if(key == huffeot){
+                    out.append(" ");
+                    found = false;
                     break;
                 }
                 out.append(key);
@@ -640,7 +643,7 @@ QString Varicode::packDataMessage(const QString &text, int *n){
 
     int pad = 64 - frameBits.length();
     if(pad){
-        frameBits += Varicode::intToBits(1, pad);
+        frameBits += Varicode::intToBits(0, pad);
     }
 
     frame = Varicode::pack64bits(Varicode::bitsToInt(frameBits)) + Varicode::pack5bits(pad & 31);

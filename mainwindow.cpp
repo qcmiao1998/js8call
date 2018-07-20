@@ -163,8 +163,8 @@ QVector<QColor> g_ColorTbl;
 namespace
 {
   Radio::Frequency constexpr default_frequency {14074000};
-  QRegExp message_alphabet {"[- A-Za-z0-9+./?]*"};
-  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:@&]*"};
+  QRegExp message_alphabet {"[- A-Za-z0-9+./?:!^]*"};
+  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:!^@&]*"};
   // grid exact match excluding RR73
   QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
 
@@ -5525,7 +5525,7 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
         }
     }
 
-#if 0
+#if 1
     qDebug() << "parsed frames:";
     foreach(auto frame, frames){
         qDebug() << "->" << frame << Varicode::unpackDataMessage(frame);
