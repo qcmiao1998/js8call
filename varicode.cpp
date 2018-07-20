@@ -124,7 +124,8 @@ QString Varicode::formatSNR(int snr){
     if(snr < -60 || snr > 60){
         return QString();
     }
-    return QString("%1%2%3").arg(snr >= 0 ? "+" : "").arg(snr <= 9 && snr >= -9 ? "0" : "").arg(snr);
+
+    return QString("%1%2").arg(snr >= 0 ? "+" : "").arg(snr, snr < 0 ? 3 : 2, 10, QChar('0'));
 }
 
 QStringList Varicode::parseCallsigns(QString const &input){
