@@ -214,13 +214,6 @@ namespace
       return QString {};
   }
 
-  QString formatSNR(int snr){
-      if(snr < -60 || snr > 60){
-          return QString();
-      }
-      return QString("%1%2").arg(snr >= 0 ? "+" : "").arg(snr);
-  }
-
   void clearTableWidget(QTableWidget *widget){
       if(!widget){
           return;
@@ -6857,16 +6850,14 @@ void MainWindow::on_snrMacroButton_clicked(){
     if(!items.isEmpty()){
         QString selectedCall = items.first()->text();
         int snr = m_callActivity[selectedCall].snr;
-        QString text = QString("%1").arg(formatSNR(snr));
-        addMessageText(text);
+        addMessageText(Varicode::formatSNR(snr));
         return;
     }
 
     int offset = ui->RxFreqSpinBox->value();
     if(m_bandActivity.contains(offset)){
         int snr = m_bandActivity[offset].last().snr;
-        QString text = QString("%1").arg(snr);
-        addMessageText(text);
+        addMessageText(Varicode::formatSNR(snr));
         return;
     }
 }
@@ -8137,7 +8128,7 @@ void MainWindow::displayActivity(bool force){
           auto offsetItem = new QTableWidgetItem(QString("%1").arg(offset));
           ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, offsetItem);
 
-          auto snrItem = new QTableWidgetItem(QString("%1").arg(formatSNR(snr)));
+          auto snrItem = new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(snr)));
           snrItem->setTextAlignment(Qt::AlignCenter|Qt::AlignVCenter);
           ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, snrItem);
 
@@ -8209,7 +8200,7 @@ void MainWindow::displayActivity(bool force){
       ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem(call));
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
-      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 2, new QTableWidgetItem(QString("%1").arg(formatSNR(d.snr))));
+      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 2, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 3, new QTableWidgetItem(QString("%1").arg(d.grid)));
 
       auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
@@ -8287,7 +8278,7 @@ void MainWindow::displayActivity(bool force){
       if(d.cmd == "?"){
           // standard FT8 reply
           // reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(d.snr);
-          reply = QString("%1 %2").arg(d.from).arg(d.snr);
+          reply = QString("%1 %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
       }
       // QTH
       else if(d.cmd == "@" && !isAllCall){

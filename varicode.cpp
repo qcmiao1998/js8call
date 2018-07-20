@@ -120,6 +120,13 @@ QMap<QString, quint32> basecalls = {
     { "ALLCALL", nbasecall + 3 },
 };
 
+QString Varicode::formatSNR(int snr){
+    if(snr < -60 || snr > 60){
+        return QString();
+    }
+    return QString("%1%2%3").arg(snr >= 0 ? "+" : "").arg(snr <= 9 && snr >= -9 ? "0" : "").arg(snr);
+}
+
 QStringList Varicode::parseCallsigns(QString const &input){
     QStringList callsigns;
     QRegularExpression re(callsign_pattern2);
@@ -616,7 +623,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
 
     int num = (flag ? -1 : 1) * extra;
     if(num != -31){
-        unpacked.append(QString(num > 0 ? "+%1" : "%1").arg(num));
+        unpacked.append(Varicode::formatSNR(num));
     }
 
     return unpacked;
