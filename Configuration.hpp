@@ -97,6 +97,8 @@ public:
   QString my_callsign () const;
   QString my_grid () const;
   QString my_station () const;
+  int activity_aging() const;
+  int callsign_aging() const;
   QString my_qth () const;
   QFont text_font () const;
   QFont decoded_text_font () const;

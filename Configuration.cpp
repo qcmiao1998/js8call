@@ -533,6 +533,8 @@ private:
   QString my_grid_;
   QString my_station_;
   QString my_qth_;
+  int callsign_aging_;
+  int activity_aging_;
   QColor color_CQ_;
   QColor next_color_CQ_;
   QColor color_MyCall_;
@@ -829,6 +831,16 @@ QString Configuration::my_station() const
 QString Configuration::my_qth() const
 {
     return m_->my_qth_;
+}
+
+int Configuration::callsign_aging() const
+{
+    return m_->callsign_aging_;
+}
+
+int Configuration::activity_aging() const
+{
+    return m_->activity_aging_;
 }
 
 void Configuration::set_location (QString const& grid_descriptor)
@@ -1145,6 +1157,8 @@ void Configuration::impl::initialize_models ()
   ui_->grid_line_edit->setPalette (pal);
   ui_->callsign_line_edit->setText (my_callsign_);
   ui_->grid_line_edit->setText (my_grid_);
+  ui_->callsign_aging_spin_box->setValue(callsign_aging_);
+  ui_->activity_aging_spin_box->setValue(activity_aging_);
   ui_->station_message_line_edit->setText (my_station_.toUpper());
   ui_->qth_message_line_edit->setText (my_qth_.toUpper());
   ui_->use_dynamic_grid->setChecked(use_dynamic_grid_);
@@ -1266,6 +1280,8 @@ void Configuration::impl::read_settings ()
   my_callsign_ = settings_->value ("MyCall", QString {}).toString ();
   my_grid_ = settings_->value ("MyGrid", QString {}).toString ();
   my_station_ = settings_->value("MyStation", QString {}).toString();
+  callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
+  activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
   my_qth_ = settings_->value("MyQTH", QString {}).toString();
   next_color_CQ_ = color_CQ_ = settings_->value("colorCQ","#66ff66").toString();
   next_color_MyCall_ = color_MyCall_ = settings_->value("colorMyCall","#ff6666").toString();
@@ -1455,6 +1471,8 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MyGrid", my_grid_);
   settings_->setValue ("MyStation", my_station_);
   settings_->setValue ("MyQTH", my_qth_);
+  settings_->setValue ("CallsignAging", callsign_aging_);
+  settings_->setValue ("ActivityAging", activity_aging_);
   settings_->setValue("colorCQ",color_CQ_);
   settings_->setValue("colorMyCall",color_MyCall_);
   settings_->setValue("colorTxMsg",color_TxMsg_);
@@ -1908,6 +1926,8 @@ void Configuration::impl::accept ()
   my_grid_ = ui_->grid_line_edit->text ();
   my_station_ = ui_->station_message_line_edit->text().toUpper();
   my_qth_ = ui_->qth_message_line_edit->text().toUpper();
+  callsign_aging_ = ui_->callsign_aging_spin_box->value();
+  activity_aging_ = ui_->activity_aging_spin_box->value();
   spot_to_psk_reporter_ = ui_->psk_reporter_check_box->isChecked ();
   id_interval_ = ui_->CW_id_interval_spin_box->value ();
   ntrials_ = ui_->sbNtrials->value ();

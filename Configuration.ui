@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>825</width>
-    <height>647</height>
+    <height>688</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -174,6 +174,12 @@
            <widget class="QWidget" name="widget" native="true">
             <layout class="QFormLayout" name="formLayout_16">
              <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
               <number>0</number>
              </property>
              <item row="0" column="0">
@@ -352,14 +358,98 @@
            </widget>
           </item>
           <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_155">
+            <item>
+             <widget class="QLabel" name="beacon_label_10">
+              <property name="text">
+               <string>Remove callsigns from heard list after:</string>
+              </property>
+              <property name="buddy">
+               <cstring>callsign_aging_spin_box</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="callsign_aging_spin_box">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended beacons&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="specialValueText">
+               <string>Disabled</string>
+              </property>
+              <property name="suffix">
+               <string> minutes</string>
+              </property>
+              <property name="prefix">
+               <string/>
+              </property>
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>60</number>
+              </property>
+              <property name="singleStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_156">
+            <item>
+             <widget class="QLabel" name="beacon_label_10">
+              <property name="text">
+               <string>Remove messages from band activity after:</string>
+              </property>
+              <property name="buddy">
+               <cstring>callsign_aging_spin_box</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="activity_aging_spin_box">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended beacons&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="specialValueText">
+               <string>Disabled</string>
+              </property>
+              <property name="suffix">
+               <string> minutes</string>
+              </property>
+              <property name="prefix">
+               <string/>
+              </property>
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>60</number>
+              </property>
+              <property name="singleStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>2</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
            <layout class="QHBoxLayout" name="horizontalLayout_15">
             <item>
              <widget class="QLabel" name="beacon_label_10">
               <property name="text">
-               <string>Beacon every:</string>
+               <string>Beacon interval:</string>
               </property>
               <property name="buddy">
-               <cstring>beacon_spin_box</cstring>
+               <cstring>callsign_aging_spin_box</cstring>
               </property>
              </widget>
             </item>

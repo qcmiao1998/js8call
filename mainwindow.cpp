@@ -8083,8 +8083,9 @@ void MainWindow::displayActivity(bool force){
           QStringList text;
           QString age;
           int snr = 0;
+          int activityAging = m_config.activity_aging();
           foreach(ActivityDetail item, items){
-              if(item.utcTimestamp.secsTo(now)/60 >= 2){
+              if(activityAging && item.utcTimestamp.secsTo(now)/60 >= activityAging){
                   continue;
               }
               if(item.text.isEmpty()){
@@ -8172,8 +8173,14 @@ void MainWindow::displayActivity(bool force){
 
   QList<QString> calls = m_callActivity.keys();
   qSort(calls.begin(), calls.end());
+  int callsignAging = m_config.callsign_aging();
   foreach(QString call, calls){
       CallDetail d = m_callActivity[call];
+
+      if(callsignAging && d.utcTimestamp.secsTo(now)/60 >= callsignAging){
+          continue;
+      }
+
       ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem(call));
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
