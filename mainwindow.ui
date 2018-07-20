@@ -1078,7 +1078,20 @@ QTextEdit[transmitting=&quot;true&quot;] {
         <property name="bottomMargin">
          <number>0</number>
         </property>
-        <item row="1" column="9">
+        <item row="1" column="12">
+         <widget class="QPushButton" name="stopTxButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Halt</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="10">
          <spacer name="horizontalSpacer_5">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -1094,7 +1107,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
           </property>
          </spacer>
         </item>
-        <item row="1" column="10">
+        <item row="1" column="11">
          <widget class="QPushButton" name="startTxButton">
           <property name="enabled">
            <bool>false</bool>
@@ -1121,6 +1134,19 @@ background:yellow;
           </property>
          </widget>
         </item>
+        <item row="1" column="8">
+         <widget class="QPushButton" name="macrosMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Macros</string>
+          </property>
+         </widget>
+        </item>
         <item row="1" column="3">
          <widget class="QPushButton" name="deMacroButton">
           <property name="minimumSize">
@@ -1134,6 +1160,32 @@ background:yellow;
           </property>
           <property name="text">
            <string>DE</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="replyMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Reply</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="5">
+         <widget class="QPushButton" name="qthMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>QTH</string>
           </property>
          </widget>
         </item>
@@ -1166,59 +1218,7 @@ background:yellow;
           </property>
          </widget>
         </item>
-        <item row="1" column="5">
-         <widget class="QPushButton" name="qthMacroButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>QTH</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="8">
-         <widget class="QPushButton" name="macrosMacroButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Macros</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="11">
-         <widget class="QPushButton" name="stopTxButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Halt</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QPushButton" name="replyMacroButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Reply</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="7">
+        <item row="1" column="9">
          <widget class="QPushButton" name="queryButton">
           <property name="minimumSize">
            <size>
