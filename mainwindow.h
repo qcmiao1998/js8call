@@ -240,6 +240,7 @@ private slots:
   void on_replyMacroButton_clicked();
   void on_qthMacroButton_clicked();
   void on_snrMacroButton_clicked();
+  void buildQueryMenu(QMenu *);
   void on_queryButton_pressed();
   void on_macrosMacroButton_pressed();
   void on_tableWidgetRXAll_cellClicked(int row, int col);

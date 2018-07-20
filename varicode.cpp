@@ -43,24 +43,26 @@ QMap<QString, int> directed_cmds = {
     {"&",     3  }, // query station message
     //{"|",     4  }, // relay message
 
-    //{"+",     5  }, // report +snr
-    //{"-",     6  }, // report -snr
-
     // ...
+    {" NO",   26  }, // negative confirm
+    {" YES",  27  }, // confirm
     {" 73",   28  }, // best regards, end of contact
     {" RR",   29  }, // confirm message
     {" AGN?", 30  }, // repeat message
     {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 2, 3, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 2, 3, 26, 27, 28, 29, 30, 31};
 
-QRegularExpression directed_re(R"(^(?:(?<from>[A-Z0-9/]+):\s?)?(?<to>[A-Z0-9/]+)(?<cmd>(\s?(?:RR|AGN[?]|73)|[?$@&| ])))");
+QRegularExpression directed_re("^"
+                               "(?<to>[A-Z0-9/]+)"
+                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|[?$@&| ]))"
+                               "(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
 
 QMap<QChar, QString> huff = {
     // char   code                 weight
-    {' '    , "001"          }, // 1300
-    {'E'    , "000"          }, // 1270.2
+    {' '    , "000"          }, // 1300
+    {'E'    , "001"          }, // 1270.2
     {'T'    , "1100"         }, // 905.6
     {'A'    , "1010"         }, // 816.7
     {'O'    , "0111"         }, // 750.7
@@ -517,12 +519,20 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
 
     auto match = directed_re.match(text);
     if(match.hasMatch()){
-        QString from = match.captured("from");
-        if(from.isEmpty()){
-            from = callsign;
-        }
+        QString from = callsign;
         QString to = match.captured("to");
         QString cmd = match.captured("cmd");
+        QString num = match.captured("num").trimmed();
+
+        int inum = -31;
+        bool hasnum = false;
+        if(!num.isEmpty()){
+            inum = qMax(-30, qMin(num.toInt(&hasnum, 10), 30));
+        }
+
+        qDebug() << "match" << match.captured(0);
+        qDebug() << "groups" << from << to << cmd << num;
+        qDebug() << "packed num" << num << inum << hasnum;
 
         if(to == callsign){
             *n = 0;
@@ -535,11 +545,12 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
             return frame;
         }
 
-        auto fromBytes = from.toLocal8Bit();
-        auto fromCRC = CRC::Calculate(fromBytes.data(), fromBytes.length(), CRC::CRC_5_ITU());
+        // TODO: jsherer - we don't need this CRC... the FT8 msg already has a 12 bit CRC...
+        //auto fromBytes = from.toLocal8Bit();
+        //auto fromCRC = CRC::Calculate(fromBytes.data(), fromBytes.length(), CRC::CRC_5_ITU());
 
         quint8 packed_is_data = 0;
-        quint8 packed_flag = 0;
+        quint8 packed_flag = inum < 0 ? 1 : 0;
         quint32 packed_from = Varicode::packCallsign(from);
         quint32 packed_to = Varicode::packCallsign(to);
 
@@ -549,7 +560,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         }
 
         quint8 packed_cmd = directed_cmds[cmd];
-        quint8 packed_extra = fromCRC;
+        quint8 packed_extra = qAbs(inum);
 
         // [1][2][28][28][5],[5] = 69
         auto bits = (
@@ -563,6 +574,8 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         *n = match.captured(0).length();
         return frame;
     }
+
+    return frame;
 }
 
 QStringList Varicode::unpackDirectedMessage(const QString &text){
@@ -587,15 +600,21 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
 
     QString from = Varicode::unpackCallsign(packed_from).trimmed();
 
-    auto fromBytes = from.toLocal8Bit();
-    auto fromCRC = CRC::Calculate(fromBytes.data(), fromBytes.length(), CRC::CRC_5_ITU());
-    if(fromCRC != extra){
-        return unpacked;
-    }
+    // TODO: jsherer - we don't need this CRC... the FT8 msg already has a 12 bit CRC...
+    //auto fromBytes = from.toLocal8Bit();
+    //auto fromCRC = CRC::Calculate(fromBytes.data(), fromBytes.length(), CRC::CRC_5_ITU());
+    //if(fromCRC != extra){
+    //    return unpacked;
+    //}
 
     unpacked.append(from);
     unpacked.append(Varicode::unpackCallsign(packed_to).trimmed());
     unpacked.append(directed_cmds.key(packed_cmd & 31));
+
+    int num = (flag ? -1 : 1) * extra;
+    if(num != -31){
+        unpacked.append(QString(num > 0 ? "+%1" : "%1").arg(num));
+    }
 
     return unpacked;
 }
@@ -603,7 +622,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
 QString Varicode::packDataMessage(const QString &text, int *n){
     QString frame;
 
-    // [1][63],[5]
+    // [1][63],[5] = 69
     quint8 is_data = 1;
     auto frameBits = (
         Varicode::intToBits(is_data, 1)

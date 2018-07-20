@@ -52,6 +52,12 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
                               , contest_mode_
                               , grid_c_string.constData ()
                               , 22, 6);
+
+      // We're only going to unpack standard messages for CQs && beacons...
+      // TODO: jsherer - this is a hack for now...
+      if(is_standard_){
+        is_standard_ = QRegularExpression("^(CQ|DE|QRZ)\\s").match(message_).hasMatch();
+      }
     }
 
     if(!is_standard_){
@@ -63,7 +69,6 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
       if(!unpacked){
         unpacked = tryUnpackData();
       }
-
     }
 }
 
@@ -82,8 +87,11 @@ bool DecodedText::tryUnpackDirected(){
     }
 
     if(parts.length() == 3){
-      // replace it with the correct unpacked (query)
+      // replace it with the correct unpacked (directed)
       message_ = QString("%1: %2%3").arg(parts.at(0), parts.at(1), parts.at(2));
+    } else if(parts.length() == 4){
+      // replace it with the correct unpacked (directed numeric)
+      message_ = QString("%1: %2%3 %4").arg(parts.at(0), parts.at(1), parts.at(2), parts.at(3));
     } else {
       // replace it with the correct unpacked (freetext)
       message_ = QString(parts.join(QChar()));

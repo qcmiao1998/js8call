@@ -5473,6 +5473,9 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
           int m = 0;
           QString datFrame = Varicode::packDataMessage(line.left(21) + "\x04", &m); //  63 / 3 = 21 (maximum number of 3bit chars we could possibly stuff in here)
 
+          qDebug() << "parsing message line" << line;
+          qDebug() << "-> isFree?" << isFree << n << m;
+
           // if this parses to a standard FT8 free text message
           // but it can be parsed as a directed message, then we
           // should send the directed version
@@ -5522,7 +5525,7 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
         }
     }
 
-#if 1
+#if 0
     qDebug() << "parsed frames:";
     foreach(auto frame, frames){
         qDebug() << "->" << frame << Varicode::unpackDataMessage(frame);
@@ -5573,11 +5576,17 @@ QString MainWindow::parseFT8Message(QString input, bool *isFree){
   int c = msgbytes[11];
   int d = ((a & 15) << 12) + (b << 6) + c;
 
+  QString output = QString::fromLatin1(msgsent);
+
   if(isFree){
-      *isFree = (d >= 32768);
+      // TODO: jsherer - lets figure out a better way to detect this for the case:
+      //    KN4CRD 16
+      // this gets encoded as a standard message, but doesn't seem to make sense as to why...
+      // see decodedtext.cpp for the alternate decoding side of this...
+      *isFree = (d >= 32768) || !QRegularExpression("^(CQ|DE|QRZ)\\s").match(output).hasMatch();
   }
 
-  return QString::fromLatin1(msgsent).trimmed();
+  return output.trimmed();
 }
 
 bool MainWindow::prepareNextMessageFrame()
@@ -6861,13 +6870,7 @@ void MainWindow::on_snrMacroButton_clicked(){
     }
 }
 
-void MainWindow::on_queryButton_pressed(){
-    QMenu *menu = ui->queryButton->menu();
-    if(!menu){
-        menu = new QMenu(ui->queryButton);
-    }
-    menu->clear();
-
+void MainWindow::buildQueryMenu(QMenu * menu){
     QString call = callsignSelected();
     if(call.isEmpty()){
         return;
@@ -6877,7 +6880,6 @@ void MainWindow::on_queryButton_pressed(){
 
     auto snrAction = menu->addAction("? - What is my signal report?");
 
-    // TODO: jsherer - this should be extracted
     connect(snrAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -6939,7 +6941,30 @@ void MainWindow::on_queryButton_pressed(){
         addMessageText(QString("%1 RR").arg(selectedCall), true);
     });
 
-    auto sevenThreeAction = menu->addAction("73 - Best regards / end of contact");
+
+    auto yesAction = menu->addAction("YES - I confirm your last inquiry");
+    connect(yesAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 YES").arg(selectedCall), true);
+    });
+
+    auto noAction = menu->addAction("NO - I do not confirm your last inquiry");
+    connect(noAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 NO").arg(selectedCall), true);
+    });
+
+    auto sevenThreeAction = menu->addAction("73 - I send my best regards / end of contact");
     connect(sevenThreeAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -6949,6 +6974,16 @@ void MainWindow::on_queryButton_pressed(){
 
         addMessageText(QString("%1 73").arg(selectedCall), true);
     });
+}
+
+void MainWindow::on_queryButton_pressed(){
+    QMenu *menu = ui->queryButton->menu();
+    if(!menu){
+        menu = new QMenu(ui->queryButton);
+    }
+    menu->clear();
+
+    buildQueryMenu(menu);
 
     ui->queryButton->setMenu(menu);
     ui->queryButton->showMenu();
@@ -8194,7 +8229,9 @@ void MainWindow::displayActivity(bool force){
 
       bool isAllCall = d.to == "ALLCALL";
 
+#if 0
       qDebug() << "processing command" << d.from << d.to << d.cmd << d.freq;
+#endif
 
       // we're only processing a subset of queries at this point
       if(!Varicode::isCommandAllowed(d.cmd)){
@@ -8217,7 +8254,8 @@ void MainWindow::displayActivity(bool force){
       // SNR
       if(d.cmd == "?"){
           // standard FT8 reply
-          reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(d.snr);
+          // reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(d.snr);
+          reply = QString("%1 %2").arg(d.from).arg(d.snr);
       }
       // QTH
       else if(d.cmd == "@" && !isAllCall){
@@ -8228,10 +8266,11 @@ void MainWindow::displayActivity(bool force){
                   continue;
               }
               // standard FT8 reply
-              reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(grid);
-          } else {
-            reply = QString("%1 %2").arg(d.from).arg(qth);
+              // reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(grid);
+              qth = grid;
           }
+
+          reply = QString("%1 %2").arg(d.from).arg(qth);
       }
       // STATION MESSAGE
       else if(d.cmd == "&" && !isAllCall){
