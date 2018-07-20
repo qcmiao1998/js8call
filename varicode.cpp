@@ -115,8 +115,7 @@ QChar huffeot = '\x04';
 quint32 nbasecall = 37 * 36 * 10 * 27 * 27 * 27;
 
 QMap<QString, quint32> basecalls = {
-    { "CQ DX",   nbasecall + 1 },
-    { "CQCQCQ",  nbasecall + 2 },
+    { "CQCQCQ",  nbasecall + 1 },
     { "ALLCALL", nbasecall + 3 },
 };
 
