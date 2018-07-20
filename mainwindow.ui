@@ -1123,14 +1123,14 @@ background:yellow;
         </item>
         <item row="1" column="3">
          <widget class="QPushButton" name="deMacroButton">
-          <property name="visible">
-            <bool>false</bool>
-          </property>
           <property name="minimumSize">
            <size>
             <width>0</width>
             <height>30</height>
            </size>
+          </property>
+          <property name="visible">
+           <bool>false</bool>
           </property>
           <property name="text">
            <string>DE</string>
@@ -1438,16 +1438,17 @@ background:yellow;
                </property>
                <property name="styleSheet">
                 <string notr="true">QSlider {
-selection-background-color: rgb(70, 70, 70);
+selection-background-color: rgb(170, 170, 170);
 }
 
 QSlider::groove:vertical{
 width:60px;
+/*background-color:transparent;*/
 }
 
 QSlider::handle:vertical {
-background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #fefefe, stop:1 #eee);
-border:1px solid #999;
+background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #27ae60);
+border:1px solid #179e50;
 width:30px;
 height:30px;
 margin:-2px -8px;
@@ -1455,7 +1456,7 @@ border-radius:2px;
 }
 
 QSlider::handle:vertical:hover {
-background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #fff, stop:1 #fefefe);
+background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #3edc81);
 }</string>
                </property>
                <property name="maximum">
