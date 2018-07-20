@@ -1447,7 +1447,7 @@ width:60px;
 }
 
 QSlider::handle:vertical {
-background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #27ae60);
+background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00FF00, stop:1 #27ae60);
 border:1px solid #179e50;
 width:30px;
 height:30px;
@@ -1456,7 +1456,7 @@ border-radius:2px;
 }
 
 QSlider::handle:vertical:hover {
-background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #3edc81);
+background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF00);
 }</string>
                </property>
                <property name="maximum">
