@@ -3308,6 +3308,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
       }
 
       if(isRecentOffset(audioFreq) || isAllCallIncluded(decodedtext.message())){
+         // TODO: jsherer - create a method for bumping this...
          m_rxRecentCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
          bDisplayRight = true;
       }
@@ -6825,8 +6826,8 @@ void MainWindow::on_cqMacroButton_clicked(){
     addMessageText(text);
 }
 
-void MainWindow::on_deMacroButton_clicked(){
-    addMessageText(m_config.my_callsign());
+void MainWindow::on_qtcMacroButton_clicked(){
+    addMessageText(m_config.my_station());
 }
 
 void MainWindow::on_replyMacroButton_clicked(){
@@ -7032,12 +7033,36 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
     // TODO: jsherer - could also parse the messages for the last callsign?
     auto item = ui->tableWidgetRXAll->item(row, 0);
     int offset = item->text().toInt();
+
+    // print the history in the main window...
+    int activityAging = m_config.activity_aging();
+    QDateTime now = QDateTime::currentDateTimeUtc();
+    QDateTime firstActivity = now;
+    QString activityText;
+    foreach(auto d, m_bandActivity[offset]){
+        if(activityAging && d.utcTimestamp.secsTo(now)/60 >= activityAging){
+            continue;
+        }
+        if(activityText.isEmpty()){
+            firstActivity = d.utcTimestamp;
+        }
+        activityText.append(d.text);
+    }
+    if(!activityText.isEmpty()){
+        int block = logRxTxMessageText(firstActivity, true, activityText, offset, false);
+        m_rxFrameBlockNumbers[offset] = block;
+        m_rxRecentCache.insert(offset/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+    }
+
+#if 0
+    // drop the callsign (if one) in the edit window
     foreach(auto d, m_callActivity.values()){
         if(d.freq == offset){
             addMessageText(d.call);
             break;
         }
     }
+#endif
 }
 
 void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected){
@@ -7981,7 +8006,7 @@ void MainWindow::updateButtonDisplay(){
 
     ui->cqMacroButton->setDisabled(isTransmitting);
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
-    ui->deMacroButton->setDisabled(isTransmitting);
+    ui->qtcMacroButton->setDisabled(isTransmitting);
     ui->qthMacroButton->setDisabled(isTransmitting);
     ui->snrMacroButton->setDisabled(isTransmitting || emptyCallsign);
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);

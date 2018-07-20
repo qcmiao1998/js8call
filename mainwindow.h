@@ -236,7 +236,7 @@ private slots:
   void on_rbFreeText_clicked(bool checked);
   void on_clearAction_triggered(QObject * sender);
   void on_cqMacroButton_clicked();
-  void on_deMacroButton_clicked();
+  void on_qtcMacroButton_clicked();
   void on_replyMacroButton_clicked();
   void on_qthMacroButton_clicked();
   void on_snrMacroButton_clicked();

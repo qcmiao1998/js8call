@@ -1148,7 +1148,7 @@ background:yellow;
          </widget>
         </item>
         <item row="1" column="3">
-         <widget class="QPushButton" name="deMacroButton">
+         <widget class="QPushButton" name="qtcMacroButton">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -1156,10 +1156,10 @@ background:yellow;
            </size>
           </property>
           <property name="visible">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <property name="text">
-           <string>DE</string>
+           <string>QTC</string>
           </property>
          </widget>
         </item>
