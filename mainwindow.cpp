@@ -6820,7 +6820,11 @@ void MainWindow::on_cqMacroButton_clicked(){
 }
 
 void MainWindow::on_qtcMacroButton_clicked(){
-    addMessageText(m_config.my_station());
+    QString qtc = m_config.my_station();
+    if(qtc.isEmpty()){
+        return;
+    }
+    addMessageText(qtc);
 }
 
 void MainWindow::on_replyMacroButton_clicked(){
@@ -6842,7 +6846,14 @@ void MainWindow::on_replyMacroButton_clicked(){
 }
 
 void MainWindow::on_qthMacroButton_clicked(){
-    addMessageText(m_config.my_grid().left(4));
+    QString qth = m_config.my_qth();
+    if(qth.isEmpty()){
+        qth = m_config.my_grid();
+    }
+    if(qth.isEmpty()){
+        return;
+    }
+    addMessageText(qth);
 }
 
 void MainWindow::on_snrMacroButton_clicked(){
