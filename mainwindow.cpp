@@ -8327,8 +8327,8 @@ void MainWindow::displayActivity(bool force){
          continue;
       }
 
-      // TODO: jsherer - check to make sure we haven't replied to their allcall recently (in the past 5 minutes)
-      if(isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(QDateTime::currentDateTimeUtc()) < 300){
+      // TODO: jsherer - check to make sure we haven't replied to their allcall recently (in the past beacon interval)
+      if(isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(QDateTime::currentDateTimeUtc())/60 < m_config.beacon()){
           continue;
       }
 
