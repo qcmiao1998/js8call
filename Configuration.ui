@@ -465,7 +465,7 @@
                <string/>
               </property>
               <property name="minimum">
-               <number>1</number>
+               <number>5</number>
               </property>
               <property name="maximum">
                <number>60</number>
@@ -474,7 +474,7 @@
                <number>1</number>
               </property>
               <property name="value">
-               <number>5</number>
+               <number>15</number>
               </property>
              </widget>
             </item>
@@ -3045,12 +3045,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="TX_mode_button_group"/>
   <buttongroup name="split_mode_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
-  <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
  </buttongroups>
 </ui>
