@@ -691,6 +691,8 @@ private:
   QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
   QSet<QString> m_callSeenBeacon; // call
+  int m_previousFreq;
+  bool m_shouldRestoreFreq;
   QMap<QString,FoxQSO> m_foxQSO;
   QMap<QString,QString> m_loggedByFox;
 

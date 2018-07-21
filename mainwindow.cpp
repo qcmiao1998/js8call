@@ -427,7 +427,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   psk_Reporter {new PSK_Reporter {m_messageClient, this}},
   m_manual {&m_network_manager},
   m_i3bit {0},
-  m_txFrameCount {0}
+  m_txFrameCount {0},
+  m_previousFreq {0}
 {
   ui->setupUi(this);
   createStatusBar();
@@ -4193,6 +4194,13 @@ void MainWindow::stopTx()
       ui->extFreeTextMsgEdit->setReadOnly(false);
       update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", false);
       on_stopTxButton_clicked();
+
+      // if we have a previousFrequency, and should jump to it, do it
+      if(m_previousFreq && m_shouldRestoreFreq){
+          setFreq4(m_previousFreq, m_previousFreq);
+          m_previousFreq = 0;
+          m_shouldRestoreFreq = false;
+      }
   }
 
   ptt0Timer.start(200);                       //end-of-transmission sequencer delay
@@ -5756,6 +5764,7 @@ void MainWindow::prepareBeacon(){
 
     // TODO: jsherer - return to the original frequency afterwards?
     setFreq4(f, f);
+    m_shouldRestoreFreq = true;
 
     QStringList lines;
 
@@ -7072,6 +7081,7 @@ void MainWindow::on_macrosMacroButton_pressed(){
 void MainWindow::on_tableWidgetRXAll_cellClicked(int row, int col){
     auto item = ui->tableWidgetRXAll->item(row, 0);
     int offset = item->text().toInt();
+
     setFreq4(offset, offset);
 
     ui->tableWidgetCalls->selectionModel()->select(
@@ -7127,7 +7137,9 @@ void MainWindow::on_tableWidgetCalls_cellClicked(int row, int col){
     if(!m_callActivity.contains(call)){
         return;
     }
+
     int offset = m_callActivity[call].freq;
+
     setFreq4(offset, offset);
 
     ui->tableWidgetRXAll->selectionModel()->select(
@@ -7353,6 +7365,8 @@ void MainWindow::setFreq4(int rxFreq, int txFreq)
     txFreq = qMax(500, txFreq);
   }
 
+  m_previousFreq = currentFreq();
+
   if (ui->RxFreqSpinBox->isEnabled ()) ui->RxFreqSpinBox->setValue(rxFreq);
   ui->labDialFreqOffset->setText(QString("%1 Hz").arg(rxFreq));
   if(m_mode.startsWith ("WSPR")) {
@@ -7371,6 +7385,8 @@ void MainWindow::setFreq4(int rxFreq, int txFreq)
       setXIT (ui->TxFreqSpinBox->value ());
     }
   }
+
+
 }
 
 void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const& s)
@@ -8384,6 +8400,8 @@ void MainWindow::displayActivity(bool force){
         // if we have beacon turned on, and it's more than 15 seconds away, automatically reply now, and bump the beacon
         if(QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) >= 15){
             setFreq4(f, f);
+            m_shouldRestoreFreq = true;
+
             ui->startTxButton->setChecked(true);
 
             if(ui->beaconButton->isChecked()){
