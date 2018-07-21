@@ -5632,7 +5632,7 @@ bool MainWindow::prepareNextMessageFrame()
 
     if(ui->beaconButton->isChecked()){
         // bump beacon
-        setBeaconTimer(m_nextBeacon.addSecs(15));
+        scheduleBeacon(true);
     }
 
     return true;
@@ -5747,7 +5747,9 @@ void MainWindow::prepareBeacon(){
         !ui->extFreeTextMsgEdit->toPlainText().isEmpty() ||
         m_lastTxTime.secsTo(QDateTime::currentDateTimeUtc()) < 30
     ){
-        setBeaconTimer(QDateTime::currentDateTimeUtc().addSecs(30));
+        if(ui->beaconButton->isChecked()){
+            scheduleBeacon(true);
+        }
         return;
     }
 
@@ -8382,7 +8384,10 @@ void MainWindow::displayActivity(bool force){
         if(QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) >= 15){
             setFreq4(f, f);
             ui->startTxButton->setChecked(true);
-            scheduleBeacon(false);
+
+            if(ui->beaconButton->isChecked()){
+                scheduleBeacon(false);
+            }
         }
     }
   }
