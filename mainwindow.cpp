@@ -5516,7 +5516,7 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
                 break;
               }
               frames.append(frame);
-              lines.append(line.left(frame.length()));
+              lines.append(line.left(frame.length()) + " ");
 
               if(!line.startsWith(frame)){
                   line = (
