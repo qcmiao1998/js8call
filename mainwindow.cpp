@@ -5358,8 +5358,7 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
   m_txFrameQueue.append(frames);
   m_txFrameCount = frames.length();
 
-  // TODO: jsherer - ew
-  int freq = ui->TxFreqSpinBox->value();
+  int freq = currentFreq();
   logRxTxMessageText(QDateTime::currentDateTimeUtc(), false, lines.join(""), freq, true);
 }
 
@@ -5443,6 +5442,10 @@ QString trimWithPeriods(QString value){
     }
 
     return value;
+}
+
+int MainWindow::currentFreq(){
+    return ui->RxFreqSpinBox->value();
 }
 
 QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const& text){
@@ -5708,9 +5711,9 @@ void MainWindow::prepareBeacon(){
     }
 
     int bw = 50 + 5;
-    int f = ui->TxFreqSpinBox->value(); // TODO: jsherer - ew
+    int f = currentFreq();
     if(!isFreqOffsetFree(f, bw)){
-        f = findFreeFreqOffset(250, 1500, bw);
+        f = findFreeFreqOffset(500, 1500, bw);
     }
 
     // delay beacon if there's not a free frequency or there's something the tx queue or we just recently transmitted
@@ -6835,7 +6838,7 @@ void MainWindow::on_replyMacroButton_clicked(){
         return;
     }
 
-    int offset = ui->RxFreqSpinBox->value();
+    int offset = currentFreq();
     if(m_bandActivity.contains(offset)){
         auto activity = m_bandActivity[offset].last();
         if(!activity.firstCall.isEmpty()){
@@ -6865,7 +6868,7 @@ void MainWindow::on_snrMacroButton_clicked(){
         return;
     }
 
-    int offset = ui->RxFreqSpinBox->value();
+    int offset = currentFreq();
     if(m_bandActivity.contains(offset)){
         int snr = m_bandActivity[offset].last().snr;
         addMessageText(Varicode::formatSNR(snr));
@@ -7297,10 +7300,10 @@ void MainWindow::setFreq4(int rxFreq, int txFreq)
       txFreq = rxFreq;
   }
 
-  // Don't go below 450 Hz if not in split mode
+  // Don't go below 500 Hz if not in split mode
   if(!m_config.split_mode()){
-    rxFreq = qMax(450, rxFreq);
-    txFreq = qMax(450, txFreq);
+    rxFreq = qMax(500, rxFreq);
+    txFreq = qMax(500, txFreq);
   }
 
   if (ui->RxFreqSpinBox->isEnabled ()) ui->RxFreqSpinBox->setValue(rxFreq);
@@ -8254,7 +8257,7 @@ void MainWindow::displayActivity(bool force){
   // Command Activity
 
   if(m_txFrameQueue.isEmpty() && !m_rxCommandQueue.isEmpty()){
-    int f = ui->TxFreqSpinBox->value(); // ew
+    int f = currentFreq();
 
     bool processed = false;
 
