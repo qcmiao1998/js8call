@@ -1050,6 +1050,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->tableWidgetCalls->addAction(clearActionSep);
   ui->tableWidgetCalls->addAction(clearActionAll);
 
+  m_lastTxTime = QDateTime::currentDateTimeUtc();
+
   displayActivity(true);
 
 #if 0
@@ -5748,11 +5750,34 @@ void MainWindow::prepareBeacon(){
         return;
     }
 
+    // TODO: jsherer - return to the original frequency afterwards?
     setFreq4(f, f);
 
-    QString message = QString("DE %1 %2\nDE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4));
+    QStringList lines;
 
-    addMessageText(message);
+    lines.append(QString("DE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4)));
+    lines.append(QString("DE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4)));
+
+    if(!m_callActivity.isEmpty()){
+        auto callsHeard = QSet<QString>::fromList(m_callActivity.keys());
+        auto callsToBeacon = callsHeard - m_callSeenBeacon;
+        if(callsToBeacon.isEmpty()){
+            m_callSeenBeacon.clear();
+        } else {
+            auto call = callsToBeacon.toList().first();
+            auto d = m_callActivity[call];
+
+            lines.append(QString("%1 SNR %2").arg(call).arg(Varicode::formatSNR(d.snr)));
+            m_callSeenBeacon.insert(call);
+        }
+    }
+
+    while(lines.length() > 2){
+        lines.removeFirst();
+    }
+
+    addMessageText(lines.join(QChar('\n')));
+
     ui->startTxButton->setChecked(true);
 
     scheduleBeacon();

@@ -690,6 +690,7 @@ private:
   QMap<int, int> m_rxFrameBlockNumbers; // freq -> block
   QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
+  QSet<QString> m_callSeenBeacon; // call
   QMap<QString,FoxQSO> m_foxQSO;
   QMap<QString,QString> m_loggedByFox;
 
