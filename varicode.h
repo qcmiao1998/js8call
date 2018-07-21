@@ -28,6 +28,7 @@ public:
     //Varicode();
 
     static QString formatSNR(int snr);
+    static QString formatPWR(int dbm);
 
     static QStringList parseCallsigns(QString const &input);
     static QStringList parseGrids(QString const &input);

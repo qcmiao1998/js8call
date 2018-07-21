@@ -46,6 +46,7 @@ QMap<QString, int> directed_cmds = {
     {"|",     4  }, // relay message
 
     // directed responses
+    {" PWR",  24  }, // power level
     {" SNR",  25  }, // seen a station at the provided snr
     {" NO",   26  }, // negative confirm
     {" YES",  27  }, // confirm
@@ -55,12 +56,14 @@ QMap<QString, int> directed_cmds = {
     {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2,      25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2,      24, 25, 26, 27, 28, 29, 30, 31};
 
 QRegularExpression directed_re("^"
                                "(?<to>[A-Z0-9/]+)"
-                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|[?$@&| ]))"
-                               "(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
+                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|PWR|[?$@&| ]))"
+                               "(?<pwr>\\s?\\d+\\s?[KM]?W)?"
+                               "(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?"
+                               );
 
 QMap<QChar, QString> huff = {
     // char   code                 weight
@@ -121,12 +124,71 @@ QMap<QString, quint32> basecalls = {
     { "ALLCALL", nbasecall + 3 },
 };
 
+QMap<int, int> dbm2mw = {
+    {0  , 1},
+    {3  , 2},
+    {7  , 5},
+    {10 , 10},
+    {13 , 20},
+    {17 , 50},
+    {20 , 100},
+    {23 , 200},
+    {27 , 500},
+    {30 , 1000},    //    1W
+    {33 , 2000},    //    2W
+    {37 , 5000},    //    5W
+    {40 , 10000},   //   10W
+    {43 , 20000},   //   20W
+    {47 , 50000},   //   50W
+    {50 , 100000},  //  100W
+    {53 , 200000},  //  200W
+    {57 , 500000},  //  500W
+    {60 , 1000000}, // 1000W
+};
+
+int mwattsToDbm(int mwatts){
+    int dbm = 0;
+    auto values = dbm2mw.values();
+    qSort(values);
+    foreach(auto mw, values){
+        if(mw < mwatts){ continue; }
+        dbm = dbm2mw.key(mw);
+        break;
+    }
+
+    return dbm;
+}
+
+int dbmTomwatts(int dbm){
+    if(dbm2mw.contains(dbm)){
+        return dbm2mw[dbm];
+    }
+    auto iter = dbm2mw.lowerBound(dbm);
+    if(iter == dbm2mw.end()){
+        return dbm2mw.last();
+    }
+    return iter.value();
+}
+
 QString Varicode::formatSNR(int snr){
     if(snr < -60 || snr > 60){
         return QString();
     }
 
     return QString("%1%2").arg(snr >= 0 ? "+" : "").arg(snr, snr < 0 ? 3 : 2, 10, QChar('0'));
+}
+
+QString Varicode::formatPWR(int dbm){
+    if(dbm < 0 || dbm > 60){
+        return QString();
+    }
+
+    int mwatts = dbmTomwatts(dbm);
+    if(mwatts < 1000){
+        return QString("%1MW").arg(mwatts);
+    }
+
+    return QString("%1W").arg(mwatts/1000);
 }
 
 QStringList Varicode::parseCallsigns(QString const &input){
@@ -535,6 +597,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         QString to = match.captured("to");
         QString cmd = match.captured("cmd");
         QString num = match.captured("num").trimmed();
+        QString pwr = match.captured("pwr").trimmed();
 
         int inum = -31;
         bool hasnum = false;
@@ -542,9 +605,19 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
             inum = qMax(-30, qMin(num.toInt(&hasnum, 10), 30));
         }
 
-        qDebug() << "match" << match.captured(0);
-        qDebug() << "groups" << from << to << cmd << num;
-        qDebug() << "packed num" << num << inum << hasnum;
+        // if we are packing a PWR command, pack pwr into dbm
+        int ipwr = -31;
+        if(!pwr.isEmpty() && cmd.trimmed() == "PWR"){
+            int factor = 1000;
+            if(pwr.endsWith("KW")){
+                factor = 1000000;
+            }
+            else if(pwr.endsWith("MW")){
+                factor = 1;
+            }
+            ipwr = pwr.replace(QRegExp("[KM]?W"), "").toInt() * factor;
+            inum = mwattsToDbm(ipwr) - 30;
+        }
 
         if(to == callsign){
             *n = 0;
@@ -625,7 +698,14 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
 
     int num = (flag ? -1 : 1) * extra;
     if(num != -31){
-        unpacked.append(Varicode::formatSNR(num));
+        // TODO: jsherer - should we decide which format to use on the command, or something else?
+        if(packed_cmd == directed_cmds[" PWR"]){
+            unpacked.append(Varicode::formatPWR(num + 30));
+        } else if(packed_cmd == directed_cmds[" SNR"]) {
+            unpacked.append(Varicode::formatSNR(num));
+        } else {
+            unpacked.append(QString("%1").arg(num));
+        }
     }
 
     return unpacked;
