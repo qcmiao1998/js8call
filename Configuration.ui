@@ -2580,13 +2580,13 @@ Right click for insert and delete options.</string>
           <item>
            <widget class="QPushButton" name="font_push_button">
             <property name="enabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="toolTip">
              <string>Set the font characteristics for the application.</string>
             </property>
             <property name="text">
-             <string>Font...</string>
+             <string>UI Font...</string>
             </property>
            </widget>
           </item>
@@ -2599,7 +2599,7 @@ Right click for insert and delete options.</string>
              <string>Set the font characteristics for the Band Activity and Rx Frequency areas.</string>
             </property>
             <property name="text">
-             <string>Decoded Text Font...</string>
+             <string>Message Text Font...</string>
             </property>
            </widget>
           </item>
