@@ -37,14 +37,16 @@ QString callsign_alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "};
 
 QMap<QString, int> directed_cmds = {
     // any changes here need to be made also in the directed regular xpression for parsing
+
+    // directed queries
     {"?",     0  }, // query snr
     {"@",     1  }, // query qth
     {"&",     2  }, // query station message
+    {"$",     3  }, // query station(s) heard
+    {"|",     4  }, // relay message
 
-    //{"$",     3  }, // query stations heard
-    //{"|",     4  }, // relay message
-
-    // ...
+    // directed responses
+    {" SNR",  25  }, // seen a station at the provided snr
     {" NO",   26  }, // negative confirm
     {" YES",  27  }, // confirm
     {" 73",   28  }, // best regards, end of contact
@@ -53,11 +55,11 @@ QMap<QString, int> directed_cmds = {
     {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 2, 3, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2,      25, 26, 27, 28, 29, 30, 31};
 
 QRegularExpression directed_re("^"
                                "(?<to>[A-Z0-9/]+)"
-                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|[?$@&| ]))"
+                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|[?$@&| ]))"
                                "(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
 
 QMap<QChar, QString> huff = {
