@@ -5324,6 +5324,7 @@ int MainWindow::logRxTxMessageText(QDateTime date, bool isFree, QString text, in
 
     c.movePosition(QTextCursor::End);
     ui->textEditRX->ensureCursorVisible();
+    ui->textEditRX->verticalScrollBar()->setValue(ui->textEditRX->verticalScrollBar()->maximum());
 
     return c.blockNumber();
 }
