@@ -5272,6 +5272,7 @@ void MainWindow::on_tx6_editingFinished()                       //tx6 edited
 void MainWindow::clearActivity(){
     m_bandActivity.clear();
     m_callActivity.clear();
+    m_callSeenBeacon.clear();
     m_rxCallCache.clear();
     m_rxRecentCache.clear();
     m_rxDirectedCache.clear();
