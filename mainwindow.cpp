@@ -6884,9 +6884,11 @@ void MainWindow::on_snrMacroButton_clicked(){
     auto items = ui->tableWidgetCalls->selectedItems();
     if(!items.isEmpty()){
         QString selectedCall = items.first()->text();
-        int snr = m_callActivity[selectedCall].snr;
-        addMessageText(Varicode::formatSNR(snr));
-        return;
+        if(m_callActivity.contains(selectedCall)){
+            int snr = m_callActivity[selectedCall].snr;
+            addMessageText(Varicode::formatSNR(snr));
+            return;
+        }
     }
 
     int offset = currentFreq();
