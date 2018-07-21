@@ -3270,6 +3270,13 @@ void MainWindow::readFromStdout()                             //readFromStdout
               cd.freq = decodedtext.frequencyOffset();
               cd.utcTimestamp = d.utcTimestamp;
               m_callActivity[cd.call] = cd;
+
+              int nsec=QDateTime::currentMSecsSinceEpoch()/1000-m_secBandChanged;
+              bool okToPost=(nsec>(4*m_TRperiod)/5);
+              if (okToPost){
+                  pskSetLocal();
+                  pskLogReport("FT8Call", d.freq, d.snr, d.from, "");
+              }
           }
         }
       }
@@ -3484,13 +3491,27 @@ void MainWindow::pskPost (DecodedText const& decodedtext)
     audioFrequency=decodedtext.string().mid(16,4).toInt();
   }
   int snr = decodedtext.snr();
-  Frequency frequency = m_freqNominal + audioFrequency;
   pskSetLocal ();
   if(grid.contains (grid_regexp)) {
 //    qDebug() << "To PSKreporter:" << deCall << grid << frequency << msgmode << snr;
-    psk_Reporter->addRemoteStation(deCall,grid,QString::number(frequency),msgmode,
-           QString::number(snr),QString::number(QDateTime::currentDateTime().toTime_t()));
+//    psk_Reporter->addRemoteStation(deCall,grid,QString::number(frequency),msgmode,
+//           QString::number(snr),QString::number(QDateTime::currentDateTime().toTime_t()));
+      pskLogReport(msgmode, audioFrequency, snr, deCall, grid);
   }
+}
+
+void MainWindow::pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid){
+    if(!m_config.spot_to_psk_reporter()) return;
+
+    Frequency frequency = m_freqNominal + offset;
+
+    psk_Reporter->addRemoteStation(
+       callsign,
+       grid,
+       QString::number(frequency),
+       mode,
+       QString::number(snr),
+       QString::number(QDateTime::currentDateTime().toTime_t()));
 }
 
 void MainWindow::killFile ()

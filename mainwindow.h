@@ -754,6 +754,7 @@ private:
   void rigFailure (QString const& reason);
   void pskSetLocal ();
   void pskPost(DecodedText const& decodedtext);
+  void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
   void displayDialFrequency ();
   void transmitDisplay (bool);
   void processMessage(DecodedText const&, Qt::KeyboardModifiers = 0);
