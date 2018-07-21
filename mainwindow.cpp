@@ -8052,11 +8052,13 @@ void MainWindow::updateButtonDisplay(){
 
     bool isTransmitting = m_transmitting || m_txFrameCount > 0;
     bool emptyCallsign = callsignSelected().isEmpty();
+    bool emptyQTC = m_config.my_station().isEmpty();
+    bool emptyQTH = m_config.my_qth().isEmpty() && m_config.my_grid().isEmpty();
 
     ui->cqMacroButton->setDisabled(isTransmitting);
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
-    ui->qtcMacroButton->setDisabled(isTransmitting);
-    ui->qthMacroButton->setDisabled(isTransmitting);
+    ui->qtcMacroButton->setDisabled(isTransmitting || emptyQTC);
+    ui->qthMacroButton->setDisabled(isTransmitting || emptyQTH);
     ui->snrMacroButton->setDisabled(isTransmitting || emptyCallsign);
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
     ui->macrosMacroButton->setDisabled(isTransmitting);
@@ -8336,7 +8338,7 @@ void MainWindow::displayActivity(bool force){
       if(d.cmd == "?"){
           // standard FT8 reply
           // reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(d.snr);
-          reply = QString("%1 %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
+          reply = QString("%1 SNR %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
       }
       // QTH
       else if(d.cmd == "@" && !isAllCall){
