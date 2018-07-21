@@ -6914,16 +6914,9 @@ void MainWindow::on_snrMacroButton_clicked(){
         QString selectedCall = items.first()->text();
         if(m_callActivity.contains(selectedCall)){
             int snr = m_callActivity[selectedCall].snr;
-            addMessageText(Varicode::formatSNR(snr));
+            addMessageText(QString("%1 SNR %2").arg(selectedCall).arg(Varicode::formatSNR(snr)));
             return;
         }
-    }
-
-    int offset = currentFreq();
-    if(m_bandActivity.contains(offset)){
-        int snr = m_bandActivity[offset].last().snr;
-        addMessageText(Varicode::formatSNR(snr));
-        return;
     }
 }
 
