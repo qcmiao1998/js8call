@@ -8188,18 +8188,18 @@ void MainWindow::displayActivity(bool force){
           auto offsetItem = new QTableWidgetItem(QString("%1").arg(offset));
           ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, offsetItem);
 
-          auto snrItem = new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(snr)));
-          snrItem->setTextAlignment(Qt::AlignCenter|Qt::AlignVCenter);
-          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, snrItem);
-
-          /*
           auto ageItem = new QTableWidgetItem(QString("(%1)").arg(age));
           ageItem->setTextAlignment(Qt::AlignCenter|Qt::AlignVCenter);
-          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, ageItem);
-          */
+          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, ageItem);
+
+          auto snrItem = new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(snr)));
+          snrItem->setTextAlignment(Qt::AlignCenter|Qt::AlignVCenter);
+          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, snrItem);
+
+
 
           // align right if eliding...
-          int colWidth = ui->tableWidgetRXAll->columnWidth(2);
+          int colWidth = ui->tableWidgetRXAll->columnWidth(3);
           auto textItem = new QTableWidgetItem(joined);
           QFontMetrics fm(textItem->font());
           auto elidedText = fm.elidedText(joined, Qt::ElideLeft, colWidth);
@@ -8212,19 +8212,19 @@ void MainWindow::displayActivity(bool force){
 
           if (text.last().contains(QRegularExpression {"^(CQ|QRZ|DE)\\s"})){
               offsetItem->setBackground(QBrush(m_config.color_CQ()));
-              //ageItem->setBackground(QBrush(m_config.color_CQ()));
+              ageItem->setBackground(QBrush(m_config.color_CQ()));
               snrItem->setBackground(QBrush(m_config.color_CQ()));
               textItem->setBackground(QBrush(m_config.color_CQ()));
           }
 
           if(m_rxDirectedCache.contains(offset/10*10)){
               offsetItem->setBackground(QBrush(m_config.color_MyCall()));
-              //ageItem->setBackground(QBrush(m_config.color_MyCall()));
+              ageItem->setBackground(QBrush(m_config.color_MyCall()));
               snrItem->setBackground(QBrush(m_config.color_MyCall()));
               textItem->setBackground(QBrush(m_config.color_MyCall()));
           }
 
-          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2/*3*/, textItem);
+          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 3, textItem);
 
           if(offset == selectedOffset){
               ui->tableWidgetRXAll->selectRow(ui->tableWidgetRXAll->rowCount() - 1);
@@ -8233,6 +8233,7 @@ void MainWindow::displayActivity(bool force){
   }
   ui->tableWidgetRXAll->resizeColumnToContents(0);
   ui->tableWidgetRXAll->resizeColumnToContents(1);
+  ui->tableWidgetRXAll->resizeColumnToContents(2);
 
 
 

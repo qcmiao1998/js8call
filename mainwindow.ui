@@ -887,6 +887,11 @@ background-color: yellow;
         </column>
         <column>
          <property name="text">
+          <string>Age</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
           <string>SNR</string>
          </property>
         </column>
