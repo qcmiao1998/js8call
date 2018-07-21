@@ -5758,6 +5758,7 @@ void MainWindow::prepareBeacon(){
     lines.append(QString("DE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4)));
     lines.append(QString("DE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4)));
 
+#if 0
     if(!m_callActivity.isEmpty()){
         auto callsHeard = QSet<QString>::fromList(m_callActivity.keys());
         auto callsToBeacon = callsHeard - m_callSeenBeacon;
@@ -5775,6 +5776,7 @@ void MainWindow::prepareBeacon(){
     while(lines.length() > 2){
         lines.removeFirst();
     }
+#endif
 
     addMessageText(lines.join(QChar('\n')));
 
