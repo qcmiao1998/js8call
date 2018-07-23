@@ -164,7 +164,7 @@ namespace
 {
   Radio::Frequency constexpr default_frequency {14074000};
   QRegExp message_alphabet {"[- A-Za-z0-9+./?:!^]*"};
-  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:!^@&|]*"}; // @&| are used for commands
+  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:!^@&|]*"}; // @&| are used for commands but are never transmitted
   // grid exact match excluding RR73
   QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
 
@@ -8104,6 +8104,12 @@ QString MainWindow::callsignSelected(){
                 return call;
             }
         }
+    }
+
+    auto text = ui->extFreeTextMsgEdit->toPlainText().left(11);
+    auto calls = Varicode::parseCallsigns(text);
+    if(!calls.isEmpty() && text.startsWith(calls.first())){
+        return calls.first();
     }
 
     return QString();
