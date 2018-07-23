@@ -164,7 +164,7 @@ namespace
 {
   Radio::Frequency constexpr default_frequency {14074000};
   QRegExp message_alphabet {"[- A-Za-z0-9+./?:!^]*"};
-  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:!^@&]*"};
+  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:!^@&|]*"}; // @&| are used for commands
   // grid exact match excluding RR73
   QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
 
@@ -770,7 +770,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(&TxAgainTimer, SIGNAL(timeout()), this, SLOT(TxAgain()));
 
   beaconTimer.setSingleShot(true);
-  connect(&beaconTimer, &QTimer::timeout, this, &MainWindow::prepareBeacon);
+  connect(&beaconTimer, &QTimer::timeout, this, &MainWindow::prepareBacon);
 
   connect(m_wideGraph.data (), SIGNAL(setFreq3(int,int)),this,
           SLOT(setFreq4(int,int)));
@@ -4197,9 +4197,7 @@ void MainWindow::stopTx()
 
       // if we have a previousFrequency, and should jump to it, do it
       if(m_previousFreq && m_shouldRestoreFreq){
-          setFreq4(m_previousFreq, m_previousFreq);
-          m_previousFreq = 0;
-          m_shouldRestoreFreq = false;
+          setFreqForRestore(m_previousFreq, false);
       }
   }
 
@@ -5488,6 +5486,18 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
     QString mycall = m_config.my_callsign();
     foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
 
+#if 0
+        // TODO: jsherer - maybe preprocess the line for validated messages in Varicode?
+        QRegularExpression r("^(?<cmd>[A-Z0-9/]+\\s?[|])(?<text>.+)");
+        auto match = r.match(line);
+        if(match.hasMatch()){
+            auto lineCmd = match.captured("cmd");
+            auto lineText = match.captured("text");
+            auto checksum = Varicode::checksum(lineText);
+            line = lineCmd + checksum + lineText;
+        }
+#endif
+
         while(line.size() > 0){
           QString frame;
 
@@ -5502,9 +5512,6 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 
           int m = 0;
           QString datFrame = Varicode::packDataMessage(line.left(21) + "\x04", &m); //  63 / 3 = 21 (maximum number of 3bit chars we could possibly stuff in here)
-
-          qDebug() << "parsing message line" << line;
-          qDebug() << "-> isFree?" << isFree << n << m;
 
           // if this parses to a standard FT8 free text message
           // but it can be parsed as a directed message, then we
@@ -5558,7 +5565,7 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 #if 1
     qDebug() << "parsed frames:";
     foreach(auto frame, frames){
-        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame);
+        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame) << Varicode::unpackDirectedMessage(frame);
     }
 
     qDebug() << "lines:";
@@ -5734,7 +5741,7 @@ void MainWindow::setBeaconTimer(QDateTime timestamp){
     beaconTimer.start(QDateTime::currentDateTimeUtc().msecsTo(m_nextBeacon) - 2*1000);
 }
 
-void MainWindow::prepareBeacon(){
+void MainWindow::prepareBacon(){
     if(!ui->beaconButton->isChecked()){
         return;
     }
@@ -5762,9 +5769,7 @@ void MainWindow::prepareBeacon(){
         return;
     }
 
-    // TODO: jsherer - return to the original frequency afterwards?
-    setFreq4(f, f);
-    m_shouldRestoreFreq = true;
+    setFreqForRestore(f, true);
 
     QStringList lines;
 
@@ -7353,6 +7358,16 @@ void MainWindow::setXIT(int n, Frequency base)
   Q_EMIT transmitFrequency (ui->TxFreqSpinBox->value () - m_XIT);
 }
 
+void MainWindow::setFreqForRestore(int freq, bool shouldRestore){
+    setFreq4(freq, freq);
+    if(shouldRestore){
+        m_shouldRestoreFreq = true;
+    } else {
+        m_previousFreq = 0;
+        m_shouldRestoreFreq = false;
+    }
+}
+
 void MainWindow::setFreq4(int rxFreq, int txFreq)
 {
   if(rxFreq != txFreq){
@@ -8399,8 +8414,7 @@ void MainWindow::displayActivity(bool force){
     if(processed){
         // if we have beacon turned on, and it's more than 15 seconds away, automatically reply now, and bump the beacon
         if(QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) >= 15){
-            setFreq4(f, f);
-            m_shouldRestoreFreq = true;
+            setFreqForRestore(f, true);
 
             ui->startTxButton->setChecked(true);
 

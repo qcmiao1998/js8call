@@ -116,6 +116,7 @@ public slots:
   void readFromStdout();
   void p1ReadFromStdout();
   void setXIT(int n, Frequency base = 0u);
+  void setFreqForRestore(int freq, bool shouldRestore);
   void setFreq4(int rxFreq, int txFreq);
   void msgAvgDecode2();
   void fastPick(int x0, int x1, int y);
@@ -261,7 +262,7 @@ private slots:
   int findFreeFreqOffset(int fmin, int fmax, int bw);
   void scheduleBeacon(bool first=false);
   void setBeaconTimer(QDateTime timestamp);
-  void prepareBeacon();
+  void prepareBacon();
   QString calculateDistance(QString const& grid);
   void on_rptSpinBox_valueChanged(int n);
   void killFile();
