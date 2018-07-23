@@ -51,6 +51,9 @@ public:
     static quint8 unpack5bits(QString const& value);
     static QString pack5bits(quint8 packed);
 
+    static quint8 unpack6bits(QString const& value);
+    static QString pack6bits(quint8 packed);
+
     static quint16 unpack16bits(QString const& value);
     static QString pack16bits(quint16 packed);
 
@@ -59,6 +62,9 @@ public:
 
     static quint64 unpack64bits(QString const& value);
     static QString pack64bits(quint64 packed);
+
+    static quint32 packCallsignPrefixSuffix(QString const& value);
+    static QString unpackCallsignPrefixSuffix(quint32 packed);
 
     static quint32 packCallsign(QString const& value);
     static QString unpackCallsign(quint32 value);

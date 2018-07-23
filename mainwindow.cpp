@@ -1090,9 +1090,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   qDebug() << "frame ready at" << i << "size" << nextFrame.length() << "->" << Varicode::bitsToStr(nextFrame);
   frames++;
   qDebug() << "HuffFrames" << frames;
+  qDebug() << Varicode::packCallsignPrefixSuffix("VE3") << Varicode::unpackCallsignPrefixSuffix(Varicode::packCallsignPrefixSuffix("VE3");
 #endif
-
-
 
   // this must be the last statement of constructor
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};

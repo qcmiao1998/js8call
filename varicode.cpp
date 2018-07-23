@@ -356,29 +356,46 @@ quint64 Varicode::bitsToInt(QVector<bool>::ConstIterator start, int n){
     return v;
 }
 
-
 quint8 Varicode::unpack5bits(QString const& value){
     return alphabet.indexOf(value.at(0));
 }
 
+// pack a 5-bit value from 0 to 31 into a single character
 QString Varicode::pack5bits(quint8 packed){
-    return alphabet.at(packed % nalphabet);
+    return alphabet.at(packed % 32);
+}
+
+quint8 Varicode::unpack6bits(QString const& value){
+    return alphabet.indexOf(value.at(0));
+}
+
+// pack a 6-bit value from 0 to 40 into a single character
+QString Varicode::pack6bits(quint8 packed){
+    return alphabet.at(packed % 41);
 }
 
 quint16 Varicode::unpack16bits(QString const& value){
     int a = alphabet.indexOf(value.at(0));
     int b = alphabet.indexOf(value.at(1));
     int c = alphabet.indexOf(value.at(2));
-    return (nalphabet*nalphabet) * a + nalphabet*b + c;
+
+    int unpacked = (nalphabet * nalphabet) * a + nalphabet * b + c;
+    if(unpacked > (1<<16)-1){
+        // BASE-41 can produce a value larger than 16 bits... ala "???" == 70643
+        return 0;
+    }
+
+    return unpacked & ((1<<16)-1);
 }
 
+// pack a 16-bit value into a three character sequence
 QString Varicode::pack16bits(quint16 packed){
     QString out;
-    quint16 tmp = packed / (nalphabet*nalphabet);
+    quint16 tmp = packed / (nalphabet * nalphabet);
 
     out.append(alphabet.at(tmp));
 
-    tmp = (packed - (tmp * (nalphabet*nalphabet))) / nalphabet;
+    tmp = (packed - (tmp * (nalphabet * nalphabet))) / nalphabet;
     out.append(alphabet.at(tmp));
 
     tmp = packed % nalphabet;
@@ -407,6 +424,38 @@ QString Varicode::pack64bits(quint64 packed){
     return pack32bits(a) + pack32bits(b);
 }
 
+
+//     //
+// --- //
+//     //
+
+
+// pack a 4-digit alpha-numeric callsign prefix/suffix into a 22 bit value
+quint32 Varicode::packCallsignPrefixSuffix(QString const& value){
+    quint32 packed = 0;
+    quint8 mask6 = (1<<6)-1;
+
+    QString prefix = QString(value).replace(QRegExp("[^A-Z0-9]"), "");
+    if(prefix.length() < 4){
+        prefix = prefix + QString(".").repeated(4-prefix.length());
+    }
+
+    // [16][6] = 22 bits
+    auto left = prefix.left(3);
+    auto right = prefix.right(1); // guaranteed to be in our alphabet...
+
+    return ((quint32)Varicode::unpack16bits(left) << 6) | (Varicode::unpack6bits(right) & mask6);
+}
+
+QString Varicode::unpackCallsignPrefixSuffix(quint32 packed){
+    quint32 mask22 = ((1<<16)-1) << 6;
+    quint32 mask6 = ((1<<6)-1);
+    quint16 a = (packed & mask22) >> 6;
+    quint16 b = packed & mask6 ;
+    return QString(Varicode::pack16bits(a) + Varicode::pack6bits(b)).replace(".", "");
+}
+
+// pack a callsign into a 28-bit value
 quint32 Varicode::packCallsign(QString const& value){
     quint32 packed = 0;
 
@@ -578,6 +627,7 @@ QPair<float, float> grid2deg(QString const &grid){
     return longLat;
 }
 
+// pack a 4-digit maidenhead grid locator into a 15-bit value
 quint16 Varicode::packGrid(QString const& grid){
     // TODO: validate grid...
 
@@ -606,6 +656,8 @@ bool Varicode::isCommandAllowed(const QString &cmd){
     return directed_cmds.contains(cmd) && allowed_cmds.contains(directed_cmds[cmd]);
 }
 
+
+// TODO: jsherer - rename to tryPackDirectedMessage, and break apart the actual packing code into a separate function
 QString Varicode::packDirectedMessage(const QString &text, const QString &callsign, int *n){
     QString frame;
 
