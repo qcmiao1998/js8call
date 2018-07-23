@@ -3209,7 +3209,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.snr = decodedtext.snr();
             d.freq = decodedtext.frequencyOffset();
             d.utcTimestamp = QDateTime::currentDateTimeUtc();
-            m_callActivity[cqCall] = d;
+            m_callActivity[Radio::base_callsign(cqCall)] = d; // original call is stored in CallDetail.
           }
 
 
@@ -3245,7 +3245,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                           d.snr = decodedtext.snr();
                           d.freq = decodedtext.frequencyOffset();
                           d.utcTimestamp = QDateTime::currentDateTimeUtc();
-                          m_callActivity[de_callsign] = d;
+                          m_callActivity[Radio::base_callsign(de_callsign)] = d;
                       }
                   }
               }
@@ -3272,7 +3272,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
               cd.snr = decodedtext.snr();
               cd.freq = decodedtext.frequencyOffset();
               cd.utcTimestamp = d.utcTimestamp;
-              m_callActivity[cd.call] = cd;
+              m_callActivity[Radio::base_callsign(cd.call)] = cd;
 
               int nsec=QDateTime::currentMSecsSinceEpoch()/1000-m_secBandChanged;
               bool okToPost=(nsec>(4*m_TRperiod)/5);
@@ -5287,6 +5287,7 @@ void MainWindow::clearActivity(){
     m_rxCommandQueue.clear();
 
     clearTableWidget(ui->tableWidgetCalls);
+
     // this is now duplicated in three places :(
     ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
     ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem("ALLCALL"));
@@ -5483,7 +5484,8 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
     QStringList frames;
     QStringList lines;
 
-    QString mycall = m_config.my_callsign();
+    QString mycall = Radio::base_callsign(m_config.my_callsign());
+
     foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
 
 #if 0
@@ -5731,16 +5733,17 @@ void MainWindow::scheduleBeacon(bool first){
         timestamp = timestamp.addSecs(15);
     }
 
-    setBeaconTimer(timestamp);
+    setBaconTimer(timestamp);
 }
 
-void MainWindow::setBeaconTimer(QDateTime timestamp){
+void MainWindow::setBaconTimer(QDateTime timestamp){
     // set the next beacon timestamp and timer
     beaconTimer.stop();
     m_nextBeacon = timestamp;
     beaconTimer.start(QDateTime::currentDateTimeUtc().msecsTo(m_nextBeacon) - 2*1000);
 }
 
+// prepareBeacon
 void MainWindow::prepareBacon(){
     if(!ui->beaconButton->isChecked()){
         return;
@@ -5773,8 +5776,14 @@ void MainWindow::prepareBacon(){
 
     QStringList lines;
 
-    lines.append(QString("DE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4)));
-    lines.append(QString("DE %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().mid(0, 4)));
+    QString call = m_config.my_callsign();
+    QString grid = m_config.my_grid().left(4);
+    if(call != Radio::base_callsign(call)){
+        grid = "";
+    }
+
+    lines.append(QString("DE %1 %2").arg(call).arg(grid));
+    lines.append(QString("DE %1 %2").arg(call).arg(grid));
 
 #if 0
     if(!m_callActivity.isEmpty()){
@@ -6884,7 +6893,13 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
 }
 
 void MainWindow::on_cqMacroButton_clicked(){
-    QString text = QString("CQ %1 %2").arg(m_config.my_callsign()).arg(m_config.my_grid().left(4));
+    QString call = m_config.my_callsign();
+    QString grid = m_config.my_grid().left(4);
+    if(call != Radio::base_callsign(call)){
+        grid = "";
+    }
+
+    QString text = QString("CQ %1 %2").arg(call).arg(grid);
     addMessageText(text);
 }
 
@@ -6897,21 +6912,11 @@ void MainWindow::on_qtcMacroButton_clicked(){
 }
 
 void MainWindow::on_replyMacroButton_clicked(){
-    auto items = ui->tableWidgetCalls->selectedItems();
-    if(!items.isEmpty()){
-        QString selectedCall = items.first()->text();
-        addMessageText(selectedCall);
+    QString selectedCall = callsignSelected();
+    if(selectedCall.isEmpty()){
         return;
     }
-
-    int offset = currentFreq();
-    if(m_bandActivity.contains(offset)){
-        auto activity = m_bandActivity[offset].last();
-        if(!activity.firstCall.isEmpty()){
-            addMessageText(activity.firstCall);
-            return;
-        }
-    }
+    addMessageText(selectedCall);
 }
 
 void MainWindow::on_qthMacroButton_clicked(){
@@ -6926,15 +6931,17 @@ void MainWindow::on_qthMacroButton_clicked(){
 }
 
 void MainWindow::on_snrMacroButton_clicked(){
-    auto items = ui->tableWidgetCalls->selectedItems();
-    if(!items.isEmpty()){
-        QString selectedCall = items.first()->text();
-        if(m_callActivity.contains(selectedCall)){
-            int snr = m_callActivity[selectedCall].snr;
-            addMessageText(QString("%1 SNR %2").arg(selectedCall).arg(Varicode::formatSNR(snr)));
-            return;
-        }
+    QString selectedCall = callsignSelected();
+    if(selectedCall.isEmpty()){
+        return;
     }
+
+    if(!m_callActivity.contains(selectedCall)){
+        return;
+    }
+
+    auto d = m_callActivity[selectedCall];
+    addMessageText(QString("%1 SNR %2").arg(selectedCall).arg(Varicode::formatSNR(d.snr)));
 }
 
 void MainWindow::buildQueryMenu(QMenu * menu){
@@ -7138,14 +7145,13 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &sele
 
 void MainWindow::on_tableWidgetCalls_cellClicked(int row, int col){
     auto item = ui->tableWidgetCalls->item(row, 0);
-    auto call = item->text();
+    auto call = Radio::base_callsign(item->text());
     if(!m_callActivity.contains(call)){
         return;
     }
 
-    int offset = m_callActivity[call].freq;
-
-    setFreq4(offset, offset);
+    auto d = m_callActivity[call];
+    setFreqForRestore(d.freq, true);
 
     ui->tableWidgetRXAll->selectionModel()->select(
         ui->tableWidgetRXAll->selectionModel()->selection(),
@@ -7156,27 +7162,12 @@ void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
     on_tableWidgetCalls_cellClicked(row, col);
 
     auto item = ui->tableWidgetCalls->item(row, 0);
-    auto call = item->text();
+    auto call = Radio::base_callsign(item->text());
     addMessageText(call);
 }
 
 void MainWindow::on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected){
     on_tableWidgetRXAll_selectionChanged(selected, deselected);
-
-    /*
-    if(selected.isEmpty()){
-        return;
-    }
-    QString selectedCall = ui->tableWidgetCalls->selectedItems().first()->text();
-    int offset = m_callActivity[selectedCall].freq;
-
-    QList<QTableWidgetItem*> items = ui->tableWidgetRXAll->findItems(QString("%1").arg(offset), Qt::MatchExactly);
-    if(items.isEmpty()){
-        return;
-    }
-
-    ui->tableWidgetRXAll->setItemSelected(items.first(), true);
-    */
 }
 
 void MainWindow::on_freeTextMsg_currentTextChanged (QString const& text)
@@ -8101,7 +8092,7 @@ void MainWindow::updateButtonDisplay(){
 QString MainWindow::callsignSelected(){
     if(!ui->tableWidgetCalls->selectedItems().isEmpty()){
         auto selectedCalls = ui->tableWidgetCalls->selectedItems();
-        return selectedCalls.first()->text();
+        return Radio::base_callsign(selectedCalls.first()->text());
     }
 
     if(!ui->tableWidgetRXAll->selectedItems().isEmpty()){
@@ -8109,7 +8100,8 @@ QString MainWindow::callsignSelected(){
         auto selectedItems = ui->tableWidgetRXAll->selectedItems();
         selectedOffset = selectedItems.first()->text().toInt();
         foreach(auto call, m_callActivity.keys()){
-            if(m_callActivity[call].freq == selectedOffset){
+            auto d = m_callActivity[call];
+            if(d.freq == selectedOffset){
                 return call;
             }
         }
@@ -8133,7 +8125,7 @@ bool MainWindow::isDirectedOffset(int offset){
 }
 
 bool MainWindow::isMyCallIncluded(const QString &text){
-    QString myCall = m_config.my_callsign();
+    QString myCall = Radio::base_callsign(m_config.my_callsign());
 
     if(myCall.isEmpty()){
         return false;
@@ -8159,11 +8151,8 @@ void MainWindow::displayActivity(bool force){
       selectedOffset = selectedItems.first()->text().toInt();
   }
 
-  QString selectedCall;
-  auto selectedCalls = ui->tableWidgetCalls->selectedItems();
-  if(!selectedCalls.isEmpty()){
-      selectedCall = selectedCalls.first()->text();
-  }
+  // Selected callsign
+  QString selectedCall = callsignSelected();
 
   // Band Activity
   auto now = QDateTime::currentDateTimeUtc();
@@ -8293,7 +8282,7 @@ void MainWindow::displayActivity(bool force){
       }
 
       ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
-      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem(call));
+      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, new QTableWidgetItem(d.call));
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 2, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
       ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 3, new QTableWidgetItem(QString("%1").arg(d.grid)));
@@ -8357,7 +8346,7 @@ void MainWindow::displayActivity(bool force){
       }
 
       // we're only processing allcall and our callsign at this point
-      if(!isAllCall && d.to != m_config.my_callsign().trimmed()){
+      if(!isAllCall && d.to != m_config.my_callsign().trimmed() && d.to != Radio::base_callsign(m_config.my_callsign()).trimmed()){
          continue;
       }
 
@@ -8371,8 +8360,6 @@ void MainWindow::displayActivity(bool force){
 
       // SNR
       if(d.cmd == "?"){
-          // standard FT8 reply
-          // reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(d.snr);
           reply = QString("%1 SNR %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
       }
       // QTH
@@ -8383,8 +8370,6 @@ void MainWindow::displayActivity(bool force){
               if(grid.isEmpty()){
                   continue;
               }
-              // standard FT8 reply
-              // reply = QString("%1 %2 %3").arg(d.from).arg(m_config.my_callsign()).arg(grid);
               qth = grid;
           }
 
