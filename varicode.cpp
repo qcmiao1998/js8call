@@ -44,8 +44,10 @@ QMap<QString, int> directed_cmds = {
     {"&",     2  }, // query station message
     {"$",     3  }, // query station(s) heard
     {"|",     4  }, // relay message
+    {"!",     5  }, // alert message
 
     // directed responses
+    {" ACK",  23  }, // acknowledge
     {" PWR",  24  }, // power level
     {" SNR",  25  }, // seen a station at the provided snr
     {" NO",   26  }, // negative confirm
@@ -56,11 +58,11 @@ QMap<QString, int> directed_cmds = {
     {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2,      24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, /*3,*/ 4, /*5,*/ 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 QRegularExpression directed_re("^"
                                "(?<to>[A-Z0-9/]+)"
-                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|PWR|[?$@&| ]))"
+                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|PWR|ACK|[?$@&|! ]))"
                                "(?<pwr>\\s?\\d+\\s?[KM]?W)?"
                                "(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?"
                                );
@@ -189,6 +191,22 @@ QString Varicode::formatPWR(int dbm){
     }
 
     return QString("%1W").arg(mwatts/1000);
+}
+
+QString Varicode::checksum(QString const &input){
+    auto fromBytes = input.toLocal8Bit();
+    auto crc = CRC::Calculate(fromBytes.data(), fromBytes.length(), CRC::CRC_16_KERMIT());
+    auto checksum = Varicode::pack16bits(crc);
+    if(checksum.length() < 3){
+        checksum += QString(" ").repeated(3-checksum.length());
+    }
+    return checksum;
+}
+
+bool Varicode::checksumValid(QString const &checksum, QString const &input){
+    auto fromBytes = input.toLocal8Bit();
+    auto crc = CRC::Calculate(fromBytes.data(), fromBytes.length(), CRC::CRC_16_KERMIT());
+    return Varicode::pack16bits(crc) == checksum;
 }
 
 QStringList Varicode::parseCallsigns(QString const &input){
