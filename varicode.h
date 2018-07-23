@@ -74,6 +74,7 @@ public:
 
     static bool isCommandAllowed(const QString &cmd);
     static QString packDirectedMessage(QString const& text, QString const& callsign, int *n);
+    static QString packDirectedFrame(const QString &from, const QString &to, const QString &cmd, int inum);
     static QStringList unpackDirectedMessage(QString const& text);
 
     static QString packDataMessage(QString const& text, int *n);

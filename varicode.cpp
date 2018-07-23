@@ -46,6 +46,9 @@ QMap<QString, int> directed_cmds = {
     {"|",     4  }, // relay message
     {"!",     5  }, // alert message
 
+    // special responses
+    // {"/",     10 }, // compound callsign
+
     // directed responses
     {" ACK",  23  }, // acknowledge
     {" PWR",  24  }, // power level
@@ -58,7 +61,7 @@ QMap<QString, int> directed_cmds = {
     {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, /*3,*/ 4, /*5,*/ 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, /*3,*/ 4, /*5,*/ 10, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 QRegularExpression directed_re("^"
                                "(?<to>[A-Z0-9/]+)"
@@ -115,6 +118,8 @@ QMap<QChar, QString> huff = {
     {'-'    , "110101101110" }, // 5
     {'/'    , "110101101111" }, // 5
     {'\x04' , "110101100010" }, // 1       <- eot
+
+    // A-Z 0-9 Space . ! ? ^ : + - /
 };
 
 QChar huffeot = '\x04';
@@ -122,7 +127,8 @@ QChar huffeot = '\x04';
 quint32 nbasecall = 37 * 36 * 10 * 27 * 27 * 27;
 
 QMap<QString, quint32> basecalls = {
-    { "CQCQCQ",  nbasecall + 1 },
+    { "<....>",  nbasecall + 1 }, // incomplete callsign
+    { "CQCQCQ",  nbasecall + 2 },
     { "ALLCALL", nbasecall + 3 },
 };
 
@@ -657,80 +663,90 @@ bool Varicode::isCommandAllowed(const QString &cmd){
 }
 
 
-// TODO: jsherer - rename to tryPackDirectedMessage, and break apart the actual packing code into a separate function
 QString Varicode::packDirectedMessage(const QString &text, const QString &callsign, int *n){
     QString frame;
 
     auto match = directed_re.match(text);
-    if(match.hasMatch()){
-        QString from = callsign;
-        QString to = match.captured("to");
-        QString cmd = match.captured("cmd");
-        QString num = match.captured("num").trimmed();
-        QString pwr = match.captured("pwr").trimmed();
-
-        int inum = -31;
-        bool hasnum = false;
-        if(!num.isEmpty()){
-            inum = qMax(-30, qMin(num.toInt(&hasnum, 10), 30));
-        }
-
-        // if we are packing a PWR command, pack pwr into dbm
-        int ipwr = -31;
-        if(!pwr.isEmpty() && cmd.trimmed() == "PWR"){
-            int factor = 1000;
-            if(pwr.endsWith("KW")){
-                factor = 1000000;
-            }
-            else if(pwr.endsWith("MW")){
-                factor = 1;
-            }
-            ipwr = pwr.replace(QRegExp("[KM]?W"), "").toInt() * factor;
-            inum = mwattsToDbm(ipwr) - 30;
-        }
-
-        if(to == callsign){
-            *n = 0;
-            return frame;
-        }
-
-        bool validToCallsign = basecalls.contains(to) || QRegularExpression(callsign_pattern2).match(to).hasMatch();
-        if(!validToCallsign || !Varicode::isCommandAllowed(cmd)){
-            *n = 0;
-            return frame;
-        }
-
-        // TODO: jsherer - we don't need this CRC... the FT8 msg already has a 12 bit CRC...
-        //auto fromBytes = from.toLocal8Bit();
-        //auto fromCRC = CRC::Calculate(fromBytes.data(), fromBytes.length(), CRC::CRC_5_ITU());
-
-        quint8 packed_is_data = 0;
-        quint8 packed_flag = inum < 0 ? 1 : 0;
-        quint32 packed_from = Varicode::packCallsign(from);
-        quint32 packed_to = Varicode::packCallsign(to);
-
-        if(packed_from == 0 || packed_to == 0){
-            *n = 0;
-            return frame;
-        }
-
-        quint8 packed_cmd = directed_cmds[cmd];
-        quint8 packed_extra = qAbs(inum);
-
-        // [1][2][28][28][5],[5] = 69
-        auto bits = (
-            Varicode::intToBits(packed_is_data, 1) +
-            Varicode::intToBits(packed_flag, 2)    +
-            Varicode::intToBits(packed_from, 28)   +
-            Varicode::intToBits(packed_to, 28)     +
-            Varicode::intToBits(packed_cmd & 31, 5)
-        );
-        frame = Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_extra & 31);
-        *n = match.captured(0).length();
+    if(!match.hasMatch()){
+        if(n) *n = 0;
         return frame;
     }
 
+    QString from = callsign;
+    QString to = match.captured("to");
+    QString cmd = match.captured("cmd");
+    QString num = match.captured("num").trimmed();
+    QString pwr = match.captured("pwr").trimmed();
+
+    // validate callsign
+    bool validToCallsign = to != callsign && (basecalls.contains(to) || QRegularExpression(callsign_pattern2).match(to).hasMatch());
+    if(!validToCallsign){
+        if(n) *n = 0;
+        return frame;
+    }
+
+    // validate command
+    if(!Varicode::isCommandAllowed(cmd)){
+        if(n) *n = 0;
+        return frame;
+    }
+
+    // packing general number...
+    int inum = -31;
+    bool hasnum = false;
+    if(!num.isEmpty()){
+        inum = qMax(-30, qMin(num.toInt(&hasnum, 10), 30));
+    }
+
+    // if we are packing a PWR command, pack pwr as dbm
+    int ipwr = -31;
+    if(!pwr.isEmpty() && cmd.trimmed() == "PWR"){
+        int factor = 1000;
+        if(pwr.endsWith("KW")){
+            factor = 1000000;
+        }
+        else if(pwr.endsWith("MW")){
+            factor = 1;
+        }
+        ipwr = pwr.replace(QRegExp("[KM]?W"), "").toInt() * factor;
+        inum = mwattsToDbm(ipwr) - 30;
+    }
+
+    frame = Varicode::packDirectedFrame(from, to, cmd, inum);
+    if(frame.isEmpty()){
+        if(n) *n = 0;
+        return frame;
+    }
+
+    if(n) *n = match.captured(0).length();
     return frame;
+}
+
+QString Varicode::packDirectedFrame(const QString &from, const QString &to, const QString &cmd, int inum){
+    QString frame;
+
+    quint8 packed_is_data = 0;
+    quint8 packed_flag = inum < 0 ? 1 : 0;
+    quint32 packed_from = Varicode::packCallsign(from);
+    quint32 packed_to = Varicode::packCallsign(to);
+
+    if(packed_from == 0 || packed_to == 0){
+        return frame;
+    }
+
+    quint8 packed_cmd = directed_cmds[cmd];
+    quint8 packed_extra = qAbs(inum);
+
+    // [1][2][28][28][5],[5] = 69
+    auto bits = (
+        Varicode::intToBits(packed_is_data, 1) +
+        Varicode::intToBits(packed_flag, 2)    +
+        Varicode::intToBits(packed_from, 28)   +
+        Varicode::intToBits(packed_to, 28)     +
+        Varicode::intToBits(packed_cmd & 31, 5)
+    );
+
+    return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_extra & 31);
 }
 
 QStringList Varicode::unpackDirectedMessage(const QString &text){
@@ -754,13 +770,6 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
     quint8 packed_cmd = Varicode::bitsToInt(Varicode::strToBits(bits.mid(59, 5)));
 
     QString from = Varicode::unpackCallsign(packed_from).trimmed();
-
-    // TODO: jsherer - we don't need this CRC... the FT8 msg already has a 12 bit CRC...
-    //auto fromBytes = from.toLocal8Bit();
-    //auto fromCRC = CRC::Calculate(fromBytes.data(), fromBytes.length(), CRC::CRC_5_ITU());
-    //if(fromCRC != extra){
-    //    return unpacked;
-    //}
 
     unpacked.append(from);
     unpacked.append(Varicode::unpackCallsign(packed_to).trimmed());
