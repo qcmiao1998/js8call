@@ -254,6 +254,7 @@ private slots:
   void on_extFreeTextMsg_currentTextChanged (QString const&);
   void on_extFreeTextMsgEdit_currentTextChanged (QString const&);
   int currentFreq();
+  int countFT8MessageFrames(QString const& text);
   QPair<QStringList, QStringList> buildFT8MessageFrames(QString const& text);
   QString parseFT8Message(QString input, bool *isFree);
   bool prepareNextMessageFrame();

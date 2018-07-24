@@ -5339,6 +5339,7 @@ void MainWindow::clearActivity(){
     m_bandActivity.clear();
     m_callActivity.clear();
     m_callSeenBeacon.clear();
+    m_compoundCallCache.clear();
     m_rxCallCache.clear();
     m_rxRecentCache.clear();
     m_rxDirectedCache.clear();
@@ -5515,7 +5516,7 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
       ui->extFreeTextMsgEdit->setTextCursor(c);
     }
 
-    int count = buildFT8MessageFrames(x).first.length();
+    int count = countFT8MessageFrames(x);
     if(count > 0){
         ui->startTxButton->setText(QString("Send (%1)").arg(count));
         ui->startTxButton->setEnabled(true);
@@ -5525,19 +5526,12 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
     }
 }
 
-QString trimWithPeriods(QString value){
-    QRegularExpression re("^\\s+");
-    auto match = re.match(value);
-    if(match.hasMatch()){
-        int count = match.captured(0).length();
-        return value.replace(0, count, QString(".").repeated(count));
-    }
-
-    return value;
-}
-
 int MainWindow::currentFreq(){
     return ui->RxFreqSpinBox->value();
+}
+
+int MainWindow::countFT8MessageFrames(QString const& text){
+    return buildFT8MessageFrames(text).first.length();
 }
 
 QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const& text){
