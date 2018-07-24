@@ -10,6 +10,7 @@ auto CallsignValidator::validate (QString& input, int& pos) const -> State
 {
   auto match = re_.match (input, 0, QRegularExpression::PartialPreferCompleteMatch);
   input = input.toUpper ();
+  if (input.count(QLatin1Char('/')) > 1) return Invalid;
   if (match.hasMatch ()) return Acceptable;
   if (!input.size () || match.hasPartialMatch ()) return Intermediate;
   pos = input.size ();
