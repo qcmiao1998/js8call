@@ -64,12 +64,34 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
       bool unpacked = false;
 
       if(!unpacked){
+        unpacked = tryUnpackCompound();
+       }
+      if(!unpacked){
         unpacked = tryUnpackDirected();
       }
       if(!unpacked){
         unpacked = tryUnpackData();
       }
     }
+}
+
+bool DecodedText::tryUnpackCompound(){
+  QString m = message().trimmed();
+
+  // directed calls will always be 12+ chars and contain no spaces.
+  if(m.length() < 12 || m.contains(' ')){
+    return false;
+  }
+
+  QStringList parts = Varicode::unpackCompoundMessage(m);
+
+  if(parts.isEmpty() || parts.length() < 2){
+    return false;
+  }
+
+  compound_ = QString("%1/%2").arg(parts.at(0), parts.at(1));
+  message_ = QString("%1:").arg(compound_);
+  return true;
 }
 
 bool DecodedText::tryUnpackDirected(){
@@ -94,7 +116,7 @@ bool DecodedText::tryUnpackDirected(){
       message_ = QString("%1: %2%3 %4").arg(parts.at(0), parts.at(1), parts.at(2), parts.at(3));
     } else {
       // replace it with the correct unpacked (freetext)
-      message_ = QString(parts.join(QChar()));
+      message_ = QString(parts.join(""));
     }
 
     directed_ = parts;

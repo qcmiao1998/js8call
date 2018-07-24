@@ -32,11 +32,15 @@ class DecodedText
 public:
   explicit DecodedText (QString const& message, bool, QString const& my_grid);
 
+  bool tryUnpackCompound();
   bool tryUnpackDirected();
   bool tryUnpackData();
 
+  QString compoundCall() const { return compound_; }
+  bool isCompoundMessage() const { return !compound_.isEmpty(); }
+
   QStringList directedMessage() const { return directed_; }
-  bool isDirectedMessage() const { return !directed_.isEmpty(); }
+  bool isDirectedMessage() const { return !directed_.isEmpty() && directed_.length() > 2; }
 
   QString string() const { return string_; }
   QString message() const { return message_; }
@@ -85,6 +89,7 @@ private:
       column_mode    = 19,
       column_qsoText = 22 };
 
+  QString compound_;
   QStringList directed_;
   QString string_;
   int padding_;

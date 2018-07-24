@@ -121,6 +121,7 @@ public slots:
   void msgAvgDecode2();
   void fastPick(int x0, int x1, int y);
 
+  QString lookupCallInCompoundCache(QString const &call);
   void clearActivity();
   int logRxTxMessageText(QDateTime date, bool isFree, QString text, int freq, bool tx, int block=-1);
   void addMessageText(QString text, bool clear=false);
@@ -238,9 +239,7 @@ private slots:
   void on_clearAction_triggered(QObject * sender);
   void on_cqMacroButton_clicked();
   void on_qtcMacroButton_clicked();
-  void on_replyMacroButton_clicked();
   void on_qthMacroButton_clicked();
-  void on_snrMacroButton_clicked();
   void buildQueryMenu(QMenu *);
   void on_queryButton_pressed();
   void on_macrosMacroButton_pressed();
@@ -684,6 +683,7 @@ private:
   QQueue<QString> m_txFrameQueue;
   QQueue<RXDetail> m_rxFrameQueue;
   QQueue<CommandDetail> m_rxCommandQueue;
+  QMap<QString, QString> m_compoundCallCache; // base callsign -> compound callsign
   QCache<QString, QDateTime> m_txAllcallCommandCache; // callsign -> last tx
   QCache<int, QDateTime> m_rxRecentCache; // freq -> last rx
   QCache<int, QDateTime> m_rxDirectedCache; // freq -> last directed rx

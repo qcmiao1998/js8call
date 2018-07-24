@@ -1046,10 +1046,23 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   auto clearAction4 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetCalls);
   connect(clearAction4, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetCalls); });
-  ui->tableWidgetCalls->setContextMenuPolicy(Qt::ActionsContextMenu);
-  ui->tableWidgetCalls->addAction(clearAction4);
-  ui->tableWidgetCalls->addAction(clearActionSep);
-  ui->tableWidgetCalls->addAction(clearActionAll);
+
+  ui->tableWidgetCalls->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, clearAction4, clearActionAll](QPoint const &point){
+    QMenu * menu = new QMenu(ui->tableWidgetCalls);
+
+    auto directedMenu = menu->addMenu("Directed");
+    directedMenu->setDisabled(callsignSelected().isEmpty());
+    buildQueryMenu(directedMenu);
+
+    menu->addSeparator();
+    menu->addAction(clearAction4);
+    menu->addSeparator();
+    menu->addAction(clearActionAll);
+
+    menu->popup(ui->tableWidgetCalls->mapToGlobal(point));
+  });
+
 
   m_lastTxTime = QDateTime::currentDateTimeUtc();
 
@@ -1091,6 +1104,35 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   frames++;
   qDebug() << "HuffFrames" << frames;
   qDebug() << Varicode::packCallsignPrefixSuffix("VE3") << Varicode::unpackCallsignPrefixSuffix(Varicode::packCallsignPrefixSuffix("VE3");
+
+  auto calls = Varicode::parseCallsigns("VE3/KN4CRD 9E/KN4CRD KN4CRD/7 KN4CRD/P KN4CRD");
+  foreach(auto call, calls){
+    qDebug() << call << Radio::base_callsign(call) << QString(call).replace(Radio::base_callsign(call), "");
+
+    auto base = Radio::base_callsign(call);
+    auto fix = call.replace(base, "").replace("/", "");
+    qDebug() << fix;
+
+    auto packedCall = ((quint64)Varicode::packCallsign(base) << 32) | Varicode::packCallsignPrefixSuffix(fix);
+
+    auto packed = Varicode::pack64bits(packedCall);
+
+    qDebug() << call << packedCall << packed;
+  }
+
+  auto call = QString(m_config.my_callsign());
+  qDebug() << call;
+  auto basecall = Radio::base_callsign(call);
+  qDebug() << call << basecall;
+  auto fix = QString(call).replace(basecall, "");
+  qDebug() << call << basecall << fix;
+  auto prefix = !fix.startsWith("/");
+  fix = fix.replace("/", "");
+
+  auto packed = Varicode::packCompoundMessage(basecall, fix, prefix, 99);
+  qDebug() << packed << Varicode::unpackCompoundMessage(packed);
+
+  m_valid = false;
 #endif
 
   // this must be the last statement of constructor
@@ -3257,7 +3299,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
               auto parts = decodedtext.directedMessage();
 
               CommandDetail d;
-              d.from = parts.at(0);
+              d.from = lookupCallInCompoundCache(parts.at(0));
               d.to = parts.at(1);
               d.cmd = parts.at(2);
               d.freq = decodedtext.frequencyOffset();
@@ -3268,8 +3310,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
               CallDetail cd;
               cd.call = d.from;
               cd.grid = "";
-              cd.snr = decodedtext.snr();
-              cd.freq = decodedtext.frequencyOffset();
+              cd.snr = d.snr;
+              cd.freq = d.freq;
               cd.utcTimestamp = d.utcTimestamp;
               m_callActivity[Radio::base_callsign(cd.call)] = cd;
 
@@ -3279,6 +3321,13 @@ void MainWindow::readFromStdout()                             //readFromStdout
                   pskSetLocal();
                   pskLogReport("FT8Call", d.freq, d.snr, d.from, "");
               }
+          }
+
+          // Process compound callsign commands (put them in cache)"
+          bool shouldProcessCompound = true;
+          if(shouldProcessCompound && decodedtext.isCompoundMessage()){
+            QString compoundCall = decodedtext.compoundCall();
+            m_compoundCallCache[Radio::base_callsign(compoundCall)] = compoundCall;
           }
         }
       }
@@ -3414,6 +3463,10 @@ void MainWindow::readFromStdout()                             //readFromStdout
   }
 
   // See MainWindow::postDecode for displaying the latest decodes
+}
+
+QString MainWindow::lookupCallInCompoundCache(QString const &call){
+    return m_compoundCallCache.value(call, call);
 }
 
 //
@@ -5483,7 +5536,13 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
     QStringList frames;
     QStringList lines;
 
-    QString mycall = Radio::base_callsign(m_config.my_callsign());
+    // prepare compound
+    bool compound = Radio::is_compound_callsign(m_config.my_callsign());
+    QString mycall = m_config.my_callsign();
+    QString basecall = Radio::base_callsign(m_config.my_callsign());
+    QString fix = QString(m_config.my_callsign()).replace(basecall, "");
+    bool prefix = !fix.startsWith("/");
+    fix = fix.replace("/", "");
 
     foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
 
@@ -5509,7 +5568,7 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
           QString stdFrame = parseFT8Message(line, &isFree);
 
           int n = 0;
-          QString dirFrame = Varicode::packDirectedMessage(line, mycall, &n);
+          QString dirFrame = Varicode::packDirectedMessage(line, basecall, &n);
 
           int m = 0;
           QString datFrame = Varicode::packDataMessage(line.left(21) + "\x04", &m); //  63 / 3 = 21 (maximum number of 3bit chars we could possibly stuff in here)
@@ -5546,11 +5605,21 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
           }
 
           if(useDir){
-              frames.append(frame);
-              // TODO: jsherer - would be nice to clean this up and have an object that can just decode the actual transmitted frames instead.
-              if(!line.startsWith(mycall)){
-                  lines.append(QString("%1: ").arg(mycall));
+              if(compound){
+                QString compoundFrame = Varicode::packCompoundMessage(basecall, fix, prefix, 0);
+                if(!compoundFrame.isEmpty()){
+                    frames.append(compoundFrame);
+                    lines.append(QString("%1: ").arg(mycall));
+                }
               }
+
+              frames.append(frame);
+
+              // TODO: jsherer - would be nice to clean this up and have an object that can just decode the actual transmitted frames instead.
+              if(!line.startsWith(basecall) && !compound){
+                  lines.append(QString("%1: ").arg(basecall));
+              }
+
               lines.append(line.left(n));
               line = line.mid(n);
           }
@@ -5566,7 +5635,7 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 #if 1
     qDebug() << "parsed frames:";
     foreach(auto frame, frames){
-        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame) << Varicode::unpackDirectedMessage(frame);
+        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame) << Varicode::unpackDirectedMessage(frame) << Varicode::unpackCompoundMessage(frame);
     }
 
     qDebug() << "lines:";
@@ -6910,14 +6979,6 @@ void MainWindow::on_qtcMacroButton_clicked(){
     addMessageText(qtc);
 }
 
-void MainWindow::on_replyMacroButton_clicked(){
-    QString selectedCall = callsignSelected();
-    if(selectedCall.isEmpty()){
-        return;
-    }
-    addMessageText(selectedCall);
-}
-
 void MainWindow::on_qthMacroButton_clicked(){
     QString qth = m_config.my_qth();
     if(qth.isEmpty()){
@@ -6929,20 +6990,6 @@ void MainWindow::on_qthMacroButton_clicked(){
     addMessageText(qth);
 }
 
-void MainWindow::on_snrMacroButton_clicked(){
-    QString selectedCall = callsignSelected();
-    if(selectedCall.isEmpty()){
-        return;
-    }
-
-    if(!m_callActivity.contains(selectedCall)){
-        return;
-    }
-
-    auto d = m_callActivity[selectedCall];
-    addMessageText(QString("%1 SNR %2").arg(selectedCall).arg(Varicode::formatSNR(d.snr)));
-}
-
 void MainWindow::buildQueryMenu(QMenu * menu){
     QString call = callsignSelected();
     if(call.isEmpty()){
@@ -6950,6 +6997,38 @@ void MainWindow::buildQueryMenu(QMenu * menu){
     }
 
     bool isAllCall = call == "ALLCALL";
+
+    auto sendReplyAction = menu->addAction("Reply to Callsign");
+
+    connect(sendReplyAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1").arg(selectedCall), true);
+    });
+
+
+    auto sendSNRAction = menu->addAction("Send Signal Report");
+    sendSNRAction->setEnabled(m_callActivity.contains(call));
+    connect(sendSNRAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        if(!m_callActivity.contains(selectedCall)){
+            return;
+        }
+
+        auto d = m_callActivity[selectedCall];
+        addMessageText(QString("%1 SNR %2").arg(selectedCall).arg(Varicode::formatSNR(d.snr)), true);
+    });
+
+    menu->addSeparator();
 
     auto snrAction = menu->addAction("? - What is my signal report?");
 
@@ -8080,12 +8159,10 @@ void MainWindow::updateButtonDisplay(){
     bool emptyQTH = m_config.my_qth().isEmpty() && m_config.my_grid().isEmpty();
 
     ui->cqMacroButton->setDisabled(isTransmitting);
-    ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
     ui->qtcMacroButton->setDisabled(isTransmitting || emptyQTC);
     ui->qthMacroButton->setDisabled(isTransmitting || emptyQTH);
-    ui->snrMacroButton->setDisabled(isTransmitting || emptyCallsign);
-    ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
     ui->macrosMacroButton->setDisabled(isTransmitting);
+    ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
 }
 
 QString MainWindow::callsignSelected(){
@@ -8356,7 +8433,7 @@ void MainWindow::displayActivity(bool force){
       }
 
       // TODO: jsherer - check to make sure we haven't replied to their allcall recently (in the past beacon interval)
-      if(isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(QDateTime::currentDateTimeUtc())/60 < m_config.beacon()){
+      if(isAllCall && m_txAllcallCommandCache.contains(Radio::base_callsign(d.from)) && m_txAllcallCommandCache[Radio::base_callsign(d.from)]->secsTo(QDateTime::currentDateTimeUtc())/60 < m_config.beacon()){
           continue;
       }
 
@@ -8365,7 +8442,7 @@ void MainWindow::displayActivity(bool force){
 
       // SNR
       if(d.cmd == "?"){
-          reply = QString("%1 SNR %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
+          reply = QString("%1 SNR %2").arg(Radio::base_callsign(d.from)).arg(Varicode::formatSNR(d.snr));
       }
       // QTH
       else if(d.cmd == "@" && !isAllCall){
@@ -8378,11 +8455,11 @@ void MainWindow::displayActivity(bool force){
               qth = grid;
           }
 
-          reply = QString("%1 %2").arg(d.from).arg(qth);
+          reply = QString("%1 %2").arg(Radio::base_callsign(d.from)).arg(qth);
       }
       // STATION MESSAGE
       else if(d.cmd == "&" && !isAllCall){
-          reply = QString("%1 %2").arg(d.from).arg(m_config.my_station());
+          reply = QString("%1 %2").arg(Radio::base_callsign(d.from)).arg(m_config.my_station());
       } else {
           continue;
       }
@@ -8395,7 +8472,7 @@ void MainWindow::displayActivity(bool force){
       // if we're responding via allcall, pick a different frequency and mark it in the cache.
       if(d.to == "ALLCALL"){
         f = findFreeFreqOffset(qMax(0, f-100), qMin(f+100, 2500), 50);
-        m_txAllcallCommandCache.insert(d.from, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+        m_txAllcallCommandCache.insert(Radio::base_callsign(d.from), new QDateTime(QDateTime::currentDateTimeUtc()), 25);
       }
 
       processed = true;
