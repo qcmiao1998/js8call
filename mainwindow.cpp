@@ -1032,6 +1032,13 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   ui->spotButton->setChecked(m_config.spot_to_psk_reporter());
 
+  auto enterFilter = new EnterKeyPressEater();
+  connect(enterFilter, &EnterKeyPressEater::enterKeyPressed, this, [this](QKeyEvent *, QObject *){
+      qDebug() << "the enter key was pressed";
+      this->toggleTx(true);
+  });
+  ui->extFreeTextMsgEdit->installEventFilter(enterFilter);
+
   auto clearActionSep = new QAction(nullptr);
   clearActionSep->setSeparator(true);
 
@@ -5489,6 +5496,8 @@ void MainWindow::resetMessageUI(){
     ui->nextFreeTextMsg->clear();
     ui->extFreeTextMsg->clear();
     ui->extFreeTextMsgEdit->clear();
+    ui->extFreeTextMsgEdit->setReadOnly(false);
+    update_dynamic_property (ui->extFreeTextMsgEdit, "transmitting", false);
 
     if(ui->startTxButton->isChecked()){
         ui->startTxButton->setChecked(false);

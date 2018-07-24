@@ -845,6 +845,27 @@ protected:
     }
 };
 
+class EnterKeyPressEater : public QObject
+{
+    Q_OBJECT
+protected:
+    bool eventFilter(QObject *obj, QEvent *event){
+        if (event->type() == QEvent::KeyPress) {
+            QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+            if(keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return){
+                emit this->enterKeyPressed(keyEvent, obj);
+                return true;
+            }
+        }
+
+        // standard event processing
+        return QObject::eventFilter(obj, event);
+    }
+
+public:
+    Q_SIGNAL void enterKeyPressed(QKeyEvent *evt, QObject *obj);
+};
+
 extern int killbyname(const char* progName);
 extern void getDev(int* numDevices,char hostAPI_DeviceName[][50],
                    int minChan[], int maxChan[],
