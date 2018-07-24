@@ -4176,7 +4176,7 @@ void MainWindow::guiUpdate()
     ui->labUTC->setText(utc);
 
     auto delta = t.secsTo(m_nextBeacon);
-    auto beacon = ui->beaconButton->isChecked() ? delta > 0 ? QString("%1 s").arg(delta) : "queued!" : "disabled";
+    auto beacon = ui->beaconButton->isChecked() ? delta > 0 ? QString("%1 s").arg(delta) : "queued!" : m_nextBeaconPaused ? "paused" : "disabled";
     ui->labBeacon->setText(QString("Next Beacon: %1").arg(beacon));
 
     if(!m_monitoring and !m_diskData) {
@@ -5765,7 +5765,7 @@ bool MainWindow::prepareNextMessageFrame()
 
     if(ui->beaconButton->isChecked()){
         // bump beacon
-        scheduleBeacon(true);
+        scheduleBacon(true);
     }
 
     return true;
@@ -5828,7 +5828,8 @@ int MainWindow::findFreeFreqOffset(int fmin, int fmax, int bw){
     return 0;
 }
 
-void MainWindow::scheduleBeacon(bool first){
+// scheduleBeacon
+void MainWindow::scheduleBacon(bool first){
     auto timestamp = QDateTime::currentDateTimeUtc();
     auto orig = timestamp;
 
@@ -5851,11 +5852,20 @@ void MainWindow::scheduleBeacon(bool first){
     setBaconTimer(timestamp);
 }
 
+// setBeaconTimer
 void MainWindow::setBaconTimer(QDateTime timestamp){
     // set the next beacon timestamp and timer
     beaconTimer.stop();
     m_nextBeacon = timestamp;
+    m_nextBeaconPaused = false;
     beaconTimer.start(QDateTime::currentDateTimeUtc().msecsTo(m_nextBeacon) - 2*1000);
+}
+
+// pauseBeacon
+void MainWindow::pauseBacon(){
+    ui->beaconButton->setChecked(false);
+    beaconTimer.stop();
+    m_nextBeaconPaused = true;
 }
 
 // prepareBeacon
@@ -5882,7 +5892,7 @@ void MainWindow::prepareBacon(){
         m_lastTxTime.secsTo(QDateTime::currentDateTimeUtc()) < 30
     ){
         if(ui->beaconButton->isChecked()){
-            scheduleBeacon(true);
+            scheduleBacon(true);
         }
         return;
     }
@@ -5924,7 +5934,7 @@ void MainWindow::prepareBacon(){
 
     ui->startTxButton->setChecked(true);
 
-    scheduleBeacon();
+    scheduleBacon();
 }
 
 
@@ -7454,7 +7464,7 @@ void MainWindow::on_pbT2R_clicked()
 void MainWindow::on_beaconButton_clicked()
 {
     if(ui->beaconButton->isChecked()){
-        scheduleBeacon(true);
+        scheduleBacon(true);
     }
 }
 
@@ -7590,6 +7600,8 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
     {
       // initializing
       on_monitorButton_clicked (!m_config.monitor_off_at_startup ());
+
+      ui->autoReplyButton->setChecked(!m_config.autoreply_off_at_startup());
     }
   if (s.frequency () != old_state.frequency () || s.split () != m_splitMode)
     {
@@ -8483,8 +8495,6 @@ void MainWindow::displayActivity(bool force){
   ui->tableWidgetCalls->resizeColumnToContents(2);
   ui->tableWidgetCalls->resizeColumnToContents(3);
 
-
-
   // Recently Directed Activity
   while(!m_rxFrameQueue.isEmpty()){
       RXDetail d = m_rxFrameQueue.dequeue();
@@ -8517,6 +8527,9 @@ void MainWindow::displayActivity(bool force){
     int f = currentFreq();
 
     bool processed = false;
+
+    // TODO: jsherer - should we if we have _any_ directed messages, pause the beacon??
+    // pauseBacon();
 
     while(!m_rxCommandQueue.isEmpty()){
       auto d = m_rxCommandQueue.dequeue();
@@ -8601,17 +8614,8 @@ void MainWindow::displayActivity(bool force){
       processed = true;
     }
 
-    if(processed){
-        // if we have beacon turned on, and it's more than 15 seconds away, automatically reply now, and bump the beacon
-        if(QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) >= 15){
-            setFreqForRestore(f, true);
-
-            ui->startTxButton->setChecked(true);
-
-            if(ui->beaconButton->isChecked()){
-                scheduleBeacon(false);
-            }
-        }
+    if(processed && ui->autoReplyButton->isChecked()){
+        toggleTx(true);
     }
   }
 

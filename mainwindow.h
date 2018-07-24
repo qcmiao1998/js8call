@@ -261,8 +261,9 @@ private slots:
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);
   int findFreeFreqOffset(int fmin, int fmax, int bw);
-  void scheduleBeacon(bool first=false);
+  void scheduleBacon(bool first=false);
   void setBaconTimer(QDateTime timestamp);
+  void pauseBacon();
   void prepareBacon();
   QString calculateDistance(QString const& grid);
   void on_rptSpinBox_valueChanged(int n);
@@ -707,6 +708,7 @@ private:
   QQueue<QString> m_foxRR73Queue;
   QQueue<qint64>  m_foxRateQueue;
 
+  bool m_nextBeaconPaused = false;
   QDateTime m_nextBeacon;
   QDateTime m_dateTimeQSOOn;
   QDateTime m_dateTimeLastTX;

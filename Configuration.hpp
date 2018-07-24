@@ -112,6 +112,7 @@ public:
   bool tx_QSY_allowed () const;
   bool spot_to_psk_reporter () const;
   void set_spot_to_psk_reporter (bool);
+  bool autoreply_off_at_startup () const;
   bool monitor_off_at_startup () const;
   bool monitor_last_used () const;
   bool log_as_RTTY () const;

@@ -315,6 +315,13 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_8">
           <item>
+           <widget class="QCheckBox" name="autoreply_off_check_box">
+            <property name="text">
+             <string>Autoreply off at startup</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="monitor_off_check_box">
             <property name="toolTip">
              <string>Don't start decoding until the monitor button is clicked.</string>
@@ -329,6 +336,9 @@
           </item>
           <item>
            <widget class="QCheckBox" name="monitor_last_used_check_box">
+            <property name="visible">
+             <bool>false</bool>
+            </property>
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check this if you wish to automatically return to the last monitored frequency when monitor is enabled, leave it unchecked if you wish to have the current rig frequency maintained.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
