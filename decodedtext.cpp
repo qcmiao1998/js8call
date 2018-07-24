@@ -90,7 +90,7 @@ bool DecodedText::tryUnpackCompound(){
   }
 
   compound_ = QString("%1/%2").arg(parts.at(0), parts.at(1));
-  message_ = QString("%1:").arg(compound_);
+  message_ = QString("%1: ").arg(compound_);
   return true;
 }
 
@@ -110,10 +110,10 @@ bool DecodedText::tryUnpackDirected(){
 
     if(parts.length() == 3){
       // replace it with the correct unpacked (directed)
-      message_ = QString("%1: %2%3").arg(parts.at(0), parts.at(1), parts.at(2));
+      message_ = QString("%1: %2%3 ").arg(parts.at(0), parts.at(1), parts.at(2));
     } else if(parts.length() == 4){
       // replace it with the correct unpacked (directed numeric)
-      message_ = QString("%1: %2%3 %4").arg(parts.at(0), parts.at(1), parts.at(2), parts.at(3));
+      message_ = QString("%1: %2%3 %4 ").arg(parts.at(0), parts.at(1), parts.at(2), parts.at(3));
     } else {
       // replace it with the correct unpacked (freetext)
       message_ = QString(parts.join(""));

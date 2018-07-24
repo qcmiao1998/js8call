@@ -123,7 +123,7 @@ public slots:
 
   QString lookupCallInCompoundCache(QString const &call);
   void clearActivity();
-  int logRxTxMessageText(QDateTime date, bool isFree, QString text, int freq, bool tx, int block=-1);
+  int logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block=-1);
   void addMessageText(QString text, bool clear=false);
   void resetMessage();
   void resetMessageUI();
@@ -199,6 +199,7 @@ private slots:
   void on_txb5_doubleClicked ();
   void on_txb6_clicked();
   void on_startTxButton_toggled(bool checked);
+  void toggleTx(bool start);
   void splitAndSendNextMessage();
   void on_rbNextFreeTextMsg_toggled (bool status);
   void on_lookupButton_clicked();
@@ -639,6 +640,7 @@ private:
   struct CallDetail
   {
     QString call;
+    QString through;
     QString grid;
     int freq;
     QDateTime utcTimestamp;
@@ -659,6 +661,7 @@ private:
   {
     bool isFree;
     bool isLowConfidence;
+    bool isCompound;
     int bits;
     QString firstCall;
     QString secondCall;
@@ -672,6 +675,7 @@ private:
   {
       bool isFree;
       bool isLowConfidence;
+      bool isCompound;
       int bits;
       int freq;
       QString text;
