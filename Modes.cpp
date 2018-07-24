@@ -24,7 +24,6 @@ namespace
     "QRA64",
     "FreqCal",
     "FT8",
-    "FT8Free"
   };
   std::size_t constexpr mode_names_size = sizeof (mode_names) / sizeof (mode_names[0]);
 }
