@@ -3328,6 +3328,14 @@ void MainWindow::readFromStdout()                             //readFromStdout
           if(shouldProcessCompound && decodedtext.isCompoundMessage()){
             QString compoundCall = decodedtext.compoundCall();
             m_compoundCallCache[Radio::base_callsign(compoundCall)] = compoundCall;
+
+            CallDetail cd;
+            cd.call = compoundCall;
+            cd.grid = "";
+            cd.snr = decodedtext.snr();
+            cd.freq = decodedtext.frequencyOffset();
+            cd.utcTimestamp = QDateTime::currentDateTimeUtc();
+            m_callActivity[Radio::base_callsign(cd.call)] = cd;
           }
         }
       }
