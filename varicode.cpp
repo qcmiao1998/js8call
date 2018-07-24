@@ -38,18 +38,19 @@ QMap<QString, int> directed_cmds = {
     // any changes here need to be made also in the directed regular xpression for parsing
 
     // directed queries
-    {"?",     0  }, // query snr
+    {"?",     0  }, // query ack
     {"@",     1  }, // query qth
     {"&",     2  }, // query station message
     {"$",     3  }, // query station(s) heard
-    {"|",     4  }, // relay message
-    {"!",     5  }, // alert message
+    {"^",     4  }, // query snr
 
-    // special responses
-    // {"/",     10 }, // compound callsign
+    {"|",     5  }, // relay message?
+    {"!",     6  }, // alert message?
+
+    // {"/",     7  }, // unused? (can we even use stroke?)
 
     // directed responses
-    {" ACK",  23  }, // acknowledge
+    {" ACK",  23  }, // acknowledged
     {" PWR",  24  }, // power level
     {" SNR",  25  }, // seen a station at the provided snr
     {" NO",   26  }, // negative confirm
@@ -60,11 +61,11 @@ QMap<QString, int> directed_cmds = {
     {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, 3, /*4,*/ /*5,*/ 10, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, 3, 4, /*5,*/ 10, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 QRegularExpression directed_re("^"
                                "(?<to>[A-Z0-9/]+)"
-                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|PWR|ACK|[?$@&|! ]))"
+                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|PWR|ACK|[?@&$^|! ]))"
                                "(?<pwr>\\s?\\d+\\s?[KM]?W)?"
                                "(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?"
                                );

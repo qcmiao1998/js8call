@@ -3507,6 +3507,10 @@ void MainWindow::readFromStdout()                             //readFromStdout
 }
 
 QString MainWindow::lookupCallInCompoundCache(QString const &call){
+    QString myBaseCall = Radio::base_callsign(m_config.my_callsign());
+    if(call == myBaseCall){
+        return m_config.my_callsign();
+    }
     return m_compoundCallCache.value(call, call);
 }
 
@@ -5394,17 +5398,26 @@ void MainWindow::clearActivity(){
     ui->textEditRX->clear();
     ui->freeTextMsg->clear();
     ui->extFreeTextMsg->clear();
+
+    // make sure to clear the read only and transmitting flags so there's always a "way out"
     ui->extFreeTextMsgEdit->clear();
+    ui->extFreeTextMsgEdit->setReadOnly(false);
+    update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", false);
 }
 
 int MainWindow::logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block){
     auto c = ui->textEditRX->textCursor();
 
     // fixup compound callsigns cache / aliases...
+    // ensure our callsign is cached...
+    QString myCall = m_config.my_callsign();
+    QString baseCall = Radio::base_callsign(myCall);
+    if(myCall != baseCall && !m_compoundCallCache.contains(baseCall)){
+        m_compoundCallCache[baseCall] = myCall;
+    }
+    // then, replace the cached calls that we see...
     foreach(auto call, m_compoundCallCache.keys()){
-        //QRegExp re(QString("").arg(call));
-        //text = text.replace(call, m_compoundCallCache[call]);
-        QRegularExpression re(QString(R"((?<![\/])%1(?![\/]))").arg(QRegularExpression::escape(call)));
+        QRegularExpression re(QString(R"((?<![\/])\b%1\b(?![\/]))").arg(QRegularExpression::escape(call)));
         text = text.replace(re, m_compoundCallCache[call]);
     }
 
@@ -7096,9 +7109,8 @@ void MainWindow::buildQueryMenu(QMenu * menu){
 
     menu->addSeparator();
 
-    auto snrAction = menu->addAction("? - What is my signal report?");
-
-    connect(snrAction, &QAction::triggered, this, [this](){
+    auto ackAction = menu->addAction("? - Are you hearing me?");
+    connect(ackAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
         if(selectedCall.isEmpty()){
@@ -7106,6 +7118,19 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         }
 
         addMessageText(QString("%1?").arg(selectedCall), true);
+        toggleTx(true);
+    });
+
+    auto snrAction = menu->addAction("^ - What is my signal report?");
+    snrAction->setDisabled(isAllCall);
+    connect(snrAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1^").arg(selectedCall), true);
         toggleTx(true);
     });
 
@@ -8558,8 +8583,12 @@ void MainWindow::displayActivity(bool force){
       // construct reply
       QString reply;
 
-      // QUERIED SNR
+      // QUERIED ACK
       if(d.cmd == "?"){
+          reply = QString("%1 ACK").arg(Radio::base_callsign(d.from));
+      }
+      // QUERIED SNR
+      else if(d.cmd == "^" && !isAllCall){
           reply = QString("%1 SNR %2").arg(Radio::base_callsign(d.from)).arg(Varicode::formatSNR(d.snr));
       }
       // QUERIED QTH
