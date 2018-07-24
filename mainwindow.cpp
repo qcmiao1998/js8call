@@ -223,6 +223,22 @@ namespace
       }
   }
 
+  int round(int numToRound, int multiple)
+  {
+   if(multiple == 0)
+   {
+    return numToRound;
+   }
+
+   int roundDown = ( (int) (numToRound) / multiple) * multiple;
+
+   if(numToRound - roundDown > multiple/2){
+    return roundDown + multiple;
+   }
+
+   return roundDown;
+  }
+
   int roundUp(int numToRound, int multiple)
   {
    if(multiple == 0)
@@ -3201,7 +3217,9 @@ void MainWindow::readFromStdout()                             //readFromStdout
             int offset = decodedtext.frequencyOffset();
 
             if(!m_bandActivity.contains(offset)){
-                QList<int> offsets = {offset - 1, offset - 2, offset - 3, offset + 1, offset + 2, offset + 3};
+                QList<int> offsets = {
+                    offset - 1, offset - 2, offset - 3, offset - 4, offset - 5,
+                    offset + 1, offset + 2, offset + 3, offset + 4, offset + 5};
                 foreach(int prevOffset, offsets){
                     if(!m_bandActivity.contains(prevOffset)){ continue; }
                     m_bandActivity[offset] = m_bandActivity[prevOffset];
