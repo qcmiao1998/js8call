@@ -30,9 +30,8 @@
 const int nalphabet = 41;
 QString alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-./?"};
 QString grid_pattern = {R"((?<grid>[A-R]{2}[0-9]{2})+)"};
-QString callsign_pattern1 = {R"((?<callsign>[A-Z0-9/]{2,}))"};
-QString callsign_pattern2 = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){3,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
-QString callsign_pattern3 = {R"(([0-9A-Z ])([0-9A-Z])([0-9])([A-Z ])([A-Z ])([A-Z ]))"};
+QString compound_callsign_pattern = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){3,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
+QString pack_callsign_pattern = {R"(([0-9A-Z ])([0-9A-Z])([0-9])([A-Z ])([A-Z ])([A-Z ]))"};
 QString callsign_alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "};
 
 QMap<QString, int> directed_cmds = {
@@ -217,7 +216,7 @@ bool Varicode::checksumValid(QString const &checksum, QString const &input){
 
 QStringList Varicode::parseCallsigns(QString const &input){
     QStringList callsigns;
-    QRegularExpression re(callsign_pattern2);
+    QRegularExpression re(compound_callsign_pattern);
     QRegularExpressionMatchIterator iter = re.globalMatch(input);
     while(iter.hasNext()){
         QRegularExpressionMatch match = iter.next();
@@ -438,7 +437,6 @@ QString Varicode::pack64bits(quint64 packed){
 
 // pack a 4-digit alpha-numeric callsign prefix/suffix into a 22 bit value
 quint32 Varicode::packCallsignPrefixSuffix(QString const& value){
-    quint32 packed = 0;
     quint8 mask6 = (1<<6)-1;
 
     QString prefix = QString(value).replace(QRegExp("[^A-Z0-9]"), "");
@@ -508,7 +506,7 @@ quint32 Varicode::packCallsign(QString const& value){
     }
 
     QString matched;
-    QRegularExpression m(callsign_pattern3);
+    QRegularExpression m(pack_callsign_pattern);
     foreach(auto permutation, permutations){
         auto match = m.match(permutation);
         if(match.hasMatch()){
@@ -662,8 +660,79 @@ bool Varicode::isCommandAllowed(const QString &cmd){
     return directed_cmds.contains(cmd) && allowed_cmds.contains(directed_cmds[cmd]);
 }
 
+QString Varicode::packCompoundMessage(const QString &baseCallsign, const QString &fix, bool isPrefix, quint16 num){
+    QString frame;
 
-QString Varicode::packDirectedMessage(const QString &text, const QString &callsign, int *n){
+    quint8 packed_is_data = 0;
+    quint8 packed_is_compound = 1;
+    quint8 packed_is_prefix = (int)isPrefix;
+    quint32 packed_base = Varicode::packCallsign(baseCallsign);
+    quint32 packed_fix = Varicode::packCallsignPrefixSuffix(fix);
+
+    if(packed_base == 0 || packed_fix == 0){
+        return frame;
+    }
+
+    quint16 mask11 = ((1<<11)-1)<<5;
+    quint8 mask5 = (1<<5)-1;
+
+    quint16 packed_11 = (num & mask11) >> 5;
+    quint8 packed_5 = num & mask5;
+
+    // [1][1][1][28][22][11],[5] = 69
+    auto bits = (
+        Varicode::intToBits(packed_is_data,     1) +
+        Varicode::intToBits(packed_is_compound, 1) +
+        Varicode::intToBits(packed_is_prefix,   1) +
+        Varicode::intToBits(packed_base,       28) +
+        Varicode::intToBits(packed_fix,        22) +
+        Varicode::intToBits(packed_11,         11)
+    );
+
+    return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_5 % 32);
+}
+
+QStringList Varicode::unpackCompoundMessage(const QString &text){
+    QStringList unpacked;
+
+    if(text.length() < 13){
+        return unpacked;
+    }
+
+    // [1][1][1][28][22][11],[5] = 69
+    auto bits = Varicode::bitsToStr(Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64));
+    quint8 packed_5 = Varicode::unpack5bits(text.right(1));
+
+    quint8 is_data = Varicode::bitsToInt(Varicode::strToBits(bits.left(1)));
+    if(is_data != 0){
+        return unpacked;
+    }
+    quint8 is_compound = Varicode::bitsToInt(Varicode::strToBits(bits.mid(1,1)));
+    if(is_compound != 1){
+        return unpacked;
+    }
+    quint8 is_prefix = Varicode::bitsToInt(Varicode::strToBits(bits.mid(2,1)));
+    quint32 packed_base = Varicode::bitsToInt(Varicode::strToBits(bits.mid(3, 28)));
+    quint32 packed_fix = Varicode::bitsToInt(Varicode::strToBits(bits.mid(31, 22)));
+    quint8 packed_11 = Varicode::bitsToInt(Varicode::strToBits(bits.mid(53, 11)));
+
+    QString base = Varicode::unpackCallsign(packed_base).trimmed();
+    QString fix = Varicode::unpackCallsignPrefixSuffix(packed_fix);
+    quint16 num = (packed_11 << 5) | packed_5;
+
+    if(is_prefix){
+        unpacked.append(fix);
+    }
+    unpacked.append(base);
+    if(!is_prefix){
+        unpacked.append(fix);
+    }
+    unpacked.append(QString("%1").arg(num));
+
+    return unpacked;
+}
+
+QString Varicode::packDirectedMessage(const QString &text, const QString &baseCallsign, int *n){
     QString frame;
 
     auto match = directed_re.match(text);
@@ -672,14 +741,14 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         return frame;
     }
 
-    QString from = callsign;
+    QString from = baseCallsign;
     QString to = match.captured("to");
     QString cmd = match.captured("cmd");
     QString num = match.captured("num").trimmed();
     QString pwr = match.captured("pwr").trimmed();
 
     // validate callsign
-    bool validToCallsign = to != callsign && (basecalls.contains(to) || QRegularExpression(callsign_pattern2).match(to).hasMatch());
+    bool validToCallsign = (to != baseCallsign) && (basecalls.contains(to) || QRegularExpression(compound_callsign_pattern).match(to).hasMatch());
     if(!validToCallsign){
         if(n) *n = 0;
         return frame;
@@ -712,41 +781,32 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         inum = mwattsToDbm(ipwr) - 30;
     }
 
-    frame = Varicode::packDirectedFrame(from, to, cmd, inum);
-    if(frame.isEmpty()){
-        if(n) *n = 0;
-        return frame;
-    }
-
-    if(n) *n = match.captured(0).length();
-    return frame;
-}
-
-QString Varicode::packDirectedFrame(const QString &from, const QString &to, const QString &cmd, int inum){
-    QString frame;
-
     quint8 packed_is_data = 0;
-    quint8 packed_flag = inum < 0 ? 1 : 0;
+    quint8 packed_is_compound = 0;
+    quint8 packed_num_flag = inum < 0 ? 1 : 0;
     quint32 packed_from = Varicode::packCallsign(from);
     quint32 packed_to = Varicode::packCallsign(to);
 
     if(packed_from == 0 || packed_to == 0){
+        if(n) *n = 0;
         return frame;
     }
 
     quint8 packed_cmd = directed_cmds[cmd];
     quint8 packed_extra = qAbs(inum);
 
-    // [1][2][28][28][5],[5] = 69
+    // [1][1][1][28][28][5],[5] = 69
     auto bits = (
-        Varicode::intToBits(packed_is_data, 1) +
-        Varicode::intToBits(packed_flag, 2)    +
-        Varicode::intToBits(packed_from, 28)   +
-        Varicode::intToBits(packed_to, 28)     +
-        Varicode::intToBits(packed_cmd & 31, 5)
+        Varicode::intToBits(packed_is_data,     1) +
+        Varicode::intToBits(packed_is_compound, 1) +
+        Varicode::intToBits(packed_num_flag,    1) +
+        Varicode::intToBits(packed_from,       28) +
+        Varicode::intToBits(packed_to,         28) +
+        Varicode::intToBits(packed_cmd % 32,    5)
     );
 
-    return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_extra & 31);
+    if(n) *n = match.captured(0).length();
+    return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_extra % 32);
 }
 
 QStringList Varicode::unpackDirectedMessage(const QString &text){
@@ -756,7 +816,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
         return unpacked;
     }
 
-    // [1][2][28][28][5],[5] = 69
+    // [1][1][1][28][28][5],[5] = 69
     auto bits = Varicode::bitsToStr(Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64));
     quint8 extra = Varicode::unpack5bits(text.right(1));
 
@@ -764,7 +824,11 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
     if(is_data != 0){
         return unpacked;
     }
-    quint8 flag = Varicode::bitsToInt(Varicode::strToBits(bits.mid(1,2)));
+    quint8 is_compound = Varicode::bitsToInt(Varicode::strToBits(bits.mid(1,1)));
+    if(is_compound != 0){
+        return unpacked;
+    }
+    quint8 num_flag = Varicode::bitsToInt(Varicode::strToBits(bits.mid(2,1)));
     quint32 packed_from = Varicode::bitsToInt(Varicode::strToBits(bits.mid(3, 28)));
     quint32 packed_to = Varicode::bitsToInt(Varicode::strToBits(bits.mid(31, 28)));
     quint8 packed_cmd = Varicode::bitsToInt(Varicode::strToBits(bits.mid(59, 5)));
@@ -773,9 +837,9 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
 
     unpacked.append(from);
     unpacked.append(Varicode::unpackCallsign(packed_to).trimmed());
-    unpacked.append(directed_cmds.key(packed_cmd & 31));
+    unpacked.append(directed_cmds.key(packed_cmd % 32));
 
-    int num = (flag ? -1 : 1) * extra;
+    int num = (num_flag ? -1 : 1) * extra;
     if(num != -31){
         // TODO: jsherer - should we decide which format to use on the command, or something else?
         if(packed_cmd == directed_cmds[" PWR"]){
@@ -814,7 +878,7 @@ QString Varicode::packDataMessage(const QString &text, int *n){
         frameBits += Varicode::intToBits(0, pad);
     }
 
-    frame = Varicode::pack64bits(Varicode::bitsToInt(frameBits)) + Varicode::pack5bits(pad & 31);
+    frame = Varicode::pack64bits(Varicode::bitsToInt(frameBits)) + Varicode::pack5bits(pad % 32);
     *n = i;
 
     return frame;
