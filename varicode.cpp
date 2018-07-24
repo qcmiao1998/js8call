@@ -60,7 +60,7 @@ QMap<QString, int> directed_cmds = {
     {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, /*3,*/ 4, /*5,*/ 10, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, 3, /*4,*/ /*5,*/ 10, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 QRegularExpression directed_re("^"
                                "(?<to>[A-Z0-9/]+)"
