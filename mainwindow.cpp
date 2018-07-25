@@ -1034,8 +1034,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   auto enterFilter = new EnterKeyPressEater();
   connect(enterFilter, &EnterKeyPressEater::enterKeyPressed, this, [this](QKeyEvent *, QObject *){
-      qDebug() << "the enter key was pressed";
-      this->toggleTx(true);
+      toggleTx(true);
   });
   ui->extFreeTextMsgEdit->installEventFilter(enterFilter);
 
@@ -5991,6 +5990,11 @@ void MainWindow::on_startTxButton_toggled(bool checked)
 
 void MainWindow::toggleTx(bool start){
     if(start){
+        // ensure the start button is checked
+        if(!ui->startTxButton->isChecked()){
+            ui->startTxButton->setChecked(true);
+        }
+
         createMessage(ui->extFreeTextMsgEdit->toPlainText());
         startTx();
     } else {
@@ -8413,7 +8417,8 @@ void MainWindow::displayActivity(bool force){
                   item.text = QString("[%1]").arg(item.text);
               }
               if(item.bits == Varicode::FT8CallLast){
-                  item.text = QString("%1 \u220E ").arg(item.text);
+                  // can also use \u0004 \u2666 \u2404
+                  item.text = QString("%1 \u2301 ").arg(item.text);
               }
               text.append(item.text);
               snr = item.snr;
@@ -8538,7 +8543,8 @@ void MainWindow::displayActivity(bool force){
       bool isLast = d.bits == Varicode::FT8CallLast;
 
       if(isLast){
-          d.text = QString("%1 \u220E ").arg(d.text);
+          // can also use \u0004 \u2666 \u2404
+          d.text = QString("%1 \u2301 ").arg(d.text);
       }
 
       int freq = d.freq/10*10;
