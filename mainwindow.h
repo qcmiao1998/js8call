@@ -664,31 +664,20 @@ private:
     bool isLowConfidence;
     bool isCompound;
     int bits;
-    QString firstCall;
-    QString secondCall;
     int freq;
     QString text;
     QDateTime utcTimestamp;
     int snr;
   };
 
-  struct RXDetail
-  {
-      bool isFree;
-      bool isLowConfidence;
-      bool isCompound;
-      int bits;
-      int freq;
-      QString text;
-      QDateTime utcTimestamp;
-  };
-
   bool m_rxDirty;
   int m_txFrameCount;
   QString m_lastTxMessage;
   QDateTime m_lastTxTime;
+
+
   QQueue<QString> m_txFrameQueue;
-  QQueue<RXDetail> m_rxFrameQueue;
+  QQueue<ActivityDetail> m_rxFrameQueue;
   QQueue<CommandDetail> m_rxCommandQueue;
   QMap<QString, QString> m_compoundCallCache; // base callsign -> compound callsign
   QCache<QString, QDateTime> m_txAllcallCommandCache; // callsign -> last tx
@@ -697,6 +686,7 @@ private:
   QCache<QString, int> m_rxCallCache; // call -> last freq seen
   QMap<int, int> m_rxFrameBlockNumbers; // freq -> block
   QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
+  QMap<int, QPair<CommandDetail, QList<ActivityDetail>>> m_messageCache; // freq -> (cmd, [frames, ...])
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
   QSet<QString> m_callSeenBeacon; // call
   int m_previousFreq;

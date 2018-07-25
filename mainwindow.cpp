@@ -3238,23 +3238,35 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.isFree = !decodedtext.isStandardMessage();
             d.isCompound = decodedtext.isCompoundMessage();
             d.bits = decodedtext.bits();
-            d.firstCall = decodedtext.CQersCall();
-            if(d.firstCall.isEmpty()){
-                auto words = decodedtext.messageWords();
-                if(words.length() == 2){
-                    d.firstCall = words.at(0);
-                    d.secondCall = words.at(1);
-                } else if(words.length() == 3){
-                    d.firstCall = words.at(1);
-                    d.secondCall = words.at(2);
-                }
-            }
-
             d.freq = offset;
             d.text = decodedtext.messageWords().isEmpty() ? "" : decodedtext.messageWords().first().trimmed();
             d.utcTimestamp = QDateTime::currentDateTimeUtc();
             d.snr = decodedtext.snr();
             m_bandActivity[offset].append(d);
+
+#if TEST_ALL_OR_NOTHING
+            if(m_messageCache.contains(d.freq/10*10)){
+                m_messageCache[d.freq/10*10].second.append(d);
+
+                if(d.bits == Varicode::FT8CallLast){
+                    auto c  = m_messageCache[d.freq/10*10].first;
+                    auto fs = m_messageCache[d.freq/10*10].second;
+                    if(!fs.isEmpty()){
+                        qDebug() << "MESSAGE COMPLETE:" << c.from << c.to;
+                        QString message;
+                        foreach(auto f, fs){
+                            message.append(f.text);
+                        }
+                        QString checksum = message.left(3);
+                        message = message.mid(3);
+                        qDebug() << "> CHECKSUM:" << checksum;
+                        qDebug() << "> MESSAGE:" << message;
+                        qDebug() << "> VALID:" << Varicode::checksum16Valid(checksum, message);
+                    }
+                    m_messageCache.remove(d.freq/10*10);
+                }
+            }
+#endif
 
             while(m_bandActivity[offset].count() > 10){
                 m_bandActivity[offset].removeFirst();
@@ -3330,6 +3342,14 @@ void MainWindow::readFromStdout()                             //readFromStdout
               d.snr = decodedtext.snr();
               d.utcTimestamp = QDateTime::currentDateTimeUtc();
               m_rxCommandQueue.append(d);
+
+              // TODO: jsherer - process this elsewhere?
+              if(d.cmd == "|"){
+                // cache the message buffer commands
+                m_messageCache[d.freq/10*10].first = d;
+                m_messageCache[d.freq/10*10].second.clear();
+              }
+
 
               CallDetail cd;
               cd.call = d.from;
@@ -3434,7 +3454,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         m_QSOText = decodedtext.string ().trimmed ();
 
         // TODO: jsherer - parse decode...
-        RXDetail d;
+        ActivityDetail d;
         d.isFree = !decodedtext.isStandardMessage();
         d.isCompound = decodedtext.isCompoundMessage();
         d.bits = decodedtext.bits();
@@ -5619,18 +5639,6 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 
     foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
 
-#if 0
-        // TODO: jsherer - maybe preprocess the line for validated messages in Varicode?
-        QRegularExpression r("^(?<cmd>[A-Z0-9/]+\\s?[|])(?<text>.+)");
-        auto match = r.match(line);
-        if(match.hasMatch()){
-            auto lineCmd = match.captured("cmd");
-            auto lineText = match.captured("text");
-            auto checksum = Varicode::checksum(lineText);
-            line = lineCmd + checksum + lineText;
-        }
-#endif
-
         // once we find a directed call, data encode the rest of the line.
         bool hasDirected = false;
 
@@ -5701,10 +5709,13 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
               lines.append(line.left(n) + " ");
               line = line.mid(n);
 
-#if 0
-              // TODO: jsherer - this is how we'll prepend a 16-bit checksum to the message, just encode it in the data...
+#if TEST_ALL_OR_NOTHING
+              // TODO: jsherer - don't do this... refactor pack to return the packed frame _and_ its components instead
+              if(Varicode::unpackDirectedMessage(dirFrame).at(2) == "|"){
+              // TODO: jsherer - this is how we can add 16-bit checksum to the message, just encode it in the data...
               if(!line.isEmpty()){
                 line = Varicode::checksum16(line) + line;
+              }
               }
 #endif
           }
@@ -8544,7 +8555,7 @@ void MainWindow::displayActivity(bool force){
 
   // Recently Directed Activity
   while(!m_rxFrameQueue.isEmpty()){
-      RXDetail d = m_rxFrameQueue.dequeue();
+      ActivityDetail d = m_rxFrameQueue.dequeue();
 
       // TODO: jsherer - is it safe to just ignore printing these?
       if(d.isCompound){
