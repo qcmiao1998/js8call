@@ -5518,6 +5518,9 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
 
   int freq = currentFreq();
   logRxTxMessageText(QDateTime::currentDateTimeUtc(), lines.join(""), freq, true);
+
+  // keep track of the last message text sent
+  m_lastTxMessage = text;
 }
 
 void MainWindow::resetMessageTransmitQueue(){
@@ -7576,12 +7579,6 @@ void MainWindow::setFreq4(int rxFreq, int txFreq)
 {
   if(rxFreq != txFreq){
       txFreq = rxFreq;
-  }
-
-  // Don't go below 500 Hz if not in split mode
-  if(!m_config.split_mode()){
-    rxFreq = qMax(500, rxFreq);
-    txFreq = qMax(500, txFreq);
   }
 
   m_previousFreq = currentFreq();

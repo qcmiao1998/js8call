@@ -685,6 +685,7 @@ private:
 
   bool m_rxDirty;
   int m_txFrameCount;
+  QString m_lastTxMessage;
   QDateTime m_lastTxTime;
   QQueue<QString> m_txFrameQueue;
   QQueue<RXDetail> m_rxFrameQueue;

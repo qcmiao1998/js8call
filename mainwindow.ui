@@ -155,13 +155,13 @@
                <number>18</number>
               </property>
               <property name="topMargin">
-               <number>18</number>
+               <number>6</number>
               </property>
               <property name="rightMargin">
                <number>18</number>
               </property>
               <property name="bottomMargin">
-               <number>18</number>
+               <number>6</number>
               </property>
               <item>
                <spacer name="verticalSpacer_6">
@@ -177,65 +177,32 @@
                </spacer>
               </item>
               <item>
-               <widget class="QWidget" name="widget" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
+               <widget class="QComboBox" name="bandComboBox">
                 <property name="minimumSize">
                  <size>
-                  <width>0</width>
-                  <height>0</height>
+                  <width>75</width>
+                  <height>30</height>
                  </size>
                 </property>
-                <layout class="QHBoxLayout" name="horizontalLayout_19">
-                 <property name="spacing">
-                  <number>4</number>
-                 </property>
-                 <property name="leftMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QComboBox" name="bandComboBox">
-                   <property name="minimumSize">
-                    <size>
-                     <width>75</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="visible">
-                    <bool>true</bool>
-                   </property>
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select operating band or enter frequency in MHz or enter kHz increment followed by k.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">background-color:white;
+                <property name="visible">
+                 <bool>true</bool>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select operating band or enter frequency in MHz or enter kHz increment followed by k.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color:white;
 color:black;</string>
-                   </property>
-                   <property name="editable">
-                    <bool>true</bool>
-                   </property>
-                   <property name="insertPolicy">
-                    <enum>QComboBox::NoInsert</enum>
-                   </property>
-                   <property name="sizeAdjustPolicy">
-                    <enum>QComboBox::AdjustToMinimumContentsLength</enum>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                </property>
+                <property name="editable">
+                 <bool>true</bool>
+                </property>
+                <property name="insertPolicy">
+                 <enum>QComboBox::NoInsert</enum>
+                </property>
+                <property name="sizeAdjustPolicy">
+                 <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+                </property>
                </widget>
               </item>
               <item>
@@ -332,13 +299,13 @@ o</string>
                <number>18</number>
               </property>
               <property name="topMargin">
-               <number>18</number>
+               <number>6</number>
               </property>
               <property name="rightMargin">
                <number>18</number>
               </property>
               <property name="bottomMargin">
-               <number>18</number>
+               <number>6</number>
               </property>
               <item>
                <spacer name="verticalSpacer_4">
@@ -453,16 +420,16 @@ color : white;
                <number>18</number>
               </property>
               <property name="topMargin">
-               <number>18</number>
+               <number>6</number>
               </property>
               <property name="rightMargin">
                <number>18</number>
               </property>
               <property name="bottomMargin">
-               <number>18</number>
+               <number>6</number>
               </property>
               <property name="spacing">
-               <number>12</number>
+               <number>18</number>
               </property>
               <item row="3" column="1">
                <spacer name="verticalSpacer_8">
