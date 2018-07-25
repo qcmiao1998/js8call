@@ -7145,10 +7145,25 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
+    auto sendPWRAction = menu->addAction("PWR - Send station power level to the selected callsign");
+    sendPWRAction->setDisabled(isAllCall || m_config.my_dBm() < 0);
+    connect(sendPWRAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 PWR %2").arg(selectedCall).arg(Varicode::formatPWR(m_config.my_dBm())), true);
+
+        // perhaps a better name here?
+        toggleTx(true);
+    });
+
     menu->addSeparator();
 
-    auto ackAction = menu->addAction("? - Are you hearing me?");
-    connect(ackAction, &QAction::triggered, this, [this](){
+    auto ackQueryAction = menu->addAction("? - Are you hearing me?");
+    connect(ackQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
         if(selectedCall.isEmpty()){
@@ -7159,9 +7174,9 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto snrAction = menu->addAction("^ - What is my signal report?");
-    snrAction->setDisabled(isAllCall);
-    connect(snrAction, &QAction::triggered, this, [this](){
+    auto snrQueryAction = menu->addAction("^ - What is my signal report?");
+    snrQueryAction->setDisabled(isAllCall);
+    connect(snrQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
         if(selectedCall.isEmpty()){
@@ -7172,9 +7187,9 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto qthAction = menu->addAction("@ - What is your QTH message?");
-    qthAction->setDisabled(isAllCall);
-    connect(qthAction, &QAction::triggered, this, [this](){
+    auto qthQueryAction = menu->addAction("@ - What is your QTH message?");
+    qthQueryAction->setDisabled(isAllCall);
+    connect(qthQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
         if(selectedCall.isEmpty()){
@@ -7185,9 +7200,9 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto stationAction = menu->addAction("&& - What is your station message?");
-    stationAction->setDisabled(isAllCall);
-    connect(stationAction, &QAction::triggered, this, [this](){
+    auto stationMessageQueryAction = menu->addAction("&& - What is your station message?");
+    stationMessageQueryAction->setDisabled(isAllCall);
+    connect(stationMessageQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
         if(selectedCall.isEmpty()){
@@ -7198,9 +7213,9 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto powerAction = menu->addAction("% - What is your station power?");
-    powerAction->setDisabled(isAllCall);
-    connect(powerAction, &QAction::triggered, this, [this](){
+    auto stationPowerQueryAction = menu->addAction("% - What is your station power?");
+    stationPowerQueryAction->setDisabled(isAllCall);
+    connect(stationPowerQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
         if(selectedCall.isEmpty()){
@@ -7211,9 +7226,9 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto heardAction = menu->addAction("$ - What stations are you hearing?");
-    heardAction->setDisabled(isAllCall);
-    connect(heardAction, &QAction::triggered, this, [this](){
+    auto heardQueryAction = menu->addAction("$ - What stations are you hearing?");
+    heardQueryAction->setDisabled(isAllCall);
+    connect(heardQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
         if(selectedCall.isEmpty()){
@@ -7240,7 +7255,19 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto rrAction = menu->addAction("RR - I acknowledge your last transmission");
+    auto ackAction = menu->addAction("ACK - I acknowledge your last transmission");
+    connect(ackAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 ACK").arg(selectedCall), true);
+        toggleTx(true);
+    });
+
+    auto rrAction = menu->addAction("RR - I received your last transmission");
     connect(rrAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -8639,7 +8666,7 @@ void MainWindow::displayActivity(bool force){
           reply = QString("%1 SNR %2").arg(Radio::base_callsign(d.from)).arg(Varicode::formatSNR(d.snr));
       }
       // QUERIED PWR
-      else if(d.cmd == "%" && !isAllCall){
+      else if(d.cmd == "%" && !isAllCall && m_config.my_dBm() >= 0){
           reply = QString("%1 PWR %2").arg(Radio::base_callsign(d.from)).arg(Varicode::formatPWR(m_config.my_dBm()));
       }
       // QUERIED QTH
@@ -8671,12 +8698,16 @@ void MainWindow::displayActivity(bool force){
 
           QStringList lines;
           foreach(auto call, calls){
+              if(Radio::base_callsign(call) == Radio::base_callsign(m_config.my_callsign())){
+                  continue;
+              }
               auto d = m_callActivity[call];
               lines.append(QString("%1 SNR %2").arg(Radio::base_callsign(call)).arg(Varicode::formatSNR(d.snr)));
           }
           reply = lines.join('\n');
+      }
 
-      } else {
+      if(reply.isEmpty()){
           continue;
       }
 

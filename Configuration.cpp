@@ -1186,6 +1186,8 @@ void Configuration::impl::initialize_models ()
   };
 
   ui_->station_power_combo_box->clear();
+  ui_->station_power_combo_box->addItem(QString(""), -1);
+
   foreach(auto dbm, dbm2mw.keys()){
     ui_->station_power_combo_box->addItem(QString("%1 (%2 dBm)").arg(Varicode::formatPWR(dbm)).arg(dbm), dbm);
 
@@ -1323,7 +1325,7 @@ void Configuration::impl::read_settings ()
   my_callsign_ = settings_->value ("MyCall", QString {}).toString ();
   my_grid_ = settings_->value ("MyGrid", QString {}).toString ();
   my_station_ = settings_->value("MyStation", QString {}).toString();
-  my_dBm_ = settings_->value("MyPower", 0).toInt();
+  my_dBm_ = settings_->value("MyPower", -1).toInt();
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
   my_qth_ = settings_->value("MyQTH", QString {}).toString();
