@@ -62,6 +62,7 @@
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
 
+#define TEST_ALL_OR_NOTHING 1 // 0
 
 extern "C" {
   //----------------------------------------------------- C and Fortran routines
@@ -3259,9 +3260,19 @@ void MainWindow::readFromStdout()                             //readFromStdout
                         }
                         QString checksum = message.left(3);
                         message = message.mid(3);
+                        bool valid = Varicode::checksum16Valid(checksum, message);
                         qDebug() << "> CHECKSUM:" << checksum;
                         qDebug() << "> MESSAGE:" << message;
-                        qDebug() << "> VALID:" << Varicode::checksum16Valid(checksum, message);
+                        qDebug() << "> VALID:" << valid;
+
+                        // TODO: jsherer - we should process this where all the other commands are processes...
+                        if(valid){
+                            addMessageText(QString("%1 ACK\n").arg(c.from), true);
+                            addMessageText(message, false);
+                            if(ui->autoReplyButton->isChecked()){
+                                toggleTx(true);
+                            }
+                        }
                     }
                     m_messageCache.remove(d.freq/10*10);
                 }
@@ -3343,13 +3354,14 @@ void MainWindow::readFromStdout()                             //readFromStdout
               d.utcTimestamp = QDateTime::currentDateTimeUtc();
               m_rxCommandQueue.append(d);
 
+#if TEST_ALL_OR_NOTHING
               // TODO: jsherer - process this elsewhere?
               if(d.cmd == "|"){
                 // cache the message buffer commands
                 m_messageCache[d.freq/10*10].first = d;
                 m_messageCache[d.freq/10*10].second.clear();
               }
-
+#endif
 
               CallDetail cd;
               cd.call = d.from;
