@@ -30,8 +30,11 @@ public:
     static QString formatSNR(int snr);
     static QString formatPWR(int dbm);
 
-    static QString checksum(QString const &input);
-    static bool checksumValid(QString const &checksum, QString const &input);
+    static QString checksum16(QString const &input);
+    static bool checksum16Valid(QString const &checksum, QString const &input);
+
+    static QString checksum32(QString const &input);
+    static bool checksum32Valid(QString const &checksum, QString const &input);
 
     static QStringList parseCallsigns(QString const &input);
     static QStringList parseGrids(QString const &input);

@@ -1034,6 +1034,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   auto enterFilter = new EnterKeyPressEater();
   connect(enterFilter, &EnterKeyPressEater::enterKeyPressed, this, [this](QKeyEvent *, QObject *){
+      if(ui->extFreeTextMsgEdit->isReadOnly()){
+          return;
+      }
       toggleTx(true);
   });
   ui->extFreeTextMsgEdit->installEventFilter(enterFilter);
@@ -5628,6 +5631,9 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
         }
 #endif
 
+        // once we find a directed call, data encode the rest of the line.
+        bool hasDirected = false;
+
         while(line.size() > 0){
           QString frame;
 
@@ -5646,10 +5652,11 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
           // if this parses to a standard FT8 free text message
           // but it can be parsed as a directed message, then we
           // should send the directed version
-          if(isFree && n > 0){
+          if(isFree && !hasDirected && n > 0){
               useDir = true;
+              hasDirected = true;
               frame = dirFrame;
-          } else if (isFree && m > 0) {
+          } else if ((isFree || hasDirected) && m > 0) {
               useDat = true;
               frame = datFrame;
           } else {
@@ -5693,6 +5700,13 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 
               lines.append(line.left(n) + " ");
               line = line.mid(n);
+
+#if 0
+              // TODO: jsherer - this is how we'll prepend a 16-bit checksum to the message, just encode it in the data...
+              if(!line.isEmpty()){
+                line = Varicode::checksum16(line) + line;
+              }
+#endif
           }
 
           if(useDat){
@@ -5985,22 +5999,19 @@ QString MainWindow::calculateDistance(QString const& grid)
 // this function is called by auto_tx_mode, which is called by autoButton.clicked
 void MainWindow::on_startTxButton_toggled(bool checked)
 {
-    toggleTx(checked);
-}
-
-void MainWindow::toggleTx(bool start){
-    if(start){
-        // ensure the start button is checked
-        if(!ui->startTxButton->isChecked()){
-            ui->startTxButton->setChecked(true);
-        }
-
+    if(checked){
         createMessage(ui->extFreeTextMsgEdit->toPlainText());
         startTx();
     } else {
         resetMessage();
         stopTx();
     }
+}
+
+void MainWindow::toggleTx(bool start){
+    if(start && ui->startTxButton->isChecked()) { return; }
+    if(!start && !ui->startTxButton->isChecked()) { return; }
+    ui->startTxButton->setChecked(start);
 }
 
 void MainWindow::splitAndSendNextMessage()
