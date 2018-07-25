@@ -193,7 +193,7 @@ QString Varicode::formatPWR(int dbm){
 
     int mwatts = dbmTomwatts(dbm);
     if(mwatts < 1000){
-        return QString("%1MW").arg(mwatts);
+        return QString("%1mW").arg(mwatts);
     }
 
     return QString("%1W").arg(mwatts/1000);

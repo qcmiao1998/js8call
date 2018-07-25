@@ -97,6 +97,7 @@ public:
   QString my_callsign () const;
   QString my_grid () const;
   QString my_station () const;
+  int my_dBm() const;
   int activity_aging() const;
   int callsign_aging() const;
   QString my_qth () const;

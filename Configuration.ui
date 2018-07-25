@@ -202,6 +202,16 @@
              <item row="1" column="1">
               <widget class="QLineEdit" name="station_message_line_edit"/>
              </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_16">
+               <property name="text">
+                <string>Station Power:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QComboBox" name="station_power_combo_box"/>
+             </item>
             </layout>
            </widget>
           </item>

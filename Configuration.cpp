@@ -181,6 +181,8 @@
 #include "MaidenheadLocatorValidator.hpp"
 #include "CallsignValidator.hpp"
 
+#include "varicode.h"
+
 #include "ui_Configuration.h"
 #include "moc_Configuration.cpp"
 
@@ -532,6 +534,7 @@ private:
   QString my_callsign_;
   QString my_grid_;
   QString my_station_;
+  int my_dBm_;
   QString my_qth_;
   int callsign_aging_;
   int activity_aging_;
@@ -828,6 +831,10 @@ QString Configuration::my_grid() const
 QString Configuration::my_station() const
 {
     return m_->my_station_;
+}
+
+int Configuration::my_dBm() const {
+    return m_->my_dBm_;
 }
 
 QString Configuration::my_qth() const
@@ -1155,6 +1162,39 @@ void Configuration::impl::initialize_models ()
     {
       pal.setColor (QPalette::Base, Qt::white);
     }
+
+  QMap<int, int> dbm2mw = {
+      {0  , 1},
+      {3  , 2},
+      {7  , 5},
+      {10 , 10},
+      {13 , 20},
+      {17 , 50},
+      {20 , 100},
+      {23 , 200},
+      {27 , 500},
+      {30 , 1000},    //    1W
+      {33 , 2000},    //    2W
+      {37 , 5000},    //    5W
+      {40 , 10000},   //   10W
+      {43 , 20000},   //   20W
+      {47 , 50000},   //   50W
+      {50 , 100000},  //  100W
+      {53 , 200000},  //  200W
+      {57 , 500000},  //  500W
+      {60 , 1000000}, // 1000W
+  };
+
+  ui_->station_power_combo_box->clear();
+  foreach(auto dbm, dbm2mw.keys()){
+    ui_->station_power_combo_box->addItem(QString("%1 (%2 dBm)").arg(Varicode::formatPWR(dbm)).arg(dbm), dbm);
+
+    if(dbm == my_dBm_){
+        ui_->station_power_combo_box->setCurrentIndex(ui_->station_power_combo_box->count()-1);
+    }
+  }
+
+
   ui_->callsign_line_edit->setPalette (pal);
   ui_->grid_line_edit->setPalette (pal);
   ui_->callsign_line_edit->setText (my_callsign_);
@@ -1283,6 +1323,7 @@ void Configuration::impl::read_settings ()
   my_callsign_ = settings_->value ("MyCall", QString {}).toString ();
   my_grid_ = settings_->value ("MyGrid", QString {}).toString ();
   my_station_ = settings_->value("MyStation", QString {}).toString();
+  my_dBm_ = settings_->value("MyPower", 0).toInt();
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
   my_qth_ = settings_->value("MyQTH", QString {}).toString();
@@ -1474,6 +1515,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MyCall", my_callsign_);
   settings_->setValue ("MyGrid", my_grid_);
   settings_->setValue ("MyStation", my_station_);
+  settings_->setValue ("MyPower", my_dBm_);
   settings_->setValue ("MyQTH", my_qth_);
   settings_->setValue ("CallsignAging", callsign_aging_);
   settings_->setValue ("ActivityAging", activity_aging_);
@@ -1930,6 +1972,7 @@ void Configuration::impl::accept ()
   my_callsign_ = ui_->callsign_line_edit->text ();
   my_grid_ = ui_->grid_line_edit->text ();
   my_station_ = ui_->station_message_line_edit->text().toUpper();
+  my_dBm_ = ui_->station_power_combo_box->currentData().toInt();
   my_qth_ = ui_->qth_message_line_edit->text().toUpper();
   callsign_aging_ = ui_->callsign_aging_spin_box->value();
   activity_aging_ = ui_->activity_aging_spin_box->value();
