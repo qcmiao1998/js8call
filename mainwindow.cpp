@@ -164,7 +164,7 @@ namespace
 {
   Radio::Frequency constexpr default_frequency {14074000};
   QRegExp message_alphabet {"[- A-Za-z0-9+./?:!^]*"};
-  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:!^@&|$]*"}; // @&|$ are used for commands but are never transmitted
+  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:!^@&|$%]*"}; // @&|$% are used for commands but are never transmitted
   // grid exact match excluding RR73
   QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
 
@@ -7198,6 +7198,19 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
+    auto powerAction = menu->addAction("% - What is your station power?");
+    powerAction->setDisabled(isAllCall);
+    connect(powerAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1%").arg(selectedCall), true);
+        toggleTx(true);
+    });
+
     auto heardAction = menu->addAction("$ - What stations are you hearing?");
     heardAction->setDisabled(isAllCall);
     connect(heardAction, &QAction::triggered, this, [this](){
@@ -8624,6 +8637,10 @@ void MainWindow::displayActivity(bool force){
       // QUERIED SNR
       else if(d.cmd == "^" && !isAllCall){
           reply = QString("%1 SNR %2").arg(Radio::base_callsign(d.from)).arg(Varicode::formatSNR(d.snr));
+      }
+      // QUERIED PWR
+      else if(d.cmd == "%" && !isAllCall){
+          reply = QString("%1 PWR %2").arg(Radio::base_callsign(d.from)).arg(Varicode::formatPWR(m_config.my_dBm()));
       }
       // QUERIED QTH
       else if(d.cmd == "@" && !isAllCall){

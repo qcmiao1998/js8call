@@ -30,7 +30,7 @@
 const int nalphabet = 41;
 QString alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-./?"};
 QString grid_pattern = {R"((?<grid>[A-R]{2}[0-9]{2})+)"};
-QString compound_callsign_pattern = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){3,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
+QString compound_callsign_pattern = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){2,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
 QString pack_callsign_pattern = {R"(([0-9A-Z ])([0-9A-Z])([0-9])([A-Z ])([A-Z ])([A-Z ]))"};
 QString callsign_alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "};
 
@@ -43,11 +43,11 @@ QMap<QString, int> directed_cmds = {
     {"&",     2  }, // query station message
     {"$",     3  }, // query station(s) heard
     {"^",     4  }, // query snr
+    {"%",     5  }, // query pwr
+    {"|",     6  }, // relay message?
+    {"!",     7  }, // alert message?
 
-    {"|",     5  }, // relay message?
-    {"!",     6  }, // alert message?
-
-    // {"/",     7  }, // unused? (can we even use stroke?)
+    // {"/",     8  }, // unused? (can we even use stroke?)
 
     // directed responses
     {" ACK",  23  }, // acknowledged
@@ -61,11 +61,11 @@ QMap<QString, int> directed_cmds = {
     {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, /*6,*/ 10, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, /*7,*/ 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 QRegularExpression directed_re("^"
                                "(?<to>[A-Z0-9/]+)"
-                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|PWR|ACK|[?@&$^|! ]))"
+                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|PWR|ACK|[?@&$^%|! ]))"
                                "(?<pwr>\\s?\\d+\\s?[KM]?W)?"
                                "(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?"
                                );
@@ -762,7 +762,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &baseCa
     QString to = match.captured("to");
     QString cmd = match.captured("cmd");
     QString num = match.captured("num").trimmed();
-    QString pwr = match.captured("pwr").trimmed();
+    QString pwr = match.captured("pwr").trimmed().toUpper();
 
     // validate callsign
     bool validToCallsign = (to != baseCallsign) && (basecalls.contains(to) || QRegularExpression(compound_callsign_pattern).match(to).hasMatch());
@@ -794,7 +794,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &baseCa
         else if(pwr.endsWith("MW")){
             factor = 1;
         }
-        ipwr = pwr.replace(QRegExp("[KM]?W"), "").toInt() * factor;
+        ipwr = pwr.replace(QRegExp("[KM]?W", Qt::CaseInsensitive), "").toInt() * factor;
         inum = mwattsToDbm(ipwr) - 30;
     }
 
