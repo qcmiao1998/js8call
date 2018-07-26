@@ -31,7 +31,9 @@ class DecodedText
 {
 public:
   explicit DecodedText (QString const& message, bool, QString const& my_grid);
+  explicit DecodedText (QString const& ft8callmessage);
 
+  bool tryUnpack();
   bool tryUnpackCompound();
   bool tryUnpackDirected();
   bool tryUnpackData();

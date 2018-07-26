@@ -60,19 +60,34 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
       }
     }
 
-    if(!is_standard_){
-      bool unpacked = false;
+    tryUnpack();
+}
 
-      if(!unpacked){
-        unpacked = tryUnpackCompound();
-       }
-      if(!unpacked){
-        unpacked = tryUnpackDirected();
-      }
-      if(!unpacked){
-        unpacked = tryUnpackData();
-      }
+DecodedText::DecodedText (QString const& ft8callmessage){
+    message_ = ft8callmessage;
+    is_standard_ = false;
+    tryUnpack();
+}
+
+bool DecodedText::tryUnpack(){
+    if(is_standard_){
+        return false;
     }
+
+    bool unpacked = false;
+    if(!unpacked){
+      unpacked = tryUnpackCompound();
+    }
+
+    if(!unpacked){
+      unpacked = tryUnpackDirected();
+    }
+
+    if(!unpacked){
+      unpacked = tryUnpackData();
+    }
+
+    return unpacked;
 }
 
 bool DecodedText::tryUnpackCompound(){

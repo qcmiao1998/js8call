@@ -3095,7 +3095,8 @@ void MainWindow::writeAllTxt(QString message)
               << m_mode << endl;
           m_RxLog=0;
         }
-        out << message << endl;
+        auto dt = DecodedText(message);
+        out << dt.message() << endl;
         f.close();
       } else {
         MessageBox::warning_message (this, tr ("File Open Error")
@@ -3171,7 +3172,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
           m_RxLog=0;
         }
         int n=t.length();
-        out << t.mid(0,n-2) << endl;
+        auto dt = DecodedText(t.mid(0, n-2));
+        out << dt.message() << endl;
         f.close();
       } else {
         MessageBox::warning_message (this, tr ("File Open Error")
@@ -4139,7 +4141,8 @@ void MainWindow::guiUpdate()
       if(m_config.bFox() and ui->tabWidget->currentIndex()==2) {
         sprintf(s,"Tx:  %d Slots",foxcom_.nslots);
       } else {
-        sprintf(s,"Tx: %s",msgsent);
+        auto dt = DecodedText(msgsent);
+        sprintf(s,"Tx: %s", dt.message().toLocal8Bit().mid(0, 41).data());
       }
       m_nsendingsh=0;
       if(s[4]==64) m_nsendingsh=1;
@@ -4326,7 +4329,8 @@ void MainWindow::stopTx2()
     WSPR_scheduling ();
     m_ntr=0;
   }
-  last_tx_label.setText("Last Tx: " + m_currentMessage.trimmed());
+  auto dt = DecodedText(m_currentMessage.trimmed());
+  last_tx_label.setText("Last Tx: " + dt.message()); //m_currentMessage.trimmed());
 //###  if(m_mode=="FT8" and m_config.bHound()) auto_tx_mode(false); ###
 }
 
@@ -9376,10 +9380,11 @@ void MainWindow::write_transmit_entry (QString const& file_name)
       QTextStream out(&f);
       auto time = QDateTime::currentDateTimeUtc ();
       time = time.addSecs (-(time.time ().second () % m_TRperiod));
+      auto dt = DecodedText(m_currentMessage);
       out << time.toString("yyMMdd_hhmmss")
           << "  Transmitting " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6)
           << " MHz  " << m_modeTx
-          << ":  " << m_currentMessage << endl;
+          << ":  " << dt.message() << endl;
       f.close();
     }
   else
