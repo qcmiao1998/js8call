@@ -39,9 +39,12 @@ public:
     static QStringList parseCallsigns(QString const &input);
     static QStringList parseGrids(QString const &input);
 
-    static QList<QVector<bool>> huffEncode(QString const& text);
-    static QVector<bool> huffFlatten(QList<QVector<bool>> &list);
-    static QString huffDecode(QVector<bool> const& bitvec, int pad=0);
+    static QList<QVector<bool>> huffEncode(const QMap<QChar, QString> &huff, QString const& text);
+    static QString huffDecode(const QMap<QChar, QString> &huff, QVector<bool> const& bitvec, int pad=0);
+
+    static QString huffUnescape(QString const &input);
+    static QString huffEscape(QString const &input);
+    static bool huffShouldEscape(QString const &input);
 
     static QVector<bool> bytesToBits(char * bitvec, int n);
     static QVector<bool> strToBits(QString const& bitvec);
@@ -50,6 +53,7 @@ public:
     static QVector<bool> intToBits(quint64 value, int expected=0);
     static quint64 bitsToInt(QVector<bool> const value);
     static quint64 bitsToInt(QVector<bool>::ConstIterator start, int n);
+    static QVector<bool> bitsListToBits(QList<QVector<bool>> &list);
 
     static quint8 unpack5bits(QString const& value);
     static QString pack5bits(quint8 packed);
@@ -84,7 +88,7 @@ public:
     static QString packDirectedMessage(QString const& text, QString const& callsign, QString * pCmd, int *n);
     static QStringList unpackDirectedMessage(QString const& text);
 
-    static QString packDataMessage(QString const& text, int *n);
+    static QString packDataMessage(QString const& text, QString *out, int *n);
     static QString unpackDataMessage(QString const& text);
 };
 

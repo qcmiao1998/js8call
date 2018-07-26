@@ -164,7 +164,7 @@ namespace
 {
   Radio::Frequency constexpr default_frequency {14074000};
   QRegExp message_alphabet {"[- A-Za-z0-9+./?:!^]*"};
-  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:!^@&|$%]*"}; // @&|$% are used for commands but are never transmitted
+  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:!^,&@#$%*()<>'\"|=]*"};
   // grid exact match excluding RR73
   QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
 
@@ -5637,7 +5637,9 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
           QString dirFrame = Varicode::packDirectedMessage(line, basecall, &dirCmd, &n);
 
           int m = 0;
-          QString datFrame = Varicode::packDataMessage(line.left(21) + "\x04", &m); //  63 / 3 = 21 (maximum number of 3bit chars we could possibly stuff in here)
+          // packDataMessage can output a new line (huff escaping special characters)
+          QString datLineOut;
+          QString datFrame = Varicode::packDataMessage(line.left(21) + "\x04", &datLineOut, &m); //  63 / 3 = 21 (maximum number of 3bit chars we could possibly stuff in here)
 
           // if this parses to a standard FT8 free text message
           // but it can be parsed as a directed message, then we
@@ -5649,6 +5651,9 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
           } else if ((isFree || hasDirected) && m > 0) {
               useDat = true;
               frame = datFrame;
+              if(!datLineOut.isEmpty()){
+                line = datLineOut;
+              }
           } else {
               useStd = true;
               frame = stdFrame;
