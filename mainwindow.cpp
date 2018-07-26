@@ -7232,6 +7232,18 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         addMessageText(QString("%1|").arg(selectedCall), true);
     });
 
+    auto alertAction = menu->addAction("!message - Please display this message in an alert dialog and ACK if acknowledged");
+    alertAction->setDisabled(isAllCall);
+    connect(alertAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1!").arg(selectedCall), true);
+    });
+
     menu->addSeparator();
 
     auto agnAction = menu->addAction("AGN? - Please repeat your last transmission");
@@ -8633,6 +8645,8 @@ void MainWindow::displayActivity(bool force){
       if(Varicode::checksum16Valid(checksum, message)){
           buffer.cmd.text = message;
           m_rxCommandQueue.append(buffer.cmd);
+      } else {
+          qDebug() << "Buffered message failed checksum...discarding";
       }
 
       // regardless of valid or not, remove the "complete" buffered message from the buffer cache
@@ -8653,7 +8667,7 @@ void MainWindow::displayActivity(bool force){
 
       bool isAllCall = d.to == "ALLCALL";
 
-#if 0
+#if 1
       qDebug() << "processing command" << d.from << d.to << d.cmd << d.freq;
 #endif
 
@@ -8734,6 +8748,35 @@ void MainWindow::displayActivity(bool force){
       else if(d.cmd == "|" && !isAllCall){
           // TODO: jsherer - perhaps parse d.text and ensure it is a valid message as well as prefix it with our call...
           reply = QString("%1 ACK\n%2 DE %1").arg(d.from).arg(d.text);
+      }
+      // PROCESS ALERT
+      else if(d.cmd == "!" && !isAllCall){
+
+          QMessageBox * msgBox = new QMessageBox(this);
+          msgBox->setIcon(QMessageBox::Information);
+
+          auto header = QString("Message from %3 at %1 (%2):");
+          header = header.arg(d.utcTimestamp.time().toString());
+          header = header.arg(d.freq);
+          header = header.arg(d.from);
+          msgBox->setText(header);
+          msgBox->setInformativeText(d.text);
+
+
+          auto ab = msgBox->addButton("ACK", QMessageBox::AcceptRole);
+          auto db = msgBox->addButton("Discard", QMessageBox::NoRole);
+
+          connect(msgBox, &QMessageBox::buttonClicked, this, [this, d, db, ab](QAbstractButton * btn){
+              if(btn != ab){
+                  return;
+              }
+              addMessageText(QString("%1 ACK").arg(d.from));
+              toggleTx(true);
+          });
+
+          msgBox->show();
+
+          continue;
       }
 
       if(reply.isEmpty()){
