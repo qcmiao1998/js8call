@@ -1318,6 +1318,8 @@ void MainWindow::readSettings()
 {
   m_settings->beginGroup("MainWindow");
   restoreGeometry (m_settings->value ("geometry", saveGeometry ()).toByteArray ());
+  setMinimumSize(800, 545);
+
   m_geometryNoControls = m_settings->value ("geometryNoControls",saveGeometry()).toByteArray();
   restoreState (m_settings->value ("state", saveState ()).toByteArray ());
   ui->dxCallEntry->setText (m_settings->value ("DXcall", QString {}).toString ());
@@ -4223,6 +4225,7 @@ void MainWindow::guiUpdate()
     auto delta = t.secsTo(m_nextBeacon);
     auto beacon = ui->beaconButton->isChecked() ? delta > 0 ? QString("%1 s").arg(delta) : "queued!" : m_nextBeaconPaused ? "paused" : "disabled";
     ui->labBeacon->setText(QString("Next Beacon: %1").arg(beacon));
+    ui->labCallsign->setText(m_config.my_callsign());
 
     if(!m_monitoring and !m_diskData) {
       ui->signal_meter_widget->setValue(0,0);
