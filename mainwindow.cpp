@@ -163,8 +163,7 @@ QVector<QColor> g_ColorTbl;
 namespace
 {
   Radio::Frequency constexpr default_frequency {14074000};
-  QRegExp message_alphabet {"[- A-Za-z0-9+./?:!^]*"};
-  QRegExp message_input_alphabet {"[- A-Za-z0-9+./?\\n:!^,&@#$%*()<>'\"|=]*"};
+  QRegExp message_alphabet {"[- A-Za-z0-9+./?:!]*"}; // base alphabet supported by FT8
   // grid exact match excluding RR73
   QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
 
@@ -5442,17 +5441,15 @@ int MainWindow::logRxTxMessageText(QDateTime date, QString text, int freq, bool 
         c.insertBlock();
     }
 
-    if(tx){
-        text = "<strong>" + text + "</strong>";
-
-        // TODO: jsherer - move this out of this function
-        m_rxFrameBlockNumbers.clear();
-    }
-
-    if(found){
+    if(found && !tx){
         c.clearSelection();
         c.insertText(text);
     } else {
+        text = text.toHtmlEscaped();
+        if(tx){
+            text = QString("<strong>%1</strong>").arg(text);
+            m_rxFrameBlockNumbers.clear();
+        }
         c.insertHtml(QString("<strong>%1 - (%2)</strong> - %3").arg(date.time().toString()).arg(freq).arg(text));
     }
 
@@ -5573,9 +5570,11 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 {
     QString x;
     QString::const_iterator i;
+    auto validChars = Varicode::huffValidChars();
     for(i = text.constBegin(); i != text.constEnd(); i++){
-        if(message_input_alphabet.exactMatch(QString(*i))){
-            x += (*i).toUpper();
+        auto ch = (*i).toUpper();
+        if(validChars.contains(ch) || ch == '\n'){
+            x += ch;
         }
     }
     if(x != text){
@@ -8733,8 +8732,8 @@ void MainWindow::displayActivity(bool force){
       }
       // PROCESS RETRANSMIT
       else if(d.cmd == "|" && !isAllCall){
-          // TODO: jsherer - perhaps parse d.text and ensure it is a valid message?
-          reply = QString("%1 ACK\n%2").arg(d.from).arg(d.text);
+          // TODO: jsherer - perhaps parse d.text and ensure it is a valid message as well as prefix it with our call...
+          reply = QString("%1 ACK\n%2 DE %1").arg(d.from).arg(d.text);
       }
 
       if(reply.isEmpty()){

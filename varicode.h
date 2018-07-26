@@ -44,6 +44,7 @@ public:
 
     static QString huffUnescape(QString const &input);
     static QString huffEscape(QString const &input);
+    static QSet<QChar> huffValidChars();
     static bool huffShouldEscape(QString const &input);
 
     static QVector<bool> bytesToBits(char * bitvec, int n);

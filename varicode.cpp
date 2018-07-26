@@ -124,14 +124,14 @@ QMap<QChar, QString> hufftable = {
     { '\x04' , "110101100010" }, // 1       <- eot
 
     /*
-    A-Z 0-9 Space . ! ? : + - / \\
+    A-Z 0-9 Space \\ ? / : - + !
     special chars that are escaped will be added here too...
     */
 };
 
 /*
-original: space + - / ? . ! : \\
-needed: ^,&@#$%*()<>'"|={}[];_~`
+original: Space \\ ? / : - + !
+needed: ^,&@#$%'"()<>|*[]{}=;_~`
 */
 QMap<QString, QChar> huffescapes = {
     {  "\\ ",   '^'  },
@@ -161,7 +161,7 @@ QMap<QString, QChar> huffescapes = {
 
 #if 0
     // reserved <= 14 bits
-    {  "\\1",   ''  },
+    {  "\\1",   '' },
     {  "\\2",   ''  },
     {  "\\3",   ''  },
     {  "\\4",   ''  },
@@ -413,6 +413,10 @@ QString Varicode::huffEscape(QString const &input){
         text = text.replace(unescaped, huffescapes.key(unescaped));
     }
     return text;
+}
+
+QSet<QChar> Varicode::huffValidChars(){
+    return QSet<QChar>::fromList(hufftableescaped.keys());
 }
 
 bool Varicode::huffShouldEscape(QString const &input){
