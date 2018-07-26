@@ -30,7 +30,8 @@
 const int nalphabet = 41;
 QString alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-./?"};
 QString grid_pattern = {R"((?<grid>[A-R]{2}[0-9]{2})+)"};
-QString compound_callsign_pattern = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){2,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
+QString orig_compound_callsign_pattern = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){2,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
+QString compound_callsign_pattern = {R"((?<callsign>([A-Z0-9]{1,4}\/)?([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?(\/[A-Z0-9]{1,4})?))"};
 QString pack_callsign_pattern = {R"(([0-9A-Z ])([0-9A-Z])([0-9])([A-Z ])([A-Z ])([A-Z ]))"};
 QString callsign_alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "};
 
@@ -47,7 +48,8 @@ QMap<QString, int> directed_cmds = {
     {"|",     6  }, // relay message?
     {"!",     7  }, // alert message?
 
-    // {"/",     8  }, // unused? (can we even use stroke?)
+    // {"=",     8  }, // unused? (can we even use equals?)
+    // {"/",     9  }, // unused? (can we even use stroke?)
 
     // directed responses
     {" ACK",  23  }, // acknowledged
