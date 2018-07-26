@@ -656,6 +656,7 @@ private:
     int freq;
     QDateTime utcTimestamp;
     int snr;
+    QString text;
   };
 
   struct ActivityDetail
@@ -668,6 +669,11 @@ private:
     QString text;
     QDateTime utcTimestamp;
     int snr;
+  };
+
+  struct MessageBuffer {
+    CommandDetail cmd;
+    QList<ActivityDetail> msgs;
   };
 
   bool m_rxDirty;
@@ -686,7 +692,7 @@ private:
   QCache<QString, int> m_rxCallCache; // call -> last freq seen
   QMap<int, int> m_rxFrameBlockNumbers; // freq -> block
   QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
-  QMap<int, QPair<CommandDetail, QList<ActivityDetail>>> m_messageCache; // freq -> (cmd, [frames, ...])
+  QMap<int, MessageBuffer> m_messageBuffer; // freq -> (cmd, [frames, ...])
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
   QSet<QString> m_callSeenBeacon; // call
   int m_previousFreq;

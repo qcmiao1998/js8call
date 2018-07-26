@@ -65,6 +65,8 @@ QMap<QString, int> directed_cmds = {
 
 QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, /*7,*/ 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
+QSet<int> buffered_cmds = {6, 7};
+
 QRegularExpression directed_re("^"
                                "(?<to>[A-Z0-9/]+)"
                                "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|PWR|ACK|[?@&$^%|! ]))"
@@ -679,6 +681,10 @@ bool Varicode::isCommandAllowed(const QString &cmd){
     return directed_cmds.contains(cmd) && allowed_cmds.contains(directed_cmds[cmd]);
 }
 
+bool Varicode::isCommandBuffered(const QString &cmd){
+    return directed_cmds.contains(cmd) && buffered_cmds.contains(directed_cmds[cmd]);
+}
+
 QString Varicode::packCompoundMessage(const QString &baseCallsign, const QString &fix, bool isPrefix, quint16 num){
     QString frame;
 
@@ -751,7 +757,7 @@ QStringList Varicode::unpackCompoundMessage(const QString &text){
     return unpacked;
 }
 
-QString Varicode::packDirectedMessage(const QString &text, const QString &baseCallsign, int *n){
+QString Varicode::packDirectedMessage(const QString &text, const QString &baseCallsign, QString * pCmd, int *n){
     QString frame;
 
     auto match = directed_re.match(text);
@@ -824,6 +830,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &baseCa
         Varicode::intToBits(packed_cmd % 32,    5)
     );
 
+    if(pCmd) *pCmd = cmd;
     if(n) *n = match.captured(0).length();
     return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_extra % 32);
 }
@@ -853,10 +860,12 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
     quint8 packed_cmd = Varicode::bitsToInt(Varicode::strToBits(bits.mid(59, 5)));
 
     QString from = Varicode::unpackCallsign(packed_from).trimmed();
+    QString to = Varicode::unpackCallsign(packed_to).trimmed();
+    QString cmd = directed_cmds.key(packed_cmd % 32);
 
     unpacked.append(from);
-    unpacked.append(Varicode::unpackCallsign(packed_to).trimmed());
-    unpacked.append(directed_cmds.key(packed_cmd % 32));
+    unpacked.append(to);
+    unpacked.append(cmd);
 
     int num = (num_flag ? -1 : 1) * extra;
     if(num != -31){

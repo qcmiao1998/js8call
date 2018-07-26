@@ -76,11 +76,12 @@ public:
     static QString unpackGrid(quint16 value);
 
     static bool isCommandAllowed(const QString &cmd);
+    static bool isCommandBuffered(const QString &cmd);
 
     static QString packCompoundMessage(const QString &baseCallsign, const QString &fix, bool isPrefix, quint16 num);
     static QStringList unpackCompoundMessage(const QString &text);
 
-    static QString packDirectedMessage(QString const& text, QString const& callsign, int *n);
+    static QString packDirectedMessage(QString const& text, QString const& callsign, QString * pCmd, int *n);
     static QStringList unpackDirectedMessage(QString const& text);
 
     static QString packDataMessage(QString const& text, int *n);

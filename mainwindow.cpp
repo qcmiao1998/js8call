@@ -62,7 +62,6 @@
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
 
-#define TEST_ALL_OR_NOTHING 1 // 0
 
 extern "C" {
   //----------------------------------------------------- C and Fortran routines
@@ -3247,39 +3246,9 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.snr = decodedtext.snr();
             m_bandActivity[offset].append(d);
 
-#if TEST_ALL_OR_NOTHING
-            if(m_messageCache.contains(d.freq/10*10)){
-                m_messageCache[d.freq/10*10].second.append(d);
-
-                if(d.bits == Varicode::FT8CallLast){
-                    auto c  = m_messageCache[d.freq/10*10].first;
-                    auto fs = m_messageCache[d.freq/10*10].second;
-                    if(!fs.isEmpty()){
-                        qDebug() << "MESSAGE COMPLETE:" << c.from << c.to;
-                        QString message;
-                        foreach(auto f, fs){
-                            message.append(f.text);
-                        }
-                        QString checksum = message.left(3);
-                        message = message.mid(3);
-                        bool valid = Varicode::checksum16Valid(checksum, message);
-                        qDebug() << "> CHECKSUM:" << checksum;
-                        qDebug() << "> MESSAGE:" << message;
-                        qDebug() << "> VALID:" << valid;
-
-                        // TODO: jsherer - we should process this where all the other commands are processes...
-                        if(valid){
-                            addMessageText(QString("%1 ACK\n").arg(c.from), true);
-                            addMessageText(message, false);
-                            if(ui->autoReplyButton->isChecked()){
-                                toggleTx(true);
-                            }
-                        }
-                    }
-                    m_messageCache.remove(d.freq/10*10);
-                }
+            if(m_messageBuffer.contains(d.freq/10*10)){
+                m_messageBuffer[d.freq/10*10].msgs.append(d);
             }
-#endif
 
             while(m_bandActivity[offset].count() > 10){
                 m_bandActivity[offset].removeFirst();
@@ -3354,16 +3323,13 @@ void MainWindow::readFromStdout()                             //readFromStdout
               d.freq = decodedtext.frequencyOffset();
               d.snr = decodedtext.snr();
               d.utcTimestamp = QDateTime::currentDateTimeUtc();
-              m_rxCommandQueue.append(d);
 
-#if TEST_ALL_OR_NOTHING
-              // TODO: jsherer - process this elsewhere?
-              if(d.cmd == "|"){
-                // cache the message buffer commands
-                m_messageCache[d.freq/10*10].first = d;
-                m_messageCache[d.freq/10*10].second.clear();
+              if(Varicode::isCommandBuffered(d.cmd)){
+                m_messageBuffer[d.freq/10*10].cmd = d;
+                m_messageBuffer[d.freq/10*10].msgs.clear();
+              } else {
+                m_rxCommandQueue.append(d);
               }
-#endif
 
               CallDetail cd;
               cd.call = d.from;
@@ -3416,7 +3382,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         }
       }
 
-        //Right (Rx Frequency) window
+      //Right (Rx Frequency) window
       bool bDisplayRight=bAvgMsg;
       int audioFreq=decodedtext.frequencyOffset();
 
@@ -5667,7 +5633,8 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
           QString stdFrame = parseFT8Message(line, &isFree);
 
           int n = 0;
-          QString dirFrame = Varicode::packDirectedMessage(line, basecall, &n);
+          QString dirCmd;
+          QString dirFrame = Varicode::packDirectedMessage(line, basecall, &dirCmd, &n);
 
           int m = 0;
           QString datFrame = Varicode::packDataMessage(line.left(21) + "\x04", &m); //  63 / 3 = 21 (maximum number of 3bit chars we could possibly stuff in here)
@@ -5724,15 +5691,10 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
               lines.append(line.left(n) + " ");
               line = line.mid(n);
 
-#if TEST_ALL_OR_NOTHING
-              // TODO: jsherer - don't do this... refactor pack to return the packed frame _and_ its components instead
-              if(Varicode::unpackDirectedMessage(dirFrame).at(2) == "|"){
-              // TODO: jsherer - this is how we can add 16-bit checksum to the message, just encode it in the data...
-              if(!line.isEmpty()){
-                line = Varicode::checksum16(line) + line;
+              if(Varicode::isCommandBuffered(dirCmd) && !line.isEmpty()){
+                  // TODO: jsherer - this is how we can add 16-bit checksum to the message, just encode it in the data...
+                  line = Varicode::checksum16(line) + " " + line;
               }
-              }
-#endif
           }
 
           if(useDat){
@@ -7254,7 +7216,17 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    //menu->addAction("| - Please relay the following message")->setEnabled(false);
+    auto retransmitAction = menu->addAction("|message - Please ACK and retransmit the following message");
+    retransmitAction->setDisabled(isAllCall);
+    connect(retransmitAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1|").arg(selectedCall), true);
+    });
 
     menu->addSeparator();
 
@@ -8634,9 +8606,36 @@ void MainWindow::displayActivity(bool force){
       }
   }
 
+  // Buffered Activity
+  foreach(auto freq, m_messageBuffer.keys()){
+      auto buffer = m_messageBuffer[freq];
+
+      if(buffer.msgs.isEmpty()){
+          continue;
+      }
+
+      if(buffer.msgs.last().bits == Varicode::FT8Call){
+          continue;
+      }
+
+      QString message;
+      foreach(auto part, buffer.msgs){
+          message.append(part.text);
+      }
+
+      QString checksum = message.left(3);
+      message = message.mid(4);
+
+      if(Varicode::checksum16Valid(checksum, message)){
+          buffer.cmd.text = message;
+          m_rxCommandQueue.append(buffer.cmd);
+      }
+
+      // regardless of valid or not, remove the "complete" buffered message from the buffer cache
+      m_messageBuffer.remove(freq);
+  }
 
   // Command Activity
-
   if(m_txFrameQueue.isEmpty() && !m_rxCommandQueue.isEmpty()){
     int f = currentFreq();
 
@@ -8703,7 +8702,8 @@ void MainWindow::displayActivity(bool force){
       }
       // QUERIED STATIONS HEARD
       else if(d.cmd == "$" && !isAllCall){
-
+          int i = 0;
+          int maxStations = 4;
           auto calls = m_callActivity.keys();
           qSort(calls.begin(), calls.end(), [this](QString const &a, QString const &b){
             auto left = m_callActivity[a];
@@ -8713,13 +8713,23 @@ void MainWindow::displayActivity(bool force){
 
           QStringList lines;
           foreach(auto call, calls){
+              if(i >= maxStations){
+                  break;
+              }
               if(Radio::base_callsign(call) == Radio::base_callsign(m_config.my_callsign())){
                   continue;
               }
+
               auto d = m_callActivity[call];
               lines.append(QString("%1 SNR %2").arg(Radio::base_callsign(call)).arg(Varicode::formatSNR(d.snr)));
+              i++;
           }
           reply = lines.join('\n');
+      }
+      // PROCESS RETRANSMIT
+      else if(d.cmd == "|" && !isAllCall){
+          // TODO: jsherer - perhaps parse d.text and ensure it is a valid message?
+          reply = QString("%1 ACK\n%2").arg(d.from).arg(d.text);
       }
 
       if(reply.isEmpty()){
