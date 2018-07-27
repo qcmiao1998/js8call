@@ -1957,6 +1957,7 @@ void MainWindow::on_actionSettings_triggered()               //Setup Dialog
     }
 
     displayDialFrequency ();
+    displayActivity(true);
 
     bool vhf {m_config.enable_VHF_features()};
     m_wideGraph->setVHF(vhf);
@@ -6024,12 +6025,14 @@ void MainWindow::prepareBacon(){
 
     QString call = m_config.my_callsign();
     QString grid = m_config.my_grid().left(4);
-    if(call != Radio::base_callsign(call)){
-        grid = "";
+    QString beacon = QString("DE %1 %2").arg(call).arg(grid);
+    QString parsed = parseFT8Message(beacon, nullptr);
+    if(parsed != beacon){
+        beacon = QString("DE %1").arg(call).arg(grid);
     }
 
-    lines.append(QString("DE %1 %2").arg(call).arg(grid));
-    lines.append(QString("DE %1 %2").arg(call).arg(grid));
+    lines.append(beacon);
+    lines.append(beacon);
 
 #if 0
     if(!m_callActivity.isEmpty()){
