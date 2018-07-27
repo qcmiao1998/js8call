@@ -127,6 +127,7 @@ public slots:
   void addMessageText(QString text, bool clear=false);
   void resetMessage();
   void resetMessageUI();
+  void restoreMessage();
   void createMessage(QString const& text);
   void createMessageTransmitQueue(QString const& text);
   void resetMessageTransmitQueue();

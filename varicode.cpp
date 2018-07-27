@@ -39,11 +39,11 @@ QMap<QString, int> directed_cmds = {
     // any changes here need to be made also in the directed regular xpression for parsing
 
     // directed queries
-    {"?",     0  }, // query ack
+    {"?",     0  }, // query snr
     {"@",     1  }, // query qth
     {"&",     2  }, // query station message
     {"$",     3  }, // query station(s) heard
-    {"^",     4  }, // query snr
+    // {"^",     4  }, // query ack
     {"%",     5  }, // query pwr
     {"|",     6  }, // relay message?
     {"!",     7  }, // alert message?
@@ -63,7 +63,7 @@ QMap<QString, int> directed_cmds = {
     {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 QSet<int> buffered_cmds = {6, 7};
 

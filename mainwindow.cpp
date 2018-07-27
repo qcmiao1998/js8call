@@ -1077,8 +1077,23 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto clearAction2 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->extFreeTextMsgEdit);
   connect(clearAction2, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->extFreeTextMsgEdit); });
   ui->extFreeTextMsgEdit->setContextMenuPolicy(Qt::ActionsContextMenu);
-  ui->extFreeTextMsgEdit->addAction(clearAction2);
-  ui->extFreeTextMsgEdit->addAction(clearActionAll);
+
+  auto restoreAction = new QAction(QString("Restore Previous Message"), ui->extFreeTextMsgEdit);
+  connect(restoreAction, &QAction::triggered, this, [this](){ this->restoreMessage(); });
+
+  ui->extFreeTextMsgEdit->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->extFreeTextMsgEdit, &QTableWidget::customContextMenuRequested, this, [this, clearAction2, clearActionAll, restoreAction](QPoint const &point){
+    QMenu * menu = new QMenu(ui->extFreeTextMsgEdit);
+
+    restoreAction->setDisabled(m_lastTxMessage.isEmpty());
+    menu->addAction(restoreAction);
+
+    menu->addSeparator();
+    menu->addAction(clearAction2);
+    menu->addAction(clearActionAll);
+
+    menu->popup(ui->extFreeTextMsgEdit->mapToGlobal(point));
+  });
 
   auto clearAction3 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetRXAll);
   connect(clearAction3, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetRXAll); });
@@ -5440,6 +5455,7 @@ void MainWindow::clearActivity(){
     m_rxFrameBlockNumbers.clear();
     m_rxFrameQueue.clear();
     m_rxCommandQueue.clear();
+    m_lastTxMessage.clear();
 
     clearTableWidget(ui->tableWidgetCalls);
 
@@ -5569,6 +5585,13 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
 
   // keep track of the last message text sent
   m_lastTxMessage = text;
+}
+
+void MainWindow::restoreMessage(){
+    if(m_lastTxMessage.isEmpty()){
+        return;
+    }
+    addMessageText(m_lastTxMessage, true);
 }
 
 void MainWindow::resetMessageTransmitQueue(){
@@ -7097,6 +7120,7 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
 
     if(sender == ui->extFreeTextMsgEdit){
         resetMessage();
+        m_lastTxMessage.clear();
     }
 
     if(sender == ui->textEditRX){
@@ -8834,6 +8858,8 @@ void MainWindow::displayActivity(bool force){
           msgBox->show();
 
           continue;
+      } else if(d.cmd == " AGN?" && !isAllCall && !m_lastTxMessage.isEmpty()){
+          reply = m_lastTxMessage;
       }
 
       if(reply.isEmpty()){
