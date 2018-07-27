@@ -2114,6 +2114,7 @@ void MainWindow::keyPressEvent (QKeyEvent * e)
     QMainWindow::keyPressEvent (e);
   }
 
+#if 0
   int n;
   switch(e->key())
     {
@@ -2229,6 +2230,7 @@ void MainWindow::keyPressEvent (QKeyEvent * e)
       }
       break;
   }
+#endif
 
   QMainWindow::keyPressEvent (e);
 }
