@@ -837,7 +837,7 @@ QString Varicode::packCompoundMessage(const QString &baseCallsign, const QString
 QStringList Varicode::unpackCompoundMessage(const QString &text){
     QStringList unpacked;
 
-    if(text.length() < 13){
+    if(text.length() < 13 || text.contains(" ")){
         return unpacked;
     }
 
@@ -955,7 +955,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &baseCa
 QStringList Varicode::unpackDirectedMessage(const QString &text){
     QStringList unpacked;
 
-    if(text.length() < 13){
+    if(text.length() < 13 || text.contains(" ")){
         return unpacked;
     }
 
@@ -1034,7 +1034,7 @@ QString Varicode::packDataMessage(const QString &input, QString * out, int *n){
 QString Varicode::unpackDataMessage(const QString &text){
     QString unpacked;
 
-    if(text.length() < 13){
+    if(text.length() < 13 || text.contains(" ")){
         return unpacked;
     }
 

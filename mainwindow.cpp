@@ -248,6 +248,16 @@ namespace
    int roundDown = ( (int) (numToRound) / multiple) * multiple;
    return roundDown + multiple;
   }
+
+  QString rstrip(const QString& str) {
+    int n = str.size() - 1;
+    for (; n >= 0; --n) {
+      if (!str.at(n).isSpace()) {
+        return str.left(n + 1);
+      }
+    }
+    return "";
+  }
 }
 
 //--------------------------------------------------- MainWindow constructor
@@ -3242,12 +3252,13 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.isCompound = decodedtext.isCompoundMessage();
             d.bits = decodedtext.bits();
             d.freq = offset;
-            d.text = decodedtext.messageWords().isEmpty() ? "" : decodedtext.messageWords().first().trimmed();
+            d.text = decodedtext.message(); //decodedtext.messageWords().isEmpty() ? "" : decodedtext.messageWords().first().trimmed();
             d.utcTimestamp = QDateTime::currentDateTimeUtc();
             d.snr = decodedtext.snr();
             m_bandActivity[offset].append(d);
 
             if(m_messageBuffer.contains(d.freq/10*10)){
+                qDebug() << "buffering" << (d.freq/10*10) << d.text;
                 m_messageBuffer[d.freq/10*10].msgs.append(d);
             }
 
@@ -5701,7 +5712,9 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 
               if(Varicode::isCommandBuffered(dirCmd) && !line.isEmpty()){
                   // TODO: jsherer - this is how we can add 16-bit checksum to the message, just encode it in the data...
-                  line = Varicode::checksum16(line) + " " + line;
+                  qDebug() << "generating checksum for line" << line;
+                  line = line + " " + Varicode::checksum16(line);
+                  qDebug() << line;
               }
           }
 
@@ -8642,15 +8655,18 @@ void MainWindow::displayActivity(bool force){
       foreach(auto part, buffer.msgs){
           message.append(part.text);
       }
+      message = rstrip(message);
 
-      QString checksum = message.left(3);
-      message = message.mid(4);
+      QString checksum = message.right(3);
+      message = message.left(message.length()-4);
 
       if(Varicode::checksum16Valid(checksum, message)){
           buffer.cmd.text = message;
           m_rxCommandQueue.append(buffer.cmd);
       } else {
           qDebug() << "Buffered message failed checksum...discarding";
+          qDebug() << "Checksum:" << checksum;
+          qDebug() << "Message:" << message;
       }
 
       // regardless of valid or not, remove the "complete" buffered message from the buffer cache
