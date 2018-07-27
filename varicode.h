@@ -83,8 +83,11 @@ public:
     static bool isCommandAllowed(const QString &cmd);
     static bool isCommandBuffered(const QString &cmd);
 
+    static QString packBeaconMessage(QString const &callsign, QString const &extra, bool isCQ);
+    static QStringList unpackBeaconMessage(const QString &text, bool *isCQ);
+
     static QString packCompoundMessage(const QString &baseCallsign, const QString &fix, bool isPrefix, quint16 num);
-    static QStringList unpackCompoundMessage(const QString &text);
+    static QStringList unpackCompoundMessage(const QString &text, quint16 *pNum);
 
     static QString packDirectedMessage(QString const& text, QString const& callsign, QString * pCmd, int *n);
     static QStringList unpackDirectedMessage(QString const& text);

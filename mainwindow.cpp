@@ -1210,6 +1210,20 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto packed = Varicode::packCompoundMessage(basecall, fix, prefix, 99);
   qDebug() << packed << Varicode::unpackCompoundMessage(packed);
 
+  bool isCQ = false;
+
+  auto packed = Varicode::packBeaconMessage("KN4CRD/P", "EM73", true);
+  qDebug() << packed << Varicode::unpackBeaconMessage(packed, &isCQ) << isCQ;
+
+  packed = Varicode::packBeaconMessage("VE3/KN4CRD", "EM73", false);
+  qDebug() << packed << Varicode::unpackBeaconMessage(packed, &isCQ) << isCQ;
+
+
+  bool isCQ = false;
+
+  auto packed = Varicode::packBeaconMessage("P/KN4CRD", "", true);
+  qDebug() << packed << Varicode::unpackBeaconMessage(packed, &isCQ) << isCQ;
+
   m_valid = false;
 #endif
 
@@ -5789,7 +5803,7 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 #if 1
     qDebug() << "parsed frames:";
     foreach(auto frame, frames){
-        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame) << Varicode::unpackDirectedMessage(frame) << Varicode::unpackCompoundMessage(frame);
+        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame) << Varicode::unpackDirectedMessage(frame) << Varicode::unpackCompoundMessage(frame, nullptr);
     }
 
     qDebug() << "lines:";

@@ -98,7 +98,7 @@ bool DecodedText::tryUnpackCompound(){
     return false;
   }
 
-  QStringList parts = Varicode::unpackCompoundMessage(m);
+  QStringList parts = Varicode::unpackCompoundMessage(m, nullptr);
 
   if(parts.isEmpty() || parts.length() < 2){
     return false;

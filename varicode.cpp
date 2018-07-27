@@ -772,6 +772,9 @@ QPair<float, float> grid2deg(QString const &grid){
 // pack a 4-digit maidenhead grid locator into a 15-bit value
 quint16 Varicode::packGrid(QString const& grid){
     // TODO: validate grid...
+    if(grid.length() < 4){
+        return (1<<15)-1;
+    }
 
     // TODO: encode non-grid data...
 
@@ -784,7 +787,7 @@ quint16 Varicode::packGrid(QString const& grid){
 
 QString Varicode::unpackGrid(quint16 value){
     if(value > 180*180){
-        // TODO: decode non-grid data...
+        // TODO: decode non-grid data... for now just return an empty string...
         return "";
     }
 
@@ -800,6 +803,50 @@ bool Varicode::isCommandAllowed(const QString &cmd){
 
 bool Varicode::isCommandBuffered(const QString &cmd){
     return directed_cmds.contains(cmd) && buffered_cmds.contains(directed_cmds[cmd]);
+}
+
+QString Varicode::packBeaconMessage(QString const &callsign, QString const &extra, bool isCQ){
+    QString frame;
+
+    auto parsedCall = QRegularExpression(compound_callsign_pattern).match(callsign);
+    if(!parsedCall.hasMatch()){
+        return frame;
+    }
+
+    QString base = parsedCall.captured("base");
+
+    bool isPrefix = false;
+    QString fix = parsedCall.captured("prefix");
+    if(!fix.isEmpty()){
+        isPrefix = true;
+    }
+
+    if(!isPrefix){
+        fix = parsedCall.captured("suffix");
+    }
+
+    quint16 packed_extra = 180*180 + 1; // maximum grid + 1 (which will display an empty string)
+    if(extra.length() == 4 && QRegularExpression(grid_pattern).match(extra).hasMatch()){
+        packed_extra = Varicode::packGrid(extra);
+    }
+
+    if(isCQ){
+        packed_extra |= (1<<15);
+    }
+
+    return packCompoundMessage(base, fix, isPrefix, packed_extra);
+}
+
+QStringList Varicode::unpackBeaconMessage(const QString &text, bool * isCQ){
+    quint16 num = 0;
+
+    QStringList unpacked = unpackCompoundMessage(text, &num);
+
+    if(isCQ) *isCQ = (num & (1<<15));
+
+    unpacked.append(Varicode::unpackGrid(num & ((1<<15)-1)));
+
+    return unpacked;
 }
 
 QString Varicode::packCompoundMessage(const QString &baseCallsign, const QString &fix, bool isPrefix, quint16 num){
@@ -834,7 +881,7 @@ QString Varicode::packCompoundMessage(const QString &baseCallsign, const QString
     return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_5 % 32);
 }
 
-QStringList Varicode::unpackCompoundMessage(const QString &text){
+QStringList Varicode::unpackCompoundMessage(const QString &text, quint16 *pNum){
     QStringList unpacked;
 
     if(text.length() < 13 || text.contains(" ")){
@@ -856,20 +903,23 @@ QStringList Varicode::unpackCompoundMessage(const QString &text){
     quint8 is_prefix = Varicode::bitsToInt(Varicode::strToBits(bits.mid(2,1)));
     quint32 packed_base = Varicode::bitsToInt(Varicode::strToBits(bits.mid(3, 28)));
     quint32 packed_fix = Varicode::bitsToInt(Varicode::strToBits(bits.mid(31, 22)));
-    quint8 packed_11 = Varicode::bitsToInt(Varicode::strToBits(bits.mid(53, 11)));
+    quint16 packed_11 = Varicode::bitsToInt(Varicode::strToBits(bits.mid(53, 11)));
 
     QString base = Varicode::unpackCallsign(packed_base).trimmed();
     QString fix = Varicode::unpackCallsignPrefixSuffix(packed_fix);
     quint16 num = (packed_11 << 5) | packed_5;
 
+    if(pNum) *pNum = num;
+
     if(is_prefix){
         unpacked.append(fix);
     }
+
     unpacked.append(base);
+
     if(!is_prefix){
         unpacked.append(fix);
     }
-    unpacked.append(QString("%1").arg(num));
 
     return unpacked;
 }
