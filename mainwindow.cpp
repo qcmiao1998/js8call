@@ -1078,8 +1078,18 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto clearAction4 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetCalls);
   connect(clearAction4, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetCalls); });
 
+  auto removeStation = new QAction(QString("Remove Station"), ui->tableWidgetCalls);
+  connect(removeStation, &QAction::triggered, this, [this](){
+      QString selectedCall = callsignSelected();
+      if(!selectedCall.isEmpty() && m_callActivity.contains(selectedCall)){
+          m_callActivity.remove(selectedCall);
+          displayActivity(true);
+      }
+  });
+
+
   ui->tableWidgetCalls->setContextMenuPolicy(Qt::CustomContextMenu);
-  connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, clearAction4, clearActionAll](QPoint const &point){
+  connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, clearAction4, clearActionAll, removeStation](QPoint const &point){
     QMenu * menu = new QMenu(ui->tableWidgetCalls);
 
     QString selectedCall = callsignSelected();
@@ -1091,6 +1101,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     auto directedMenu = menu->addMenu("Directed");
     directedMenu->setDisabled(missingCallsign);
     buildQueryMenu(directedMenu);
+
+    menu->addSeparator();
+
+    removeStation->setDisabled(missingCallsign || callsignSelected() == "ALLCALL");
+    menu->addAction(removeStation);
+
 
     menu->addSeparator();
     menu->addAction(clearAction4);
