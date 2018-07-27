@@ -258,6 +258,16 @@ namespace
     }
     return "";
   }
+
+  QString lstrip(const QString& str) {
+    int len = str.size() - 1;
+    for (int n = 0; n < len; n++) {
+      if (!str.at(n).isSpace()) {
+        return str.mid(n);
+      }
+    }
+    return "";
+  }
 }
 
 //--------------------------------------------------- MainWindow constructor
@@ -456,6 +466,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_previousFreq {0}
 {
   ui->setupUi(this);
+
   createStatusBar();
   add_child_to_event_filter (this);
   ui->dxGridEntry->setValidator (new MaidenheadLocatorValidator {this});
@@ -5733,6 +5744,8 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
               line = line.mid(n);
 
               if(Varicode::isCommandBuffered(dirCmd) && !line.isEmpty()){
+                  // strip leading whitespace after a buffered directed command
+                  line = lstrip(line);
                   // TODO: jsherer - this is how we can add 16-bit checksum to the message, just encode it in the data...
                   qDebug() << "generating checksum for line" << line;
                   line = line + " " + Varicode::checksum16(line);
