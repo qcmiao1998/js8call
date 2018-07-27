@@ -1082,8 +1082,14 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, clearAction4, clearActionAll](QPoint const &point){
     QMenu * menu = new QMenu(ui->tableWidgetCalls);
 
+    QString selectedCall = callsignSelected();
+    bool missingCallsign = selectedCall.isEmpty();
+    if(!missingCallsign && m_callActivity.contains(selectedCall)){
+        setFreqForRestore(m_callActivity[selectedCall].freq, true);
+    }
+
     auto directedMenu = menu->addMenu("Directed");
-    directedMenu->setDisabled(callsignSelected().isEmpty());
+    directedMenu->setDisabled(missingCallsign);
     buildQueryMenu(directedMenu);
 
     menu->addSeparator();
