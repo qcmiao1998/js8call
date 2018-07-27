@@ -5799,7 +5799,7 @@ bool MainWindow::prepareNextMessageFrame()
 
     if(ui->beaconButton->isChecked()){
         // bump beacon
-        scheduleBacon(true);
+        scheduleBacon(false);
     }
 
     return true;
@@ -5926,7 +5926,7 @@ void MainWindow::prepareBacon(){
         m_lastTxTime.secsTo(QDateTime::currentDateTimeUtc()) < 30
     ){
         if(ui->beaconButton->isChecked()){
-            scheduleBacon(true);
+            scheduleBacon(false);
         }
         return;
     }
@@ -5968,7 +5968,7 @@ void MainWindow::prepareBacon(){
 
     ui->startTxButton->setChecked(true);
 
-    scheduleBacon();
+    scheduleBacon(false);
 }
 
 
