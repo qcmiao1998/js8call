@@ -31,7 +31,7 @@ const int nalphabet = 41;
 QString alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-./?"};
 QString grid_pattern = {R"((?<grid>[A-R]{2}[0-9]{2})+)"};
 QString orig_compound_callsign_pattern = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){2,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
-QString compound_callsign_pattern = {R"((?<callsign>\b([A-Z0-9]{1,4}\/)?([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?(\/[A-Z0-9]{1,4})?)\b)"};
+QString compound_callsign_pattern = {R"((?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
 QString pack_callsign_pattern = {R"(([0-9A-Z ])([0-9A-Z])([0-9])([A-Z ])([A-Z ])([A-Z ]))"};
 QString callsign_alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "};
 
@@ -890,10 +890,18 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &baseCa
     QString pwr = match.captured("pwr").trimmed().toUpper();
 
     // validate callsign
-    bool validToCallsign = (to != baseCallsign) && (basecalls.contains(to) || QRegularExpression(compound_callsign_pattern).match(to).hasMatch());
+    auto parsedTo = QRegularExpression(compound_callsign_pattern).match(to);
+    bool validToCallsign = (to != baseCallsign) && (basecalls.contains(to) || parsedTo.hasMatch());
     if(!validToCallsign){
         if(n) *n = 0;
         return frame;
+    }
+
+    if(parsedTo.hasMatch()){
+        auto parsedBase = parsedTo.captured("base");
+        if(parsedBase.length() != to.length()){
+            to = parsedBase;
+        }
     }
 
     // validate command
