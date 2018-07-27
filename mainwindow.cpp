@@ -7160,7 +7160,8 @@ void MainWindow::buildQueryMenu(QMenu * menu){
 
     menu->addSeparator();
 
-    auto ackQueryAction = menu->addAction("? - Are you hearing me?");
+    /*
+    auto ackQueryAction = menu->addAction("^ - Are you hearing me?");
     connect(ackQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7171,9 +7172,9 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         addMessageText(QString("%1?").arg(selectedCall), true);
         toggleTx(true);
     });
+    */
 
-    auto snrQueryAction = menu->addAction("^ - What is my signal report?");
-    snrQueryAction->setDisabled(isAllCall);
+    auto snrQueryAction = menu->addAction("? - What is my signal report?");
     connect(snrQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7181,7 +7182,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
             return;
         }
 
-        addMessageText(QString("%1^").arg(selectedCall), true);
+        addMessageText(QString("%1?").arg(selectedCall), true);
         toggleTx(true);
     });
 
@@ -8709,14 +8710,15 @@ void MainWindow::displayActivity(bool force){
       // construct reply
       QString reply;
 
-      // QUERIED ACK
-      if(d.cmd == "?"){
-          reply = QString("%1 ACK").arg(Radio::base_callsign(d.from));
-      }
+
       // QUERIED SNR
-      else if(d.cmd == "^" && !isAllCall){
+      if(d.cmd == "?"){
           reply = QString("%1 SNR %2").arg(Radio::base_callsign(d.from)).arg(Varicode::formatSNR(d.snr));
       }
+      // QUERIED ACK
+      //else if(d.cmd == "#"){
+      //    reply = QString("%1 ACK").arg(Radio::base_callsign(d.from));
+      //}
       // QUERIED PWR
       else if(d.cmd == "%" && !isAllCall && m_config.my_dBm() >= 0){
           reply = QString("%1 PWR %2").arg(Radio::base_callsign(d.from)).arg(Varicode::formatPWR(m_config.my_dBm()));
