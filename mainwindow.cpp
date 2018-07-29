@@ -3454,7 +3454,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
             CallDetail cd;
             cd.call = compoundCall;
-            cd.grid = "";
+            cd.grid = ""; // compound calls via beacons contain grid...
             cd.snr = decodedtext.snr();
             cd.freq = decodedtext.frequencyOffset();
             cd.utcTimestamp = QDateTime::currentDateTimeUtc();
@@ -5776,6 +5776,7 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
     // prepare compound
     bool compoundSent = false;
     bool compound = Radio::is_compound_callsign(m_config.my_callsign());
+    QString mygrid = m_config.my_grid();
     QString mycall = m_config.my_callsign();
     QString basecall = Radio::base_callsign(m_config.my_callsign());
     QString fix = QString(m_config.my_callsign()).replace(basecall, "");
@@ -5787,14 +5788,26 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
         // once we find a directed call, data encode the rest of the line.
         bool hasDirected = false;
 
+        // remove our callsign from the start of the line...
+        if(line.startsWith(mycall + ":")){
+            line = lstrip(line.mid(mycall.length() + 1));
+        }
+        if(line.startsWith(basecall + ":")){
+            line = lstrip(line.mid(basecall.length() + 1));
+        }
+
         while(line.size() > 0){
           QString frame;
 
           bool useStd = false;
+          bool useBcn = false;
           bool useDir = false;
           bool useDat = false;
           bool isFree = false;
           QString stdFrame = parseFT8Message(line, &isFree);
+
+          int l = 0;
+          QString bcnFrame = Varicode::packBeaconMessage(line, mycall, &l);
 
           int n = 0;
           QString dirCmd;
@@ -5807,12 +5820,21 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 
           // if this parses to a standard FT8 free text message
           // but it can be parsed as a directed message, then we
-          // should send the directed version
-          if(isFree && !hasDirected && n > 0){
+          // should send the directed version. if we've already sent
+          // a directed message, we won't send any more but instead
+          // send it as a data message
+
+          if(isFree && !hasDirected && l > 0){
+              useBcn = true;
+              hasDirected = false;
+              frame = bcnFrame;
+          }
+          else if(isFree && !hasDirected && n > 0){
               useDir = true;
               hasDirected = true;
               frame = dirFrame;
-          } else if ((isFree || hasDirected) && m > 0) {
+          }
+          else if ((isFree || hasDirected) && m > 0) {
               useDat = true;
               frame = datFrame;
               if(!datLineOut.isEmpty()){
@@ -5840,14 +5862,20 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
               line = line.mid(frame.length()).trimmed();
           }
 
+          if(useBcn){
+              frames.append(frame);
+              lines.append(QString("%1: ").arg(mycall) + line.left(l) + " ");
+              line = line.mid(l);
+          }
+
           if(useDir){
               if(compound && !compoundSent){
-                QString compoundFrame = Varicode::packCompoundMessage(basecall, fix, prefix, 0);
-                if(!compoundFrame.isEmpty()){
-                    frames.append(compoundFrame);
-                    lines.append(QString("%1: ").arg(mycall));
-                    compoundSent = true;
-                }
+                  QString compoundMessage = QString("DE %1").arg(mygrid);
+                  QString beaconFrame = Varicode::packBeaconMessage(compoundMessage, mycall, nullptr);
+                  if(!beaconFrame.isEmpty()){
+                      frames.append(beaconFrame);
+                      lines.append(QString("%1: ").arg(mycall));
+                  }
               }
 
               frames.append(frame);
@@ -5881,7 +5909,7 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 #if 1
     qDebug() << "parsed frames:";
     foreach(auto frame, frames){
-        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame) << Varicode::unpackDirectedMessage(frame) << Varicode::unpackCompoundMessage(frame, nullptr);
+        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame) << Varicode::unpackDirectedMessage(frame) << Varicode::unpackCompoundFrame(frame, nullptr) << Varicode::unpackBeaconMessage(frame, nullptr);
     }
 
     qDebug() << "lines:";
@@ -6108,8 +6136,11 @@ void MainWindow::prepareBacon(){
         beacon = QString("DE %1").arg(call).arg(grid);
     }
 
+    // FT8 Style
     lines.append(beacon);
-    lines.append(beacon);
+
+    // FT8Call Style
+    lines.append(QString("%1: BCN %2").arg(call).arg(grid));
 
 #if 0
     if(!m_callActivity.isEmpty()){
@@ -8793,6 +8824,9 @@ void MainWindow::displayActivity(bool force){
       }
   }
 
+  // Grouped Compound Activity
+  // TODO: jsherer - group compound callsign and directed commands together.
+
   // Buffered Activity
   foreach(auto freq, m_messageBuffer.keys()){
       auto buffer = m_messageBuffer[freq];
@@ -8866,7 +8900,7 @@ void MainWindow::displayActivity(bool force){
 
       // QUERIED SNR
       if(d.cmd == "?"){
-          reply = QString("%1 SNR %2").arg(Radio::base_callsign(d.from)).arg(Varicode::formatSNR(d.snr));
+          reply = QString("%1 SNR %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
       }
       // QUERIED ACK
       //else if(d.cmd == "#"){
@@ -8874,7 +8908,7 @@ void MainWindow::displayActivity(bool force){
       //}
       // QUERIED PWR
       else if(d.cmd == "%" && !isAllCall && m_config.my_dBm() >= 0){
-          reply = QString("%1 PWR %2").arg(Radio::base_callsign(d.from)).arg(Varicode::formatPWR(m_config.my_dBm()));
+          reply = QString("%1 PWR %2").arg(d.from).arg(Varicode::formatPWR(m_config.my_dBm()));
       }
       // QUERIED QTH
       else if(d.cmd == "@" && !isAllCall){
@@ -8887,11 +8921,11 @@ void MainWindow::displayActivity(bool force){
               qth = grid;
           }
 
-          reply = QString("%1 %2").arg(Radio::base_callsign(d.from)).arg(qth);
+          reply = QString("%1 %2").arg(d.from).arg(qth);
       }
       // QUERIED STATION MESSAGE
       else if(d.cmd == "&" && !isAllCall){
-          reply = QString("%1 %2").arg(Radio::base_callsign(d.from)).arg(m_config.my_station());
+          reply = QString("%1 %2").arg(d.from).arg(m_config.my_station());
       }
       // QUERIED STATIONS HEARD
       else if(d.cmd == "$" && !isAllCall){
@@ -8909,12 +8943,9 @@ void MainWindow::displayActivity(bool force){
               if(i >= maxStations){
                   break;
               }
-              if(Radio::base_callsign(call) == Radio::base_callsign(m_config.my_callsign())){
-                  continue;
-              }
 
               auto d = m_callActivity[call];
-              lines.append(QString("%1 SNR %2").arg(Radio::base_callsign(call)).arg(Varicode::formatSNR(d.snr)));
+              lines.append(QString("%1 SNR %2").arg(d.call).arg(Varicode::formatSNR(d.snr)));
               i++;
           }
           reply = lines.join('\n');

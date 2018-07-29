@@ -76,7 +76,7 @@ bool DecodedText::tryUnpack(){
 
     bool unpacked = false;
     if(!unpacked){
-      unpacked = tryUnpackCompound();
+      unpacked = tryUnpackBeacon();
     }
 
     if(!unpacked){
@@ -90,23 +90,32 @@ bool DecodedText::tryUnpack(){
     return unpacked;
 }
 
-bool DecodedText::tryUnpackCompound(){
-  QString m = message().trimmed();
+bool DecodedText::tryUnpackBeacon(){
+    QString m = message().trimmed();
 
-  // directed calls will always be 12+ chars and contain no spaces.
-  if(m.length() < 12 || m.contains(' ')){
-    return false;
-  }
+    // directed calls will always be 12+ chars and contain no spaces.
+    if(m.length() < 12 || m.contains(' ')){
+      return false;
+    }
 
-  QStringList parts = Varicode::unpackCompoundMessage(m, nullptr);
+    bool isBCN = false;
+    QStringList parts = Varicode::unpackBeaconMessage(m, &isBCN);
 
-  if(parts.isEmpty() || parts.length() < 2){
-    return false;
-  }
+    if(parts.isEmpty() || parts.length() < 2){
+      return false;
+    }
 
-  compound_ = QString("%1/%2").arg(parts.at(0), parts.at(1));
-  message_ = QString("%1: ").arg(compound_);
-  return true;
+    auto extra = parts.at(2);
+
+    compound_ = QStringList{ parts.at(0), parts.at(1) }.join("/");
+
+    if(isBCN){
+        message_ = QString("%1: BCN %2 ").arg(compound_).arg(extra);
+    } else {
+         message_ = QString("%1: ").arg(compound_);
+    }
+
+    return true;
 }
 
 bool DecodedText::tryUnpackDirected(){

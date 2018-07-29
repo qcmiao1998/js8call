@@ -52,6 +52,7 @@ QMap<QString, int> directed_cmds = {
     // {"/",     9  }, // unused? (can we even use stroke?)
 
     // directed responses
+    {" BCN",  22  }, // beacon
     {" ACK",  23  }, // acknowledged
     {" PWR",  24  }, // power level
     {" SNR",  25  }, // seen a station at the provided snr
@@ -805,11 +806,26 @@ bool Varicode::isCommandBuffered(const QString &cmd){
     return directed_cmds.contains(cmd) && buffered_cmds.contains(directed_cmds[cmd]);
 }
 
-QString Varicode::packBeaconMessage(QString const &callsign, QString const &extra, bool isCQ){
+QString Varicode::packBeaconMessage(QString const &text, const QString &callsign, int *n){
     QString frame;
+
+    auto parsedText = QRegularExpression(R"(^(?<type>BCN|DE)\s(?<grid>[A-Z]{2}[0-9]{2})\b)").match(text);
+    if(!parsedText.hasMatch()){
+        if(n) *n = 0;
+        return frame;
+    }
+
+    auto extra = parsedText.captured("grid");
+    if(extra.isEmpty()){
+        if(n) *n = 0;
+        return frame;
+    }
+
+    auto isBCN = parsedText.captured("type") == "BCN";
 
     auto parsedCall = QRegularExpression(compound_callsign_pattern).match(callsign);
     if(!parsedCall.hasMatch()){
+        if(n) *n = 0;
         return frame;
     }
 
@@ -830,26 +846,33 @@ QString Varicode::packBeaconMessage(QString const &callsign, QString const &extr
         packed_extra = Varicode::packGrid(extra);
     }
 
-    if(isCQ){
+    if(isBCN){
         packed_extra |= (1<<15);
     }
 
-    return packCompoundMessage(base, fix, isPrefix, packed_extra);
+    frame = packCompoundFrame(base, fix, isPrefix, packed_extra);
+    if(frame.isEmpty()){
+        if(n) *n = 0;
+        return frame;
+    }
+
+    if(n) *n = parsedText.captured(0).length();
+    return frame;
 }
 
-QStringList Varicode::unpackBeaconMessage(const QString &text, bool * isCQ){
+QStringList Varicode::unpackBeaconMessage(const QString &text, bool * isBCN){
     quint16 num = 0;
 
-    QStringList unpacked = unpackCompoundMessage(text, &num);
+    QStringList unpacked = unpackCompoundFrame(text, &num);
 
-    if(isCQ) *isCQ = (num & (1<<15));
+    if(isBCN) *isBCN = (num & (1<<15));
 
     unpacked.append(Varicode::unpackGrid(num & ((1<<15)-1)));
 
     return unpacked;
 }
 
-QString Varicode::packCompoundMessage(const QString &baseCallsign, const QString &fix, bool isPrefix, quint16 num){
+QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, quint16 num){
     QString frame;
 
     quint8 packed_is_data = 0;
@@ -881,7 +904,7 @@ QString Varicode::packCompoundMessage(const QString &baseCallsign, const QString
     return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_5 % 32);
 }
 
-QStringList Varicode::unpackCompoundMessage(const QString &text, quint16 *pNum){
+QStringList Varicode::unpackCompoundFrame(const QString &text, quint16 *pNum){
     QStringList unpacked;
 
     if(text.length() < 13 || text.contains(" ")){

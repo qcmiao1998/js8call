@@ -34,7 +34,7 @@ public:
   explicit DecodedText (QString const& ft8callmessage);
 
   bool tryUnpack();
-  bool tryUnpackCompound();
+  bool tryUnpackBeacon();
   bool tryUnpackDirected();
   bool tryUnpackData();
 
