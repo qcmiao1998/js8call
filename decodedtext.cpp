@@ -98,8 +98,9 @@ bool DecodedText::tryUnpackBeacon(){
       return false;
     }
 
-    bool isBCN = false;
-    QStringList parts = Varicode::unpackBeaconMessage(m, &isBCN);
+    bool isBeacon = false;
+    bool isAlt = false;
+    QStringList parts = Varicode::unpackBeaconMessage(m, &isBeacon, &isAlt);
 
     if(parts.isEmpty() || parts.length() < 2){
       return false;
@@ -109,7 +110,7 @@ bool DecodedText::tryUnpackBeacon(){
 
     compound_ = QStringList{ parts.at(0), parts.at(1) }.join("/");
 
-    if(isBCN){
+    if(isBeacon){
         message_ = QString("%1: BCN %2 ").arg(compound_).arg(extra);
     } else {
          message_ = QString("%1: ").arg(compound_);

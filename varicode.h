@@ -14,7 +14,8 @@
 class Varicode
 {
 public:
-    enum FrameType{
+    // frame type transmitted via itype and decoded by the ft8 decoded
+    enum TransmissionType {
         FT8              = 0, // [000]
         FT8Fox           = 1, // [001]
         FT8Call          = 2, // [010]
@@ -23,6 +24,17 @@ public:
         FT8CallReservedB = 5, // [101]
         FT8CallReservedC = 6, // [110]
         FT8CallReservedD = 7, // [111]
+    };
+
+    enum FrameType {
+        FrameBeaconPrefix     = 0, // [000]
+        FrameBeaconSuffix     = 1, // [001]
+        FrameCompoundPrefix   = 2, // [010]
+        FrameCompoundSuffix   = 3, // [011]
+        FrameDirectedPositive = 4, // [100]
+        FrameDirectedNegative = 5, // [101]
+        FrameDataUnpadded     = 6, // [110]
+        FrameDataPadded       = 7, // [111]
     };
 
     //Varicode();
@@ -40,7 +52,7 @@ public:
     static QStringList parseGrids(QString const &input);
 
     static QList<QVector<bool>> huffEncode(const QMap<QChar, QString> &huff, QString const& text);
-    static QString huffDecode(const QMap<QChar, QString> &huff, QVector<bool> const& bitvec, int pad=0);
+    static QString huffDecode(const QMap<QChar, QString> &huff, QVector<bool> const& bitvec);
 
     static QString huffUnescape(QString const &input);
     static QString huffEscape(QString const &input);
@@ -84,10 +96,10 @@ public:
     static bool isCommandBuffered(const QString &cmd);
 
     static QString packBeaconMessage(QString const &text, QString const&callsign, int *n);
-    static QStringList unpackBeaconMessage(const QString &text, bool *isBCN);
+    static QStringList unpackBeaconMessage(const QString &text, bool *isBeacon, bool *isAlt);
 
-    static QString packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, quint16 num);
-    static QStringList unpackCompoundFrame(const QString &text, quint16 *pNum);
+    static QString packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, bool isBeacon, quint16 num);
+    static QStringList unpackCompoundFrame(const QString &text, bool *isBeacon, quint16 *pNum);
 
     static QString packDirectedMessage(QString const& text, QString const& callsign, QString * pCmd, int *n);
     static QStringList unpackDirectedMessage(QString const& text);

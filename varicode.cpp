@@ -364,16 +364,16 @@ QList<QVector<bool>> Varicode::huffEncode(QMap<QChar, QString> const &huff, QStr
         if(!huff.contains(ch)){
             continue;
         }
-        out.append(strToBits(huff[ch]));
+        out.append(Varicode::strToBits(huff[ch]));
     }
 
     return out;
 }
 
-QString Varicode::huffDecode(QMap<QChar, QString> const &huff, QVector<bool> const& bitvec, int pad){
+QString Varicode::huffDecode(QMap<QChar, QString> const &huff, QVector<bool> const& bitvec){
     QString text;
 
-    QString bits = bitsToStr(bitvec).mid(0, bitvec.length()-pad);
+    QString bits = Varicode::bitsToStr(bitvec); //.mid(0, bitvec.length()-pad);
 
     // TODO: jsherer - this is naive...
     while(bits.length() > 0){
@@ -821,7 +821,8 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
         return frame;
     }
 
-    auto isBCN = parsedText.captured("type") == "BCN";
+    auto isBeacon = parsedText.captured("type") == "BCN";
+    auto isAlt = false;
 
     auto parsedCall = QRegularExpression(compound_callsign_pattern).match(callsign);
     if(!parsedCall.hasMatch()){
@@ -846,11 +847,11 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
         packed_extra = Varicode::packGrid(extra);
     }
 
-    if(isBCN){
+    if(isAlt){
         packed_extra |= (1<<15);
     }
 
-    frame = packCompoundFrame(base, fix, isPrefix, packed_extra);
+    frame = packCompoundFrame(base, fix, isPrefix, isBeacon, packed_extra);
     if(frame.isEmpty()){
         if(n) *n = 0;
         return frame;
@@ -860,24 +861,28 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
     return frame;
 }
 
-QStringList Varicode::unpackBeaconMessage(const QString &text, bool * isBCN){
+QStringList Varicode::unpackBeaconMessage(const QString &text, bool *isBeacon, bool * isAlt){
     quint16 num = 0;
 
-    QStringList unpacked = unpackCompoundFrame(text, &num);
+    QStringList unpacked = unpackCompoundFrame(text, isBeacon, &num);
 
-    if(isBCN) *isBCN = (num & (1<<15));
+    if(isAlt) *isAlt = (num & (1<<15));
 
     unpacked.append(Varicode::unpackGrid(num & ((1<<15)-1)));
 
     return unpacked;
 }
 
-QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, quint16 num){
+QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix,  bool isBeacon, quint16 num){
     QString frame;
 
-    quint8 packed_is_data = 0;
-    quint8 packed_is_compound = 1;
-    quint8 packed_is_prefix = (int)isPrefix;
+    quint8 packed_flag = 0;
+    if(isBeacon){
+        packed_flag = isPrefix ? FrameBeaconPrefix : FrameBeaconSuffix;
+    } else {
+        packed_flag = isPrefix ? FrameCompoundPrefix : FrameCompoundSuffix;
+    }
+
     quint32 packed_base = Varicode::packCallsign(baseCallsign);
     quint32 packed_fix = Varicode::packCallsignPrefixSuffix(fix);
 
@@ -891,39 +896,39 @@ QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &
     quint16 packed_11 = (num & mask11) >> 5;
     quint8 packed_5 = num & mask5;
 
-    // [1][1][1][28][22][11],[5] = 69
+    // [3][28][22][11],[5] = 69
     auto bits = (
-        Varicode::intToBits(packed_is_data,     1) +
-        Varicode::intToBits(packed_is_compound, 1) +
-        Varicode::intToBits(packed_is_prefix,   1) +
-        Varicode::intToBits(packed_base,       28) +
-        Varicode::intToBits(packed_fix,        22) +
-        Varicode::intToBits(packed_11,         11)
+        Varicode::intToBits(packed_flag,  3) +
+        Varicode::intToBits(packed_base, 28) +
+        Varicode::intToBits(packed_fix,  22) +
+        Varicode::intToBits(packed_11,   11)
     );
 
     return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_5 % 32);
 }
 
-QStringList Varicode::unpackCompoundFrame(const QString &text, quint16 *pNum){
+QStringList Varicode::unpackCompoundFrame(const QString &text, bool *isBeacon, quint16 *pNum){
     QStringList unpacked;
 
     if(text.length() < 13 || text.contains(" ")){
         return unpacked;
     }
 
-    // [1][1][1][28][22][11],[5] = 69
+    // [3][28][22][11],[5] = 69
     auto bits = Varicode::bitsToStr(Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64));
     quint8 packed_5 = Varicode::unpack5bits(text.right(1));
 
-    quint8 is_data = Varicode::bitsToInt(Varicode::strToBits(bits.left(1)));
-    if(is_data != 0){
+    bool is_prefix = false;
+    bool is_suffix = false;
+    quint8 packed_flag = Varicode::bitsToInt(Varicode::strToBits(bits.left(3)));
+    if(packed_flag == FrameBeaconPrefix || packed_flag == FrameCompoundPrefix){
+        is_prefix = true;
+    } else if (packed_flag == FrameBeaconSuffix || packed_flag == FrameCompoundSuffix){
+        is_suffix = true;
+    } else {
         return unpacked;
     }
-    quint8 is_compound = Varicode::bitsToInt(Varicode::strToBits(bits.mid(1,1)));
-    if(is_compound != 1){
-        return unpacked;
-    }
-    quint8 is_prefix = Varicode::bitsToInt(Varicode::strToBits(bits.mid(2,1)));
+
     quint32 packed_base = Varicode::bitsToInt(Varicode::strToBits(bits.mid(3, 28)));
     quint32 packed_fix = Varicode::bitsToInt(Varicode::strToBits(bits.mid(31, 22)));
     quint16 packed_11 = Varicode::bitsToInt(Varicode::strToBits(bits.mid(53, 11)));
@@ -933,6 +938,7 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, quint16 *pNum){
     quint16 num = (packed_11 << 5) | packed_5;
 
     if(pNum) *pNum = num;
+    if(isBeacon) *isBeacon = packed_flag == FrameBeaconPrefix || packed_flag == FrameBeaconSuffix;
 
     if(is_prefix){
         unpacked.append(fix);
@@ -940,7 +946,7 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, quint16 *pNum){
 
     unpacked.append(base);
 
-    if(!is_prefix){
+    if(is_suffix){
         unpacked.append(fix);
     }
 
@@ -1004,9 +1010,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &baseCa
         inum = mwattsToDbm(ipwr) - 30;
     }
 
-    quint8 packed_is_data = 0;
-    quint8 packed_is_compound = 0;
-    quint8 packed_num_flag = inum < 0 ? 1 : 0;
+    quint8 packed_flag = inum < 0 ? FrameDirectedNegative : FrameDirectedPositive;
     quint32 packed_from = Varicode::packCallsign(from);
     quint32 packed_to = Varicode::packCallsign(to);
 
@@ -1018,14 +1022,12 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &baseCa
     quint8 packed_cmd = directed_cmds[cmd];
     quint8 packed_extra = qAbs(inum);
 
-    // [1][1][1][28][28][5],[5] = 69
+    // [3][28][28][5],[5] = 69
     auto bits = (
-        Varicode::intToBits(packed_is_data,     1) +
-        Varicode::intToBits(packed_is_compound, 1) +
-        Varicode::intToBits(packed_num_flag,    1) +
-        Varicode::intToBits(packed_from,       28) +
-        Varicode::intToBits(packed_to,         28) +
-        Varicode::intToBits(packed_cmd % 32,    5)
+        Varicode::intToBits(packed_flag,      3) +
+        Varicode::intToBits(packed_from,     28) +
+        Varicode::intToBits(packed_to,       28) +
+        Varicode::intToBits(packed_cmd % 32,  5)
     );
 
     if(pCmd) *pCmd = cmd;
@@ -1040,19 +1042,20 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
         return unpacked;
     }
 
-    // [1][1][1][28][28][5],[5] = 69
+    // [3][28][28][5],[5] = 69
     auto bits = Varicode::bitsToStr(Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64));
     quint8 extra = Varicode::unpack5bits(text.right(1));
 
-    quint8 is_data = Varicode::bitsToInt(Varicode::strToBits(bits.left(1)));
-    if(is_data != 0){
+    int numSign = 0;
+    quint8 packed_flag = Varicode::bitsToInt(Varicode::strToBits(bits.left(3)));
+    if(packed_flag == FrameDirectedPositive){
+        numSign = 1;
+    } else if(packed_flag == FrameDirectedNegative){
+        numSign = -1;
+    } else {
         return unpacked;
     }
-    quint8 is_compound = Varicode::bitsToInt(Varicode::strToBits(bits.mid(1,1)));
-    if(is_compound != 0){
-        return unpacked;
-    }
-    quint8 num_flag = Varicode::bitsToInt(Varicode::strToBits(bits.mid(2,1)));
+
     quint32 packed_from = Varicode::bitsToInt(Varicode::strToBits(bits.mid(3, 28)));
     quint32 packed_to = Varicode::bitsToInt(Varicode::strToBits(bits.mid(31, 28)));
     quint8 packed_cmd = Varicode::bitsToInt(Varicode::strToBits(bits.mid(59, 5)));
@@ -1065,7 +1068,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
     unpacked.append(to);
     unpacked.append(cmd);
 
-    int num = (num_flag ? -1 : 1) * extra;
+    int num = numSign * extra;
     if(num != -31){
         // TODO: jsherer - should we decide which format to use on the command, or something else?
         if(packed_cmd == directed_cmds[" PWR"]){
@@ -1083,30 +1086,41 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
 QString Varicode::packDataMessage(const QString &input, QString * out, int *n){
     QString frame;
 
-    // [1][63],[5] = 69
-    quint8 is_data = 1;
-    auto frameBits = (
-        Varicode::intToBits(is_data, 1)
-    );
+    // [3][66] = 69
+    QVector<bool> frameDataBits;
+
+    QVector<bool> frameHeaderBits = Varicode::intToBits(FrameDataUnpadded, 3);
 
     int i = 0;
 
     // we use the escaped table here, so they the escapes and the characters are packed together...
     foreach(auto charBits, Varicode::huffEncode(hufftableescaped, input)){
-        if(frameBits.length() + charBits.length() < 63){
-            frameBits += charBits;
+        if(frameHeaderBits.length() + frameDataBits.length() + charBits.length() <= 69){
+            frameDataBits += charBits;
             i++;
             continue;
         }
         break;
     }
 
-    int pad = 64 - frameBits.length();
+    QVector<bool> framePadBits;
+
+    int pad = 69 - frameHeaderBits.length() - frameDataBits.length();
     if(pad){
-        frameBits += Varicode::intToBits(0, pad);
+        frameHeaderBits = Varicode::intToBits(FrameDataPadded, 3);
+
+        // the way we will pad is this...
+        // set the bit after the frame to 0 and every bit after that a 1
+        // to unpad, seek from the end of the bits until you hit a zero... the rest is the actual frame.
+        for(int i = 0; i < pad; i++){
+            framePadBits.append(i == 0 ? (bool)0 : (bool)1);
+        }
     }
 
-    frame = Varicode::pack64bits(Varicode::bitsToInt(frameBits)) + Varicode::pack5bits(pad % 32);
+    QVector<bool> allBits = frameHeaderBits + frameDataBits + framePadBits;
+
+    //frame = pass;// Varicode::pack64bits(Varicode::bitsToInt(frameBits)) + Varicode::pack5bits(pad % 32);
+    frame = Varicode::pack64bits(Varicode::bitsToInt(allBits.constBegin(), 64)) + Varicode::pack5bits(Varicode::bitsToInt(allBits.constBegin() + 64, 5));
     *n = i;
 
     return frame;
@@ -1119,19 +1133,21 @@ QString Varicode::unpackDataMessage(const QString &text){
         return unpacked;
     }
 
-    auto bits = Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64);
-    quint8 pad = Varicode::unpack5bits(text.right(1));
+    auto bits = Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64) + Varicode::intToBits(Varicode::unpack5bits(text.right(1)), 5);
 
-    quint8 is_data = (int)bits.at(0);
-    if(is_data != 1){
+    quint8 flag = Varicode::bitsToInt(bits.mid(0, 3));
+
+    if(flag == FrameDataUnpadded){
+        bits = bits.mid(3);
+    } else if(flag == FrameDataPadded) {
+        int n = bits.lastIndexOf(0);
+        bits = bits.mid(3, n-3);
+    } else {
         return unpacked;
     }
 
-    // pop off the is_data bit
-    bits.removeAt(0);
-
     // huff decode the bits (without escapes)
-    unpacked = Varicode::huffDecode(hufftable, bits, pad);
+    unpacked = Varicode::huffDecode(hufftable, bits);
 
     // then... unescape special characters
     unpacked = Varicode::huffUnescape(unpacked);
