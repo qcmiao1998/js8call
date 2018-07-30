@@ -809,20 +809,33 @@ bool Varicode::isCommandBuffered(const QString &cmd){
 QString Varicode::packBeaconMessage(QString const &text, const QString &callsign, int *n){
     QString frame;
 
-    auto parsedText = QRegularExpression(R"(^(?<type>BCN|DE)\s(?<grid>[A-Z]{2}[0-9]{2})\b)").match(text);
+    auto parsedText = QRegularExpression(R"(^(?<type>BCN|CQ|DE|TO)(?:\s(?<grid>[A-Z]{2}[0-9]{2}))?\b)").match(text);
     if(!parsedText.hasMatch()){
         if(n) *n = 0;
         return frame;
     }
 
     auto extra = parsedText.captured("grid");
+
+    /*
     if(extra.isEmpty()){
         if(n) *n = 0;
         return frame;
     }
+    */
 
-    auto isBeacon = parsedText.captured("type") == "BCN";
-    auto isAlt = false;
+    // Beacon Alt Type
+    // ---------------
+    // 1      0   BCN
+    // 1      1   CQ
+    // 0      0   DE
+    // 0      1   TO
+
+    auto type = parsedText.captured("type");
+    auto isBeacon = type == "BCN" || type == "CQ";
+    auto isAlt = type == "CQ" || type == "TO";
+    auto isDe = type == "DE";
+    Q_UNUSED(isDe);
 
     auto parsedCall = QRegularExpression(compound_callsign_pattern).match(callsign);
     if(!parsedCall.hasMatch()){
@@ -953,7 +966,7 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, bool *isBeacon, q
     return unpacked;
 }
 
-QString Varicode::packDirectedMessage(const QString &text, const QString &baseCallsign, QString * pCmd, int *n){
+QString Varicode::packDirectedMessage(const QString &text, const QString &callsign, QString *pTo, QString * pCmd, int *n){
     QString frame;
 
     auto match = directed_re.match(text);
@@ -962,24 +975,26 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &baseCa
         return frame;
     }
 
-    QString from = baseCallsign;
+    QString from = callsign;
     QString to = match.captured("to");
     QString cmd = match.captured("cmd");
     QString num = match.captured("num").trimmed();
     QString pwr = match.captured("pwr").trimmed().toUpper();
 
-    // validate callsign
+    // validate "to" callsign
     auto parsedTo = QRegularExpression(compound_callsign_pattern).match(to);
-    bool validToCallsign = (to != baseCallsign) && (basecalls.contains(to) || parsedTo.hasMatch());
+    bool validToCallsign = (to != callsign) && (basecalls.contains(to) || parsedTo.hasMatch());
     if(!validToCallsign){
         if(n) *n = 0;
         return frame;
     }
 
     if(parsedTo.hasMatch()){
+        if(pTo) *pTo = parsedTo.captured(0);
+
         auto parsedBase = parsedTo.captured("base");
         if(parsedBase.length() != to.length()){
-            to = parsedBase;
+            to = "<....>"; // parsedBase;
         }
     }
 

@@ -101,7 +101,7 @@ public:
     static QString packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, bool isBeacon, quint16 num);
     static QStringList unpackCompoundFrame(const QString &text, bool *isBeacon, quint16 *pNum);
 
-    static QString packDirectedMessage(QString const& text, QString const& callsign, QString * pCmd, int *n);
+    static QString packDirectedMessage(QString const& text, QString const& callsign, QString *pTo, QString * pCmd, int *n);
     static QStringList unpackDirectedMessage(QString const& text);
 
     static QString packDataMessage(QString const& text, QString *out, int *n);

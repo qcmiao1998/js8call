@@ -90,6 +90,7 @@ class MainWindow : public QMainWindow
 {
   Q_OBJECT;
 
+  struct CallDetail;
 public:
   using Frequency = Radio::Frequency;
   using FrequencyDelta = Radio::FrequencyDelta;
@@ -121,6 +122,7 @@ public slots:
   void msgAvgDecode2();
   void fastPick(int x0, int x1, int y);
 
+  void logCallActivity(CallDetail d);
   QString lookupCallInCompoundCache(QString const &call);
   void clearActivity();
   int logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block=-1);
@@ -257,7 +259,7 @@ private slots:
   void on_extFreeTextMsgEdit_currentTextChanged (QString const&);
   int currentFreq();
   int countFT8MessageFrames(QString const& text);
-  QPair<QStringList, QStringList> buildFT8MessageFrames(QString const& text);
+  QStringList buildFT8MessageFrames(QString const& text);
   QString parseFT8Message(QString input, bool *isFree);
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);
@@ -648,6 +650,7 @@ private:
     int freq;
     QDateTime utcTimestamp;
     int snr;
+    int bits;
   };
 
   struct CommandDetail
@@ -658,6 +661,7 @@ private:
     int freq;
     QDateTime utcTimestamp;
     int snr;
+    int bits;
     QString text;
   };
 
@@ -674,6 +678,7 @@ private:
   };
 
   struct MessageBuffer {
+    QQueue<CallDetail> compound;
     CommandDetail cmd;
     QList<ActivityDetail> msgs;
   };

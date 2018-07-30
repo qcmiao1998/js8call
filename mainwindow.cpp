@@ -3299,14 +3299,21 @@ void MainWindow::readFromStdout()                             //readFromStdout
                m_config.color_DXCC(), m_config.color_NewCall(),
                m_config.ppfx(),(ui->cbCQonly->isVisible() and ui->cbCQonly->isChecked()));
 
+
+
+
+
+
           // Parse General Activity
-          if(decodedtext.messageWords().length() > 0){
+#if 1
+          bool shouldParseGeneralActivity = true;
+          if(shouldParseGeneralActivity && !decodedtext.messageWords().isEmpty()){
             int offset = decodedtext.frequencyOffset();
 
             if(!m_bandActivity.contains(offset)){
                 QList<int> offsets = {
-                    offset - 1, offset - 2, offset - 3, offset - 4, offset - 5,
-                    offset + 1, offset + 2, offset + 3, offset + 4, offset + 5};
+                    offset - 1, offset - 2, offset - 3, offset - 4, offset - 5, offset - 6,
+                    offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6};
                 foreach(int prevOffset, offsets){
                     if(!m_bandActivity.contains(prevOffset)){ continue; }
                     m_bandActivity[offset] = m_bandActivity[prevOffset];
@@ -3321,13 +3328,14 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.isCompound = decodedtext.isCompoundMessage();
             d.bits = decodedtext.bits();
             d.freq = offset;
-            d.text = decodedtext.message(); //decodedtext.messageWords().isEmpty() ? "" : decodedtext.messageWords().first().trimmed();
+            d.text = decodedtext.message();
             d.utcTimestamp = QDateTime::currentDateTimeUtc();
             d.snr = decodedtext.snr();
             m_bandActivity[offset].append(d);
 
-            if(m_messageBuffer.contains(d.freq/10*10)){
-                qDebug() << "buffering" << (d.freq/10*10) << d.text;
+            // if we have a data frame, and a message buffer has been established, buffer it...
+            if(m_messageBuffer.contains(d.freq/10*10) && !decodedtext.isCompoundMessage() && !decodedtext.isDirectedMessage()){
+                qDebug() << "buffering data" << (d.freq/10*10) << d.text;
                 m_messageBuffer[d.freq/10*10].msgs.append(d);
             }
 
@@ -3335,23 +3343,123 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 m_bandActivity[offset].removeFirst();
             }
           }
+#endif
+
+
+          // Process compound callsign commands (put them in cache)"
+#if 1
+          bool shouldProcessCompound = true;
+          if(shouldProcessCompound && decodedtext.isCompoundMessage()){
+#if ALIAS_COMPOUND_CALLS
+            QString compoundCall = decodedtext.compoundCall();
+            m_compoundCallCache[Radio::base_callsign(compoundCall)] = compoundCall;
+#endif
+
+            CallDetail cd;
+            cd.call = decodedtext.compoundCall();
+            cd.grid = decodedtext.extra(); // compound calls via beacons may contain grid...
+            cd.snr = decodedtext.snr();
+            cd.freq = decodedtext.frequencyOffset();
+            cd.utcTimestamp = QDateTime::currentDateTimeUtc();
+            cd.bits = decodedtext.bits();
+
+            if(!decodedtext.isBeacon()){
+                qDebug() << "buffering compound call" << cd.call << cd.bits;
+                m_messageBuffer[cd.freq/10*10].compound.append(cd);
+            }
+            /*
+            // DISABLED FOR NOW...
+            else {
+                logCallActivity(cd);
+            }
+            */
+
+            //
+          }
+#endif
+
+          // Parse commands
+          // KN4CRD K1JT ?
+#if 1
+          bool shouldProcessDirected = true;
+          if(shouldProcessDirected && decodedtext.isDirectedMessage()){
+              auto parts = decodedtext.directedMessage();
+
+              CommandDetail d;
+#if ALIAS_COMPOUND_CALLS
+              d.from = lookupCallInCompoundCache(parts.at(0));
+#endif
+              d.from = parts.at(0);
+              d.to = parts.at(1);
+              d.cmd = parts.at(2);
+              d.freq = decodedtext.frequencyOffset();
+              d.snr = decodedtext.snr();
+              d.utcTimestamp = QDateTime::currentDateTimeUtc();
+              d.bits = decodedtext.bits();
+
+              // if the command is a buffered command OR we have from or to in a separate message (compound)
+              if(Varicode::isCommandBuffered(d.cmd) || d.from == "<....>" || d.to == "<....>"){
+                qDebug() << "buffering cmd" << d.cmd << d.from << d.to;
+                m_messageBuffer[d.freq/10*10].cmd = d;
+                m_messageBuffer[d.freq/10*10].msgs.clear();
+              } else {
+                m_rxCommandQueue.append(d);
+              }
+
+              /*
+              // DISABLED FOR NOW...
+              CallDetail cd;
+              cd.bits = d.bits;
+              cd.call = d.from;
+              cd.grid = "";
+              cd.snr = d.snr;
+              cd.freq = d.freq;
+              cd.utcTimestamp = d.utcTimestamp;
+              logCallActivity(cd);
+              */
+
+#if 0
+              bool shouldCaptureThirdPartyCallsigns = false;
+              // check to see if this is a station we've heard 3rd party
+              if(shouldCaptureThirdPartyCallsigns && Radio::base_callsign(d.to) != Radio::base_callsign(m_config.my_callsign())){
+                  QString relayCall = QString("%1|%2").arg(Radio::base_callsign(d.from)).arg(Radio::base_callsign(d.to));
+                  int snr = -100;
+                  if(parts.length() == 4){
+                      snr = QString(parts.at(3)).toInt();
+                  }
+                  CallDetail td;
+                  td.through = d.from;
+                  td.call = d.to;
+                  td.grid = "";
+                  td.snr = snr;
+                  td.freq = d.freq;
+                  td.utcTimestamp = d.utcTimestamp;
+                  m_callActivity[relayCall] = td;
+              }
+#endif
+          }
+#endif
 
           // Parse CQs
-          QString cqCall = decodedtext.CQersCall();
-          if(!cqCall.isEmpty()){
-            QString theircall;
-            QString theirgrid;
-            decodedtext.deCallAndGrid(/*out*/theircall,theirgrid);
+#if 0
+          bool shouldParseCQs = false;
+          if(shouldParseCQs){
+              QString cqCall = decodedtext.CQersCall();
+              if(!cqCall.isEmpty()){
+                QString theircall;
+                QString theirgrid;
+                decodedtext.deCallAndGrid(/*out*/theircall,theirgrid);
 
-            CallDetail d;
-            d.call = theircall;
-            d.grid = theirgrid;
-            d.snr = decodedtext.snr();
-            d.freq = decodedtext.frequencyOffset();
-            d.utcTimestamp = QDateTime::currentDateTimeUtc();
-            m_callActivity[Radio::base_callsign(cqCall)] = d; // original call is stored in CallDetail.
+                CallDetail d;
+                d.call = theircall;
+                d.grid = theirgrid;
+                d.snr = decodedtext.snr();
+                d.freq = decodedtext.frequencyOffset();
+                d.utcTimestamp = QDateTime::currentDateTimeUtc();
+                m_callActivity[Radio::base_callsign(cqCall)] = d; // original call is stored in CallDetail.
+              }
           }
-
+#endif
 
           // Parse standard message callsigns
           // K1JT KN4CRD EM73
@@ -3359,7 +3467,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
           // K1JT KN4CRD R-12
           // DE KN4CRD
           // KN4CRD
-          bool shouldParseCallsigns = true;
+#if 0
+          bool shouldParseCallsigns = false;
           if(shouldParseCallsigns){
               QStringList callsigns = Varicode::parseCallsigns(decodedtext.message());
               if(!callsigns.isEmpty()){
@@ -3390,76 +3499,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                   }
               }
           }
-
-          // Parse commands
-          // KN4CRD K1JT ?
-          bool shouldProcessDirected = true;
-          if(shouldProcessDirected && decodedtext.isDirectedMessage()){
-              auto parts = decodedtext.directedMessage();
-
-              CommandDetail d;
-              d.from = lookupCallInCompoundCache(parts.at(0));
-              d.to = parts.at(1);
-              d.cmd = parts.at(2);
-              d.freq = decodedtext.frequencyOffset();
-              d.snr = decodedtext.snr();
-              d.utcTimestamp = QDateTime::currentDateTimeUtc();
-
-              if(Varicode::isCommandBuffered(d.cmd)){
-                m_messageBuffer[d.freq/10*10].cmd = d;
-                m_messageBuffer[d.freq/10*10].msgs.clear();
-              } else {
-                m_rxCommandQueue.append(d);
-              }
-
-              CallDetail cd;
-              cd.call = d.from;
-              cd.grid = "";
-              cd.snr = d.snr;
-              cd.freq = d.freq;
-              cd.utcTimestamp = d.utcTimestamp;
-              m_callActivity[Radio::base_callsign(cd.call)] = cd;
-
-              bool shouldCaptureThirdPartyCallsigns = false;
-              // check to see if this is a station we've heard 3rd party
-              if(shouldCaptureThirdPartyCallsigns && Radio::base_callsign(d.to) != Radio::base_callsign(m_config.my_callsign())){
-                  QString relayCall = QString("%1|%2").arg(Radio::base_callsign(d.from)).arg(Radio::base_callsign(d.to));
-                  int snr = -100;
-                  if(parts.length() == 4){
-                      snr = QString(parts.at(3)).toInt();
-                  }
-                  CallDetail td;
-                  td.through = d.from;
-                  td.call = d.to;
-                  td.grid = "";
-                  td.snr = snr;
-                  td.freq = d.freq;
-                  td.utcTimestamp = d.utcTimestamp;
-                  m_callActivity[relayCall] = td;
-              }
-
-              int nsec=QDateTime::currentMSecsSinceEpoch()/1000-m_secBandChanged;
-              bool okToPost=(nsec>(4*m_TRperiod)/5);
-              if (okToPost){
-                  pskSetLocal();
-                  pskLogReport("FT8Call", d.freq, d.snr, d.from, "");
-              }
-          }
-
-          // Process compound callsign commands (put them in cache)"
-          bool shouldProcessCompound = true;
-          if(shouldProcessCompound && decodedtext.isCompoundMessage()){
-            QString compoundCall = decodedtext.compoundCall();
-            m_compoundCallCache[Radio::base_callsign(compoundCall)] = compoundCall;
-
-            CallDetail cd;
-            cd.call = compoundCall;
-            cd.grid = ""; // compound calls via beacons contain grid...
-            cd.snr = decodedtext.snr();
-            cd.freq = decodedtext.frequencyOffset();
-            cd.utcTimestamp = QDateTime::currentDateTimeUtc();
-            m_callActivity[Radio::base_callsign(cd.call)] = cd;
-          }
+#endif
         }
       }
 
@@ -3490,6 +3530,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
           bDisplayRight=true;
       }
 
+#if 0
       if(isRecentOffset(audioFreq) || isAllCallIncluded(decodedtext.message())){
          // TODO: jsherer - create a method for bumping this...
          m_rxRecentCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
@@ -3500,6 +3541,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
           m_rxDirectedCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
           bDisplayRight = true;
       }
+#endif
 
       if (bDisplayRight) {
         // This msg is within 10 hertz of our tuned frequency, or a JT4 or JT65 avg,
@@ -3515,6 +3557,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         }
         m_QSOText = decodedtext.string ().trimmed ();
 
+#if 0
         // TODO: jsherer - parse decode...
         ActivityDetail d;
         d.isFree = !decodedtext.isStandardMessage();
@@ -3524,6 +3567,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         d.text = decodedtext.message();
         d.utcTimestamp = QDateTime::currentDateTimeUtc();
         m_rxFrameQueue.append(d);
+#endif
       }
 
       if(m_mode=="FT8" and m_config.bHound()) {
@@ -3603,6 +3647,21 @@ void MainWindow::readFromStdout()                             //readFromStdout
   }
 
   // See MainWindow::postDecode for displaying the latest decodes
+}
+
+
+void MainWindow::logCallActivity(CallDetail d){
+    if(m_callActivity.contains(d.call)){
+        // update (keep grid)
+        CallDetail old = m_callActivity[d.call];
+        if(!old.grid.isEmpty()){
+            d.grid = old.grid;
+        }
+        m_callActivity[d.call] = d;
+    } else {
+        // create
+        m_callActivity[d.call] = d;
+    }
 }
 
 QString MainWindow::lookupCallInCompoundCache(QString const &call){
@@ -5575,6 +5634,7 @@ void MainWindow::clearActivity(){
 int MainWindow::logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block){
     auto c = ui->textEditRX->textCursor();
 
+#if ALIAS_COMPOUND_CALLS
     // fixup compound callsigns cache / aliases...
     // ensure our callsign is cached...
     QString myCall = m_config.my_callsign();
@@ -5587,6 +5647,7 @@ int MainWindow::logRxTxMessageText(QDateTime date, QString text, int freq, bool 
         QRegularExpression re(QString(R"((?<![\/])\b%1\b(?![\/]))").arg(QRegularExpression::escape(call)));
         text = text.replace(re, m_compoundCallCache[call]);
     }
+#endif
 
     bool found = false;
     if(block != -1){
@@ -5668,13 +5729,17 @@ void MainWindow::createMessage(QString const& text){
 }
 
 void MainWindow::createMessageTransmitQueue(QString const& text){
-  auto pair = buildFT8MessageFrames(text);
-  auto frames = pair.first;
-  auto lines = pair.second;
+  auto frames = buildFT8MessageFrames(text);
   m_txFrameQueue.append(frames);
   m_txFrameCount = frames.length();
 
   int freq = currentFreq();
+
+  QStringList lines;
+  foreach(auto frame, frames){
+      lines.append(DecodedText(frame).message());
+  }
+
   logRxTxMessageText(QDateTime::currentDateTimeUtc(), lines.join(""), freq, true);
 
   // keep track of the last message text sent
@@ -5766,12 +5831,11 @@ int MainWindow::currentFreq(){
 }
 
 int MainWindow::countFT8MessageFrames(QString const& text){
-    return buildFT8MessageFrames(text).first.length();
+    return buildFT8MessageFrames(text).length();
 }
 
-QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const& text){
+QStringList MainWindow::buildFT8MessageFrames(QString const& text){
     QStringList frames;
-    QStringList lines;
 
     // prepare compound
     bool compoundSent = false;
@@ -5779,6 +5843,9 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
     QString mygrid = m_config.my_grid();
     QString mycall = m_config.my_callsign();
     QString basecall = Radio::base_callsign(m_config.my_callsign());
+    if(basecall != mycall){
+        basecall = "<....>";
+    }
     QString fix = QString(m_config.my_callsign()).replace(basecall, "");
     bool prefix = !fix.startsWith("/");
     fix = fix.replace("/", "");
@@ -5811,10 +5878,11 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 
           int n = 0;
           QString dirCmd;
-          QString dirFrame = Varicode::packDirectedMessage(line, basecall, &dirCmd, &n);
+          QString dirTo;
+          QString dirFrame = Varicode::packDirectedMessage(line, basecall, &dirTo, &dirCmd, &n);
 
+          // packDataMessage can output a new line to datLineOut (huff escaping special characters)
           int m = 0;
-          // packDataMessage can output a new line (huff escaping special characters)
           QString datLineOut;
           QString datFrame = Varicode::packDataMessage(line.left(21) + "\x04", &datLineOut, &m); //  63 / 3 = 21 (maximum number of 3bit chars we could possibly stuff in here)
 
@@ -5850,7 +5918,6 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
                 break;
               }
               frames.append(frame);
-              lines.append(line.left(frame.length()) + " ");
 
               if(!line.startsWith(frame)){
                   line = (
@@ -5864,30 +5931,35 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 
           if(useBcn){
               frames.append(frame);
-              lines.append(QString("%1: ").arg(mycall) + line.left(l) + " ");
               line = line.mid(l);
           }
 
           if(useDir){
-              if(compound && !compoundSent){
+              // from compound callsign
+              if(compound){
                   QString compoundMessage = QString("DE %1").arg(mygrid);
                   QString beaconFrame = Varicode::packBeaconMessage(compoundMessage, mycall, nullptr);
                   if(!beaconFrame.isEmpty()){
                       frames.append(beaconFrame);
-                      lines.append(QString("%1: ").arg(mycall));
                   }
               }
 
               frames.append(frame);
 
-              // TODO: jsherer - would be nice to clean this up and have an object that can just decode the actual transmitted frames instead.
-              if(!line.startsWith(basecall) && !compound){
-                  lines.append(QString("%1: ").arg(lookupCallInCompoundCache(basecall)));
+              // to compound callsign
+              if(!dirTo.isEmpty()){
+                  if(dirTo.contains("/")){
+                      QString compoundMessage = QString("TO");
+                      QString beaconFrame = Varicode::packBeaconMessage(compoundMessage, dirTo, nullptr);
+                      if(!beaconFrame.isEmpty()){
+                          frames.append(beaconFrame);
+                      }
+                  }
               }
 
-              lines.append(line.left(n) + " ");
               line = line.mid(n);
 
+              // generate a checksum for buffered commands with line data
               if(Varicode::isCommandBuffered(dirCmd) && !line.isEmpty()){
                   // strip leading whitespace after a buffered directed command
                   line = lstrip(line);
@@ -5900,7 +5972,6 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 
           if(useDat){
               frames.append(frame);
-              lines.append(line.left(m));
               line = line.mid(m);
           }
         }
@@ -5909,16 +5980,11 @@ QPair<QStringList, QStringList> MainWindow::buildFT8MessageFrames(QString const&
 #if 1
     qDebug() << "parsed frames:";
     foreach(auto frame, frames){
-        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame) << Varicode::unpackDirectedMessage(frame) << Varicode::unpackCompoundFrame(frame, nullptr) << Varicode::unpackBeaconMessage(frame, nullptr);
-    }
-
-    qDebug() << "lines:";
-    foreach(auto line, lines){
-        qDebug() << "->" << line;
+        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame) << Varicode::unpackDirectedMessage(frame) << Varicode::unpackCompoundFrame(frame, nullptr, nullptr) << Varicode::unpackBeaconMessage(frame, nullptr, nullptr);
     }
 #endif
 
-    return {frames,lines};
+    return frames;
 }
 
 
@@ -8634,6 +8700,10 @@ void MainWindow::displayActivity(bool force){
     return;
   }
 
+  // Is it ok to post spots to PSKReporter?
+  int nsec=QDateTime::currentMSecsSinceEpoch()/1000-m_secBandChanged;
+  bool okToPost=(nsec>(4*m_TRperiod)/5);
+
   // Selected Rows
   int selectedOffset = -1;
   auto selectedItems = ui->tableWidgetRXAll->selectedItems();
@@ -8826,6 +8896,64 @@ void MainWindow::displayActivity(bool force){
 
   // Grouped Compound Activity
   // TODO: jsherer - group compound callsign and directed commands together.
+  foreach(auto freq, m_messageBuffer.keys()){
+    QMap<int, MessageBuffer>::iterator i = m_messageBuffer.find(freq);
+
+    MessageBuffer &buffer = i.value();
+
+    qDebug() << "-> grouping buffer for freq" << freq;
+
+    if(buffer.compound.isEmpty()){
+        qDebug() << "-> buffer.compound is empty...skip";
+        continue;
+    }
+
+    // if we don't have an initialized command, skip...
+    if(buffer.cmd.bits != Varicode::FT8Call && buffer.cmd.bits != Varicode::FT8CallLast){
+        qDebug() << "-> buffer.cmd bits is invalid...skip";
+        continue;
+    }
+
+    // if we need two compound calls, but less than two have arrived...skip
+    if(buffer.cmd.from == "<....>" && buffer.cmd.to == "<....>" && buffer.compound.length() < 2){
+        qDebug() << "-> buffer needs two compound, but has less...skip";
+        continue;
+    }
+
+    // if we need one compound call, but non have arrived...skip
+    if((buffer.cmd.from == "<....>" || buffer.cmd.to == "<....>") && buffer.compound.length() < 1){
+        qDebug() << "-> buffer needs one compound, but has less...skip";
+        continue;
+    }
+
+    if(buffer.cmd.from == "<....>"){
+        auto d = buffer.compound.dequeue();
+        buffer.cmd.from = d.call;
+
+        if(d.bits == Varicode::FT8CallLast){
+            buffer.cmd.bits = d.bits;
+        }
+    }
+
+    if(buffer.cmd.to == "<....>"){
+        auto d = buffer.compound.dequeue();
+        buffer.cmd.to = d.call;
+
+        if(d.bits == Varicode::FT8CallLast){
+            buffer.cmd.bits = d.bits;
+        }
+    }
+
+    if(buffer.cmd.bits != Varicode::FT8CallLast){
+        qDebug() << "-> still not last message...skip";
+        continue;
+    }
+
+    qDebug() << "buffered compound command ready" << buffer.cmd.from << buffer.cmd.to << buffer.cmd.cmd;
+
+    m_rxCommandQueue.append(buffer.cmd);
+    m_messageBuffer.remove(freq);
+  }
 
   // Buffered Activity
   foreach(auto freq, m_messageBuffer.keys()){
@@ -8879,6 +9007,11 @@ void MainWindow::displayActivity(bool force){
       qDebug() << "processing command" << d.from << d.to << d.cmd << d.freq;
 #endif
 
+      // if we need a compound callsign but never got one...skip
+      if(d.from == "<....>" || d.to == "<....>"){
+          continue;
+      }
+
       // we're only processing a subset of queries at this point
       if(!Varicode::isCommandAllowed(d.cmd)){
          continue;
@@ -8894,9 +9027,14 @@ void MainWindow::displayActivity(bool force){
           continue;
       }
 
-      // construct reply
-      QString reply;
+      // record the spot to PSKReporter
+      if (okToPost){
+          pskSetLocal();
+          pskLogReport("FT8Call", d.freq, d.snr, d.from, "");
+      }
 
+      // construct a reply
+      QString reply;
 
       // QUERIED SNR
       if(d.cmd == "?"){

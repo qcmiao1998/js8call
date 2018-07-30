@@ -41,6 +41,10 @@ public:
   QString compoundCall() const { return compound_; }
   bool isCompoundMessage() const { return !compound_.isEmpty(); }
 
+  QString extra() const { return extra_; }
+  bool isBeacon() const { return isBeacon_; }
+  bool isAlt() const { return isAlt_; }
+
   QStringList directedMessage() const { return directed_; }
   bool isDirectedMessage() const { return !directed_.isEmpty() && directed_.length() > 2; }
 
@@ -91,7 +95,10 @@ private:
       column_mode    = 19,
       column_qsoText = 22 };
 
+  bool isBeacon_;
+  bool isAlt_;
   QString compound_;
+  QString extra_;
   QStringList directed_;
   QString string_;
   int padding_;

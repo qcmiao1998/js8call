@@ -106,14 +106,29 @@ bool DecodedText::tryUnpackBeacon(){
       return false;
     }
 
-    auto extra = parts.at(2);
-
+    // Beacon Alt Type
+    // ---------------
+    // 1      0   BCN
+    // 1      1   CQ
+    // 0      0   DE
+    // 0      1   TO
+    isBeacon_ = isBeacon;
+    isAlt_ = isAlt;
+    extra_ = parts.at(2);
     compound_ = QStringList{ parts.at(0), parts.at(1) }.join("/");
 
+    // BCN|CQ
     if(isBeacon){
-        message_ = QString("%1: BCN %2 ").arg(compound_).arg(extra);
+        message_ = QString("%1: %2 %3 ").arg(compound_).arg(isAlt ? "CQ" : "BCN").arg(extra_);
     } else {
-         message_ = QString("%1: ").arg(compound_);
+        // :TO
+        if(isAlt){
+            message_ = QString("%1").arg(compound_);
+        }
+        // DE:
+        else {
+            message_ = QString("%1: ").arg(compound_);
+        }
     }
 
     return true;
