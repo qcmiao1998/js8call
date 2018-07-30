@@ -77,18 +77,25 @@ QRegularExpression directed_re("^"
 
 QMap<QChar, QString> hufftable = {
     // char   code                 weight
+    // 3 bits
     { ' '    , "000"          }, // 1300
     { 'E'    , "001"          }, // 1270.2
+
+    // 4 bits
     { 'T'    , "1100"         }, // 905.6
     { 'A'    , "1010"         }, // 816.7
     { 'O'    , "0111"         }, // 750.7
     { 'I'    , "0101"         }, // 696.6
     { 'N'    , "0100"         }, // 674.9
+
+    // 5 bits
     { 'S'    , "11111"        }, // 632.7
     { 'H'    , "11110"        }, // 609.4
     { 'R'    , "11101"        }, // 598.7
     { 'D'    , "10111"        }, // 425.3
     { 'L'    , "10110"        }, // 402.5
+
+    // 6 bits
     { 'C'    , "111001"       }, // 278.2
     { 'U'    , "111000"       }, // 275.8
     { 'M'    , "110111"       }, // 240.6
@@ -99,6 +106,8 @@ QMap<QChar, QString> hufftable = {
     { 'Y'    , "011010"       }, // 197.4
     { 'P'    , "011001"       }, // 192.9
     { 'B'    , "011000"       }, // 149.2
+
+    // 7 bits
     { '\\'   , "0110111"      }, // 100     <- escape
     { '.'    , "1000000"      }, // 100
     { '0'    , "1000001"      }, // 100
@@ -114,11 +123,19 @@ QMap<QChar, QString> hufftable = {
     { '?'    , "1001011"      }, // 100
     { '/'    , "1101010"      }, // 100
     { 'V'    , "0110110"      }, // 97.8
+
+    // 8 bits
     { 'K'    , "11010111"     }, // 77.2
+
+    // 10 bits
     { 'J'    , "1101011010"   }, // 15.3
     { 'X'    , "1101011001"   }, // 15.0
+
+    // 11 bits
     { 'Z'    , "11010110110"  }, // 7.4
     { ':'    , "11010110000"  }, // 5
+
+    // 12 bits
     { '+'    , "110101100011" }, // 5
     { '-'    , "110101101110" }, // 5
     { '!'    , "110101101111" }, // 5
@@ -129,6 +146,62 @@ QMap<QChar, QString> hufftable = {
     special chars that are escaped will be added here too...
     */
 };
+
+/*
+Most common trigrams:
+the = 12 bits
+and = 13 bits
+tha = 13 bits
+ent = 11 bits
+ing = 14 bits
+ion = 12 bits
+tio = 12 bits
+for = 15 bits **
+nde = 12 bits
+has = 14 bits
+nce = 13 bits
+edt = 12 bits
+tis = 13 bits
+oft = 14 bits
+sth = 14 bits
+men = 13 bits
+her = 13 bits
+hat = 13 bits
+his = 14 bits
+ere = 11 bits
+ter = 12 bits
+was = 15 bits **
+you = 16 bits **
+ith = 13 bits
+ver = 15 bits **
+all = 14 bits
+wit = 14 bits
+thi = 13 bits
+
+quadgrams:
+that = 17 bits
+ther = 17 bits
+with = 18 bits
+tion = 16 bits
+here = 16 bits
+ould = 20 bits **
+ight = 19 bits
+have = 19 bits
+hich = 20 bits **
+whic = 21 bits **
+this = 18 bits
+thin = 18 bits
+they = 18 bits
+atio = 16 bits
+ever = 18 bits
+from = 21 bits **
+ough = 21 bits **
+were = 17 bits
+hing = 18 bits
+ment = 17 bits
+
+*/
+
 
 /*
 original: Space \\ ? / : - + !
@@ -161,8 +234,8 @@ QMap<QString, QChar> huffescapes = {
     {  "\\0",   '`'  },
 
 #if 0
-    // reserved <= 14 bits
-    {  "\\1",   '' },
+    // 14 bits
+    {  "\\1",   ''  },
     {  "\\2",   ''  },
     {  "\\3",   ''  },
     {  "\\4",   ''  },
@@ -174,7 +247,28 @@ QMap<QString, QChar> huffescapes = {
     {  "\\?",   ''  },
     {  "\\/",   ''  },
     {  "\\V",   ''  },
+
+    // 15 bits
+    {  "\\K"  , ''  },
+
+    // 17 bits
+    {  "\\J"  , ''  },
+    {  "\\X"  , ''  },
+
+    // 18 bits
+    {  "\\Z"  , ''  },
+    {  "\\:"  , ''  },
+
+    // 19 bits
+    {  "\\+"  , ''  },
+    {  "\\-"  , ''  },
+    {  "\\!"  , ''  },
 #endif
+
+
+
+
+
 };
 
 QChar ESC = '\\';   // Escape char
