@@ -7656,7 +7656,7 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
     }
     if(!activityText.isEmpty()){
         int block = logRxTxMessageText(firstActivity, activityText, offset, false);
-        m_rxFrameBlockNumbers[offset] = block;
+        m_rxFrameBlockNumbers[offset/10*10] = block;
         m_rxRecentCache.insert(offset/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
     }
 
@@ -8733,8 +8733,7 @@ void MainWindow::processRxActivity() {
             continue;
         }
 
-        // ok, we're good to display...let's do that!
-
+        // ok, we're good to display...let's cache that fact and then display!
         bool isLast = d.bits == Varicode::FT8CallLast;
 
         if (isLast) {
@@ -8744,11 +8743,13 @@ void MainWindow::processRxActivity() {
 
         int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
 
-        m_rxFrameBlockNumbers[freq] = logRxTxMessageText(d.utcTimestamp, d.text, d.freq, false, block);;
+        // log it to the display!
+        m_rxFrameBlockNumbers[freq] = logRxTxMessageText(d.utcTimestamp, d.text, d.freq, false, block);
 
         if (isLast) {
             m_rxFrameBlockNumbers.remove(freq);
         }
+        m_rxRecentCache.insert(freq, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
     }
 }
 
