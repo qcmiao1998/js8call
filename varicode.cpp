@@ -155,10 +155,10 @@ the = 12 bits
 and = 13 bits
 tha = 13 bits
 ent = 11 bits
-ing = 14 bits
+ing = 14 bits **
 ion = 12 bits
 tio = 12 bits
-for = 15 bits
+for = 15 bits **
 nde = 12 bits
 has = 14 bits
 nce = 13 bits
@@ -223,8 +223,10 @@ needed: ^,&@#$%'"()<>|*[]{}=;_~`
 QMap<QString, QString> huffescapes = {
 
     // 10 bits
-    {  "\\ ",   ","  },
-    {  "\\E",   "\'" },
+#if 0
+    {  "\\ ",   ""  },
+#endif
+    {  "\\E",   "," },
 
     // 11 bits
     {  "\\T",   "&"  },
@@ -234,62 +236,63 @@ QMap<QString, QString> huffescapes = {
     {  "\\N",   "%"  },
 
     // 12 bits
-    {  "\\S",   "^"  },
+    {  "\\S",   "\'" },
     {  "\\H",   "\"" },
     {  "\\R",   "("  },
     {  "\\D",   ")"  },
     {  "\\L",   "|"  },
 
     // 13 bits
-    {  "\\C",   "<"  },
-    {  "\\U",   ">"  },
-    {  "\\M",   "*"  },
-    {  "\\W",   "["  },
-    {  "\\F",   "]"  },
-    {  "\\G",   "{"  },
-    {  "\\Q",   "}"  },
-    {  "\\Y",   "="  },
-    {  "\\P",   ";"  },
-    {  "\\B",   "_"  },
-
-    // 14 bits
-    {  "\\.",   "~"  },
-    {  "\\0",   "`"  },
-
     // trigram / quadgram efficiency
-    {  "\\1",   "WAS"   }, // 16 bits - 2 bit savings
-    {  "\\2",   "THAT"  }, // 17 bits - 3 bit savings
-    {  "\\3",   "THER"  }, // 17 bits - 3 bit savings
-    {  "\\4",   "WITH"  }, // 18 bits - 4 bit savings
-    {  "\\5",   "TION"  }, // 16 bits - 2 bit savings
-    {  "\\6",   "HERE"  }, // 16 bits - 2 bit savings
-    {  "\\7",   "OULD"  }, // 20 bits - 6 bit savings
-    {  "\\8",   "IGHT"  }, // 19 bits - 5 bit savings
-    {  "\\9",   "HAVE"  }, // 19 bits - 5 bit savings
-    {  "\\?",   "HICH"  }, // 20 bits - 6 bit savings
-    {  "\\/",   "WHIC"  }, // 21 bits - 7 bit savings
-    {  "\\V",   "THIS"  }, // 18 bits - 4 bit savings
+    {  "\\C",   "YOU"   }, // 16 bits - 3 bit savings
+    {  "\\U",   "THAT"  }, // 17 bits - 4 bit savings
+    {  "\\M",   "THER"  }, // 17 bits - 4 bit savings
+    {  "\\W",   "WITH"  }, // 18 bits - 5 bit savings
+    {  "\\F",   "TION"  }, // 16 bits - 3 bit savings
+    {  "\\G",   "HERE"  }, // 16 bits - 3 bit savings
+    {  "\\Q",   "OULD"  }, // 20 bits - 7 bit savings
+    {  "\\Y",   "IGHT"  }, // 19 bits - 6 bit savings
+    {  "\\P",   "HAVE"  }, // 19 bits - 6 bit savings
+    {  "\\B",   "HICH"  }, // 20 bits - 7 bit savings
+
+#if 0
+    // 14 bits
+    {  "\\.",   ""  },
+    {  "\\0",   ""  },
+#endif
+
+    {  "\\1",   "<"  },
+    {  "\\2",   ">"  },
+    {  "\\3",   "["  },
+    {  "\\4",   "]"  },
+    {  "\\5",   "{"  },
+    {  "\\6",   "}"  },
+    {  "\\7",   "*"  },
+    {  "\\8",   "="  },
+    {  "\\9",   ";"  },
+    {  "\\?",   "WHIC"  }, // 21 bits - 7 bit savings
+    {  "\\/",   "THIS"  }, // 18 bits - 4 bit savings
+    {  "\\V",   "FROM"  }, // 21 bits - 7 bit savings
 
     // 15 bits
     // quadgram efficiency
-    {  "\\K"  , "FROM"  }, // 21 bits - 6 bit savings
+    {  "\\K"  , "OUGH"  }, // 21 bits - 6 bit savings
 
     // 17 bits
-    // quadgram efficiency
-    {  "\\J"  , "OUGH"  }, // 21 bits - 4 bit savings
-    {  "\\X"  , "599"   }, // 21 bits - 4 bit savings
-
-    // 18 bits
-    // quadgram efficiency
-    {  "\\Z"  , "..."   }, // 21 bits - 3 bit savings
 #if 0
-    {  "\\:"  , ""  },
-
-    // 19 bits
-    {  "\\+"  , ""  },
-    {  "\\-"  , ""  },
+    {  "\\J"  , ""   },
+    {  "\\X"  , ""   },
 #endif
 
+    // 18 bits
+    {  "\\Z"  , "^"  },
+    {  "\\:"  , "~"  },
+
+    // 19 bits
+    {  "\\+"  , "`"  },
+    {  "\\-"  , "_"  },
+
+    // special case :)
     {  "\\!"  , "FT8CALL"  }, // 37 bits - 18 bit savings
 };
 
@@ -497,11 +500,9 @@ QList<QPair<int, QVector<bool>>> Varicode::huffEncode(const QMap<QString, QStrin
     });
 
     while(i < text.length()){
-        qDebug() << i << text.length();
         bool found = false;
         foreach(auto ch, keys){
             if(text.midRef(i).startsWith(ch)){
-                qDebug() << text.midRef(i) << ch;
                 out.append({ ch.length(), Varicode::strToBits(huff[ch])});
                 i += ch.length();
                 found = true;
@@ -514,14 +515,14 @@ QList<QPair<int, QVector<bool>>> Varicode::huffEncode(const QMap<QString, QStrin
         }
     }
 
-    /*
+#if 0
     foreach(auto ch, text){
         if(!huff.contains(ch)){
             continue;
         }
         out.append(Varicode::strToBits(huff[ch]));
     }
-    */
+#endif
 
     return out;
 }
