@@ -705,9 +705,9 @@ private:
 
 
   enum Priority {
-    PriorityLow    =   0,
-    PriorityNormal =  10,
-    PriorityHigh   = 100
+    PriorityLow    =   10,
+    PriorityNormal =  100,
+    PriorityHigh   = 1000
   };
 
   struct PrioritizedMessage {

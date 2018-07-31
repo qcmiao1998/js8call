@@ -5777,6 +5777,7 @@ void MainWindow::restoreMessage(){
 void MainWindow::resetMessageTransmitQueue(){
   m_txFrameCount = 0;
   m_txFrameQueue.clear();
+  m_txMessageQueue.clear();
 }
 
 QString MainWindow::popMessageFrame(){
@@ -9086,21 +9087,22 @@ void MainWindow::processTxQueue(){
         return;
     }
 
-#if 0
-    // and we need to have not transmitted in the 30 seconds...
-    if(m_lastTxTime.secsTo(QDateTime::currentDateTimeUtc()) < 30){
+    // and if we are a low priority message, we need to have not transmitted in the past 30 seconds...
+    if(head.priority <= PriorityLow && m_lastTxTime.secsTo(QDateTime::currentDateTimeUtc()) <= 30){
         return;
     }
-#endif
 
-    // dequeue the next message from the queue...
+    // if so... dequeue the next message from the queue...
     auto message = m_txMessageQueue.dequeue();
 
     // add the message to the outgoing message text box
     addMessageText(message.message, true);
 
-    // then transmit...
-    toggleTx(true);
+    // check to see if we have autoreply enabled...
+    if(ui->autoReplyButton->isChecked()){
+        // then prepare to transmit...
+        toggleTx(true);
+    }
 
     if(message.callback){
         message.callback();
