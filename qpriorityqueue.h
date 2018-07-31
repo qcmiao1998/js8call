@@ -164,7 +164,8 @@ private:
 template <typename T, typename LessThan>
 Q_INLINE_TEMPLATE void QPriorityQueue<T, LessThan>::clear()
 {
-    d = std::priority_queue<T>(lessThan);
+    d = std::priority_queue <T, std::vector < T >, LessThan>(lessThan);
+    //d = std::priority_queue<T>(lessThan);
 }
 
 #else

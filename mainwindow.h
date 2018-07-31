@@ -727,7 +727,7 @@ private:
 
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent
   QQueue<QString> m_txFrameQueue; // frames to be sent
-  QQueue<ActivityDetail> m_rxFrameQueue;
+  QQueue<ActivityDetail> m_rxActivityQueue;
   QQueue<CommandDetail> m_rxCommandQueue;
   QMap<QString, QString> m_compoundCallCache; // base callsign -> compound callsign
   QCache<QString, QDateTime> m_txAllcallCommandCache; // callsign -> last tx

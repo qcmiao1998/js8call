@@ -3334,6 +3334,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.utcTimestamp = QDateTime::currentDateTimeUtc();
             d.snr = decodedtext.snr();
             m_bandActivity[offset].append(d);
+            m_rxActivityQueue.append(d);
 
             // if we have a data frame, and a message buffer has been established, buffer it...
             if(m_messageBuffer.contains(d.freq/10*10) && !decodedtext.isCompoundMessage() && !decodedtext.isDirectedMessage()){
@@ -3532,19 +3533,6 @@ void MainWindow::readFromStdout()                             //readFromStdout
           bDisplayRight=true;
       }
 
-#if 0
-      if(isRecentOffset(audioFreq) || isAllCallIncluded(decodedtext.message())){
-         // TODO: jsherer - create a method for bumping this...
-         m_rxRecentCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
-         bDisplayRight = true;
-      }
-
-      if(isDirectedOffset(audioFreq/10*10) || isMyCallIncluded(decodedtext.message())){
-          m_rxDirectedCache.insert(audioFreq/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
-          bDisplayRight = true;
-      }
-#endif
-
       if (bDisplayRight) {
         // This msg is within 10 hertz of our tuned frequency, or a JT4 or JT65 avg,
         // or contains MyCall
@@ -3558,18 +3546,6 @@ void MainWindow::readFromStdout()                             //readFromStdout
           if(!b65 and m_modeTx=="JT65") on_pbTxMode_clicked();
         }
         m_QSOText = decodedtext.string ().trimmed ();
-
-#if 0
-        // TODO: jsherer - parse decode...
-        ActivityDetail d;
-        d.isFree = !decodedtext.isStandardMessage();
-        d.isCompound = decodedtext.isCompoundMessage();
-        d.bits = decodedtext.bits();
-        d.freq = audioFreq;
-        d.text = decodedtext.message();
-        d.utcTimestamp = QDateTime::currentDateTimeUtc();
-        m_rxFrameQueue.append(d);
-#endif
       }
 
       if(m_mode=="FT8" and m_config.bHound()) {
@@ -5618,7 +5594,7 @@ void MainWindow::clearActivity(){
     m_rxRecentCache.clear();
     m_rxDirectedCache.clear();
     m_rxFrameBlockNumbers.clear();
-    m_rxFrameQueue.clear();
+    m_rxActivityQueue.clear();
     m_rxCommandQueue.clear();
     m_lastTxMessage.clear();
 
@@ -7332,7 +7308,7 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
         // TODO: jsherer - move these
         ui->textEditRX->clear();
         m_rxFrameBlockNumbers.clear();
-        m_rxFrameQueue.clear();
+        m_rxActivityQueue.clear();
     }
 }
 
@@ -8727,17 +8703,37 @@ void MainWindow::processActivity(bool force) {
 }
 
 void MainWindow::processRxActivity() {
-    if(m_rxFrameQueue.isEmpty()){
+    if(m_rxActivityQueue.isEmpty()){
         return;
     }
 
-    while (!m_rxFrameQueue.isEmpty()) {
-        ActivityDetail d = m_rxFrameQueue.dequeue();
+    while (!m_rxActivityQueue.isEmpty()) {
+        ActivityDetail d = m_rxActivityQueue.dequeue();
+
+        int freq = d.freq / 10 * 10;
 
         // TODO: jsherer - is it safe to just ignore printing these?
         if (d.isCompound) {
             continue;
         }
+
+        bool shouldDisplay = abs(freq - currentFreq()) <= 10;
+
+        if(isRecentOffset(freq) || isAllCallIncluded(d.text)){
+            m_rxRecentCache.insert(freq, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+            shouldDisplay = true;
+        }
+
+        if(isDirectedOffset(freq) || isMyCallIncluded(d.text)){
+            m_rxDirectedCache.insert(freq, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+            shouldDisplay = true;
+        }
+
+        if(!shouldDisplay){
+            continue;
+        }
+
+        // ok, we're good to display...let's do that!
 
         bool isLast = d.bits == Varicode::FT8CallLast;
 
@@ -8746,10 +8742,9 @@ void MainWindow::processRxActivity() {
             d.text = QString("%1 \u2301 ").arg(d.text);
         }
 
-        int freq = d.freq / 10 * 10;
         int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
-        block = logRxTxMessageText(d.utcTimestamp, d.text, d.freq, false, block);
-        m_rxFrameBlockNumbers[freq] = block;
+
+        m_rxFrameBlockNumbers[freq] = logRxTxMessageText(d.utcTimestamp, d.text, d.freq, false, block);;
 
         if (isLast) {
             m_rxFrameBlockNumbers.remove(freq);
