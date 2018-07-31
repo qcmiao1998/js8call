@@ -5884,7 +5884,7 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
           // packDataMessage can output a new line to datLineOut (huff escaping special characters)
           int m = 0;
           QString datLineOut;
-          QString datFrame = Varicode::packDataMessage(line.left(21) + "\x04", &datLineOut, &m); //  63 / 3 = 21 (maximum number of 3bit chars we could possibly stuff in here)
+          QString datFrame = Varicode::packDataMessage(line.left(24) + "\x04", &datLineOut, &m); //  66 / 3 + 2 = 22 (maximum number of 3bit chars we could possibly stuff in here plus 2 for good measure :P)
 
           // if this parses to a standard FT8 free text message
           // but it can be parsed as a directed message, then we

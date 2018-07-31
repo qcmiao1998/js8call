@@ -75,71 +75,71 @@ QRegularExpression directed_re("^"
                                "(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?"
                                );
 
-QMap<QChar, QString> hufftable = {
+QMap<QString, QString> hufftable = {
     // char   code                 weight
     // 3 bits
-    { ' '    , "000"          }, // 1300
-    { 'E'    , "001"          }, // 1270.2
+    { " "    , "000"          }, // 1300
+    { "E"    , "001"          }, // 1270.2
 
     // 4 bits
-    { 'T'    , "1100"         }, // 905.6
-    { 'A'    , "1010"         }, // 816.7
-    { 'O'    , "0111"         }, // 750.7
-    { 'I'    , "0101"         }, // 696.6
-    { 'N'    , "0100"         }, // 674.9
+    { "T"    , "1100"         }, // 905.6
+    { "A"    , "1010"         }, // 816.7
+    { "O"    , "0111"         }, // 750.7
+    { "I"    , "0101"         }, // 696.6
+    { "N"    , "0100"         }, // 674.9
 
     // 5 bits
-    { 'S'    , "11111"        }, // 632.7
-    { 'H'    , "11110"        }, // 609.4
-    { 'R'    , "11101"        }, // 598.7
-    { 'D'    , "10111"        }, // 425.3
-    { 'L'    , "10110"        }, // 402.5
+    { "S"    , "11111"        }, // 632.7
+    { "H"    , "11110"        }, // 609.4
+    { "R"    , "11101"        }, // 598.7
+    { "D"    , "10111"        }, // 425.3
+    { "L"    , "10110"        }, // 402.5
 
     // 6 bits
-    { 'C'    , "111001"       }, // 278.2
-    { 'U'    , "111000"       }, // 275.8
-    { 'M'    , "110111"       }, // 240.6
-    { 'W'    , "110110"       }, // 236.0
-    { 'F'    , "110100"       }, // 222.8
-    { 'G'    , "100111"       }, // 201.5
-    { 'Q'    , "100110"       }, // 200
-    { 'Y'    , "011010"       }, // 197.4
-    { 'P'    , "011001"       }, // 192.9
-    { 'B'    , "011000"       }, // 149.2
+    { "C"    , "111001"       }, // 278.2
+    { "U"    , "111000"       }, // 275.8
+    { "M"    , "110111"       }, // 240.6
+    { "W"    , "110110"       }, // 236.0
+    { "F"    , "110100"       }, // 222.8
+    { "G"    , "100111"       }, // 201.5
+    { "Q"    , "100110"       }, // 200
+    { "Y"    , "011010"       }, // 197.4
+    { "P"    , "011001"       }, // 192.9
+    { "B"    , "011000"       }, // 149.2
 
     // 7 bits
-    { '\\'   , "0110111"      }, // 100     <- escape
-    { '.'    , "1000000"      }, // 100
-    { '0'    , "1000001"      }, // 100
-    { '1'    , "1000010"      }, // 100
-    { '2'    , "1000011"      }, // 100
-    { '3'    , "1000100"      }, // 100
-    { '4'    , "1000101"      }, // 100
-    { '5'    , "1000110"      }, // 100
-    { '6'    , "1000111"      }, // 100
-    { '7'    , "1001000"      }, // 100
-    { '8'    , "1001001"      }, // 100
-    { '9'    , "1001010"      }, // 100
-    { '?'    , "1001011"      }, // 100
-    { '/'    , "1101010"      }, // 100
-    { 'V'    , "0110110"      }, // 97.8
+    { "\\"   , "0110111"      }, // 100     <- escape
+    { "."    , "1000000"      }, // 100
+    { "0"    , "1000001"      }, // 100
+    { "1"    , "1000010"      }, // 100
+    { "2"    , "1000011"      }, // 100
+    { "3"    , "1000100"      }, // 100
+    { "4"    , "1000101"      }, // 100
+    { "5"    , "1000110"      }, // 100
+    { "6"    , "1000111"      }, // 100
+    { "7"    , "1001000"      }, // 100
+    { "8"    , "1001001"      }, // 100
+    { "9"    , "1001010"      }, // 100
+    { "?"    , "1001011"      }, // 100
+    { "/"    , "1101010"      }, // 100
+    { "V"    , "0110110"      }, // 97.8
 
     // 8 bits
-    { 'K'    , "11010111"     }, // 77.2
+    { "K"    , "11010111"     }, // 77.2
 
     // 10 bits
-    { 'J'    , "1101011010"   }, // 15.3
-    { 'X'    , "1101011001"   }, // 15.0
+    { "J"    , "1101011010"   }, // 15.3
+    { "X"    , "1101011001"   }, // 15.0
 
     // 11 bits
-    { 'Z'    , "11010110110"  }, // 7.4
-    { ':'    , "11010110000"  }, // 5
+    { "Z"    , "11010110110"  }, // 7.4
+    { ":"    , "11010110000"  }, // 5
 
     // 12 bits
-    { '+'    , "110101100011" }, // 5
-    { '-'    , "110101101110" }, // 5
-    { '!'    , "110101101111" }, // 5
-    { '\x04' , "110101100010" }, // 1       <- eot
+    { "+"    , "110101100011" }, // 5
+    { "-"    , "110101101110" }, // 5
+    { "!"    , "110101101111" }, // 5
+    { "\x04" , "110101100010" }, // 1       <- eot
 
     /*
     A-Z 0-9 Space \\ ? / : - + !
@@ -148,7 +148,9 @@ QMap<QChar, QString> hufftable = {
 };
 
 /*
-Most common trigrams:
+via https://www3.nd.edu/~busiforc/handouts/cryptography/Letter%20Frequencies.html#Most_common_trigrams_.28in_order.29
+
+most common trigrams:
 the = 12 bits
 and = 13 bits
 tha = 13 bits
@@ -156,7 +158,7 @@ ent = 11 bits
 ing = 14 bits
 ion = 12 bits
 tio = 12 bits
-for = 15 bits **
+for = 15 bits
 nde = 12 bits
 has = 14 bits
 nce = 13 bits
@@ -170,15 +172,15 @@ hat = 13 bits
 his = 14 bits
 ere = 11 bits
 ter = 12 bits
-was = 15 bits **
+was = 15 bits
 you = 16 bits **
 ith = 13 bits
-ver = 15 bits **
+ver = 15 bits
 all = 14 bits
 wit = 14 bits
 thi = 13 bits
 
-quadgrams:
+most common quadgrams:
 that = 17 bits
 ther = 17 bits
 with = 18 bits
@@ -200,6 +202,17 @@ were = 17 bits
 hing = 18 bits
 ment = 17 bits
 
+potential contenders:
+_DE_ = 14 bits
+BTU = 16 bits
+... = 21 bits
+599 = 21 bits
+FT8 = 17 bits
+BAND = 19 bits
+FT8CALL = 37 bits
+DIPOLE = 27 bits
+VERT = 19 bits
+BEAM = 19 bits
 */
 
 
@@ -207,68 +220,70 @@ ment = 17 bits
 original: Space \\ ? / : - + !
 needed: ^,&@#$%'"()<>|*[]{}=;_~`
 */
-QMap<QString, QChar> huffescapes = {
-    {  "\\ ",   '^'  },
-    {  "\\E",   ','  },
-    {  "\\T",   '&'  },
-    {  "\\A",   '@'  },
-    {  "\\O",   '#'  },
-    {  "\\I",   '$'  },
-    {  "\\N",   '%'  },
-    {  "\\S",   '\'' },
-    {  "\\H",   '\"' },
-    {  "\\R",   '('  },
-    {  "\\D",   ')'  },
-    {  "\\L",   '<'  },
-    {  "\\C",   '>'  },
-    {  "\\U",   '|'  },
-    {  "\\M",   '*'  },
-    {  "\\W",   '['  },
-    {  "\\F",   ']'  },
-    {  "\\G",   '{'  },
-    {  "\\Q",   '}'  },
-    {  "\\Y",   '='  },
-    {  "\\P",   ';'  },
-    {  "\\B",   '_'  },
-    {  "\\.",   '~'  },
-    {  "\\0",   '`'  },
+QMap<QString, QString> huffescapes = {
+    {  "\\ ",   "^"  },
+    {  "\\E",   ","  },
+    {  "\\T",   "&"  },
+    {  "\\A",   "@"  },
+    {  "\\O",   "#"  },
+    {  "\\I",   "$"  },
+    {  "\\N",   "%"  },
+    {  "\\S",   "\'" },
+    {  "\\H",   "\"" },
+    {  "\\R",   "("  },
+    {  "\\D",   ")"  },
+    {  "\\L",   "<"  },
+    {  "\\C",   ">"  },
+    {  "\\U",   "|"  },
+    {  "\\M",   "*"  },
+    {  "\\W",   "["  },
+    {  "\\F",   "]"  },
+    {  "\\G",   "{"  },
+    {  "\\Q",   "}"  },
+    {  "\\Y",   "="  },
+    {  "\\P",   ";"  },
+    {  "\\B",   "_"  },
+    {  "\\.",   "~"  },
+    {  "\\0",   "`"  },
 
-#if 0
     // 14 bits
-    {  "\\1",   ''  },
-    {  "\\2",   ''  },
-    {  "\\3",   ''  },
-    {  "\\4",   ''  },
-    {  "\\5",   ''  },
-    {  "\\6",   ''  },
-    {  "\\7",   ''  },
-    {  "\\8",   ''  },
-    {  "\\9",   ''  },
-    {  "\\?",   ''  },
-    {  "\\/",   ''  },
-    {  "\\V",   ''  },
+    // trigram efficiency
+    {  "\\1",   "WAS"  }, // 16 bits - 2 bit savings
+
+    // quadgram efficiency
+    {  "\\2",   "THAT"  }, // 17 bits - 3 bit savings
+    {  "\\3",   "THER"  }, // 17 bits - 3 bit savings
+    {  "\\4",   "WITH"  }, // 18 bits - 4 bit savings
+    {  "\\5",   "TION"  }, // 16 bits - 2 bit savings
+    {  "\\6",   "HERE"  }, // 16 bits - 2 bit savings
+    {  "\\7",   "OULD"  }, // 20 bits - 6 bit savings
+    {  "\\8",   "IGHT"  }, // 19 bits - 5 bit savings
+    {  "\\9",   "HAVE"  }, // 19 bits - 5 bit savings
+    {  "\\?",   "HICH"  }, // 20 bits - 6 bit savings
+    {  "\\/",   "WHIC"  }, // 21 bits - 7 bit savings
+    {  "\\V",   "THIS"  }, // 18 bits - 4 bit savings
 
     // 15 bits
-    {  "\\K"  , ''  },
+    // quadgram efficiency
+    {  "\\K"  , "FROM"  }, // 21 bits - 6 bit savings
 
     // 17 bits
-    {  "\\J"  , ''  },
-    {  "\\X"  , ''  },
+    // quadgram efficiency
+    {  "\\J"  , "OUGH"  }, // 21 bits - 4 bit savings
+    {  "\\X"  , "599"   }, // 21 bits - 4 bit savings
 
+#if 0
     // 18 bits
-    {  "\\Z"  , ''  },
-    {  "\\:"  , ''  },
+    // quadgram efficiency
+    {  "\\Z"  , ""  },
+    {  "\\:"  , ""  },
 
     // 19 bits
-    {  "\\+"  , ''  },
-    {  "\\-"  , ''  },
-    {  "\\!"  , ''  },
+    {  "\\+"  , ""  },
+    {  "\\-"  , ""  },
 #endif
 
-
-
-
-
+    {  "\\!"  , "FT8CALL"  }, // 37 bits - 18 bit savings
 };
 
 QChar ESC = '\\';   // Escape char
@@ -283,15 +298,15 @@ QMap<QString, quint32> basecalls = {
 };
 
 QMap<int, int> dbm2mw = {
-    {0  , 1},
-    {3  , 2},
-    {7  , 5},
-    {10 , 10},
-    {13 , 20},
-    {17 , 50},
-    {20 , 100},
-    {23 , 200},
-    {27 , 500},
+    {0  , 1},       //   1mW
+    {3  , 2},       //   2mW
+    {7  , 5},       //   5mW
+    {10 , 10},      //  10mW
+    {13 , 20},      //  20mW
+    {17 , 50},      //  50mW
+    {20 , 100},     // 100mW
+    {23 , 200},     // 200mW
+    {27 , 500},     // 500mW
     {30 , 1000},    //    1W
     {33 , 2000},    //    2W
     {37 , 5000},    //    5W
@@ -305,12 +320,16 @@ QMap<int, int> dbm2mw = {
 };
 
 
-QMap<QChar, QString> initializeEscapes(QMap<QChar, QString> huff, QMap<QString, QChar> escapes){
-    QMap<QChar, QString> newhuff(huff);
+QMap<QString, QString> initializeEscapes(QMap<QString, QString> huff, QMap<QString, QString> escapes){
+    QMap<QString, QString> newhuff(huff);
     foreach(auto escapeString, escapes.keys()){
         auto ch = escapes[escapeString];
         auto encoded = Varicode::huffEncode(huff, escapeString);
-        auto bits = Varicode::bitsListToBits(encoded);
+        QList<QVector<bool>> e;
+        foreach(auto pair, encoded){
+            e.append(pair.second);
+        }
+        auto bits = Varicode::bitsListToBits(e);
         newhuff[ch] = Varicode::bitsToStr(bits);
     }
 
@@ -327,7 +346,7 @@ QMap<QChar, QString> initializeEscapes(QMap<QChar, QString> huff, QMap<QString, 
     return newhuff;
 }
 
-QMap<QChar, QString> hufftableescaped = initializeEscapes(hufftable, huffescapes);
+QMap<QString, QString> hufftableescaped = initializeEscapes(hufftable, huffescapes);
 
 /*
  * UTILITIES
@@ -451,20 +470,56 @@ QStringList Varicode::parseGrids(const QString &input){
     return grids;
 }
 
-QList<QVector<bool>> Varicode::huffEncode(QMap<QChar, QString> const &huff, QString const& text){
-    QList<QVector<bool>> out;
+QList<QPair<int, QVector<bool>>> Varicode::huffEncode(const QMap<QString, QString> &huff, QString const& text){
+    QList<QPair<int, QVector<bool>>> out;
 
+    int i = 0;
+
+    auto keys = huff.keys();
+    qSort(keys.begin(), keys.end(), [](QString const &a, QString const &b){
+        auto alen = a.length();
+        auto blen = b.length();
+        if(blen < alen){
+            return true;
+        }
+        if(alen < blen){
+            return false;
+        }
+
+        return b < a;
+    });
+
+    while(i < text.length()){
+        qDebug() << i << text.length();
+        bool found = false;
+        foreach(auto ch, keys){
+            if(text.midRef(i).startsWith(ch)){
+                qDebug() << text.midRef(i) << ch;
+                out.append({ ch.length(), Varicode::strToBits(huff[ch])});
+                i += ch.length();
+                found = true;
+                break;
+            }
+        }
+
+        if(!found){
+            i++;
+        }
+    }
+
+    /*
     foreach(auto ch, text){
         if(!huff.contains(ch)){
             continue;
         }
         out.append(Varicode::strToBits(huff[ch]));
     }
+    */
 
     return out;
 }
 
-QString Varicode::huffDecode(QMap<QChar, QString> const &huff, QVector<bool> const& bitvec){
+QString Varicode::huffDecode(QMap<QString, QString> const &huff, QVector<bool> const& bitvec){
     QString text;
 
     QString bits = Varicode::bitsToStr(bitvec); //.mid(0, bitvec.length()-pad);
@@ -510,8 +565,8 @@ QString Varicode::huffEscape(QString const &input){
     return text;
 }
 
-QSet<QChar> Varicode::huffValidChars(){
-    return QSet<QChar>::fromList(hufftableescaped.keys());
+QSet<QString> Varicode::huffValidChars(){
+    return QSet<QString>::fromList(hufftableescaped.keys());
 }
 
 bool Varicode::huffShouldEscape(QString const &input){
@@ -1203,10 +1258,12 @@ QString Varicode::packDataMessage(const QString &input, QString * out, int *n){
     int i = 0;
 
     // we use the escaped table here, so they the escapes and the characters are packed together...
-    foreach(auto charBits, Varicode::huffEncode(hufftableescaped, input)){
+    foreach(auto pair, Varicode::huffEncode(hufftableescaped, input)){
+        auto charN = pair.first;
+        auto charBits = pair.second;
         if(frameHeaderBits.length() + frameDataBits.length() + charBits.length() <= 69){
             frameDataBits += charBits;
-            i++;
+            i += charN;
             continue;
         }
         break;

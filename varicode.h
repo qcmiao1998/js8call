@@ -51,12 +51,12 @@ public:
     static QStringList parseCallsigns(QString const &input);
     static QStringList parseGrids(QString const &input);
 
-    static QList<QVector<bool>> huffEncode(const QMap<QChar, QString> &huff, QString const& text);
-    static QString huffDecode(const QMap<QChar, QString> &huff, QVector<bool> const& bitvec);
+    static QList<QPair<int, QVector<bool>>> huffEncode(const QMap<QString, QString> &huff, QString const& text);
+    static QString huffDecode(const QMap<QString, QString> &huff, QVector<bool> const& bitvec);
 
     static QString huffUnescape(QString const &input);
     static QString huffEscape(QString const &input);
-    static QSet<QChar> huffValidChars();
+    static QSet<QString> huffValidChars();
     static bool huffShouldEscape(QString const &input);
 
     static QVector<bool> bytesToBits(char * bitvec, int n);
