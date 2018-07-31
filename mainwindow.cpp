@@ -222,6 +222,7 @@ namespace
       }
   }
 
+#if 0
   int round(int numToRound, int multiple)
   {
    if(multiple == 0)
@@ -237,6 +238,7 @@ namespace
 
    return roundDown;
   }
+#endif
 
   int roundUp(int numToRound, int multiple)
   {
@@ -1121,6 +1123,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     QMenu * menu = new QMenu(ui->tableWidgetCalls);
 
     QString selectedCall = callsignSelected();
+    bool isAllCall = isAllCallIncluded(selectedCall);
     bool missingCallsign = selectedCall.isEmpty();
     if(!missingCallsign && m_callActivity.contains(selectedCall)){
         setFreqForRestore(m_callActivity[selectedCall].freq, true);
@@ -1132,9 +1135,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
     menu->addSeparator();
 
-    removeStation->setDisabled(missingCallsign || callsignSelected() == "ALLCALL");
+    removeStation->setDisabled(missingCallsign || isAllCall);
     menu->addAction(removeStation);
-
 
     menu->addSeparator();
     menu->addAction(clearAction4);
@@ -4413,15 +4415,19 @@ void MainWindow::guiUpdate()
 
     m_sec0=nsec;
 
-
     // once per period
     if(m_sec0 % m_TRperiod == 0){
+        // force rx dirty at least once pre period
         m_rxDirty = true;
     }
 
-    // once per second
-    displayDialFrequency ();
+    // update the dial frequency once per second..
+    displayDialFrequency();
 
+    // process all received activity...
+    processActivity();
+
+    // once processed, lets update the display...
     displayActivity();
   }
 
@@ -5855,6 +5861,9 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
         // once we find a directed call, data encode the rest of the line.
         bool hasDirected = false;
 
+        // do the same for when we have sent data...
+        bool hasData = false;
+
         // remove our callsign from the start of the line...
         if(line.startsWith(mycall + ":")){
             line = lstrip(line.mid(mycall.length() + 1));
@@ -5889,21 +5898,22 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
           // if this parses to a standard FT8 free text message
           // but it can be parsed as a directed message, then we
           // should send the directed version. if we've already sent
-          // a directed message, we won't send any more but instead
-          // send it as a data message
+          // a directed message or a data frame, we will only follow it
+          // with more data frames.
 
-          if(isFree && !hasDirected && l > 0){
+          if(isFree && !hasDirected && !hasData && l > 0){
               useBcn = true;
               hasDirected = false;
               frame = bcnFrame;
           }
-          else if(isFree && !hasDirected && n > 0){
+          else if(isFree && !hasDirected && !hasData && n > 0){
               useDir = true;
               hasDirected = true;
               frame = dirFrame;
           }
           else if ((isFree || hasDirected) && m > 0) {
               useDat = true;
+              hasData = true;
               frame = datFrame;
               if(!datLineOut.isEmpty()){
                 line = datLineOut;
@@ -7363,7 +7373,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         return;
     }
 
-    bool isAllCall = call == "ALLCALL";
+    bool isAllCall = isAllCallIncluded(call);
 
     auto sendReplyAction = menu->addAction("CALL - Send a message to selected callsign");
 
@@ -8690,466 +8700,546 @@ bool MainWindow::isMyCallIncluded(const QString &text){
     return text.contains(myCall);
 }
 
-
 bool MainWindow::isAllCallIncluded(const QString &text){
     return text.contains("ALLCALL");
 }
 
-void MainWindow::displayActivity(bool force){
-  if(!m_rxDirty && !force){
-    return;
-  }
-
-  // Is it ok to post spots to PSKReporter?
-  int nsec=QDateTime::currentMSecsSinceEpoch()/1000-m_secBandChanged;
-  bool okToPost=(nsec>(4*m_TRperiod)/5);
-
-  // Selected Rows
-  int selectedOffset = -1;
-  auto selectedItems = ui->tableWidgetRXAll->selectedItems();
-  if(!selectedItems.isEmpty()){
-      selectedOffset = selectedItems.first()->text().toInt();
-  }
-
-  // Selected callsign
-  QString selectedCall = callsignSelected();
-
-  // Band Activity
-  auto now = QDateTime::currentDateTimeUtc();
-  clearTableWidget(ui->tableWidgetRXAll);
-  QList<int> keys = m_bandActivity.keys();
-
-  // sort directed & recent messages first
-  qSort(keys.begin(), keys.end(), [this](const int left, int right){
-      if(m_rxDirectedCache.contains(left/10*10)){
-          return true;
-      }
-      if(m_rxDirectedCache.contains(right/10*10)){
-          return false;
-      }
-      if(m_rxRecentCache.contains(left/10*10)){
-          return true;
-      }
-      if(m_rxRecentCache.contains(right/10*10)){
-          return false;
-      }
-      return left < right;
-  });
-
-  foreach (int offset, keys) {
-      QList<ActivityDetail> items = m_bandActivity[offset];
-      if(items.length() > 0){
-          QStringList text;
-          QString age;
-          int snr = 0;
-          int activityAging = m_config.activity_aging();
-          foreach(ActivityDetail item, items){
-              if(activityAging && item.utcTimestamp.secsTo(now)/60 >= activityAging){
-                  continue;
-              }
-              if(item.text.isEmpty()){
-                  continue;
-              }
-              if(item.isLowConfidence){
-                  item.text = QString("[%1]").arg(item.text);
-              }
-              if(item.bits == Varicode::FT8CallLast){
-                  // can also use \u0004 \u2666 \u2404
-                  item.text = QString("%1 \u2301 ").arg(item.text);
-              }
-              text.append(item.text);
-              snr = item.snr;
-              age = since(item.utcTimestamp);
-          }
-
-          auto joined = text.join("     ");
-          if(joined.isEmpty()){
-              continue;
-          }
-
-          ui->tableWidgetRXAll->insertRow(ui->tableWidgetRXAll->rowCount());
-
-          auto offsetItem = new QTableWidgetItem(QString("%1").arg(offset));
-          offsetItem->setData(Qt::UserRole, QVariant(offset));
-          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, offsetItem);
-
-          auto ageItem = new QTableWidgetItem(QString("(%1)").arg(age));
-          ageItem->setTextAlignment(Qt::AlignCenter|Qt::AlignVCenter);
-          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, ageItem);
-
-          auto snrItem = new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(snr)));
-          snrItem->setTextAlignment(Qt::AlignCenter|Qt::AlignVCenter);
-          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, snrItem);
-
-
-
-          // align right if eliding...
-          int colWidth = ui->tableWidgetRXAll->columnWidth(3);
-          auto textItem = new QTableWidgetItem(joined);
-          QFontMetrics fm(textItem->font());
-          auto elidedText = fm.elidedText(joined, Qt::ElideLeft, colWidth);
-          auto flag = Qt::AlignLeft|Qt::AlignVCenter;
-          if(elidedText != joined){
-              flag = Qt::AlignRight|Qt::AlignVCenter;
-              textItem->setText(joined);
-          }
-          textItem->setTextAlignment(flag);
-
-          if (text.last().contains(QRegularExpression {"^(CQ|QRZ|DE)\\s"})){
-              offsetItem->setBackground(QBrush(m_config.color_CQ()));
-              ageItem->setBackground(QBrush(m_config.color_CQ()));
-              snrItem->setBackground(QBrush(m_config.color_CQ()));
-              textItem->setBackground(QBrush(m_config.color_CQ()));
-          }
-
-          if(m_rxDirectedCache.contains(offset/10*10)){
-              offsetItem->setBackground(QBrush(m_config.color_MyCall()));
-              ageItem->setBackground(QBrush(m_config.color_MyCall()));
-              snrItem->setBackground(QBrush(m_config.color_MyCall()));
-              textItem->setBackground(QBrush(m_config.color_MyCall()));
-          }
-
-          ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 3, textItem);
-
-          if(offset == selectedOffset){
-              ui->tableWidgetRXAll->selectRow(ui->tableWidgetRXAll->rowCount() - 1);
-          }
-      }
-  }
-  ui->tableWidgetRXAll->resizeColumnToContents(0);
-  ui->tableWidgetRXAll->resizeColumnToContents(1);
-  ui->tableWidgetRXAll->resizeColumnToContents(2);
-
-
-
-  // Call Activity
-
-  clearTableWidget(ui->tableWidgetCalls);
-
-  ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
-  auto item = new QTableWidgetItem("ALLCALL");
-  item->setData(Qt::UserRole, QVariant("ALLCALL"));
-  ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, item);
-  ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
-  if(selectedCall == "ALLCALL"){
-      ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
-  }
-
-  QList<QString> calls = m_callActivity.keys();
-  qSort(calls.begin(), calls.end());
-  int callsignAging = m_config.callsign_aging();
-  foreach(QString call, calls){
-      CallDetail d = m_callActivity[call];
-
-      if(callsignAging && d.utcTimestamp.secsTo(now)/60 >= callsignAging){
-          continue;
-      }
-
-      ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
-
-      QString displayCall = d.through.isEmpty() ? d.call : QString("%1 | %2").arg(d.through).arg(d.call);
-      auto displayItem = new QTableWidgetItem(displayCall);
-      displayItem->setData(Qt::UserRole, QVariant((d.call)));
-      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, displayItem);
-      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
-      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 2, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
-      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 3, new QTableWidgetItem(QString("%1").arg(d.grid)));
-
-      auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
-      distanceItem->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
-      ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 4, distanceItem);
-
-      if(call == selectedCall){
-          ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
-      }
-  }
-  ui->tableWidgetCalls->resizeColumnToContents(0);
-  ui->tableWidgetCalls->resizeColumnToContents(1);
-  ui->tableWidgetCalls->resizeColumnToContents(2);
-  ui->tableWidgetCalls->resizeColumnToContents(3);
-
-  // Recently Directed Activity
-  while(!m_rxFrameQueue.isEmpty()){
-      ActivityDetail d = m_rxFrameQueue.dequeue();
-
-      // TODO: jsherer - is it safe to just ignore printing these?
-      if(d.isCompound){
-          continue;
-      }
-
-      bool isLast = d.bits == Varicode::FT8CallLast;
-
-      if(isLast){
-          // can also use \u0004 \u2666 \u2404
-          d.text = QString("%1 \u2301 ").arg(d.text);
-      }
-
-      int freq = d.freq/10*10;
-      int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
-      block = logRxTxMessageText(d.utcTimestamp, d.text, d.freq, false, block);
-      m_rxFrameBlockNumbers[freq] = block;
-
-      if(isLast){
-          m_rxFrameBlockNumbers.remove(freq);
-      }
-  }
-
-  // Grouped Compound Activity
-  // TODO: jsherer - group compound callsign and directed commands together.
-  foreach(auto freq, m_messageBuffer.keys()){
-    QMap<int, MessageBuffer>::iterator i = m_messageBuffer.find(freq);
-
-    MessageBuffer &buffer = i.value();
-
-    qDebug() << "-> grouping buffer for freq" << freq;
-
-    if(buffer.compound.isEmpty()){
-        qDebug() << "-> buffer.compound is empty...skip";
-        continue;
+void MainWindow::processActivity(bool force) {
+    if (!m_rxDirty && !force) {
+        return;
     }
 
-    // if we don't have an initialized command, skip...
-    if(buffer.cmd.bits != Varicode::FT8Call && buffer.cmd.bits != Varicode::FT8CallLast){
-        qDebug() << "-> buffer.cmd bits is invalid...skip";
-        continue;
+    // Recent Rx Activity
+    processRxActivity();
+
+    // Grouped Compound Activity
+    processCompoundActivity();
+
+    // Buffered Activity
+    processBufferedActivity();
+
+    // Command Activity
+    processCommandActivity();
+
+    // Process PSKReporter Spots
+    processSpots();
+
+    m_rxDirty = false;
+}
+
+void MainWindow::processRxActivity() {
+    if(m_rxFrameQueue.isEmpty()){
+        return;
     }
 
-    // if we need two compound calls, but less than two have arrived...skip
-    if(buffer.cmd.from == "<....>" && buffer.cmd.to == "<....>" && buffer.compound.length() < 2){
-        qDebug() << "-> buffer needs two compound, but has less...skip";
-        continue;
-    }
+    while (!m_rxFrameQueue.isEmpty()) {
+        ActivityDetail d = m_rxFrameQueue.dequeue();
 
-    // if we need one compound call, but non have arrived...skip
-    if((buffer.cmd.from == "<....>" || buffer.cmd.to == "<....>") && buffer.compound.length() < 1){
-        qDebug() << "-> buffer needs one compound, but has less...skip";
-        continue;
-    }
+        // TODO: jsherer - is it safe to just ignore printing these?
+        if (d.isCompound) {
+            continue;
+        }
 
-    if(buffer.cmd.from == "<....>"){
-        auto d = buffer.compound.dequeue();
-        buffer.cmd.from = d.call;
+        bool isLast = d.bits == Varicode::FT8CallLast;
 
-        if(d.bits == Varicode::FT8CallLast){
-            buffer.cmd.bits = d.bits;
+        if (isLast) {
+            // can also use \u0004 \u2666 \u2404
+            d.text = QString("%1 \u2301 ").arg(d.text);
+        }
+
+        int freq = d.freq / 10 * 10;
+        int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
+        block = logRxTxMessageText(d.utcTimestamp, d.text, d.freq, false, block);
+        m_rxFrameBlockNumbers[freq] = block;
+
+        if (isLast) {
+            m_rxFrameBlockNumbers.remove(freq);
         }
     }
+}
 
-    if(buffer.cmd.to == "<....>"){
-        auto d = buffer.compound.dequeue();
-        buffer.cmd.to = d.call;
+void MainWindow::processCompoundActivity() {
+    if(m_messageBuffer.isEmpty()){
+        return;
+    }
 
-        if(d.bits == Varicode::FT8CallLast){
-            buffer.cmd.bits = d.bits;
+    // group compound callsign and directed commands together.
+    foreach(auto freq, m_messageBuffer.keys()) {
+        QMap < int, MessageBuffer > ::iterator i = m_messageBuffer.find(freq);
+
+        MessageBuffer & buffer = i.value();
+
+        qDebug() << "-> grouping buffer for freq" << freq;
+
+        if (buffer.compound.isEmpty()) {
+            qDebug() << "-> buffer.compound is empty...skip";
+            continue;
         }
+
+        // if we don't have an initialized command, skip...
+        if (buffer.cmd.bits != Varicode::FT8Call && buffer.cmd.bits != Varicode::FT8CallLast) {
+            qDebug() << "-> buffer.cmd bits is invalid...skip";
+            continue;
+        }
+
+        // if we need two compound calls, but less than two have arrived...skip
+        if (buffer.cmd.from == "<....>" && buffer.cmd.to == "<....>" && buffer.compound.length() < 2) {
+            qDebug() << "-> buffer needs two compound, but has less...skip";
+            continue;
+        }
+
+        // if we need one compound call, but non have arrived...skip
+        if ((buffer.cmd.from == "<....>" || buffer.cmd.to == "<....>") && buffer.compound.length() < 1) {
+            qDebug() << "-> buffer needs one compound, but has less...skip";
+            continue;
+        }
+
+        if (buffer.cmd.from == "<....>") {
+            auto d = buffer.compound.dequeue();
+            buffer.cmd.from = d.call;
+
+            if (d.bits == Varicode::FT8CallLast) {
+                buffer.cmd.bits = d.bits;
+            }
+        }
+
+        if (buffer.cmd.to == "<....>") {
+            auto d = buffer.compound.dequeue();
+            buffer.cmd.to = d.call;
+
+            if (d.bits == Varicode::FT8CallLast) {
+                buffer.cmd.bits = d.bits;
+            }
+        }
+
+        if (buffer.cmd.bits != Varicode::FT8CallLast) {
+            qDebug() << "-> still not last message...skip";
+            continue;
+        }
+
+        qDebug() << "buffered compound command ready" << buffer.cmd.from << buffer.cmd.to << buffer.cmd.cmd;
+
+        m_rxCommandQueue.append(buffer.cmd);
+        m_messageBuffer.remove(freq);
+    }
+}
+
+void MainWindow::processBufferedActivity() {
+    if(m_messageBuffer.isEmpty()){
+        return;
     }
 
-    if(buffer.cmd.bits != Varicode::FT8CallLast){
-        qDebug() << "-> still not last message...skip";
-        continue;
+    foreach(auto freq, m_messageBuffer.keys()) {
+        auto buffer = m_messageBuffer[freq];
+
+        if (buffer.msgs.isEmpty()) {
+            continue;
+        }
+
+        if (buffer.msgs.last().bits == Varicode::FT8Call) {
+            continue;
+        }
+
+        QString message;
+        foreach(auto part, buffer.msgs) {
+            message.append(part.text);
+        }
+        message = rstrip(message);
+
+        QString checksum = message.right(3);
+        message = message.left(message.length() - 4);
+
+        if (Varicode::checksum16Valid(checksum, message)) {
+            buffer.cmd.text = message;
+            m_rxCommandQueue.append(buffer.cmd);
+        } else {
+            qDebug() << "Buffered message failed checksum...discarding";
+            qDebug() << "Checksum:" << checksum;
+            qDebug() << "Message:" << message;
+        }
+
+        // regardless of valid or not, remove the "complete" buffered message from the buffer cache
+        m_messageBuffer.remove(freq);
     }
+}
 
-    qDebug() << "buffered compound command ready" << buffer.cmd.from << buffer.cmd.to << buffer.cmd.cmd;
-
-    m_rxCommandQueue.append(buffer.cmd);
-    m_messageBuffer.remove(freq);
-  }
-
-  // Buffered Activity
-  foreach(auto freq, m_messageBuffer.keys()){
-      auto buffer = m_messageBuffer[freq];
-
-      if(buffer.msgs.isEmpty()){
-          continue;
-      }
-
-      if(buffer.msgs.last().bits == Varicode::FT8Call){
-          continue;
-      }
-
-      QString message;
-      foreach(auto part, buffer.msgs){
-          message.append(part.text);
-      }
-      message = rstrip(message);
-
-      QString checksum = message.right(3);
-      message = message.left(message.length()-4);
-
-      if(Varicode::checksum16Valid(checksum, message)){
-          buffer.cmd.text = message;
-          m_rxCommandQueue.append(buffer.cmd);
-      } else {
-          qDebug() << "Buffered message failed checksum...discarding";
-          qDebug() << "Checksum:" << checksum;
-          qDebug() << "Message:" << message;
-      }
-
-      // regardless of valid or not, remove the "complete" buffered message from the buffer cache
-      m_messageBuffer.remove(freq);
-  }
-
-  // Command Activity
-  if(m_txFrameQueue.isEmpty() && !m_rxCommandQueue.isEmpty()){
-    int f = currentFreq();
-
-    bool processed = false;
-
-    // TODO: jsherer - should we if we have _any_ directed messages, pause the beacon??
-    // pauseBacon();
-
-    while(!m_rxCommandQueue.isEmpty()){
-      auto d = m_rxCommandQueue.dequeue();
-
-      bool isAllCall = d.to == "ALLCALL";
-
-#if 1
-      qDebug() << "processing command" << d.from << d.to << d.cmd << d.freq;
+void MainWindow::processCommandActivity() {
+#if 0
+    if (!m_txFrameQueue.isEmpty()) {
+        return;
+    }
 #endif
 
-      // if we need a compound callsign but never got one...skip
-      if(d.from == "<....>" || d.to == "<....>"){
-          continue;
-      }
-
-      // we're only processing a subset of queries at this point
-      if(!Varicode::isCommandAllowed(d.cmd)){
-         continue;
-      }
-
-      // we're only responding to allcall and our callsign at this point, but we'll log callsigns we've heard
-      if(!isAllCall && d.to != m_config.my_callsign().trimmed() && d.to != Radio::base_callsign(m_config.my_callsign()).trimmed()){
-         continue;
-      }
-
-      // TODO: jsherer - check to make sure we haven't replied to their allcall recently (in the past beacon interval)
-      if(isAllCall && m_txAllcallCommandCache.contains(Radio::base_callsign(d.from)) && m_txAllcallCommandCache[Radio::base_callsign(d.from)]->secsTo(QDateTime::currentDateTimeUtc())/60 < m_config.beacon()){
-          continue;
-      }
-
-      // record the spot to PSKReporter
-      if (okToPost){
-          pskSetLocal();
-          pskLogReport("FT8Call", d.freq, d.snr, d.from, "");
-      }
-
-      // construct a reply
-      QString reply;
-
-      // QUERIED SNR
-      if(d.cmd == "?"){
-          reply = QString("%1 SNR %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
-      }
-      // QUERIED ACK
-      //else if(d.cmd == "#"){
-      //    reply = QString("%1 ACK").arg(Radio::base_callsign(d.from));
-      //}
-      // QUERIED PWR
-      else if(d.cmd == "%" && !isAllCall && m_config.my_dBm() >= 0){
-          reply = QString("%1 PWR %2").arg(d.from).arg(Varicode::formatPWR(m_config.my_dBm()));
-      }
-      // QUERIED QTH
-      else if(d.cmd == "@" && !isAllCall){
-          QString qth = m_config.my_qth();
-          if(qth.isEmpty()){
-              QString grid = m_config.my_grid();
-              if(grid.isEmpty()){
-                  continue;
-              }
-              qth = grid;
-          }
-
-          reply = QString("%1 %2").arg(d.from).arg(qth);
-      }
-      // QUERIED STATION MESSAGE
-      else if(d.cmd == "&" && !isAllCall){
-          reply = QString("%1 %2").arg(d.from).arg(m_config.my_station());
-      }
-      // QUERIED STATIONS HEARD
-      else if(d.cmd == "$" && !isAllCall){
-          int i = 0;
-          int maxStations = 4;
-          auto calls = m_callActivity.keys();
-          qSort(calls.begin(), calls.end(), [this](QString const &a, QString const &b){
-            auto left = m_callActivity[a];
-            auto right = m_callActivity[b];
-            return right.snr < left.snr;
-          });
-
-          QStringList lines;
-          foreach(auto call, calls){
-              if(i >= maxStations){
-                  break;
-              }
-
-              auto d = m_callActivity[call];
-              lines.append(QString("%1 SNR %2").arg(d.call).arg(Varicode::formatSNR(d.snr)));
-              i++;
-          }
-          reply = lines.join('\n');
-      }
-      // PROCESS RETRANSMIT
-      else if(d.cmd == "|" && !isAllCall){
-          // TODO: jsherer - perhaps parse d.text and ensure it is a valid message as well as prefix it with our call...
-          reply = QString("%1 ACK\n%2 DE %1").arg(d.from).arg(d.text);
-      }
-      // PROCESS ALERT
-      else if(d.cmd == "!" && !isAllCall){
-
-          QMessageBox * msgBox = new QMessageBox(this);
-          msgBox->setIcon(QMessageBox::Information);
-
-          auto header = QString("Message from %3 at %1 (%2):");
-          header = header.arg(d.utcTimestamp.time().toString());
-          header = header.arg(d.freq);
-          header = header.arg(d.from);
-          msgBox->setText(header);
-          msgBox->setInformativeText(d.text);
-
-
-          auto ab = msgBox->addButton("ACK", QMessageBox::AcceptRole);
-          auto db = msgBox->addButton("Discard", QMessageBox::NoRole);
-
-          connect(msgBox, &QMessageBox::buttonClicked, this, [this, d, db, ab](QAbstractButton * btn){
-              if(btn != ab){
-                  return;
-              }
-              addMessageText(QString("%1 ACK").arg(d.from));
-              toggleTx(true);
-          });
-
-          msgBox->show();
-
-          continue;
-      } else if(d.cmd == " AGN?" && !isAllCall && !m_lastTxMessage.isEmpty()){
-          reply = m_lastTxMessage;
-      }
-
-      if(reply.isEmpty()){
-          continue;
-      }
-
-      addMessageText(reply);
-
-      // use the last frequency
-      f = d.freq;
-
-      // if we're responding via allcall, pick a different frequency and mark it in the cache.
-      if(d.to == "ALLCALL"){
-        f = findFreeFreqOffset(qMax(0, f-100), qMin(f+100, 2500), 50);
-        m_txAllcallCommandCache.insert(Radio::base_callsign(d.from), new QDateTime(QDateTime::currentDateTimeUtc()), 25);
-      }
-
-      processed = true;
+    if (m_rxCommandQueue.isEmpty()) {
+        return;
     }
 
-    if(processed && ui->autoReplyButton->isChecked()){
+#if 0
+    bool processed = false;
+
+    int f = currentFreq();
+#endif
+
+    // TODO: jsherer - should we, if we have _any_ directed messages, pause the beacon??
+    // pauseBacon();
+
+    while (!m_rxCommandQueue.isEmpty()) {
+        auto d = m_rxCommandQueue.dequeue();
+
+        bool isAllCall = isAllCallIncluded(d.to);
+
+        qDebug() << "try processing command" << d.from << d.to << d.cmd << d.freq;
+
+        // if we need a compound callsign but never got one...skip
+        if (d.from == "<....>" || d.to == "<....>") {
+            continue;
+        }
+
+        // we're only processing a subset of queries at this point
+        if (!Varicode::isCommandAllowed(d.cmd)) {
+            continue;
+        }
+
+        // we're only responding to allcall and our callsign at this point, but we'll log callsigns we've heard
+        if (!isAllCall && d.to != m_config.my_callsign().trimmed() && d.to != Radio::base_callsign(m_config.my_callsign()).trimmed()) {
+            continue;
+        }
+
+#if 0
+        // TODO: jsherer - check to make sure we haven't replied to their allcall recently (in the past beacon interval)
+        if (isAllCall && m_txAllcallCommandCache.contains(Radio::base_callsign(d.from)) && m_txAllcallCommandCache[Radio::base_callsign(d.from)]->secsTo(QDateTime::currentDateTimeUtc()) / 60 < m_config.beacon()) {
+            continue;
+        }
+
+        // TODO: jsherer - we need to queue these for later processing
+        // record the spot to PSKReporter
+        if (okToPost) {
+            pskSetLocal();
+            pskLogReport("FT8Call", d.freq, d.snr, d.from, "");
+        }
+#endif
+
+        // construct a reply
+        QString reply;
+
+        // QUERIED SNR
+        if (d.cmd == "?") {
+            reply = QString("%1 SNR %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
+        }
+        // QUERIED ACK
+        //else if(d.cmd == "#"){
+        //    reply = QString("%1 ACK").arg(Radio::base_callsign(d.from));
+        //}
+        // QUERIED PWR
+        else if (d.cmd == "%" && !isAllCall && m_config.my_dBm() >= 0) {
+            reply = QString("%1 PWR %2").arg(d.from).arg(Varicode::formatPWR(m_config.my_dBm()));
+        }
+        // QUERIED QTH
+        else if (d.cmd == "@" && !isAllCall) {
+            QString qth = m_config.my_qth();
+            if (qth.isEmpty()) {
+                QString grid = m_config.my_grid();
+                if (grid.isEmpty()) {
+                    continue;
+                }
+                qth = grid;
+            }
+
+            reply = QString("%1 %2").arg(d.from).arg(qth);
+        }
+        // QUERIED STATION MESSAGE
+        else if (d.cmd == "&" && !isAllCall) {
+            reply = QString("%1 %2").arg(d.from).arg(m_config.my_station());
+        }
+        // QUERIED STATIONS HEARD
+        else if (d.cmd == "$" && !isAllCall) {
+            int i = 0;
+            int maxStations = 4;
+            auto calls = m_callActivity.keys();
+            qSort(calls.begin(), calls.end(), [this](QString
+                const & a, QString
+                const & b) {
+                auto left = m_callActivity[a];
+                auto right = m_callActivity[b];
+                return right.snr < left.snr;
+            });
+
+            QStringList lines;
+            foreach(auto call, calls) {
+                if (i >= maxStations) {
+                    break;
+                }
+
+                auto d = m_callActivity[call];
+                lines.append(QString("%1 SNR %2").arg(d.call).arg(Varicode::formatSNR(d.snr)));
+                i++;
+            }
+            reply = lines.join('\n');
+        }
+        // PROCESS RETRANSMIT
+        else if (d.cmd == "|" && !isAllCall) {
+            // TODO: jsherer - perhaps parse d.text and ensure it is a valid message as well as prefix it with our call...
+            reply = QString("%1 ACK\n%2 DE %1").arg(d.from).arg(d.text);
+        }
+        // PROCESS ALERT
+        else if (d.cmd == "!" && !isAllCall) {
+
+            QMessageBox * msgBox = new QMessageBox(this);
+            msgBox->setIcon(QMessageBox::Information);
+
+            auto header = QString("Message from %3 at %1 (%2):");
+            header = header.arg(d.utcTimestamp.time().toString());
+            header = header.arg(d.freq);
+            header = header.arg(d.from);
+            msgBox->setText(header);
+            msgBox->setInformativeText(d.text);
+
+            auto ab = msgBox->addButton("ACK", QMessageBox::AcceptRole);
+            auto db = msgBox->addButton("Discard", QMessageBox::NoRole);
+
+            connect(msgBox, & QMessageBox::buttonClicked, this, [this, d, db, ab](QAbstractButton * btn) {
+                if (btn != ab) {
+                    return;
+                }
+
+#if 0
+                addMessageText(QString("%1 ACK").arg(d.from));
+                toggleTx(true);
+#endif
+            });
+
+            msgBox->show();
+
+            continue;
+        } else if (d.cmd == " AGN?" && !isAllCall && !m_lastTxMessage.isEmpty()) {
+            reply = m_lastTxMessage;
+        }
+
+        if (reply.isEmpty()) {
+            continue;
+        }
+
+#if 0
+        addMessageText(reply);
+
+        // use the last frequency
+        f = d.freq;
+
+        // if we're responding via allcall, pick a different frequency and mark it in the cache.
+        if (isAllCallIncluded(d.to)) {
+            f = findFreeFreqOffset(qMax(0, f - 100), qMin(f + 100, 2500), 50);
+            m_txAllcallCommandCache.insert(Radio::base_callsign(d.from), new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+        }
+
+        processed = true;
+#endif
+
+        // TODO: jsherer - queue the reply here to be sent when a free interval is available
+    }
+
+#if 0
+    if (processed && ui->autoReplyButton->isChecked()) {
         toggleTx(true);
     }
-  }
+#endif
+}
 
+void MainWindow::processSpots() {
+    // Is it ok to post spots to PSKReporter?
+    int nsec = QDateTime::currentMSecsSinceEpoch() / 1000 - m_secBandChanged;
+    bool okToPost = (nsec > (4 * m_TRperiod) / 5);
+    if (!okToPost) {
+        return;
+    }
 
-  m_rxDirty = false;
+    // Process spots to be sent...
+}
+
+void MainWindow::displayActivity(bool force) {
+    if (!m_rxDirty && !force) {
+        return;
+    }
+
+    // Band Activity
+    displayBandActivity();
+
+    // Call Activity
+    displayCallActivity();
+}
+
+void MainWindow::displayBandActivity() {
+    auto now = QDateTime::currentDateTimeUtc();
+
+    // Selected Offset
+    int selectedOffset = -1;
+    auto selectedItems = ui->tableWidgetRXAll->selectedItems();
+    if (!selectedItems.isEmpty()) {
+        selectedOffset = selectedItems.first()->text().toInt();
+    }
+
+    // Clear the table
+    clearTableWidget(ui->tableWidgetRXAll);
+
+    // Sort directed & recent messages first
+    QList < int > keys = m_bandActivity.keys();
+    qSort(keys.begin(), keys.end(), [this](const int left, int right) {
+        if (m_rxDirectedCache.contains(left / 10 * 10)) {
+            return true;
+        }
+        if (m_rxDirectedCache.contains(right / 10 * 10)) {
+            return false;
+        }
+        if (m_rxRecentCache.contains(left / 10 * 10)) {
+            return true;
+        }
+        if (m_rxRecentCache.contains(right / 10 * 10)) {
+            return false;
+        }
+        return left < right;
+    });
+
+    // Build the table
+    foreach(int offset, keys) {
+        QList < ActivityDetail > items = m_bandActivity[offset];
+        if (items.length() > 0) {
+            QStringList text;
+            QString age;
+            int snr = 0;
+            int activityAging = m_config.activity_aging();
+            foreach(ActivityDetail item, items) {
+                if (activityAging && item.utcTimestamp.secsTo(now) / 60 >= activityAging) {
+                    continue;
+                }
+                if (item.text.isEmpty()) {
+                    continue;
+                }
+                if (item.isLowConfidence) {
+                    item.text = QString("[%1]").arg(item.text);
+                }
+                if (item.bits == Varicode::FT8CallLast) {
+                    // can also use \u0004 \u2666 \u2404
+                    item.text = QString("%1 \u2301 ").arg(item.text);
+                }
+                text.append(item.text);
+                snr = item.snr;
+                age = since(item.utcTimestamp);
+            }
+
+            auto joined = text.join("     ");
+            if (joined.isEmpty()) {
+                continue;
+            }
+
+            ui->tableWidgetRXAll->insertRow(ui->tableWidgetRXAll->rowCount());
+
+            auto offsetItem = new QTableWidgetItem(QString("%1").arg(offset));
+            offsetItem->setData(Qt::UserRole, QVariant(offset));
+            ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, offsetItem);
+
+            auto ageItem = new QTableWidgetItem(QString("(%1)").arg(age));
+            ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+            ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, ageItem);
+
+            auto snrItem = new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(snr)));
+            snrItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+            ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, snrItem);
+
+            // align right if eliding...
+            int colWidth = ui->tableWidgetRXAll->columnWidth(3);
+            auto textItem = new QTableWidgetItem(joined);
+            QFontMetrics fm(textItem->font());
+            auto elidedText = fm.elidedText(joined, Qt::ElideLeft, colWidth);
+            auto flag = Qt::AlignLeft | Qt::AlignVCenter;
+            if (elidedText != joined) {
+                flag = Qt::AlignRight | Qt::AlignVCenter;
+                textItem->setText(joined);
+            }
+            textItem->setTextAlignment(flag);
+
+            if (text.last().contains(QRegularExpression {
+                    "^(CQ|QRZ|DE)\\s"
+                })) {
+                offsetItem->setBackground(QBrush(m_config.color_CQ()));
+                ageItem->setBackground(QBrush(m_config.color_CQ()));
+                snrItem->setBackground(QBrush(m_config.color_CQ()));
+                textItem->setBackground(QBrush(m_config.color_CQ()));
+            }
+
+            if (m_rxDirectedCache.contains(offset / 10 * 10)) {
+                offsetItem->setBackground(QBrush(m_config.color_MyCall()));
+                ageItem->setBackground(QBrush(m_config.color_MyCall()));
+                snrItem->setBackground(QBrush(m_config.color_MyCall()));
+                textItem->setBackground(QBrush(m_config.color_MyCall()));
+            }
+
+            ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 3, textItem);
+
+            if (offset == selectedOffset) {
+                ui->tableWidgetRXAll->selectRow(ui->tableWidgetRXAll->rowCount() - 1);
+            }
+        }
+    }
+
+    // Resize the table columns
+    ui->tableWidgetRXAll->resizeColumnToContents(0);
+    ui->tableWidgetRXAll->resizeColumnToContents(1);
+    ui->tableWidgetRXAll->resizeColumnToContents(2);
+}
+
+void MainWindow::displayCallActivity() {
+    auto now = QDateTime::currentDateTimeUtc();
+
+    // Selected callsign
+    QString selectedCall = callsignSelected();
+
+    // Clear the table
+    clearTableWidget(ui->tableWidgetCalls);
+
+    // Create the ALLCALL item
+    auto item = new QTableWidgetItem("ALLCALL");
+    ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+    item->setData(Qt::UserRole, QVariant("ALLCALL"));
+    ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, item);
+    ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
+    if (isAllCallIncluded(selectedCall)) {
+        ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
+    }
+
+    // Build the table
+    QList < QString > calls = m_callActivity.keys();
+    qSort(calls.begin(), calls.end());
+    int callsignAging = m_config.callsign_aging();
+    foreach(QString call, calls) {
+        CallDetail d = m_callActivity[call];
+
+        if (callsignAging && d.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+            continue;
+        }
+
+        ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+
+        QString displayCall = d.through.isEmpty() ? d.call : QString("%1 | %2").arg(d.through).arg(d.call);
+        auto displayItem = new QTableWidgetItem(displayCall);
+        displayItem->setData(Qt::UserRole, QVariant((d.call)));
+        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, displayItem);
+        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
+        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 2, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
+        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 3, new QTableWidgetItem(QString("%1").arg(d.grid)));
+
+        auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
+        distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 4, distanceItem);
+
+        if (call == selectedCall) {
+            ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
+        }
+    }
+
+    // Resize the table columns
+    ui->tableWidgetCalls->resizeColumnToContents(0);
+    ui->tableWidgetCalls->resizeColumnToContents(1);
+    ui->tableWidgetCalls->resizeColumnToContents(2);
+    ui->tableWidgetCalls->resizeColumnToContents(3);
 }
 
 void MainWindow::postWSPRDecode (bool is_new, QStringList parts)

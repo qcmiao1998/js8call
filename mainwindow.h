@@ -795,7 +795,15 @@ private:
   QString callsignSelected();
   bool isRecentOffset(int offset);
   bool isDirectedOffset(int offset);
+  void processActivity(bool force=false);
+  void processRxActivity();
+  void processCompoundActivity();
+  void processBufferedActivity();
+  void processCommandActivity();
+  void processSpots();
   void displayActivity(bool force=false);
+  void displayBandActivity();
+  void displayCallActivity();
   void postWSPRDecode (bool is_new, QStringList message_parts);
   void enable_DXCC_entity (bool on);
   void switch_mode (Mode);
