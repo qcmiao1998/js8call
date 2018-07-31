@@ -221,20 +221,28 @@ original: Space \\ ? / : - + !
 needed: ^,&@#$%'"()<>|*[]{}=;_~`
 */
 QMap<QString, QString> huffescapes = {
-    {  "\\ ",   "^"  },
-    {  "\\E",   ","  },
+
+    // 10 bits
+    {  "\\ ",   ","  },
+    {  "\\E",   "\'" },
+
+    // 11 bits
     {  "\\T",   "&"  },
     {  "\\A",   "@"  },
     {  "\\O",   "#"  },
     {  "\\I",   "$"  },
     {  "\\N",   "%"  },
-    {  "\\S",   "\'" },
+
+    // 12 bits
+    {  "\\S",   "^"  },
     {  "\\H",   "\"" },
     {  "\\R",   "("  },
     {  "\\D",   ")"  },
-    {  "\\L",   "<"  },
-    {  "\\C",   ">"  },
-    {  "\\U",   "|"  },
+    {  "\\L",   "|"  },
+
+    // 13 bits
+    {  "\\C",   "<"  },
+    {  "\\U",   ">"  },
     {  "\\M",   "*"  },
     {  "\\W",   "["  },
     {  "\\F",   "]"  },
@@ -243,14 +251,13 @@ QMap<QString, QString> huffescapes = {
     {  "\\Y",   "="  },
     {  "\\P",   ";"  },
     {  "\\B",   "_"  },
+
+    // 14 bits
     {  "\\.",   "~"  },
     {  "\\0",   "`"  },
 
-    // 14 bits
-    // trigram efficiency
-    {  "\\1",   "WAS"  }, // 16 bits - 2 bit savings
-
-    // quadgram efficiency
+    // trigram / quadgram efficiency
+    {  "\\1",   "WAS"   }, // 16 bits - 2 bit savings
     {  "\\2",   "THAT"  }, // 17 bits - 3 bit savings
     {  "\\3",   "THER"  }, // 17 bits - 3 bit savings
     {  "\\4",   "WITH"  }, // 18 bits - 4 bit savings
@@ -272,10 +279,10 @@ QMap<QString, QString> huffescapes = {
     {  "\\J"  , "OUGH"  }, // 21 bits - 4 bit savings
     {  "\\X"  , "599"   }, // 21 bits - 4 bit savings
 
-#if 0
     // 18 bits
     // quadgram efficiency
-    {  "\\Z"  , ""  },
+    {  "\\Z"  , "..."   }, // 21 bits - 3 bit savings
+#if 0
     {  "\\:"  , ""  },
 
     // 19 bits
