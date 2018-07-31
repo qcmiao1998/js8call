@@ -65,12 +65,14 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
 
 DecodedText::DecodedText (QString const& ft8callmessage){
     message_ = ft8callmessage;
-    is_standard_ = false;
+    is_standard_ = QRegularExpression("^(CQ|DE|QRZ)\\s").match(message_).hasMatch();
+
     tryUnpack();
 }
 
 bool DecodedText::tryUnpack(){
     if(is_standard_){
+        message_ = message_.append(" ");
         return false;
     }
 
@@ -115,7 +117,15 @@ bool DecodedText::tryUnpackBeacon(){
     isBeacon_ = isBeacon;
     isAlt_ = isAlt;
     extra_ = parts.at(2);
-    compound_ = QStringList{ parts.at(0), parts.at(1) }.join("/");
+
+    QStringList cmp;
+    if(!parts.at(0).isEmpty()){
+        cmp.append(parts.at(0));
+    }
+    if(!parts.at(1).isEmpty()){
+        cmp.append(parts.at(1));
+    }
+    compound_ = cmp.join("/");
 
     // BCN|CQ
     if(isBeacon){

@@ -117,8 +117,8 @@ public:
     // like qqueue
     inline void enqueue(const T &t) { push(t); }
     inline T dequeue() { T t = d.top();	d.pop(); return t; }
-    inline T &head() { top(); }
-    inline const T &head() const { top(); }
+    inline T &head() { return const_cast<T&>(top()); }
+    inline const T &head() const { return top(); }
 
     // stl compatibility
     typedef int size_type;

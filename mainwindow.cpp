@@ -4419,13 +4419,19 @@ void MainWindow::guiUpdate()
     if(m_sec0 % m_TRperiod == 0){
         // force rx dirty at least once pre period
         m_rxDirty = true;
+        m_rxDisplayDirty = true;
     }
+
+    // once pre second...
 
     // update the dial frequency once per second..
     displayDialFrequency();
 
     // process all received activity...
     processActivity();
+
+    // process outgoing tx queue...
+    processTxQueue();
 
     // once processed, lets update the display...
     displayActivity();
@@ -5712,6 +5718,14 @@ void MainWindow::addMessageText(QString text, bool clear){
     ui->extFreeTextMsgEdit->setFocus();
 }
 
+void MainWindow::enqueueMessage(int priority, QString message, int freq, Callback c){
+    m_txMessageQueue.enqueue(
+        PrioritizedMessage{
+            QDateTime::currentDateTimeUtc(), priority, message, freq, c
+        }
+    );
+}
+
 void MainWindow::resetMessage(){
     resetMessageUI();
     resetMessageTransmitQueue();
@@ -5743,7 +5757,8 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
 
   QStringList lines;
   foreach(auto frame, frames){
-      lines.append(DecodedText(frame).message());
+      auto dt = DecodedText(frame);
+      lines.append(dt.message());
   }
 
   logRxTxMessageText(QDateTime::currentDateTimeUtc(), lines.join(""), freq, true);
@@ -6101,6 +6116,7 @@ bool MainWindow::prepareNextMessageFrame()
 
 bool MainWindow::isFreqOffsetFree(int f, int bw){
     foreach(int offset, m_bandActivity.keys()){
+
         if(qAbs(offset - f) < bw){
             return false;
         }
@@ -6143,7 +6159,7 @@ void MainWindow::scheduleBacon(bool first){
 
     // round to 15 second increment
     int secondsSinceEpoch = (timestamp.toMSecsSinceEpoch()/1000);
-    int delta = roundUp(secondsSinceEpoch, 15) + 1 + (first ? m_txFirst ? 15 : 30 : qMax(1, m_config.beacon()) * 60) - secondsSinceEpoch;
+    int delta = roundUp(secondsSinceEpoch, 15) + 1 + (first ? /*m_txFirst ? 15 : 30*/ 0 : qMax(1, m_config.beacon()) * 60) - secondsSinceEpoch;
     timestamp = timestamp.addSecs(delta);
 
     // 25% of the time, switch intervals
@@ -6181,27 +6197,6 @@ void MainWindow::prepareBacon(){
         return;
     }
 
-    int bw = 50 + 5;
-    int f = currentFreq();
-    if(!isFreqOffsetFree(f, bw)){
-        f = findFreeFreqOffset(500, 1500, bw);
-    }
-
-    // delay beacon if there's not a free frequency or there's something the tx queue or we just recently transmitted
-    if(
-        f == 0 ||
-        !m_txFrameQueue.isEmpty() ||
-        !ui->extFreeTextMsgEdit->toPlainText().isEmpty() ||
-        m_lastTxTime.secsTo(QDateTime::currentDateTimeUtc()) < 30
-    ){
-        if(ui->beaconButton->isChecked()){
-            scheduleBacon(false);
-        }
-        return;
-    }
-
-    setFreqForRestore(f, true);
-
     QStringList lines;
 
     QString call = m_config.my_callsign();
@@ -6217,6 +6212,10 @@ void MainWindow::prepareBacon(){
 
     // FT8Call Style
     lines.append(QString("%1: BCN %2").arg(call).arg(grid));
+
+    // Queue the beacon
+    enqueueMessage(PriorityLow, lines.join(QChar('\n')), currentFreq(), nullptr);
+
 
 #if 0
     if(!m_callActivity.isEmpty()){
@@ -6238,11 +6237,14 @@ void MainWindow::prepareBacon(){
     }
 #endif
 
+
+#if 0
     addMessageText(lines.join(QChar('\n')));
 
     ui->startTxButton->setChecked(true);
 
     scheduleBacon(false);
+#endif
 }
 
 
@@ -6282,10 +6284,6 @@ void MainWindow::toggleTx(bool start){
     if(start && ui->startTxButton->isChecked()) { return; }
     if(!start && !ui->startTxButton->isChecked()) { return; }
     ui->startTxButton->setChecked(start);
-}
-
-void MainWindow::splitAndSendNextMessage()
-{
 }
 
 void MainWindow::on_rbNextFreeTextMsg_toggled (bool status)
@@ -9019,6 +9017,10 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
+
+        enqueueMessage(PriorityNormal, reply, d.freq, nullptr);
+
+
 #if 0
         addMessageText(reply);
 
@@ -9055,8 +9057,58 @@ void MainWindow::processSpots() {
     // Process spots to be sent...
 }
 
+void MainWindow::processTxQueue(){
+    if(m_txMessageQueue.isEmpty()){
+        return;
+    }
+
+    // grab the next message...
+    auto head = m_txMessageQueue.head();
+
+    // decide if it's ok to transmit...
+    int f = head.freq;
+    if(!isFreqOffsetFree(f, 60)){
+        f = findFreeFreqOffset(500, 2500, 60);
+    }
+
+    // we need a valid frequency...
+    if(f == 0){
+        return;
+    }
+
+    // tx frame queue needs to be empty...
+    if(!m_txFrameQueue.isEmpty()){
+        return;
+    }
+
+    // our message box needs to be empty...
+    if(!ui->extFreeTextMsgEdit->toPlainText().isEmpty()){
+        return;
+    }
+
+#if 0
+    // and we need to have not transmitted in the 30 seconds...
+    if(m_lastTxTime.secsTo(QDateTime::currentDateTimeUtc()) < 30){
+        return;
+    }
+#endif
+
+    // dequeue the next message from the queue...
+    auto message = m_txMessageQueue.dequeue();
+
+    // add the message to the outgoing message text box
+    addMessageText(message.message, true);
+
+    // then transmit...
+    toggleTx(true);
+
+    if(message.callback){
+        message.callback();
+    }
+}
+
 void MainWindow::displayActivity(bool force) {
-    if (!m_rxDirty && !force) {
+    if (!m_rxDisplayDirty && !force) {
         return;
     }
 
@@ -9065,6 +9117,8 @@ void MainWindow::displayActivity(bool force) {
 
     // Call Activity
     displayCallActivity();
+
+    m_rxDisplayDirty = false;
 }
 
 void MainWindow::displayBandActivity() {

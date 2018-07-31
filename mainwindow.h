@@ -23,6 +23,8 @@
 #include <QFuture>
 #include <QFutureWatcher>
 
+#include <functional>
+
 #include "AudioDevice.hpp"
 #include "commons.h"
 #include "Radio.hpp"
@@ -39,6 +41,7 @@
 #include "MessageBox.hpp"
 #include "NetworkAccessManager.hpp"
 #include "qorderedmap.h"
+#include "qpriorityqueue.h"
 #include "varicode.h"
 
 #define NUM_JT4_SYMBOLS 206                //(72+31)*2, embedded sync
@@ -86,6 +89,9 @@ class MultiSettings;
 class EqualizationToolsDialog;
 class DecodedText;
 
+using namespace std;
+typedef std::function<void()> Callback;
+
 class MainWindow : public QMainWindow
 {
   Q_OBJECT;
@@ -127,6 +133,7 @@ public slots:
   void clearActivity();
   int logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block=-1);
   void addMessageText(QString text, bool clear=false);
+  void enqueueMessage(int priority, QString message, int freq, Callback c);
   void resetMessage();
   void resetMessageUI();
   void restoreMessage();
@@ -203,7 +210,6 @@ private slots:
   void on_txb6_clicked();
   void on_startTxButton_toggled(bool checked);
   void toggleTx(bool start);
-  void splitAndSendNextMessage();
   void on_rbNextFreeTextMsg_toggled (bool status);
   void on_lookupButton_clicked();
   void on_addButton_clicked();
@@ -642,6 +648,14 @@ private:
   QSet<QString> m_pfx;
   QSet<QString> m_sfx;
 
+  struct FoxQSO
+  {
+    QString grid;
+    QString sent;
+    QString rcvd;
+    qint32  ncall;
+  };
+
   struct CallDetail
   {
     QString call;
@@ -684,11 +698,35 @@ private:
   };
 
   bool m_rxDirty;
+  bool m_rxDisplayDirty;
   int m_txFrameCount;
   QString m_lastTxMessage;
   QDateTime m_lastTxTime;
 
-  QQueue<QString> m_txFrameQueue;
+
+  enum Priority {
+    PriorityLow    =   0,
+    PriorityNormal =  10,
+    PriorityHigh   = 100
+  };
+
+  struct PrioritizedMessage {
+      QDateTime date;
+      int priority;
+      QString message;
+      int freq;
+      Callback callback;
+
+      friend bool operator <(PrioritizedMessage const &a, PrioritizedMessage const &b){
+          if(a.priority < b.priority){
+              return true;
+          }
+          return a.date < b.date;
+      }
+  };
+
+  QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent
+  QQueue<QString> m_txFrameQueue; // frames to be sent
   QQueue<ActivityDetail> m_rxFrameQueue;
   QQueue<CommandDetail> m_rxCommandQueue;
   QMap<QString, QString> m_compoundCallCache; // base callsign -> compound callsign
@@ -721,7 +759,6 @@ private:
   QQueue<QString> m_houndQueue;        //Selected Hounds available for starting a QSO
   QQueue<QString> m_foxQSOinProgress;  //QSOs in progress: Fox has sent a report
   QQueue<qint64>  m_foxRateQueue;
-
 
   bool m_nextBeaconPaused = false;
   QDateTime m_nextBeacon;
@@ -801,6 +838,7 @@ private:
   void processBufferedActivity();
   void processCommandActivity();
   void processSpots();
+  void processTxQueue();
   void displayActivity(bool force=false);
   void displayBandActivity();
   void displayCallActivity();
