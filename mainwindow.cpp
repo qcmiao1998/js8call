@@ -3252,8 +3252,9 @@ void MainWindow::readFromStdout()                             //readFromStdout
           m_RxLog=0;
         }
         int n=t.length();
-        auto dt = DecodedText(t.mid(0, n-2));
-        out << dt.message() << endl;
+        auto logText = t.mid(0, n-2);
+        auto dt = DecodedText(logText, false, m_config.my_grid());
+        out << logText << "  " << dt.message() << endl;
         f.close();
       } else {
         MessageBox::warning_message (this, tr ("File Open Error")
