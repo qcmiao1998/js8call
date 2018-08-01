@@ -128,7 +128,7 @@ public slots:
   void msgAvgDecode2();
   void fastPick(int x0, int x1, int y);
 
-  void logCallActivity(CallDetail d);
+  void logCallActivity(CallDetail d, bool spot=true);
   QString lookupCallInCompoundCache(QString const &call);
   void clearActivity();
   int logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block=-1);
@@ -676,6 +676,7 @@ private:
     QDateTime utcTimestamp;
     int snr;
     int bits;
+    QString grid;
     QString text;
   };
 
@@ -727,8 +728,9 @@ private:
 
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent
   QQueue<QString> m_txFrameQueue; // frames to be sent
-  QQueue<ActivityDetail> m_rxActivityQueue;
-  QQueue<CommandDetail> m_rxCommandQueue;
+  QQueue<ActivityDetail> m_rxActivityQueue; // all rx activity queue
+  QQueue<CommandDetail> m_rxCommandQueue; // command queue for processing commands
+  QQueue<CallDetail> m_rxCallQueue; // call detail queue for spots to pskreporter
   QMap<QString, QString> m_compoundCallCache; // base callsign -> compound callsign
   QCache<QString, QDateTime> m_txAllcallCommandCache; // callsign -> last tx
   QCache<int, QDateTime> m_rxRecentCache; // freq -> last rx

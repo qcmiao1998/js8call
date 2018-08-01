@@ -3354,11 +3354,6 @@ void MainWindow::readFromStdout()                             //readFromStdout
 #if 1
           bool shouldProcessCompound = true;
           if(shouldProcessCompound && decodedtext.isCompoundMessage()){
-#if ALIAS_COMPOUND_CALLS
-            QString compoundCall = decodedtext.compoundCall();
-            m_compoundCallCache[Radio::base_callsign(compoundCall)] = compoundCall;
-#endif
-
             CallDetail cd;
             cd.call = decodedtext.compoundCall();
             cd.grid = decodedtext.extra(); // compound calls via beacons may contain grid...
@@ -3367,18 +3362,12 @@ void MainWindow::readFromStdout()                             //readFromStdout
             cd.utcTimestamp = QDateTime::currentDateTimeUtc();
             cd.bits = decodedtext.bits();
 
-            if(!decodedtext.isBeacon()){
+            if(decodedtext.isBeacon()){
+                logCallActivity(cd, true);
+            } else {
                 qDebug() << "buffering compound call" << cd.call << cd.bits;
                 m_messageBuffer[cd.freq/10*10].compound.append(cd);
             }
-            /*
-            // DISABLED FOR NOW...
-            else {
-                logCallActivity(cd);
-            }
-            */
-
-            //
           }
 #endif
 
@@ -3390,9 +3379,6 @@ void MainWindow::readFromStdout()                             //readFromStdout
               auto parts = decodedtext.directedMessage();
 
               CommandDetail d;
-#if ALIAS_COMPOUND_CALLS
-              d.from = lookupCallInCompoundCache(parts.at(0));
-#endif
               d.from = parts.at(0);
               d.to = parts.at(1);
               d.cmd = parts.at(2);
@@ -3632,7 +3618,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
 }
 
 
-void MainWindow::logCallActivity(CallDetail d){
+void MainWindow::logCallActivity(CallDetail d, bool spot){
     if(m_callActivity.contains(d.call)){
         // update (keep grid)
         CallDetail old = m_callActivity[d.call];
@@ -3643,6 +3629,11 @@ void MainWindow::logCallActivity(CallDetail d){
     } else {
         // create
         m_callActivity[d.call] = d;
+    }
+
+    // enqueue for spotting to psk reporter
+    if(spot){
+        m_rxCallQueue.append(d);
     }
 }
 
@@ -5595,6 +5586,7 @@ void MainWindow::clearActivity(){
     m_callSeenBeacon.clear();
     m_compoundCallCache.clear();
     m_rxCallCache.clear();
+    m_rxCallQueue.clear();
     m_rxRecentCache.clear();
     m_rxDirectedCache.clear();
     m_rxFrameBlockNumbers.clear();
@@ -8786,6 +8778,7 @@ void MainWindow::processCompoundActivity() {
         if (buffer.cmd.from == "<....>") {
             auto d = buffer.compound.dequeue();
             buffer.cmd.from = d.call;
+            buffer.cmd.grid = d.grid;
 
             if (d.bits == Varicode::FT8CallLast) {
                 buffer.cmd.bits = d.bits;
@@ -8899,16 +8892,19 @@ void MainWindow::processCommandActivity() {
         if (isAllCall && m_txAllcallCommandCache.contains(Radio::base_callsign(d.from)) && m_txAllcallCommandCache[Radio::base_callsign(d.from)]->secsTo(QDateTime::currentDateTimeUtc()) / 60 < m_config.beacon()) {
             continue;
         }
-
-        // TODO: jsherer - we need to queue these for later processing
-        // record the spot to PSKReporter
-        if (okToPost) {
-            pskSetLocal();
-            pskLogReport("FT8Call", d.freq, d.snr, d.from, "");
-        }
 #endif
 
-        // construct a reply
+        // log call activity...
+        CallDetail cd;
+        cd.call = d.from;
+        cd.grid = d.grid;
+        cd.snr = d.snr;
+        cd.freq = d.freq;
+        cd.bits = d.bits;
+        cd.utcTimestamp = d.utcTimestamp;
+        logCallActivity(cd, true);
+
+        // construct a reply, if needed
         QString reply;
 
         // QUERIED SNR
@@ -8991,10 +8987,7 @@ void MainWindow::processCommandActivity() {
                     return;
                 }
 
-#if 0
-                addMessageText(QString("%1 ACK").arg(d.from));
-                toggleTx(true);
-#endif
+                enqueueMessage(PriorityNormal, QString("%1 ACK").arg(d.from), d.freq, nullptr);
             });
 
             msgBox->show();
@@ -9008,9 +9001,8 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-
+        // queue the reply here to be sent when a free interval is available
         enqueueMessage(PriorityNormal, reply, d.freq, nullptr);
-
 
 #if 0
         addMessageText(reply);
@@ -9027,17 +9019,19 @@ void MainWindow::processCommandActivity() {
         processed = true;
 #endif
 
-        // TODO: jsherer - queue the reply here to be sent when a free interval is available
     }
-
-#if 0
-    if (processed && ui->autoReplyButton->isChecked()) {
-        toggleTx(true);
-    }
-#endif
 }
 
 void MainWindow::processSpots() {
+    if(!ui->spotButton->isChecked()){
+        m_rxCallQueue.clear();
+        return;
+    }
+
+    if(m_rxCallQueue.isEmpty()){
+        return;
+    }
+
     // Is it ok to post spots to PSKReporter?
     int nsec = QDateTime::currentMSecsSinceEpoch() / 1000 - m_secBandChanged;
     bool okToPost = (nsec > (4 * m_TRperiod) / 5);
@@ -9046,6 +9040,16 @@ void MainWindow::processSpots() {
     }
 
     // Process spots to be sent...
+    pskSetLocal();
+
+    while(!m_rxCallQueue.isEmpty()){
+        CallDetail d = m_rxCallQueue.dequeue();
+        if(d.call.isEmpty()){
+            continue;
+        }
+        qDebug() << "spotting call to psk reporter" << d.call << d.snr << d.freq;
+        pskLogReport("FT8Call", d.freq, d.snr, d.call, d.grid);
+    }
 }
 
 void MainWindow::processTxQueue(){
