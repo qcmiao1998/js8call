@@ -52,7 +52,6 @@ QMap<QString, int> directed_cmds = {
     // {"/",     9  }, // unused? (can we even use stroke?)
 
     // directed responses
-    {" BCN",  22  }, // beacon
     {" ACK",  23  }, // acknowledged
     {" PWR",  24  }, // power level
     {" SNR",  25  }, // seen a station at the provided snr
@@ -64,7 +63,7 @@ QMap<QString, int> directed_cmds = {
     {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 QSet<int> buffered_cmds = {6, 7};
 
