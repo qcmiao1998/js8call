@@ -1101,9 +1101,43 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   auto clearAction3 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetRXAll);
   connect(clearAction3, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetRXAll); });
-  ui->tableWidgetRXAll->setContextMenuPolicy(Qt::ActionsContextMenu);
-  ui->tableWidgetRXAll->addAction(clearAction3);
-  ui->tableWidgetRXAll->addAction(clearActionAll);
+
+  auto removeActivity = new QAction(QString("Remove Activity"), ui->tableWidgetRXAll);
+  connect(removeActivity, &QAction::triggered, this, [this](){
+      if(ui->tableWidgetRXAll->selectedItems().isEmpty()){
+          return;
+      }
+
+      auto selectedItems = ui->tableWidgetRXAll->selectedItems();
+      int selectedOffset = selectedItems.first()->text().toInt();
+
+      m_bandActivity.remove(selectedOffset);
+      displayActivity(true);
+  });
+
+
+  ui->tableWidgetRXAll->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->tableWidgetRXAll, &QTableWidget::customContextMenuRequested, this, [this, clearAction3, clearActionAll, removeActivity](QPoint const &point){
+    QMenu * menu = new QMenu(ui->tableWidgetRXAll);
+
+    int selectedOffset = -1;
+    if(!ui->tableWidgetRXAll->selectedItems().isEmpty()){
+        auto selectedItems = ui->tableWidgetRXAll->selectedItems();
+        selectedOffset = selectedItems.first()->text().toInt();
+    }
+
+    removeActivity->setDisabled(selectedOffset == -1);
+    menu->addAction(removeActivity);
+
+    menu->addSeparator();
+    menu->addAction(clearAction3);
+    menu->addAction(clearActionAll);
+
+    menu->popup(ui->tableWidgetRXAll->mapToGlobal(point));
+  });
+
+
+
 
   auto clearAction4 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetCalls);
   connect(clearAction4, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetCalls); });
