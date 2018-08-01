@@ -3445,22 +3445,25 @@ void MainWindow::readFromStdout()                             //readFromStdout
 #endif
 
           // Parse CQs
-#if 0
-          bool shouldParseCQs = false;
-          if(shouldParseCQs){
-              QString cqCall = decodedtext.CQersCall();
-              if(!cqCall.isEmpty()){
-                QString theircall;
-                QString theirgrid;
-                decodedtext.deCallAndGrid(/*out*/theircall,theirgrid);
+#if 1
+          bool shouldParseCQs = true;
+          if(shouldParseCQs && decodedtext.isStandardMessage()){
+            QString theircall;
+            QString theirgrid;
+            decodedtext.deCallAndGrid(theircall, theirgrid);
+
+            QStringList calls = Varicode::parseCallsigns(theircall);
+            if(!calls.isEmpty() && !calls.first().isEmpty()){
+                theircall = calls.first();
 
                 CallDetail d;
+                d.bits = decodedtext.bits();
                 d.call = theircall;
                 d.grid = theirgrid;
                 d.snr = decodedtext.snr();
                 d.freq = decodedtext.frequencyOffset();
                 d.utcTimestamp = QDateTime::currentDateTimeUtc();
-                m_callActivity[Radio::base_callsign(cqCall)] = d; // original call is stored in CallDetail.
+                m_callActivity[d.call] = d;
               }
           }
 #endif
@@ -7646,10 +7649,6 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
         if(activityAging && d.utcTimestamp.secsTo(now)/60 >= activityAging){
             continue;
         }
-        // TODO: jsherer - still ok to skip these here?
-        if(d.isCompound){
-            continue;
-        }
         if(activityText.isEmpty()){
             firstActivity = d.utcTimestamp;
         }
@@ -8627,7 +8626,9 @@ QString MainWindow::callsignSelected(){
         auto selectedCalls = ui->tableWidgetCalls->selectedItems();
         if(!selectedCalls.isEmpty()){
             auto call = selectedCalls.first()->data(Qt::UserRole).toString();
-            return Radio::base_callsign(call);
+            if(!call.isEmpty()){
+                return call;
+            }
         }
     }
 
@@ -8638,12 +8639,12 @@ QString MainWindow::callsignSelected(){
         foreach(auto call, m_callActivity.keys()){
             auto d = m_callActivity[call];
             if(d.freq == selectedOffset){
-                return call;
+                return d.call;
             }
         }
     }
 
-    auto text = ui->extFreeTextMsgEdit->toPlainText().left(11);
+    auto text = ui->extFreeTextMsgEdit->toPlainText().left(11); // Maximum callsign is 6 + / + 4 = 11 characters
     auto calls = Varicode::parseCallsigns(text);
     if(!calls.isEmpty() && text.startsWith(calls.first())){
         return calls.first();
@@ -8713,11 +8714,6 @@ void MainWindow::processRxActivity() {
 
         int freq = d.freq / 10 * 10;
 
-        // TODO: jsherer - is it safe to just ignore printing these?
-        if (d.isCompound) {
-            continue;
-        }
-
         bool shouldDisplay = abs(freq - currentFreq()) <= 10;
 
         if(isRecentOffset(freq) || isAllCallIncluded(d.text)){
@@ -8736,17 +8732,14 @@ void MainWindow::processRxActivity() {
 
         // ok, we're good to display...let's cache that fact and then display!
         bool isLast = d.bits == Varicode::FT8CallLast;
-
         if (isLast) {
             // can also use \u0004 \u2666 \u2404
             d.text = QString("%1 \u2301 ").arg(d.text);
         }
 
-        int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
-
         // log it to the display!
+        int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
         m_rxFrameBlockNumbers[freq] = logRxTxMessageText(d.utcTimestamp, d.text, d.freq, false, block);
-
         if (isLast) {
             m_rxFrameBlockNumbers.remove(freq);
         }
