@@ -28,12 +28,12 @@
 #include "varicode.h"
 
 const int nalphabet = 41;
-QString alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-./?"};
+QString alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-./?"}; // alphabet to encode _into_ for FT8 freetext transmission
 QString grid_pattern = {R"((?<grid>[A-R]{2}[0-9]{2})+)"};
 QString orig_compound_callsign_pattern = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){2,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
 QString compound_callsign_pattern = {R"((?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
 QString pack_callsign_pattern = {R"(([0-9A-Z ])([0-9A-Z])([0-9])([A-Z ])([A-Z ])([A-Z ]))"};
-QString callsign_alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "};
+QString alphanumeric = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "}; // callsign and grid alphabet
 
 QMap<QString, int> directed_cmds = {
     // any changes here need to be made also in the directed regular xpression for parsing
@@ -299,6 +299,8 @@ QChar ESC = '\\';   // Escape char
 QChar EOT = '\x04'; // EOT char
 
 quint32 nbasecall = 37 * 36 * 10 * 27 * 27 * 27;
+quint16 nbasegrid = 180 * 180;
+quint16 nmaxgrid  = (1<<15)-1;
 
 QMap<QString, quint32> basecalls = {
     { "<....>",  nbasecall + 1 }, // incomplete callsign
@@ -730,28 +732,49 @@ QString Varicode::pack64bits(quint64 packed){
 //     //
 
 
-// pack a 4-digit alpha-numeric callsign prefix/suffix into a 22 bit value
-quint32 Varicode::packCallsignPrefixSuffix(QString const& value){
-    quint8 mask6 = (1<<6)-1;
-
-    QString prefix = QString(value).replace(QRegExp("[^A-Z0-9]"), "");
-    if(prefix.length() < 4){
-        prefix = prefix + QString(".").repeated(4-prefix.length());
+// pack a 4-digit alpha-numeric + space into a 22 bit value
+// 21 bits for the data + 1 bit for a flag indicator
+// giving us a total of 5.5 bits per character
+quint32 Varicode::packAlphaNumeric22(QString const& value, bool isFlag){
+    QString word = QString(value).replace(QRegExp("[^A-Z0-9]"), "");
+    if(word.length() < 4){
+        word = word + QString(" ").repeated(4-word.length());
     }
 
-    // [16][6] = 22 bits
-    auto left = prefix.left(3);
-    auto right = prefix.right(1); // guaranteed to be in our alphabet...
+    quint32 a = 37 * 37 * 37 * alphanumeric.indexOf(word.at(0));
+    quint32 b = 37 * 37 * alphanumeric.indexOf(word.at(1));
+    quint32 c = 37 * alphanumeric.indexOf(word.at(2));
+    quint32 d = alphanumeric.indexOf(word.at(3));
 
-    return ((quint32)Varicode::unpack16bits(left) << 6) | (Varicode::unpack6bits(right) & mask6);
+    quint32 packed = a + b + c + d;
+    packed = (packed << 1) + (int)isFlag;
+
+    return packed;
 }
 
-QString Varicode::unpackCallsignPrefixSuffix(quint32 packed){
-    quint32 mask22 = ((1<<16)-1) << 6;
-    quint32 mask6 = ((1<<6)-1);
-    quint16 a = (packed & mask22) >> 6;
-    quint16 b = packed & mask6 ;
-    return QString(Varicode::pack16bits(a) + Varicode::pack6bits(b)).replace(".", "");
+QString Varicode::unpackAlphaNumeric22(quint32 packed, bool *isFlag){
+    QChar word[4];
+
+    if(isFlag) *isFlag = packed & 1;
+    packed = packed >> 1;
+
+    quint32 tmp = packed % 37;
+    word[3] = alphanumeric.at(tmp);
+    packed = packed / 37;
+
+    tmp = packed % 37;
+    word[2] = alphanumeric.at(tmp);
+    packed = packed / 37;
+
+    tmp = packed % 37;
+    word[1] = alphanumeric.at(tmp);
+    packed = packed / 37;
+
+    tmp = packed % 37;
+    word[0] = alphanumeric.at(tmp);
+    packed = packed / 37;
+
+    return QString(word, 4);
 }
 
 // pack a callsign into a 28-bit value
@@ -815,12 +838,12 @@ quint32 Varicode::packCallsign(QString const& value){
         return packed;
     }
 
-    packed = callsign_alphabet.indexOf(matched.at(0));
-    packed = 36*packed + callsign_alphabet.indexOf(matched.at(1));
-    packed = 10*packed + callsign_alphabet.indexOf(matched.at(2));
-    packed = 27*packed + callsign_alphabet.indexOf(matched.at(3)) - 10;
-    packed = 27*packed + callsign_alphabet.indexOf(matched.at(4)) - 10;
-    packed = 27*packed + callsign_alphabet.indexOf(matched.at(5)) - 10;
+    packed = alphanumeric.indexOf(matched.at(0));
+    packed = 36*packed + alphanumeric.indexOf(matched.at(1));
+    packed = 10*packed + alphanumeric.indexOf(matched.at(2));
+    packed = 27*packed + alphanumeric.indexOf(matched.at(3)) - 10;
+    packed = 27*packed + alphanumeric.indexOf(matched.at(4)) - 10;
+    packed = 27*packed + alphanumeric.indexOf(matched.at(5)) - 10;
 
     return packed;
 }
@@ -834,27 +857,27 @@ QString Varicode::unpackCallsign(quint32 value){
 
     QChar word[6];
     quint32 tmp = value % 27 + 10;
-    word[5] = callsign_alphabet.at(tmp);
+    word[5] = alphanumeric.at(tmp);
     value = value/27;
 
     tmp = value % 27 + 10;
-    word[4] = callsign_alphabet.at(tmp);
+    word[4] = alphanumeric.at(tmp);
     value = value/27;
 
     tmp = value % 27 + 10;
-    word[3] = callsign_alphabet.at(tmp);
+    word[3] = alphanumeric.at(tmp);
     value = value/27;
 
     tmp = value % 10;
-    word[2] = callsign_alphabet.at(tmp);
+    word[2] = alphanumeric.at(tmp);
     value = value/10;
 
     tmp = value % 36;
-    word[1] = callsign_alphabet.at(tmp);
+    word[1] = alphanumeric.at(tmp);
     value = value/36;
 
     tmp = value;
-    word[0] = callsign_alphabet.at(tmp);
+    word[0] = alphanumeric.at(tmp);
 
     QString callsign(word, 6);
     if(callsign.startsWith("3D0")){
@@ -929,7 +952,7 @@ QPair<float, float> grid2deg(QString const &grid){
 // pack a 4-digit maidenhead grid locator into a 15-bit value
 quint16 Varicode::packGrid(QString const& grid){
     // TODO: validate grid...
-    if(grid.length() < 4){
+    if(grid.length() < 4){      
         return (1<<15)-1;
     }
 
@@ -1011,7 +1034,7 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
         fix = parsedCall.captured("suffix");
     }
 
-    quint16 packed_extra = 180*180 + 1; // maximum grid + 1 (which will display an empty string)
+    quint16 packed_extra = nmaxgrid; // which will display an empty string
     if(extra.length() == 4 && QRegularExpression(grid_pattern).match(extra).hasMatch()){
         packed_extra = Varicode::packGrid(extra);
     }
@@ -1045,15 +1068,9 @@ QStringList Varicode::unpackBeaconMessage(const QString &text, bool *isBeacon, b
 QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix,  bool isBeacon, quint16 num){
     QString frame;
 
-    quint8 packed_flag = 0;
-    if(isBeacon){
-        packed_flag = isPrefix ? FrameBeaconPrefix : FrameBeaconSuffix;
-    } else {
-        packed_flag = isPrefix ? FrameCompoundPrefix : FrameCompoundSuffix;
-    }
-
+    quint8 packed_flag = isBeacon ? FrameBeacon : FrameCompound;
     quint32 packed_base = Varicode::packCallsign(baseCallsign);
-    quint32 packed_fix = Varicode::packCallsignPrefixSuffix(fix);
+    quint32 packed_fix = Varicode::packAlphaNumeric22(fix, isPrefix);
 
     if(packed_base == 0 || packed_fix == 0){
         return frame;
@@ -1087,35 +1104,33 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, bool *isBeacon, q
     auto bits = Varicode::bitsToStr(Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64));
     quint8 packed_5 = Varicode::unpack5bits(text.right(1));
 
-    bool is_prefix = false;
-    bool is_suffix = false;
     quint8 packed_flag = Varicode::bitsToInt(Varicode::strToBits(bits.left(3)));
-    if(packed_flag == FrameBeaconPrefix || packed_flag == FrameCompoundPrefix){
-        is_prefix = true;
-    } else if (packed_flag == FrameBeaconSuffix || packed_flag == FrameCompoundSuffix){
-        is_suffix = true;
-    } else {
+    if(packed_flag != FrameBeacon && packed_flag != FrameCompound){
         return unpacked;
     }
+
 
     quint32 packed_base = Varicode::bitsToInt(Varicode::strToBits(bits.mid(3, 28)));
     quint32 packed_fix = Varicode::bitsToInt(Varicode::strToBits(bits.mid(31, 22)));
     quint16 packed_11 = Varicode::bitsToInt(Varicode::strToBits(bits.mid(53, 11)));
 
     QString base = Varicode::unpackCallsign(packed_base).trimmed();
-    QString fix = Varicode::unpackCallsignPrefixSuffix(packed_fix);
+
+    bool isPrefix = false;
+    QString fix = Varicode::unpackAlphaNumeric22(packed_fix, &isPrefix).trimmed();
+
     quint16 num = (packed_11 << 5) | packed_5;
 
     if(pNum) *pNum = num;
-    if(isBeacon) *isBeacon = packed_flag == FrameBeaconPrefix || packed_flag == FrameBeaconSuffix;
+    if(isBeacon) *isBeacon = packed_flag == FrameBeacon;
 
-    if(is_prefix){
+    if(isPrefix){
         unpacked.append(fix);
     }
 
     unpacked.append(base);
 
-    if(is_suffix){
+    if(!isPrefix){
         unpacked.append(fix);
     }
 

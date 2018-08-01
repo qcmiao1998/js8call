@@ -1263,6 +1263,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   qDebug() << packed << Varicode::unpackBeaconMessage(packed, &isCQ) << isCQ;
 
   m_valid = false;
+
+  bool isPrefix = false;
+  qDebug() << Varicode::packCallsignPrefixSuffix("VE3", true) << Varicode::unpackCallsignPrefixSuffix(Varicode::packCallsignPrefixSuffix("VE3", true), &isPrefix) << isPrefix;
 #endif
 
   // this must be the last statement of constructor
@@ -8990,7 +8993,11 @@ void MainWindow::processCommandActivity() {
                 }
 
                 auto d = m_callActivity[call];
-                lines.append(QString("%1 SNR %2").arg(d.call).arg(Varicode::formatSNR(d.snr)));
+
+
+                //lines.append(QString("%1 SNR %2").arg(d.call).arg(Varicode::formatSNR(d.snr)));
+
+
                 i++;
             }
             reply = lines.join('\n');

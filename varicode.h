@@ -27,14 +27,14 @@ public:
     };
 
     enum FrameType {
-        FrameBeaconPrefix     = 0, // [000]
-        FrameBeaconSuffix     = 1, // [001]
-        FrameCompoundPrefix   = 2, // [010]
-        FrameCompoundSuffix   = 3, // [011]
-        FrameDirectedPositive = 4, // [100]
-        FrameDirectedNegative = 5, // [101]
-        FrameDataUnpadded     = 6, // [110]
-        FrameDataPadded       = 7, // [111]
+        FrameBeacon           = 0, // [000]
+        FrameCompound         = 1, // [001]
+        FrameDirectedPositive = 2, // [010]
+        FrameDirectedNegative = 3, // [011]
+        FrameDataUnpadded     = 4, // [100]
+        FrameDataPadded       = 5, // [101]
+        FrameReservedA        = 6, // [110]
+        FrameReservedB        = 7, // [111]
     };
 
     //Varicode();
@@ -83,8 +83,8 @@ public:
     static quint64 unpack64bits(QString const& value);
     static QString pack64bits(quint64 packed);
 
-    static quint32 packCallsignPrefixSuffix(QString const& value);
-    static QString unpackCallsignPrefixSuffix(quint32 packed);
+    static quint32 packAlphaNumeric22(QString const& value, bool isFlag);
+    static QString unpackAlphaNumeric22(quint32 packed, bool *isFlag);
 
     static quint32 packCallsign(QString const& value);
     static QString unpackCallsign(quint32 value);
