@@ -254,19 +254,21 @@ namespace
   QString rstrip(const QString& str) {
     int n = str.size() - 1;
     for (; n >= 0; --n) {
-      if (!str.at(n).isSpace()) {
-        return str.left(n + 1);
+      if (str.at(n).isSpace()) {
+          continue;
       }
+      return str.left(n + 1);
     }
     return "";
   }
 
   QString lstrip(const QString& str) {
-    int len = str.size() - 1;
+    int len = str.size();
     for (int n = 0; n < len; n++) {
-      if (!str.at(n).isSpace()) {
+        if(str.at(n).isSpace()){
+            continue;
+        }
         return str.mid(n);
-      }
     }
     return "";
   }
@@ -6009,12 +6011,18 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
 
               // generate a checksum for buffered commands with line data
               if(Varicode::isCommandBuffered(dirCmd) && !line.isEmpty()){
+                  qDebug() << "generating checksum for line" << line << line.mid(1);
+
                   // strip leading whitespace after a buffered directed command
                   line = lstrip(line);
-                  // TODO: jsherer - this is how we can add 16-bit checksum to the message, just encode it in the data...
-                  qDebug() << "generating checksum for line" << line;
-                  line = line + " " + Varicode::checksum16(line);
-                  qDebug() << line;
+
+                  qDebug() << "before:" << line;
+                  if(dirCmd == "#"){
+                    line = line + " " + Varicode::checksum32(line);
+                  } else {
+                    line = line + " " + Varicode::checksum16(line);
+                  }
+                  qDebug() << "after:" << line;
               }
           }
 
@@ -8889,10 +8897,21 @@ void MainWindow::processBufferedActivity() {
         }
         message = rstrip(message);
 
-        QString checksum = message.right(3);
-        message = message.left(message.length() - 4);
+        QString checksum;
 
-        if (Varicode::checksum16Valid(checksum, message)) {
+        bool valid = false;
+
+        if(buffer.cmd.cmd == "#"){
+            checksum = message.right(6);
+            message = message.left(message.length() - 7);
+            valid = Varicode::checksum32Valid(checksum, message);
+        } else {
+            checksum = message.right(3);
+            message = message.left(message.length() - 4);
+            valid = Varicode::checksum16Valid(checksum, message);
+        }
+
+        if (valid) {
             buffer.cmd.text = message;
             buffer.cmd.isBuffered = true;
             m_rxCommandQueue.append(buffer.cmd);

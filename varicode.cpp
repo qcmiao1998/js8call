@@ -47,9 +47,10 @@ QMap<QString, int> directed_cmds = {
     {"%",     5  }, // query pwr
     {"|",     6  }, // relay message?
     {"!",     7  }, // alert message?
+    {"#",     8  }, // all or nothing message
 
-    // {"=",     8  }, // unused? (can we even use equals?)
-    // {"/",     9  }, // unused? (can we even use stroke?)
+    // {"=",     9  }, // unused? (can we even use equals?)
+    // {"/",     10  }, // unused? (can we even use stroke?)
 
     // directed responses
     {" ACK",  23  }, // acknowledged
@@ -63,13 +64,13 @@ QMap<QString, int> directed_cmds = {
     {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 8, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
-QSet<int> buffered_cmds = {6, 7};
+QSet<int> buffered_cmds = {6, 7, 8};
 
 QRegularExpression directed_re("^"
                                "(?<to>[A-Z0-9/]+)"
-                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|PWR|ACK|[?@&$^%|! ]))"
+                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|PWR|ACK|[?@&$^%|!# ]))"
                                "(?<pwr>\\s?\\d+\\s?[KM]?W)?"
                                "(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?"
                                );
