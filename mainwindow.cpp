@@ -5985,7 +5985,7 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
               // to compound callsign
               if(!dirTo.isEmpty()){
                   if(dirTo.contains("/")){
-                      QString compoundMessage = QString("TO");
+                      QString compoundMessage = QString("CALL");
                       QString beaconFrame = Varicode::packBeaconMessage(compoundMessage, dirTo, nullptr);
                       if(!beaconFrame.isEmpty()){
                           frames.append(beaconFrame);
@@ -6016,7 +6016,7 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
 #if 1
     qDebug() << "parsed frames:";
     foreach(auto frame, frames){
-        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame) << Varicode::unpackDirectedMessage(frame) << Varicode::unpackCompoundFrame(frame, nullptr, nullptr) << Varicode::unpackBeaconMessage(frame, nullptr, nullptr);
+        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame) << Varicode::unpackDirectedMessage(frame) << Varicode::unpackCompoundFrame(frame, nullptr, nullptr) << Varicode::unpackBeaconMessage(frame, nullptr);
     }
 #endif
 
@@ -9022,11 +9022,13 @@ void MainWindow::processCommandActivity() {
 
                 auto d = m_callActivity[call];
 
-                lines.append(QString("%1 SNR %2").arg(d.call).arg(Varicode::formatSNR(d.snr)));
+                lines.append(QString("%1 %2").arg(d.call).arg(Varicode::formatSNR(d.snr)));
 
                 i++;
             }
-            reply = lines.join('\n');
+
+            lines.prepend(QString("%1 ACK %2\n").arg(d.from).arg(i));
+            reply = lines.join(' ');
         }
         // PROCESS RETRANSMIT
         else if (d.cmd == "|" && !isAllCall) {

@@ -100,9 +100,8 @@ bool DecodedText::tryUnpackBeacon(){
       return false;
     }
 
-    bool isBeacon = false;
     bool isAlt = false;
-    QStringList parts = Varicode::unpackBeaconMessage(m, &isBeacon, &isAlt);
+    QStringList parts = Varicode::unpackBeaconMessage(m, &isAlt);
 
     if(parts.isEmpty() || parts.length() < 2){
       return false;
@@ -112,9 +111,7 @@ bool DecodedText::tryUnpackBeacon(){
     // ---------------
     // 1      0   BCN
     // 1      1   CQ
-    // 0      0   DE
-    // 0      1   TO
-    isBeacon_ = isBeacon;
+    isBeacon_ = true;
     isAlt_ = isAlt;
     extra_ = parts.at(2);
 
@@ -126,20 +123,7 @@ bool DecodedText::tryUnpackBeacon(){
         cmp.append(parts.at(1));
     }
     compound_ = cmp.join("/");
-
-    // BCN|CQ
-    if(isBeacon){
-        message_ = QString("%1: %2 %3 ").arg(compound_).arg(isAlt ? "CQ" : "BCN").arg(extra_);
-    } else {
-        // :TO
-        if(isAlt){
-            message_ = QString("%1").arg(compound_);
-        }
-        // DE:
-        else {
-            message_ = QString("%1: ").arg(compound_);
-        }
-    }
+    message_ = QString("%1: ALLCALL %2 %3 ").arg(compound_).arg(isAlt ? "CQ" : "BCN").arg(extra_);
 
     return true;
 }

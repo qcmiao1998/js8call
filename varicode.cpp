@@ -988,7 +988,7 @@ bool Varicode::isCommandBuffered(const QString &cmd){
 QString Varicode::packBeaconMessage(QString const &text, const QString &callsign, int *n){
     QString frame;
 
-    auto parsedText = QRegularExpression(R"(^(?<type>BCN|CQ|DE|TO)(?:\s(?<grid>[A-Z]{2}[0-9]{2}))?\b)").match(text);
+    auto parsedText = QRegularExpression(R"(^ALLCALL\s(?<type>CQ|BCN)(?:\s(?<grid>[A-Z]{2}[0-9]{2}))?\b)").match(text);
     if(!parsedText.hasMatch()){
         if(n) *n = 0;
         return frame;
@@ -996,25 +996,13 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
 
     auto extra = parsedText.captured("grid");
 
-    /*
-    if(extra.isEmpty()){
-        if(n) *n = 0;
-        return frame;
-    }
-    */
-
     // Beacon Alt Type
     // ---------------
     // 1      0   BCN
     // 1      1   CQ
-    // 0      0   DE
-    // 0      1   TO
 
     auto type = parsedText.captured("type");
-    auto isBeacon = type == "BCN" || type == "CQ";
-    auto isAlt = type == "CQ" || type == "TO";
-    auto isDe = type == "DE";
-    Q_UNUSED(isDe);
+    auto isAlt = type == "CQ";
 
     auto parsedCall = QRegularExpression(compound_callsign_pattern).match(callsign);
     if(!parsedCall.hasMatch()){
@@ -1043,7 +1031,8 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
         packed_extra |= (1<<15);
     }
 
-    frame = packCompoundFrame(base, fix, isPrefix, isBeacon, packed_extra);
+
+    frame = packCompoundFrame(base, fix, isPrefix, FrameBeacon, packed_extra);
     if(frame.isEmpty()){
         if(n) *n = 0;
         return frame;
@@ -1053,22 +1042,31 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
     return frame;
 }
 
-QStringList Varicode::unpackBeaconMessage(const QString &text, bool *isBeacon, bool * isAlt){
+QStringList Varicode::unpackBeaconMessage(const QString &text, bool * isAlt){
+    quint8 type = 0;
     quint16 num = 0;
 
-    QStringList unpacked = unpackCompoundFrame(text, isBeacon, &num);
-
-    if(isAlt) *isAlt = (num & (1<<15));
+    QStringList unpacked = unpackCompoundFrame(text, &type, &num);
+    if(unpacked.isEmpty()){
+        return unpacked;
+    }
 
     unpacked.append(Varicode::unpackGrid(num & ((1<<15)-1)));
+
+    if(isAlt) *isAlt = (num & (1<<15));
 
     return unpacked;
 }
 
-QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix,  bool isBeacon, quint16 num){
+QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, quint8 type, quint16 num){
     QString frame;
 
-    quint8 packed_flag = isBeacon ? FrameBeacon : FrameCompound;
+    // needs to be a beacon type...
+    if(type == FrameDataPadded || type == FrameDataUnpadded || type == FrameDirectedPositive || type == FrameDirectedNegative){
+        return frame;
+    }
+
+    quint8 packed_flag = type;
     quint32 packed_base = Varicode::packCallsign(baseCallsign);
     quint32 packed_fix = Varicode::packAlphaNumeric22(fix, isPrefix);
 
@@ -1083,6 +1081,12 @@ QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &
     quint8 packed_5 = num & mask5;
 
     // [3][28][22][11],[5] = 69
+    /*
+    if(extra.isEmpty()){
+        if(n) *n = 0;
+        return frame;
+    }
+    */
     auto bits = (
         Varicode::intToBits(packed_flag,  3) +
         Varicode::intToBits(packed_base, 28) +
@@ -1093,7 +1097,7 @@ QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &
     return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_5 % 32);
 }
 
-QStringList Varicode::unpackCompoundFrame(const QString &text, bool *isBeacon, quint16 *pNum){
+QStringList Varicode::unpackCompoundFrame(const QString &text, quint8 *pType, quint16 *pNum){
     QStringList unpacked;
 
     if(text.length() < 13 || text.contains(" ")){
@@ -1105,7 +1109,9 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, bool *isBeacon, q
     quint8 packed_5 = Varicode::unpack5bits(text.right(1));
 
     quint8 packed_flag = Varicode::bitsToInt(Varicode::strToBits(bits.left(3)));
-    if(packed_flag != FrameBeacon && packed_flag != FrameCompound){
+
+    // needs to be a beacon type...
+    if(packed_flag == FrameDataPadded || packed_flag == FrameDataUnpadded || packed_flag == FrameDirectedPositive || packed_flag == FrameDirectedNegative){
         return unpacked;
     }
 
@@ -1120,8 +1126,8 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, bool *isBeacon, q
 
     quint16 num = (packed_11 << 5) | packed_5;
 
+    if(pType) *pType = packed_flag;
     if(pNum) *pNum = num;
-    if(isBeacon) *isBeacon = packed_flag == FrameBeacon;
 
     if(isPrefix){
         unpacked.append(fix);
