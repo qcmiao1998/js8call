@@ -1109,7 +1109,6 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, bool *isBeacon, q
         return unpacked;
     }
 
-
     quint32 packed_base = Varicode::bitsToInt(Varicode::strToBits(bits.mid(3, 28)));
     quint32 packed_fix = Varicode::bitsToInt(Varicode::strToBits(bits.mid(31, 22)));
     quint16 packed_11 = Varicode::bitsToInt(Varicode::strToBits(bits.mid(53, 11)));

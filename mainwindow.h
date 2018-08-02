@@ -669,6 +669,8 @@ private:
 
   struct CommandDetail
   {
+    bool isCompound;
+    bool isBuffered;
     QString from;
     QString to;
     QString cmd;
@@ -685,6 +687,7 @@ private:
     bool isFree;
     bool isLowConfidence;
     bool isCompound;
+    bool isDirected;
     int bits;
     int freq;
     QString text;

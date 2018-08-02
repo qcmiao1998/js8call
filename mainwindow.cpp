@@ -3366,6 +3366,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.isLowConfidence = decodedtext.isLowConfidence();
             d.isFree = !decodedtext.isStandardMessage();
             d.isCompound = decodedtext.isCompoundMessage();
+            d.isDirected = decodedtext.isDirectedMessage();
             d.bits = decodedtext.bits();
             d.freq = offset;
             d.text = decodedtext.message();
@@ -6125,12 +6126,15 @@ bool MainWindow::prepareNextMessageFrame()
 }
 
 bool MainWindow::isFreqOffsetFree(int f, int bw){
-    foreach(int offset, m_bandActivity.keys()){
+    // TODO: jsherer - figure out a better way to determine if the frequency is suitable for tx
 
+#if 0
+    foreach(int offset, m_bandActivity.keys()){
         if(qAbs(offset - f) < bw){
             return false;
         }
     }
+#endif
 
     return true;
 }
@@ -8741,6 +8745,12 @@ void MainWindow::processRxActivity() {
     while (!m_rxActivityQueue.isEmpty()) {
         ActivityDetail d = m_rxActivityQueue.dequeue();
 
+        // if this is a compound message or it's a directed message needing a compound call, skip.
+        // these messages will be displayed when the compound calls come through
+        if(d.isCompound || (d.isDirected && d.text.contains("<....>"))){
+            continue;
+        }
+
         int freq = d.freq / 10 * 10;
 
         bool shouldDisplay = abs(freq - currentFreq()) <= 10;
@@ -8816,6 +8826,7 @@ void MainWindow::processCompoundActivity() {
             auto d = buffer.compound.dequeue();
             buffer.cmd.from = d.call;
             buffer.cmd.grid = d.grid;
+            buffer.cmd.isCompound = true;
 
             if (d.bits == Varicode::FT8CallLast) {
                 buffer.cmd.bits = d.bits;
@@ -8825,6 +8836,7 @@ void MainWindow::processCompoundActivity() {
         if (buffer.cmd.to == "<....>") {
             auto d = buffer.compound.dequeue();
             buffer.cmd.to = d.call;
+            buffer.cmd.isCompound = true;
 
             if (d.bits == Varicode::FT8CallLast) {
                 buffer.cmd.bits = d.bits;
@@ -8870,6 +8882,7 @@ void MainWindow::processBufferedActivity() {
 
         if (Varicode::checksum16Valid(checksum, message)) {
             buffer.cmd.text = message;
+            buffer.cmd.isBuffered = true;
             m_rxCommandQueue.append(buffer.cmd);
         } else {
             qDebug() << "Buffered message failed checksum...discarding";
@@ -8931,6 +8944,20 @@ void MainWindow::processCommandActivity() {
         }
 #endif
 
+#if 0
+        if(d.isCompound){
+            // this is a command with a compound call... we need to log it to the rx activity!
+            ActivityDetail ad;
+            ad.bits = d.bits;
+            ad.freq = d.freq;
+            ad.isDirected = true;
+            ad.snr = d.snr;
+            ad.text = QString("%1: %2%3 %4 %5 ").arg(d.from).arg(d.to).arg(d.cmd).arg(d.grid).arg(d.text);
+            ad.utcTimestamp = d.utcTimestamp;
+            m_bandActivity[d.freq].append(ad);
+        }
+#endif
+
         // log call activity...
         CallDetail cd;
         cd.call = d.from;
@@ -8987,6 +9014,7 @@ void MainWindow::processCommandActivity() {
             });
 
             QStringList lines;
+
             foreach(auto call, calls) {
                 if (i >= maxStations) {
                     break;
@@ -8994,9 +9022,7 @@ void MainWindow::processCommandActivity() {
 
                 auto d = m_callActivity[call];
 
-
-                //lines.append(QString("%1 SNR %2").arg(d.call).arg(Varicode::formatSNR(d.snr)));
-
+                lines.append(QString("%1 SNR %2").arg(d.call).arg(Varicode::formatSNR(d.snr)));
 
                 i++;
             }
@@ -9204,6 +9230,12 @@ void MainWindow::displayBandActivity() {
                 if (item.text.isEmpty()) {
                     continue;
                 }
+#if 0
+                if (item.isCompound || (item.isDirected && item.text.contains("<....>"))){
+                    //continue;
+                    item.text = "[...]";
+                }
+#endif
                 if (item.isLowConfidence) {
                     item.text = QString("[%1]").arg(item.text);
                 }
