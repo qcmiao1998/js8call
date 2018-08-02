@@ -8788,6 +8788,9 @@ void MainWindow::processRxActivity() {
 
         bool shouldDisplay = abs(freq - currentFreq()) <= 10;
 
+
+        // TODO: jsherer - develop a better way to determine if we can display this band activity...
+#if 0
         if(isRecentOffset(freq) || isAllCallIncluded(d.text)){
             m_rxRecentCache.insert(freq, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
             shouldDisplay = true;
@@ -8797,6 +8800,7 @@ void MainWindow::processRxActivity() {
             m_rxDirectedCache.insert(freq, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
             shouldDisplay = true;
         }
+#endif
 
         if(!shouldDisplay){
             continue;
