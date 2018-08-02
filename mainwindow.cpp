@@ -5996,8 +5996,6 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
                   }
               }
 
-              frames.append(frame);
-
               // to compound callsign
               if(!dirTo.isEmpty() && dirTo.contains("/")){
                   QString compoundMessage = QString("<%1>").arg(dirTo);
@@ -6006,6 +6004,8 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
                       frames.append(compoundFrame);
                   }
               }
+
+              frames.append(frame);
 
               line = line.mid(n);
 
@@ -6017,7 +6017,8 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
                   line = lstrip(line);
 
                   qDebug() << "before:" << line;
-                  if(dirCmd == "#"){
+                  bool shouldUseLargeChecksum = false;
+                  if(shouldUseLargeChecksum && dirCmd == "#"){
                     line = line + " " + Varicode::checksum32(line);
                   } else {
                     line = line + " " + Varicode::checksum16(line);
@@ -7535,6 +7536,18 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
+    auto hashAction = menu->addAction("#message - Please ACK if you receive this message in its entirety");
+    hashAction->setDisabled(isAllCall);
+    connect(hashAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1#").arg(selectedCall), true);
+    });
+
     auto retransmitAction = menu->addAction("|message - Please ACK and retransmit the following message");
     retransmitAction->setDisabled(isAllCall);
     connect(retransmitAction, &QAction::triggered, this, [this](){
@@ -8901,7 +8914,8 @@ void MainWindow::processBufferedActivity() {
 
         bool valid = false;
 
-        if(buffer.cmd.cmd == "#"){
+        bool shouldUseLargeChecksum = false;
+        if(shouldUseLargeChecksum && buffer.cmd.cmd == "#"){
             checksum = message.right(6);
             message = message.left(message.length() - 7);
             valid = Varicode::checksum32Valid(checksum, message);
@@ -9007,7 +9021,7 @@ void MainWindow::processCommandActivity() {
             reply = QString("%1 SNR %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
         }
         // QUERIED ACK
-        //else if(d.cmd == "#"){
+        //else if(d.cmd == "^"){
         //    reply = QString("%1 ACK").arg(Radio::base_callsign(d.from));
         //}
         // QUERIED PWR
@@ -9060,6 +9074,11 @@ void MainWindow::processCommandActivity() {
 
             lines.prepend(QString("%1 ACK %2\n").arg(d.from).arg(i));
             reply = lines.join(' ');
+        }
+        // PROCESS MESSAGE ACK
+        else if (d.cmd == "^" && !isAllCall) {
+            // TODO: jsherer - perhaps parse d.text and ensure it is a valid message as well as prefix it with our call...
+            reply = QString("%1 ACK").arg(d.from);
         }
         // PROCESS RETRANSMIT
         else if (d.cmd == "|" && !isAllCall) {
