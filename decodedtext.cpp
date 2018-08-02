@@ -17,47 +17,42 @@ namespace
 
 DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString const& my_grid)
   : string_ {the_string.left (the_string.indexOf (QChar::Nbsp))} // discard appended info
-  , padding_ {string_.indexOf (" ") > 4 ? 2 : 0} // allow for
-                                                    // seconds
+  , padding_ {string_.indexOf (" ") > 4 ? 2 : 0} // allow for seconds
   , contest_mode_ {contest_mode}
   , message_ {string_.mid (column_qsoText + padding_).trimmed ()}
   , is_standard_ {false}
 {
-  if (message_.length() >= 1)
-    {
-      message_ = message_.left (21).remove (QRegularExpression {"[<>]"});
-      int i1 = message_.indexOf ('\r');
-      if (i1 > 0)
-        {
-          message_ = message_.left (i1 - 1);
+    if(message_.length() >= 1) {
+        message_ = message_.left (21).remove (QRegularExpression {"[<>]"});
+        int i1 = message_.indexOf ('\r');
+        if (i1 > 0) {
+            message_ = message_.left (i1 - 1);
         }
-      if (message_.contains (QRegularExpression {"^(CQ|QRZ)\\s"}))
-        {
-          // TODO this magic position 16 is guaranteed to be after the
-          // last space in a decoded CQ or QRZ message but before any
-          // appended DXCC entity name or worked before information
-          auto eom_pos = message_.indexOf (' ', 16);
-          // we always want at least the characters to position 16
-          if (eom_pos < 16) eom_pos = message_.size () - 1;
-          // remove DXCC entity and worked B4 status. TODO need a better way to do this
-          message_ = message_.left (eom_pos + 1);
-        }
-      // stdmsg is a fortran routine that packs the text, unpacks it
-      // and compares the result
-      auto message_c_string = message_.toLocal8Bit ();
-      message_c_string += QByteArray {22 - message_c_string.size (), ' '};
-      auto grid_c_string = my_grid.toLocal8Bit ();
-      grid_c_string += QByteArray {6 - grid_c_string.size (), ' '};
-      is_standard_ = stdmsg_ (message_c_string.constData ()
-                              , contest_mode_
-                              , grid_c_string.constData ()
-                              , 22, 6);
 
-      // We're only going to unpack standard messages for CQs && beacons...
-      // TODO: jsherer - this is a hack for now...
-      if(is_standard_){
-        is_standard_ = QRegularExpression("^(CQ|DE|QRZ)\\s").match(message_).hasMatch();
-      }
+        if (message_.contains (QRegularExpression {"^(CQ|QRZ)\\s"})) {
+            // TODO this magic position 16 is guaranteed to be after the
+            // last space in a decoded CQ or QRZ message but before any
+            // appended DXCC entity name or worked before information
+            auto eom_pos = message_.indexOf (' ', 16);
+            // we always want at least the characters to position 16
+            if (eom_pos < 16) eom_pos = message_.size () - 1;
+            // remove DXCC entity and worked B4 status. TODO need a better way to do this
+            message_ = message_.left (eom_pos + 1);
+        }
+
+        // stdmsg is a fortran routine that packs the text, unpacks it
+        // and compares the result
+        auto message_c_string = message_.toLocal8Bit ();
+        message_c_string += QByteArray {22 - message_c_string.size (), ' '};
+        auto grid_c_string = my_grid.toLocal8Bit ();
+        grid_c_string += QByteArray {6 - grid_c_string.size (), ' '};
+        is_standard_ = stdmsg_ (message_c_string.constData (), contest_mode_, grid_c_string.constData (), 22, 6);
+
+        // We're only going to unpack standard messages for CQs && beacons...
+        // TODO: jsherer - this is a hack for now...
+        if(is_standard_){
+            is_standard_ = QRegularExpression("^(CQ|DE|QRZ)\\s").match(message_).hasMatch();
+        }
     }
 
     tryUnpack();
@@ -78,15 +73,20 @@ bool DecodedText::tryUnpack(){
 
     bool unpacked = false;
     if(!unpacked){
-      unpacked = tryUnpackBeacon();
+        unpacked = tryUnpackBeacon();
     }
 
     if(!unpacked){
-      unpacked = tryUnpackDirected();
+        unpacked = tryUnpackCompound();
+    }
+
+
+    if(!unpacked){
+        unpacked = tryUnpackDirected();
     }
 
     if(!unpacked){
-      unpacked = tryUnpackData();
+        unpacked = tryUnpackData();
     }
 
     return unpacked;
@@ -104,7 +104,7 @@ bool DecodedText::tryUnpackBeacon(){
     QStringList parts = Varicode::unpackBeaconMessage(m, &isAlt);
 
     if(parts.isEmpty() || parts.length() < 2){
-      return false;
+        return false;
     }
 
     // Beacon Alt Type
@@ -124,6 +124,40 @@ bool DecodedText::tryUnpackBeacon(){
     }
     compound_ = cmp.join("/");
     message_ = QString("%1: ALLCALL %2 %3 ").arg(compound_).arg(isAlt ? "CQ" : "BCN").arg(extra_);
+
+    return true;
+}
+
+bool DecodedText::tryUnpackCompound(){
+    auto m = message().trimmed();
+    // directed calls will always be 12+ chars and contain no spaces.
+    if(m.length() < 12 || m.contains(' ')){
+        return false;
+    }
+
+    auto parts = Varicode::unpackCompoundMessage(m);
+    if(parts.isEmpty() || parts.length() < 2){
+        return false;
+    }
+
+    isBeacon_ = false;
+
+    extra_ = parts.at(2);
+
+    QStringList cmp;
+    if(!parts.at(0).isEmpty()){
+        cmp.append(parts.at(0));
+    }
+    if(!parts.at(1).isEmpty()){
+        cmp.append(parts.at(1));
+    }
+    compound_ = cmp.join("/");
+
+    if(extra_.isEmpty()){
+        message_ = QString("<%1> ").arg(compound_);
+    } else {
+        message_ = QString("<%1 %2> ").arg(compound_).arg(extra_);
+    }
 
     return true;
 }

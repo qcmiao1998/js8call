@@ -3365,7 +3365,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             ActivityDetail d;
             d.isLowConfidence = decodedtext.isLowConfidence();
             d.isFree = !decodedtext.isStandardMessage();
-            d.isCompound = decodedtext.isCompoundMessage();
+            d.isCompound = decodedtext.isCompound();
             d.isDirected = decodedtext.isDirectedMessage();
             d.bits = decodedtext.bits();
             d.freq = offset;
@@ -3376,7 +3376,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             m_rxActivityQueue.append(d);
 
             // if we have a data frame, and a message buffer has been established, buffer it...
-            if(m_messageBuffer.contains(d.freq/10*10) && !decodedtext.isCompoundMessage() && !decodedtext.isDirectedMessage()){
+            if(m_messageBuffer.contains(d.freq/10*10) && !decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
                 qDebug() << "buffering data" << (d.freq/10*10) << d.text;
                 m_messageBuffer[d.freq/10*10].msgs.append(d);
             }
@@ -3391,7 +3391,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
           // Process compound callsign commands (put them in cache)"
 #if 1
           bool shouldProcessCompound = true;
-          if(shouldProcessCompound && decodedtext.isCompoundMessage()){
+          if(shouldProcessCompound && decodedtext.isCompound()){
             CallDetail cd;
             cd.call = decodedtext.compoundCall();
             cd.grid = decodedtext.extra(); // compound calls via beacons may contain grid...
@@ -5903,6 +5903,7 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
 
           bool useStd = false;
           bool useBcn = false;
+          bool useCmp = false;
           bool useDir = false;
           bool useDat = false;
           bool isFree = false;
@@ -5910,6 +5911,9 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
 
           int l = 0;
           QString bcnFrame = Varicode::packBeaconMessage(line, mycall, &l);
+
+          int o = 0;
+          QString cmpFrame = Varicode::packCompoundMessage(line, &o);
 
           int n = 0;
           QString dirCmd;
@@ -5931,6 +5935,11 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
               useBcn = true;
               hasDirected = false;
               frame = bcnFrame;
+          }
+          else if(isFree && !hasDirected && !hasData && o > 0){
+              useCmp = true;
+              hasDirected = false;
+              frame = cmpFrame;
           }
           else if(isFree && !hasDirected && !hasData && n > 0){
               useDir = true;
@@ -5970,26 +5979,29 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
               line = line.mid(l);
           }
 
+          if(useCmp){
+              frames.append(frame);
+              line = line.mid(o);
+          }
+
           if(useDir){
               // from compound callsign
               if(compound){
-                  QString compoundMessage = QString("DE %1").arg(mygrid);
-                  QString beaconFrame = Varicode::packBeaconMessage(compoundMessage, mycall, nullptr);
-                  if(!beaconFrame.isEmpty()){
-                      frames.append(beaconFrame);
+                  QString compoundMessage = QString("<%1 %2>").arg(mycall).arg(mygrid);
+                  QString compoundFrame = Varicode::packCompoundMessage(compoundMessage, nullptr);
+                  if(!compoundFrame.isEmpty()){
+                      frames.append(compoundFrame);
                   }
               }
 
               frames.append(frame);
 
               // to compound callsign
-              if(!dirTo.isEmpty()){
-                  if(dirTo.contains("/")){
-                      QString compoundMessage = QString("CALL");
-                      QString beaconFrame = Varicode::packBeaconMessage(compoundMessage, dirTo, nullptr);
-                      if(!beaconFrame.isEmpty()){
-                          frames.append(beaconFrame);
-                      }
+              if(!dirTo.isEmpty() && dirTo.contains("/")){
+                  QString compoundMessage = QString("<%1>").arg(dirTo);
+                  QString compoundFrame = Varicode::packCompoundMessage(compoundMessage, nullptr);
+                  if(!compoundFrame.isEmpty()){
+                      frames.append(compoundFrame);
                   }
               }
 

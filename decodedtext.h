@@ -35,11 +35,12 @@ public:
 
   bool tryUnpack();
   bool tryUnpackBeacon();
+  bool tryUnpackCompound();
   bool tryUnpackDirected();
   bool tryUnpackData();
 
   QString compoundCall() const { return compound_; }
-  bool isCompoundMessage() const { return !compound_.isEmpty(); }
+  bool isCompound() const { return !compound_.isEmpty(); }
 
   QString extra() const { return extra_; }
   bool isBeacon() const { return isBeacon_; }

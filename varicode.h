@@ -98,6 +98,9 @@ public:
     static QString packBeaconMessage(QString const &text, QString const&callsign, int *n);
     static QStringList unpackBeaconMessage(const QString &text, bool *isAlt);
 
+    static QString packCompoundMessage(QString const &text, int *n);
+    static QStringList unpackCompoundMessage(const QString &text);
+
     static QString packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, quint8 type, quint16 num);
     static QStringList unpackCompoundFrame(const QString &text, quint8 *pType, quint16 *pNum);
 

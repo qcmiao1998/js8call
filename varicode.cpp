@@ -74,6 +74,10 @@ QRegularExpression directed_re("^"
                                "(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?"
                                );
 
+QRegularExpression beacon_re(R"(^ALLCALL\s(?<type>CQ|BCN)(?:\s(?<grid>[A-Z]{2}[0-9]{2}))?\b)");
+
+QRegularExpression compound_re(R"(^[<](?<callsign>[A-Z0-9/]+)(?:\s(?<grid>[A-Z]{2}[0-9]{2}))?[>])");
+
 QMap<QString, QString> hufftable = {
     // char   code                 weight
     // 3 bits
@@ -985,10 +989,12 @@ bool Varicode::isCommandBuffered(const QString &cmd){
     return directed_cmds.contains(cmd) && buffered_cmds.contains(directed_cmds[cmd]);
 }
 
+// ALLCALL CQ EM73
+// ALLCALL BCN EM73
 QString Varicode::packBeaconMessage(QString const &text, const QString &callsign, int *n){
     QString frame;
 
-    auto parsedText = QRegularExpression(R"(^ALLCALL\s(?<type>CQ|BCN)(?:\s(?<grid>[A-Z]{2}[0-9]{2}))?\b)").match(text);
+    auto parsedText = beacon_re.match(text);
     if(!parsedText.hasMatch()){
         if(n) *n = 0;
         return frame;
@@ -1043,17 +1049,73 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
 }
 
 QStringList Varicode::unpackBeaconMessage(const QString &text, bool * isAlt){
-    quint8 type = 0;
-    quint16 num = 0;
+    quint8 type = FrameBeacon;
+    quint16 num = nmaxgrid;
 
     QStringList unpacked = unpackCompoundFrame(text, &type, &num);
-    if(unpacked.isEmpty()){
-        return unpacked;
+    if(unpacked.isEmpty() || type != FrameBeacon){
+        return QStringList{};
     }
 
     unpacked.append(Varicode::unpackGrid(num & ((1<<15)-1)));
 
     if(isAlt) *isAlt = (num & (1<<15));
+
+    return unpacked;
+}
+
+
+// KN4CRD/XXXX EM73
+// XXXX/KN4CRD EM73
+// KN4CRD/P
+QString Varicode::packCompoundMessage(QString const &text, int *n){
+    QString frame;
+
+    auto parsedText = compound_re.match(text);
+    if(!parsedText.hasMatch()){
+        if(n) *n = 0;
+        return frame;
+    }
+
+    auto callsign = parsedText.captured("callsign");
+    auto grid = parsedText.captured("grid");
+
+    auto parsedCall = QRegularExpression(compound_callsign_pattern).match(callsign);
+    if(!parsedCall.hasMatch()){
+        if(n) *n = 0;
+        return frame;
+    }
+
+    auto base = parsedCall.captured("base");
+
+    bool isPrefix = false;
+    auto fix = parsedCall.captured("prefix");
+    if(!fix.isEmpty()){
+        isPrefix = true;
+    }
+
+    if(!isPrefix){
+        fix = parsedCall.captured("suffix");
+    }
+
+    quint16 extra = Varicode::packGrid(grid);
+
+    frame = Varicode::packCompoundFrame(base, fix, isPrefix, FrameCompound, extra);
+
+    if(n) *n = parsedText.captured(0).length();
+    return frame;
+}
+
+QStringList Varicode::unpackCompoundMessage(const QString &text){
+    quint8 type = FrameCompound;
+    quint16 num = nmaxgrid;
+
+    QStringList unpacked = unpackCompoundFrame(text, &type, &num);
+    if(unpacked.isEmpty() || type != FrameCompound){
+        return QStringList {};
+    }
+
+    unpacked.append(Varicode::unpackGrid(num & ((1<<15)-1)));
 
     return unpacked;
 }
@@ -1081,12 +1143,6 @@ QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &
     quint8 packed_5 = num & mask5;
 
     // [3][28][22][11],[5] = 69
-    /*
-    if(extra.isEmpty()){
-        if(n) *n = 0;
-        return frame;
-    }
-    */
     auto bits = (
         Varicode::intToBits(packed_flag,  3) +
         Varicode::intToBits(packed_base, 28) +
@@ -1142,6 +1198,10 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, quint8 *pType, qu
     return unpacked;
 }
 
+// J1Y ACK
+// J1Y?
+// KN4CRD: J1Y$
+// KN4CRD: J1Y! HELLO WORLD
 QString Varicode::packDirectedMessage(const QString &text, const QString &callsign, QString *pTo, QString * pCmd, int *n){
     QString frame;
 
