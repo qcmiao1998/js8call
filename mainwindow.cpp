@@ -1,4 +1,4 @@
-//---------------------------------------------------------- MainWindow
+﻿//---------------------------------------------------------- MainWindow
 #include "mainwindow.h"
 #include <cinttypes>
 #include <limits>
@@ -2145,151 +2145,13 @@ void MainWindow::auto_tx_mode (bool state)
 
 void MainWindow::keyPressEvent (QKeyEvent * e)
 {
-  if(m_config.bFox()) {
     switch (e->key()) {
-      case Qt::Key_Return:
-        doubleClickOnCall2(Qt::KeyboardModifier(Qt::ShiftModifier + Qt::ControlModifier + Qt::AltModifier));
-        return;
-      case Qt::Key_Enter:
-        doubleClickOnCall2(Qt::KeyboardModifier(Qt::ShiftModifier + Qt::ControlModifier + Qt::AltModifier));
-        return;
-      case Qt::Key_Backspace:
-        qDebug() << "Key Backspace";
-        return;
+        case Qt::Key_Escape:
+            stopTx();
+            return;
     }
+
     QMainWindow::keyPressEvent (e);
-  }
-
-  if(m_config.bHound()) {
-    switch (e->key()) {
-      case Qt::Key_Return:
-        auto_tx_mode(true);
-        return;
-      case Qt::Key_Enter:
-        auto_tx_mode(true);
-        return;
-    }
-    QMainWindow::keyPressEvent (e);
-  }
-
-#if 0
-  int n;
-  switch(e->key())
-    {
-    case Qt::Key_D:
-      if(m_mode != "WSPR" && e->modifiers() & Qt::ShiftModifier) {
-        if(!m_decoderBusy) {
-          dec_data.params.newdat=0;
-          dec_data.params.nagain=0;
-          decode();
-          return;
-        }
-      }
-      break;
-    case Qt::Key_F1:
-      on_actionOnline_User_Guide_triggered();
-      return;
-    case Qt::Key_F2:
-      on_actionSettings_triggered();
-      return;
-    case Qt::Key_F3:
-      on_actionKeyboard_shortcuts_triggered();
-      return;
-    case Qt::Key_F4:
-      clearDX ();
-      ui->dxCallEntry->setFocus();
-      return;
-    case Qt::Key_F5:
-      on_actionSpecial_mouse_commands_triggered();
-      return;
-    case Qt::Key_F6:
-      if(e->modifiers() & Qt::ShiftModifier) {
-        on_actionDecode_remaining_files_in_directory_triggered();
-        return;
-      }
-      on_actionOpen_next_in_directory_triggered();
-      return;
-    case Qt::Key_F11:
-      n=11;
-      if(e->modifiers() & Qt::ControlModifier) n+=100;
-      if(e->modifiers() & Qt::ShiftModifier) {
-        ui->TxFreqSpinBox->setValue(ui->TxFreqSpinBox->value()-60);
-      } else{
-        bumpFqso(n);
-      }
-      return;
-    case Qt::Key_F12:
-      n=12;
-      if(e->modifiers() & Qt::ControlModifier) n+=100;
-      if(e->modifiers() & Qt::ShiftModifier) {
-        ui->TxFreqSpinBox->setValue(ui->TxFreqSpinBox->value()+60);
-      } else {
-        bumpFqso(n);
-      }
-      return;
-    case Qt::Key_X:
-      if(e->modifiers() & Qt::AltModifier) {
-        foxTest();
-        return;
-      }
-    case Qt::Key_E:
-      if(e->modifiers() & Qt::ShiftModifier) {
-          ui->txFirstCheckBox->setChecked(false);
-          return;
-      }
-      else if (e->modifiers() & Qt::ControlModifier) {
-          ui->txFirstCheckBox->setChecked(true);
-          return;
-      }
-      break;
-    case Qt::Key_F:
-      if(e->modifiers() & Qt::ControlModifier) {
-        if(ui->tabWidget->currentIndex()==0) {
-          ui->tx5->clearEditText();
-          ui->tx5->setFocus();
-        } else {
-          ui->freeTextMsg->clearEditText();
-          ui->freeTextMsg->setFocus();
-        }
-        return;
-      }
-      break;
-    case Qt::Key_G:
-      if(e->modifiers() & Qt::AltModifier) {
-        genStdMsgs (m_rpt, true);
-        return;
-      }
-      break;
-    case Qt::Key_H:
-      if(e->modifiers() & Qt::AltModifier) {
-        on_stopTxButton_clicked();
-        return;
-      }
-      break;
-    case Qt::Key_L:
-      if(e->modifiers() & Qt::ControlModifier) {
-        lookup();
-        genStdMsgs(m_rpt);
-        return;
-      }
-      break;
-    case Qt::Key_O:
-      if(e->modifiers() & Qt::ControlModifier) {
-          on_actionOpen_triggered();
-          return;
-      }
-      break;
-    case Qt::Key_V:
-      if(e->modifiers() & Qt::AltModifier) {
-        m_fileToSave = m_fnameWE;
-        m_bAltV=true;
-        return;
-      }
-      break;
-  }
-#endif
-
-  QMainWindow::keyPressEvent (e);
 }
 
 void MainWindow::bumpFqso(int n)                                 //bumpFqso()
@@ -2698,7 +2560,9 @@ void MainWindow::hideMenus(bool checked)
     ui->label_6->setVisible(!checked);
     ui->label_7->setVisible(!checked);
     ui->decodedTextLabel2->setVisible(!checked);
+//    ui->line_2->setVisible(!checked);
   }
+//  ui->line->setVisible(!checked);
   ui->decodedTextLabel->setVisible(!checked);
   ui->gridLayout_5->layout()->setSpacing(spacing);
   ui->horizontalLayout->layout()->setSpacing(spacing);
