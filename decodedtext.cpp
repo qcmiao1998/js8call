@@ -21,6 +21,9 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
   , contest_mode_ {contest_mode}
   , message_ {string_.mid (column_qsoText + padding_).trimmed ()}
   , is_standard_ {false}
+  , frameType_(Varicode::FrameUnknown)
+  , isBeacon_(false)
+  , isAlt_(false)
 {
     if(message_.length() >= 1) {
         message_ = message_.left (21).remove (QRegularExpression {"[<>]"});
@@ -58,8 +61,12 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
     tryUnpack();
 }
 
-DecodedText::DecodedText (QString const& ft8callmessage){
-    message_ = ft8callmessage;
+DecodedText::DecodedText (QString const& ft8callmessage):
+    frameType_(Varicode::FrameUnknown),
+    message_(ft8callmessage),
+    isBeacon_(false),
+    isAlt_(false)
+{
     is_standard_ = QRegularExpression("^(CQ|DE|QRZ)\\s").match(message_).hasMatch();
 
     tryUnpack();
@@ -79,7 +86,6 @@ bool DecodedText::tryUnpack(){
     if(!unpacked){
         unpacked = tryUnpackCompound();
     }
-
 
     if(!unpacked){
         unpacked = tryUnpackDirected();
@@ -101,7 +107,8 @@ bool DecodedText::tryUnpackBeacon(){
     }
 
     bool isAlt = false;
-    QStringList parts = Varicode::unpackBeaconMessage(m, &isAlt);
+    quint8 type = Varicode::FrameUnknown;
+    QStringList parts = Varicode::unpackBeaconMessage(m, &type, &isAlt);
 
     if(parts.isEmpty() || parts.length() < 2){
         return false;
@@ -113,7 +120,7 @@ bool DecodedText::tryUnpackBeacon(){
     // 1      1   CQ
     isBeacon_ = true;
     isAlt_ = isAlt;
-    extra_ = parts.at(2);
+    extra_ = parts.length() < 3 ? "" : parts.at(2);
 
     QStringList cmp;
     if(!parts.at(0).isEmpty()){
@@ -124,7 +131,7 @@ bool DecodedText::tryUnpackBeacon(){
     }
     compound_ = cmp.join("/");
     message_ = QString("%1: ALLCALL %2 %3 ").arg(compound_).arg(isAlt ? "CQ" : "BCN").arg(extra_);
-
+    frameType_ = type;
     return true;
 }
 
@@ -135,14 +142,11 @@ bool DecodedText::tryUnpackCompound(){
         return false;
     }
 
-    auto parts = Varicode::unpackCompoundMessage(m);
+    quint8 type = Varicode::FrameUnknown;
+    auto parts = Varicode::unpackCompoundMessage(m, &type);
     if(parts.isEmpty() || parts.length() < 2){
         return false;
     }
-
-    isBeacon_ = false;
-
-    extra_ = parts.at(2);
 
     QStringList cmp;
     if(!parts.at(0).isEmpty()){
@@ -152,13 +156,29 @@ bool DecodedText::tryUnpackCompound(){
         cmp.append(parts.at(1));
     }
     compound_ = cmp.join("/");
+    extra_ = parts.length() < 3 ? "" : parts.mid(2).join(" ");
 
-    if(extra_.isEmpty()){
-        message_ = QString("<%1> ").arg(compound_);
-    } else {
-        message_ = QString("<%1 %2> ").arg(compound_).arg(extra_);
+    bool hasPrefixSuffix = compound_.contains("/");
+
+    if(type == Varicode::FrameCompound){
+#if COMPOUND_SHOW_GRID
+        message_ = QString("<%1%2>:").arg(compound_).arg(extra_);
+#endif
+        if(hasPrefixSuffix){
+            message_ = QString("<%1>: ").arg(compound_);
+        } else {
+            message_ = QString("%1: ").arg(compound_);
+        }
+    } else if(type == Varicode::FrameCompoundDirected){
+        if(hasPrefixSuffix){
+            message_ = QString("<%1>%2").arg(compound_).arg(extra_);
+        } else {
+            message_ = QString("%1%2").arg(compound_).arg(extra_);
+        }
+        directed_ = QStringList{ "<....>", compound_ } + parts.mid(2);
     }
 
+    frameType_ = type;
     return true;
 }
 
@@ -170,7 +190,8 @@ bool DecodedText::tryUnpackDirected(){
       return false;
     }
 
-    QStringList parts = Varicode::unpackDirectedMessage(m);
+    quint8 type = Varicode::FrameUnknown;
+    QStringList parts = Varicode::unpackDirectedMessage(m, &type);
 
     if(parts.isEmpty()){
       return false;
@@ -188,6 +209,7 @@ bool DecodedText::tryUnpackDirected(){
     }
 
     directed_ = parts;
+    frameType_ = type;
     return true;
 }
 
@@ -199,13 +221,15 @@ bool DecodedText::tryUnpackData(){
       return false;
     }
 
-    QString data = Varicode::unpackDataMessage(m);
+    quint8 type = Varicode::FrameUnknown;
+    QString data = Varicode::unpackDataMessage(m, &type);
 
     if(data.isEmpty()){
       return false;
     }
 
     message_ = data;
+    frameType_ = type;
     return true;
 }
 

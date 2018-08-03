@@ -39,10 +39,12 @@ public:
   bool tryUnpackDirected();
   bool tryUnpackData();
 
+  quint8 frameType() const { return frameType_; }
+
+  QString extra() const { return extra_; }
   QString compoundCall() const { return compound_; }
   bool isCompound() const { return !compound_.isEmpty(); }
 
-  QString extra() const { return extra_; }
   bool isBeacon() const { return isBeacon_; }
   bool isAlt() const { return isAlt_; }
 
@@ -96,6 +98,7 @@ private:
       column_mode    = 19,
       column_qsoText = 22 };
 
+  quint8 frameType_;
   bool isBeacon_;
   bool isAlt_;
   QString compound_;

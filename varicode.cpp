@@ -68,16 +68,27 @@ QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 8, 23, 24, 25, 26, 27, 28, 29,
 
 QSet<int> buffered_cmds = {6, 7, 8};
 
-QRegularExpression directed_re("^"
-                               "(?<to>[A-Z0-9/]+)"
-                               "(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|PWR|ACK|[?@&$^%|!# ]))"
-                               "(?<pwr>\\s?\\d+\\s?[KM]?W)?"
-                               "(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?"
-                               );
+QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|PWR|ACK|[?@&$^%|!# ]))?");
+QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
+QString optional_pwr_pattern = QString("(?<pwr>\\s?\\d+\\s?[KM]?W)?");
+QString optional_num_pattern = QString("(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
+
+QRegularExpression directed_re("^"                    +
+                               callsign_pattern       +
+                               optional_cmd_pattern   +
+                               optional_pwr_pattern   +
+                               optional_num_pattern);
 
 QRegularExpression beacon_re(R"(^ALLCALL\s(?<type>CQ|BCN)(?:\s(?<grid>[A-Z]{2}[0-9]{2}))?\b)");
 
-QRegularExpression compound_re(R"(^[<](?<callsign>[A-Z0-9/]+)(?:\s(?<grid>[A-Z]{2}[0-9]{2}))?[>])");
+QRegularExpression compound_re("^[<]"                +
+                               callsign_pattern      +
+                               optional_grid_pattern +
+                               optional_cmd_pattern  +
+                               optional_pwr_pattern  +
+                               optional_num_pattern  +
+                               "[>]");
 
 QMap<QString, QString> hufftable = {
     // char   code                 weight
@@ -305,6 +316,7 @@ QChar EOT = '\x04'; // EOT char
 
 quint32 nbasecall = 37 * 36 * 10 * 27 * 27 * 27;
 quint16 nbasegrid = 180 * 180;
+quint16 nusergrid = nbasegrid + 10;
 quint16 nmaxgrid  = (1<<15)-1;
 
 QMap<QString, quint32> basecalls = {
@@ -955,13 +967,11 @@ QPair<float, float> grid2deg(QString const &grid){
 }
 
 // pack a 4-digit maidenhead grid locator into a 15-bit value
-quint16 Varicode::packGrid(QString const& grid){
-    // TODO: validate grid...
+quint16 Varicode::packGrid(QString const& value){
+    QString grid = QString(value).trimmed();
     if(grid.length() < 4){      
         return (1<<15)-1;
     }
-
-    // TODO: encode non-grid data...
 
     auto pair = grid2deg(grid.left(4));
     int ilong = pair.first;
@@ -971,8 +981,7 @@ quint16 Varicode::packGrid(QString const& grid){
 }
 
 QString Varicode::unpackGrid(quint16 value){
-    if(value > 180*180){
-        // TODO: decode non-grid data... for now just return an empty string...
+    if(value > nbasegrid){
         return "";
     }
 
@@ -980,6 +989,81 @@ QString Varicode::unpackGrid(quint16 value){
     float dlong = value / 180 * 2 - 180 + 2;
 
     return deg2grid(dlong, dlat).left(4);
+}
+
+// pack a number or snr into an integer between 0 & 62
+quint8 Varicode::packNum(QString const &num, bool *ok){
+    int inum = 0;
+    if(num.isEmpty()){
+        if(ok) *ok = false;
+        return inum;
+    }
+
+    inum = qMax(-30, qMin(num.toInt(ok, 10), 31));
+    return inum + 30 + 1;
+}
+
+// pack pwr string into a dbm between 0 and 62
+quint8 Varicode::packPwr(QString const &pwr, bool *ok){
+    int ipwr = 0;
+    if(pwr.isEmpty()){
+        if(ok) *ok = false;
+        return ipwr;
+    }
+
+    int factor = 1000;
+    if(pwr.endsWith("KW")){
+        factor = 1000000;
+    }
+    else if(pwr.endsWith("MW")){
+        factor = 1;
+    }
+
+    ipwr = QString(pwr).replace(QRegExp("[KM]?W", Qt::CaseInsensitive), "").toInt() * factor;
+    ipwr = mwattsToDbm(ipwr);
+
+    if(ok) *ok = true;
+    return ipwr + 1;
+}
+
+// pack a reduced fidelity command and a number into the extra bits provided between nbasegrid and nmaxgrid
+quint8 Varicode::packCmd(quint8 cmd, quint8 num){
+    //quint8 allowed = nmaxgrid - nbasegrid - 1;
+
+    // if cmd == pwr || cmd == snr
+    quint8 value = 0;
+    if(cmd == directed_cmds[" PWR"] || cmd == directed_cmds[" SNR"]){
+        // 8 bits - 1 bit flag + 1 bit type + 6 bit number
+        // [1][X][6]
+        // X = 0 == SNR
+        // X = 1 == PWR
+
+        value = ((1 << 1) + ((int)cmd == directed_cmds[" PWR"])) << 6;
+        value = value + num;
+    } else {
+        value = cmd & ((1<<7)-1);
+    }
+
+    return value;
+}
+
+quint8 Varicode::unpackCmd(quint8 value, quint8 *pNum){
+    // if the first bit is 1, the second bit will indicate if its pwr or snr...
+    if(value & (1<<7)){
+        // either pwr or snr...
+        bool pwr = value & (1<<6);
+
+        if(pNum) *pNum = value & ((1<<6)-1);
+
+        if(pwr){
+            return directed_cmds[" PWR"];
+        } else {
+            return directed_cmds[" SNR"];
+        }
+    } else {
+        if(pNum) *pNum = 0;
+        return value & ((1<<7)-1);
+    }
 }
 
 bool Varicode::isCommandAllowed(const QString &cmd){
@@ -1049,7 +1133,7 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
     return frame;
 }
 
-QStringList Varicode::unpackBeaconMessage(const QString &text, bool * isAlt){
+QStringList Varicode::unpackBeaconMessage(const QString &text, quint8 *pType, bool * isAlt){
     quint8 type = FrameBeacon;
     quint16 num = nmaxgrid;
 
@@ -1061,6 +1145,7 @@ QStringList Varicode::unpackBeaconMessage(const QString &text, bool * isAlt){
     unpacked.append(Varicode::unpackGrid(num & ((1<<15)-1)));
 
     if(isAlt) *isAlt = (num & (1<<15));
+    if(pType) *pType = type;
 
     return unpacked;
 }
@@ -1078,8 +1163,11 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
         return frame;
     }
 
-    auto callsign = parsedText.captured("callsign");
-    auto grid = parsedText.captured("grid");
+    QString callsign = parsedText.captured("callsign");
+    QString grid = parsedText.captured("grid");
+    QString cmd = parsedText.captured("cmd");
+    QString num = parsedText.captured("num").trimmed();
+    QString pwr = parsedText.captured("pwr").trimmed().toUpper();
 
     auto parsedCall = QRegularExpression(compound_callsign_pattern).match(callsign);
     if(!parsedCall.hasMatch()){
@@ -1099,24 +1187,54 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
         fix = parsedCall.captured("suffix");
     }
 
-    quint16 extra = Varicode::packGrid(grid);
+    quint8 type = FrameCompound;
+    quint16 extra = nmaxgrid;
 
-    frame = Varicode::packCompoundFrame(base, fix, isPrefix, FrameCompound, extra);
+    if (!cmd.isEmpty() && directed_cmds.contains(cmd) && Varicode::isCommandAllowed(cmd)){
+
+        qint8 inum = Varicode::packNum(num, nullptr);
+        if(cmd.trimmed() == "PWR"){
+            inum = Varicode::packPwr(pwr, nullptr);
+        }
+
+        extra = nusergrid + Varicode::packCmd(directed_cmds[cmd], inum);
+
+        type = FrameCompoundDirected;
+    } else if(!grid.isEmpty()){
+        extra = Varicode::packGrid(grid);
+    }
+
+    frame = Varicode::packCompoundFrame(base, fix, isPrefix, type, extra);
 
     if(n) *n = parsedText.captured(0).length();
     return frame;
 }
 
-QStringList Varicode::unpackCompoundMessage(const QString &text){
+QStringList Varicode::unpackCompoundMessage(const QString &text, quint8 *pType){
     quint8 type = FrameCompound;
-    quint16 num = nmaxgrid;
+    quint16 extra = nmaxgrid;
 
-    QStringList unpacked = unpackCompoundFrame(text, &type, &num);
-    if(unpacked.isEmpty() || type != FrameCompound){
+    QStringList unpacked = unpackCompoundFrame(text, &type, &extra);
+    if(unpacked.isEmpty() || (type != FrameCompound && type != FrameCompoundDirected)){
         return QStringList {};
     }
 
-    unpacked.append(Varicode::unpackGrid(num & ((1<<15)-1)));
+    if(extra <= nbasegrid){
+        unpacked.append(" " + Varicode::unpackGrid(extra));
+    } else if (nusergrid <= extra && extra < nmaxgrid) {
+        quint8 num = 0;
+        auto cmd = Varicode::unpackCmd(extra - nusergrid, &num);
+
+        unpacked.append(directed_cmds.key(cmd));
+
+        if(cmd == directed_cmds[" PWR"]){
+            unpacked.append(Varicode::formatPWR(num - 1));
+        } else if(cmd == directed_cmds[" SNR"]){
+            unpacked.append(Varicode::formatSNR(num - 31));
+        }
+    }
+
+    if(pType) *pType = type;
 
     return unpacked;
 }
@@ -1124,7 +1242,7 @@ QStringList Varicode::unpackCompoundMessage(const QString &text){
 QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, quint8 type, quint16 num){
     QString frame;
 
-    // needs to be a beacon type...
+    // needs to be a compound type...
     if(type == FrameDataPadded || type == FrameDataUnpadded || type == FrameDirectedPositive || type == FrameDirectedNegative){
         return frame;
     }
@@ -1203,7 +1321,7 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, quint8 *pType, qu
 // J1Y?
 // KN4CRD: J1Y$
 // KN4CRD: J1Y! HELLO WORLD
-QString Varicode::packDirectedMessage(const QString &text, const QString &callsign, QString *pTo, QString * pCmd, int *n){
+QString Varicode::packDirectedMessage(const QString &text, const QString &callsign, QString *pTo, QString * pCmd, QString *pNum, int *n){
     QString frame;
 
     auto match = directed_re.match(text);
@@ -1213,10 +1331,16 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
     }
 
     QString from = callsign;
-    QString to = match.captured("to");
+    QString to = match.captured("callsign");
     QString cmd = match.captured("cmd");
     QString num = match.captured("num").trimmed();
     QString pwr = match.captured("pwr").trimmed().toUpper();
+
+    // ensure we have a directed command
+    if(cmd.isEmpty()){
+        if(n) *n = 0;
+        return frame;
+    }
 
     // validate "to" callsign
     auto parsedTo = QRegularExpression(compound_callsign_pattern).match(to);
@@ -1242,27 +1366,16 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
     }
 
     // packing general number...
-    int inum = -31;
-    bool hasnum = false;
-    if(!num.isEmpty()){
-        inum = qMax(-30, qMin(num.toInt(&hasnum, 10), 30));
+    quint8 inum = 0;
+
+    if(cmd.trimmed() == "PWR"){
+        inum = Varicode::packPwr(pwr, nullptr);
+        if(pNum) *pNum = pwr;
+    } else {
+        inum = Varicode::packNum(num, nullptr);
+        if(pNum) *pNum = num;
     }
 
-    // if we are packing a PWR command, pack pwr as dbm
-    int ipwr = -31;
-    if(!pwr.isEmpty() && cmd.trimmed() == "PWR"){
-        int factor = 1000;
-        if(pwr.endsWith("KW")){
-            factor = 1000000;
-        }
-        else if(pwr.endsWith("MW")){
-            factor = 1;
-        }
-        ipwr = pwr.replace(QRegExp("[KM]?W", Qt::CaseInsensitive), "").toInt() * factor;
-        inum = mwattsToDbm(ipwr) - 30;
-    }
-
-    quint8 packed_flag = inum < 0 ? FrameDirectedNegative : FrameDirectedPositive;
     quint32 packed_from = Varicode::packCallsign(from);
     quint32 packed_to = Varicode::packCallsign(to);
 
@@ -1272,7 +1385,8 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
     }
 
     quint8 packed_cmd = directed_cmds[cmd];
-    quint8 packed_extra = qAbs(inum);
+    quint8 packed_flag = inum < 31 ? FrameDirectedNegative : FrameDirectedPositive;
+    quint8 packed_extra = inum < 31 ? inum : inum - 31;
 
     // [3][28][28][5],[5] = 69
     auto bits = (
@@ -1287,7 +1401,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
     return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_extra % 32);
 }
 
-QStringList Varicode::unpackDirectedMessage(const QString &text){
+QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
     QStringList unpacked;
 
     if(text.length() < 13 || text.contains(" ")){
@@ -1301,9 +1415,9 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
     int numSign = 0;
     quint8 packed_flag = Varicode::bitsToInt(Varicode::strToBits(bits.left(3)));
     if(packed_flag == FrameDirectedPositive){
-        numSign = 1;
+        numSign = 31;
     } else if(packed_flag == FrameDirectedNegative){
-        numSign = -1;
+        numSign = 0;
     } else {
         return unpacked;
     }
@@ -1320,22 +1434,23 @@ QStringList Varicode::unpackDirectedMessage(const QString &text){
     unpacked.append(to);
     unpacked.append(cmd);
 
-    int num = numSign * extra;
-    if(num != -31){
+    quint8 num = extra + numSign;
+    if(num != 0){
         // TODO: jsherer - should we decide which format to use on the command, or something else?
         if(packed_cmd == directed_cmds[" PWR"]){
-            unpacked.append(Varicode::formatPWR(num + 30));
+            unpacked.append(Varicode::formatPWR(num-1));
         } else if(packed_cmd == directed_cmds[" SNR"]) {
-            unpacked.append(Varicode::formatSNR(num));
+            unpacked.append(Varicode::formatSNR((int)num-31));
         } else {
             unpacked.append(QString("%1").arg(num));
         }
     }
 
+    if(pType) *pType = packed_flag;
     return unpacked;
 }
 
-QString Varicode::packDataMessage(const QString &input, QString * out, int *n){
+QString Varicode::packDataMessage(const QString &input, int *n){
     QString frame;
 
     // [3][66] = 69
@@ -1380,7 +1495,7 @@ QString Varicode::packDataMessage(const QString &input, QString * out, int *n){
     return frame;
 }
 
-QString Varicode::unpackDataMessage(const QString &text){
+QString Varicode::unpackDataMessage(const QString &text, quint8 *pType){
     QString unpacked;
 
     if(text.length() < 13 || text.contains(" ")){
@@ -1389,11 +1504,10 @@ QString Varicode::unpackDataMessage(const QString &text){
 
     auto bits = Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64) + Varicode::intToBits(Varicode::unpack5bits(text.right(1)), 5);
 
-    quint8 flag = Varicode::bitsToInt(bits.mid(0, 3));
-
-    if(flag == FrameDataUnpadded){
+    quint8 type = Varicode::bitsToInt(bits.mid(0, 3));
+    if(type == FrameDataUnpadded){
         bits = bits.mid(3);
-    } else if(flag == FrameDataPadded) {
+    } else if(type == FrameDataPadded) {
         int n = bits.lastIndexOf(0);
         bits = bits.mid(3, n-3);
     } else {
@@ -1405,6 +1519,8 @@ QString Varicode::unpackDataMessage(const QString &text){
 
     // then... unescape special characters
     unpacked = Varicode::huffUnescape(unpacked);
+
+    if(pType) *pType = type;
 
     return unpacked;
 }

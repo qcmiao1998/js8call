@@ -3392,8 +3392,9 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
           // Process compound callsign commands (put them in cache)"
 #if 1
+          qDebug() << "decoded" << decodedtext.frameType() << decodedtext.isCompound() << decodedtext.isDirectedMessage() << decodedtext.isBeacon();
           bool shouldProcessCompound = true;
-          if(shouldProcessCompound && decodedtext.isCompound()){
+          if(shouldProcessCompound && decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
             CallDetail cd;
             cd.call = decodedtext.compoundCall();
             cd.grid = decodedtext.extra(); // compound calls via beacons may contain grid...
@@ -5905,7 +5906,9 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
 
           bool useStd = false;
           bool useBcn = false;
+#if ALLOW_SEND_COMPOUND
           bool useCmp = false;
+#endif
           bool useDir = false;
           bool useDat = false;
           bool isFree = false;
@@ -5914,18 +5917,20 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
           int l = 0;
           QString bcnFrame = Varicode::packBeaconMessage(line, mycall, &l);
 
+#if ALLOW_SEND_COMPOUND
           int o = 0;
           QString cmpFrame = Varicode::packCompoundMessage(line, &o);
+#endif
 
           int n = 0;
           QString dirCmd;
           QString dirTo;
-          QString dirFrame = Varicode::packDirectedMessage(line, basecall, &dirTo, &dirCmd, &n);
+          QString dirNum;
+          QString dirFrame = Varicode::packDirectedMessage(line, basecall, &dirTo, &dirCmd, &dirNum, &n);
+          bool dirToCompound = dirTo.contains("/");
 
-          // packDataMessage can output a new line to datLineOut (huff escaping special characters)
           int m = 0;
-          QString datLineOut;
-          QString datFrame = Varicode::packDataMessage(line.left(24) + "\x04", &datLineOut, &m); //  66 / 3 + 2 = 22 (maximum number of 3bit chars we could possibly stuff in here plus 2 for good measure :P)
+          QString datFrame = Varicode::packDataMessage(line.left(24) + "\x04", &m); //  66 / 3 + 2 = 22 (maximum number of 3bit chars we could possibly stuff in here plus 2 for good measure :P)
 
           // if this parses to a standard FT8 free text message
           // but it can be parsed as a directed message, then we
@@ -5938,11 +5943,13 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
               hasDirected = false;
               frame = bcnFrame;
           }
+#if ALLOW_SEND_COMPOUND
           else if(isFree && !hasDirected && !hasData && o > 0){
               useCmp = true;
               hasDirected = false;
               frame = cmpFrame;
           }
+#endif
           else if(isFree && !hasDirected && !hasData && n > 0){
               useDir = true;
               hasDirected = true;
@@ -5952,9 +5959,6 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
               useDat = true;
               hasData = true;
               frame = datFrame;
-              if(!datLineOut.isEmpty()){
-                line = datLineOut;
-              }
           } else {
               useStd = true;
               frame = stdFrame;
@@ -5981,31 +5985,51 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
               line = line.mid(l);
           }
 
+#if ALLOW_SEND_COMPOUND
           if(useCmp){
               frames.append(frame);
               line = line.mid(o);
           }
+#endif
 
           if(useDir){
-              // from compound callsign
-              if(compound){
-                  QString compoundMessage = QString("<%1 %2>").arg(mycall).arg(mygrid);
-                  QString compoundFrame = Varicode::packCompoundMessage(compoundMessage, nullptr);
-                  if(!compoundFrame.isEmpty()){
-                      frames.append(compoundFrame);
+              /**
+               * We have a few special cases when we are sending to a compound call, or our call is a compound call, or both.
+               * CASE 0: Non-compound:       KN4CRD: J1Y ACK
+               * -> One standard directed message frame
+               *
+               * CASE 1: Compound From:      KN4CRD/P: J1Y ACK
+               * -> One standard compound frame, followed by a standard directed message frame with placeholder
+               * -> The second standard directed frame _could_ be replaced with a compound directed frame
+               * -> <KN4CRD/P EM73> then <....>: J1Y ACK
+               * -> <KN4CRD/P EM73> then <J1Y ACK>
+               *
+               * CASE 2: Compound To:        KN4CRD: J1Y/P ACK
+               * -> One standard compound frame, followed by a compound directed frame
+               * -> <KN4CRD EM73> then <J1Y/P ACK>
+               *
+               * CASE 3: Compound From & To: KN4CRD/P: J1Y/P ACK
+               * -> One standard compound frame, followed by a compound directed frame
+               * -> <KN4CRD/P EM73> then <J1Y/P ACK>
+               **/
+              if(compound || dirToCompound){
+                  // Cases 1, 2, 3 all send a standard compound frame first...
+                  QString deCompoundMessage = QString("<%1 %2>").arg(mycall).arg(mygrid);
+                  QString deCompoundFrame = Varicode::packCompoundMessage(deCompoundMessage, nullptr);
+                  if(!deCompoundFrame.isEmpty()){
+                      frames.append(deCompoundFrame);
                   }
-              }
 
-              // to compound callsign
-              if(!dirTo.isEmpty() && dirTo.contains("/")){
-                  QString compoundMessage = QString("<%1>").arg(dirTo);
-                  QString compoundFrame = Varicode::packCompoundMessage(compoundMessage, nullptr);
-                  if(!compoundFrame.isEmpty()){
-                      frames.append(compoundFrame);
+                  // Followed, by a standard OR compound directed message...
+                  QString dirCompoundMessage = QString("<%1%2%3>").arg(dirTo).arg(dirCmd).arg(dirNum);
+                  QString dirCompoundFrame = Varicode::packCompoundMessage(dirCompoundMessage, nullptr);
+                  if(!dirCompoundFrame.isEmpty()){
+                      frames.append(dirCompoundFrame);
                   }
+              } else {
+                  // otherwise, just send the standard directed frame
+                  frames.append(frame);
               }
-
-              frames.append(frame);
 
               line = line.mid(n);
 
@@ -6037,7 +6061,7 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
 #if 1
     qDebug() << "parsed frames:";
     foreach(auto frame, frames){
-        qDebug() << "->" << frame << Varicode::unpackDataMessage(frame) << Varicode::unpackDirectedMessage(frame) << Varicode::unpackCompoundFrame(frame, nullptr, nullptr) << Varicode::unpackBeaconMessage(frame, nullptr);
+        qDebug() << "->" << frame << DecodedText(frame).message();
     }
 #endif
 
@@ -6283,10 +6307,11 @@ void MainWindow::prepareBacon(){
 }
 
 
-QString MainWindow::calculateDistance(QString const& grid)
+QString MainWindow::calculateDistance(QString const& value)
 {
-    if(grid.isEmpty()){
-        return QString();
+    QString grid = value.trimmed();
+    if(grid.isEmpty() || grid.length() < 4){
+        return QString{};
     }
 
     qint64 nsec = (QDateTime::currentMSecsSinceEpoch()/1000) % 86400;

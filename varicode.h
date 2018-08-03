@@ -27,14 +27,15 @@ public:
     };
 
     enum FrameType {
-        FrameBeacon           = 0, // [000]
-        FrameCompound         = 1, // [001]
-        FrameDirectedPositive = 2, // [010]
-        FrameDirectedNegative = 3, // [011]
-        FrameDataUnpadded     = 4, // [100]
-        FrameDataPadded       = 5, // [101]
-        FrameReservedA        = 6, // [110]
-        FrameReservedB        = 7, // [111]
+        FrameUnknown          = 255, // [11111111] <- only used as a sentinel
+        FrameBeacon           = 0,   // [000]
+        FrameCompound         = 1,   // [001]
+        FrameCompoundDirected = 2,   // [010]
+        FrameDirectedPositive = 3,   // [011]
+        FrameDirectedNegative = 4,   // [100]
+        FrameDataUnpadded     = 5,   // [101]
+        FrameDataPadded       = 6,   // [110]
+        FrameReservedX        = 7,   // [111]
     };
 
     //Varicode();
@@ -92,23 +93,28 @@ public:
     static quint16 packGrid(QString const& value);
     static QString unpackGrid(quint16 value);
 
+    static quint8 packNum(QString const &num, bool *ok);
+    static quint8 packPwr(QString const &pwr, bool *ok);
+    static quint8 packCmd(quint8 cmd, quint8 num);
+    static quint8 unpackCmd(quint8 value, quint8 *pNum);
+
     static bool isCommandAllowed(const QString &cmd);
     static bool isCommandBuffered(const QString &cmd);
 
     static QString packBeaconMessage(QString const &text, QString const&callsign, int *n);
-    static QStringList unpackBeaconMessage(const QString &text, bool *isAlt);
+    static QStringList unpackBeaconMessage(const QString &text, quint8 *pType, bool *isAlt);
 
     static QString packCompoundMessage(QString const &text, int *n);
-    static QStringList unpackCompoundMessage(const QString &text);
+    static QStringList unpackCompoundMessage(const QString &text, quint8 *pType);
 
     static QString packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, quint8 type, quint16 num);
     static QStringList unpackCompoundFrame(const QString &text, quint8 *pType, quint16 *pNum);
 
-    static QString packDirectedMessage(QString const& text, QString const& callsign, QString *pTo, QString * pCmd, int *n);
-    static QStringList unpackDirectedMessage(QString const& text);
+    static QString packDirectedMessage(QString const& text, QString const& callsign, QString *pTo, QString * pCmd, QString *pNum, int *n);
+    static QStringList unpackDirectedMessage(QString const& text, quint8 *pType);
 
-    static QString packDataMessage(QString const& text, QString *out, int *n);
-    static QString unpackDataMessage(QString const& text);
+    static QString packDataMessage(QString const& text, int *n);
+    static QString unpackDataMessage(QString const& text, quint8 *pType);
 };
 
 #endif // VARICODE_H
