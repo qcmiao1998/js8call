@@ -35,8 +35,28 @@ public:
         FrameDirectedNegative = 4,   // [100]
         FrameDataUnpadded     = 5,   // [101]
         FrameDataPadded       = 6,   // [110]
-        FrameReservedX        = 7,   // [111]
+        FrameReserved         = 7,   // [111]
     };
+
+    static const quint8 FrameTypeMax = 7;
+
+    static QString frameTypeString(quint8 type) {
+        const char* FrameTypeStrings[] = {
+            "FrameBeacon",
+            "FrameCompound",
+            "FrameCompoundDirected",
+            "FrameDirectedPositive",
+            "FrameDirectedNegative",
+            "FrameDataUnpadded",
+            "FrameDataPadded",
+            "FrameReserved"
+        };
+
+        if(type > FrameTypeMax){
+            return "FrameUnknown";
+        }
+        return FrameTypeStrings[type];
+    }
 
     //Varicode();
 
@@ -95,7 +115,7 @@ public:
 
     static quint8 packNum(QString const &num, bool *ok);
     static quint8 packPwr(QString const &pwr, bool *ok);
-    static quint8 packCmd(quint8 cmd, quint8 num);
+    static quint8 packCmd(quint8 cmd, quint8 num, bool *pPackedNum);
     static quint8 unpackCmd(quint8 value, quint8 *pNum);
 
     static bool isCommandAllowed(const QString &cmd);

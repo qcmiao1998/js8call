@@ -5876,6 +5876,7 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
                * -> One standard compound frame, followed by a compound directed frame
                * -> <KN4CRD/P EM73> then <J1Y/P ACK>
                **/
+              bool shouldUseStandardFrame = true;
               if(compound || dirToCompound){
                   // Cases 1, 2, 3 all send a standard compound frame first...
                   QString deCompoundMessage = QString("<%1 %2>").arg(mycall).arg(mygrid);
@@ -5890,7 +5891,10 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
                   if(!dirCompoundFrame.isEmpty()){
                       frames.append(dirCompoundFrame);
                   }
-              } else {
+                  shouldUseStandardFrame = false;
+              }
+
+              if(shouldUseStandardFrame) {
                   // otherwise, just send the standard directed frame
                   frames.append(frame);
               }
@@ -5925,7 +5929,8 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
 #if 1
     qDebug() << "parsed frames:";
     foreach(auto frame, frames){
-        qDebug() << "->" << frame << DecodedText(frame).message();
+        auto dt = DecodedText(frame);
+        qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType());
     }
 #endif
 
@@ -6134,7 +6139,7 @@ void MainWindow::prepareBacon(){
     lines.append(beacon);
 
     // FT8Call Style
-    lines.append(QString("%1: BCN %2").arg(call).arg(grid));
+    lines.append(QString("%1: BEACON %2").arg(call).arg(grid));
 
     // Queue the beacon
     enqueueMessage(PriorityLow, lines.join(QChar('\n')), currentFreq(), nullptr);
@@ -7262,11 +7267,7 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
 void MainWindow::on_cqMacroButton_clicked(){
     QString call = m_config.my_callsign();
     QString grid = m_config.my_grid().left(4);
-    if(call != Radio::base_callsign(call)){
-        grid = "";
-    }
-
-    QString text = QString("CQ %1 %2").arg(call).arg(grid);
+    QString text = QString("%1: CQCQCQ %2").arg(call).arg(grid).trimmed();
     addMessageText(text);
 }
 
@@ -7475,7 +7476,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto qslQueryAction = menu->addAction("QSL? - Did you copy my last transmission?");
+    auto qslQueryAction = menu->addAction("QSL? - Did you receive my last transmission?");
     connect(qslQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7487,30 +7488,17 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto ackAction = menu->addAction("ACK - I acknowledge your last transmission");
-    connect(ackAction, &QAction::triggered, this, [this](){
+    auto qslAction = menu->addAction("QSL - I confirm I received your last transmission");
+    connect(qslAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
         if(selectedCall.isEmpty()){
             return;
         }
 
-        addMessageText(QString("%1 ACK").arg(selectedCall), true);
+        addMessageText(QString("%1 QSL").arg(selectedCall), true);
         toggleTx(true);
     });
-
-    auto rrAction = menu->addAction("RR - I received your last transmission");
-    connect(rrAction, &QAction::triggered, this, [this](){
-
-        QString selectedCall = callsignSelected();
-        if(selectedCall.isEmpty()){
-            return;
-        }
-
-        addMessageText(QString("%1 RR").arg(selectedCall), true);
-        toggleTx(true);
-    });
-
 
     auto yesAction = menu->addAction("YES - I confirm your last inquiry");
     connect(yesAction, &QAction::triggered, this, [this](){

@@ -45,23 +45,23 @@ QMap<QString, int> directed_cmds = {
     {"$",     3  }, // query station(s) heard
     // {"^",     4  }, // query ack
     {"%",     5  }, // query pwr
-    {"|",     6  }, // relay message?
-    {"!",     7  }, // alert message?
+    {"|",     6  }, // retransmit message
+    {"!",     7  }, // alert message
     {"#",     8  }, // all or nothing message
 
     // {"=",     9  }, // unused? (can we even use equals?)
     // {"/",     10  }, // unused? (can we even use stroke?)
 
     // directed responses
-    {" QSL?", 21  }, // do you copy?
-    {" QSL",  22  }, // i copy
-    {" ACK",  23  }, // acknowledged
+    {" RR",   21  }, // roger roger (not visible in UI but still exists)
+    {" QSL?", 22  }, // do you copy?
+    {" QSL",  23  }, // i copy
     {" PWR",  24  }, // power level
     {" SNR",  25  }, // seen a station at the provided snr
     {" NO",   26  }, // negative confirm
     {" YES",  27  }, // confirm
     {" 73",   28  }, // best regards, end of contact
-    {" RR",   29  }, // confirm message
+    {" ACK",  29  }, // acknowledge
     {" AGN?", 30  }, // repeat message
     {" ",     31 },  // send freetext
 };
@@ -71,10 +71,10 @@ QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25, 26, 27,
 QSet<int> buffered_cmds = {6, 7, 8};
 
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]?|RR|73|YES|NO|SNR|PWR|ACK|[?@&$^%|!# ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]?|ACK|RR|73|YES|NO|SNR|PWR|[?@&$^%|!# ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
-QString optional_pwr_pattern = QString("(?<pwr>\\s?\\d+\\s?[KM]?W)?");
-QString optional_num_pattern = QString("(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
+QString optional_pwr_pattern = QString("(?<pwr>(?<=PWR)\\s?\\d+\\s?[KM]?W)?");
+QString optional_num_pattern = QString("(?<num>(?<=SNR)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
 
 QRegularExpression directed_re("^"                    +
                                callsign_pattern       +
@@ -82,14 +82,16 @@ QRegularExpression directed_re("^"                    +
                                optional_pwr_pattern   +
                                optional_num_pattern);
 
-QRegularExpression beacon_re(R"(^ALLCALL\s(?<type>CQ|BCN)(?:\s(?<grid>[A-Z]{2}[0-9]{2}))?\b)");
+QRegularExpression beacon_re(R"(^(?<type>CQCQCQ|BEACON)(?:\s(?<grid>[A-Z]{2}[0-9]{2}))?\b)");
 
-QRegularExpression compound_re("^[<]"                +
-                               callsign_pattern      +
-                               optional_grid_pattern +
-                               optional_cmd_pattern  +
-                               optional_pwr_pattern  +
-                               optional_num_pattern  +
+QRegularExpression compound_re("^[<]"                  +
+                               callsign_pattern        +
+                               "(?<extra>"             +
+                                 optional_grid_pattern +
+                                 optional_cmd_pattern  +
+                                 optional_pwr_pattern  +
+                                 optional_num_pattern  +
+                               ")"                     +
                                "[>]");
 
 QMap<QString, QString> hufftable = {
@@ -323,8 +325,7 @@ quint16 nmaxgrid  = (1<<15)-1;
 
 QMap<QString, quint32> basecalls = {
     { "<....>",  nbasecall + 1 }, // incomplete callsign
-    { "CQCQCQ",  nbasecall + 2 },
-    { "ALLCALL", nbasecall + 3 },
+    { "ALLCALL", nbasecall + 2 },
 };
 
 QMap<int, int> dbm2mw = {
@@ -1020,7 +1021,7 @@ quint8 Varicode::packPwr(QString const &pwr, bool *ok){
 }
 
 // pack a reduced fidelity command and a number into the extra bits provided between nbasegrid and nmaxgrid
-quint8 Varicode::packCmd(quint8 cmd, quint8 num){
+quint8 Varicode::packCmd(quint8 cmd, quint8 num, bool *pPackedNum){
     //quint8 allowed = nmaxgrid - nbasegrid - 1;
 
     // if cmd == pwr || cmd == snr
@@ -1033,8 +1034,10 @@ quint8 Varicode::packCmd(quint8 cmd, quint8 num){
 
         value = ((1 << 1) + ((int)cmd == directed_cmds[" PWR"])) << 6;
         value = value + num;
+        if(pPackedNum) *pPackedNum = true;
     } else {
         value = cmd & ((1<<7)-1);
+        if(pPackedNum) *pPackedNum = false;
     }
 
     return value;
@@ -1067,8 +1070,8 @@ bool Varicode::isCommandBuffered(const QString &cmd){
     return directed_cmds.contains(cmd) && buffered_cmds.contains(directed_cmds[cmd]);
 }
 
-// ALLCALL CQ EM73
-// ALLCALL BCN EM73
+// CQCQCQ EM73
+// BEACON EM73
 QString Varicode::packBeaconMessage(QString const &text, const QString &callsign, int *n){
     QString frame;
 
@@ -1082,11 +1085,11 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
 
     // Beacon Alt Type
     // ---------------
-    // 1      0   BCN
-    // 1      1   CQ
+    // 1      0   BEACON
+    // 1      1   CQCQCQ
 
     auto type = parsedText.captured("type");
-    auto isAlt = type == "CQ";
+    auto isAlt = type.startsWith("CQ");
 
     auto parsedCall = QRegularExpression(compound_callsign_pattern).match(callsign);
     if(!parsedCall.hasMatch()){
@@ -1162,35 +1165,42 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
     QString num = parsedText.captured("num").trimmed();
     QString pwr = parsedText.captured("pwr").trimmed().toUpper();
 
-    auto parsedCall = QRegularExpression(compound_callsign_pattern).match(callsign);
-    if(!parsedCall.hasMatch()){
-        if(n) *n = 0;
-        return frame;
-    }
-
-    auto base = parsedCall.captured("base");
-
+    QString base;
+    QString fix;
     bool isPrefix = false;
-    auto fix = parsedCall.captured("prefix");
-    if(!fix.isEmpty()){
-        isPrefix = true;
-    }
 
-    if(!isPrefix){
-        fix = parsedCall.captured("suffix");
+    if(basecalls.contains(callsign)){
+        // if it's a basecall, use it verbatim with no prefix/suffix
+        base = callsign;
+        fix = "";
+    } else {
+        // otherwise, parse the callsign for prefix/suffix
+        auto parsedCall = QRegularExpression(compound_callsign_pattern).match(callsign);
+        if(!parsedCall.hasMatch()){
+            if(n) *n = 0;
+            return frame;
+        }
+
+        base = parsedCall.captured("base");
+        fix = parsedCall.captured("prefix");
+        if(!fix.isEmpty()){
+            isPrefix = true;
+        }
+        if(!isPrefix){
+            fix = parsedCall.captured("suffix");
+        }
     }
 
     quint8 type = FrameCompound;
     quint16 extra = nmaxgrid;
 
     if (!cmd.isEmpty() && directed_cmds.contains(cmd) && Varicode::isCommandAllowed(cmd)){
-
+        bool packedNum = false;
         qint8 inum = Varicode::packNum(num, nullptr);
-        if(cmd.trimmed() == "PWR"){
+        if(cmd == " PWR"){
             inum = Varicode::packPwr(pwr, nullptr);
         }
-
-        extra = nusergrid + Varicode::packCmd(directed_cmds[cmd], inum);
+        extra = nusergrid + Varicode::packCmd(directed_cmds[cmd], inum, &packedNum);
 
         type = FrameCompoundDirected;
     } else if(!grid.isEmpty()){
@@ -1343,7 +1353,9 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         return frame;
     }
 
-    if(parsedTo.hasMatch()){
+    if(basecalls.contains(to)){
+        if(pTo) *pTo = to;
+    } else if(parsedTo.hasMatch()){
         if(pTo) *pTo = parsedTo.captured(0);
 
         auto parsedBase = parsedTo.captured("base");
@@ -1351,6 +1363,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
             to = "<....>"; // parsedBase;
         }
     }
+
 
     // validate command
     if(!Varicode::isCommandAllowed(cmd)){
@@ -1435,7 +1448,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
         } else if(packed_cmd == directed_cmds[" SNR"]) {
             unpacked.append(Varicode::formatSNR((int)num-31));
         } else {
-            unpacked.append(QString("%1").arg(num));
+            unpacked.append(QString("%1").arg(num-31));
         }
     }
 

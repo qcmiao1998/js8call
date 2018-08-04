@@ -130,7 +130,7 @@ bool DecodedText::tryUnpackBeacon(){
         cmp.append(parts.at(1));
     }
     compound_ = cmp.join("/");
-    message_ = QString("%1: ALLCALL %2 %3 ").arg(compound_).arg(isAlt ? "CQ" : "BCN").arg(extra_);
+    message_ = QString("%1: %2 %3 ").arg(compound_).arg(isAlt ? "CQCQCQ" : "BEACON").arg(extra_);
     frameType_ = type;
     return true;
 }
