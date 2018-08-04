@@ -7475,6 +7475,18 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
+    auto qslQueryAction = menu->addAction("QSL? - Did you copy my last transmission?");
+    connect(qslQueryAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 QSL?").arg(selectedCall), true);
+        toggleTx(true);
+    });
+
     auto ackAction = menu->addAction("ACK - I acknowledge your last transmission");
     connect(ackAction, &QAction::triggered, this, [this](){
 

@@ -53,6 +53,8 @@ QMap<QString, int> directed_cmds = {
     // {"/",     10  }, // unused? (can we even use stroke?)
 
     // directed responses
+    {" QSL?", 21  }, // do you copy?
+    {" QSL",  22  }, // i copy
     {" ACK",  23  }, // acknowledged
     {" PWR",  24  }, // power level
     {" SNR",  25  }, // seen a station at the provided snr
@@ -64,12 +66,12 @@ QMap<QString, int> directed_cmds = {
     {" ",     31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 8, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 QSet<int> buffered_cmds = {6, 7, 8};
 
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|RR|73|YES|NO|SNR|PWR|ACK|[?@&$^%|!# ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]?|RR|73|YES|NO|SNR|PWR|ACK|[?@&$^%|!# ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_pwr_pattern = QString("(?<pwr>\\s?\\d+\\s?[KM]?W)?");
 QString optional_num_pattern = QString("(?<num>\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
