@@ -1059,10 +1059,16 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->spotButton->setChecked(m_config.spot_to_psk_reporter());
 
   auto enterFilter = new EnterKeyPressEater();
-  connect(enterFilter, &EnterKeyPressEater::enterKeyPressed, this, [this](QKeyEvent *, QObject *){
-      if(ui->extFreeTextMsgEdit->isReadOnly()){
+  connect(enterFilter, &EnterKeyPressEater::enterKeyPressed, this, [this](QObject *, QKeyEvent *, bool *pProcessed){
+      if(QApplication::keyboardModifiers() & Qt::ShiftModifier){
+          if(pProcessed) *pProcessed = false;
           return;
       }
+      if(ui->extFreeTextMsgEdit->isReadOnly()){
+          if(pProcessed) *pProcessed = false;
+          return;
+      }
+      if(pProcessed) *pProcessed = true;
       toggleTx(true);
   });
   ui->extFreeTextMsgEdit->installEventFilter(enterFilter);

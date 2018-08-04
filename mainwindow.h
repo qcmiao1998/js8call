@@ -920,8 +920,11 @@ protected:
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
             if(keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return){
-                emit this->enterKeyPressed(keyEvent, obj);
-                return true;
+                bool processed = false;
+                emit this->enterKeyPressed(obj, keyEvent, &processed);
+                if(processed){
+                    return true;
+                }
             }
         }
 
@@ -930,7 +933,7 @@ protected:
     }
 
 public:
-    Q_SIGNAL void enterKeyPressed(QKeyEvent *evt, QObject *obj);
+    Q_SIGNAL void enterKeyPressed(QObject *obj, QKeyEvent *evt, bool *pProcessed);
 };
 
 extern int killbyname(const char* progName);
