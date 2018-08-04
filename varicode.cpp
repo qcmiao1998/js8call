@@ -43,8 +43,8 @@ QMap<QString, int> directed_cmds = {
     {"@",     1  }, // query qth
     {"&",     2  }, // query station message
     {"$",     3  }, // query station(s) heard
-    // {"^",     4  }, // query ack
     {"%",     5  }, // query pwr
+    // 4.
     {"|",     6  }, // retransmit message
     {"!",     7  }, // alert message
     {"#",     8  }, // all or nothing message
@@ -53,28 +53,29 @@ QMap<QString, int> directed_cmds = {
     // {"/",     10  }, // unused? (can we even use stroke?)
 
     // directed responses
-    {" RR",   21  }, // roger roger (not visible in UI but still exists)
-    {" QSL?", 22  }, // do you copy?
-    {" QSL",  23  }, // i copy
-    {" PWR",  24  }, // power level
-    {" SNR",  25  }, // seen a station at the provided snr
-    {" NO",   26  }, // negative confirm
-    {" YES",  27  }, // confirm
-    {" 73",   28  }, // best regards, end of contact
-    {" ACK",  29  }, // acknowledge
-    {" AGN?", 30  }, // repeat message
-    {" ",     31 },  // send freetext
+    {" HEARING", 20  }, // i am hearing the following stations
+    {" RR",      21  }, // roger roger (not visible in UI but still exists)
+    {" QSL?",    22  }, // do you copy?
+    {" QSL",     23  }, // i copy
+    {" PWR",     24  }, // power level
+    {" SNR",     25  }, // seen a station at the provided snr
+    {" NO",      26  }, // negative confirm
+    {" YES",     27  }, // confirm
+    {" 73",      28  }, // best regards, end of contact
+    {" ACK",     29  }, // acknowledge
+    {" AGN?",    30  }, // repeat message
+    {" ",        31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, 3, /*4,*/ 5, 6, 7, 8, /*...*/ 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 QSet<int> buffered_cmds = {6, 7, 8};
 
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]?|ACK|RR|73|YES|NO|SNR|PWR|[?@&$^%|!# ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|PWR|QSL[?]?|RR|HEARING|[?@&$%|!# ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_pwr_pattern = QString("(?<pwr>(?<=PWR)\\s?\\d+\\s?[KM]?W)?");
-QString optional_num_pattern = QString("(?<num>(?<=SNR)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
+QString optional_num_pattern = QString("(?<num>(?<=SNR|HEARING)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
 
 QRegularExpression directed_re("^"                    +
                                callsign_pattern       +
@@ -91,8 +92,7 @@ QRegularExpression compound_re("^[<]"                  +
                                  optional_cmd_pattern  +
                                  optional_pwr_pattern  +
                                  optional_num_pattern  +
-                               ")"                     +
-                               "[>]");
+                               ")[>]");
 
 QMap<QString, QString> hufftable = {
     // char   code                 weight

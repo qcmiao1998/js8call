@@ -161,7 +161,7 @@ bool DecodedText::tryUnpackCompound(){
     if(type == Varicode::FrameCompound){
         message_ = QString("%1: ").arg(compound_);
     } else if(type == Varicode::FrameCompoundDirected){
-        message_ = QString("%1%2").arg(compound_).arg(extra_);
+        message_ = QString("%1%2 ").arg(compound_).arg(extra_);
         directed_ = QStringList{ "<....>", compound_ } + parts.mid(2);
     }
 

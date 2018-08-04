@@ -3247,6 +3247,12 @@ void MainWindow::readFromStdout()                             //readFromStdout
             m_bandActivity[offset].append(d);
             m_rxActivityQueue.append(d);
 
+            // if we have any "first" frame, and a buffer is already established, clear it...
+            if(d.bits == Varicode::FT8CallFirst && m_messageBuffer.contains(d.freq/10*10)){
+                qDebug() << "first message encountered, clearing existing buffer" << (d.freq/10*10);
+                m_messageBuffer.remove(d.freq/10*10);
+            }
+
             // if we have a data frame, and a message buffer has been established, buffer it...
             if(m_messageBuffer.contains(d.freq/10*10) && !decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
                 qDebug() << "buffering data" << (d.freq/10*10) << d.text;
@@ -5771,6 +5777,8 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
             line = lstrip(line.mid(basecall.length() + 1));
         }
 
+#define ALLOW_SEND_COMPOUND 1
+
         while(line.size() > 0){
           QString frame;
 
@@ -6006,6 +6014,9 @@ bool MainWindow::prepareNextMessageFrame()
     int sent = count - m_txFrameQueue.count();
 
     m_i3bit = Varicode::FT8Call;
+    if(sent == 1){
+        m_i3bit = Varicode::FT8CallFirst;
+    }
     if(count == sent){
         m_i3bit = Varicode::FT8CallLast;
     }
@@ -6019,30 +6030,6 @@ bool MainWindow::prepareNextMessageFrame()
 
     return true;
   }
-
-
-  /*
-  QString txt = ui->extFreeTextMsg->toPlainText().trimmed().mid(m_extFreeTxtPos).trimmed();
-
-  QString nextTxt = parseFT8Message(txt);
-  ui->nextFreeTextMsg->setText(nextTxt);
-  QRegExp n = QRegExp("^" + QRegExp::escape(nextTxt));
-  
-  ui->extFreeTextMsg->setPlainText(txt.remove(n).trimmed());
-  */
-
-  /*
-  if(txt.contains(n)){
-    QTextCursor tc = ui->extFreeTextMsg->textCursor();
-    tc.setPosition(0);
-    m_extFreeTxtPos += n.matchedLength();
-    tc.setPosition(m_extFreeTxtPos, QTextCursor::KeepAnchor);
-    QTextCharFormat cf = tc.charFormat();
-    cf.setFontStrikeOut(true);
-    tc.mergeCharFormat(cf);call
-  }
-  */
-
 }
 
 bool MainWindow::isFreqOffsetFree(int f, int bw){
@@ -8737,7 +8724,7 @@ void MainWindow::processCompoundActivity() {
         }
 
         // if we don't have an initialized command, skip...
-        if (buffer.cmd.bits != Varicode::FT8Call && buffer.cmd.bits != Varicode::FT8CallLast) {
+        if (buffer.cmd.bits != Varicode::FT8Call && buffer.cmd.bits != Varicode::FT8CallFirst && buffer.cmd.bits != Varicode::FT8CallLast) {
             qDebug() << "-> buffer.cmd bits is invalid...skip";
             continue;
         }
@@ -8799,7 +8786,7 @@ void MainWindow::processBufferedActivity() {
             continue;
         }
 
-        if (buffer.msgs.last().bits == Varicode::FT8Call) {
+        if (buffer.msgs.last().bits != Varicode::FT8CallLast) {
             continue;
         }
 
@@ -8919,10 +8906,6 @@ void MainWindow::processCommandActivity() {
         if (d.cmd == "?") {
             reply = QString("%1 SNR %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
         }
-        // QUERIED ACK
-        //else if(d.cmd == "^"){
-        //    reply = QString("%1 ACK").arg(Radio::base_callsign(d.from));
-        //}
         // QUERIED PWR
         else if (d.cmd == "%" && !isAllCall && m_config.my_dBm() >= 0) {
             reply = QString("%1 PWR %2").arg(d.from).arg(Varicode::formatPWR(m_config.my_dBm()));
@@ -8966,18 +8949,13 @@ void MainWindow::processCommandActivity() {
 
                 auto d = m_callActivity[call];
 
-                lines.append(QString("%1 %2").arg(d.call).arg(Varicode::formatSNR(d.snr)));
+                lines.append(QString("<%1 SNR %2>").arg(d.call).arg(Varicode::formatSNR(d.snr)));
 
                 i++;
             }
 
-            lines.prepend(QString("%1 ACK %2\n").arg(d.from).arg(i));
-            reply = lines.join(' ');
-        }
-        // PROCESS MESSAGE ACK
-        else if (d.cmd == "^" && !isAllCall) {
-            // TODO: jsherer - perhaps parse d.text and ensure it is a valid message as well as prefix it with our call...
-            reply = QString("%1 ACK").arg(d.from);
+            lines.prepend(QString("<%1 HEARING>").arg(m_config.my_callsign()));
+            reply = lines.join('\n');
         }
         // PROCESS RETRANSMIT
         else if (d.cmd == "|" && !isAllCall) {

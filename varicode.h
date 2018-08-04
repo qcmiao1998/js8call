@@ -19,8 +19,8 @@ public:
         FT8              = 0, // [000]
         FT8Fox           = 1, // [001]
         FT8Call          = 2, // [010]
-        FT8CallLast      = 3, // [011] <- used to indicate last frame in transmission
-        FT8CallReservedA = 4, // [100]
+        FT8CallLast      = 3, // [011] <- used to indicate the last frame in a transmission
+        FT8CallFirst     = 4, // [100] <- used to indicate the first frmae in a transmission
         FT8CallReservedB = 5, // [101]
         FT8CallReservedC = 6, // [110]
         FT8CallReservedD = 7, // [111]
