@@ -158,23 +158,10 @@ bool DecodedText::tryUnpackCompound(){
     compound_ = cmp.join("/");
     extra_ = parts.length() < 3 ? "" : parts.mid(2).join(" ");
 
-    bool hasPrefixSuffix = compound_.contains("/");
-
     if(type == Varicode::FrameCompound){
-#if COMPOUND_SHOW_GRID
-        message_ = QString("<%1%2>:").arg(compound_).arg(extra_);
-#endif
-        if(hasPrefixSuffix){
-            message_ = QString("<%1>: ").arg(compound_);
-        } else {
-            message_ = QString("%1: ").arg(compound_);
-        }
+        message_ = QString("%1: ").arg(compound_);
     } else if(type == Varicode::FrameCompoundDirected){
-        if(hasPrefixSuffix){
-            message_ = QString("<%1>%2").arg(compound_).arg(extra_);
-        } else {
-            message_ = QString("%1%2").arg(compound_).arg(extra_);
-        }
+        message_ = QString("%1%2").arg(compound_).arg(extra_);
         directed_ = QStringList{ "<....>", compound_ } + parts.mid(2);
     }
 

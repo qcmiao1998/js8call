@@ -533,15 +533,6 @@ QList<QPair<int, QVector<bool>>> Varicode::huffEncode(const QMap<QString, QStrin
         }
     }
 
-#if 0
-    foreach(auto ch, text){
-        if(!huff.contains(ch)){
-            continue;
-        }
-        out.append(Varicode::strToBits(huff[ch]));
-    }
-#endif
-
     return out;
 }
 
@@ -1280,19 +1271,19 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, quint8 *pType, qu
     }
 
     // [3][28][22][11],[5] = 69
-    auto bits = Varicode::bitsToStr(Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64));
+    auto bits = Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64);
     quint8 packed_5 = Varicode::unpack5bits(text.right(1));
 
-    quint8 packed_flag = Varicode::bitsToInt(Varicode::strToBits(bits.left(3)));
+    quint8 packed_flag = Varicode::bitsToInt(bits.mid(0, 3));
 
     // needs to be a beacon type...
     if(packed_flag == FrameDataPadded || packed_flag == FrameDataUnpadded || packed_flag == FrameDirectedPositive || packed_flag == FrameDirectedNegative){
         return unpacked;
     }
 
-    quint32 packed_base = Varicode::bitsToInt(Varicode::strToBits(bits.mid(3, 28)));
-    quint32 packed_fix = Varicode::bitsToInt(Varicode::strToBits(bits.mid(31, 22)));
-    quint16 packed_11 = Varicode::bitsToInt(Varicode::strToBits(bits.mid(53, 11)));
+    quint32 packed_base = Varicode::bitsToInt(bits.mid(3, 28));
+    quint32 packed_fix = Varicode::bitsToInt(bits.mid(31, 22));
+    quint16 packed_11 = Varicode::bitsToInt(bits.mid(53, 11));
 
     QString base = Varicode::unpackCallsign(packed_base).trimmed();
 
@@ -1409,11 +1400,11 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
     }
 
     // [3][28][28][5],[5] = 69
-    auto bits = Varicode::bitsToStr(Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64));
+    auto bits = Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64);
     quint8 extra = Varicode::unpack5bits(text.right(1));
 
     int numSign = 0;
-    quint8 packed_flag = Varicode::bitsToInt(Varicode::strToBits(bits.left(3)));
+    quint8 packed_flag = Varicode::bitsToInt(bits.mid(0, 3));
     if(packed_flag == FrameDirectedPositive){
         numSign = 31;
     } else if(packed_flag == FrameDirectedNegative){
@@ -1422,9 +1413,9 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
         return unpacked;
     }
 
-    quint32 packed_from = Varicode::bitsToInt(Varicode::strToBits(bits.mid(3, 28)));
-    quint32 packed_to = Varicode::bitsToInt(Varicode::strToBits(bits.mid(31, 28)));
-    quint8 packed_cmd = Varicode::bitsToInt(Varicode::strToBits(bits.mid(59, 5)));
+    quint32 packed_from = Varicode::bitsToInt(bits.mid(3, 28));
+    quint32 packed_to = Varicode::bitsToInt(bits.mid(31, 28));
+    quint8 packed_cmd = Varicode::bitsToInt(bits.mid(59, 5));
 
     QString from = Varicode::unpackCallsign(packed_from).trimmed();
     QString to = Varicode::unpackCallsign(packed_to).trimmed();
@@ -1488,7 +1479,6 @@ QString Varicode::packDataMessage(const QString &input, int *n){
 
     QVector<bool> allBits = frameHeaderBits + frameDataBits + framePadBits;
 
-    //frame = pass;// Varicode::pack64bits(Varicode::bitsToInt(frameBits)) + Varicode::pack5bits(pad % 32);
     frame = Varicode::pack64bits(Varicode::bitsToInt(allBits.constBegin(), 64)) + Varicode::pack5bits(Varicode::bitsToInt(allBits.constBegin() + 64, 5));
     *n = i;
 
