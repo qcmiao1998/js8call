@@ -1175,8 +1175,8 @@ target_link_libraries (jt65sim wsjt_fort wsjt_cxx)
 add_executable (qra64sim lib/qra/qra64/qra64sim.f90 wsjtx.rc)
 target_link_libraries (qra64sim wsjt_fort wsjt_cxx)
 
-add_executable (jt9sim lib/jt9sim.f90 wsjtx.rc)
-target_link_libraries (jt9sim wsjt_fort wsjt_cxx)
+add_executable (jt49sim lib/jt49sim.f90 wsjtx.rc)
+target_link_libraries (jt49sim wsjt_fort wsjt_cxx)
 
 add_executable (allsim lib/allsim.f90 wsjtx.rc)
 target_link_libraries (allsim wsjt_fort wsjt_cxx)
@@ -1312,12 +1312,14 @@ if (WSJT_CREATE_WINMAIN)
 endif (WSJT_CREATE_WINMAIN)
 
 set_target_properties (ft8call PROPERTIES
+  MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Darwin/Info.plist.in"
   MACOSX_BUNDLE_INFO_STRING "${WSJTX_DESCRIPTION_SUMMARY}"
   MACOSX_BUNDLE_ICON_FILE "${WSJTX_ICON_FILE}"
   MACOSX_BUNDLE_BUNDLE_VERSION ${wsjtx_VERSION}
   MACOSX_BUNDLE_SHORT_VERSION_STRING "v${wsjtx_VERSION}"
   MACOSX_BUNDLE_LONG_VERSION_STRING "Version ${wsjtx_VERSION}"
   MACOSX_BUNDLE_BUNDLE_NAME "${PROJECT_NAME}"
+  MACOSX_BUNDLE_BUNDLE_EXECUTABLE_NAME "${PROJECT_NAME}"
   MACOSX_BUNDLE_COPYRIGHT "${PROJECT_COPYRIGHT}"
   MACOSX_BUNDLE_GUI_IDENTIFIER "org.k1jt.wsjtx"
   )
@@ -1363,7 +1365,7 @@ set_target_properties (wsjtx_udp-static PROPERTIES
   )
 target_compile_definitions (wsjtx_udp-static PUBLIC UDP_STATIC_DEFINE)
 #qt5_use_modules (wsjtx_udp Network)
-qt5_use_modules (wsjtx_udp-static Network)
+qt5_use_modules (wsjtx_udp-static Network Gui)
 generate_export_header (wsjtx_udp-static BASE_NAME udp)
 
 add_executable (udp_daemon UDPExamples/UDPDaemon.cpp UDPExamples/udp_daemon.rc ${WSJTX_ICON_FILE})
@@ -1487,9 +1489,13 @@ add_custom_target (uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
 
-# creates svnversion.h using cmake script
+# creates or updates ${PROJECT_BINARY_DIR}/scs_version.h using cmake script
 # add_custom_target (revisiontag
-#   COMMAND ${CMAKE_COMMAND} -D SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -D OUTPUT_DIR=${PROJECT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/CMake/getsvn.cmake
+#   COMMAND ${CMAKE_COMMAND}
+#   -D SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+#   -D BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+#   -D OUTPUT_DIR=${PROJECT_BINARY_DIR}
+#   -P ${CMAKE_CURRENT_SOURCE_DIR}/CMake/getsvn.cmake
 #   COMMENT "Generating Subversion revision information"
 #   VERBATIM
 #   )

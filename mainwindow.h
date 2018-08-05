@@ -485,6 +485,15 @@ private:
   qint32  m_Nslots=5;
   qint32  m_nFoxMsgTimes[5]={0,0,0,0,0};
   qint32  m_tAutoOn;
+//  qint32  m_maxQSOs;
+  qint32  m_tFoxTx=0;
+  qint32  m_tFoxTx0=0;
+  qint32  m_maxStrikes=3;      //Max # of repeats: 3 strikes and you're out
+  qint32  m_maxFoxWait=3;      //Max wait time for expected Hound replies
+  qint32  m_foxCQtime=10;      //CQs at least every 5 minutes
+  qint32  m_tFoxTxSinceCQ=999; //Fox Tx cycles since most recent CQ
+  qint32  m_nFoxFreq;          //Audio freq at which Hound received a call from Fox
+  qint32  m_nSentFoxRrpt=0;    //Serial number for next R+rpt Hound will send to Fox
 
   bool    m_btxok;		//True if OK to transmit
   bool    m_diskData;
@@ -631,14 +640,6 @@ private:
   QSet<QString> m_pfx;
   QSet<QString> m_sfx;
 
-  struct FoxQSO
-  {
-    QString grid;
-    QString sent;
-    QString rcvd;
-    qint32  ncall;
-  };
-
   struct CallDetail
   {
     QString call;
@@ -682,7 +683,6 @@ private:
   QString m_lastTxMessage;
   QDateTime m_lastTxTime;
 
-
   QQueue<QString> m_txFrameQueue;
   QQueue<ActivityDetail> m_rxFrameQueue;
   QQueue<CommandDetail> m_rxCommandQueue;
@@ -698,13 +698,25 @@ private:
   QSet<QString> m_callSeenBeacon; // call
   int m_previousFreq;
   bool m_shouldRestoreFreq;
-  QMap<QString,FoxQSO> m_foxQSO;
-  QMap<QString,QString> m_loggedByFox;
 
-  QQueue<QString> m_houndQueue;
-  QQueue<QString> m_foxQSOqueue;
-  QQueue<QString> m_foxRR73Queue;
+  struct FoxQSO       //Everything we need to know about QSOs in progress (or recently logged).
+  {
+    QString grid;       //Hound's declared locator
+    QString sent;       //Report sent to Hound
+    QString rcvd;       //Report received from Hound
+    qint32  ncall;      //Number of times report sent to Hound
+    qint32  nRR73;      //Number of times RR73 sent to Hound
+    qint32  tFoxRrpt;   //m_tFoxTx (Fox Tx cycle counter) when R+rpt was received from Hound
+    qint32  tFoxTxRR73; //m_tFoxTx when RR73 was sent to Hound
+  };
+
+  QMap<QString,FoxQSO> m_foxQSO;       //Key = HoundCall, value = parameters for QSO in progress
+  QMap<QString,QString> m_loggedByFox; //Key = HoundCall, value = logged band
+
+  QQueue<QString> m_houndQueue;        //Selected Hounds available for starting a QSO
+  QQueue<QString> m_foxQSOinProgress;  //QSOs in progress: Fox has sent a report
   QQueue<qint64>  m_foxRateQueue;
+
 
   bool m_nextBeaconPaused = false;
   QDateTime m_nextBeacon;
@@ -799,6 +811,7 @@ private:
                           , Frequency frequency
                           , QString const& his_call
                           , QString const& his_grid) const;
+  void hound_reply ();
   QString sortHoundCalls(QString t, int isort, int max_dB);
   void rm_tb4(QString houndCall);
   void read_wav_file (QString const& fname);

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>825</width>
-    <height>688</height>
+    <width>530</width>
+    <height>550</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -849,9 +849,25 @@ text message.</string>
                </property>
                <layout class="QHBoxLayout" name="horizontalLayout_4">
                 <item>
+                 <widget class="QRadioButton" name="CAT_default_bit_radio_button">
+                  <property name="text">
+                   <string>D&amp;efault</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                  <attribute name="buttonGroup">
+                   <string notr="true">CAT_data_bits_button_group</string>
+                  </attribute>
+                 </widget>
+                </item>
+                <item>
                  <widget class="QRadioButton" name="CAT_7_bit_radio_button">
                   <property name="text">
                    <string>Se&amp;ven</string>
+                  </property>
+                  <property name="autoExclusive">
+                   <bool>true</bool>
                   </property>
                   <attribute name="buttonGroup">
                    <string notr="true">CAT_data_bits_button_group</string>
@@ -864,7 +880,7 @@ text message.</string>
                    <string>E&amp;ight</string>
                   </property>
                   <property name="checked">
-                   <bool>true</bool>
+                   <bool>false</bool>
                   </property>
                   <attribute name="buttonGroup">
                    <string notr="true">CAT_data_bits_button_group</string>
@@ -884,6 +900,19 @@ text message.</string>
                </property>
                <layout class="QHBoxLayout" name="horizontalLayout_2">
                 <item>
+                 <widget class="QRadioButton" name="CAT_default_stop_bit_radio_button">
+                  <property name="text">
+                   <string>Default</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                  <attribute name="buttonGroup">
+                   <string notr="true">CAT_stop_bits_button_group</string>
+                  </attribute>
+                 </widget>
+                </item>
+                <item>
                  <widget class="QRadioButton" name="CAT_one_stop_bit_radio_button">
                   <property name="text">
                    <string>On&amp;e</string>
@@ -899,7 +928,7 @@ text message.</string>
                    <string>T&amp;wo</string>
                   </property>
                   <property name="checked">
-                   <bool>true</bool>
+                   <bool>false</bool>
                   </property>
                   <attribute name="buttonGroup">
                    <string notr="true">CAT_stop_bits_button_group</string>
@@ -919,9 +948,9 @@ text message.</string>
                </property>
                <layout class="QGridLayout" name="gridLayout_11">
                 <item row="0" column="0">
-                 <widget class="QRadioButton" name="CAT_handshake_none_radio_button">
+                 <widget class="QRadioButton" name="CAT_handshake_default_radio_button">
                   <property name="text">
-                   <string>&amp;None</string>
+                   <string>Default</string>
                   </property>
                   <property name="checked">
                    <bool>true</bool>
@@ -932,6 +961,19 @@ text message.</string>
                  </widget>
                 </item>
                 <item row="0" column="1">
+                 <widget class="QRadioButton" name="CAT_handshake_none_radio_button">
+                  <property name="text">
+                   <string>&amp;None</string>
+                  </property>
+                  <property name="checked">
+                   <bool>false</bool>
+                  </property>
+                  <attribute name="buttonGroup">
+                   <string notr="true">CAT_handshake_button_group</string>
+                  </attribute>
+                 </widget>
+                </item>
+                <item row="1" column="0">
                  <widget class="QRadioButton" name="CAT_handshake_xon_radio_button">
                   <property name="toolTip">
                    <string>Software flow control (very rare on CAT interfaces).</string>
@@ -944,7 +986,7 @@ text message.</string>
                   </attribute>
                  </widget>
                 </item>
-                <item row="0" column="2">
+                <item row="1" column="1">
                  <widget class="QRadioButton" name="CAT_handshake_hardware_radio_button">
                   <property name="toolTip">
                    <string>Flow control using the RTS and CTS RS-232 control lines
@@ -976,16 +1018,6 @@ a few, particularly some Kenwood rigs, require it).</string>
                <layout class="QHBoxLayout" name="horizontalLayout_8">
                 <item>
                  <layout class="QFormLayout" name="formLayout_8">
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="force_DTR_label">
-                    <property name="text">
-                     <string>DTR:</string>
-                    </property>
-                    <property name="buddy">
-                     <cstring>force_DTR_combo_box</cstring>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="0" column="1">
                    <widget class="QComboBox" name="force_DTR_combo_box">
                     <item>
@@ -1003,6 +1035,16 @@ a few, particularly some Kenwood rigs, require it).</string>
                       <string>Low</string>
                      </property>
                     </item>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="force_DTR_label">
+                    <property name="text">
+                     <string>DTR:</string>
+                    </property>
+                    <property name="buddy">
+                     <cstring>force_DTR_combo_box</cstring>
+                    </property>
                    </widget>
                   </item>
                  </layout>
@@ -2667,6 +2709,9 @@ Right click for insert and delete options.</string>
           </item>
           <item row="2" column="1">
            <widget class="QDoubleSpinBox" name="sbDegrade">
+            <property name="toolTip">
+             <string>For offline sensitivity tests</string>
+            </property>
             <property name="suffix">
              <string> dB</string>
             </property>
@@ -2690,6 +2735,9 @@ Right click for insert and delete options.</string>
           </item>
           <item row="3" column="1">
            <widget class="QSpinBox" name="sbBandwidth">
+            <property name="toolTip">
+             <string>For offline sensitivity tests</string>
+            </property>
             <property name="suffix">
              <string>  Hz</string>
             </property>
@@ -2749,7 +2797,7 @@ Right click for insert and delete options.</string>
           <item row="8" column="0">
            <widget class="QCheckBox" name="cbx4ToneSpacing">
             <property name="enabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Generate Tx audio with four times the normal tone spacing. Intended for special LF/MF transmitters that use a divide-by-4 before generating RF.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -2872,6 +2920,9 @@ Right click for insert and delete options.</string>
           <layout class="QHBoxLayout" name="horizontalLayout_16">
            <item>
             <widget class="QCheckBox" name="cbFox">
+             <property name="toolTip">
+              <string>Fox is the DXpedition station</string>
+             </property>
              <property name="text">
               <string> Fox</string>
              </property>
@@ -2879,6 +2930,9 @@ Right click for insert and delete options.</string>
            </item>
            <item>
             <widget class="QCheckBox" name="cbHound">
+             <property name="toolTip">
+              <string>Everybody else is a Hound</string>
+             </property>
              <property name="text">
               <string>Hound</string>
              </property>
@@ -2916,6 +2970,7 @@ soundcard changes</string>
   <tabstop>use_dynamic_grid</tabstop>
   <tabstop>region_combo_box</tabstop>
   <tabstop>type_2_msg_gen_combo_box</tabstop>
+  <tabstop>insert_blank_check_box</tabstop>
   <tabstop>miles_check_box</tabstop>
   <tabstop>TX_messages_check_box</tabstop>
   <tabstop>DXCC_check_box</tabstop>
@@ -2927,6 +2982,8 @@ soundcard changes</string>
   <tabstop>tx_watchdog_spin_box</tabstop>
   <tabstop>CW_id_after_73_check_box</tabstop>
   <tabstop>enable_VHF_features_check_box</tabstop>
+  <tabstop>tx_QSY_check_box</tabstop>
+  <tabstop>single_decode_check_box</tabstop>
   <tabstop>decode_at_52s_check_box</tabstop>
   <tabstop>CW_id_interval_spin_box</tabstop>
   <tabstop>rig_combo_box</tabstop>
@@ -3065,12 +3122,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
   <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
  </buttongroups>
 </ui>
