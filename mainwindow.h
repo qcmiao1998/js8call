@@ -648,14 +648,6 @@ private:
   QSet<QString> m_pfx;
   QSet<QString> m_sfx;
 
-  struct FoxQSO
-  {
-    QString grid;
-    QString sent;
-    QString rcvd;
-    qint32  ncall;
-  };
-
   struct CallDetail
   {
     QString call;
