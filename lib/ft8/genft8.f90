@@ -5,6 +5,7 @@ subroutine genft8(msg,mygrid,bcontest,i3bit,msgsent,msgbits,itone)
   use crc
   use packjt
   include 'ft8_params.f90'
+  character*68 alphabet
   character*22 msg,msgsent
   character*6 mygrid
   character*87 cbits
@@ -16,8 +17,30 @@ subroutine genft8(msg,mygrid,bcontest,i3bit,msgsent,msgbits,itone)
   integer icos7(0:6)
   data icos7/2,5,6,0,4,1,3/                   !Costas 7x7 tone pattern
 
-  call packmsg(msg,i4Msg6BitWords,itype,bcontest) !Pack into 12 6-bit bytes
-  call unpackmsg(i4Msg6BitWords,msgsent,bcontest,mygrid) !Unpack to get msgsent
+  alphabet='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-+/?. abcdefghijklmnopqrstuvwxyz'
+
+  itype=6
+  do i=1,12
+    v=index(alphabet, msg(i:i)) - 1
+    i4Msg6BitWords(i)=v
+  enddo
+  !i4Msg6BitWords( 1)=index(alphabet, msg( 1: 2))
+  !i4Msg6BitWords( 2)=index(alphabet, msg( 2: 3))
+  !i4Msg6BitWords( 3)=index(alphabet, msg( 3: 4))
+  !i4Msg6BitWords( 4)=index(alphabet, msg( 4: 5))
+  !i4Msg6BitWords( 5)=index(alphabet, msg( 5: 6))
+  !i4Msg6BitWords( 6)=index(alphabet, msg( 6: 7))
+  !i4Msg6BitWords( 7)=index(alphabet, msg( 7: 8))
+  !i4Msg6BitWords( 8)=index(alphabet, msg( 8: 9))
+  !i4Msg6BitWords( 9)=index(alphabet, msg( 9:10))
+  !i4Msg6BitWords(10)=index(alphabet, msg(10:11))
+  !i4Msg6BitWords(11)=index(alphabet, msg(11:12))
+  !i4Msg6BitWords(12)=index(alphabet, msg(12:13))
+  msgsent='                      '
+  msgsent(1:12)=msg(1:12)
+
+  ! call packmsg(msg,i4Msg6BitWords,itype,bcontest) !Pack into 12 6-bit bytes
+  ! call unpackmsg(i4Msg6BitWords,msgsent,bcontest,mygrid) !Unpack to get msgsent
 
   write(cbits,1000) i4Msg6BitWords,32*i3bit
 1000 format(12b6.6,b8.8)

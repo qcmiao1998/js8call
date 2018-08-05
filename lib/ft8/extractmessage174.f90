@@ -2,12 +2,14 @@ subroutine extractmessage174(decoded,msgreceived,ncrcflag)
   use iso_c_binding, only: c_loc,c_size_t
   use crc
   use packjt
-
+  character*68 alphabet
   character*22 msgreceived
   character*87 cbits
   integer*1 decoded(87)
   integer*1, target::  i1Dec8BitBytes(11)
   integer*4 i4Dec6BitWords(12)
+
+  alphabet='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-+/?. abcdefghijklmnopqrstuvwxyz'
 
 ! Write decoded bits into cbits: 75-bit message plus 12-bit CRC
   write(cbits,1000) decoded
@@ -31,7 +33,15 @@ subroutine extractmessage174(decoded,msgreceived,ncrcflag)
       enddo
       i4Dec6BitWords(ibyte)=itmp
     enddo
-    call unpackmsg(i4Dec6BitWords,msgreceived,.false.,'      ')
+
+    !call unpackmsg(i4Dec6BitWords,msgreceived,.false.,'      ')
+
+    msgreceived='                      '
+    do ibyte=1,12
+      itmp=i4Dec6BitWords(ibyte)
+      msgreceived(ibyte:ibyte) = alphabet(itmp+1:itmp+1)
+    enddo
+    
     ncrcflag=1
   else
     msgreceived=' '

@@ -7,7 +7,7 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   include 'ft8_params.f90'
   parameter(NP2=2812)
   character*37 msg37
-  character message*22,msgsent*22
+  character message*22,msgsent*22,origmsg*22
   character*12 mycall12,hiscall12
   character*6 mycall6,mygrid6,hiscall6,c1,c2
   character*87 cbits
@@ -378,7 +378,7 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
      if(nbadcrc.eq.0) then
         decoded0=decoded
         if(i3bit.eq.1) decoded(57:)=0
-        call extractmessage174(decoded,message,ncrcflag)
+        call extractmessage174(decoded,origmsg,ncrcflag)
         decoded=decoded0
 
 ! This needs fixing for messages with i3bit=1:        
@@ -399,40 +399,42 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
         if(xsnr .lt. -24.0) xsnr=-24.0
         
         
-        if(i3bit.eq.1) then
-           do i=1,12
-              i1hiscall(i)=ichar(hiscall12(i:i))
-           enddo
-           icrc10=crc10(c_loc(i1hiscall),12)
-           write(cbits,1001) decoded
-1001       format(87i1)
-           read(cbits,1002) ncrc10,nrpt
-1002       format(56x,b10,b6)
-           irpt=nrpt-30
-           i1=index(message,' ')
-           i2=index(message(i1+1:),' ') + i1
-           c1=message(1:i1)//'   '
-           c2=message(i1+1:i2)//'   '
+!        if(i3bit.eq.1) then
+!           do i=1,12
+!              i1hiscall(i)=ichar(hiscall12(i:i))
+!           enddo
+!           icrc10=crc10(c_loc(i1hiscall),12)
+!           write(cbits,1001) decoded
+!1001       format(87i1)
+!           read(cbits,1002) ncrc10,nrpt
+!1002       format(56x,b10,b6)
+!           irpt=nrpt-30
+!           i1=index(message,' ')
+!           i2=index(message(i1+1:),' ') + i1
+!           c1=message(1:i1)//'   '
+!           c2=message(i1+1:i2)//'   '
+!
+!           if(ncrc10.eq.icrc10) msg37=c1//' RR73; '//c2//' <'//      &
+!                trim(hiscall12)//'>    '
+!           if(ncrc10.ne.icrc10) msg37=c1//' RR73; '//c2//' <...>    '
+!           
+!!           msg37=c1//' RR73; '//c2//' <...>    '
+!           write(msg37(35:37),1010) irpt
+!1010       format(i3.2)
+!           if(msg37(35:35).ne.'-') msg37(35:35)='+'
+!           
+!           iz=len(trim(msg37))
+!           do iter=1,10                           !Collapse multiple blanks
+!              ib2=index(msg37(1:iz),'  ')
+!              if(ib2.lt.1) exit
+!              msg37=msg37(1:ib2)//msg37(ib2+2:)
+!              iz=iz-1
+!           enddo
+!        else
+!           msg37=message//'               '
+!        endif
 
-           if(ncrc10.eq.icrc10) msg37=c1//' RR73; '//c2//' <'//      &
-                trim(hiscall12)//'>    '
-           if(ncrc10.ne.icrc10) msg37=c1//' RR73; '//c2//' <...>    '
-           
-!           msg37=c1//' RR73; '//c2//' <...>    '
-           write(msg37(35:37),1010) irpt
-1010       format(i3.2)
-           if(msg37(35:35).ne.'-') msg37(35:35)='+'
-           
-           iz=len(trim(msg37))
-           do iter=1,10                           !Collapse multiple blanks
-              ib2=index(msg37(1:iz),'  ')
-              if(ib2.lt.1) exit
-              msg37=msg37(1:ib2)//msg37(ib2+2:)
-              iz=iz-1
-           enddo
-        else
-           msg37=message//'               '
-        endif
+        msg37=origmsg//'               '
 
         if(i3bit.gt.1) then
             msg37(22:22) = char(48 + i3bit)
