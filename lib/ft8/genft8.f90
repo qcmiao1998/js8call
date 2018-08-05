@@ -26,6 +26,7 @@ subroutine genft8(msg,mygrid,bcontest,i3bit,msgsent,msgbits,itone)
   i1Msg8BitBytes(10)=iand(i1Msg8BitBytes(10),128+64+32)
   i1Msg8BitBytes(11)=0
   icrc12=crc12(c_loc(i1Msg8BitBytes),11)
+  icrc12=xor(icrc12, 42)
 
 ! For reference, here's how to check the CRC
 !  i1Msg8BitBytes(10)=icrc12/256
