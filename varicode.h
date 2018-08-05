@@ -35,7 +35,7 @@ public:
         FrameDirectedNegative = 4,   // [100]
         FrameDataUnpadded     = 5,   // [101]
         FrameDataPadded       = 6,   // [110]
-        FrameReserved         = 7,   // [111]
+        FrameReserved         = 7,   // [111] <- Reserved for future use, likely binary data / other formats.
     };
 
     static const quint8 FrameTypeMax = 7;
