@@ -271,8 +271,8 @@ private slots:
   bool isFreqOffsetFree(int f, int bw);
   int findFreeFreqOffset(int fmin, int fmax, int bw);
   void scheduleBacon(bool first=false);
-  void setBaconTimer(QDateTime timestamp);
   void pauseBacon();
+  void checkBacon();
   void prepareBacon();
   QString calculateDistance(QString const& grid);
   void on_rptSpinBox_valueChanged(int n);
@@ -757,6 +757,7 @@ private:
   QQueue<QString> m_foxQSOinProgress;  //QSOs in progress: Fox has sent a report
   QQueue<qint64>  m_foxRateQueue;
 
+  bool m_nextBeaconQueued = false;
   bool m_nextBeaconPaused = false;
   QDateTime m_nextBeacon;
   QDateTime m_dateTimeQSOOn;

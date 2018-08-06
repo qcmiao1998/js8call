@@ -811,8 +811,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   TxAgainTimer.setSingleShot(true);
   connect(&TxAgainTimer, SIGNAL(timeout()), this, SLOT(TxAgain()));
 
-  beaconTimer.setSingleShot(true);
-  connect(&beaconTimer, &QTimer::timeout, this, &MainWindow::prepareBacon);
+  beaconTimer.setSingleShot(false);
+  connect(&beaconTimer, &QTimer::timeout, this, &MainWindow::checkBacon);
 
   connect(m_wideGraph.data (), SIGNAL(setFreq3(int,int)),this,
           SLOT(setFreq4(int,int)));
@@ -1188,7 +1188,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   });
 
 
-  m_lastTxTime = QDateTime::currentDateTimeUtc();
+  // Don't block beacon's first run...
+  m_lastTxTime = QDateTime::currentDateTimeUtc().addSecs(-300);
 
   displayActivity(true);
 
@@ -6103,35 +6104,44 @@ void MainWindow::scheduleBacon(bool first){
         timestamp = timestamp.addSecs(15);
     }
 
-    setBaconTimer(timestamp);
-}
-
-// setBeaconTimer
-void MainWindow::setBaconTimer(QDateTime timestamp){
-    // set the next beacon timestamp and timer
-    beaconTimer.stop();
     m_nextBeacon = timestamp;
+    m_nextBeaconQueued = false;
     m_nextBeaconPaused = false;
-    beaconTimer.start(QDateTime::currentDateTimeUtc().msecsTo(m_nextBeacon) - 2*1000);
+
+    if(!beaconTimer.isActive()){
+        beaconTimer.setInterval(1000);
+        beaconTimer.start();
+    }
 }
 
 // pauseBeacon
 void MainWindow::pauseBacon(){
     ui->beaconButton->setChecked(false);
-    beaconTimer.stop();
     m_nextBeaconPaused = true;
+
+    if(beaconTimer.isActive()){
+        beaconTimer.stop();
+    }
+}
+
+// checkBeacon
+void MainWindow::checkBacon(){
+    if(!ui->beaconButton->isChecked()){
+        return;
+    }
+    if(QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) > 5){
+        return;
+    }
+    if(m_nextBeaconQueued){
+        return;
+    }
+
+    qDebug() << "PREPARING BACON!!";
+    prepareBacon();
 }
 
 // prepareBeacon
 void MainWindow::prepareBacon(){
-    if(!ui->beaconButton->isChecked()){
-        return;
-    }
-
-    if(QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) > 15){
-        return;
-    }
-
     QStringList lines;
 
     QString call = m_config.my_callsign();
@@ -6146,38 +6156,13 @@ void MainWindow::prepareBacon(){
     }
 
     // Queue the beacon
-    enqueueMessage(PriorityLow, lines.join(QChar('\n')), currentFreq(), nullptr);
+    enqueueMessage(PriorityLow, lines.join(QChar('\n')), currentFreq(), [this](){
+        m_nextBeaconQueued = false;
+    });
 
-
-#if 0
-    if(!m_callActivity.isEmpty()){
-        auto callsHeard = QSet<QString>::fromList(m_callActivity.keys());
-        auto callsToBeacon = callsHeard - m_callSeenBeacon;
-        if(callsToBeacon.isEmpty()){
-            m_callSeenBeacon.clear();
-        } else {
-            auto call = callsToBeacon.toList().first();
-            auto d = m_callActivity[call];
-
-            lines.append(QString("%1 SNR %2").arg(call).arg(Varicode::formatSNR(d.snr)));
-            m_callSeenBeacon.insert(call);
-        }
-    }
-
-    while(lines.length() > 2){
-        lines.removeFirst();
-    }
-#endif
-
-
-#if 0
-    addMessageText(lines.join(QChar('\n')));
-
-    ui->startTxButton->setChecked(true);
-
-    scheduleBacon(false);
-#endif
+    m_nextBeaconQueued = true;
 }
+
 
 
 QString MainWindow::calculateDistance(QString const& value)
@@ -7788,6 +7773,8 @@ void MainWindow::on_beaconButton_clicked()
 {
     if(ui->beaconButton->isChecked()){
         scheduleBacon(true);
+    } else {
+        pauseBacon();
     }
 }
 
@@ -9105,6 +9092,9 @@ void MainWindow::processTxQueue(){
 
     // check to see if we have autoreply enabled...
     if(ui->autoReplyButton->isChecked()){
+        // then try to set the frequency...
+        setFreqForRestore(f, true);
+
         // then prepare to transmit...
         toggleTx(true);
     }
