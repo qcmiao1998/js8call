@@ -31,11 +31,11 @@ public:
         FrameBeacon           = 0,   // [000]
         FrameCompound         = 1,   // [001]
         FrameCompoundDirected = 2,   // [010]
-        FrameDirectedPositive = 3,   // [011]
-        FrameDirectedNegative = 4,   // [100]
+        FrameDirected         = 3,   // [011]
+        FrameReservedA        = 4,   // [100] <- Reserved for future use, likely an extension of one of these formats.
         FrameDataUnpadded     = 5,   // [101]
         FrameDataPadded       = 6,   // [110]
-        FrameReserved         = 7,   // [111] <- Reserved for future use, likely binary data / other formats.
+        FrameReservedB        = 7,   // [111] <- Reserved for future use, likely binary data / other formats.
     };
 
     static const quint8 FrameTypeMax = 7;

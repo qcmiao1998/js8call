@@ -1290,7 +1290,7 @@ QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &
     QString frame;
 
     // needs to be a compound type...
-    if(type == FrameDataPadded || type == FrameDataUnpadded || type == FrameDirectedPositive || type == FrameDirectedNegative){
+    if(type == FrameDataPadded || type == FrameDataUnpadded || type == FrameDirected){
         return frame;
     }
 
@@ -1333,7 +1333,7 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, quint8 *pType, qu
     quint8 packed_flag = Varicode::bitsToInt(bits.mid(0, 3));
 
     // needs to be a beacon type...
-    if(packed_flag == FrameDataPadded || packed_flag == FrameDataUnpadded || packed_flag == FrameDirectedPositive || packed_flag == FrameDirectedNegative){
+    if(packed_flag == FrameDataPadded || packed_flag == FrameDataUnpadded || packed_flag == FrameDirected){
         return unpacked;
     }
 
@@ -1435,10 +1435,10 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
     }
 
     quint8 packed_cmd = directed_cmds[cmd];
-    quint8 packed_flag = inum < 31 ? FrameDirectedNegative : FrameDirectedPositive;
-    quint8 packed_extra = inum < 31 ? inum : inum - 31;
+    quint8 packed_flag = FrameDirected;
+    quint8 packed_extra = inum;
 
-    // [3][28][28][5],[3][5] = 72
+    // [3][28][28][5],[2][6] = 72
     auto bits = (
         Varicode::intToBits(packed_flag,      3) +
         Varicode::intToBits(packed_from,     28) +
@@ -1448,7 +1448,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
 
     if(pCmd) *pCmd = cmd;
     if(n) *n = match.captured(0).length();
-    return Varicode::pack72bits(Varicode::bitsToInt(bits), packed_extra % 32);
+    return Varicode::pack72bits(Varicode::bitsToInt(bits), packed_extra % 64);
 }
 
 QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
@@ -1458,17 +1458,12 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
         return unpacked;
     }
 
-    // [3][28][22][11],[3][5] = 72
+    // [3][28][22][11],[2][6] = 72
     quint8 extra = 0;
     auto bits = Varicode::intToBits(Varicode::unpack72bits(text, &extra), 64);
 
-    int numSign = 0;
     quint8 packed_flag = Varicode::bitsToInt(bits.mid(0, 3));
-    if(packed_flag == FrameDirectedPositive){
-        numSign = 31;
-    } else if(packed_flag == FrameDirectedNegative){
-        numSign = 0;
-    } else {
+    if(packed_flag != FrameDirected){
         return unpacked;
     }
 
@@ -1484,15 +1479,14 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
     unpacked.append(to);
     unpacked.append(cmd);
 
-    quint8 num = extra + numSign;
-    if(num != 0){
+    if(extra != 0){
         // TODO: jsherer - should we decide which format to use on the command, or something else?
         if(packed_cmd == directed_cmds[" PWR"]){
-            unpacked.append(Varicode::formatPWR(num-1));
+            unpacked.append(Varicode::formatPWR(extra-1));
         } else if(packed_cmd == directed_cmds[" SNR"]) {
-            unpacked.append(Varicode::formatSNR((int)num-31));
+            unpacked.append(Varicode::formatSNR((int)extra-31));
         } else {
-            unpacked.append(QString("%1").arg(num-31));
+            unpacked.append(QString("%1").arg(extra-31));
         }
     }
 
