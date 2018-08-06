@@ -382,6 +382,7 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
         decoded=decoded0
 
 ! This needs fixing for messages with i3bit=1:        
+        message(1:12)=origmsg(1:12)
         call genft8(message,mygrid6,bcontest,i3bit,msgsent,msgbits,itone)
         if(lsubtract) call subtractft8(dd0,itone,f1,xdt2)
         xsig=0.0
