@@ -6,7 +6,7 @@
 
 namespace
 {
-  auto logFileName = "wsjtx_log.adi";
+  auto logFileName = "ft8call_log.adi";
   auto countryFileName = "cty.dat";
 }
 

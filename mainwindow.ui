@@ -4197,7 +4197,7 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionDelete_all_wav_files_in_SaveDir"/>
     <addaction name="actionErase_ALL_TXT"/>
     <addaction name="actionErase_FoxQSO_txt"/>
-    <addaction name="actionErase_wsjtx_log_adi"/>
+    <addaction name="actionErase_ft8call_log_adi"/>
     <addaction name="actionOpen_log_directory"/>
     <addaction name="separator"/>
     <addaction name="actionSettings"/>
@@ -4522,9 +4522,9 @@ list. The list can be maintained in Settings (F2).</string>
     <string>Erase ALL.TXT</string>
    </property>
   </action>
-  <action name="actionErase_wsjtx_log_adi">
+  <action name="actionErase_ft8call_log_adi">
    <property name="text">
-    <string>Erase wsjtx_log.adi</string>
+    <string>Erase ft8call_log.adi</string>
    </property>
   </action>
   <action name="actionConvert_JT9_x_to_RTTY">

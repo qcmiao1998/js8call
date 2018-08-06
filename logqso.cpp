@@ -114,10 +114,10 @@ void LogQSO::accept()
   m_comments=comments;
   QString strDialFreq(QString::number(m_dialFreq / 1.e6,'f',6));
   operator_call = ui->loggedOperator->text();
-  //Log this QSO to ADIF file "wsjtx_log.adi"
-  QString filename = "wsjtx_log.adi";  // TODO allow user to set
+  //Log this QSO to ADIF file "ft8call_log.adi"
+  QString filename = "ft8call_log.adi";  // TODO allow user to set
   ADIF adifile;
-  auto adifilePath = QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath ("wsjtx_log.adi");
+  auto adifilePath = QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath ("ft8call_log.adi");
   adifile.init(adifilePath);
 
   QByteArray ADIF {adifile.QSOToADIF (hisCall, hisGrid, mode, rptSent, rptRcvd, m_dateTimeOn, m_dateTimeOff, band

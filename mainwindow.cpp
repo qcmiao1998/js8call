@@ -6593,12 +6593,12 @@ void MainWindow::on_actionErase_FoxQSO_txt_triggered()
   }
 }
 
-void MainWindow::on_actionErase_wsjtx_log_adi_triggered()
+void MainWindow::on_actionErase_ft8call_log_adi_triggered()
 {
   int ret = MessageBox::query_message (this, tr ("Confirm Erase"),
-                                       tr ("Are you sure you want to erase file wsjtx_log.adi?"));
+                                       tr ("Are you sure you want to erase file ft8call_log.adi?"));
   if(ret==MessageBox::Yes) {
-    QFile f {m_config.writeable_data_dir ().absoluteFilePath ("wsjtx_log.adi")};
+    QFile f {m_config.writeable_data_dir ().absoluteFilePath ("ft8call_log.adi")};
     f.remove();
   }
 }
