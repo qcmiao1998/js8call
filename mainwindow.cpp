@@ -8636,7 +8636,7 @@ void MainWindow::processSpots() {
             continue;
         }
         qDebug() << "spotting call to psk reporter" << d.call << d.snr << d.freq;
-        pskLogReport("FT8Call", d.freq, d.snr, d.call, d.grid);
+        pskLogReport("FT8CALL", d.freq, d.snr, d.call, d.grid);
     }
 }
 
