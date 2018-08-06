@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>530</width>
-    <height>550</height>
+    <width>692</width>
+    <height>701</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1888,6 +1888,13 @@ QListView::item:hover {
          <layout class="QVBoxLayout" name="verticalLayout_7">
           <item>
            <layout class="QGridLayout" name="gridLayout_14">
+            <item row="0" column="3">
+             <widget class="QLabel" name="label_13">
+              <property name="text">
+               <string>Op Call:</string>
+              </property>
+             </widget>
+            </item>
             <item row="0" column="0">
              <widget class="QCheckBox" name="prompt_to_log_check_box">
               <property name="enabled">
@@ -1904,34 +1911,31 @@ QListView::item:hover {
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
-             <spacer name="horizontalSpacer_6">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+            <item row="2" column="1">
+             <widget class="QCheckBox" name="clear_DX_check_box">
+              <property name="enabled">
+               <bool>false</bool>
               </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
+              <property name="visible">
+               <bool>false</bool>
               </property>
-             </spacer>
-            </item>
-            <item row="0" column="2">
-             <widget class="QLabel" name="label_13">
+              <property name="toolTip">
+               <string>Check this option to force the clearing of the DX Call
+and DX Grid fields when a 73 or free text message is sent.</string>
+              </property>
               <property name="text">
-               <string>Op Call:</string>
+               <string>Clear &amp;DX call and grid after logging</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="3">
+            <item row="0" column="4">
              <widget class="QLineEdit" name="opCallEntry">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The callsign of the operator, if different from the station callsign.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
+            <item row="0" column="1">
              <widget class="QCheckBox" name="log_as_RTTY_check_box">
               <property name="toolTip">
                <string>Some logging programs will not accept JT-65 or JT9 as a recognized mode.</string>
@@ -1941,9 +1945,12 @@ QListView::item:hover {
               </property>
              </widget>
             </item>
-            <item row="2" column="0">
+            <item row="1" column="1">
              <widget class="QCheckBox" name="report_in_comments_check_box">
               <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="visible">
                <bool>false</bool>
               </property>
               <property name="toolTip">
@@ -1957,19 +1964,18 @@ comments field.</string>
               </property>
              </widget>
             </item>
-            <item row="3" column="0" colspan="2">
-             <widget class="QCheckBox" name="clear_DX_check_box">
-              <property name="enabled">
-               <bool>false</bool>
+            <item row="0" column="2">
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
               </property>
-              <property name="toolTip">
-               <string>Check this option to force the clearing of the DX Call
-and DX Grid fields when a 73 or free text message is sent.</string>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
               </property>
-              <property name="text">
-               <string>Clear &amp;DX call and grid after logging</string>
-              </property>
-             </widget>
+             </spacer>
             </item>
            </layout>
           </item>
@@ -2797,7 +2803,7 @@ Right click for insert and delete options.</string>
           <item row="8" column="0">
            <widget class="QCheckBox" name="cbx4ToneSpacing">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Generate Tx audio with four times the normal tone spacing. Intended for special LF/MF transmitters that use a divide-by-4 before generating RF.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -3027,9 +3033,6 @@ soundcard changes</string>
   <tabstop>delete_macro_push_button</tabstop>
   <tabstop>macros_list_view</tabstop>
   <tabstop>prompt_to_log_check_box</tabstop>
-  <tabstop>log_as_RTTY_check_box</tabstop>
-  <tabstop>report_in_comments_check_box</tabstop>
-  <tabstop>clear_DX_check_box</tabstop>
   <tabstop>psk_reporter_check_box</tabstop>
   <tabstop>udp_server_line_edit</tabstop>
   <tabstop>udp_server_port_spin_box</tabstop>
@@ -3122,12 +3125,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
-  <buttongroup name="TX_mode_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
+  <buttongroup name="TX_mode_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
  </buttongroups>
 </ui>

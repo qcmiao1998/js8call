@@ -6264,7 +6264,7 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   if (dateTimeQSOOff < m_dateTimeQSOOn) dateTimeQSOOff = m_dateTimeQSOOn;
   QString grid=m_hisGrid;
   if(grid=="....") grid="";
-  m_logDlg->initLogQSO (m_hisCall, grid, m_modeTx, m_rptSent, m_rptRcvd,
+  m_logDlg->initLogQSO (m_hisCall, grid, m_modeTx == "FT8" ? "FT8CALL" : m_modeTx, m_rptSent, m_rptRcvd,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),
                         m_config.my_callsign(), m_config.my_grid(), m_noSuffix,
                         m_config.log_as_RTTY(), m_config.report_in_comments(),
