@@ -3224,8 +3224,9 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
             if(!m_bandActivity.contains(offset)){
                 QList<int> offsets = {
-                    offset - 1, offset - 2, offset - 3, offset - 4, offset - 5, offset - 6,
-                    offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6};
+                    offset - 1, offset - 2, offset - 3, offset - 4, offset - 5, offset - 6, offset - 7, offset - 8, offset - 9, offset - 10,
+                    offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 7, offset + 8, offset + 9, offset + 10
+                };
                 foreach(int prevOffset, offsets){
                     if(!m_bandActivity.contains(prevOffset)){ continue; }
                     m_bandActivity[offset] = m_bandActivity[prevOffset];
@@ -4304,8 +4305,8 @@ void MainWindow::guiUpdate()
     m_sec0=nsec;
 
     // once per period
-    if(m_sec0 % m_TRperiod == 0){
-        // force rx dirty at least once pre period
+    if(m_sec0 % m_TRperiod == 0 || (m_sec0 % (m_TRperiod/2)) == 0){
+        // force rx dirty at least twice per period
         m_rxDirty = true;
         m_rxDisplayDirty = true;
     }
