@@ -2155,6 +2155,7 @@ void MainWindow::keyPressEvent (QKeyEvent * e)
     switch (e->key()) {
         case Qt::Key_Escape:
             stopTx();
+            on_stopTxButton_clicked();
             return;
     }
 
