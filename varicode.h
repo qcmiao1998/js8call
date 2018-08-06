@@ -104,6 +104,9 @@ public:
     static quint64 unpack64bits(QString const& value);
     static QString pack64bits(quint64 packed);
 
+    static bool unpack72bits(QString const& value, quint64 *pValue, quint8 *pRem);
+    static QString pack72bits(quint64 value, quint8 rem);
+
     static quint32 packAlphaNumeric22(QString const& value, bool isFlag);
     static QString unpackAlphaNumeric22(quint32 packed, bool *isFlag);
 

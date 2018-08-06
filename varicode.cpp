@@ -29,6 +29,7 @@
 
 const int nalphabet = 41;
 QString alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-./?"}; // alphabet to encode _into_ for FT8 freetext transmission
+QString alphabet72 = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+/?."};
 QString grid_pattern = {R"((?<grid>[A-R]{2}[0-9]{2})+)"};
 QString orig_compound_callsign_pattern = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){2,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
 QString compound_callsign_pattern = {R"((?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
@@ -737,6 +738,51 @@ QString Varicode::pack64bits(quint64 packed){
     return pack32bits(a) + pack32bits(b);
 }
 
+// 64 bits in pValue and 8 bits in pRem
+bool Varicode::unpack72bits(QString const& text, quint64 *pValue, quint8 *pRem){
+    quint64 value = 0;
+    quint8 rem = 0;
+    quint8 mask2 = ((1<<2)-1);
+
+    for(int i = 0; i < 10; i++){
+        value |= (quint64)(alphabet72.indexOf(text.at(i))) << (58-6*i);
+    }
+
+    quint8 remHigh = alphabet72.indexOf(text.at(10));
+    value |= remHigh >> 2;
+
+    quint8 remLow = alphabet72.indexOf(text.at(11));
+    rem = ((remHigh & mask2) << 6) | remLow;
+
+    if(pValue) *pValue = value;
+    if(pRem) *pRem = rem;
+
+    return true;
+}
+
+QString Varicode::pack72bits(quint64 value, quint8 rem){
+    QChar packed[12]; // 12 x 6bit characters
+
+    quint8 mask4 = ((1<<4)-1);
+    quint8 mask6 = ((1<<6)-1);
+
+    quint8 remHigh = ((value & mask4) << 2) | (rem >> 6);
+    quint8 remLow = rem & mask6;
+    value = value >> 4;
+
+    packed[11] = alphabet72.at(remLow);
+    packed[10] = alphabet72.at(remHigh);
+
+    for(int i = 0; i < 10; i++){
+        packed[9-i] = alphabet72.at(value & mask6);
+        value = value >> 6;
+    }
+
+    return QString(packed, 12);
+}
+
+
+
 
 //     //
 // --- //
@@ -1272,19 +1318,27 @@ QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &
         Varicode::intToBits(packed_11,   11)
     );
 
-    return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_5 % 32);
+    //return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_5 % 32);
+
+    return Varicode::pack72bits(Varicode::bitsToInt(bits), packed_5 % 32);
 }
 
 QStringList Varicode::unpackCompoundFrame(const QString &text, quint8 *pType, quint16 *pNum){
     QStringList unpacked;
 
     if(text.length() < 13 || text.contains(" ")){
-        return unpacked;
+    //    return unpacked;
     }
 
     // [3][28][22][11],[5] = 69
-    auto bits = Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64);
-    quint8 packed_5 = Varicode::unpack5bits(text.right(1));
+    //auto bits = Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64);
+    //quint8 packed_5 = Varicode::unpack5bits(text.right(1));
+
+    quint64 value = 0;
+    quint8 rem = 0;
+    Varicode::unpack72bits(text, &value, &rem);
+    auto bits = Varicode::intToBits(value);
+    quint8 packed_5 = rem;
 
     quint8 packed_flag = Varicode::bitsToInt(bits.mid(0, 3));
 
