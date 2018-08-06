@@ -1274,6 +1274,23 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   bool isPrefix = false;
   qDebug() << Varicode::packCallsignPrefixSuffix("VE3", true) << Varicode::unpackCallsignPrefixSuffix(Varicode::packCallsignPrefixSuffix("VE3", true), &isPrefix) << isPrefix;
+
+
+#define BIT (quint64)1
+  quint64 val = 0;
+  quint8 rem = 0;
+  quint64 j = (BIT<<40)-1;
+  quint64 k = (BIT<<5)-1;
+
+  qDebug() << j << k << val << rem;
+  qDebug() << "packing" << Varicode::unpack72bits(Varicode::pack72bits(j, k), &val, &rem);
+  qDebug() << j << k << val << rem;
+
+  m_valid = false;
+
+  quint8 r = 0;
+  quint64 v = Varicode::unpack72bits(Varicode::pack72bits((((quint64)1)<<62)-1, (1<<7)-1), &r);
+  qDebug() << "packing" << Varicode::pack72bits((((quint64)1)<<62)-1, (1<<7)-1) << v << r;
 #endif
 
   // this must be the last statement of constructor
@@ -4017,6 +4034,7 @@ void MainWindow::guiUpdate()
               // 0:   [000] <- this is standard set
               // 1:   [001] <- this is fox/hound
               //m_i3bit=0;
+              qDebug() << "genft8" << message;
               char ft8msgbits[75 + 12]; //packed 75 bit ft8 message plus 12-bit CRC
               genft8_(message, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
                       const_cast<int *> (itone), 22, 6, 22);
@@ -5954,6 +5972,10 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
 
 
 QString MainWindow::parseFT8Message(QString input, bool *isFree){
+  if(isFree) *isFree = true;
+  return input;
+
+#if 0
   char message[29];
   char msgsent[29];
   char volatile ft8msgbits[75 + 12];
@@ -5999,6 +6021,7 @@ QString MainWindow::parseFT8Message(QString input, bool *isFree){
   }
 
   return output.trimmed();
+#endif
 }
 
 bool MainWindow::prepareNextMessageFrame()

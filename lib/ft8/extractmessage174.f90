@@ -9,7 +9,7 @@ subroutine extractmessage174(decoded,msgreceived,ncrcflag)
   integer*1, target::  i1Dec8BitBytes(11)
   integer*4 i4Dec6BitWords(12)
 
-  alphabet='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-+/?. abcdefghijklmnopqrstuvwxyz'
+  alphabet='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+/?.'
 
 ! Write decoded bits into cbits: 75-bit message plus 12-bit CRC
   write(cbits,1000) decoded
