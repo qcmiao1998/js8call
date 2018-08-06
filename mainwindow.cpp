@@ -6036,15 +6036,27 @@ bool MainWindow::prepareNextMessageFrame()
 }
 
 bool MainWindow::isFreqOffsetFree(int f, int bw){
-    // TODO: jsherer - figure out a better way to determine if the frequency is suitable for tx
+    // if this frequency is our current frequency, it's always "free"
+    if(currentFreq() == f){
+        return true;
+    }
 
-#if 0
     foreach(int offset, m_bandActivity.keys()){
+        auto d = m_bandActivity[offset];
+        if(d.isEmpty()){
+            continue;
+        }
+
+        // if we last received on this more than 30 seconds ago, it's free
+        if(d.last().utcTimestamp.secsTo(QDateTime::currentDateTimeUtc()) >= 30){
+            continue;
+        }
+
+        // otherwise, if this is an occupied slot within our 60Hz of where we'd like to transmit... it's not free...
         if(qAbs(offset - f) < bw){
             return false;
         }
     }
-#endif
 
     return true;
 }
@@ -8681,8 +8693,8 @@ void MainWindow::processTxQueue(){
     // add the message to the outgoing message text box
     addMessageText(message.message, true);
 
-    // check to see if we have autoreply enabled...
-    if(ui->autoReplyButton->isChecked()){
+    // check to see if we have autoreply enabled...(or if this is a beacon and the beacon button is enabled)
+    if(ui->autoReplyButton->isChecked() || (ui->beaconButton->isChecked() && message.message.contains("BEACON"))){
         // then try to set the frequency...
         setFreqForRestore(f, true);
 
