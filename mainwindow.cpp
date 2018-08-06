@@ -8983,6 +8983,10 @@ void MainWindow::processCommandActivity() {
             // TODO: jsherer - perhaps parse d.text and ensure it is a valid message as well as prefix it with our call...
             reply = QString("%1 ACK\n%2 DE %1").arg(d.from).arg(d.text);
         }
+        // PROCESS BUFFERED MESSAGE
+        else if (d.cmd == "#" && !isAllCall) {
+            reply = QString("%1 ACK").arg(d.from);
+        }
         // PROCESS ALERT
         else if (d.cmd == "!" && !isAllCall) {
 
