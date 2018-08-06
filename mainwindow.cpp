@@ -6146,17 +6146,14 @@ void MainWindow::prepareBacon(){
 
     QString call = m_config.my_callsign();
     QString grid = m_config.my_grid().left(4);
-    QString beacon = QString("DE %1 %2").arg(call).arg(grid);
-    QString parsed = parseFT8Message(beacon, nullptr);
-    if(parsed != beacon){
-        beacon = QString("DE %1").arg(call).arg(grid);
-    }
-
-    // FT8 Style
-    lines.append(beacon);
 
     // FT8Call Style
     lines.append(QString("%1: BEACON %2").arg(call).arg(grid));
+
+    bool shouldTransmitTwoBeacons = false;
+    if(shouldTransmitTwoBeacons){
+        lines.append(QString("%1: BEACON %2").arg(call).arg(grid));
+    }
 
     // Queue the beacon
     enqueueMessage(PriorityLow, lines.join(QChar('\n')), currentFreq(), nullptr);
