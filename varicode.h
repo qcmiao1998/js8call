@@ -17,7 +17,7 @@ public:
     // frame type transmitted via itype and decoded by the ft8 decoded
     enum TransmissionType {
         FT8              = 0, // [000]
-        FT8Fox           = 1, // [001]
+        FT8Fox           = 1, // [001] <- the decoder special cases this one frequently :|
         FT8Call          = 2, // [010]
         FT8CallLast      = 3, // [011] <- used to indicate the last frame in a transmission
         FT8CallFirst     = 4, // [100] <- used to indicate the first frmae in a transmission
@@ -104,7 +104,7 @@ public:
     static quint64 unpack64bits(QString const& value);
     static QString pack64bits(quint64 packed);
 
-    static bool unpack72bits(QString const& value, quint64 *pValue, quint8 *pRem);
+    static quint64 unpack72bits(QString const& value, quint8 *pRem);
     static QString pack72bits(quint64 value, quint8 rem);
 
     static quint32 packAlphaNumeric22(QString const& value, bool isFlag);

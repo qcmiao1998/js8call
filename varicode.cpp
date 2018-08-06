@@ -738,8 +738,8 @@ QString Varicode::pack64bits(quint64 packed){
     return pack32bits(a) + pack32bits(b);
 }
 
-// 64 bits in pValue and 8 bits in pRem
-bool Varicode::unpack72bits(QString const& text, quint64 *pValue, quint8 *pRem){
+// returns the first 64 bits and sets the last 8 bits in pRem
+quint64 Varicode::unpack72bits(QString const& text, quint8 *pRem){
     quint64 value = 0;
     quint8 rem = 0;
     quint8 mask2 = ((1<<2)-1);
@@ -754,10 +754,8 @@ bool Varicode::unpack72bits(QString const& text, quint64 *pValue, quint8 *pRem){
     quint8 remLow = alphabet72.indexOf(text.at(11));
     rem = ((remHigh & mask2) << 6) | remLow;
 
-    if(pValue) *pValue = value;
     if(pRem) *pRem = rem;
-
-    return true;
+    return value;
 }
 
 QString Varicode::pack72bits(quint64 value, quint8 rem){
@@ -1310,7 +1308,7 @@ QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &
     quint16 packed_11 = (num & mask11) >> 5;
     quint8 packed_5 = num & mask5;
 
-    // [3][28][22][11],[5] = 69
+    // [3][28][22][11],[3][5] = 72
     auto bits = (
         Varicode::intToBits(packed_flag,  3) +
         Varicode::intToBits(packed_base, 28) +
@@ -1318,27 +1316,19 @@ QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &
         Varicode::intToBits(packed_11,   11)
     );
 
-    //return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_5 % 32);
-
     return Varicode::pack72bits(Varicode::bitsToInt(bits), packed_5 % 32);
 }
 
 QStringList Varicode::unpackCompoundFrame(const QString &text, quint8 *pType, quint16 *pNum){
     QStringList unpacked;
 
-    if(text.length() < 13 || text.contains(" ")){
-    //    return unpacked;
+    if(text.length() < 12 || text.contains(" ")){
+        return unpacked;
     }
 
-    // [3][28][22][11],[5] = 69
-    //auto bits = Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64);
-    //quint8 packed_5 = Varicode::unpack5bits(text.right(1));
-
-    quint64 value = 0;
-    quint8 rem = 0;
-    Varicode::unpack72bits(text, &value, &rem);
-    auto bits = Varicode::intToBits(value);
-    quint8 packed_5 = rem;
+    // [3][28][22][11],[3][5] = 72
+    quint8 packed_5 = 0;
+    auto bits = Varicode::intToBits(Varicode::unpack72bits(text, &packed_5), 64);
 
     quint8 packed_flag = Varicode::bitsToInt(bits.mid(0, 3));
 
@@ -1448,7 +1438,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
     quint8 packed_flag = inum < 31 ? FrameDirectedNegative : FrameDirectedPositive;
     quint8 packed_extra = inum < 31 ? inum : inum - 31;
 
-    // [3][28][28][5],[5] = 69
+    // [3][28][28][5],[3][5] = 72
     auto bits = (
         Varicode::intToBits(packed_flag,      3) +
         Varicode::intToBits(packed_from,     28) +
@@ -1458,19 +1448,19 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
 
     if(pCmd) *pCmd = cmd;
     if(n) *n = match.captured(0).length();
-    return Varicode::pack64bits(Varicode::bitsToInt(bits)) + Varicode::pack5bits(packed_extra % 32);
+    return Varicode::pack72bits(Varicode::bitsToInt(bits), packed_extra % 32);
 }
 
 QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
     QStringList unpacked;
 
-    if(text.length() < 13 || text.contains(" ")){
+    if(text.length() < 12 || text.contains(" ")){
         return unpacked;
     }
 
-    // [3][28][28][5],[5] = 69
-    auto bits = Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64);
-    quint8 extra = Varicode::unpack5bits(text.right(1));
+    // [3][28][22][11],[3][5] = 72
+    quint8 extra = 0;
+    auto bits = Varicode::intToBits(Varicode::unpack72bits(text, &extra), 64);
 
     int numSign = 0;
     quint8 packed_flag = Varicode::bitsToInt(bits.mid(0, 3));
@@ -1511,9 +1501,11 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
 }
 
 QString Varicode::packDataMessage(const QString &input, int *n){
+    static const int frameSize = 72;
+
     QString frame;
 
-    // [3][66] = 69
+    // [3][69] = 72
     QVector<bool> frameDataBits;
 
     QVector<bool> frameHeaderBits = Varicode::intToBits(FrameDataUnpadded, 3);
@@ -1524,7 +1516,7 @@ QString Varicode::packDataMessage(const QString &input, int *n){
     foreach(auto pair, Varicode::huffEncode(hufftableescaped, input)){
         auto charN = pair.first;
         auto charBits = pair.second;
-        if(frameHeaderBits.length() + frameDataBits.length() + charBits.length() <= 69){
+        if(frameHeaderBits.length() + frameDataBits.length() + charBits.length() <= frameSize){
             frameDataBits += charBits;
             i += charN;
             continue;
@@ -1534,7 +1526,7 @@ QString Varicode::packDataMessage(const QString &input, int *n){
 
     QVector<bool> framePadBits;
 
-    int pad = 69 - frameHeaderBits.length() - frameDataBits.length();
+    int pad = frameSize - frameHeaderBits.length() - frameDataBits.length();
     if(pad){
         frameHeaderBits = Varicode::intToBits(FrameDataPadded, 3);
 
@@ -1548,7 +1540,10 @@ QString Varicode::packDataMessage(const QString &input, int *n){
 
     QVector<bool> allBits = frameHeaderBits + frameDataBits + framePadBits;
 
-    frame = Varicode::pack64bits(Varicode::bitsToInt(allBits.constBegin(), 64)) + Varicode::pack5bits(Varicode::bitsToInt(allBits.constBegin() + 64, 5));
+    quint64 value = Varicode::bitsToInt(allBits.constBegin(), 64);
+    quint8 rem = (quint8)Varicode::bitsToInt(allBits.constBegin() + 64, 8);
+    frame = Varicode::pack72bits(value, rem);
+
     *n = i;
 
     return frame;
@@ -1557,11 +1552,13 @@ QString Varicode::packDataMessage(const QString &input, int *n){
 QString Varicode::unpackDataMessage(const QString &text, quint8 *pType){
     QString unpacked;
 
-    if(text.length() < 13 || text.contains(" ")){
+    if(text.length() < 12 || text.contains(" ")){
         return unpacked;
     }
 
-    auto bits = Varicode::intToBits(Varicode::unpack64bits(text.left(12)), 64) + Varicode::intToBits(Varicode::unpack5bits(text.right(1)), 5);
+    quint8 rem = 0;
+    quint64 value = Varicode::unpack72bits(text, &rem);
+    auto bits = Varicode::intToBits(value, 64) + Varicode::intToBits(rem, 8);
 
     quint8 type = Varicode::bitsToInt(bits.mid(0, 3));
     if(type == FrameDataUnpadded){
