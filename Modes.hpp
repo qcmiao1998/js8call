@@ -40,16 +40,7 @@ public:
   enum Mode
   {
     ALL,                        // matches with all modes
-    JT65,
-    JT9,
-    JT4,
-    WSPR,
-    Echo,
-    ISCAT,
-    MSK144,
-    QRA64,
-    FreqCal,
-    FT8,
+    FT8CALL,
     MODES_END_SENTINAL_AND_COUNT // this must be last
   };
   Q_ENUM (Mode)

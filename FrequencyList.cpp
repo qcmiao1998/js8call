@@ -26,16 +26,16 @@ namespace
 {
   FrequencyList_v2::FrequencyItems const default_frequency_list =
     {
-      { 1838000, Modes::FT8, IARURegions::ALL}, // 2 below
-      { 3590000, Modes::FT8, IARURegions::ALL}, // 17 above
-      { 7047000, Modes::FT8, IARURegions::ALL}, // 27 below
-      {10130000, Modes::FT8, IARURegions::ALL}, // 6 below
-      {14080000, Modes::FT8, IARURegions::ALL}, // 6 above
-      {18104000, Modes::FT8, IARURegions::ALL}, // 4 above
-      {21080000, Modes::FT8, IARURegions::ALL}, // 6 above
-      {24920000, Modes::FT8, IARURegions::ALL}, // 5 above
-      {28080000, Modes::FT8, IARURegions::ALL}, // 6 above
-      {50300000, Modes::FT8, IARURegions::ALL}, // 13 below
+      { 1838000, Modes::FT8CALL, IARURegions::ALL}, // 2 below
+      { 3590000, Modes::FT8CALL, IARURegions::ALL}, // 17 above
+      { 7047000, Modes::FT8CALL, IARURegions::ALL}, // 27 below
+      {10130000, Modes::FT8CALL, IARURegions::ALL}, // 6 below
+      {14080000, Modes::FT8CALL, IARURegions::ALL}, // 6 above
+      {18104000, Modes::FT8CALL, IARURegions::ALL}, // 4 above
+      {21080000, Modes::FT8CALL, IARURegions::ALL}, // 6 above
+      {24920000, Modes::FT8CALL, IARURegions::ALL}, // 5 above
+      {28080000, Modes::FT8CALL, IARURegions::ALL}, // 6 above
+      {50300000, Modes::FT8CALL, IARURegions::ALL}, // 13 below
     };
 }
 
@@ -257,9 +257,7 @@ bool FrequencyList_v2::filterAcceptsRow (int source_row, QModelIndex const& /* p
     }
   if (result && m_->mode_filter_ != Modes::ALL)
     {
-      // we pass ALL mode rows unless filtering for FreqCal mode
-      result = (Modes::ALL == item.mode_ && m_->mode_filter_ != Modes::FreqCal)
-        || m_->mode_filter_ == item.mode_;
+      result = Modes::ALL == item.mode_;
     }
   return result;
 }

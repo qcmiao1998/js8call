@@ -4205,6 +4205,9 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuView">
+   <property name="visible">
+   <bool>false</bool>
+   </property>
     <property name="title">
      <string>View</string>
     </property>
@@ -4217,6 +4220,9 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuDecode">
+   <property name="visible">
+   <bool>false</bool>
+   </property>
     <property name="title">
      <string>Decode</string>
     </property>
@@ -4257,6 +4263,9 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuMode">
+   <property name="visible">
+   <bool>false</bool>
+   </property>
     <property name="title">
      <string>Mode</string>
     </property>
@@ -4421,6 +4430,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionOnline_User_Guide">
+  <property name="visible">
+  <bool>false</bool>
+  </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -4658,6 +4670,9 @@ list. The list can be maintained in Settings (F2).</string>
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="visible">
+   <bool>false</bool>
+   </property>
    <property name="text">
     <string>List of Type 1 prefixes and suffixes</string>
    </property>
@@ -4671,6 +4686,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionLocal_User_Guide">
+  <property name="visible">
+  <bool>false</bool>
+  </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -4901,6 +4919,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionFox_Log">
+  <property name="visible">
+  <bool>false</bool>
+  </property>
    <property name="text">
     <string>Fox Log</string>
    </property>
@@ -4912,6 +4933,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionErase_FoxQSO_txt">
+   <property name="visible">
+   <bool>false</bool>
+   </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -4922,6 +4946,9 @@ list. The list can be maintained in Settings (F2).</string>
   <action name="actionFT8_DXpedition_Mode_User_Guide">
    <property name="enabled">
     <bool>false</bool>
+   </property>
+   <property name="visible">
+   <bool>false</bool>
    </property>
    <property name="text">
     <string>FT8 DXpedition Mode User Guide</string>

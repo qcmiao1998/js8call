@@ -269,12 +269,14 @@ bool WSPRBandHopping::impl::simple_scheduler ()
 WSPRBandHopping::WSPRBandHopping (QSettings * settings, Configuration const * configuration, QWidget * parent_widget)
   : m_ {settings, configuration, parent_widget}
 {
+#if INCLUDE_ALL_MODES
   // detect changes to the working frequencies model
   m_->WSPR_bands_ = m_->configuration_->frequencies ()->all_bands (m_->configuration_->region (), Modes::WSPR).toList ();
   connect (m_->configuration_->frequencies (), &QAbstractItemModel::layoutChanged
            , [this] () {
              m_->WSPR_bands_ = m_->configuration_->frequencies ()->all_bands (m_->configuration_->region (), Modes::WSPR).toList ();
            });
+#endif
 
   // load settings
   SettingsGroup g {m_->settings_, title};

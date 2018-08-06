@@ -218,10 +218,6 @@ private slots:
   void on_dxCallEntry_returnPressed ();
   void on_genStdMsgsPushButton_clicked();
   void on_logQSOButton_clicked();
-  void on_actionJT9_triggered();
-  void on_actionJT65_triggered();
-  void on_actionJT9_JT65_triggered();
-  void on_actionJT4_triggered();
   void on_actionFT8_triggered();
   void on_TxFreqSpinBox_valueChanged(int arg1);
   void on_actionSave_decoded_triggered();
@@ -319,8 +315,6 @@ private slots:
   void on_cbAutoSeq_toggled(bool b);
   void networkError (QString const&);
   void on_ClrAvgButton_clicked();
-  void on_actionWSPR_triggered();
-  void on_actionWSPR_LF_triggered();
   void on_syncSpinBox_valueChanged(int n);
   void on_TxPowerComboBox_currentIndexChanged(const QString &arg1);
   void on_sbTxPercent_valueChanged(int n);
@@ -332,8 +326,6 @@ private slots:
   void on_WSPRfreqSpinBox_valueChanged(int n);
   void on_pbTxNext_clicked(bool b);
   void on_actionEcho_Graph_triggered();
-  void on_actionEcho_triggered();
-  void on_actionISCAT_triggered();
   void on_actionFast_Graph_triggered();
   void fast_decode_done();
   void on_actionMeasure_reference_spectrum_triggered();
@@ -344,9 +336,6 @@ private slots:
   void on_cbFast9_clicked(bool b);
   void on_sbCQTxFreq_valueChanged(int n);
   void on_cbCQTx_toggled(bool b);
-  void on_actionMSK144_triggered();
-  void on_actionQRA64_triggered();
-  void on_actionFreqCal_triggered();
   void splash_done (); 
   void on_measure_check_box_stateChanged (int);
   void on_sbNlist_valueChanged(int n);
