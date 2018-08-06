@@ -2881,9 +2881,9 @@ void MainWindow::decode()                                       //decode()
   QDateTime now = QDateTime::currentDateTime();
   if( m_dateTimeLastTX.isValid () ) {
     qint64 isecs_since_tx = m_dateTimeLastTX.secsTo(now);
-    dec_data.params.lapcqonly= (isecs_since_tx > 600); 
+    dec_data.params.lapcqonly= (isecs_since_tx > 600);
 //    QTextStream(stdout) << "last tx " << isecs_since_tx << endl;
-  } else { 
+  } else {
     m_dateTimeLastTX = now.addSecs(-900);
     dec_data.params.lapcqonly=true;
   }
@@ -2954,7 +2954,7 @@ void MainWindow::decode()                                       //decode()
   if(m_modeTx=="JT65") dec_data.params.ntxmode=65;
   dec_data.params.nmode=9;
   if(m_mode=="JT65") dec_data.params.nmode=65;
-  if(m_mode=="JT65") dec_data.params.ljt65apon = ui->actionEnable_AP_JT65->isVisible () && ui->actionEnable_AP_JT65->isChecked (); 
+  if(m_mode=="JT65") dec_data.params.ljt65apon = ui->actionEnable_AP_JT65->isVisible () && ui->actionEnable_AP_JT65->isChecked ();
   if(m_mode=="QRA64") dec_data.params.nmode=164;
   if(m_mode=="QRA64") dec_data.params.ntxmode=164;
   if(m_mode=="JT9+JT65") dec_data.params.nmode=9+65;  // = 74
@@ -3211,28 +3211,17 @@ void MainWindow::readFromStdout()                             //readFromStdout
           foxRxSequencer(decodedtext.string(),houndCall,houndGrid);
         }
       }
+
+      // only display frames that are FT8Call frames (should decrease false decodes by at least 50%)
+      bool bValidFrame = (
+        decodedtext.bits() == Varicode::FT8CallFirst ||
+        decodedtext.bits() == Varicode::FT8Call      ||
+        decodedtext.bits() == Varicode::FT8CallLast
+      );
+
       //Left (Band activity) window
-      if(!bAvgMsg) {
+      if(!bAvgMsg && bValidFrame) {
         if(m_mode=="FT8" and m_config.bFox()) {
-          if(!m_bDisplayedOnce) {
-            // This hack sets the font.  Surely there's a better way!
-            DecodedText dt{".",false," "};
-            ui->decodedTextBrowser->displayDecodedText(dt,m_baseCall,m_config.DXCC(),
-                m_logBook,m_config.color_CQ(),m_config.color_MyCall(),
-                m_config.color_DXCC(), m_config.color_NewCall(),m_config.ppfx());
-            m_bDisplayedOnce=true;
-          }
-        } else {
-          ui->decodedTextBrowser->displayDecodedText(decodedtext,m_baseCall,m_config.DXCC(),
-               m_logBook,m_config.color_CQ(),m_config.color_MyCall(),
-               m_config.color_DXCC(), m_config.color_NewCall(),
-               m_config.ppfx(),(ui->cbCQonly->isVisible() and ui->cbCQonly->isChecked()));
-
-
-
-
-
-
           // Parse General Activity
 #if 1
           bool shouldParseGeneralActivity = true;
@@ -3281,6 +3270,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 m_bandActivity[offset].removeFirst();
             }
           }
+
 #endif
 
 
@@ -3909,7 +3899,7 @@ void MainWindow::guiUpdate()
           }
         }
       }
-      
+
 
 // If HoldTxFreq is not checked, randomize Fox's Tx Freq
 // NB: Maybe this should be done no more than once every 5 minutes or so ?
@@ -5371,7 +5361,7 @@ void MainWindow::on_addButton_clicked()                       //Add button
   //  } else {
   newEntry += ",,,";
   //  }
-  
+
   QFile f1 {m_config.writeable_data_dir ().absoluteFilePath ("CALL3.TXT")};
   if(!f1.open(QIODevice::ReadWrite | QIODevice::Text)) {
     MessageBox::warning_message (this, tr ("Add to CALL3.TXT")
@@ -6341,7 +6331,7 @@ void MainWindow::displayWidgets(qint64 n)
   qint64 j=qint64(1)<<(N_WIDGETS-1);
   bool b;
   for(int i=0; i<N_WIDGETS; i++) {
-    b=(n&j) != 0;    
+    b=(n&j) != 0;
     if(i==0) ui->txFirstCheckBox->setVisible(b);
     if(i==1) ui->TxFreqSpinBox->setVisible(b);
     if(i==2) ui->RxFreqSpinBox->setVisible(b);
@@ -6429,7 +6419,7 @@ void MainWindow::on_actionFT8_triggered()
   }
   if(!bVHF) {
     displayWidgets(nWidgets("111010000100111000010000100100001"));
-// Make sure that VHF contest mode is unchecked if VHF features is not enabled. 
+// Make sure that VHF contest mode is unchecked if VHF features is not enabled.
     ui->cbVHFcontest->setChecked(false);
   } else {
     displayWidgets(nWidgets("111010000100111000010000100110001"));
@@ -9711,7 +9701,7 @@ void MainWindow::on_actionMeasure_reference_spectrum_triggered()
 
 void MainWindow::on_actionMeasure_phase_response_triggered()
 {
-  if(m_bTrain) { 
+  if(m_bTrain) {
     m_bTrain=false;
     MessageBox::information_message (this, tr ("Phase Training Disabled"));
   } else {
