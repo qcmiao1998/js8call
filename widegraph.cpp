@@ -207,6 +207,15 @@ void WideGraph::on_bppSpinBox_valueChanged(int n)                            //b
   ui->widePlot->setBinsPerPixel(n);
 }
 
+void WideGraph::on_offsetSpinBox_valueChanged(int n){
+  if(n == rxFreq()){
+      return;
+  }
+
+  setRxFreq(n);
+  setTxFreq(n);
+}
+
 void WideGraph::on_waterfallAvgSpinBox_valueChanged(int n)                  //Navg
 {
   m_waterfallAvg = n;
@@ -237,6 +246,7 @@ void WideGraph::setRxFreq(int n)                                           //set
 {
   ui->widePlot->setRxFreq(n);
   ui->widePlot->draw(swide,false,false);
+  ui->offsetSpinBox->setValue(n);
 }
 
 int WideGraph::rxFreq()                                                   //rxFreq
@@ -287,6 +297,7 @@ void WideGraph::setTxFreq(int n)                                   //setTxFreq
 {
   emit setXIT2(n);
   ui->widePlot->setTxFreq(n);
+  ui->offsetSpinBox->setValue(n);
 }
 
 void WideGraph::setMode(QString mode)                              //setMode

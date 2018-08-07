@@ -66,6 +66,7 @@ protected:
   void closeEvent (QCloseEvent *) override;
 
 private slots:
+  void on_offsetSpinBox_valueChanged(int n);
   void on_waterfallAvgSpinBox_valueChanged(int arg1);
   void on_bppSpinBox_valueChanged(int arg1);
   void on_spec2dComboBox_currentIndexChanged(const QString &arg1);
