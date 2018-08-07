@@ -8226,7 +8226,7 @@ bool MainWindow::isRecentOffset(int offset){
 bool MainWindow::isDirectedOffset(int offset){
     return (
         m_rxDirectedCache.contains(offset/10*10) &&
-        m_rxDirectedCache[offset/10*10]->secsTo(QDateTime::currentDateTimeUtc()) < 120
+        m_rxDirectedCache[offset/10*10]->secsTo(QDateTime::currentDateTimeUtc()) < 300
     );
 }
 
