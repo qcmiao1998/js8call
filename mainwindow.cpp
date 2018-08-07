@@ -3243,8 +3243,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.text = decodedtext.message();
             d.utcTimestamp = QDateTime::currentDateTimeUtc();
             d.snr = decodedtext.snr();
-            m_bandActivity[offset].append(d);
-            m_rxActivityQueue.append(d);
+            d.isBuffered = false;
 
             // if we have any "first" frame, and a buffer is already established, clear it...
             if(d.bits == Varicode::FT8CallFirst && m_messageBuffer.contains(d.freq/10*10)){
@@ -3255,9 +3254,12 @@ void MainWindow::readFromStdout()                             //readFromStdout
             // if we have a data frame, and a message buffer has been established, buffer it...
             if(m_messageBuffer.contains(d.freq/10*10) && !decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
                 qDebug() << "buffering data" << (d.freq/10*10) << d.text;
+                d.isBuffered = true;
                 m_messageBuffer[d.freq/10*10].msgs.append(d);
             }
 
+            m_rxActivityQueue.append(d);
+            m_bandActivity[offset].append(d);
             while(m_bandActivity[offset].count() > 10){
                 m_bandActivity[offset].removeFirst();
             }
@@ -5932,7 +5934,7 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
                   line = lstrip(line);
 
                   qDebug() << "before:" << line;
-                  bool shouldUseLargeChecksum = false;
+                  bool shouldUseLargeChecksum = true;
                   if(shouldUseLargeChecksum && dirCmd == "#"){
                     line = line + " " + Varicode::checksum32(line);
                   } else {
@@ -8332,6 +8334,11 @@ void MainWindow::processRxActivity() {
 
         displayTextForFreq(d.text, d.freq, d.utcTimestamp, false, false, false);
 
+        if(isLast && !d.isBuffered){
+            // buffered commands need the rxFrameBlockNumbers cache so it can fixup its display
+            // all other "last" data frames can clear the rxFrameBlockNumbers cache so the next message will be on a new line.
+            m_rxFrameBlockNumbers.remove(freq);
+        }
     }
 }
 

@@ -671,6 +671,7 @@ private:
     bool isLowConfidence;
     bool isCompound;
     bool isDirected;
+    bool isBuffered;
     int bits;
     int freq;
     QString text;
