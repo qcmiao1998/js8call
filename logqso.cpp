@@ -139,8 +139,8 @@ void LogQSO::accept()
     }
   }
 
-//Log this QSO to file "wsjtx.log"
-  static QFile f {QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath ("wsjtx.log")};
+//Log this QSO to file "ft8call.log"
+  static QFile f {QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath ("ft8call.log")};
   if(!f.open(QIODevice::Text | QIODevice::Append)) {
     MessageBox::warning_message (this, tr ("Log file error"),
                                  tr ("Cannot open \"%1\" for append").arg (f.fileName ()),
