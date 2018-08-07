@@ -138,6 +138,10 @@ void MessageClient::impl::parse_message (QByteArray const& msg)
 {
   try
     {
+        qDebug() << "incoming udp message" << msg;
+
+
+#if 0
       // 
       // message format is described in NetworkMessage.hpp
       // 
@@ -157,6 +161,7 @@ void MessageClient::impl::parse_message (QByteArray const& msg)
             {
             case NetworkMessage::Reply:
               {
+#if 0
                 // unpack message
                 QTime time;
                 qint32 snr;
@@ -174,30 +179,38 @@ void MessageClient::impl::parse_message (QByteArray const& msg)
                                          , QString::fromUtf8 (mode), QString::fromUtf8 (message)
                                          , low_confidence, modifiers);
                   }
+#endif
               }
               break;
 
             case NetworkMessage::Replay:
+              {
+#if 0
               if (check_status (in) != Fail)
                 {
                   last_message_.clear ();
                   Q_EMIT self_->replay ();
                 }
+#endif
+              }
               break;
 
             case NetworkMessage::HaltTx:
               {
+#if 0
                 bool auto_only {false};
                 in >> auto_only;
                 if (check_status (in) != Fail)
                   {
                     Q_EMIT self_->halt_tx (auto_only);
                   }
+#endif
               }
               break;
 
             case NetworkMessage::FreeText:
               {
+#if 0
                 QByteArray message;
                 bool send {true};
                 in >> message >> send;
@@ -205,22 +218,26 @@ void MessageClient::impl::parse_message (QByteArray const& msg)
                   {
                     Q_EMIT self_->free_text (QString::fromUtf8 (message), send);
                   }
+#endif
               }
               break;
 
             case NetworkMessage::Location:
               {
+#if 0
                 QByteArray location;
                 in >> location;
                 if (check_status (in) != Fail)
                 {
                     Q_EMIT self_->location (QString::fromUtf8 (location));
                 }
+#endif
               }
               break;
 
             case NetworkMessage::HighlightCallsign:
               {
+#if 0
                 QByteArray call;
                 QColor bg;      // default invalid color
                 QColor fg;      // default invalid color
@@ -230,6 +247,7 @@ void MessageClient::impl::parse_message (QByteArray const& msg)
                   {
                     Q_EMIT self_->highlight_callsign (QString::fromUtf8 (call), bg, fg, last_only);
                   }
+#endif
               }
               break;
 
@@ -243,6 +261,7 @@ void MessageClient::impl::parse_message (QByteArray const& msg)
               break;
             }
         }
+#endif
     }
   catch (std::exception const& e)
     {
@@ -264,6 +283,7 @@ void MessageClient::impl::heartbeat ()
          << version_.toUtf8 () << revision_.toUtf8 ();
       if (OK == check_status (hb))
         {
+          qDebug() << "outgoing udp heartbeat message" << message;
           writeDatagram (message, server_, server_port_);
         }
     }
@@ -277,6 +297,7 @@ void MessageClient::impl::closedown ()
       NetworkMessage::Builder out {&message, NetworkMessage::Close, id_, schema_};
       if (OK == check_status (out))
         {
+          qDebug() << "outgoing udp closedown message" << message;
           writeDatagram (message, server_, server_port_);
         }
     }
@@ -290,6 +311,7 @@ void MessageClient::impl::send_message (QByteArray const& message)
         {
           if (message != last_message_) // avoid duplicates
             {
+              qDebug() << "outgoing udp message" << message;
               writeDatagram (message, server_, server_port_);
               last_message_ = message;
             }
@@ -398,6 +420,7 @@ void MessageClient::add_blocked_destination (QHostAddress const& a)
     }
 }
 
+#if 0
 void MessageClient::status_update (Frequency f, QString const& mode, QString const& dx_call
                                    , QString const& report, QString const& tx_mode
                                    , bool tx_enabled, bool transmitting, bool decoding
@@ -485,3 +508,4 @@ void MessageClient::logged_ADIF (QByteArray const& ADIF_record)
       m_->send_message (out, message);
     }
 }
+#endif

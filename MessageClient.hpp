@@ -48,6 +48,7 @@ public:
   Q_SLOT void set_server_port (port_type server_port = 0u);
 
   // outgoing messages
+#if 0
   Q_SLOT void status_update (Frequency, QString const& mode, QString const& dx_call, QString const& report
                              , QString const& tx_mode, bool tx_enabled, bool transmitting, bool decoding
                              , qint32 rx_df, qint32 tx_df, QString const& de_call, QString const& de_grid
@@ -69,6 +70,7 @@ public:
   // ADIF_record argument should be valid ADIF excluding any <EOR> end
   // of record marker
   Q_SLOT void logged_ADIF (QByteArray const& ADIF_record);
+#endif
 
   // this slot may be used to send arbitrary UDP datagrams to and
   // destination allowing the underlying socket to be used for general
@@ -79,6 +81,7 @@ public:
   // with send_raw_datagram() above)
   Q_SLOT void add_blocked_destination (QHostAddress const&);
 
+#if 0
   // this signal is emitted if the server sends us a reply, the only
   // reply supported is reply to a prior CQ or QRZ message
   Q_SIGNAL void reply (QTime, qint32 snr, float delta_time, quint32 delta_frequency, QString const& mode
@@ -99,15 +102,18 @@ public:
   // this signal is emitted if the server has sent a highlight
   // callsign request for the specified call
   Q_SIGNAL void highlight_callsign (QString const& callsign, QColor const& bg, QColor const& fg, bool last_only);
+#endif
 
   // this signal is emitted when network errors occur or if a host
   // lookup fails
   Q_SIGNAL void error (QString const&) const;
 
+#if 0
   // this signal is emitted if the message obtains a location from a
   // server.  (It doesn't have to be new, could be a periodic location
   // update)
   Q_SIGNAL void location (QString const&);
+#endif
 
 private:
   class impl;

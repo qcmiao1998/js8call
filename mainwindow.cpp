@@ -544,7 +544,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (m_logDlg.data (), &LogQSO::acceptQSO, this, &MainWindow::acceptQSO);
   connect (this, &MainWindow::finished, m_logDlg.data (), &LogQSO::close);
 
+
   // Network message handlers
+  connect (m_messageClient, &MessageClient::error, this, &MainWindow::networkError);
+
+#if 0
   connect (m_messageClient, &MessageClient::reply, this, &MainWindow::replyToCQ);
   connect (m_messageClient, &MessageClient::replay, this, &MainWindow::replayDecodes);
   connect (m_messageClient, &MessageClient::location, this, &MainWindow::locationChange);
@@ -559,7 +563,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         }
       }
     });
-  connect (m_messageClient, &MessageClient::error, this, &MainWindow::networkError);
   connect (m_messageClient, &MessageClient::free_text, [this] (QString const& text, bool send) {
       if (m_config.accept_udp_requests ()) {
         tx_watchdog (false);
@@ -598,6 +601,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
            , &m_WSPR_band_hopping, &WSPRBandHopping::show_dialog);
   connect (ui->sbTxPercent, static_cast<void (QSpinBox::*) (int)> (&QSpinBox::valueChanged)
            , &m_WSPR_band_hopping, &WSPRBandHopping::set_tx_percent);
+#endif
+
 
   on_EraseButton_clicked ();
 
@@ -3745,7 +3750,9 @@ void MainWindow::on_EraseButton_clicked ()
 
 void MainWindow::band_activity_cleared ()
 {
+#if 0
   m_messageClient->clear_decodes ();
+#endif
   QFile f(m_config.temp_dir ().absoluteFilePath ("decoded.txt"));
   if(f.exists()) f.remove();
 }
@@ -6333,8 +6340,10 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
   QString date = QSO_date_on.toString("yyyyMMdd");
   m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), m_modeTx, date);
 
+#if 0
   m_messageClient->qso_logged (QSO_date_off, call, grid, dial_freq, mode, rpt_sent, rpt_received, tx_power, comments, name, QSO_date_on, operator_call, my_call, my_grid);
   m_messageClient->logged_ADIF (ADIF);
+#endif
   if (m_config.clear_DX () and !m_config.bHound()) clearDX ();
   m_dateTimeQSOOn = QDateTime {};
 }
@@ -8158,6 +8167,7 @@ void MainWindow::replayDecodes ()
 
 void MainWindow::postDecode (bool is_new, QString const& message)
 {
+#if 0
   auto const& decode = message.trimmed ();
   auto const& parts = decode.left (22).split (' ', QString::SkipEmptyParts);
   if (parts.size () >= 5)
@@ -8171,6 +8181,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
                                , QChar {'?'} == decode.mid (has_seconds ? 24 + 21 : 22 + 21, 1)
                                , m_diskData);
   }
+#endif
 
   if(is_new){
       m_rxDirty = true;
@@ -8963,10 +8974,12 @@ void MainWindow::postWSPRDecode (bool is_new, QStringList parts)
     {
       parts.insert (6, "");
     }
+#if 0
   m_messageClient->WSPR_decode (is_new, QTime::fromString (parts[0], "hhmm"), parts[1].toInt ()
                                 , parts[2].toFloat (), Radio::frequency (parts[3].toFloat (), 6)
                                 , parts[4].toInt (), parts[5], parts[6], parts[7].toInt ()
                                 , m_diskData);
+#endif
 }
 
 void MainWindow::networkError (QString const& e)
@@ -9398,6 +9411,7 @@ void MainWindow::statusUpdate () const
 {
   if (!ui) return;
   auto submode = current_submode ();
+#if 0
   m_messageClient->status_update (m_freqNominal, m_mode, m_hisCall,
                                   QString::number (ui->rptSpinBox->value ()),
                                   m_modeTx, ui->autoButton->isChecked (),
@@ -9406,6 +9420,7 @@ void MainWindow::statusUpdate () const
                                   m_config.my_callsign (), m_config.my_grid (),
                                   m_hisGrid, m_tx_watchdog,
                                   submode != QChar::Null ? QString {submode} : QString {}, m_bFastMode);
+#endif
 }
 
 void MainWindow::childEvent (QChildEvent * e)
