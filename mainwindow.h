@@ -131,7 +131,8 @@ public slots:
   void logCallActivity(CallDetail d, bool spot=true);
   QString lookupCallInCompoundCache(QString const &call);
   void clearActivity();
-  int logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block=-1);
+  void displayTextForFreq(QString text, int freq, QDateTime date, bool bold, bool newLine, bool clearLine);
+  int writeMessageTextToUI(QDateTime date, QString text, int freq, bool bold, int block=-1);
   void addMessageText(QString text, bool clear=false);
   void enqueueMessage(int priority, QString message, int freq, Callback c);
   void resetMessage();
@@ -661,6 +662,7 @@ private:
     int bits;
     QString grid;
     QString text;
+    QString extra;
   };
 
   struct ActivityDetail
@@ -819,6 +821,7 @@ private:
   QString callsignSelected();
   bool isRecentOffset(int offset);
   bool isDirectedOffset(int offset);
+  void markOffsetDirected(int offset);
   void processActivity(bool force=false);
   void processRxActivity();
   void processCompoundActivity();

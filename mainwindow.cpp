@@ -3208,9 +3208,12 @@ void MainWindow::readFromStdout()                             //readFromStdout
         decodedtext.bits() == Varicode::FT8CallLast
       );
 
+      qDebug() << "frame valid?" << bValidFrame;
+      qDebug() << "decoded text" << decodedtext.message();
+
       //Left (Band activity) window
       if(!bAvgMsg && bValidFrame) {
-        if(m_mode=="FT8" and m_config.bFox()) {
+        if(m_mode=="FT8"){
           // Parse General Activity
 #if 1
           bool shouldParseGeneralActivity = true;
@@ -3300,6 +3303,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
               d.snr = decodedtext.snr();
               d.utcTimestamp = QDateTime::currentDateTimeUtc();
               d.bits = decodedtext.bits();
+              d.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
 
               // if the command is a buffered command OR we have from or to in a separate message (compound)
               if(Varicode::isCommandBuffered(d.cmd) || d.from == "<....>" || d.to == "<....>"){
@@ -4302,25 +4306,25 @@ void MainWindow::guiUpdate()
     m_sec0=nsec;
 
     // once per period
-    if(m_sec0 % m_TRperiod == 0 || (m_sec0 % (m_TRperiod/2)) == 0){
-        // force rx dirty at least twice per period
-        m_rxDirty = true;
-        m_rxDisplayDirty = true;
+    bool forceDirty = false;
+    if(m_sec0 % (m_TRperiod/3) == 0){
+        // force rx dirty three times per period
+        forceDirty = true;
     }
 
-    // once pre second...
+    // once per second...
 
     // update the dial frequency once per second..
     displayDialFrequency();
 
     // process all received activity...
-    processActivity();
+    processActivity(forceDirty);
 
     // process outgoing tx queue...
     processTxQueue();
 
     // once processed, lets update the display...
-    displayActivity();
+    displayActivity(forceDirty);
   }
 
   // once per 100ms
@@ -5530,24 +5534,27 @@ void MainWindow::clearActivity(){
     update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", false);
 }
 
-int MainWindow::logRxTxMessageText(QDateTime date, QString text, int freq, bool tx, int block){
+void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool bold, bool newLine, bool clearLine){
+    int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
+    if(clearLine && block != -1){
+        auto c = ui->textEditRX->textCursor();
+        QTextBlock b = c.document()->findBlockByNumber(block);
+        c.setPosition(b.position());
+        c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+        c.deleteChar();
+        c.deleteChar();
+        block = -1;
+    }
+    if(newLine){
+        block = -1;
+    }
+    m_rxFrameBlockNumbers[freq] = writeMessageTextToUI(date, text, freq, bold, block);
+}
+
+int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, bool bold, int block){
     auto c = ui->textEditRX->textCursor();
 
-#if ALIAS_COMPOUND_CALLS
-    // fixup compound callsigns cache / aliases...
-    // ensure our callsign is cached...
-    QString myCall = m_config.my_callsign();
-    QString baseCall = Radio::base_callsign(myCall);
-    if(myCall != baseCall && !m_compoundCallCache.contains(baseCall)){
-        m_compoundCallCache[baseCall] = myCall;
-    }
-    // then, replace the cached calls that we see...
-    foreach(auto call, m_compoundCallCache.keys()){
-        QRegularExpression re(QString(R"((?<![\/])\b%1\b(?![\/]))").arg(QRegularExpression::escape(call)));
-        text = text.replace(re, m_compoundCallCache[call]);
-    }
-#endif
-
+    // find an existing block (
     bool found = false;
     if(block != -1){
         QTextBlock b = c.document()->findBlockByNumber(block);
@@ -5556,22 +5563,25 @@ int MainWindow::logRxTxMessageText(QDateTime date, QString text, int freq, bool 
         found = true;
     } else {
         c.movePosition(QTextCursor::End);
-        c.insertBlock();
+        if(c.block().length() > 1){
+            c.insertBlock();
+        }
     }
 
-    if(found && !tx){
+    if(found && !bold){
         c.clearSelection();
         c.insertText(text);
     } else {
         text = text.toHtmlEscaped();
-        if(tx){
+        if(bold){
             text = QString("<strong>%1</strong>").arg(text);
-            m_rxFrameBlockNumbers.clear();
         }
         c.insertHtml(QString("<strong>%1 - (%2)</strong> - %3").arg(date.time().toString()).arg(freq).arg(text));
     }
 
     c.movePosition(QTextCursor::End);
+
+
     ui->textEditRX->ensureCursorVisible();
     ui->textEditRX->verticalScrollBar()->setValue(ui->textEditRX->verticalScrollBar()->maximum());
 
@@ -5648,7 +5658,8 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
       lines.append(dt.message());
   }
 
-  logRxTxMessageText(QDateTime::currentDateTimeUtc(), lines.join(""), freq, true);
+  //logMessageText(QDateTime::currentDateTimeUtc(), lines.join(""), freq, true);
+  displayTextForFreq(lines.join(""), freq, QDateTime::currentDateTimeUtc(), true, true, false);
 
   // keep track of the last message text sent
   m_lastTxMessage = text;
@@ -7203,9 +7214,12 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
         activityText.append(d.text);
     }
     if(!activityText.isEmpty()){
-        int block = logRxTxMessageText(firstActivity, activityText, offset, false);
-        m_rxFrameBlockNumbers[offset/10*10] = block;
-        m_rxRecentCache.insert(offset/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+        //int block = logMessageText(firstActivity, activityText, offset, false);
+
+        displayTextForFreq(activityText, offset, firstActivity, false, true, false);
+
+        // TODO: jsherer - evaluate recency cache...
+        // m_rxRecentCache.insert(offset/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
     }
 
 #if 0
@@ -8216,6 +8230,10 @@ bool MainWindow::isDirectedOffset(int offset){
     );
 }
 
+void MainWindow::markOffsetDirected(int offset){
+    m_rxDirectedCache.insert(offset/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+}
+
 bool MainWindow::isMyCallIncluded(const QString &text){
     QString myCall = Radio::base_callsign(m_config.my_callsign());
 
@@ -8271,6 +8289,12 @@ void MainWindow::processRxActivity() {
 
         bool shouldDisplay = abs(freq - currentFreq()) <= 10;
 
+        // if this is a (recent) directed offset, bump the cache, and display...
+        // this will allow a directed free text command followed by non-buffered data frames.
+        if(isDirectedOffset(freq)){
+            markOffsetDirected(freq);
+            shouldDisplay = true;
+        }
 
         // TODO: jsherer - develop a better way to determine if we can display this band activity...
 #if 0
@@ -8285,6 +8309,8 @@ void MainWindow::processRxActivity() {
         }
 #endif
 
+
+
         if(!shouldDisplay){
             continue;
         }
@@ -8297,12 +8323,15 @@ void MainWindow::processRxActivity() {
         }
 
         // log it to the display!
-        int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
-        m_rxFrameBlockNumbers[freq] = logRxTxMessageText(d.utcTimestamp, d.text, d.freq, false, block);
-        if (isLast) {
-            m_rxFrameBlockNumbers.remove(freq);
-        }
-        m_rxRecentCache.insert(freq, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+        // int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
+        // m_rxFrameBlockNumbers[freq] = logMessageText(d.utcTimestamp, d.text, d.freq, false, block);
+        // if (isLast) {
+        //     m_rxFrameBlockNumbers.remove(freq);
+        // }
+        // m_rxRecentCache.insert(freq, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+
+        displayTextForFreq(d.text, d.freq, d.utcTimestamp, false, false, false);
+
     }
 }
 
@@ -8401,7 +8430,7 @@ void MainWindow::processBufferedActivity() {
 
         bool valid = false;
 
-        bool shouldUseLargeChecksum = false;
+        bool shouldUseLargeChecksum = true;
         if(shouldUseLargeChecksum && buffer.cmd.cmd == "#"){
             checksum = message.right(6);
             message = message.left(message.length() - 7);
@@ -8413,6 +8442,7 @@ void MainWindow::processBufferedActivity() {
         }
 
         if (valid) {
+            buffer.cmd.bits = Varicode::FT8CallLast;
             buffer.cmd.text = message;
             buffer.cmd.isBuffered = true;
             m_rxCommandQueue.append(buffer.cmd);
@@ -8444,7 +8474,7 @@ void MainWindow::processCommandActivity() {
     int f = currentFreq();
 #endif
 
-    // TODO: jsherer - should we, if we have _any_ directed messages, pause the beacon??
+    // TODO: jsherer - should we, if we have _any_ directed messages, pause the beacon or maybe just bump it?
     // pauseBacon();
 
     while (!m_rxCommandQueue.isEmpty()) {
@@ -8469,26 +8499,15 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-#if 0
-        // TODO: jsherer - check to make sure we haven't replied to their allcall recently (in the past beacon interval)
-        if (isAllCall && m_txAllcallCommandCache.contains(Radio::base_callsign(d.from)) && m_txAllcallCommandCache[Radio::base_callsign(d.from)]->secsTo(QDateTime::currentDateTimeUtc()) / 60 < m_config.beacon()) {
-            continue;
-        }
-#endif
+        // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past beacon interval)
+        // that way we never get spammed by allcalls at a high frequency than what we would beacon
+        if (isAllCall){
+            if(m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(QDateTime::currentDateTimeUtc()) / 60 < m_config.beacon()) {
+                continue;
+            }
 
-#if 0
-        if(d.isCompound){
-            // this is a command with a compound call... we need to log it to the rx activity!
-            ActivityDetail ad;
-            ad.bits = d.bits;
-            ad.freq = d.freq;
-            ad.isDirected = true;
-            ad.snr = d.snr;
-            ad.text = QString("%1: %2%3 %4 %5 ").arg(d.from).arg(d.to).arg(d.cmd).arg(d.grid).arg(d.text);
-            ad.utcTimestamp = d.utcTimestamp;
-            m_bandActivity[d.freq].append(ad);
+            m_txAllcallCommandCache.insert(d.from, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
         }
-#endif
 
         // log call activity...
         CallDetail cd;
@@ -8499,6 +8518,37 @@ void MainWindow::processCommandActivity() {
         cd.bits = d.bits;
         cd.utcTimestamp = d.utcTimestamp;
         logCallActivity(cd, true);
+
+        // display the command activity
+        ActivityDetail ad;
+        ad.isLowConfidence = false;
+        ad.isFree = true;
+        ad.isDirected = true;
+        ad.bits = d.bits;
+        ad.freq = d.freq;
+        ad.snr = d.snr;
+        ad.text = QString("%1: %2%3 ").arg(d.from).arg(d.to).arg(d.cmd);
+        if(!d.grid.isEmpty()){
+            ad.text += d.grid;
+        }
+        if(!d.extra.isEmpty()){
+            ad.text += d.extra;
+        }
+        if(!d.text.isEmpty()){
+            ad.text += d.text;
+        }
+        bool isLast = ad.bits == Varicode::FT8CallLast;
+        if (isLast) {
+            // can also use \u0004 \u2666 \u2404
+            ad.text += QString(" \u2301 ");
+        }
+        ad.utcTimestamp = d.utcTimestamp;
+
+        // log it to the display!
+        displayTextForFreq(ad.text, ad.freq, ad.utcTimestamp, false, true, true);
+
+        // and mark the offset as a directed offset so future free text is displayed
+        markOffsetDirected(ad.freq);
 
         // construct a reply, if needed
         QString reply;
@@ -8588,7 +8638,7 @@ void MainWindow::processCommandActivity() {
                     return;
                 }
 
-                enqueueMessage(PriorityNormal, QString("%1 ACK").arg(d.from), d.freq, nullptr);
+                enqueueMessage(PriorityHigh, QString("%1 ACK").arg(d.from), d.freq, nullptr);
             });
 
             msgBox->show();
@@ -8604,22 +8654,6 @@ void MainWindow::processCommandActivity() {
 
         // queue the reply here to be sent when a free interval is available
         enqueueMessage(PriorityNormal, reply, d.freq, nullptr);
-
-#if 0
-        addMessageText(reply);
-
-        // use the last frequency
-        f = d.freq;
-
-        // if we're responding via allcall, pick a different frequency and mark it in the cache.
-        if (isAllCallIncluded(d.to)) {
-            f = findFreeFreqOffset(qMax(0, f - 100), qMin(f + 100, 2500), 50);
-            m_txAllcallCommandCache.insert(Radio::base_callsign(d.from), new QDateTime(QDateTime::currentDateTimeUtc()), 25);
-        }
-
-        processed = true;
-#endif
-
     }
 }
 
@@ -8694,7 +8728,10 @@ void MainWindow::processTxQueue(){
     addMessageText(message.message, true);
 
     // check to see if we have autoreply enabled...(or if this is a beacon and the beacon button is enabled)
-    if(ui->autoReplyButton->isChecked() || (ui->beaconButton->isChecked() && message.message.contains("BEACON"))){
+    if(message.priority >= PriorityHigh   ||
+       (ui->autoReplyButton->isChecked()) ||
+       (ui->beaconButton->isChecked() && message.message.contains("BEACON"))
+    ){
         // then try to set the frequency...
         setFreqForRestore(f, true);
 
