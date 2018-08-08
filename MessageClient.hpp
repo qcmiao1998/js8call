@@ -47,6 +47,9 @@ public:
   // change the server port messages are sent to
   Q_SLOT void set_server_port (port_type server_port = 0u);
 
+  // this slot is used to send an arbitrary message
+  Q_SLOT void send_message(QString const &type, QString const &message);
+
   // this slot may be used to send arbitrary UDP datagrams to and
   // destination allowing the underlying socket to be used for general
   // UDP messaging if desired
@@ -55,6 +58,10 @@ public:
   // disallowed message destination (does not block datagrams sent
   // with send_raw_datagram() above)
   Q_SLOT void add_blocked_destination (QHostAddress const&);
+
+
+  // this signal is emitted when the a reply a message is received
+  Q_SIGNAL void message_received(QString const &type, QString const &message);
 
   // this signal is emitted when network errors occur or if a host
   // lookup fails

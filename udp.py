@@ -11,10 +11,15 @@ def main():
         while True:
             content, addr = sock.recvfrom(65500)
             print("from:", ":".join(map(str, addr)))
-            print("->", repr(content))
-            print("sending test reply...", end="")
-            sock.sendto("test", addr)
-            print("done")
+
+            typ, msg = content.split('|')
+            print("->", typ)
+            print("->", msg)
+
+            if typ == "PING":
+                print("sending pong reply...", end="")
+                sock.sendto("PONG|hello world|asdf", addr)
+                print("done")
     finally:
         sock.close()
 

@@ -136,7 +136,15 @@ void MessageClient::impl::parse_message (QByteArray const& msg)
 {
   try
     {
-        qDebug() << "incoming udp message" << msg;
+        QList<QByteArray> segments = msg.split('|');
+        if(segments.isEmpty()){
+            return;
+        }
+
+        QString type(segments.first());
+        QString message(segments.mid(1).join('|'));
+        qDebug() << "MessageClient: Incoming" << type << message;
+        Q_EMIT self_->message_received(type, message);
     }
   catch (std::exception const& e)
     {
@@ -152,8 +160,7 @@ void MessageClient::impl::heartbeat ()
 {
    if (server_port_ && !server_.isNull ())
     {
-      QByteArray message;
-      qDebug() << "outgoing udp heartbeat message" << message;
+      QByteArray message("PING|");
       writeDatagram (message, server_, server_port_);
     }
 }
@@ -162,8 +169,7 @@ void MessageClient::impl::closedown ()
 {
    if (server_port_ && !server_.isNull ())
     {
-      QByteArray message;
-      qDebug() << "outgoing udp closedown message" << message;
+      QByteArray message("EXIT|");
       writeDatagram (message, server_, server_port_);
     }
 }
@@ -263,6 +269,14 @@ void MessageClient::set_server (QString const& server)
 void MessageClient::set_server_port (port_type server_port)
 {
   m_->server_port_ = server_port;
+}
+
+void MessageClient::send_message(QString const &type, QString const &message){
+  QByteArray b;
+  b.append(type);
+  b.append('|');
+  b.append(message);
+  m_->send_message(b);
 }
 
 void MessageClient::send_raw_datagram (QByteArray const& message, QHostAddress const& dest_address
