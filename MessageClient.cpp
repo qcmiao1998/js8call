@@ -12,8 +12,6 @@
 #include <QHostAddress>
 #include <QColor>
 
-#include "NetworkMessage.hpp"
-
 #include "pimpl_impl.hpp"
 
 #include "moc_MessageClient.cpp"
@@ -37,7 +35,7 @@ public:
     connect (heartbeat_timer_, &QTimer::timeout, this, &impl::heartbeat);
     connect (this, &QIODevice::readyRead, this, &impl::pending_datagrams);
 
-    heartbeat_timer_->start (NetworkMessage::pulse * 1000);
+    heartbeat_timer_->start (15 * 1000);
 
     // bind to an ephemeral port
     bind ();
@@ -139,129 +137,6 @@ void MessageClient::impl::parse_message (QByteArray const& msg)
   try
     {
         qDebug() << "incoming udp message" << msg;
-
-
-#if 0
-      // 
-      // message format is described in NetworkMessage.hpp
-      // 
-      NetworkMessage::Reader in {msg};
-      if (OK == check_status (in) && id_ == in.id ()) // OK and for us
-        {
-          if (schema_ < in.schema ()) // one time record of server's
-                                      // negotiated schema
-            {
-              schema_ = in.schema ();
-            }
-
-          //
-          // message format is described in NetworkMessage.hpp
-          //
-          switch (in.type ())
-            {
-            case NetworkMessage::Reply:
-              {
-#if 0
-                // unpack message
-                QTime time;
-                qint32 snr;
-                float delta_time;
-                quint32 delta_frequency;
-                QByteArray mode;
-                QByteArray message;
-                bool low_confidence {false};
-                quint8 modifiers {0};
-                in >> time >> snr >> delta_time >> delta_frequency >> mode >> message
-                   >> low_confidence >> modifiers;
-                if (check_status (in) != Fail)
-                  {
-                    Q_EMIT self_->reply (time, snr, delta_time, delta_frequency
-                                         , QString::fromUtf8 (mode), QString::fromUtf8 (message)
-                                         , low_confidence, modifiers);
-                  }
-#endif
-              }
-              break;
-
-            case NetworkMessage::Replay:
-              {
-#if 0
-              if (check_status (in) != Fail)
-                {
-                  last_message_.clear ();
-                  Q_EMIT self_->replay ();
-                }
-#endif
-              }
-              break;
-
-            case NetworkMessage::HaltTx:
-              {
-#if 0
-                bool auto_only {false};
-                in >> auto_only;
-                if (check_status (in) != Fail)
-                  {
-                    Q_EMIT self_->halt_tx (auto_only);
-                  }
-#endif
-              }
-              break;
-
-            case NetworkMessage::FreeText:
-              {
-#if 0
-                QByteArray message;
-                bool send {true};
-                in >> message >> send;
-                if (check_status (in) != Fail)
-                  {
-                    Q_EMIT self_->free_text (QString::fromUtf8 (message), send);
-                  }
-#endif
-              }
-              break;
-
-            case NetworkMessage::Location:
-              {
-#if 0
-                QByteArray location;
-                in >> location;
-                if (check_status (in) != Fail)
-                {
-                    Q_EMIT self_->location (QString::fromUtf8 (location));
-                }
-#endif
-              }
-              break;
-
-            case NetworkMessage::HighlightCallsign:
-              {
-#if 0
-                QByteArray call;
-                QColor bg;      // default invalid color
-                QColor fg;      // default invalid color
-                bool last_only {false};
-                in >> call >> bg >> fg >> last_only;
-                if (check_status (in) != Fail && call.size ())
-                  {
-                    Q_EMIT self_->highlight_callsign (QString::fromUtf8 (call), bg, fg, last_only);
-                  }
-#endif
-              }
-              break;
-
-            default:
-              // Ignore
-              //
-              // Note that although server  heartbeat messages are not
-              // parsed here  they are  still partially parsed  in the
-              // message reader class to  negotiate the maximum schema
-              // number being used on the network.
-              break;
-            }
-        }
-#endif
     }
   catch (std::exception const& e)
     {
@@ -278,14 +153,8 @@ void MessageClient::impl::heartbeat ()
    if (server_port_ && !server_.isNull ())
     {
       QByteArray message;
-      NetworkMessage::Builder hb {&message, NetworkMessage::Heartbeat, id_, schema_};
-      hb << NetworkMessage::Builder::schema_number // maximum schema number accepted
-         << version_.toUtf8 () << revision_.toUtf8 ();
-      if (OK == check_status (hb))
-        {
-          qDebug() << "outgoing udp heartbeat message" << message;
-          writeDatagram (message, server_, server_port_);
-        }
+      qDebug() << "outgoing udp heartbeat message" << message;
+      writeDatagram (message, server_, server_port_);
     }
 }
 
@@ -294,12 +163,8 @@ void MessageClient::impl::closedown ()
    if (server_port_ && !server_.isNull ())
     {
       QByteArray message;
-      NetworkMessage::Builder out {&message, NetworkMessage::Close, id_, schema_};
-      if (OK == check_status (out))
-        {
-          qDebug() << "outgoing udp closedown message" << message;
-          writeDatagram (message, server_, server_port_);
-        }
+      qDebug() << "outgoing udp closedown message" << message;
+      writeDatagram (message, server_, server_port_);
     }
 }
 
@@ -419,93 +284,3 @@ void MessageClient::add_blocked_destination (QHostAddress const& a)
       m_->pending_messages_.clear (); // discard
     }
 }
-
-#if 0
-void MessageClient::status_update (Frequency f, QString const& mode, QString const& dx_call
-                                   , QString const& report, QString const& tx_mode
-                                   , bool tx_enabled, bool transmitting, bool decoding
-                                   , qint32 rx_df, qint32 tx_df, QString const& de_call
-                                   , QString const& de_grid, QString const& dx_grid
-                                   , bool watchdog_timeout, QString const& sub_mode
-                                   , bool fast_mode)
-{
-  if (m_->server_port_ && !m_->server_string_.isEmpty ())
-    {
-      QByteArray message;
-      NetworkMessage::Builder out {&message, NetworkMessage::Status, m_->id_, m_->schema_};
-      out << f << mode.toUtf8 () << dx_call.toUtf8 () << report.toUtf8 () << tx_mode.toUtf8 ()
-          << tx_enabled << transmitting << decoding << rx_df << tx_df << de_call.toUtf8 ()
-          << de_grid.toUtf8 () << dx_grid.toUtf8 () << watchdog_timeout << sub_mode.toUtf8 ()
-          << fast_mode;
-      m_->send_message (out, message);
-    }
-}
-
-void MessageClient::decode (bool is_new, QTime time, qint32 snr, float delta_time, quint32 delta_frequency
-                            , QString const& mode, QString const& message_text, bool low_confidence
-                            , bool off_air)
-{
-   if (m_->server_port_ && !m_->server_string_.isEmpty ())
-    {
-      QByteArray message;
-      NetworkMessage::Builder out {&message, NetworkMessage::Decode, m_->id_, m_->schema_};
-      out << is_new << time << snr << delta_time << delta_frequency << mode.toUtf8 ()
-          << message_text.toUtf8 () << low_confidence << off_air;
-      m_->send_message (out, message);
-    }
-}
-
-void MessageClient::WSPR_decode (bool is_new, QTime time, qint32 snr, float delta_time, Frequency frequency
-                                 , qint32 drift, QString const& callsign, QString const& grid, qint32 power
-                                 , bool off_air)
-{
-   if (m_->server_port_ && !m_->server_string_.isEmpty ())
-    {
-      QByteArray message;
-      NetworkMessage::Builder out {&message, NetworkMessage::WSPRDecode, m_->id_, m_->schema_};
-      out << is_new << time << snr << delta_time << frequency << drift << callsign.toUtf8 ()
-          << grid.toUtf8 () << power << off_air;
-      m_->send_message (out, message);
-    }
-}
-
-void MessageClient::clear_decodes ()
-{
-   if (m_->server_port_ && !m_->server_string_.isEmpty ())
-    {
-      QByteArray message;
-      NetworkMessage::Builder out {&message, NetworkMessage::Clear, m_->id_, m_->schema_};
-      m_->send_message (out, message);
-    }
-}
-
-void MessageClient::qso_logged (QDateTime time_off, QString const& dx_call, QString const& dx_grid
-                                , Frequency dial_frequency, QString const& mode, QString const& report_sent
-                                , QString const& report_received, QString const& tx_power
-                                , QString const& comments, QString const& name, QDateTime time_on
-                                , QString const& operator_call, QString const& my_call
-                                , QString const& my_grid)
-{
-   if (m_->server_port_ && !m_->server_string_.isEmpty ())
-    {
-      QByteArray message;
-      NetworkMessage::Builder out {&message, NetworkMessage::QSOLogged, m_->id_, m_->schema_};
-      out << time_off << dx_call.toUtf8 () << dx_grid.toUtf8 () << dial_frequency << mode.toUtf8 ()
-          << report_sent.toUtf8 () << report_received.toUtf8 () << tx_power.toUtf8 () << comments.toUtf8 ()
-          << name.toUtf8 () << time_on << operator_call.toUtf8 () << my_call.toUtf8 () << my_grid.toUtf8 ();
-      m_->send_message (out, message);
-    }
-}
-
-void MessageClient::logged_ADIF (QByteArray const& ADIF_record)
-{
-   if (m_->server_port_ && !m_->server_string_.isEmpty ())
-    {
-      QByteArray message;
-      NetworkMessage::Builder out {&message, NetworkMessage::LoggedADIF, m_->id_, m_->schema_};
-      QByteArray ADIF {"\n<adif_ver:5>3.0.7\n<programid:6>WSJT-X\n<EOH>\n" + ADIF_record + " <EOR>"};
-      out << ADIF;
-      m_->send_message (out, message);
-    }
-}
-#endif

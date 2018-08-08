@@ -9,7 +9,7 @@ def main():
     sock.bind(listen)
     try:
         while True:
-            content, addr = sock.recvfrom(1024)
+            content, addr = sock.recvfrom(65500)
             print("from:", ":".join(map(str, addr)))
             print("->", repr(content))
             print("sending test reply...", end="")
