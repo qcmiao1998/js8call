@@ -214,6 +214,7 @@ void WideGraph::on_offsetSpinBox_valueChanged(int n){
 
   setRxFreq(n);
   setTxFreq(n);
+  setFreq2(n, n);
 }
 
 void WideGraph::on_waterfallAvgSpinBox_valueChanged(int n)                  //Navg
