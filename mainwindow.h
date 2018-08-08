@@ -43,6 +43,7 @@
 #include "qorderedmap.h"
 #include "qpriorityqueue.h"
 #include "varicode.h"
+#include "MessageClient.hpp"
 
 #define NUM_JT4_SYMBOLS 206                //(72+31)*2, embedded sync
 #define NUM_JT65_SYMBOLS 126               //63 data + 63 sync
@@ -123,7 +124,8 @@ public slots:
   void readFromStdout();
   void p1ReadFromStdout();
   void setXIT(int n, Frequency base = 0u);
-  void setFreqForRestore(int freq, bool shouldRestore);
+  void setFreqOffsetForRestore(int freq, bool shouldRestore);
+  bool tryRestoreFreqOffset();
   void setFreq4(int rxFreq, int txFreq);
   void msgAvgDecode2();
   void fastPick(int x0, int x1, int y);
@@ -259,7 +261,7 @@ private slots:
   void on_freeTextMsg_currentTextChanged (QString const&);
   void on_nextFreeTextMsg_currentTextChanged (QString const&);
   void on_extFreeTextMsgEdit_currentTextChanged (QString const&);
-  int currentFreq();
+  int currentFreqOffset();
   int countFT8MessageFrames(QString const& text);
   QStringList buildFT8MessageFrames(QString const& text);
   QString parseFT8Message(QString input, bool *isFree);
@@ -313,8 +315,9 @@ private slots:
   void on_cbCQonly_toggled(bool b);
   void on_cbFirst_toggled(bool b);
   void on_cbAutoSeq_toggled(bool b);
-  void networkMessage(QString const &type, QString const &message);
+  void networkMessage(Message const &message);
   void sendNetworkMessage(QString const &type, QString const &message);
+  void sendNetworkMessage(QString const &type, QString const &message, const QMap<QString, QVariant> &params);
   void networkError (QString const&);
   void on_ClrAvgButton_clicked();
   void on_syncSpinBox_valueChanged(int n);
@@ -811,6 +814,7 @@ private:
   void pskSetLocal ();
   void pskPost(DecodedText const& decodedtext);
   void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
+  Radio::Frequency dialFrequency();
   void displayDialFrequency ();
   void transmitDisplay (bool);
   void processMessage(DecodedText const&, Qt::KeyboardModifiers = 0);

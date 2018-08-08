@@ -547,7 +547,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   // Network message handlers
   connect (m_messageClient, &MessageClient::error, this, &MainWindow::networkError);
-  connect (m_messageClient, &MessageClient::message_received, this, &MainWindow::networkMessage);
+  connect (m_messageClient, &MessageClient::message, this, &MainWindow::networkMessage);
 
 #if 0
   // Hook up WSPR band hopping
@@ -1002,7 +1002,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->dxCallEntry->clear();
   ui->dxGridEntry->clear();
   auto f = findFreeFreqOffset(500, 2000, 50);
-  setFreqForRestore(f, false);
+  setFreqOffsetForRestore(f, false);
   ui->cbVHFcontest->setChecked(false); // this needs to always be false
 
   ui->spotButton->setChecked(m_config.spot_to_psk_reporter());
@@ -1117,7 +1117,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     bool isAllCall = isAllCallIncluded(selectedCall);
     bool missingCallsign = selectedCall.isEmpty();
     if(!missingCallsign && m_callActivity.contains(selectedCall)){
-        setFreqForRestore(m_callActivity[selectedCall].freq, true);
+        setFreqOffsetForRestore(m_callActivity[selectedCall].freq, true);
     }
 
     auto directedMenu = menu->addMenu("Directed");
@@ -2192,10 +2192,14 @@ void MainWindow::bumpFqso(int n)                                 //bumpFqso()
   }
 }
 
+Radio::Frequency MainWindow::dialFrequency() {
+    return Frequency {m_rigState.ptt () && m_rigState.split () ?
+        m_rigState.tx_frequency () : m_rigState.frequency ()};
+}
+
 void MainWindow::displayDialFrequency ()
 {
-  Frequency dial_frequency {m_rigState.ptt () && m_rigState.split () ?
-      m_rigState.tx_frequency () : m_rigState.frequency ()};
+  auto dial_frequency = dialFrequency();
 
   // lookup band
   auto const& band_name = m_config.bands ()->find (dial_frequency);
@@ -4440,11 +4444,7 @@ void MainWindow::stopTx()
       ui->extFreeTextMsgEdit->setReadOnly(false);
       update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", false);
       on_stopTxButton_clicked();
-
-      // if we have a previousFrequency, and should jump to it, do it
-      if(m_previousFreq && m_shouldRestoreFreq){
-          setFreqForRestore(m_previousFreq, false);
-      }
+      tryRestoreFreqOffset();
   }
 
   ptt0Timer.start(200);                       //end-of-transmission sequencer delay
@@ -5571,6 +5571,12 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
     if(newLine){
         block = -1;
     }
+
+    sendNetworkMessage("RECV", text, {
+        {"UTC", QVariant(date.toSecsSinceEpoch())},
+        {"OFFSET", QVariant(freq)},
+    });
+
     m_rxFrameBlockNumbers[freq] = writeMessageTextToUI(date, text, freq, bold, block);
 }
 
@@ -5673,7 +5679,7 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
   m_txFrameQueue.append(frames);
   m_txFrameCount = frames.length();
 
-  int freq = currentFreq();
+  int freq = currentFreqOffset();
 
   QStringList lines;
   foreach(auto frame, frames){
@@ -5743,7 +5749,7 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
     }
 }
 
-int MainWindow::currentFreq(){
+int MainWindow::currentFreqOffset(){
     return ui->RxFreqSpinBox->value();
 }
 
@@ -6041,7 +6047,7 @@ bool MainWindow::prepareNextMessageFrame()
 
 bool MainWindow::isFreqOffsetFree(int f, int bw){
     // if this frequency is our current frequency, it's always "free"
-    if(currentFreq() == f){
+    if(currentFreqOffset() == f){
         return true;
     }
 
@@ -6160,7 +6166,7 @@ void MainWindow::prepareBacon(){
     }
 
     // Queue the beacon
-    enqueueMessage(PriorityLow, lines.join(QChar('\n')), currentFreq(), [this](){
+    enqueueMessage(PriorityLow, lines.join(QChar('\n')), currentFreqOffset(), [this](){
         m_nextBeaconQueued = false;
     });
 
@@ -7184,7 +7190,7 @@ void MainWindow::on_tableWidgetRXAll_cellClicked(int row, int /*col*/){
     auto item = ui->tableWidgetRXAll->item(row, 0);
     int offset = item->text().toInt();
 
-    setFreqForRestore(offset, false);
+    setFreqOffsetForRestore(offset, false);
 
     ui->tableWidgetCalls->selectionModel()->select(
         ui->tableWidgetCalls->selectionModel()->selection(),
@@ -7244,7 +7250,7 @@ void MainWindow::on_tableWidgetCalls_cellClicked(int /*row*/, int /*col*/){
     }
 
     auto d = m_callActivity[call];
-    setFreqForRestore(d.freq, false);
+    setFreqOffsetForRestore(d.freq, false);
 
     ui->tableWidgetRXAll->selectionModel()->select(
         ui->tableWidgetRXAll->selectionModel()->selection(),
@@ -7443,7 +7449,7 @@ void MainWindow::setXIT(int n, Frequency base)
   Q_EMIT transmitFrequency (ui->TxFreqSpinBox->value () - m_XIT);
 }
 
-void MainWindow::setFreqForRestore(int freq, bool shouldRestore){
+void MainWindow::setFreqOffsetForRestore(int freq, bool shouldRestore){
     setFreq4(freq, freq);
     if(shouldRestore){
         m_shouldRestoreFreq = true;
@@ -7453,13 +7459,23 @@ void MainWindow::setFreqForRestore(int freq, bool shouldRestore){
     }
 }
 
+bool MainWindow::tryRestoreFreqOffset(){
+    if(!m_shouldRestoreFreq || m_previousFreq == 0){
+        return false;
+    }
+
+    setFreqOffsetForRestore(m_previousFreq, false);
+
+    return true;
+}
+
 void MainWindow::setFreq4(int rxFreq, int txFreq)
 {
   if(rxFreq != txFreq){
       txFreq = rxFreq;
   }
 
-  m_previousFreq = currentFreq();
+  m_previousFreq = currentFreqOffset();
 
   if (ui->RxFreqSpinBox->isEnabled ()) ui->RxFreqSpinBox->setValue(rxFreq);
   ui->labDialFreqOffset->setText(QString("%1 Hz").arg(rxFreq));
@@ -8269,7 +8285,7 @@ void MainWindow::processRxActivity() {
 
         int freq = d.freq / 10 * 10;
 
-        bool shouldDisplay = abs(freq - currentFreq()) <= 10;
+        bool shouldDisplay = abs(freq - currentFreqOffset()) <= 10;
 
         // if this is a (recent) directed offset, bump the cache, and display...
         // this will allow a directed free text command followed by non-buffered data frames.
@@ -8684,6 +8700,10 @@ void MainWindow::processTxQueue(){
 
     // decide if it's ok to transmit...
     int f = head.freq;
+    if(f == -1){
+        f = currentFreqOffset();
+    }
+
     if(!isFreqOffsetFree(f, 60)){
         f = findFreeFreqOffset(500, 2500, 60);
     }
@@ -8720,7 +8740,7 @@ void MainWindow::processTxQueue(){
        (ui->beaconButton->isChecked() && message.message.contains("BEACON"))
     ){
         // then try to set the frequency...
-        setFreqForRestore(f, true);
+        setFreqOffsetForRestore(f, true);
 
         // then prepare to transmit...
         toggleTx(true);
@@ -8940,9 +8960,34 @@ void MainWindow::postWSPRDecode (bool is_new, QStringList parts)
 #endif
 }
 
-void MainWindow::networkMessage(QString const &type, QString const &message)
+void MainWindow::networkMessage(Message const &message)
 {
     if(!m_config.accept_udp_requests()){
+        return;
+    }
+
+    auto type = message.type();
+
+    if(type == "PONG"){
+        return;
+    }
+
+    if(type == "GET_CALL_ACTIVITY"){
+        QMap<QString, QVariant> calls;
+        foreach(auto cd, m_callActivity.values()){
+            QMap<QString, QVariant> detail;
+            detail["SNR"] = QVariant(cd.snr);
+            detail["GRID"] = QVariant(cd.grid);
+            detail["UTC"] = QVariant(cd.utcTimestamp.toSecsSinceEpoch());
+            calls[cd.call] = QVariant(detail);
+        }
+
+        sendNetworkMessage("CALL_ACTIVITY", "", calls);
+        return;
+    }
+
+    if(type == "GET_CALLSIGN"){
+        sendNetworkMessage("CALLSIGN", m_config.my_callsign());
         return;
     }
 
@@ -8952,18 +8997,64 @@ void MainWindow::networkMessage(QString const &type, QString const &message)
     }
 
     if(type == "SET_GRID"){
-        m_config.set_location(message);
+        m_config.set_location(message.value());
         return;
     }
+
+    if(type == "GET_FREQ"){
+        sendNetworkMessage("FREQ", "", {
+            {"DIAL", QVariant((quint64)dialFrequency())},
+            {"OFFSET", QVariant((quint64)currentFreqOffset())}
+        });
+        return;
+    }
+
+    if(type == "SET_FREQ"){
+        auto params = message.params();
+        if(params.contains("DIAL")){
+            bool ok = false;
+            auto f = params["DIAL"].toInt(&ok);
+            if(ok){
+                setRig(f);
+                displayDialFrequency();
+            }
+        }
+
+        if(params.contains("OFFSET")){
+            bool ok = false;
+            auto f = params["OFFSET"].toInt(&ok);
+            if(ok){
+                setFreqOffsetForRestore(f, false);
+            }
+        }
+        return;
+    }
+
+    if(type == "SEND_MESSAGE"){
+        auto text = message.value();
+        if(!text.isEmpty()){
+            enqueueMessage(PriorityNormal, text, -1, nullptr);
+            return;
+        }
+    }
+
+    qDebug() << "Unable to process networkMessage:" << type;
 }
 
-void MainWindow::sendNetworkMessage(QString const &type, QString const &message)
+void MainWindow::sendNetworkMessage(QString const &type, QString const &message){
+    m_messageClient->send(Message(type, message));
+}
+
+void MainWindow::sendNetworkMessage(QString const &type, QString const &message, QMap<QString, QVariant> const &params)
 {
-    m_messageClient->send_message(type, message);
+    m_messageClient->send(Message(type, message, params));
 }
 
 void MainWindow::networkError (QString const& e)
 {
+  if(!m_config.accept_udp_requests()){
+    return;
+  }
   if (m_splash && m_splash->isVisible ()) m_splash->hide ();
   if (MessageBox::Retry == MessageBox::warning_message (this, tr ("Network Error")
                                                         , tr ("Error: %1\nUDP server %2:%3")

@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 
+#include <QApplication>
 #include <QUdpSocket>
 #include <QHostInfo>
 #include <QTimer>
@@ -16,10 +17,66 @@
 
 #include "moc_MessageClient.cpp"
 
+Message::Message()
+{
+}
+
+Message::Message(QString const &type, QString const &value):
+    type_{ type },
+    value_{ value }
+{
+}
+
+Message::Message(QString const &type, QString const &value,  QMap<QString, QVariant> const &params):
+    type_{ type },
+    value_{ value },
+    params_{ params }
+{
+}
+
+void Message::read(const QJsonObject &json){
+    if(json.contains("type") && json["type"].isString()){
+        type_ = json["type"].toString();
+    }
+
+    if(json.contains("value") && json["value"].isString()){
+        value_ = json["value"].toString();
+    }
+
+    if(json.contains("params") && json["params"].isObject()){
+        params_.clear();
+
+        QJsonObject params = json["params"].toObject();
+        foreach(auto key, params.keys()){
+            params_[key] = params[key].toVariant();
+        }
+    }
+}
+
+void Message::write(QJsonObject &json) const{
+    json["type"] = type_;
+    json["value"] = value_;
+
+    QJsonObject params;
+    foreach(auto key, params_.keys()){
+        params.insert(key, QJsonValue::fromVariant(params_[key]));
+    }
+    json["params"] = params;
+}
+
+QByteArray Message::toJson() const {
+    QJsonObject o;
+    write(o);
+
+    QJsonDocument d(o);
+    return d.toJson();
+}
+
+
 class MessageClient::impl
   : public QUdpSocket
 {
-  Q_OBJECT;
+  Q_OBJECT
 
 public:
   impl (QString const& id, QString const& version, QString const& revision,
@@ -84,6 +141,7 @@ public:
   QByteArray last_message_;
 };
 
+
 #include "MessageClient.moc"
 
 void MessageClient::impl::host_info_results (QHostInfo host_info)
@@ -136,14 +194,26 @@ void MessageClient::impl::parse_message (QByteArray const& msg)
 {
   try
     {
-        QList<QByteArray> segments = msg.split('|');
-        if(segments.isEmpty()){
+        if(msg.isEmpty()){
             return;
         }
 
-        QString type(segments.first());
-        QString message(segments.mid(1).join('|'));
-        Q_EMIT self_->message_received(type, message);
+        QJsonParseError e;
+        QJsonDocument d = QJsonDocument::fromJson(msg, &e);
+        if(e.error != QJsonParseError::NoError){
+            Q_EMIT self_->error(QString {"MessageClient json parse error:  %1"}.arg(e.errorString()));
+            return;
+        }
+
+        if(!d.isObject()){
+            Q_EMIT self_->error(QString {"MessageClient json parse error: json is not an object"});
+            return;
+        }
+
+        Message m;
+        m.read(d.object());
+        Q_EMIT self_->message(m);
+
     }
   catch (std::exception const& e)
     {
@@ -159,8 +229,12 @@ void MessageClient::impl::heartbeat ()
 {
    if (server_port_ && !server_.isNull ())
     {
-      QByteArray message("PING|");
-      writeDatagram (message, server_, server_port_);
+      Message m("PING", "", QMap<QString, QVariant>{
+        {"NAME", QVariant(QApplication::applicationName())},
+        {"VERSION", QVariant(QApplication::applicationVersion())},
+        {"UTC", QVariant(QDateTime::currentDateTimeUtc().toSecsSinceEpoch())}
+      });
+      writeDatagram (m.toJson(), server_, server_port_);
     }
 }
 
@@ -168,8 +242,8 @@ void MessageClient::impl::closedown ()
 {
    if (server_port_ && !server_.isNull ())
     {
-      QByteArray message("EXIT|");
-      writeDatagram (message, server_, server_port_);
+       Message m("CLOSE");
+       writeDatagram (m.toJson(), server_, server_port_);
     }
 }
 
@@ -181,7 +255,6 @@ void MessageClient::impl::send_message (QByteArray const& message)
         {
           if (message != last_message_) // avoid duplicates
             {
-              qDebug() << "outgoing udp message" << message;
               writeDatagram (message, server_, server_port_);
               last_message_ = message;
             }
@@ -270,12 +343,8 @@ void MessageClient::set_server_port (port_type server_port)
   m_->server_port_ = server_port;
 }
 
-void MessageClient::send_message(QString const &type, QString const &message){
-  QByteArray b;
-  b.append(type);
-  b.append('|');
-  b.append(message);
-  m_->send_message(b);
+void MessageClient::send(Message const &message){
+  m_->send_message(message.toJson());
 }
 
 void MessageClient::send_raw_datagram (QByteArray const& message, QHostAddress const& dest_address

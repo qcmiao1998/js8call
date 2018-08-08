@@ -5,6 +5,8 @@
 #include <QTime>
 #include <QDateTime>
 #include <QString>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #include "Radio.hpp"
 #include "pimpl_h.hpp"
@@ -12,6 +14,29 @@
 class QByteArray;
 class QHostAddress;
 class QColor;
+
+
+class Message {
+public:
+    Message();
+    Message(QString const &type, QString const &value="");
+    Message(QString const &type, QString const &value, QMap<QString, QVariant> const &params);
+
+    void read(const QJsonObject &json);
+    void write(QJsonObject &json) const;
+
+    QByteArray toJson() const;
+
+    QString type() const { return type_; }
+    QString value() const { return value_; }
+    QMap<QString, QVariant> params() const { return params_; }
+
+private:
+    QString type_;
+    QString value_;
+    QMap<QString, QVariant> params_;
+};
+
 
 //
 // MessageClient - Manage messages sent and replies received from a
@@ -24,7 +49,7 @@ class QColor;
 class MessageClient
   : public QObject
 {
-  Q_OBJECT;
+  Q_OBJECT
 
 public:
   using Frequency = Radio::Frequency;
@@ -48,7 +73,7 @@ public:
   Q_SLOT void set_server_port (port_type server_port = 0u);
 
   // this slot is used to send an arbitrary message
-  Q_SLOT void send_message(QString const &type, QString const &message);
+  Q_SLOT void send(Message const &message);
 
   // this slot may be used to send arbitrary UDP datagrams to and
   // destination allowing the underlying socket to be used for general
@@ -59,6 +84,7 @@ public:
   // with send_raw_datagram() above)
   Q_SLOT void add_blocked_destination (QHostAddress const&);
 
+  Q_SIGNAL void message(Message const &message);
 
   // this signal is emitted when the a reply a message is received
   Q_SIGNAL void message_received(QString const &type, QString const &message);
