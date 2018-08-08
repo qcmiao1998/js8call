@@ -8211,7 +8211,7 @@ QString MainWindow::callsignSelected(){
 
     auto text = ui->extFreeTextMsgEdit->toPlainText().left(11); // Maximum callsign is 6 + / + 4 = 11 characters
     auto calls = Varicode::parseCallsigns(text);
-    if(!calls.isEmpty() && text.startsWith(calls.first())){
+    if(!calls.isEmpty() && text.startsWith(calls.first()) && calls.first() != m_config.my_callsign()){
         return calls.first();
     }
 
