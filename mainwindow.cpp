@@ -8861,7 +8861,7 @@ void MainWindow::displayBandActivity() {
             textItem->setTextAlignment(flag);
 
             if (text.last().contains(QRegularExpression {
-                    "^(CQ|QRZ|DE)\\s"
+                    "\\b(CQCQCQ|BEACON)\\b"
                 })) {
                 offsetItem->setBackground(QBrush(m_config.color_CQ()));
                 ageItem->setBackground(QBrush(m_config.color_CQ()));
