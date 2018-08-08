@@ -655,6 +655,7 @@ AudioDevice::Channel Configuration::audio_output_channel () const {return m_->au
 bool Configuration::restart_audio_input () const {return m_->restart_sound_input_device_;}
 bool Configuration::restart_audio_output () const {return m_->restart_sound_output_device_;}
 auto Configuration::type_2_msg_gen () const -> Type2MsgGen {return m_->type_2_msg_gen_;}
+bool Configuration::use_dynamic_grid() const {return m_->use_dynamic_grid_; }
 QString Configuration::my_callsign () const {return m_->my_callsign_;}
 QColor Configuration::color_CQ () const {return m_->color_CQ_;}
 QColor Configuration::color_MyCall () const {return m_->color_MyCall_;}

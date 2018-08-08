@@ -94,6 +94,7 @@ public:
   bool restart_audio_input () const;
   bool restart_audio_output () const;
 
+  bool use_dynamic_grid() const;
   QString my_callsign () const;
   QString my_grid () const;
   QString my_station () const;

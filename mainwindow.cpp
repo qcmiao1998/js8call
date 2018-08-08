@@ -547,62 +547,15 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   // Network message handlers
   connect (m_messageClient, &MessageClient::error, this, &MainWindow::networkError);
+  connect (m_messageClient, &MessageClient::message_received, this, &MainWindow::networkMessage);
 
 #if 0
-  connect (m_messageClient, &MessageClient::reply, this, &MainWindow::replyToCQ);
-  connect (m_messageClient, &MessageClient::replay, this, &MainWindow::replayDecodes);
-  connect (m_messageClient, &MessageClient::location, this, &MainWindow::locationChange);
-  connect (m_messageClient, &MessageClient::halt_tx, [this] (bool auto_only) {
-      if (m_config.accept_udp_requests ()) {
-        if (auto_only) {
-          if (ui->autoButton->isChecked ()) {
-            ui->autoButton->click();
-          }
-        } else {
-          ui->stopTxButton->click();
-        }
-      }
-    });
-  connect (m_messageClient, &MessageClient::free_text, [this] (QString const& text, bool send) {
-      if (m_config.accept_udp_requests ()) {
-        tx_watchdog (false);
-        // send + non-empty text means set and send the free text
-        // message, !send + non-empty text means set the current free
-        // text message, send + empty text means send the current free
-        // text message without change, !send + empty text means clear
-        // the current free text message
-        if (0 == ui->tabWidget->currentIndex ()) {
-          if (!text.isEmpty ()) {
-            ui->tx5->setCurrentText (text);
-          }
-          if (send) {
-            ui->txb5->click ();
-          } else if (text.isEmpty ()) {
-            ui->tx5->setCurrentText (text);
-          }
-        } else if (1 == ui->tabWidget->currentIndex ()) {
-          if (!text.isEmpty ()) {
-            ui->freeTextMsg->setCurrentText (text);
-          }
-          if (send) {
-            ui->rbFreeText->click ();
-          } else if (text.isEmpty ()) {
-            ui->freeTextMsg->setCurrentText (text);
-          }
-        }
-        QApplication::alert (this);
-      }
-    });
-
-  connect (m_messageClient, &MessageClient::highlight_callsign, ui->decodedTextBrowser, &DisplayText::highlight_callsign);
-
   // Hook up WSPR band hopping
   connect (ui->band_hopping_schedule_push_button, &QPushButton::clicked
            , &m_WSPR_band_hopping, &WSPRBandHopping::show_dialog);
   connect (ui->sbTxPercent, static_cast<void (QSpinBox::*) (int)> (&QSpinBox::valueChanged)
            , &m_WSPR_band_hopping, &WSPRBandHopping::set_tx_percent);
 #endif
-
 
   on_EraseButton_clicked ();
 
@@ -4357,7 +4310,12 @@ void MainWindow::guiUpdate()
     auto delta = t.secsTo(m_nextBeacon);
     auto beacon = ui->beaconButton->isChecked() ? delta > 0 ? QString("%1 s").arg(delta) : "queued!" : m_nextBeaconPaused ? "paused" : "disabled";
     ui->labBeacon->setText(QString("Next Beacon: %1").arg(beacon));
-    ui->labCallsign->setText(m_config.my_callsign());
+
+    auto callLabel = m_config.my_callsign();
+    if(m_config.use_dynamic_grid() && !m_config.my_grid().isEmpty()){
+        callLabel = QString("%1 - %2").arg(callLabel).arg(m_config.my_grid());
+    }
+    ui->labCallsign->setText(callLabel);
 
     if(!m_monitoring and !m_diskData) {
       ui->signal_meter_widget->setValue(0,0);
@@ -8980,6 +8938,28 @@ void MainWindow::postWSPRDecode (bool is_new, QStringList parts)
                                 , parts[4].toInt (), parts[5], parts[6], parts[7].toInt ()
                                 , m_diskData);
 #endif
+}
+
+void MainWindow::networkMessage(QString const &type, QString const &message)
+{
+    if(!m_config.accept_udp_requests()){
+        return;
+    }
+
+    if(type == "GET_GRID"){
+        sendNetworkMessage("GRID", m_config.my_grid());
+        return;
+    }
+
+    if(type == "SET_GRID"){
+        m_config.set_location(message);
+        return;
+    }
+}
+
+void MainWindow::sendNetworkMessage(QString const &type, QString const &message)
+{
+    m_messageClient->send_message(type, message);
 }
 
 void MainWindow::networkError (QString const& e)

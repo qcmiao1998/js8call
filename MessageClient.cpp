@@ -143,7 +143,6 @@ void MessageClient::impl::parse_message (QByteArray const& msg)
 
         QString type(segments.first());
         QString message(segments.mid(1).join('|'));
-        qDebug() << "MessageClient: Incoming" << type << message;
         Q_EMIT self_->message_received(type, message);
     }
   catch (std::exception const& e)

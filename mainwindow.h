@@ -313,6 +313,8 @@ private slots:
   void on_cbCQonly_toggled(bool b);
   void on_cbFirst_toggled(bool b);
   void on_cbAutoSeq_toggled(bool b);
+  void networkMessage(QString const &type, QString const &message);
+  void sendNetworkMessage(QString const &type, QString const &message);
   void networkError (QString const&);
   void on_ClrAvgButton_clicked();
   void on_syncSpinBox_valueChanged(int n);
