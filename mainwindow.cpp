@@ -1294,10 +1294,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
 void MainWindow::not_GA_warning_message ()
 {
-  QDate eol(2018, 8, 13);
+  QDate eol(2018, 9, 3);
 
   if(QDate::currentDate() >= eol){
-      MessageBox::critical_message (this, QString("This pre-release development build of FT8Call has expired."));
+      MessageBox::critical_message (this, QString("This pre-release development build of FT8Call has expired. Please upgrade to the latest version."));
       close();
       return;
   }
