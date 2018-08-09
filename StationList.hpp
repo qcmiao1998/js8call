@@ -55,12 +55,13 @@ public:
     QString band_name_;
     Frequency frequency_;
     QDateTime switch_at_;
+    QDateTime switch_until_;
     QString antenna_description_;
   };
 
   using Stations = QList<Station>;
 
-  enum Column {band_column, frequency_column, switch_column, description_column};
+  enum Column {band_column, frequency_column, switch_at_column, switch_until_column, description_column};
 
   explicit StationList (Bands const * bands, QObject * parent = nullptr);
   explicit StationList (Bands const * bands, Stations, QObject * parent = nullptr);

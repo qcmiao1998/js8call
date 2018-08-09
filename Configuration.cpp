@@ -267,11 +267,15 @@ public:
 
     switch_at_.setTimeSpec(Qt::UTC);
     switch_at_.setDisplayFormat("hh:mm");
-      
+
+    switch_until_.setTimeSpec(Qt::UTC);
+    switch_until_.setDisplayFormat("hh:mm");
+
     auto form_layout = new QFormLayout ();
     form_layout->addRow (tr ("&Band:"), &band_);
     form_layout->addRow (tr ("&Frequency (MHz):"), &freq_);
-    form_layout->addRow (tr ("&Switch at (UTC)):"), &switch_at_);
+    form_layout->addRow (tr ("&Switch at (UTC):"), &switch_at_);
+    form_layout->addRow (tr ("&Until (UTC):"), &switch_until_);
     //form_layout->addRow (tr ("&Antenna:"), &description_);
 
     auto main_layout = new QVBoxLayout (this);
@@ -286,7 +290,16 @@ public:
 
   StationList::Station station () const
   {
-    return {band_.currentText (), freq_.frequency(), QDateTime(QDate(2000, 1, 1), switch_at_.time(), Qt::UTC), description_.text ()};
+    int offset = 0;
+    if(switch_until_.time() <= switch_at_.time()){
+        offset += 1;
+    }
+    return {
+        band_.currentText (),
+        freq_.frequency(),
+        QDateTime(QDate(2000, 1, 1), switch_at_.time(), Qt::UTC),
+        QDateTime(QDate(2000, 1, 1 + offset), switch_until_.time(), Qt::UTC),
+        description_.text ()};
   }
 
   int exec () override
@@ -301,6 +314,7 @@ private:
   QComboBox band_;
   FrequencyLineEdit freq_;
   QTimeEdit switch_at_;
+  QTimeEdit switch_until_;
   QLineEdit description_;
 };
 
@@ -2474,6 +2488,7 @@ void Configuration::impl::delete_stations ()
   next_stations_.removeDisjointRows (selection_model->selectedRows ());
   ui_->stations_table_view->resizeColumnToContents (StationList::band_column);
   ui_->stations_table_view->resizeColumnToContents (StationList::frequency_column);
+  ui_->stations_table_view->resizeColumnToContents (StationList::switch_at_column);
 }
 
 void Configuration::impl::insert_station ()
@@ -2491,6 +2506,7 @@ void Configuration::impl::insert_station ()
       ui_->stations_table_view->setCurrentIndex (next_stations_.add (station));
       ui_->stations_table_view->resizeColumnToContents (StationList::band_column);
       ui_->stations_table_view->resizeColumnToContents (StationList::frequency_column);
+      ui_->stations_table_view->resizeColumnToContents (StationList::switch_at_column);
     }
 }
 

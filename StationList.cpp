@@ -30,6 +30,7 @@ QDebug operator << (QDebug debug, StationList::Station const& station)
                    << station.band_name_ << ", "
                    << station.frequency_ << ", "
                    << station.switch_at_ << ", "
+                   << station.switch_until_ << ", "
                    << station.antenna_description_ << ')';
   return debug;
 }
@@ -40,6 +41,7 @@ QDataStream& operator << (QDataStream& os, StationList::Station const& station)
   return os << station.band_name_
             << station.frequency_
             << station.switch_at_
+            << station.switch_until_
             << station.antenna_description_;
 }
 
@@ -48,6 +50,7 @@ QDataStream& operator >> (QDataStream& is, StationList::Station& station)
   return is >> station.band_name_
             >> station.frequency_
             >> station.switch_at_
+            >> station.switch_until_
             >> station.antenna_description_;
 }
 
@@ -93,7 +96,7 @@ public:
     return matches.isEmpty () ? QModelIndex {} : matches.first ();
   }
 
-  static int constexpr num_columns {3};
+  static int constexpr num_columns {4};
   static auto constexpr mime_type = "application/wsjt.antenna-descriptions";
 
   Bands const * bands_;
@@ -294,7 +297,7 @@ QVariant StationList::impl::data (QModelIndex const& index, int role) const
               break;
 
             case Qt::TextAlignmentRole:
-              item = Qt::AlignHCenter + Qt::AlignVCenter;
+              item = (int)Qt::AlignHCenter | Qt::AlignVCenter;
               break;
             }
           break;
@@ -320,20 +323,20 @@ QVariant StationList::impl::data (QModelIndex const& index, int role) const
                 break;
 
               case Qt::TextAlignmentRole:
-                item = Qt::AlignRight + Qt::AlignVCenter;
+                item = (int)Qt::AlignRight | Qt::AlignVCenter;
                 break;
               }
           }
           break;
 
-      case switch_column:
+      case switch_at_column:
         switch (role)
           {
           case SortRole:
           case Qt::EditRole:
           case Qt::DisplayRole:
           case Qt::AccessibleTextRole:
-            item = stations_.at (row).switch_at_.toUTC().time().toString("hh:mm");
+            item = stations_.at (row).switch_at_.time().toString();
             break;
 
           case Qt::ToolTipRole:
@@ -342,7 +345,28 @@ QVariant StationList::impl::data (QModelIndex const& index, int role) const
             break;
 
           case Qt::TextAlignmentRole:
-            item = Qt::AlignCenter + Qt::AlignVCenter;
+            item = (int)Qt::AlignHCenter | Qt::AlignVCenter;
+            break;
+          }
+        break;
+
+      case switch_until_column:
+        switch (role)
+          {
+          case SortRole:
+          case Qt::EditRole:
+          case Qt::DisplayRole:
+          case Qt::AccessibleTextRole:
+            item = stations_.at (row).switch_until_.time().toString();
+            break;
+
+          case Qt::ToolTipRole:
+          case Qt::AccessibleDescriptionRole:
+            item = tr ("Switch until this time");
+            break;
+
+          case Qt::TextAlignmentRole:
+            item = (int)Qt::AlignHCenter | Qt::AlignVCenter;
             break;
           }
         break;
@@ -363,7 +387,7 @@ QVariant StationList::impl::data (QModelIndex const& index, int role) const
             break;
 
           case Qt::TextAlignmentRole:
-            item = Qt::AlignLeft + Qt::AlignVCenter;
+            item = (int)Qt::AlignLeft | Qt::AlignVCenter;
             break;
           }
         break;
@@ -383,7 +407,8 @@ QVariant StationList::impl::headerData (int section, Qt::Orientation orientation
         {
         case band_column: header = tr ("Band"); break;
         case frequency_column: header = tr ("Freq. (MHz)"); break;
-        case switch_column: header = tr ("Switch at (UTC)"); break;
+        case switch_at_column: header = tr ("Switch at (UTC)"); break;
+        case switch_until_column: header = tr ("Until (UTC)"); break;
         case description_column: header = tr ("Antenna Description"); break;
         }
     }
@@ -445,8 +470,13 @@ bool StationList::impl::setData (QModelIndex const& model_index, QVariant const&
               }
           }
           break;
-        case switch_column:
+        case switch_at_column:
           stations_[row].switch_at_ = value.toDateTime();
+          Q_EMIT dataChanged (model_index, model_index, roles);
+          changed = true;
+          break;
+        case switch_until_column:
+          stations_[row].switch_until_ = value.toDateTime();
           Q_EMIT dataChanged (model_index, model_index, roles);
           changed = true;
           break;
@@ -560,7 +590,7 @@ bool StationList::impl::dropMimeData (QMimeData const * data, Qt::DropAction act
                                                  , [&band] (Station const& s) {return s.band_name_ == band;}))
             {
               // not found so add it
-              add (Station {band, 0, QDateTime::currentDateTimeUtc(), QString {}});
+              add (Station {band, 0, QDateTime::currentDateTimeUtc(), QDateTime::currentDateTimeUtc(), QString {}});
             }
         }
       return true;

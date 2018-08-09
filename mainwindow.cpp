@@ -1350,30 +1350,21 @@ void MainWindow::on_the_minute ()
     }
 
   // see if we need to hop bands...
-  auto now = QDateTime::currentDateTimeUtc().time();
-  Frequency dial_frequency {m_rigState.ptt () && m_rigState.split () ?
-      m_rigState.tx_frequency () : m_rigState.frequency ()};
-  auto const& band_name = m_config.bands ()->find (dial_frequency);
+  auto const& band_name = ui->bandComboBox->currentText();
   auto stations = m_config.stations()->station_list();
   qSort(stations.begin(), stations.end(), [](StationList::Station const &a, StationList::Station const &b){
-    return a.switch_at_ < b.switch_at_;
+    return (a.switch_at_ < b.switch_at_) || (a.switch_at_ == b.switch_at_ && a.switch_until_ < b.switch_until_);
   });
 
-  StationList::Station prev;
   foreach(auto station, stations){
-      if(station == stations.first()){
-          prev = station;
-          continue;
-      }
+      // we just set it to a known date to make the comparisons easier ;)
+      QDateTime d = QDateTime::currentDateTimeUtc();
+      d.setDate(QDate(2000, 1, 1));
 
-      if(prev.switch_at_.time() <= now && now < station.switch_at_.time()){
-          qDebug() << "switch to" << station.band_name_ << station.frequency_;
+      bool canSwitch = station.switch_at_ <= d && d < station.switch_until_;
+      if(canSwitch && station.band_name_ != band_name){
+          qDebug() << "should switch to" << station.band_name_ << station.frequency_;
       }
-
-      prev = station;
-  }
-  if(prev.switch_at_.time() <= now && now < QTime(11, 59)){
-      qDebug() << "switch to" << prev.band_name_ << prev.frequency_;
   }
 }
 
