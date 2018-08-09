@@ -293,17 +293,14 @@ public:
   {
     auto band = all_bands_->find(freq_.frequency());
 
-    int offset = 0;
-    if(switch_until_.time() <= switch_at_.time()){
-        offset += 1;
-    }
+    auto a = QDateTime(QDate(2000, 1, 1), switch_at_.time(), Qt::UTC);
+    auto b = QDateTime(QDate(2000, 1, 1), switch_until_.time(), Qt::UTC);
 
     return {
-        //band_.currentText (),
         band,
         freq_.frequency(),
-        QDateTime(QDate(2000, 1, 1), switch_at_.time(), Qt::UTC),
-        QDateTime(QDate(2000, 1, 1 + offset), switch_until_.time(), Qt::UTC),
+        qMin(a, b),
+        qMax(a, b),
         description_.text ()};
   }
 

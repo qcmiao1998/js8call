@@ -486,25 +486,29 @@ bool StationList::impl::setData (QModelIndex const& model_index, QVariant const&
               s = QString("0").repeated(5-s.length()) + s;
           }
           auto t = QTime::fromString(s);
-          auto dt = QDateTime(QDate(2000,1,1), t);
-          stations_[row].switch_at_ = dt;
+          auto at = QDateTime(QDate(2000,1,1), t, Qt::UTC);
+          auto until = stations_[row].switch_until_;
+
+          stations_[row].switch_at_ = qMin(at, until);
+          stations_[row].switch_until_ = qMax(at, until);
+
           Q_EMIT dataChanged (model_index, model_index, roles);
           changed = true;
           break;
         }
         case switch_until_column:
         {
-          int o = 0;
           QString s = value.toString();
           if(s.length() < 5){
               s = QString("0").repeated(5-s.length()) + s;
           }
           auto t = QTime::fromString(s);
-          if(t < stations_[row].switch_at_.time()){
-              o += 1;
-          }
-          auto dt = QDateTime(QDate(2000,1,1+o), t);
-          stations_[row].switch_until_ = dt;
+          auto until = QDateTime(QDate(2000,1,1), t, Qt::UTC);
+          auto at = stations_[row].switch_at_;
+
+          stations_[row].switch_at_ = qMin(at, until);
+          stations_[row].switch_until_ = qMax(at, until);
+
           Q_EMIT dataChanged (model_index, model_index, roles);
           changed = true;
           break;

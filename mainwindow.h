@@ -863,6 +863,7 @@ private:
   void statusUpdate () const;
   void update_watchdog_label ();
   void on_the_minute ();
+  void tryBandHop();
   void add_child_to_event_filter (QObject *);
   void remove_child_from_event_filter (QObject *);
   void setup_status_bar (bool vhf);

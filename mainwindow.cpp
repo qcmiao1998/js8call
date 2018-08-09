@@ -1348,22 +1348,54 @@ void MainWindow::on_the_minute ()
     {
       tx_watchdog (false);
     }
+}
 
+void MainWindow::tryBandHop(){
   // see if we need to hop bands...
-  auto const& band_name = ui->bandComboBox->currentText();
+  if(!m_config.auto_switch_bands()){
+      return;
+  }
+
+  qDebug() << "Checking for automatic band hop";
+
+  // get the current band
+  Frequency dialFreq {m_rigState.ptt () && m_rigState.split () ?
+      m_rigState.tx_frequency () : m_rigState.frequency ()};
+
+  auto currentBand = m_config.bands()->find(dialFreq);
+
+  // get the stations list
   auto stations = m_config.stations()->station_list();
+
+  // order stations by (switch_at, switch_until) time tuple
   qSort(stations.begin(), stations.end(), [](StationList::Station const &a, StationList::Station const &b){
     return (a.switch_at_ < b.switch_at_) || (a.switch_at_ == b.switch_at_ && a.switch_until_ < b.switch_until_);
   });
 
-  foreach(auto station, stations){
-      // we just set it to a known date to make the comparisons easier ;)
-      QDateTime d = QDateTime::currentDateTimeUtc();
-      d.setDate(QDate(2000, 1, 1));
+  // we just set the date to a known y/m/d to make the comparisons easier
+  QDateTime d = QDateTime::currentDateTimeUtc();
+  d.setDate(QDate(2000, 1, 1));
 
-      bool canSwitch = station.switch_at_ <= d && d < station.switch_until_;
-      if(canSwitch && station.band_name_ != band_name){
-          qDebug() << "should switch to" << station.band_name_ << station.frequency_;
+  // see if we can find a needed band switch...
+  foreach(auto station, stations){
+      // we can switch to this frequency if we're in the time range, inclusive of switch_at, exclusive of switch_until
+      // and if we are switching within 30 seconds of the switch_at time. this allows us to switch bands at that time,
+      // but then later we can later switch to a different band if needed without the automatic band switching to take over
+      bool canSwitch = station.switch_at_ <= d && d <= station.switch_until_ && station.switch_at_.secsTo(d) <= 30;
+
+      //qDebug() << "Can switch to" << station.band_name_ << "=" << canSwitch << station.switch_at_.time().toString("hh:mm") << "<=" << d.time().toString("hh:mm") << "<=" << station.switch_until_.time().toString("hh:mm");
+
+      // switch, if we can and the band is different than our current band
+      if(canSwitch && station.band_name_ != currentBand){
+
+          qDebug() << "Automatic band hop from" << currentBand << "to" << station.band_name_ << "at" << Radio::frequency_MHz_string(station.frequency_);
+
+          // TODO: jsherer - is this the right way to switch the rig freq?
+          setRig(station.frequency_);
+
+          // TODO: jsherer - potentially cache the fact that we switched and mark it as an override, so we don't revert back?
+
+          break;
       }
   }
 }
@@ -4326,6 +4358,11 @@ void MainWindow::guiUpdate()
     m_sec0=nsec;
 
     // once per period
+    if(m_sec0 % m_TRperiod == 0){
+        tryBandHop();
+    }
+
+    // once per period/3
     bool forceDirty = false;
     if(m_sec0 % (m_TRperiod/3) == 0){
         // force rx dirty three times per period
