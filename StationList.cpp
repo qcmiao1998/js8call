@@ -28,7 +28,8 @@ QDebug operator << (QDebug debug, StationList::Station const& station)
   QDebugStateSaver saver {debug};
   debug.nospace () << "Station("
                    << station.band_name_ << ", "
-                   << station.offset_ << ", "
+                   << station.frequency_ << ", "
+                   << station.switch_at_ << ", "
                    << station.antenna_description_ << ')';
   return debug;
 }
@@ -37,14 +38,16 @@ QDebug operator << (QDebug debug, StationList::Station const& station)
 QDataStream& operator << (QDataStream& os, StationList::Station const& station)
 {
   return os << station.band_name_
-            << station.offset_
+            << station.frequency_
+            << station.switch_at_
             << station.antenna_description_;
 }
 
 QDataStream& operator >> (QDataStream& is, StationList::Station& station)
 {
   return is >> station.band_name_
-            >> station.offset_
+            >> station.frequency_
+            >> station.switch_at_
             >> station.antenna_description_;
 }
 
@@ -172,12 +175,6 @@ bool StationList::removeDisjointRows (QModelIndexList rows)
   return result;
 }
 
-auto StationList::offset (Frequency f) const -> FrequencyDelta
-{
-  return m_->offset (f);
-}
-
-
 auto StationList::impl::station_list (Stations stations) -> Stations
 {
   beginResetModel ();
@@ -203,6 +200,7 @@ QModelIndex StationList::impl::add (Station s)
   return QModelIndex {};
 }
 
+#if 0
 auto StationList::impl::offset (Frequency f) const -> FrequencyDelta
 {
   // Lookup band for frequency
@@ -214,12 +212,13 @@ auto StationList::impl::offset (Frequency f) const -> FrequencyDelta
         {
           if (stations_[i].band_name_ == band)
             {
-              return stations_[i].offset_;
+              return stations_[i].frequency_;
             }
         }
     }
   return 0;                     // no offset
 }
+#endif
 
 int StationList::impl::rowCount (QModelIndex const& parent) const
 {
@@ -300,9 +299,9 @@ QVariant StationList::impl::data (QModelIndex const& index, int role) const
             }
           break;
 
-        case offset_column:
+        case frequency_column:
           {
-            auto frequency_offset = stations_.at (row).offset_;
+            auto frequency_offset = stations_.at (row).frequency_;
             switch (role)
               {
               case SortRole:
@@ -317,7 +316,7 @@ QVariant StationList::impl::data (QModelIndex const& index, int role) const
 
               case Qt::ToolTipRole:
               case Qt::AccessibleDescriptionRole:
-                item = tr ("Frequency offset");
+                item = tr ("Frequency");
                 break;
 
               case Qt::TextAlignmentRole:
@@ -327,27 +326,48 @@ QVariant StationList::impl::data (QModelIndex const& index, int role) const
           }
           break;
 
-        case description_column:
-          switch (role)
-            {
-            case SortRole:
-            case Qt::EditRole:
-            case Qt::DisplayRole:
-            case Qt::AccessibleTextRole:
-              item = stations_.at (row).antenna_description_;
-              break;
+      case switch_column:
+        switch (role)
+          {
+          case SortRole:
+          case Qt::EditRole:
+          case Qt::DisplayRole:
+          case Qt::AccessibleTextRole:
+            item = stations_.at (row).switch_at_.toUTC().time().toString("hh:mm");
+            break;
 
-            case Qt::ToolTipRole:
-            case Qt::AccessibleDescriptionRole:
-              item = tr ("Antenna description");
-              break;
+          case Qt::ToolTipRole:
+          case Qt::AccessibleDescriptionRole:
+            item = tr ("Switch at this time");
+            break;
 
-            case Qt::TextAlignmentRole:
-              item = Qt::AlignLeft + Qt::AlignVCenter;
-              break;
-            }
-          break;
-        }
+          case Qt::TextAlignmentRole:
+            item = Qt::AlignCenter + Qt::AlignVCenter;
+            break;
+          }
+        break;
+
+      case description_column:
+        switch (role)
+          {
+          case SortRole:
+          case Qt::EditRole:
+          case Qt::DisplayRole:
+          case Qt::AccessibleTextRole:
+            item = stations_.at (row).antenna_description_;
+            break;
+
+          case Qt::ToolTipRole:
+          case Qt::AccessibleDescriptionRole:
+            item = tr ("Antenna description");
+            break;
+
+          case Qt::TextAlignmentRole:
+            item = Qt::AlignLeft + Qt::AlignVCenter;
+            break;
+          }
+        break;
+      }
     }
 
   return item;
@@ -362,7 +382,8 @@ QVariant StationList::impl::headerData (int section, Qt::Orientation orientation
       switch (section)
         {
         case band_column: header = tr ("Band"); break;
-        case offset_column: header = tr ("Offset"); break;
+        case frequency_column: header = tr ("Freq. (MHz)"); break;
+        case switch_column: header = tr ("Switch at (UTC)"); break;
         case description_column: header = tr ("Antenna Description"); break;
         }
     }
@@ -402,21 +423,33 @@ bool StationList::impl::setData (QModelIndex const& model_index, QVariant const&
           }
           break;
 
-        case offset_column:
+        case frequency_column:
           {
-            if (value.canConvert<FrequencyDelta> ())
+            if (value.canConvert<Frequency> ())
               {
-                FrequencyDelta offset {qvariant_cast<Radio::FrequencyDelta> (value)};
-                if (offset != stations_[row].offset_)
+                Frequency offset {qvariant_cast<Radio::Frequency> (value)};
+
+                if(offset == 0){
+                    Frequency f;
+                    if(bands_->findFreq(stations_[row].band_name_, &f)){
+                        offset = f;
+                    }
+                }
+
+                if (offset != stations_[row].frequency_)
                   {
-                    stations_[row].offset_ = offset;
+                    stations_[row].frequency_ = offset;
                     Q_EMIT dataChanged (model_index, model_index, roles);
                     changed = true;
                   }
               }
           }
           break;
-
+        case switch_column:
+          stations_[row].switch_at_ = value.toDateTime();
+          Q_EMIT dataChanged (model_index, model_index, roles);
+          changed = true;
+          break;
         case description_column:
           stations_[row].antenna_description_ = value.toString ();
           Q_EMIT dataChanged (model_index, model_index, roles);
@@ -527,7 +560,7 @@ bool StationList::impl::dropMimeData (QMimeData const * data, Qt::DropAction act
                                                  , [&band] (Station const& s) {return s.band_name_ == band;}))
             {
               // not found so add it
-              add (Station {band, 0, QString {}});
+              add (Station {band, 0, QDateTime::currentDateTimeUtc(), QString {}});
             }
         }
       return true;

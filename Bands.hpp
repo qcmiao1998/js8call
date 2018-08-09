@@ -56,6 +56,8 @@ public:
   //
   QString find (Frequency) const; // find band Frequency is in
   int find (QString const&) const; // find row of band (-1 if not valid)
+  bool findFreq(QString const& band, Radio::Frequency *pFreq) const;
+
   static QString const& oob ();
 
   // Iterators

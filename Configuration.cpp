@@ -161,6 +161,7 @@
 #include <QColorDialog>
 #include <QSerialPortInfo>
 #include <QScopedPointer>
+#include <QDateTimeEdit>
 
 #include "pimpl_impl.hpp"
 #include "qt_helpers.hpp"
@@ -260,14 +261,18 @@ public:
     : QDialog {parent}
     , filtered_bands_ {new CandidateKeyFilter {bands, stations, 0, 0}}
   {
-    setWindowTitle (QApplication::applicationName () + " - " + tr ("Add Station"));
+    setWindowTitle (QApplication::applicationName () + " - " + tr ("Add Schedule"));
 
     band_.setModel (filtered_bands_.data ());
+
+    switch_at_.setTimeSpec(Qt::UTC);
+    switch_at_.setDisplayFormat("hh:mm");
       
     auto form_layout = new QFormLayout ();
     form_layout->addRow (tr ("&Band:"), &band_);
-    form_layout->addRow (tr ("&Offset (MHz):"), &delta_);
-    form_layout->addRow (tr ("&Antenna:"), &description_);
+    form_layout->addRow (tr ("&Frequency (MHz):"), &freq_);
+    form_layout->addRow (tr ("&Switch at (UTC)):"), &switch_at_);
+    //form_layout->addRow (tr ("&Antenna:"), &description_);
 
     auto main_layout = new QVBoxLayout (this);
     main_layout->addLayout (form_layout);
@@ -277,16 +282,11 @@ public:
 
     connect (button_box, &QDialogButtonBox::accepted, this, &StationDialog::accept);
     connect (button_box, &QDialogButtonBox::rejected, this, &StationDialog::reject);
-
-    if (delta_.text ().isEmpty ())
-      {
-        delta_.setText ("0");
-      }
   }
 
   StationList::Station station () const
   {
-    return {band_.currentText (), delta_.frequency_delta (), description_.text ()};
+    return {band_.currentText (), freq_.frequency(), QDateTime(QDate(2000, 1, 1), switch_at_.time(), Qt::UTC), description_.text ()};
   }
 
   int exec () override
@@ -299,7 +299,8 @@ private:
   QScopedPointer<CandidateKeyFilter> filtered_bands_;
 
   QComboBox band_;
-  FrequencyDeltaLineEdit delta_;
+  FrequencyLineEdit freq_;
+  QTimeEdit switch_at_;
   QLineEdit description_;
 };
 
@@ -501,8 +502,7 @@ private:
   FrequencyList_v2 next_frequencies_;
   StationList stations_;
   StationList next_stations_;
-  FrequencyDelta current_offset_;
-  FrequencyDelta current_tx_offset_;
+  bool auto_switch_bands_;
 
   QAction * frequency_delete_action_;
   QAction * frequency_insert_action_;
@@ -706,6 +706,7 @@ Bands * Configuration::bands () {return &m_->bands_;}
 Bands const * Configuration::bands () const {return &m_->bands_;}
 StationList * Configuration::stations () {return &m_->stations_;}
 StationList const * Configuration::stations () const {return &m_->stations_;}
+bool Configuration::auto_switch_bands() const { return &m_->auto_switch_bands_; }
 IARURegions::Region Configuration::region () const {return m_->region_;}
 FrequencyList_v2 * Configuration::frequencies () {return &m_->frequencies_;}
 FrequencyList_v2 const * Configuration::frequencies () const {return &m_->frequencies_;}
@@ -724,7 +725,7 @@ void Configuration::set_calibration (CalibrationParams params)
 
 void Configuration::enable_calibration (bool on)
 {
-  auto target_frequency = m_->remove_calibration (m_->cached_rig_state_.frequency ()) - m_->current_offset_;
+  auto target_frequency = m_->remove_calibration (m_->cached_rig_state_.frequency ());
   m_->frequency_calibration_disabled_ = !on;
   transceiver_frequency (target_frequency);
 }
@@ -910,8 +911,6 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   , next_frequencies_ {&bands_}
   , stations_ {&bands_}
   , next_stations_ {&bands_}
-  , current_offset_ {0}
-  , current_tx_offset_ {0}
   , frequency_dialog_ {new FrequencyDialog {&regions_, &modes_, this}}
   , station_dialog_ {new StationDialog {&next_stations_, &bands_, this}}
   , last_port_type_ {TransceiverFactory::Capabilities::none}
@@ -1112,6 +1111,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
 
   ui_->stations_table_view->setModel (&next_stations_);
   ui_->stations_table_view->sortByColumn (StationList::band_column, Qt::AscendingOrder);
+  connect(ui_->auto_switch_bands_check_box, &QCheckBox::clicked, ui_->stations_table_view, &QTableView::setEnabled);
 
   // delegates
   auto stations_item_delegate = new QStyledItemDelegate {this};
@@ -1230,6 +1230,8 @@ void Configuration::impl::initialize_models ()
   ui_->monitor_off_check_box->setChecked (monitor_off_at_startup_);
   ui_->monitor_last_used_check_box->setChecked (monitor_last_used_);
   ui_->log_as_RTTY_check_box->setChecked (log_as_RTTY_);
+  ui_->auto_switch_bands_check_box->setChecked(auto_switch_bands_);
+  ui_->stations_table_view->setEnabled(ui_->auto_switch_bands_check_box->isChecked());
   ui_->report_in_comments_check_box->setChecked (report_in_comments_);
   ui_->prompt_to_log_check_box->setChecked (prompt_to_log_);
   ui_->insert_blank_check_box->setChecked (insert_blank_);
@@ -1307,6 +1309,7 @@ void Configuration::impl::initialize_models ()
   next_macros_.setStringList (macros_.stringList ());
   next_frequencies_.frequency_list (frequencies_.frequency_list ());
   next_stations_.station_list (stations_.station_list ());
+
 
   set_rig_invariants ();
 }
@@ -1457,6 +1460,7 @@ void Configuration::impl::read_settings ()
     }
 
   stations_.station_list (settings_->value ("stations").value<StationList::Stations> ());
+  auto_switch_bands_ = settings_->value("AutoSwitchBands", false).toBool();
 
   log_as_RTTY_ = settings_->value ("toRTTY", false).toBool ();
   report_in_comments_ = settings_->value("dBtoComments", false).toBool ();
@@ -1571,6 +1575,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("Macros", macros_.stringList ());
   settings_->setValue ("FrequenciesForRegionModes", QVariant::fromValue (frequencies_.frequency_list ()));
   settings_->setValue ("stations", QVariant::fromValue (stations_.station_list ()));
+  settings_->setValue ("AutoSwitchBands", auto_switch_bands_);
   settings_->setValue ("toRTTY", log_as_RTTY_);
   settings_->setValue ("dBtoComments", report_in_comments_);
   settings_->setValue ("Rig", rig_params_.rig_name);
@@ -1993,6 +1998,7 @@ void Configuration::impl::accept ()
   autoreply_off_at_startup_ = ui_->autoreply_off_check_box->isChecked ();
   monitor_off_at_startup_ = ui_->monitor_off_check_box->isChecked ();
   monitor_last_used_ = ui_->monitor_last_used_check_box->isChecked ();
+  auto_switch_bands_ = ui_->auto_switch_bands_check_box->isChecked();
   type_2_msg_gen_ = static_cast<Type2MsgGen> (ui_->type_2_msg_gen_combo_box->currentIndex ());
   log_as_RTTY_ = ui_->log_as_RTTY_check_box->isChecked ();
   report_in_comments_ = ui_->report_in_comments_check_box->isChecked ();
@@ -2467,16 +2473,24 @@ void Configuration::impl::delete_stations ()
   selection_model->select (selection_model->selection (), QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
   next_stations_.removeDisjointRows (selection_model->selectedRows ());
   ui_->stations_table_view->resizeColumnToContents (StationList::band_column);
-  ui_->stations_table_view->resizeColumnToContents (StationList::offset_column);
+  ui_->stations_table_view->resizeColumnToContents (StationList::frequency_column);
 }
 
 void Configuration::impl::insert_station ()
 {
   if (QDialog::Accepted == station_dialog_->exec ())
     {
-      ui_->stations_table_view->setCurrentIndex (next_stations_.add (station_dialog_->station ()));
+      auto station = station_dialog_->station ();
+      if(station.frequency_ == 0){
+          Frequency f;
+          if(bands_.findFreq(station.band_name_, &f)){
+              station.frequency_ = f;
+          }
+      }
+
+      ui_->stations_table_view->setCurrentIndex (next_stations_.add (station));
       ui_->stations_table_view->resizeColumnToContents (StationList::band_column);
-      ui_->stations_table_view->resizeColumnToContents (StationList::offset_column);
+      ui_->stations_table_view->resizeColumnToContents (StationList::frequency_column);
     }
 }
 
@@ -2640,8 +2654,7 @@ void Configuration::impl::transceiver_frequency (Frequency f)
   // cannot absolutely determine if the offset should apply but by
   // simply picking an offset when the Rx frequency is set and
   // sticking to it we get sane behaviour
-  current_offset_ = stations_.offset (f);
-  cached_rig_state_.frequency (apply_calibration (f + current_offset_));
+  cached_rig_state_.frequency (apply_calibration (f));
 
   Q_EMIT set_transceiver (cached_rig_state_, ++transceiver_command_number_);
 }
@@ -2664,8 +2677,7 @@ void Configuration::impl::transceiver_tx_frequency (Frequency f)
           // rig, we cannot absolutely determine if the offset should
           // apply but by simply picking an offset when the Rx
           // frequency is set and sticking to it we get sane behaviour
-          current_tx_offset_ = stations_.offset (f);
-          cached_rig_state_.tx_frequency (apply_calibration (f + current_tx_offset_));
+          cached_rig_state_.tx_frequency (apply_calibration (f));
         }
 
       Q_EMIT set_transceiver (cached_rig_state_, ++transceiver_command_number_);
@@ -2732,12 +2744,12 @@ void Configuration::impl::handle_transceiver_update (TransceiverState const& sta
     {
       TransceiverState reported_state {state};
       // take off calibration & offset
-      reported_state.frequency (remove_calibration (reported_state.frequency ()) - current_offset_);
+      reported_state.frequency (remove_calibration (reported_state.frequency ()));
 
       if (reported_state.tx_frequency ())
         {
           // take off calibration & offset
-          reported_state.tx_frequency (remove_calibration (reported_state.tx_frequency ()) - current_tx_offset_);
+          reported_state.tx_frequency (remove_calibration (reported_state.tx_frequency ()));
         }
 
       Q_EMIT self_->transceiver_update (reported_state);

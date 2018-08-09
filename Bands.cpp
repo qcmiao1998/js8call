@@ -87,6 +87,18 @@ int Bands::find (QString const& band) const
   return result;
 }
 
+bool Bands::findFreq(QString const& band, Radio::Frequency *pFreq) const {
+    int row = find(band);
+    if(row == -1){
+        return false;
+    }
+
+    if(pFreq) *pFreq = ADIF_bands[row].lower_bound_;
+
+    return true;
+}
+
+
 QString const& Bands::oob ()
 {
   return oob_name;

@@ -162,6 +162,7 @@ public:
   FrequencyList_v2 const * frequencies () const;
   StationList * stations ();
   StationList const * stations () const;
+  bool auto_switch_bands() const;
   QStringListModel * macros ();
   QStringListModel const * macros () const;
   QDir save_directory () const;

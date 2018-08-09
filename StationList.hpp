@@ -2,6 +2,7 @@
 #define STATION_LIST_HPP__
 
 #include <QSortFilterProxyModel>
+#include <QDateTime>
 #include <QString>
 #include <QList>
 
@@ -52,13 +53,14 @@ public:
   struct Station
   {
     QString band_name_;
-    FrequencyDelta offset_;
+    Frequency frequency_;
+    QDateTime switch_at_;
     QString antenna_description_;
   };
 
   using Stations = QList<Station>;
 
-  enum Column {band_column, offset_column, description_column};
+  enum Column {band_column, frequency_column, switch_column, description_column};
 
   explicit StationList (Bands const * bands, QObject * parent = nullptr);
   explicit StationList (Bands const * bands, Stations, QObject * parent = nullptr);
@@ -74,7 +76,6 @@ public:
   QModelIndex add (Station);                 // Add a new Station
   bool remove (Station);                     // Remove a Station
   bool removeDisjointRows (QModelIndexList); // Remove one or more stations
-  FrequencyDelta offset (Frequency) const;   // Return the offset to be used for a Frequency
 
   // Custom sort role.
   static int constexpr SortRole = Qt::UserRole;
@@ -88,9 +89,10 @@ private:
 inline
 bool operator == (StationList::Station const& lhs, StationList::Station const& rhs)
 {
-  return lhs.band_name_ == rhs.band_name_
-    && lhs.offset_ == rhs.offset_
-    && lhs.antenna_description_ == rhs.antenna_description_;
+  return lhs.band_name_ == rhs.band_name_ &&
+    //lhs.antenna_description_ == rhs.antenna_description_ &&
+    lhs.frequency_ == rhs.frequency_ &&
+    lhs.switch_at_ == rhs.switch_at_;
 }
 
 QDataStream& operator << (QDataStream&, StationList::Station const&);
