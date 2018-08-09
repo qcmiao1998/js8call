@@ -730,6 +730,8 @@ private:
   QSet<QString> m_callSeenBeacon; // call
   int m_previousFreq;
   bool m_shouldRestoreFreq;
+  bool m_bandHopped;
+  Frequency m_bandHoppedFreq;
 
   struct FoxQSO       //Everything we need to know about QSOs in progress (or recently logged).
   {

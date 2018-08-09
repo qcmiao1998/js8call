@@ -1356,8 +1356,6 @@ void MainWindow::tryBandHop(){
       return;
   }
 
-  qDebug() << "Checking for automatic band hop";
-
   // get the current band
   Frequency dialFreq {m_rigState.ptt () && m_rigState.split () ?
       m_rigState.tx_frequency () : m_rigState.frequency ()};
@@ -1379,21 +1377,27 @@ void MainWindow::tryBandHop(){
   // see if we can find a needed band switch...
   foreach(auto station, stations){
       // we can switch to this frequency if we're in the time range, inclusive of switch_at, exclusive of switch_until
-      // and if we are switching within 30 seconds of the switch_at time. this allows us to switch bands at that time,
+      // and if we are switching to a different frequency than the last hop. this allows us to switch bands at that time,
       // but then later we can later switch to a different band if needed without the automatic band switching to take over
-      bool canSwitch = station.switch_at_ <= d && d <= station.switch_until_ && station.switch_at_.secsTo(d) <= 30;
+      bool canSwitch = (
+        station.switch_at_ <= d    &&
+        d <= station.switch_until_ &&
+        (m_bandHopped || (!m_bandHopped && station.frequency_ != m_bandHoppedFreq))
+      );
 
-      //qDebug() << "Can switch to" << station.band_name_ << "=" << canSwitch << station.switch_at_.time().toString("hh:mm") << "<=" << d.time().toString("hh:mm") << "<=" << station.switch_until_.time().toString("hh:mm");
+      //qDebug() << "Can switch to" << station.band_name_ << "=" << canSwitch << station.switch_at_.time().toString("hh:mm") << "<=" << d.time().toString("hh:mm") << "<=" << station.switch_until_.time().toString("hh:mm") << m_bandHopped << m_bandHoppedFreq;
 
       // switch, if we can and the band is different than our current band
-      if(canSwitch && station.band_name_ != currentBand){
+      if(canSwitch){
 
           qDebug() << "Automatic band hop from" << currentBand << "to" << station.band_name_ << "at" << Radio::frequency_MHz_string(station.frequency_);
 
+          // cache the frequency set by bandHop...
+          m_bandHopped = true;
+          m_bandHoppedFreq = station.frequency_;
+
           // TODO: jsherer - is this the right way to switch the rig freq?
           setRig(station.frequency_);
-
-          // TODO: jsherer - potentially cache the fact that we switched and mark it as an override, so we don't revert back?
 
           break;
       }
@@ -7601,8 +7605,14 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
           if (m_lastDialFreq != m_freqNominal &&
               (m_mode != "MSK144"
                || !(ui->cbCQTx->isEnabled () && ui->cbCQTx->isVisible () && ui->cbCQTx->isChecked()))) {
+
             m_lastDialFreq = m_freqNominal;
             m_secBandChanged=QDateTime::currentMSecsSinceEpoch()/1000;
+
+            if(m_freqNominal != m_bandHoppedFreq){
+                m_bandHopped = false;
+            }
+
             if(s.frequency () < 30000000u && !m_mode.startsWith ("WSPR")) {
               // Write freq changes to ALL.TXT only below 30 MHz.
               QFile f2 {m_config.writeable_data_dir ().absoluteFilePath ("ALL.TXT")};

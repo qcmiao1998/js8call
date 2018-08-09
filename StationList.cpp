@@ -467,13 +467,15 @@ bool StationList::impl::setData (QModelIndex const& model_index, QVariant const&
 
                 if (offset != stations_[row].frequency_)
                   {
+                    stations_[row].frequency_ = offset;
+                    Q_EMIT dataChanged (model_index, model_index, roles);
+
                     auto band = bands_->find(offset);
                     if(band != stations_[row].band_name_){
                         stations_[row].band_name_ = band;
+                        auto band_index = model_index.model()->index(row, band_column, model_index);
+                        Q_EMIT dataChanged (band_index, band_index, roles);
                     }
-
-                    stations_[row].frequency_ = offset;
-                    Q_EMIT dataChanged (model_index, model_index, roles);
                     changed = true;
                   }
               }
@@ -493,6 +495,10 @@ bool StationList::impl::setData (QModelIndex const& model_index, QVariant const&
           stations_[row].switch_until_ = qMax(at, until);
 
           Q_EMIT dataChanged (model_index, model_index, roles);
+
+          auto switch_until_index = model_index.model()->index(row, switch_until_column, model_index);
+          Q_EMIT dataChanged (switch_until_index, switch_until_index, roles);
+
           changed = true;
           break;
         }
@@ -510,6 +516,10 @@ bool StationList::impl::setData (QModelIndex const& model_index, QVariant const&
           stations_[row].switch_until_ = qMax(at, until);
 
           Q_EMIT dataChanged (model_index, model_index, roles);
+
+          auto switch_at_index = model_index.model()->index(row, switch_at_column, model_index);
+          Q_EMIT dataChanged (switch_at_index, switch_at_index, roles);
+
           changed = true;
           break;
         }

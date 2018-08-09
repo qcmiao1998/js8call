@@ -273,7 +273,6 @@ public:
     switch_until_.setDisplayFormat("hh:mm");
 
     auto form_layout = new QFormLayout ();
-    //form_layout->addRow (tr ("&Band:"), &band_);
     form_layout->addRow (tr ("&Frequency (MHz):"), &freq_);
     form_layout->addRow (tr ("&Switch at (UTC):"), &switch_at_);
     form_layout->addRow (tr ("&Until (UTC):"), &switch_until_);
@@ -2092,7 +2091,7 @@ void Configuration::impl::accept ()
   if (stations_.station_list () != next_stations_.station_list ())
     {
       stations_.station_list(next_stations_.station_list ());
-      stations_.sort (StationList::band_column);
+      stations_.sort (StationList::switch_at_column);
     }
 
   if (ui_->use_dynamic_grid->isChecked() && !use_dynamic_grid_ )

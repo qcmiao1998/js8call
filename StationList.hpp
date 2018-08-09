@@ -91,9 +91,10 @@ inline
 bool operator == (StationList::Station const& lhs, StationList::Station const& rhs)
 {
   return lhs.band_name_ == rhs.band_name_ &&
-    //lhs.antenna_description_ == rhs.antenna_description_ &&
+    lhs.description_ == rhs.description_ &&
     lhs.frequency_ == rhs.frequency_ &&
-    lhs.switch_at_ == rhs.switch_at_;
+    lhs.switch_at_ == rhs.switch_at_ &&
+    lhs.switch_until_ == rhs.switch_until_;
 }
 
 QDataStream& operator << (QDataStream&, StationList::Station const&);
