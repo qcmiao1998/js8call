@@ -87,13 +87,14 @@ int Bands::find (QString const& band) const
   return result;
 }
 
-bool Bands::findFreq(QString const& band, Radio::Frequency *pFreq) const {
+bool Bands::findFreq(QString const& band, Radio::Frequency *pFreqLower, Radio::Frequency *pFreqHigher) const {
     int row = find(band);
     if(row == -1){
         return false;
     }
 
-    if(pFreq) *pFreq = ADIF_bands[row].lower_bound_;
+    if(pFreqLower) *pFreqLower = ADIF_bands[row].lower_bound_;
+    if(pFreqHigher) *pFreqHigher = ADIF_bands[row].upper_bound_;
 
     return true;
 }

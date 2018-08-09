@@ -31,7 +31,7 @@ QDebug operator << (QDebug debug, StationList::Station const& station)
                    << station.frequency_ << ", "
                    << station.switch_at_ << ", "
                    << station.switch_until_ << ", "
-                   << station.antenna_description_ << ')';
+                   << station.description_ << ')';
   return debug;
 }
 #endif
@@ -42,7 +42,7 @@ QDataStream& operator << (QDataStream& os, StationList::Station const& station)
             << station.frequency_
             << station.switch_at_
             << station.switch_until_
-            << station.antenna_description_;
+            << station.description_;
 }
 
 QDataStream& operator >> (QDataStream& is, StationList::Station& station)
@@ -51,7 +51,7 @@ QDataStream& operator >> (QDataStream& is, StationList::Station& station)
             >> station.frequency_
             >> station.switch_at_
             >> station.switch_until_
-            >> station.antenna_description_;
+            >> station.description_;
 }
 
 
@@ -96,7 +96,7 @@ public:
     return matches.isEmpty () ? QModelIndex {} : matches.first ();
   }
 
-  static int constexpr num_columns {4};
+  static int constexpr num_columns {5};
   static auto constexpr mime_type = "application/wsjt.antenna-descriptions";
 
   Bands const * bands_;
@@ -244,7 +244,10 @@ Qt::ItemFlags StationList::impl::flags (QModelIndex const& index) const
       && row < stations_.size ()
       && column < num_columns)
     {
-      if (description_column == column)
+      if (band_column == column){
+          result |= Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+
+      } else if (description_column == column)
         {
           result |= Qt::ItemIsEditable | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
         }
@@ -336,7 +339,7 @@ QVariant StationList::impl::data (QModelIndex const& index, int role) const
           case Qt::EditRole:
           case Qt::DisplayRole:
           case Qt::AccessibleTextRole:
-            item = stations_.at (row).switch_at_.time().toString();
+            item = stations_.at (row).switch_at_.time().toString("hh:mm");
             break;
 
           case Qt::ToolTipRole:
@@ -357,7 +360,7 @@ QVariant StationList::impl::data (QModelIndex const& index, int role) const
           case Qt::EditRole:
           case Qt::DisplayRole:
           case Qt::AccessibleTextRole:
-            item = stations_.at (row).switch_until_.time().toString();
+            item = stations_.at (row).switch_until_.time().toString("hh:mm");
             break;
 
           case Qt::ToolTipRole:
@@ -378,7 +381,7 @@ QVariant StationList::impl::data (QModelIndex const& index, int role) const
           case Qt::EditRole:
           case Qt::DisplayRole:
           case Qt::AccessibleTextRole:
-            item = stations_.at (row).antenna_description_;
+            item = stations_.at (row).description_;
             break;
 
           case Qt::ToolTipRole:
@@ -409,7 +412,7 @@ QVariant StationList::impl::headerData (int section, Qt::Orientation orientation
         case frequency_column: header = tr ("Freq. (MHz)"); break;
         case switch_at_column: header = tr ("Switch at (UTC)"); break;
         case switch_until_column: header = tr ("Until (UTC)"); break;
-        case description_column: header = tr ("Antenna Description"); break;
+        case description_column: header = tr ("Description"); break;
         }
     }
   else
@@ -455,14 +458,20 @@ bool StationList::impl::setData (QModelIndex const& model_index, QVariant const&
                 Frequency offset {qvariant_cast<Radio::Frequency> (value)};
 
                 if(offset == 0){
-                    Frequency f;
-                    if(bands_->findFreq(stations_[row].band_name_, &f)){
-                        offset = f;
+                    Frequency l;
+                    Frequency h;
+                    if(bands_->findFreq(stations_[row].band_name_, &l, &h)){
+                        offset = l;
                     }
                 }
 
                 if (offset != stations_[row].frequency_)
                   {
+                    auto band = bands_->find(offset);
+                    if(band != stations_[row].band_name_){
+                        stations_[row].band_name_ = band;
+                    }
+
                     stations_[row].frequency_ = offset;
                     Q_EMIT dataChanged (model_index, model_index, roles);
                     changed = true;
@@ -471,17 +480,37 @@ bool StationList::impl::setData (QModelIndex const& model_index, QVariant const&
           }
           break;
         case switch_at_column:
-          stations_[row].switch_at_ = value.toDateTime();
+        {
+          QString s = value.toString();
+          if(s.length() < 5){
+              s = QString("0").repeated(5-s.length()) + s;
+          }
+          auto t = QTime::fromString(s);
+          auto dt = QDateTime(QDate(2000,1,1), t);
+          stations_[row].switch_at_ = dt;
           Q_EMIT dataChanged (model_index, model_index, roles);
           changed = true;
           break;
+        }
         case switch_until_column:
-          stations_[row].switch_until_ = value.toDateTime();
+        {
+          int o = 0;
+          QString s = value.toString();
+          if(s.length() < 5){
+              s = QString("0").repeated(5-s.length()) + s;
+          }
+          auto t = QTime::fromString(s);
+          if(t < stations_[row].switch_at_.time()){
+              o += 1;
+          }
+          auto dt = QDateTime(QDate(2000,1,1+o), t);
+          stations_[row].switch_until_ = dt;
           Q_EMIT dataChanged (model_index, model_index, roles);
           changed = true;
           break;
+        }
         case description_column:
-          stations_[row].antenna_description_ = value.toString ();
+          stations_[row].description_ = value.toString ();
           Q_EMIT dataChanged (model_index, model_index, roles);
           changed = true;
           break;

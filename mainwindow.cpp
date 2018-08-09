@@ -7837,21 +7837,8 @@ bool MainWindow::shortList(QString callsign)
 
 void MainWindow::pskSetLocal ()
 {
-  // find the station row, if any, that matches the band we are on
-  auto stations = m_config.stations ();
-  auto matches = stations->match (stations->index (0, StationList::band_column)
-                                  , Qt::DisplayRole
-                                  , ui->bandComboBox->currentText ()
-                                  , 1
-                                  , Qt::MatchExactly);
-  QString antenna_description;
-  if (!matches.isEmpty ()) {
-    antenna_description = stations->index (matches.first ().row ()
-                                           , StationList::description_column).data ().toString ();
-  }
-  // qDebug() << "To PSKreporter: local station details";
   psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (),
-        antenna_description, QString {"FT8Call v" + version() }.simplified ());
+        m_config.my_station(), QString {"FT8Call v" + version() }.simplified ());
 }
 
 void MainWindow::transmitDisplay (bool transmitting)

@@ -259,6 +259,7 @@ class StationDialog final
 public:
   explicit StationDialog (StationList const * stations, Bands * bands, QWidget * parent = nullptr)
     : QDialog {parent}
+    , all_bands_ {bands}
     , filtered_bands_ {new CandidateKeyFilter {bands, stations, 0, 0}}
   {
     setWindowTitle (QApplication::applicationName () + " - " + tr ("Add Schedule"));
@@ -272,11 +273,11 @@ public:
     switch_until_.setDisplayFormat("hh:mm");
 
     auto form_layout = new QFormLayout ();
-    form_layout->addRow (tr ("&Band:"), &band_);
+    //form_layout->addRow (tr ("&Band:"), &band_);
     form_layout->addRow (tr ("&Frequency (MHz):"), &freq_);
     form_layout->addRow (tr ("&Switch at (UTC):"), &switch_at_);
     form_layout->addRow (tr ("&Until (UTC):"), &switch_until_);
-    //form_layout->addRow (tr ("&Antenna:"), &description_);
+    form_layout->addRow (tr ("&Description:"), &description_);
 
     auto main_layout = new QVBoxLayout (this);
     main_layout->addLayout (form_layout);
@@ -290,12 +291,16 @@ public:
 
   StationList::Station station () const
   {
+    auto band = all_bands_->find(freq_.frequency());
+
     int offset = 0;
     if(switch_until_.time() <= switch_at_.time()){
         offset += 1;
     }
+
     return {
-        band_.currentText (),
+        //band_.currentText (),
+        band,
         freq_.frequency(),
         QDateTime(QDate(2000, 1, 1), switch_at_.time(), Qt::UTC),
         QDateTime(QDate(2000, 1, 1 + offset), switch_until_.time(), Qt::UTC),
@@ -310,6 +315,7 @@ public:
 
 private:
   QScopedPointer<CandidateKeyFilter> filtered_bands_;
+  Bands * all_bands_;
 
   QComboBox band_;
   FrequencyLineEdit freq_;
@@ -1121,17 +1127,23 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   //
   // setup stations table model & view
   //
-  stations_.sort (StationList::band_column);
+  stations_.sort (StationList::switch_at_column);
 
   ui_->stations_table_view->setModel (&next_stations_);
-  ui_->stations_table_view->sortByColumn (StationList::band_column, Qt::AscendingOrder);
+  ui_->stations_table_view->sortByColumn (StationList::switch_at_column, Qt::AscendingOrder);
   connect(ui_->auto_switch_bands_check_box, &QCheckBox::clicked, ui_->stations_table_view, &QTableView::setEnabled);
 
   // delegates
   auto stations_item_delegate = new QStyledItemDelegate {this};
   stations_item_delegate->setItemEditorFactory (item_editor_factory ());
   ui_->stations_table_view->setItemDelegate (stations_item_delegate);
-  ui_->stations_table_view->setItemDelegateForColumn (StationList::band_column, new ForeignKeyDelegate {&bands_, &next_stations_, 0, StationList::band_column, this});
+  //ui_->stations_table_view->setItemDelegateForColumn (StationList::band_column, new ForeignKeyDelegate {&bands_, &next_stations_, 0, StationList::band_column, this});
+
+  ui_->stations_table_view->resizeColumnToContents (StationList::band_column);
+  ui_->stations_table_view->resizeColumnToContents (StationList::frequency_column);
+  ui_->stations_table_view->resizeColumnToContents (StationList::switch_at_column);
+  ui_->stations_table_view->resizeColumnToContents (StationList::switch_until_column);
+  ui_->stations_table_view->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
   // actions
   station_delete_action_ = new QAction {tr ("&Delete"), ui_->stations_table_view};
@@ -2489,6 +2501,7 @@ void Configuration::impl::delete_stations ()
   ui_->stations_table_view->resizeColumnToContents (StationList::band_column);
   ui_->stations_table_view->resizeColumnToContents (StationList::frequency_column);
   ui_->stations_table_view->resizeColumnToContents (StationList::switch_at_column);
+  ui_->stations_table_view->resizeColumnToContents (StationList::switch_until_column);
 }
 
 void Configuration::impl::insert_station ()
@@ -2497,9 +2510,10 @@ void Configuration::impl::insert_station ()
     {
       auto station = station_dialog_->station ();
       if(station.frequency_ == 0){
-          Frequency f;
-          if(bands_.findFreq(station.band_name_, &f)){
-              station.frequency_ = f;
+          Frequency l;
+          Frequency h;
+          if(bands_.findFreq(station.band_name_, &l, &h)){
+              station.frequency_ = l;
           }
       }
 
@@ -2507,6 +2521,7 @@ void Configuration::impl::insert_station ()
       ui_->stations_table_view->resizeColumnToContents (StationList::band_column);
       ui_->stations_table_view->resizeColumnToContents (StationList::frequency_column);
       ui_->stations_table_view->resizeColumnToContents (StationList::switch_at_column);
+      ui_->stations_table_view->resizeColumnToContents (StationList::switch_until_column);
     }
 }
 

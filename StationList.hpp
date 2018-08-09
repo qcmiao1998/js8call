@@ -56,7 +56,7 @@ public:
     Frequency frequency_;
     QDateTime switch_at_;
     QDateTime switch_until_;
-    QString antenna_description_;
+    QString description_;
   };
 
   using Stations = QList<Station>;
