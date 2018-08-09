@@ -464,8 +464,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         m_config.udp_server_name (), m_config.udp_server_port (),
         this}},
   psk_Reporter {new PSK_Reporter {m_messageClient, this}},
-  m_manual {&m_network_manager},
   m_i3bit {0},
+  m_manual {&m_network_manager},
   m_txFrameCount {0},
   m_previousFreq {0}
 {
@@ -774,9 +774,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (ui->nextFreeTextMsg
            , &QLineEdit::editingFinished
            , [this] () {on_nextFreeTextMsg_currentTextChanged (ui->nextFreeTextMsg->text ());});
-  connect (ui->extFreeTextMsg
-           , &QTextEdit::textChanged
-           , [this] () {on_extFreeTextMsg_currentTextChanged (ui->extFreeTextMsg->toPlainText ());});
   connect (ui->extFreeTextMsgEdit
            , &QTextEdit::textChanged
            , [this] () {on_extFreeTextMsgEdit_currentTextChanged (ui->extFreeTextMsgEdit->toPlainText ());});
@@ -5751,32 +5748,6 @@ void MainWindow::on_nextFreeTextMsg_currentTextChanged (QString const& text)
   msgtype(text, ui->nextFreeTextMsg);
 }
 
-void MainWindow::on_extFreeTextMsg_currentTextChanged (QString const& text)
-{
-  /*
-  QString x;
-  QString::const_iterator i;
-  for(i = text.constBegin(); i != text.constEnd(); i++){
-      if(message_alphabet.exactMatch(QString(*i))){
-          x += (*i).toUpper();
-      }
-  }
-  if(x != text){
-    int pos = ui->extFreeTextMsg->textCursor().position();
-    int maxpos = x.size();
-    ui->extFreeTextMsg->setPlainText(x);
-    QTextCursor c = ui->extFreeTextMsg->textCursor();
-    c.setPosition(pos < maxpos ? pos : maxpos, QTextCursor::MoveAnchor);
-    ui->extFreeTextMsg->setTextCursor(c);
-  }
-
-  int count = countFreeTextMsgs(x.trimmed().mid(m_extFreeTxtPos).trimmed());
-  //ui->lblTxNum->setText(QString("Remaining Tx Sequences: %1").arg(count));
-  QString sendText = count > 0 ? QString("Send (%1)").arg(count) : "Send";
-  ui->startTxButton->setText(sendText);
-  */
-}
-
 void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 {
     QString x;
@@ -5819,7 +5790,6 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
     QStringList frames;
 
     // prepare compound
-    bool compoundSent = false;
     bool compound = Radio::is_compound_callsign(m_config.my_callsign());
     QString mygrid = m_config.my_grid();
     QString mycall = m_config.my_callsign();
@@ -5827,9 +5797,6 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
     if(basecall != mycall){
         basecall = "<....>";
     }
-    QString fix = QString(m_config.my_callsign()).replace(basecall, "");
-    bool prefix = !fix.startsWith("/");
-    fix = fix.replace("/", "");
 
     foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
 
@@ -6351,7 +6318,7 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   if(grid=="....") grid="";
   m_logDlg->initLogQSO (m_hisCall, grid, m_modeTx == "FT8" ? "FT8CALL" : m_modeTx, m_rptSent, m_rptRcvd,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),
-                        m_config.my_callsign(), m_config.my_grid(), m_noSuffix,
+                        m_config.my_callsign(), m_config.my_grid(),
                         m_config.log_as_RTTY(), m_config.report_in_comments(),
                         m_config.bFox(), m_opCall);
 }
@@ -7242,7 +7209,7 @@ void MainWindow::on_macrosMacroButton_pressed(){
 }
 
 
-void MainWindow::on_tableWidgetRXAll_cellClicked(int row, int col){
+void MainWindow::on_tableWidgetRXAll_cellClicked(int row, int /*col*/){
     auto item = ui->tableWidgetRXAll->item(row, 0);
     int offset = item->text().toInt();
 
@@ -7294,17 +7261,11 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
 #endif
 }
 
-void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected){
+void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/){
     updateButtonDisplay();
 }
 
-void MainWindow::on_tableWidgetCalls_cellClicked(int row, int col){
-    /*
-    auto item = ui->tableWidgetCalls->item(row, 0);
-    auto call = Radio::base_callsign(item->data(Qt::UserRole).toString());
-    //auto call = Radio::base_callsign(item->text());
-    */
-
+void MainWindow::on_tableWidgetCalls_cellClicked(int /*row*/, int /*col*/){
     auto call = callsignSelected();
 
     if(!m_callActivity.contains(call)){
@@ -7321,12 +7282,6 @@ void MainWindow::on_tableWidgetCalls_cellClicked(int row, int col){
 
 void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
     on_tableWidgetCalls_cellClicked(row, col);
-
-    /*
-    auto item = ui->tableWidgetCalls->item(row, 0);
-    auto call = Radio::base_callsign(item->data(Qt::UserRole).toString());
-    //auto call = Radio::base_callsign(item->text());
-    */
 
     auto call = callsignSelected();
     addMessageText(call);

@@ -59,7 +59,7 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
                         QString const& rptSent, QString const& rptRcvd,
                         QDateTime const& dateTimeOn, QDateTime const& dateTimeOff,
                         Radio::Frequency dialFreq, QString const& myCall, QString const& myGrid,
-                        bool noSuffix, bool toRTTY, bool dBtoComments, bool bFox, QString const& opCall)
+                        bool toRTTY, bool dBtoComments, bool bFox, QString const& opCall)
 {
   if(!isHidden()) return;
   ui->call->setText(hisCall);
@@ -75,8 +75,6 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
     if(rptRcvd!="") t+="  Rcvd: " + rptRcvd;
     ui->comments->setText(t);
   }
-  //if(noSuffix and mode.mid(0,3)=="JT9") mode="JT9";
-  //if(toRTTY and mode.mid(0,3)=="JT9") mode="RTTY";
   if(toRTTY) mode="RTTY";
   ui->mode->setText(mode);
   ui->sent->setText(rptSent);
