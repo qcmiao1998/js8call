@@ -6503,11 +6503,15 @@ void MainWindow::switch_mode (Mode mode)
 {
   m_fastGraph->setMode(m_mode);
   m_config.frequencies ()->filter (m_config.region (), mode);
+
+#if 0
   auto const& row = m_config.frequencies ()->best_working_frequency (m_freqNominal);
   if (row >= 0) {
     ui->bandComboBox->setCurrentIndex (row);
     on_bandComboBox_activated (row);
   }
+#endif
+
   ui->rptSpinBox->setSingleStep(1);
   ui->rptSpinBox->setMinimum(-50);
   ui->rptSpinBox->setMaximum(49);
