@@ -27,8 +27,8 @@ namespace
   FrequencyList_v2::FrequencyItems const default_frequency_list =
     {
       { 1838000, Modes::FT8CALL, IARURegions::ALL}, // 2 below
-      { 3590000, Modes::FT8CALL, IARURegions::ALL}, // 17 above
-      { 7047000, Modes::FT8CALL, IARURegions::ALL}, // 27 below
+      { 3580000, Modes::FT8CALL, IARURegions::ALL}, // 7 above
+      { 7080000, Modes::FT8CALL, IARURegions::ALL}, // 7 above
       {10130000, Modes::FT8CALL, IARURegions::ALL}, // 6 below
       {14080000, Modes::FT8CALL, IARURegions::ALL}, // 6 above
       {18104000, Modes::FT8CALL, IARURegions::ALL}, // 4 above
