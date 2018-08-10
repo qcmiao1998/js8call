@@ -518,7 +518,6 @@ private:
   FrequencyList_v2 next_frequencies_;
   StationList stations_;
   StationList next_stations_;
-  bool auto_switch_bands_;
 
   QAction * frequency_delete_action_;
   QAction * frequency_insert_action_;
@@ -547,6 +546,7 @@ private:
   QString dynamic_grid_;
 
   // configuration fields that we publish
+  bool auto_switch_bands_;
   QString my_callsign_;
   QString my_grid_;
   QString my_station_;
@@ -723,7 +723,7 @@ Bands * Configuration::bands () {return &m_->bands_;}
 Bands const * Configuration::bands () const {return &m_->bands_;}
 StationList * Configuration::stations () {return &m_->stations_;}
 StationList const * Configuration::stations () const {return &m_->stations_;}
-bool Configuration::auto_switch_bands() const { return &m_->auto_switch_bands_; }
+bool Configuration::auto_switch_bands() const { return m_->auto_switch_bands_; }
 IARURegions::Region Configuration::region () const {return m_->region_;}
 FrequencyList_v2 * Configuration::frequencies () {return &m_->frequencies_;}
 FrequencyList_v2 const * Configuration::frequencies () const {return &m_->frequencies_;}
@@ -1225,6 +1225,7 @@ void Configuration::impl::initialize_models ()
 
   ui_->callsign_line_edit->setPalette (pal);
   ui_->grid_line_edit->setPalette (pal);
+  ui_->auto_switch_bands_check_box->setChecked(auto_switch_bands_);
   ui_->callsign_line_edit->setText (my_callsign_);
   ui_->grid_line_edit->setText (my_grid_);
   ui_->callsign_aging_spin_box->setValue(callsign_aging_);
@@ -1253,7 +1254,6 @@ void Configuration::impl::initialize_models ()
   ui_->monitor_off_check_box->setChecked (monitor_off_at_startup_);
   ui_->monitor_last_used_check_box->setChecked (monitor_last_used_);
   ui_->log_as_RTTY_check_box->setChecked (log_as_RTTY_);
-  ui_->auto_switch_bands_check_box->setChecked(auto_switch_bands_);
   ui_->stations_table_view->setEnabled(ui_->auto_switch_bands_check_box->isChecked());
   ui_->report_in_comments_check_box->setChecked (report_in_comments_);
   ui_->prompt_to_log_check_box->setChecked (prompt_to_log_);
@@ -1351,6 +1351,7 @@ void Configuration::impl::read_settings ()
   SettingsGroup g {settings_, "Configuration"};
   restoreGeometry (settings_->value ("window/geometry").toByteArray ());
 
+  auto_switch_bands_ = settings_->value("AutoSwitchBands", false).toBool();
   my_callsign_ = settings_->value ("MyCall", QString {}).toString ();
   my_grid_ = settings_->value ("MyGrid", QString {}).toString ();
   my_station_ = settings_->value("MyStation", QString {}).toString();
@@ -1483,7 +1484,6 @@ void Configuration::impl::read_settings ()
     }
 
   stations_.station_list (settings_->value ("stations").value<StationList::Stations> ());
-  auto_switch_bands_ = settings_->value("AutoSwitchBands", false).toBool();
 
   log_as_RTTY_ = settings_->value ("toRTTY", false).toBool ();
   report_in_comments_ = settings_->value("dBtoComments", false).toBool ();
@@ -1544,6 +1544,7 @@ void Configuration::impl::write_settings ()
 {
   SettingsGroup g {settings_, "Configuration"};
 
+  settings_->setValue ("AutoSwitchBands", auto_switch_bands_);
   settings_->setValue ("MyCall", my_callsign_);
   settings_->setValue ("MyGrid", my_grid_);
   settings_->setValue ("MyStation", my_station_);
@@ -1598,7 +1599,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("Macros", macros_.stringList ());
   settings_->setValue ("FrequenciesForRegionModes", QVariant::fromValue (frequencies_.frequency_list ()));
   settings_->setValue ("stations", QVariant::fromValue (stations_.station_list ()));
-  settings_->setValue ("AutoSwitchBands", auto_switch_bands_);
   settings_->setValue ("toRTTY", log_as_RTTY_);
   settings_->setValue ("dBtoComments", report_in_comments_);
   settings_->setValue ("Rig", rig_params_.rig_name);
@@ -2002,6 +2002,7 @@ void Configuration::impl::accept ()
     }
   Q_ASSERT (audio_output_channel_ <= AudioDevice::Both);
 
+  auto_switch_bands_ = ui_->auto_switch_bands_check_box->isChecked();
   my_callsign_ = ui_->callsign_line_edit->text ();
   my_grid_ = ui_->grid_line_edit->text ();
   my_station_ = ui_->station_message_line_edit->text().toUpper();
@@ -2021,7 +2022,6 @@ void Configuration::impl::accept ()
   autoreply_off_at_startup_ = ui_->autoreply_off_check_box->isChecked ();
   monitor_off_at_startup_ = ui_->monitor_off_check_box->isChecked ();
   monitor_last_used_ = ui_->monitor_last_used_check_box->isChecked ();
-  auto_switch_bands_ = ui_->auto_switch_bands_check_box->isChecked();
   type_2_msg_gen_ = static_cast<Type2MsgGen> (ui_->type_2_msg_gen_combo_box->currentIndex ());
   log_as_RTTY_ = ui_->log_as_RTTY_check_box->isChecked ();
   report_in_comments_ = ui_->report_in_comments_check_box->isChecked ();

@@ -2093,9 +2093,9 @@ for assessing propagation and system performance.</string>
             </item>
             <item>
              <widget class="QCheckBox" name="udpWindowToFront">
-             <property name="visible">
+              <property name="visible">
                <bool>false</bool>
-             </property>
+              </property>
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Indicate acceptance of an incoming UDP request. The effect of this option varies depending on the operating system and window manager, its intent is to notify the acceptance of an incoming UDP request even if this application is minimized or hidden.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -2107,7 +2107,7 @@ for assessing propagation and system performance.</string>
             <item>
              <widget class="QCheckBox" name="udpWindowRestore">
               <property name="visible">
-                <bool>false</bool>
+               <bool>false</bool>
               </property>
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Restore the window from minimized if an UDP request is accepted.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -3161,12 +3161,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
  </buttongroups>
 </ui>
