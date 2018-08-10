@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTime>
+#include <QDataStream>
 #include <QDateTime>
 #include <QString>
 #include <QJsonDocument>
