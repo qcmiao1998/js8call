@@ -1391,6 +1391,11 @@ void MainWindow::writeSettings()
   m_settings->setValue("FoxNlist",ui->sbNlist->value());
   m_settings->setValue("FoxNslots",ui->sbNslots->value());
   m_settings->setValue("FoxMaxDB",ui->sbMax_dB->value());
+
+  m_settings->setValue("MainSplitter", ui->mainSplitter->saveState());
+  m_settings->setValue("TextHorizontalSplitter", ui->textHorizontalSplitter->saveState());
+  m_settings->setValue("TextVerticalSplitter", ui->textVerticalSplitter->saveState());
+
   m_settings->endGroup();
 
   m_settings->beginGroup("Common");
@@ -1477,6 +1482,11 @@ void MainWindow::readSettings()
   ui->sbNlist->setValue(m_settings->value("FoxNlist",12).toInt());
   ui->sbNslots->setValue(m_settings->value("FoxNslots",5).toInt());
   ui->sbMax_dB->setValue(m_settings->value("FoxMaxDB",30).toInt());
+
+  ui->mainSplitter->restoreState(m_settings->value("MainSplitter", ui->mainSplitter->saveState()).toByteArray());
+  ui->textHorizontalSplitter->restoreState(m_settings->value("TextHorizontalSplitter", ui->textHorizontalSplitter->saveState()).toByteArray());
+  ui->textVerticalSplitter->restoreState(m_settings->value("TextVerticalSplitter", ui->textVerticalSplitter->saveState()).toByteArray());
+
   m_settings->endGroup();
 
   // do this outside of settings group because it uses groups internally
@@ -1994,6 +2004,60 @@ void MainWindow::showSoundOutError(const QString& errorMsg)
 
 void MainWindow::showStatusMessage(const QString& statusMsg)
 {statusBar()->showMessage(statusMsg);}
+
+
+void MainWindow::on_menuWindow_aboutToShow(){
+    auto hsizes = ui->textHorizontalSplitter->sizes();
+    ui->actionShow_Band_Activity->setChecked(hsizes.at(0) > 0);
+    ui->actionShow_Call_Activity->setChecked(hsizes.at(2) > 0);
+
+    auto vsizes = ui->mainSplitter->sizes();
+    ui->actionShow_Waterfall->setChecked(vsizes.last() > 0);
+}
+
+void MainWindow::on_actionShow_Band_Activity_triggered(bool checked){
+    auto hsizes = ui->textHorizontalSplitter->sizes();
+    hsizes[0] = checked ? ui->textHorizontalSplitter->width()/4 : 0;
+    ui->textHorizontalSplitter->setSizes(hsizes);
+}
+
+void MainWindow::on_actionShow_Call_Activity_triggered(bool checked){
+    auto hsizes = ui->textHorizontalSplitter->sizes();
+    hsizes[2] = checked ? ui->textHorizontalSplitter->width()/4 : 0;
+    ui->textHorizontalSplitter->setSizes(hsizes);
+}
+
+void MainWindow::on_actionShow_Waterfall_triggered(bool checked){
+    auto vsizes = ui->mainSplitter->sizes();
+    vsizes[0] = qMin(vsizes[0], ui->logHorizontalWidget->minimumHeight());
+    int oldHeight = vsizes[vsizes.length()-1];
+    int newHeight = checked ? ui->mainSplitter->height()/4 : 0;
+    vsizes[1] += oldHeight - newHeight;
+    vsizes[vsizes.length()-1] = newHeight;
+    ui->mainSplitter->setSizes(vsizes);
+}
+
+void MainWindow::on_actionReset_Window_Sizes_triggered(){
+    auto size = this->centralWidget()->size();
+
+    ui->mainSplitter->setSizes({
+        ui->logHorizontalWidget->minimumHeight(),
+        ui->mainSplitter->height()/2,
+        ui->macroHorizonalWidget->minimumHeight(),
+        ui->mainSplitter->height()/4
+    });
+
+    ui->textHorizontalSplitter->setSizes({
+        ui->textHorizontalSplitter->width()/4,
+        ui->textHorizontalSplitter->width()/2,
+        ui->textHorizontalSplitter->width()/4
+    });
+
+    ui->textVerticalSplitter->setSizes({
+        ui->textVerticalSplitter->height()/2,
+        ui->textVerticalSplitter->height()/2
+    });
+}
 
 void MainWindow::on_actionSettings_triggered()               //Setup Dialog
 {
@@ -5566,12 +5630,15 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
         block = -1;
         m_rxFrameBlockNumbers.remove(freq);
     }
+
     if(newLine){
         m_rxFrameBlockNumbers.remove(freq);
         block = -1;
     }
 
     block = writeMessageTextToUI(date, text, freq, bold, block);
+
+    // TODO: jsherer - might be better to see if the bits are "last" versus checking for the EOT
     if(!text.contains("\u2301")){
         m_rxFrameBlockNumbers.insert(freq, block);
     }

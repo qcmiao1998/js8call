@@ -1669,14 +1669,14 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
       <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-            <widget class="QCheckBox" name="cbMoreCQs">
-                <property name="text">
-                <string>More CQs</string>
-                </property>
-                <property name="visible">
-                <bool>false</bool>
-                </property>
-            </widget>
+         <widget class="QCheckBox" name="cbMoreCQs">
+          <property name="visible">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>More CQs</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QLabel" name="label_6">
@@ -4205,9 +4205,9 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuView">
-   <property name="visible">
-   <bool>false</bool>
-   </property>
+    <property name="visible">
+     <bool>false</bool>
+    </property>
     <property name="title">
      <string>View</string>
     </property>
@@ -4220,9 +4220,9 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuDecode">
-   <property name="visible">
-   <bool>false</bool>
-   </property>
+    <property name="visible">
+     <bool>false</bool>
+    </property>
     <property name="title">
      <string>Decode</string>
     </property>
@@ -4263,9 +4263,9 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuMode">
-   <property name="visible">
-   <bool>false</bool>
-   </property>
+    <property name="visible">
+     <bool>false</bool>
+    </property>
     <property name="title">
      <string>Mode</string>
     </property>
@@ -4304,6 +4304,16 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionFrequency_calibration"/>
     <addaction name="actionSolve_FreqCal"/>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionShow_Band_Activity"/>
+    <addaction name="actionShow_Call_Activity"/>
+    <addaction name="actionShow_Waterfall"/>
+    <addaction name="separator"/>
+    <addaction name="actionReset_Window_Sizes"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
    <addaction name="menuView"/>
@@ -4311,6 +4321,7 @@ list. The list can be maintained in Settings (F2).</string>
    <addaction name="menuDecode"/>
    <addaction name="menuSave"/>
    <addaction name="menuTools"/>
+   <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -4430,9 +4441,6 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionOnline_User_Guide">
-  <property name="visible">
-  <bool>false</bool>
-  </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -4441,6 +4449,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="shortcut">
     <string>F1</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionKeyboard_shortcuts">
@@ -4670,11 +4681,11 @@ list. The list can be maintained in Settings (F2).</string>
    <property name="enabled">
     <bool>false</bool>
    </property>
-   <property name="visible">
-   <bool>false</bool>
-   </property>
    <property name="text">
     <string>List of Type 1 prefixes and suffixes</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionSettings">
@@ -4686,14 +4697,14 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionLocal_User_Guide">
-  <property name="visible">
-  <bool>false</bool>
-  </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
    <property name="text">
     <string>Local User Guide</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionOpen_log_directory">
@@ -4919,9 +4930,6 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionFox_Log">
-  <property name="visible">
-  <bool>false</bool>
-  </property>
    <property name="text">
     <string>Fox Log</string>
    </property>
@@ -4931,27 +4939,68 @@ list. The list can be maintained in Settings (F2).</string>
    <property name="toolTip">
     <string>Fox Log</string>
    </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="actionErase_FoxQSO_txt">
-   <property name="visible">
-   <bool>false</bool>
-   </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
    <property name="text">
     <string>Erase FoxQSO.txt</string>
    </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="actionFT8_DXpedition_Mode_User_Guide">
    <property name="enabled">
     <bool>false</bool>
    </property>
-   <property name="visible">
-   <bool>false</bool>
-   </property>
    <property name="text">
     <string>FT8 DXpedition Mode User Guide</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionShow_Band_Activity">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Band Activity</string>
+   </property>
+  </action>
+  <action name="actionShow_Call_Activity">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Call Activity</string>
+   </property>
+  </action>
+  <action name="actionShow_Waterfall">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Waterfall</string>
+   </property>
+  </action>
+  <action name="actionReset_Window_Sizes">
+   <property name="text">
+    <string>Reset Window Sizes</string>
    </property>
   </action>
  </widget>
