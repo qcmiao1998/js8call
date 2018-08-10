@@ -21,7 +21,7 @@ def to_message(typ, value='', params=None):
 
 
 class Server(object):
-
+    first = True
     def process(self, message):
         typ = message.get('type', '')
         value = message.get('value', '')
@@ -37,20 +37,28 @@ class Server(object):
         if params:
             print('-> params: ', params)
 
-        if typ == 'PING':
-            self.send('GET_GRID')
-            self.send('GET_FREQ')
-            self.send('GET_CALLSIGN')
-            self.send('GET_CALL_ACTIVITY')
+        #### if typ == 'PING':
+        ####     if self.first:
+        ####         self.send('RX.GET_BAND_ACTIVITY')
+        ####         self.send('TX.SET_TEXT', 'HERE WE GO')
+        ####         time.sleep(1)
+        ####         self.send('WINDOW.RAISE')
+        ####         self.first = False
 
-        #### elif typ == 'GRID':
+        #### if typ == 'PING':
+        ####     self.send('STATION.GET_GRID')
+        ####     self.send('RIG.GET_FREQ')
+        ####     self.send('STATION.GET_CALLSIGN')
+        ####     self.send('RX.GET_CALL_ACTIVITY')
+
+        #### elif typ == 'STATION.GRID':
         ####     if value != 'EM73TU49TQ':
-        ####         self.send('SET_GRID', 'EM73TU49TQ')
+        ####         self.send('STATION.SET_GRID', 'EM73TU49TQ')
 
-        #### elif typ == 'FREQ':
+        #### elif typ == 'RIG.FREQ':
         ####     if params.get('DIAL', 0) != 14064000:
-        ####         self.send('SET_FREQ', '', {"DIAL": 14064000, "OFFSET": 977})
-        ####         self.send('SEND_MESSAGE', 'HELLO WORLD')
+        ####         self.send('RIG.SET_FREQ', '', {"DIAL": 14064000, "OFFSET": 977})
+        ####         self.send('TX.SEND_MESSAGE', 'HELLO WORLD')
 
         elif typ == 'CLOSE':
             self.close()

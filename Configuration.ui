@@ -2093,6 +2093,9 @@ for assessing propagation and system performance.</string>
             </item>
             <item>
              <widget class="QCheckBox" name="udpWindowToFront">
+             <property name="visible">
+               <bool>false</bool>
+             </property>
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Indicate acceptance of an incoming UDP request. The effect of this option varies depending on the operating system and window manager, its intent is to notify the acceptance of an incoming UDP request even if this application is minimized or hidden.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -2103,6 +2106,9 @@ for assessing propagation and system performance.</string>
             </item>
             <item>
              <widget class="QCheckBox" name="udpWindowRestore">
+              <property name="visible">
+                <bool>false</bool>
+              </property>
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Restore the window from minimized if an UDP request is accepted.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>

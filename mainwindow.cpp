@@ -5572,11 +5572,6 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
         block = -1;
     }
 
-    sendNetworkMessage("RECV", text, {
-        {"UTC", QVariant(date.toSecsSinceEpoch())},
-        {"OFFSET", QVariant(freq)},
-    });
-
     m_rxFrameBlockNumbers[freq] = writeMessageTextToUI(date, text, freq, bold, block);
 }
 
@@ -8972,44 +8967,23 @@ void MainWindow::networkMessage(Message const &message)
         return;
     }
 
-    if(type == "GET_CALL_ACTIVITY"){
-        QMap<QString, QVariant> calls;
-        foreach(auto cd, m_callActivity.values()){
-            QMap<QString, QVariant> detail;
-            detail["SNR"] = QVariant(cd.snr);
-            detail["GRID"] = QVariant(cd.grid);
-            detail["UTC"] = QVariant(cd.utcTimestamp.toSecsSinceEpoch());
-            calls[cd.call] = QVariant(detail);
-        }
+    // Inspired by FLDigi
+    // TODO: MAIN.RX - Turn on RX
+    // TODO: MAIN.TX - Transmit
+    // TODO: MAIN.TUNE - Tune
+    // TODO: MAIN.HALT - Halt
 
-        sendNetworkMessage("CALL_ACTIVITY", "", calls);
-        return;
-    }
-
-    if(type == "GET_CALLSIGN"){
-        sendNetworkMessage("CALLSIGN", m_config.my_callsign());
-        return;
-    }
-
-    if(type == "GET_GRID"){
-        sendNetworkMessage("GRID", m_config.my_grid());
-        return;
-    }
-
-    if(type == "SET_GRID"){
-        m_config.set_location(message.value());
-        return;
-    }
-
-    if(type == "GET_FREQ"){
-        sendNetworkMessage("FREQ", "", {
+    // RIG.GET_FREQ - Get the current Frequency
+    // RIG.SET_FREQ - Set the current Frequency
+    if(type == "RIG.GET_FREQ"){
+        sendNetworkMessage("RIG.FREQ", "", {
             {"DIAL", QVariant((quint64)dialFrequency())},
             {"OFFSET", QVariant((quint64)currentFreqOffset())}
         });
         return;
     }
 
-    if(type == "SET_FREQ"){
+    if(type == "RIG.SET_FREQ"){
         auto params = message.params();
         if(params.contains("DIAL")){
             bool ok = false;
@@ -9019,7 +8993,6 @@ void MainWindow::networkMessage(Message const &message)
                 displayDialFrequency();
             }
         }
-
         if(params.contains("OFFSET")){
             bool ok = false;
             auto f = params["OFFSET"].toInt(&ok);
@@ -9027,15 +9000,100 @@ void MainWindow::networkMessage(Message const &message)
                 setFreqOffsetForRestore(f, false);
             }
         }
+    }
+
+    // STATION.GET_CALLSIGN - Get the current callsign
+    // STATION.GET_GRID - Get the current grid locator
+    // STATION.SET_GRID - Set the current grid locator
+    if(type == "STATION.GET_CALLSIGN"){
+        sendNetworkMessage("STATION.CALLSIGN", m_config.my_callsign());
         return;
     }
 
-    if(type == "SEND_MESSAGE"){
+    if(type == "STATION.GET_GRID"){
+        sendNetworkMessage("STATION.GRID", m_config.my_grid());
+        return;
+    }
+
+    if(type == "STATION.SET_GRID"){
+        m_config.set_location(message.value());
+        sendNetworkMessage("STATION.GRID", m_config.my_grid());
+        return;
+    }
+
+    // RX.GET_CALL_ACTIVITY
+    // RX.GET_BAND_ACTIVITY
+    // RX.GET_TEXT
+
+    if(type == "RX.GET_CALL_ACTIVITY"){
+        QMap<QString, QVariant> calls;
+        foreach(auto cd, m_callActivity.values()){
+            QMap<QString, QVariant> detail;
+            detail["SNR"] = QVariant(cd.snr);
+            detail["GRID"] = QVariant(cd.grid);
+            detail["UTC"] = QVariant(cd.utcTimestamp.toSecsSinceEpoch());
+            calls[cd.call] = QVariant(detail);
+        }
+
+        sendNetworkMessage("RX.CALL_ACTIVITY", "", calls);
+        return;
+    }
+
+    if(type == "RX.GET_BAND_ACTIVITY"){
+        QMap<QString, QVariant> offsets;
+        foreach(auto offset, m_bandActivity.keys()){
+            auto activity = m_bandActivity[offset];
+            if(activity.isEmpty()){
+                continue;
+            }
+
+            auto d = activity.last();
+
+            QMap<QString, QVariant> detail;
+            detail["FREQ"] = QVariant(d.freq);
+            detail["TEXT"] = QVariant(d.text);
+            detail["SNR"] = QVariant(d.snr);
+            detail["UTC"] = QVariant(d.utcTimestamp.toSecsSinceEpoch());
+            offsets[QString("%1").arg(offset)] = QVariant(detail);
+        }
+
+        sendNetworkMessage("RX.BAND_ACTIVITY", "", offsets);
+        return;
+    }
+
+    if(type == "RX.GET_TEXT"){
+        sendNetworkMessage("RX.TEXT", ui->textEditRX->toPlainText());
+        return;
+    }
+
+    // TX.GET_TEXT
+    // TX.SET_TEXT
+    // TX.SEND_MESSAGE
+
+    if(type == "TX.GET_TEXT"){
+        sendNetworkMessage("TX.TEXT", ui->extFreeTextMsgEdit->toPlainText());
+        return;
+    }
+
+    if(type == "TX.SET_TEXT"){
+        addMessageText(message.value(), true);
+        return;
+    }
+
+    if(type == "TX.SEND_MESSAGE"){
         auto text = message.value();
         if(!text.isEmpty()){
             enqueueMessage(PriorityNormal, text, -1, nullptr);
             return;
         }
+    }
+
+    // WINDOW.RAISE
+
+    if(type == "WINDOW.RAISE"){
+        setWindowState(Qt::WindowActive);
+        activateWindow();
+        return;
     }
 
     qDebug() << "Unable to process networkMessage:" << type;
