@@ -9120,7 +9120,7 @@ void MainWindow::networkMessage(Message const &message)
             QMap<QString, QVariant> detail;
             detail["SNR"] = QVariant(cd.snr);
             detail["GRID"] = QVariant(cd.grid);
-            detail["UTC"] = QVariant(cd.utcTimestamp.toSecsSinceEpoch());
+            detail["UTC"] = QVariant(cd.utcTimestamp.toMSecsSinceEpoch());
             calls[cd.call] = QVariant(detail);
         }
 
@@ -9142,7 +9142,7 @@ void MainWindow::networkMessage(Message const &message)
             detail["FREQ"] = QVariant(d.freq);
             detail["TEXT"] = QVariant(d.text);
             detail["SNR"] = QVariant(d.snr);
-            detail["UTC"] = QVariant(d.utcTimestamp.toSecsSinceEpoch());
+            detail["UTC"] = QVariant(d.utcTimestamp.toMSecsSinceEpoch());
             offsets[QString("%1").arg(offset)] = QVariant(detail);
         }
 

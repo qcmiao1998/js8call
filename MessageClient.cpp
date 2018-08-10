@@ -232,7 +232,7 @@ void MessageClient::impl::heartbeat ()
       Message m("PING", "", QMap<QString, QVariant>{
         {"NAME", QVariant(QApplication::applicationName())},
         {"VERSION", QVariant(QApplication::applicationVersion())},
-        {"UTC", QVariant(QDateTime::currentDateTimeUtc().toSecsSinceEpoch())}
+        {"UTC", QVariant(QDateTime::currentDateTimeUtc().toMSecsSinceEpoch())}
       });
       writeDatagram (m.toJson(), server_, server_port_);
     }
