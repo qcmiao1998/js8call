@@ -6578,7 +6578,7 @@ void MainWindow::switch_mode (Mode mode)
     ui->RxFreqSpinBox->setMaximum(1600);
     ui->RxFreqSpinBox->setSingleStep(25);
   } else {
-    ui->RxFreqSpinBox->setMinimum(200);
+    ui->RxFreqSpinBox->setMinimum(0);
     ui->RxFreqSpinBox->setMaximum(5000);
     ui->RxFreqSpinBox->setSingleStep(1);
   }
