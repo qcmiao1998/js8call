@@ -1108,9 +1108,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       }
   });
 
+  auto logAction = new QAction(QString("Log..."), ui->tableWidgetCalls);
+  connect(logAction, &QAction::triggered, this, &MainWindow::on_logQSOButton_clicked);
 
   ui->tableWidgetCalls->setContextMenuPolicy(Qt::CustomContextMenu);
-  connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, clearAction4, clearActionAll, removeStation](QPoint const &point){
+  connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, logAction, clearAction4, clearActionAll, removeStation](QPoint const &point){
     QMenu * menu = new QMenu(ui->tableWidgetCalls);
 
     QString selectedCall = callsignSelected();
@@ -1119,6 +1121,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     if(!missingCallsign && m_callActivity.contains(selectedCall)){
         setFreqOffsetForRestore(m_callActivity[selectedCall].freq, true);
     }
+
+    menu->addAction(logAction);
+    logAction->setDisabled(missingCallsign || isAllCall);
 
     auto directedMenu = menu->addMenu("Directed");
     directedMenu->setDisabled(missingCallsign);
@@ -1483,9 +1488,18 @@ void MainWindow::readSettings()
   ui->sbNslots->setValue(m_settings->value("FoxNslots",5).toInt());
   ui->sbMax_dB->setValue(m_settings->value("FoxMaxDB",30).toInt());
 
-  ui->mainSplitter->restoreState(m_settings->value("MainSplitter", ui->mainSplitter->saveState()).toByteArray());
-  ui->textHorizontalSplitter->restoreState(m_settings->value("TextHorizontalSplitter", ui->textHorizontalSplitter->saveState()).toByteArray());
-  ui->textVerticalSplitter->restoreState(m_settings->value("TextVerticalSplitter", ui->textVerticalSplitter->saveState()).toByteArray());
+  auto mainSplitterState = m_settings->value("MainSplitter").toByteArray();
+  if(!mainSplitterState.isEmpty()){
+    ui->mainSplitter->restoreState(mainSplitterState);
+  }
+  auto horizontalState = m_settings->value("TextHorizontalSplitter").toByteArray();
+  if(!horizontalState.isEmpty()){
+    ui->textHorizontalSplitter->restoreState(horizontalState);
+  }
+  auto verticalState = m_settings->value("TextVerticalSplitter").toByteArray();
+  if(!verticalState.isEmpty()){
+    ui->textVerticalSplitter->restoreState(verticalState);
+  }
 
   m_settings->endGroup();
 
@@ -6349,9 +6363,15 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   }
   auto dateTimeQSOOff = QDateTime::currentDateTimeUtc();
   if (dateTimeQSOOff < m_dateTimeQSOOn) dateTimeQSOOff = m_dateTimeQSOOn;
-  QString grid=m_hisGrid;
-  if(grid=="....") grid="";
-  m_logDlg->initLogQSO (m_hisCall, grid, m_modeTx == "FT8" ? "FT8CALL" : m_modeTx, m_rptSent, m_rptRcvd,
+  QString call=callsignSelected();
+  if(call == "ALLCALL"){
+      call = "";
+  }
+  QString grid="";
+  if(m_callActivity.contains(call)){
+      grid = m_callActivity[call].grid;
+  }
+  m_logDlg->initLogQSO (call, grid, m_modeTx == "FT8" ? "FT8CALL" : m_modeTx, m_rptSent, m_rptRcvd,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),
                         m_config.my_callsign(), m_config.my_grid(),
                         m_config.log_as_RTTY(), m_config.report_in_comments(),
