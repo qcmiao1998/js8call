@@ -10,19 +10,19 @@ subroutine ft8apset(mycall12,mygrid6,hiscall12,hisgrid6,bcontest,apsym,iaptype)
   integer*1 msgbits(KK)
   integer itone(KK)
   
-  mycall=mycall12(1:6)
-  hiscall=hiscall12(1:6)
-  hisgrid=hisgrid6(1:4)
-  if(len_trim(hiscall).eq.0) then
-    iaptype=1
-    hiscall="K9AN"
-  else 
-    iaptype=2
-  endif
-  hisgrid=hisgrid6(1:4)
-!  if(len_trim(hisgrid).eq.0) hisgrid="EN50"
-  if(index(hisgrid," ").eq.0) hisgrid="EN50"
-  msg=mycall//' '//hiscall//' '//hisgrid
+!  mycall=mycall12(1:6)
+!  hiscall=hiscall12(1:6)
+!  hisgrid=hisgrid6(1:4)
+!  if(len_trim(hiscall).eq.0) then
+!    iaptype=1
+!    hiscall="K9AN"
+!  else 
+!    iaptype=2
+!  endif
+!  hisgrid=hisgrid6(1:4)
+!!  if(len_trim(hisgrid).eq.0) hisgrid="EN50"
+!  if(index(hisgrid," ").eq.0) hisgrid="EN50"
+  msg='tZQpZP-slh4+'
   i3bit=0                                       ! ### TEMPORARY ??? ###
   call genft8(msg,mygrid6,bcontest,i3bit,msgsent,msgbits,itone)
   apsym=2*msgbits-1
