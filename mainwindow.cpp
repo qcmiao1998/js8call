@@ -1312,8 +1312,7 @@ void MainWindow::tryBandHop(){
   }
 
   // get the current band
-  Frequency dialFreq {m_rigState.ptt () && m_rigState.split () ?
-      m_rigState.tx_frequency () : m_rigState.frequency ()};
+  auto dialFreq = dialFrequency();
 
   auto currentBand = m_config.bands()->find(dialFreq);
 
