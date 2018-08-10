@@ -1337,7 +1337,8 @@ void MainWindow::tryBandHop(){
       bool canSwitch = (
         station.switch_at_ <= d    &&
         d <= station.switch_until_ &&
-        (m_bandHopped || (!m_bandHopped && station.frequency_ != m_bandHoppedFreq))
+        (m_bandHopped || (!m_bandHopped && station.frequency_ != m_bandHoppedFreq)) &&
+        station.frequency_ != dialFreq
       );
 
       //qDebug() << "Can switch to" << station.band_name_ << "=" << canSwitch << station.switch_at_.time().toString("hh:mm") << "<=" << d.time().toString("hh:mm") << "<=" << station.switch_until_.time().toString("hh:mm") << m_bandHopped << m_bandHoppedFreq;
