@@ -3221,12 +3221,10 @@ void MainWindow::readFromStdout()                             //readFromStdout
         decodedtext.bits() == Varicode::FT8CallLast
       );
 
-      qDebug() << "frame valid?" << bValidFrame;
-      qDebug() << "decoded text" << decodedtext.message();
+      qDebug() << "valid" << bValidFrame << "decoded text" << decodedtext.message();
 
       //Left (Band activity) window
-      if(!bAvgMsg && bValidFrame) {
-        if(m_mode=="FT8"){
+      if(bValidFrame) {
           // Parse General Activity
 #if 1
           bool shouldParseGeneralActivity = true;
@@ -3426,7 +3424,6 @@ void MainWindow::readFromStdout()                             //readFromStdout
               }
           }
 #endif
-        }
       }
 
       //Right (Rx Frequency) window
@@ -5567,12 +5564,17 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
         c.deleteChar();
         c.deleteChar();
         block = -1;
+        m_rxFrameBlockNumbers.remove(freq);
     }
     if(newLine){
+        m_rxFrameBlockNumbers.remove(freq);
         block = -1;
     }
 
-    m_rxFrameBlockNumbers[freq] = writeMessageTextToUI(date, text, freq, bold, block);
+    block = writeMessageTextToUI(date, text, freq, bold, block);
+    if(!text.contains("\u2301")){
+        m_rxFrameBlockNumbers.insert(freq, block);
+    }
 }
 
 int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, bool bold, int block){
