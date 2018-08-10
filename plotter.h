@@ -128,6 +128,7 @@ private:
   qint32  m_ia;
   qint32  m_ib;
 
+  QPixmap m_FullOverlayPixmap;
   QPixmap m_WaterfallPixmap;
   QPixmap m_2DPixmap;
   QPixmap m_ScalePixmap;

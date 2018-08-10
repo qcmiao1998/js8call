@@ -90,6 +90,9 @@ void CPlotter::resizeEvent(QResizeEvent* )                    //resizeEvent()
     if(m_h2<1) m_h2=1;
     m_h1=m_h-m_h2;
 //    m_line=0;
+
+    m_FullOverlayPixmap = QPixmap(m_Size.width(), m_h);
+    m_FullOverlayPixmap.fill(Qt::transparent);
     m_2DPixmap = QPixmap(m_Size.width(), m_h2);
     m_2DPixmap.fill(Qt::black);
     m_WaterfallPixmap = QPixmap(m_Size.width(), m_h1);
@@ -112,6 +115,9 @@ void CPlotter::paintEvent(QPaintEvent *)                                // paint
   painter.drawPixmap(0,0,m_ScalePixmap);
   painter.drawPixmap(0,30,m_WaterfallPixmap);
   painter.drawPixmap(0,m_h1,m_2DPixmap);
+
+  int x = XfromFreq(m_rxFreq);
+  painter.drawPixmap(x,0,m_FullOverlayPixmap);
   m_paintEventBusy=false;
 }
 
@@ -478,7 +484,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     painter0.drawLine(x1,24,x1,30);
   }
 
-  if(m_mode=="JT9" or m_mode=="JT65" or m_mode=="JT9+JT65" or m_mode=="QRA64" or m_mode=="FT8") {
+  if(false && (m_mode=="JT9" or m_mode=="JT65" or m_mode=="JT9+JT65" or m_mode=="QRA64" or m_mode=="FT8")) {
 
     if(m_mode=="QRA64" or (m_mode=="JT65" and m_bVHF)) {
       painter0.setPen(penGreen);
@@ -511,8 +517,8 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     }
   }
 
-  if(m_mode=="JT9" or m_mode=="JT65" or m_mode=="JT9+JT65" or
-     m_mode.mid(0,4)=="WSPR" or m_mode=="QRA64" or m_mode=="FT8") {
+  if(false && (m_mode=="JT9" or m_mode=="JT65" or m_mode=="JT9+JT65" or
+     m_mode.mid(0,4)=="WSPR" or m_mode=="QRA64" or m_mode=="FT8")) {
     painter0.setPen(penRed);
     x1=XfromFreq(m_txFreq);
     x2=XfromFreq(m_txFreq+bw);
@@ -549,6 +555,21 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       painter0.setPen(penOrange);               //Mark WSPR sub-band orange
       painter0.drawLine(x1,9,x2,9);
     }
+  }
+
+  if(m_mode=="FT8"){
+      int fwidth=XfromFreq(m_rxFreq+bw)-XfromFreq(m_rxFreq);
+      QPainter overPainter(&m_FullOverlayPixmap);
+      overPainter.initFrom(this);
+      overPainter.setCompositionMode(QPainter::CompositionMode_Source);
+      overPainter.fillRect(0, 0, m_Size.width(), m_h, Qt::transparent);
+      overPainter.setPen(Qt::red);
+      overPainter.drawLine(0, 30, 0, m_h);
+      overPainter.drawLine(fwidth, 30, fwidth, m_h);
+
+      overPainter.setPen(penRed);
+      overPainter.drawLine(0, 26, fwidth, 26);
+      overPainter.drawLine(0, 28, fwidth, 28);
   }
 }
 
