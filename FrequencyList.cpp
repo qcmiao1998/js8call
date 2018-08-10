@@ -257,7 +257,7 @@ bool FrequencyList_v2::filterAcceptsRow (int source_row, QModelIndex const& /* p
     }
   if (result && m_->mode_filter_ != Modes::ALL)
     {
-      result = Modes::ALL == item.mode_;
+      result = Modes::ALL == item.mode_ || m_->mode_filter_ == item.mode_;
     }
   return result;
 }
