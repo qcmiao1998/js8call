@@ -75,6 +75,7 @@ QSet<int> buffered_cmds = {6, 7, 8};
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
 QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|PWR|QSL[?]?|RR|HEARING|[?@&$%|!# ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
+QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_pwr_pattern = QString("(?<pwr>(?<=PWR)\\s?\\d+\\s?[KM]?W)?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR|HEARING)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
 
@@ -84,7 +85,7 @@ QRegularExpression directed_re("^"                    +
                                optional_pwr_pattern   +
                                optional_num_pattern);
 
-QRegularExpression beacon_re(R"(^(?<type>CQCQCQ|BEACON)(?:\s(?<grid>[A-Z]{2}[0-9]{2}))?\b)");
+QRegularExpression beacon_re(R"(^(?<type>CQCQCQ|BEACON)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
 QRegularExpression compound_re("^[<]"                  +
                                callsign_pattern        +
@@ -1197,11 +1198,14 @@ QStringList Varicode::unpackBeaconMessage(const QString &text, quint8 *pType, bo
 QString Varicode::packCompoundMessage(QString const &text, int *n){
     QString frame;
 
+    qDebug() << "trying to pack compound message" << text;
     auto parsedText = compound_re.match(text);
     if(!parsedText.hasMatch()){
         if(n) *n = 0;
         return frame;
     }
+
+    qDebug() << parsedText.capturedTexts();
 
     QString callsign = parsedText.captured("callsign");
     QString grid = parsedText.captured("grid");

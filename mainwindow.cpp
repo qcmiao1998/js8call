@@ -5839,7 +5839,7 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
 
     // prepare compound
     bool compound = Radio::is_compound_callsign(m_config.my_callsign());
-    QString mygrid = m_config.my_grid();
+    QString mygrid = m_config.my_grid().left(4);
     QString mycall = m_config.my_callsign();
     QString basecall = Radio::base_callsign(m_config.my_callsign());
     if(basecall != mycall){
