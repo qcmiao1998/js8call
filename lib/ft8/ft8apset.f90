@@ -22,7 +22,7 @@ subroutine ft8apset(mycall12,mygrid6,hiscall12,hisgrid6,bcontest,apsym,iaptype)
 !  hisgrid=hisgrid6(1:4)
 !!  if(len_trim(hisgrid).eq.0) hisgrid="EN50"
 !  if(index(hisgrid," ").eq.0) hisgrid="EN50"
-  msg='tZQpZP-slh4+'
+  msg='tZQpZP-slh4+'                            ! HELLO WORLD
   i3bit=0                                       ! ### TEMPORARY ??? ###
   call genft8(msg,mygrid6,bcontest,i3bit,msgsent,msgbits,itone)
   apsym=2*msgbits-1

@@ -16,14 +16,10 @@ class Varicode
 public:
     // frame type transmitted via itype and decoded by the ft8 decoded
     enum TransmissionType {
-        FT8              = 0, // [000]
-        FT8Fox           = 1, // [001] <- the decoder special cases this one frequently :|
-        FT8Call          = 2, // [010]
-        FT8CallLast      = 3, // [011] <- used to indicate the last frame in a transmission
-        FT8CallFirst     = 4, // [100] <- used to indicate the first frmae in a transmission
-        FT8CallReservedB = 5, // [101]
-        FT8CallReservedC = 6, // [110]
-        FT8CallReservedD = 7, // [111]
+        FT8Call          = 0, // [000] <- any other frame of the message
+        FT8CallFirst     = 1, // [001] <- the first frame of a message
+        FT8CallLast      = 2, // [010] <- the last frame of a message
+        FT8CallReserved  = 4, // [100] <- a reserved flag for future use...
     };
 
     enum FrameType {

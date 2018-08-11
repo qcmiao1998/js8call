@@ -3291,11 +3291,14 @@ void MainWindow::readFromStdout()                             //readFromStdout
         }
       }
 
-      // only display frames that are FT8Call frames (should decrease false decodes by at least 50%)
+      // only display frames that are FT8Call frames (should decrease false decodes by at least 12%)
+      int bits = decodedtext.bits();
+
       bool bValidFrame = (
-        decodedtext.bits() == Varicode::FT8CallFirst ||
-        decodedtext.bits() == Varicode::FT8Call      ||
-        decodedtext.bits() == Varicode::FT8CallLast
+        bits == Varicode::FT8Call                                            ||
+        ((bits & Varicode::FT8CallFirst)    == Varicode::FT8CallFirst)       ||
+        ((bits & Varicode::FT8CallLast)     == Varicode::FT8CallLast)        ||
+        ((bits & Varicode::FT8CallReserved) == 0 /*Varicode::FT8CallReserved*/) // This is unused...so is invalid at this time...
       );
 
       qDebug() << "valid" << bValidFrame << "decoded text" << decodedtext.message();
@@ -3334,7 +3337,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.isBuffered = false;
 
             // if we have any "first" frame, and a buffer is already established, clear it...
-            if(d.bits == Varicode::FT8CallFirst && m_messageBuffer.contains(d.freq/10*10)){
+            if(((d.bits & Varicode::FT8CallFirst) == Varicode::FT8CallFirst) && m_messageBuffer.contains(d.freq/10*10)){
                 qDebug() << "first message encountered, clearing existing buffer" << (d.freq/10*10);
                 m_messageBuffer.remove(d.freq/10*10);
             }
@@ -5631,28 +5634,17 @@ void MainWindow::clearActivity(){
     update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", false);
 }
 
-void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool bold, bool newLine, bool clearLine){
+void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool isTx, bool isNewLine, bool isLast){
     int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
-    if(clearLine && block != -1){
-        auto c = ui->textEditRX->textCursor();
-        QTextBlock b = c.document()->findBlockByNumber(block);
-        c.setPosition(b.position());
-        c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-        c.deleteChar();
-        c.deleteChar();
-        block = -1;
-        m_rxFrameBlockNumbers.remove(freq);
-    }
-
-    if(newLine){
+    if(isNewLine){
         m_rxFrameBlockNumbers.remove(freq);
         block = -1;
     }
 
-    block = writeMessageTextToUI(date, text, freq, bold, block);
+    block = writeMessageTextToUI(date, text, freq, isTx, block);
 
-    // TODO: jsherer - might be better to see if the bits are "last" versus checking for the EOT
-    if(!text.contains("\u2301")){
+    // never cache tx or last lines
+    if(!isTx && !isLast){
         m_rxFrameBlockNumbers.insert(freq, block);
     }
 }
@@ -5764,8 +5756,7 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
       lines.append(dt.message());
   }
 
-  //logMessageText(QDateTime::currentDateTimeUtc(), lines.join(""), freq, true);
-  displayTextForFreq(lines.join(""), freq, QDateTime::currentDateTimeUtc(), true, true, false);
+  displayTextForFreq(lines.join(""), freq, QDateTime::currentDateTimeUtc(), true, true, true);
 
   // keep track of the last message text sent
   m_lastTxMessage = text;
@@ -6008,8 +5999,7 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
                   line = lstrip(line);
 
                   qDebug() << "before:" << line;
-                  bool shouldUseLargeChecksum = true;
-                  if(shouldUseLargeChecksum && dirCmd == "#"){
+                  if(dirCmd == "#"){
                     line = line + " " + Varicode::checksum32(line);
                   } else {
                     line = line + " " + Varicode::checksum16(line);
@@ -6092,9 +6082,10 @@ QString MainWindow::parseFT8Message(QString input, bool *isFree){
 
 bool MainWindow::prepareNextMessageFrame()
 {
+  m_i3bit = Varicode::FT8Call;
+
   QString frame = popMessageFrame();
-  if(frame.isEmpty()){
-    m_i3bit = Varicode::FT8;
+  if(frame.isEmpty()){  
     ui->nextFreeTextMsg->clear();
     return false;
   } else {
@@ -6103,12 +6094,11 @@ bool MainWindow::prepareNextMessageFrame()
     int count = m_txFrameCount;
     int sent = count - m_txFrameQueue.count();
 
-    m_i3bit = Varicode::FT8Call;
     if(sent == 1){
-        m_i3bit = Varicode::FT8CallFirst;
+        m_i3bit |= Varicode::FT8CallFirst;
     }
     if(count == sent){
-        m_i3bit = Varicode::FT8CallLast;
+        m_i3bit |= Varicode::FT8CallLast;
     }
 
     ui->startTxButton->setText(QString("Sending (%1/%2)").arg(sent).arg(count));
@@ -7296,6 +7286,7 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
     QDateTime now = QDateTime::currentDateTimeUtc();
     QDateTime firstActivity = now;
     QString activityText;
+    bool isLast = false;
     foreach(auto d, m_bandActivity[offset]){
         if(activityAging && d.utcTimestamp.secsTo(now)/60 >= activityAging){
             continue;
@@ -7304,25 +7295,16 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
             firstActivity = d.utcTimestamp;
         }
         activityText.append(d.text);
-    }
-    if(!activityText.isEmpty()){
-        //int block = logMessageText(firstActivity, activityText, offset, false);
 
-        displayTextForFreq(activityText, offset, firstActivity, false, true, false);
-
-        // TODO: jsherer - evaluate recency cache...
-        // m_rxRecentCache.insert(offset/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
-    }
-
-#if 0
-    // drop the callsign (if one) in the edit window
-    foreach(auto d, m_callActivity.values()){
-        if(d.freq == offset){
-            addMessageText(d.call);
-            break;
+        isLast = (d.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast;
+        if(isLast){
+            // can also use \u0004 \u2666 \u2404
+            activityText.append(" \u2301 ");
         }
     }
-#endif
+    if(!activityText.isEmpty()){
+        displayTextForFreq(activityText, offset, firstActivity, false, true, isLast);
+    }
 }
 
 void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/){
@@ -8302,10 +8284,18 @@ QString MainWindow::callsignSelected(){
 }
 
 bool MainWindow::isRecentOffset(int offset){
+    if(abs(offset - currentFreqOffset()) <= 10){
+        return true;
+    }
     return (
         m_rxRecentCache.contains(offset/10*10) &&
         m_rxRecentCache[offset/10*10]->secsTo(QDateTime::currentDateTimeUtc()) < 120
     );
+}
+
+void MainWindow::markOffsetRecent(int offset){
+    m_rxRecentCache.insert(offset/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 10);
+    m_rxRecentCache.insert(offset/10*10+10, new QDateTime(QDateTime::currentDateTimeUtc()), 10);
 }
 
 bool MainWindow::isDirectedOffset(int offset){
@@ -8316,7 +8306,8 @@ bool MainWindow::isDirectedOffset(int offset){
 }
 
 void MainWindow::markOffsetDirected(int offset){
-    m_rxDirectedCache.insert(offset/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+    m_rxDirectedCache.insert(offset/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 10);
+    m_rxDirectedCache.insert(offset/10*10+10, new QDateTime(QDateTime::currentDateTimeUtc()), 10);
 }
 
 bool MainWindow::isMyCallIncluded(const QString &text){
@@ -8366,18 +8357,31 @@ void MainWindow::processRxActivity() {
 
         // if this is a compound message or it's a directed message needing a compound call, skip.
         // these messages will be displayed when the compound calls come through
+#if 0
         if(d.isCompound || (d.isDirected && d.text.contains("<....>"))){
+#endif
+
+        // if this is a _partial_ directed message, skip until the complete call comes through.
+        if(d.isDirected && d.text.contains("<....>")){
             continue;
         }
 
-        int freq = d.freq / 10 * 10;
+        // use the actual frequency and check its delta from our current frequency
+        // meaning, if our current offset is 1502 and the d.freq is 1492, the delta is <= 10;
+        bool shouldDisplay = abs(d.freq - currentFreqOffset()) <= 10;
 
-        bool shouldDisplay = abs(freq - currentFreqOffset()) <= 10;
+#if 0
+        // if this is a recent non-directed offset, bump the cache and display...
+        if(isRecentOffset(d.freq)){
+            markOffsetRecent(d.freq);
+            shouldDisplay = true;
+        }
+#endif
 
         // if this is a (recent) directed offset, bump the cache, and display...
         // this will allow a directed free text command followed by non-buffered data frames.
-        if(isDirectedOffset(freq)){
-            markOffsetDirected(freq);
+        if(isDirectedOffset(d.freq)){
+            markOffsetDirected(d.freq);
             shouldDisplay = true;
         }
 
@@ -8394,33 +8398,29 @@ void MainWindow::processRxActivity() {
         }
 #endif
 
-
-
         if(!shouldDisplay){
             continue;
         }
 
         // ok, we're good to display...let's cache that fact and then display!
-        bool isLast = d.bits == Varicode::FT8CallLast;
+        markOffsetRecent(d.freq);
+
+        bool isFirst = (d.bits & Varicode::FT8CallFirst) == Varicode::FT8CallFirst;
+        bool isLast = (d.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast;
+
+        // if we're the last message, let's display our EOT character
         if (isLast) {
             // can also use \u0004 \u2666 \u2404
             d.text = QString("%1 \u2301 ").arg(d.text);
         }
 
         // log it to the display!
-        // int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
-        // m_rxFrameBlockNumbers[freq] = logMessageText(d.utcTimestamp, d.text, d.freq, false, block);
-        // if (isLast) {
-        //     m_rxFrameBlockNumbers.remove(freq);
-        // }
-        // m_rxRecentCache.insert(freq, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
-
-        displayTextForFreq(d.text, d.freq, d.utcTimestamp, false, false, false);
+        displayTextForFreq(d.text, d.freq, d.utcTimestamp, false, isFirst, isLast);
 
         if(isLast && !d.isBuffered){
             // buffered commands need the rxFrameBlockNumbers cache so it can fixup its display
             // all other "last" data frames can clear the rxFrameBlockNumbers cache so the next message will be on a new line.
-            m_rxFrameBlockNumbers.remove(freq);
+            m_rxFrameBlockNumbers.remove(d.freq);
         }
     }
 }
@@ -8444,7 +8444,14 @@ void MainWindow::processCompoundActivity() {
         }
 
         // if we don't have an initialized command, skip...
-        if (buffer.cmd.bits != Varicode::FT8Call && buffer.cmd.bits != Varicode::FT8CallFirst && buffer.cmd.bits != Varicode::FT8CallLast) {
+        int bits = buffer.cmd.bits;
+        bool validBits = (
+            bits == Varicode::FT8Call                                         ||
+            ((bits & Varicode::FT8CallFirst)    == Varicode::FT8CallFirst)    ||
+            ((bits & Varicode::FT8CallLast)     == Varicode::FT8CallLast)     ||
+            ((bits & Varicode::FT8CallReserved) == Varicode::FT8CallReserved)
+        );
+        if (!validBits) {
             qDebug() << "-> buffer.cmd bits is invalid...skip";
             continue;
         }
@@ -8467,7 +8474,7 @@ void MainWindow::processCompoundActivity() {
             buffer.cmd.grid = d.grid;
             buffer.cmd.isCompound = true;
 
-            if (d.bits == Varicode::FT8CallLast) {
+            if ((d.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast) {
                 buffer.cmd.bits = d.bits;
             }
         }
@@ -8477,12 +8484,12 @@ void MainWindow::processCompoundActivity() {
             buffer.cmd.to = d.call;
             buffer.cmd.isCompound = true;
 
-            if (d.bits == Varicode::FT8CallLast) {
+            if ((d.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast) {
                 buffer.cmd.bits = d.bits;
             }
         }
 
-        if (buffer.cmd.bits != Varicode::FT8CallLast) {
+        if ((buffer.cmd.bits & Varicode::FT8CallLast) != Varicode::FT8CallLast) {
             qDebug() << "-> still not last message...skip";
             continue;
         }
@@ -8506,7 +8513,7 @@ void MainWindow::processBufferedActivity() {
             continue;
         }
 
-        if (buffer.msgs.last().bits != Varicode::FT8CallLast) {
+        if ((buffer.msgs.last().bits & Varicode::FT8CallLast) != Varicode::FT8CallLast) {
             continue;
         }
 
@@ -8520,19 +8527,23 @@ void MainWindow::processBufferedActivity() {
 
         bool valid = false;
 
-        bool shouldUseLargeChecksum = true;
-        if(shouldUseLargeChecksum && buffer.cmd.cmd == "#"){
-            checksum = message.right(6);
-            message = message.left(message.length() - 7);
-            valid = Varicode::checksum32Valid(checksum, message);
+        if(Varicode::isCommandBuffered(buffer.cmd.cmd)){
+            if(buffer.cmd.cmd == "#"){
+                checksum = message.right(6);
+                message = message.left(message.length() - 7);
+                valid = Varicode::checksum32Valid(checksum, message);
+            } else {
+                checksum = message.right(3);
+                message = message.left(message.length() - 4);
+                valid = Varicode::checksum16Valid(checksum, message);
+            }
         } else {
-            checksum = message.right(3);
-            message = message.left(message.length() - 4);
-            valid = Varicode::checksum16Valid(checksum, message);
+            valid = true;
         }
 
+
         if (valid) {
-            buffer.cmd.bits = Varicode::FT8CallLast;
+            buffer.cmd.bits |= Varicode::FT8CallLast;
             buffer.cmd.text = message;
             buffer.cmd.isBuffered = true;
             m_rxCommandQueue.append(buffer.cmd);
@@ -8627,15 +8638,30 @@ void MainWindow::processCommandActivity() {
         if(!d.text.isEmpty()){
             ad.text += d.text;
         }
-        bool isLast = ad.bits == Varicode::FT8CallLast;
+        bool isLast = (ad.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast;
         if (isLast) {
             // can also use \u0004 \u2666 \u2404
             ad.text += QString(" \u2301 ");
         }
         ad.utcTimestamp = d.utcTimestamp;
 
-        // log it to the display!
-        displayTextForFreq(ad.text, ad.freq, ad.utcTimestamp, false, true, true);
+
+        // we'd be double printing here if were on frequency, so let's be "smart" about this...
+        bool shouldDisplay = true;
+        if(shouldDisplay){
+            if(isRecentOffset(d.freq) && ui->textEditRX->find(QString("(%1)").arg(ad.freq), QTextDocument::FindBackward)){
+                // ... maybe we could delete the last line that had this message on this frequency...
+                auto c = ui->textEditRX->textCursor();
+                c.movePosition(QTextCursor::StartOfBlock);
+                c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+                qDebug() << "should display directed message, erasing last rx activity line..." << c.selectedText();
+                c.deleteChar();
+                c.deleteChar();
+            }
+
+            // log it to the display!
+            displayTextForFreq(ad.text, ad.freq, ad.utcTimestamp, false, true, false);
+        }
 
         // and mark the offset as a directed offset so future free text is displayed
         markOffsetDirected(ad.freq);
@@ -8910,7 +8936,7 @@ void MainWindow::displayBandActivity() {
                 if (item.isLowConfidence) {
                     item.text = QString("[%1]").arg(item.text);
                 }
-                if (item.bits == Varicode::FT8CallLast) {
+                if ((item.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast) {
                     // can also use \u0004 \u2666 \u2404
                     item.text = QString("%1 \u2301 ").arg(item.text);
                 }
@@ -9038,11 +9064,12 @@ void MainWindow::displayCallActivity() {
 
 void MainWindow::postWSPRDecode (bool is_new, QStringList parts)
 {
-  if (parts.size () < 8)
+#if 0
+    if (parts.size () < 8)
     {
       parts.insert (6, "");
     }
-#if 0
+
   m_messageClient->WSPR_decode (is_new, QTime::fromString (parts[0], "hhmm"), parts[1].toInt ()
                                 , parts[2].toFloat (), Radio::frequency (parts[3].toFloat (), 6)
                                 , parts[4].toInt (), parts[5], parts[6], parts[7].toInt ()
@@ -9633,9 +9660,10 @@ void MainWindow::on_cbCQTx_toggled(bool b)
 
 void MainWindow::statusUpdate () const
 {
+#if 0
   if (!ui) return;
   auto submode = current_submode ();
-#if 0
+
   m_messageClient->status_update (m_freqNominal, m_mode, m_hisCall,
                                   QString::number (ui->rptSpinBox->value ()),
                                   m_modeTx, ui->autoButton->isChecked (),

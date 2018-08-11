@@ -62,21 +62,17 @@ program ft8code
      msgchk=msg
      
 ! Generate msgsent, msgbits, and itone
-     if(index(msg,';').le.0) then
-        call packmsg(msg(1:22),dgen,itype,bcontest)
-        msgtype=""
-        if(itype.eq.1) msgtype="Std Msg"
-        if(itype.eq.2) msgtype="Type 1 pfx"
-        if(itype.eq.3) msgtype="Type 1 sfx"
-        if(itype.eq.4) msgtype="Type 2 pfx"
-        if(itype.eq.5) msgtype="Type 2 sfx"
-        if(itype.eq.6) msgtype="Free text"
-        i3bit=0
-        call genft8(msg(1:22),mygrid6,bcontest,i3bit,msgsent,msgbits,itone)
-     else
-        call foxgen_wrap(msg,msgbits,itone)
-        i3bit=1
-     endif
+     call packmsg(msg(1:22),dgen,itype,bcontest)
+     msgtype=""
+     if(itype.eq.1) msgtype="Std Msg"
+     if(itype.eq.2) msgtype="Type 1 pfx"
+     if(itype.eq.3) msgtype="Type 1 sfx"
+     if(itype.eq.4) msgtype="Type 2 pfx"
+     if(itype.eq.5) msgtype="Type 2 sfx"
+     if(itype.eq.6) msgtype="Free text"
+     i3bit=0
+     call genft8(msg(1:22),mygrid6,bcontest,i3bit,msgsent,msgbits,itone)
+
      decoded=msgbits
      i3bit=4*decoded(73) + 2*decoded(74) + decoded(75)
      iFreeText=decoded(57)
@@ -85,40 +81,14 @@ program ft8code
      call extractmessage174(decoded,message,ncrcflag)
      decoded=decoded0
 
-     if(i3bit.eq.0) then
-        if(bcontest) call fix_contest_msg(mygrid6,message)
-        bad=" "
-        comment='         '
-        if(itype.ne.6 .and. message.ne.msgchk) bad="*"
-        if(itype.eq.6 .and. message(1:13).ne.msgchk(1:13)) bad="*"
-        if(itype.eq.6 .and. len(trim(msgchk)).gt.13) comment='truncated'
-        write(*,1020) imsg,msgchk,message,bad,i3bit,itype,msgtype,comment
+    if(bcontest) call fix_contest_msg(mygrid6,message)
+    bad=" "
+    comment='         '
+    if(itype.ne.6 .and. message.ne.msgchk) bad="*"
+    if(itype.eq.6 .and. message(1:13).ne.msgchk(1:13)) bad="*"
+    if(itype.eq.6 .and. len(trim(msgchk)).gt.13) comment='truncated'
+    write(*,1020) imsg,msgchk,message,bad,i3bit,itype,msgtype,comment
 1020    format(i2,'.',1x,a22,1x,a22,1x,a1,2i2,1x,a10,1x,a9)
-     else
-        write(cbits,1001) decoded
-1001    format(87i1)
-        read(cbits,1002) nrpt
-1002    format(66x,b6)
-        irpt=nrpt-30
-        i1=index(message,' ')
-        i2=index(message(i1+1:),' ') + i1
-        c1=message(1:i1)//'   '
-        c2=message(i1+1:i2)//'   '
-        msg37=c1//' RR73; '//c2//' <...>    '
-        write(msg37(35:37),1003) irpt
-1003    format(i3.2)
-        if(msg37(35:35).ne.'-') msg37(35:35)='+'
-        iz=len(trim(msg37))
-        do iter=1,10                           !Collapse multiple blanks into one
-           ib2=index(msg37(1:iz),'  ')
-           if(ib2.lt.1) exit
-           msg37=msg37(1:ib2)//msg37(ib2+2:)
-           iz=iz-1
-        enddo
- 
-        write(*,1021) imsg,msgchk,msg37
-1021    format(i2,'.',1x,a40,1x,a37)
-     endif
 
   enddo
 
