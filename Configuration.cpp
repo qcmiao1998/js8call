@@ -873,7 +873,7 @@ int Configuration::activity_aging() const
 void Configuration::set_location (QString const& grid_descriptor)
 {
   // change the dynamic grid
-  qDebug () << "Configuration::set_location - location:" << grid_descriptor;
+  // qDebug () << "Configuration::set_location - location:" << grid_descriptor;
   m_->dynamic_grid_ = grid_descriptor.trimmed ();
 }
 

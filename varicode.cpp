@@ -85,9 +85,9 @@ QRegularExpression directed_re("^"                    +
                                optional_pwr_pattern   +
                                optional_num_pattern);
 
-QRegularExpression beacon_re(R"(^(?<type>CQCQCQ|BEACON)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
+QRegularExpression beacon_re(R"(^\s*(?<type>CQCQCQ|BEACON)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
-QRegularExpression compound_re("^[<]"                  +
+QRegularExpression compound_re("^\\s*[<]"                  +
                                callsign_pattern        +
                                "(?<extra>"             +
                                  optional_grid_pattern +

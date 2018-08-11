@@ -6231,15 +6231,15 @@ void MainWindow::checkBacon(){
 void MainWindow::prepareBacon(){
     QStringList lines;
 
-    QString call = m_config.my_callsign();
-    QString grid = m_config.my_grid().left(4);
+    QString mycall = m_config.my_callsign();
+    QString mygrid = m_config.my_grid().left(4);
 
     // FT8Call Style
-    lines.append(QString("%1: BEACON %2").arg(call).arg(grid));
+    lines.append(QString("%1: BEACON %2").arg(mycall).arg(mygrid));
 
-    bool shouldTransmitTwoBeacons = false;
+    bool shouldTransmitTwoBeacons = true;
     if(shouldTransmitTwoBeacons){
-        lines.append(QString("%1: BEACON %2").arg(call).arg(grid));
+        lines.append(QString("%1: BEACON %2").arg(mycall).arg(mygrid));
     }
 
     // Queue the beacon
@@ -6957,9 +6957,8 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
 }
 
 void MainWindow::on_cqMacroButton_clicked(){
-    QString call = m_config.my_callsign();
-    QString grid = m_config.my_grid().left(4);
-    QString text = QString("%1: CQCQCQ %2").arg(call).arg(grid).trimmed();
+    QString mygrid = m_config.my_grid().left(4);
+    QString text = QString("CQCQCQ %1").arg(mygrid).trimmed();
     addMessageText(text);
 }
 
