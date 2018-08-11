@@ -1339,8 +1339,7 @@ void MainWindow::tryBandHop(){
       // and if we are switching to a different frequency than the last hop. this allows us to switch bands at that time,
       // but then later we can later switch to a different band if needed without the automatic band switching to take over
       bool canSwitch = (
-        station.switch_at_ <= d    &&
-        d <= station.switch_until_ &&
+        (station.switch_at_ <= d || d <= station.switch_until_) &&
         (m_bandHopped || (!m_bandHopped && station.frequency_ != m_bandHoppedFreq)) &&
         station.frequency_ != dialFreq
       );

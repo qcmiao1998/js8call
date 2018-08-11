@@ -298,8 +298,8 @@ public:
     return {
         band,
         freq_.frequency(),
-        qMin(a, b),
-        qMax(a, b),
+        a,
+        b,
         description_.text ()};
   }
 

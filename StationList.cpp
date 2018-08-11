@@ -490,9 +490,8 @@ bool StationList::impl::setData (QModelIndex const& model_index, QVariant const&
           auto t = QTime::fromString(s);
           auto at = QDateTime(QDate(2000,1,1), t, Qt::UTC);
           auto until = stations_[row].switch_until_;
-
-          stations_[row].switch_at_ = qMin(at, until);
-          stations_[row].switch_until_ = qMax(at, until);
+          stations_[row].switch_at_ = at;
+          stations_[row].switch_until_ = until;
 
           Q_EMIT dataChanged (model_index, model_index, roles);
 
@@ -511,9 +510,8 @@ bool StationList::impl::setData (QModelIndex const& model_index, QVariant const&
           auto t = QTime::fromString(s);
           auto until = QDateTime(QDate(2000,1,1), t, Qt::UTC);
           auto at = stations_[row].switch_at_;
-
-          stations_[row].switch_at_ = qMin(at, until);
-          stations_[row].switch_until_ = qMax(at, until);
+          stations_[row].switch_at_ = at;
+          stations_[row].switch_until_ = until;
 
           Q_EMIT dataChanged (model_index, model_index, roles);
 
