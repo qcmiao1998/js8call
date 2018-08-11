@@ -6128,6 +6128,11 @@ bool MainWindow::isFreqOffsetFree(int f, int bw){
         return true;
     }
 
+    // if this frequency is in our directed cache, it's always "free"
+    if(m_rxDirectedCache.contains(f/10*10)){
+        return true;
+    }
+
     foreach(int offset, m_bandActivity.keys()){
         auto d = m_bandActivity[offset];
         if(d.isEmpty()){
