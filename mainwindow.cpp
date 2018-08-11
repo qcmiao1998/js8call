@@ -8742,8 +8742,11 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-        // queue the reply here to be sent when a free interval is available
-        enqueueMessage(PriorityNormal, reply, d.freq, nullptr);
+        // queue the reply here to be sent when a free interval is available on the frequency that was sent
+        // unless, this is an allcall, to which we should be responding on a clear frequency offset
+        // we always want to make sure that the directed cache has been updated at this point so we have the
+        // most information available to make a frequency selection.
+        enqueueMessage(PriorityNormal, reply, isAllCall ? -1 : d.freq, nullptr);
     }
 }
 
