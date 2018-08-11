@@ -563,9 +563,10 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       overPainter.initFrom(this);
       overPainter.setCompositionMode(QPainter::CompositionMode_Source);
       overPainter.fillRect(0, 0, m_Size.width(), m_h, Qt::transparent);
-      overPainter.setPen(Qt::red);
+      QPen thinRed(Qt::red, 1);
+      overPainter.setPen(thinRed);
       overPainter.drawLine(0, 30, 0, m_h);
-      overPainter.drawLine(fwidth, 30, fwidth, m_h);
+      overPainter.drawLine(fwidth+1, 30, fwidth+1, m_h);
 
       overPainter.setPen(penRed);
       overPainter.drawLine(0, 26, fwidth, 26);
