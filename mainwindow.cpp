@@ -5635,9 +5635,24 @@ void MainWindow::clearActivity(){
 }
 
 void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool isTx, bool isNewLine, bool isLast){
-    int block = m_rxFrameBlockNumbers.contains(freq) ? m_rxFrameBlockNumbers[freq] : -1;
+    int lowFreq = freq/10*10;
+    int highFreq = lowFreq + 10;
+
+    int block = -1;
+    if(m_rxFrameBlockNumbers.contains(freq)){
+        block =m_rxFrameBlockNumbers[freq];
+    } else if(m_rxFrameBlockNumbers.contains(lowFreq)){
+        block = m_rxFrameBlockNumbers[lowFreq];
+        freq = lowFreq;
+    } else if(m_rxFrameBlockNumbers.contains(highFreq)){
+        block = m_rxFrameBlockNumbers[highFreq];
+        freq = highFreq;
+    }
+
     if(isNewLine){
         m_rxFrameBlockNumbers.remove(freq);
+        m_rxFrameBlockNumbers.remove(lowFreq);
+        m_rxFrameBlockNumbers.remove(highFreq);
         block = -1;
     }
 
@@ -5646,6 +5661,8 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
     // never cache tx or last lines
     if(!isTx && !isLast){
         m_rxFrameBlockNumbers.insert(freq, block);
+        m_rxFrameBlockNumbers.insert(lowFreq, block);
+        m_rxFrameBlockNumbers.insert(highFreq, block);
     }
 }
 
