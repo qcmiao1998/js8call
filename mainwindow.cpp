@@ -8595,7 +8595,18 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-        // we're only responding to allcall and our callsign at this point, but we'll log callsigns we've heard
+        // log call activity...
+        CallDetail cd;
+        cd.call = d.from;
+        cd.grid = d.grid;
+        cd.snr = d.snr;
+        cd.freq = d.freq;
+        cd.bits = d.bits;
+        cd.utcTimestamp = d.utcTimestamp;
+        logCallActivity(cd, true);
+
+
+        // we're only responding to allcall and our callsign at this point, so we'll end after logging the callsigns we've heard
         if (!isAllCall && d.to != m_config.my_callsign().trimmed() && d.to != Radio::base_callsign(m_config.my_callsign()).trimmed()) {
             continue;
         }
@@ -8609,16 +8620,6 @@ void MainWindow::processCommandActivity() {
 
             m_txAllcallCommandCache.insert(d.from, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
         }
-
-        // log call activity...
-        CallDetail cd;
-        cd.call = d.from;
-        cd.grid = d.grid;
-        cd.snr = d.snr;
-        cd.freq = d.freq;
-        cd.bits = d.bits;
-        cd.utcTimestamp = d.utcTimestamp;
-        logCallActivity(cd, true);
 
         // display the command activity
         ActivityDetail ad;
