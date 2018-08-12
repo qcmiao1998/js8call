@@ -2101,6 +2101,8 @@ void Configuration::impl::accept ()
     {
       stations_.station_list(next_stations_.station_list ());
       stations_.sort (StationList::switch_at_column);
+
+      Q_EMIT self_->band_schedule_changed(this->stations_);
     }
 
   if (ui_->use_dynamic_grid->isChecked() && !use_dynamic_info_ )

@@ -695,6 +695,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (&m_config, &Configuration::transceiver_failure, this, &MainWindow::handle_transceiver_failure);
   connect (&m_config, &Configuration::udp_server_changed, m_messageClient, &MessageClient::set_server);
   connect (&m_config, &Configuration::udp_server_port_changed, m_messageClient, &MessageClient::set_server_port);
+  connect (&m_config, &Configuration::band_schedule_changed, this, [this](){
+    this->m_bandHopped = true;
+  });
 
   // set up configurations menu
   connect (m_multi_settings, &MultiSettings::configurationNameChanged, [this] (QString const& name) {
@@ -1333,15 +1336,33 @@ void MainWindow::tryBandHop(){
   QDateTime d = QDateTime::currentDateTimeUtc();
   d.setDate(QDate(2000, 1, 1));
 
+  QDateTime startOfDay = QDateTime(QDate(2000, 1, 1), QTime(0, 0));
+  QDateTime endOfDay = QDateTime(QDate(2000, 1, 1), QTime(23, 59));
+
   // see if we can find a needed band switch...
   foreach(auto station, stations){
       // we can switch to this frequency if we're in the time range, inclusive of switch_at, exclusive of switch_until
       // and if we are switching to a different frequency than the last hop. this allows us to switch bands at that time,
       // but then later we can later switch to a different band if needed without the automatic band switching to take over
+      bool inTimeRange = (
+        (station.switch_at_ <= d && d <= station.switch_until_) ||          // <- normal range, 12-16 && 6-8, evalued as 12 <= d <= 16 || 6 <= d <= 8
+
+        (station.switch_until_ < station.switch_at_ && (                    // <- say for a range of 12->2 & 2->12;  12->2,
+             (station.switch_at_ <= d && d <= endOfDay)         ||          //    should be evaluated as 12 <= d <= 23:59 || 00:00 <= d <= 2
+             (startOfDay <= d && d <= station.switch_until_)
+        ))
+      );
+
+      bool noOverride = (
+        (m_bandHopped || (!m_bandHopped && station.frequency_ != m_bandHoppedFreq))
+      );
+
+      bool freqIsDifferent = (station.frequency_ != dialFreq);
+
       bool canSwitch = (
-        (station.switch_at_ <= d || d <= station.switch_until_) &&
-        (m_bandHopped || (!m_bandHopped && station.frequency_ != m_bandHoppedFreq)) &&
-        station.frequency_ != dialFreq
+        inTimeRange     &&
+        noOverride      &&
+        freqIsDifferent
       );
 
       //qDebug() << "Can switch to" << station.band_name_ << "=" << canSwitch << station.switch_at_.time().toString("hh:mm") << "<=" << d.time().toString("hh:mm") << "<=" << station.switch_until_.time().toString("hh:mm") << m_bandHopped << m_bandHoppedFreq;

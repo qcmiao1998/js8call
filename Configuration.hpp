@@ -274,6 +274,8 @@ public:
   Q_SIGNAL void udp_server_changed (QString const& udp_server);
   Q_SIGNAL void udp_server_port_changed (port_type server_port);
 
+  // This signal is emitted when the band schedule changes
+  Q_SIGNAL void band_schedule_changed (StationList &stations);
 
   //
   // These signals are emitted and reflect transceiver state changes
