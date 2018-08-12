@@ -544,6 +544,7 @@ private:
   bool frequency_calibration_disabled_; // not persistent
   unsigned transceiver_command_number_;
   QString dynamic_grid_;
+  QString dynamic_qtc_;
 
   // configuration fields that we publish
   bool auto_switch_bands_;
@@ -597,7 +598,7 @@ private:
   bool bHound_;
   bool x2ToneSpacing_;
   bool x4ToneSpacing_;
-  bool use_dynamic_grid_;
+  bool use_dynamic_info_;
   QString opCall_;
   QString udp_server_name_;
   port_type udp_server_port_;
@@ -655,7 +656,7 @@ AudioDevice::Channel Configuration::audio_output_channel () const {return m_->au
 bool Configuration::restart_audio_input () const {return m_->restart_sound_input_device_;}
 bool Configuration::restart_audio_output () const {return m_->restart_sound_output_device_;}
 auto Configuration::type_2_msg_gen () const -> Type2MsgGen {return m_->type_2_msg_gen_;}
-bool Configuration::use_dynamic_grid() const {return m_->use_dynamic_grid_; }
+bool Configuration::use_dynamic_grid() const {return m_->use_dynamic_info_; }
 QString Configuration::my_callsign () const {return m_->my_callsign_;}
 QColor Configuration::color_CQ () const {return m_->color_CQ_;}
 QColor Configuration::color_MyCall () const {return m_->color_MyCall_;}
@@ -839,16 +840,20 @@ bool Configuration::valid_n1mm_info () const
 
 QString Configuration::my_grid() const
 {
-  auto the_grid = m_->my_grid_;
-  if (m_->use_dynamic_grid_ && m_->dynamic_grid_.size () >= 4) {
-    the_grid = m_->dynamic_grid_;
+  auto grid = m_->my_grid_;
+  if (m_->use_dynamic_info_ && m_->dynamic_grid_.size () >= 4) {
+    grid = m_->dynamic_grid_;
   }
-  return the_grid;
+  return grid;
 }
 
 QString Configuration::my_station() const
 {
-    return m_->my_station_;
+    auto station = m_->my_station_;
+    if(m_->use_dynamic_info_ && !m_->dynamic_qtc_.isEmpty()){
+        station = m_->dynamic_qtc_;
+    }
+    return station;
 }
 
 int Configuration::my_dBm() const {
@@ -870,11 +875,14 @@ int Configuration::activity_aging() const
     return m_->activity_aging_;
 }
 
-void Configuration::set_location (QString const& grid_descriptor)
+void Configuration::set_dynamic_location (QString const& grid_descriptor)
 {
-  // change the dynamic grid
-  // qDebug () << "Configuration::set_location - location:" << grid_descriptor;
   m_->dynamic_grid_ = grid_descriptor.trimmed ();
+}
+
+void Configuration::set_dynamic_station_message(QString const& qtc)
+{
+  m_->dynamic_qtc_ = qtc.trimmed ();
 }
 
 namespace
@@ -1232,7 +1240,7 @@ void Configuration::impl::initialize_models ()
   ui_->activity_aging_spin_box->setValue(activity_aging_);
   ui_->station_message_line_edit->setText (my_station_.toUpper());
   ui_->qth_message_line_edit->setText (my_qth_.toUpper());
-  ui_->use_dynamic_grid->setChecked(use_dynamic_grid_);
+  ui_->use_dynamic_grid->setChecked(use_dynamic_info_);
   ui_->labCQ->setStyleSheet(QString("background: %1").arg(color_CQ_.name()));
   ui_->labMyCall->setStyleSheet(QString("background: %1").arg(color_MyCall_.name()));
   ui_->labTx->setStyleSheet(QString("background: %1").arg(color_TxMsg_.name()));
@@ -1458,7 +1466,7 @@ void Configuration::impl::read_settings ()
   spot_to_psk_reporter_ = settings_->value ("PSKReporter", false).toBool ();
   id_after_73_ = settings_->value ("After73", false).toBool ();
   tx_QSY_allowed_ = settings_->value ("TxQSYAllowed", false).toBool ();
-  use_dynamic_grid_ = settings_->value ("AutoGrid", false).toBool ();
+  use_dynamic_info_ = settings_->value ("AutoGrid", false).toBool ();
 
   auto loadedMacros = settings_->value ("Macros", QStringList {"TNX 73 GL"}).toStringList();
 
@@ -1650,7 +1658,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("pwrBandTxMemory", pwrBandTxMemory_);
   settings_->setValue ("pwrBandTuneMemory", pwrBandTuneMemory_);
   settings_->setValue ("Region", QVariant::fromValue (region_));
-  settings_->setValue ("AutoGrid", use_dynamic_grid_);
+  settings_->setValue ("AutoGrid", use_dynamic_info_);
 }
 
 void Configuration::impl::set_rig_invariants ()
@@ -2095,12 +2103,12 @@ void Configuration::impl::accept ()
       stations_.sort (StationList::switch_at_column);
     }
 
-  if (ui_->use_dynamic_grid->isChecked() && !use_dynamic_grid_ )
+  if (ui_->use_dynamic_grid->isChecked() && !use_dynamic_info_ )
   {
     // turning on so clear it so only the next location update gets used
     dynamic_grid_.clear ();
   }
-  use_dynamic_grid_ = ui_->use_dynamic_grid->isChecked();
+  use_dynamic_info_ = ui_->use_dynamic_grid->isChecked();
 
   write_settings ();		// make visible to all
 }

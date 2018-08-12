@@ -2085,10 +2085,10 @@ for assessing propagation and system performance.</string>
               <item row="0" column="0">
                <widget class="QCheckBox" name="use_dynamic_grid">
                 <property name="toolTip">
-                 <string>Check to allow grid changes from external programs</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check to allow changes to grid, qtc, etc from external programs&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="text">
-                 <string>Accept Dynamic Grid Requests</string>
+                 <string>Accept Dynamic Station Information</string>
                 </property>
                </widget>
               </item>

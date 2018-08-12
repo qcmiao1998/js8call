@@ -8166,7 +8166,7 @@ void MainWindow::locationChange (QString const& location)
   if (MaidenheadLocatorValidator::Acceptable == MaidenheadLocatorValidator ().validate (grid, len)) {
     qDebug() << "locationChange: Grid supplied is " << grid;
     if (m_config.my_grid () != grid) {
-      m_config.set_location (grid);
+      m_config.set_dynamic_location (grid);
       genStdMsgs (m_rpt, false);
       statusUpdate ();
     }
@@ -9124,6 +9124,8 @@ void MainWindow::networkMessage(Message const &message)
     // STATION.GET_CALLSIGN - Get the current callsign
     // STATION.GET_GRID - Get the current grid locator
     // STATION.SET_GRID - Set the current grid locator
+    // STATION.GET_QTC - Get the current station message
+    // STATION.SET_QTC - Set the current station message
     if(type == "STATION.GET_CALLSIGN"){
         sendNetworkMessage("STATION.CALLSIGN", m_config.my_callsign());
         return;
@@ -9135,8 +9137,19 @@ void MainWindow::networkMessage(Message const &message)
     }
 
     if(type == "STATION.SET_GRID"){
-        m_config.set_location(message.value());
+        m_config.set_dynamic_location(message.value());
         sendNetworkMessage("STATION.GRID", m_config.my_grid());
+        return;
+    }
+
+    if(type == "STATION.GET_QTC"){
+        sendNetworkMessage("STATION.QTC", m_config.my_station());
+        return;
+    }
+
+    if(type == "STATION.SET_QTC"){
+        m_config.set_dynamic_station_message(message.value());
+        sendNetworkMessage("STATION.QTC", m_config.my_station());
         return;
     }
 
