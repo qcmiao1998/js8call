@@ -8629,9 +8629,6 @@ void MainWindow::processCommandActivity() {
         ad.freq = d.freq;
         ad.snr = d.snr;
         ad.text = QString("%1: %2%3 ").arg(d.from).arg(d.to).arg(d.cmd);
-        if(!d.grid.isEmpty()){
-            ad.text += d.grid;
-        }
         if(!d.extra.isEmpty()){
             ad.text += d.extra;
         }
