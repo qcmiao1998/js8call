@@ -140,6 +140,7 @@ public slots:
   void resetMessage();
   void resetMessageUI();
   void restoreMessage();
+  bool ensureCallsignSet();
   void createMessage(QString const& text);
   void createMessageTransmitQueue(QString const& text);
   void resetMessageTransmitQueue();

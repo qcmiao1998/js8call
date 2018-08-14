@@ -5776,7 +5776,20 @@ void MainWindow::resetMessageUI(){
     }
 }
 
+bool MainWindow::ensureCallsignSet(){
+    if(m_config.my_callsign().trimmed().isEmpty()){
+        MessageBox::warning_message(this, tr ("Please enter your callsign in the settings."));
+        return false;
+    }
+
+    return true;
+}
+
 void MainWindow::createMessage(QString const& text){
+    if(!ensureCallsignSet()){
+        on_stopTxButton_clicked();
+        return;
+    }
     resetMessageTransmitQueue();
     createMessageTransmitQueue(text);
 }
@@ -6309,7 +6322,7 @@ QString MainWindow::calculateDistance(QString const& value)
 // this function is called by auto_tx_mode, which is called by autoButton.clicked
 void MainWindow::on_startTxButton_toggled(bool checked)
 {
-    if(checked){
+    if(checked){       
         createMessage(ui->extFreeTextMsgEdit->toPlainText());
         startTx();
     } else {
