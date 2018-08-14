@@ -99,7 +99,11 @@
                </widget>
               </item>
               <item row="0" column="1">
-               <widget class="QComboBox" name="region_combo_box"/>
+               <widget class="QComboBox" name="region_combo_box">
+                <property name="toolTip">
+                 <string>IARU Region</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -179,7 +183,11 @@
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QLineEdit" name="qth_message_line_edit"/>
+              <widget class="QLineEdit" name="qth_message_line_edit">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message that is transmitted in response to &amp;quot;@&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
              </item>
              <item row="1" column="0">
               <widget class="QLabel" name="label_15">
@@ -189,7 +197,11 @@
               </widget>
              </item>
              <item row="1" column="1">
-              <widget class="QLineEdit" name="station_message_line_edit"/>
+              <widget class="QLineEdit" name="station_message_line_edit">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station message that is transmitted in response to &amp;quot;&amp;amp;&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
              </item>
              <item row="2" column="0">
               <widget class="QLabel" name="label_16">
@@ -199,7 +211,11 @@
               </widget>
              </item>
              <item row="2" column="1">
-              <widget class="QComboBox" name="station_power_combo_box"/>
+              <widget class="QComboBox" name="station_power_combo_box">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Approximate or average station transmit power to be sent in response to &amp;quot;%&amp;quot; directed queries. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -316,7 +332,7 @@
           <item>
            <widget class="QCheckBox" name="autoreply_off_check_box">
             <property name="text">
-             <string>Autoreply off at startup</string>
+             <string>Autoreply (AUTO) off at startup</string>
             </property>
            </widget>
           </item>
@@ -326,7 +342,7 @@
              <string>Don't start decoding until the monitor button is clicked.</string>
             </property>
             <property name="text">
-             <string>Mon&amp;itor off at startup</string>
+             <string>Mon&amp;itor (RX) off at startup</string>
             </property>
             <property name="checked">
              <bool>false</bool>
@@ -3164,12 +3180,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="split_mode_button_group"/>
-  <buttongroup name="PTT_method_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
  </buttongroups>
 </ui>

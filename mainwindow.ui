@@ -508,6 +508,9 @@ color : white;
                    <height>30</height>
                   </size>
                  </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable the receiver&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {
 font-family: helvetica;
@@ -640,6 +643,9 @@ background-color: yellow;
                   <height>30</height>
                  </size>
                 </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Transmit a tuning tone&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
 font-family: helvetica;
@@ -701,6 +707,9 @@ background-color: yellow;
                   <height>30</height>
                  </size>
                 </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable automatic station replies to directed queries&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
 font-family: helvetica;
@@ -760,6 +769,9 @@ background-color: #6699ff;
                   <width>60</width>
                   <height>30</height>
                  </size>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable spotting of callsigns heard to PSKReporter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
@@ -821,6 +833,9 @@ background-color: #00ff00;
                   <height>30</height>
                  </size>
                 </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable the automatic beacon&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
 font-family: helvetica;
@@ -880,6 +895,9 @@ background-color: #6699ff;
                   <width>60</width>
                   <height>30</height>
                  </size>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Insert a new entry into the log&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
@@ -950,6 +968,9 @@ background-color: #00ff00;
          <font>
           <pointsize>12</pointsize>
          </font>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Received band activity is displayed with time since last heard, SNR, and the text received for each frequency offset in the passband.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="sizeAdjustPolicy">
          <enum>QAbstractScrollArea::AdjustToContentsOnFirstShow</enum>
@@ -1107,6 +1128,9 @@ QTextEdit[transmitting=&quot;true&quot;] {
           <pointsize>12</pointsize>
          </font>
         </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Received callsigns are displayed with time since last heard, SNR, and grid locator (if reported).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="autoScroll">
          <bool>false</bool>
         </property>
@@ -1232,6 +1256,9 @@ QTextEdit[transmitting=&quot;true&quot;] {
             <height>30</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send your station location message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
            <string>QTH</string>
           </property>
@@ -1244,6 +1271,9 @@ QTextEdit[transmitting=&quot;true&quot;] {
             <width>0</width>
             <height>30</height>
            </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send a CQ message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>CQ</string>
@@ -1261,6 +1291,9 @@ QTextEdit[transmitting=&quot;true&quot;] {
             <height>30</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Stop transmitting&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
            <string>Halt</string>
           </property>
@@ -1277,6 +1310,9 @@ QTextEdit[transmitting=&quot;true&quot;] {
           <property name="visible">
            <bool>true</bool>
           </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send your station message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
            <string>QTC</string>
           </property>
@@ -1289,6 +1325,9 @@ QTextEdit[transmitting=&quot;true&quot;] {
             <width>0</width>
             <height>30</height>
            </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send a macro&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>Macros</string>
@@ -1305,6 +1344,9 @@ QTextEdit[transmitting=&quot;true&quot;] {
             <width>0</width>
             <height>30</height>
            </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start transmitting&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="styleSheet">
            <string notr="true">QPushButton:checked {
@@ -1329,6 +1371,9 @@ background:yellow;
             <width>0</width>
             <height>30</height>
            </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send a directed message to another station&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>Directed</string>
