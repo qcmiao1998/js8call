@@ -41,11 +41,11 @@ public:
             "FrameBeacon",
             "FrameCompound",
             "FrameCompoundDirected",
-            "FrameDirectedPositive",
-            "FrameDirectedNegative",
+            "FrameDirected",
+            "FrameReservedA",
             "FrameDataUnpadded",
             "FrameDataPadded",
-            "FrameReserved"
+            "FrameReservedB"
         };
 
         if(type > FrameTypeMax){
