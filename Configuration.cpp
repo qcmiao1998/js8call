@@ -559,8 +559,8 @@ private:
   QColor next_color_CQ_;
   QColor color_MyCall_;
   QColor next_color_MyCall_;
-  QColor color_TxMsg_;
-  QColor next_color_TxMsg_;
+  QColor color_ReceivedMsg_;
+  QColor next_color_ReceivedMsg_;
   QColor color_DXCC_;
   QColor next_color_DXCC_;
   QColor color_NewCall_;
@@ -660,7 +660,7 @@ bool Configuration::use_dynamic_grid() const {return m_->use_dynamic_info_; }
 QString Configuration::my_callsign () const {return m_->my_callsign_;}
 QColor Configuration::color_CQ () const {return m_->color_CQ_;}
 QColor Configuration::color_MyCall () const {return m_->color_MyCall_;}
-QColor Configuration::color_TxMsg () const {return m_->color_TxMsg_;}
+QColor Configuration::color_ReceivedMsg () const {return m_->color_ReceivedMsg_;}
 QColor Configuration::color_DXCC () const {return m_->color_DXCC_;}
 QColor Configuration::color_NewCall () const {return m_->color_NewCall_;}
 QFont Configuration::text_font () const {return m_->font_;}
@@ -1243,7 +1243,7 @@ void Configuration::impl::initialize_models ()
   ui_->use_dynamic_grid->setChecked(use_dynamic_info_);
   ui_->labCQ->setStyleSheet(QString("background: %1").arg(color_CQ_.name()));
   ui_->labMyCall->setStyleSheet(QString("background: %1").arg(color_MyCall_.name()));
-  ui_->labTx->setStyleSheet(QString("background: %1").arg(color_TxMsg_.name()));
+  ui_->labTx->setStyleSheet(QString("background: %1").arg(color_ReceivedMsg_.name()));
   ui_->labDXCC->setStyleSheet(QString("background: %1").arg(color_DXCC_.name()));
   ui_->labNewCall->setStyleSheet(QString("background: %1").arg(color_NewCall_.name()));
   ui_->CW_id_interval_spin_box->setValue (id_interval_);  
@@ -1369,7 +1369,7 @@ void Configuration::impl::read_settings ()
   my_qth_ = settings_->value("MyQTH", QString {}).toString();
   next_color_CQ_ = color_CQ_ = settings_->value("colorCQ","#66ff66").toString();
   next_color_MyCall_ = color_MyCall_ = settings_->value("colorMyCall","#ff6666").toString();
-  next_color_TxMsg_ = color_TxMsg_ = settings_->value("colorTxMsg","#ffff00").toString();
+  next_color_ReceivedMsg_ = color_ReceivedMsg_ = settings_->value("colorReceivedMsg","#ffeaa7").toString();
   next_color_DXCC_ = color_DXCC_ = settings_->value("colorDXCC","#ff00ff").toString();
   next_color_NewCall_ = color_NewCall_ = settings_->value("colorNewCall","#ffaaff").toString();
 
@@ -1562,7 +1562,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("ActivityAging", activity_aging_);
   settings_->setValue("colorCQ",color_CQ_);
   settings_->setValue("colorMyCall",color_MyCall_);
-  settings_->setValue("colorTxMsg",color_TxMsg_);
+  settings_->setValue("colorReceivedMsg",color_ReceivedMsg_);
   settings_->setValue("colorDXCC",color_DXCC_);
   settings_->setValue("colorNewCall",color_NewCall_);
   settings_->setValue ("Font", font_.toString ());
@@ -1928,9 +1928,11 @@ void Configuration::impl::accept ()
 
   color_CQ_ = next_color_CQ_;
   color_MyCall_ = next_color_MyCall_;
-  color_TxMsg_ = next_color_TxMsg_;
+  color_ReceivedMsg_ = next_color_ReceivedMsg_;
   color_DXCC_ = next_color_DXCC_;
   color_NewCall_ = next_color_NewCall_;
+
+  Q_EMIT self_->colors_changed();
 
   rig_params_ = temp_rig_params; // now we can go live with the rig
                                  // related configuration parameters
@@ -2145,7 +2147,7 @@ void Configuration::impl::on_font_push_button_clicked ()
 
 void Configuration::impl::on_pbCQmsg_clicked()
 {
-  auto new_color = QColorDialog::getColor(next_color_CQ_, this, "CQ Messages Color");
+  auto new_color = QColorDialog::getColor(next_color_CQ_, this, "CQ and BEACON Messages Color");
   if (new_color.isValid ())
     {
       next_color_CQ_ = new_color;
@@ -2155,7 +2157,7 @@ void Configuration::impl::on_pbCQmsg_clicked()
 
 void Configuration::impl::on_pbMyCall_clicked()
 {
-  auto new_color = QColorDialog::getColor(next_color_MyCall_, this, "My Call Messages Color");
+  auto new_color = QColorDialog::getColor(next_color_MyCall_, this, "Directed Messages Color");
   if (new_color.isValid ())
     {
       next_color_MyCall_ = new_color;
@@ -2165,11 +2167,11 @@ void Configuration::impl::on_pbMyCall_clicked()
 
 void Configuration::impl::on_pbTxMsg_clicked()
 {
-  auto new_color = QColorDialog::getColor(next_color_TxMsg_, this, "Tx Messages Color");
+  auto new_color = QColorDialog::getColor(next_color_ReceivedMsg_, this, "Received Messages Textarea Color");
   if (new_color.isValid ())
     {
-      next_color_TxMsg_ = new_color;
-      ui_->labTx->setStyleSheet(QString("background: %1").arg(next_color_TxMsg_.name()));
+      next_color_ReceivedMsg_ = new_color;
+      ui_->labTx->setStyleSheet(QString("background: %1").arg(next_color_ReceivedMsg_.name()));
     }
 }
 
@@ -2196,7 +2198,7 @@ void Configuration::impl::on_pbNewCall_clicked()
 void Configuration::impl::on_decoded_text_font_push_button_clicked ()
 {
   next_decoded_text_font_ = QFontDialog::getFont (0, decoded_text_font_ , this
-                                                  , tr ("WSJT-X Decoded Text Font Chooser")
+                                                  , tr ("Font Chooser")
 #if QT_VERSION >= 0x050201
                                                   , QFontDialog::MonospacedFonts
 #endif

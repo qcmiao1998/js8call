@@ -26,7 +26,7 @@ public:
         LogBook const& logBook, QColor color_CQ, QColor color_MyCall,
         QColor color_DXCC, QColor color_NewCall, bool ppfx, bool bCQonly=false);
   void displayTransmittedText(QString text, QString modeTx, qint32 txFreq,
-			      QColor color_TxMsg, bool bFastMode);
+			      QColor color_ReceivedMsg, bool bFastMode);
   void displayQSY(QString text);
   void displayFoxToBeCalled(QString t, QColor bg);
 

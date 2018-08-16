@@ -172,7 +172,7 @@ public:
   Type2MsgGen type_2_msg_gen () const;
   QColor color_CQ () const;
   QColor color_MyCall () const;
-  QColor color_TxMsg () const;
+  QColor color_ReceivedMsg () const;
   QColor color_DXCC () const;
   QColor color_NewCall () const;
   bool pwrBandTxMemory () const;
@@ -267,6 +267,7 @@ public:
   //
   Q_SIGNAL void text_font_changed (QFont);
   Q_SIGNAL void decoded_text_font_changed (QFont);
+  Q_SIGNAL void colors_changed ();
 
   //
   // This signal is emitted when the UDP server changes

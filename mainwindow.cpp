@@ -628,6 +628,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (&m_config, &Configuration::decoded_text_font_changed, [this] (QFont const& font) {
       setDecodedTextFont (font);
     });
+  connect (&m_config, &Configuration::colors_changed, [this](){
+     ui->textEditRX->setStyleSheet(QString("background: %1").arg(m_config.color_ReceivedMsg().name()));
+  });
 
   setWindowTitle (program_title ());
 
@@ -1599,6 +1602,7 @@ void MainWindow::readSettings()
   //ui->bandHorizontalWidget->setGeometry( m_settings->value("PanelWaterfallGeometry", ui->bandHorizontalWidget->geometry()).toRect());
   //qDebug() << m_settings->value("PanelTopGeometry") << ui->extFreeTextMsg;
 
+  ui->textEditRX->setStyleSheet(QString("background: %1").arg(m_config.color_ReceivedMsg().name()));
 
   {
     auto const& coeffs = m_settings->value ("PhaseEqualizationCoefficients"
@@ -4186,7 +4190,7 @@ void MainWindow::guiUpdate()
       write_transmit_entry ("ALL.TXT");
       if (m_config.TX_messages ()) {
         ui->decodedTextBrowser2->displayTransmittedText(m_currentMessage,m_modeTx,
-                     ui->TxFreqSpinBox->value(),m_config.color_TxMsg(),m_bFastMode);
+                     ui->TxFreqSpinBox->value(),m_config.color_ReceivedMsg(),m_bFastMode);
         }
     }
 
@@ -4290,7 +4294,7 @@ void MainWindow::guiUpdate()
 
       if (m_config.TX_messages () && !m_tune && !m_config.bFox()) {
         ui->decodedTextBrowser2->displayTransmittedText(current_message, m_modeTx,
-              ui->TxFreqSpinBox->value(),m_config.color_TxMsg(),m_bFastMode);
+              ui->TxFreqSpinBox->value(),m_config.color_ReceivedMsg(),m_bFastMode);
       }
 
       switch (m_ntx)
@@ -10459,7 +10463,7 @@ void MainWindow::foxGenWaveform(int i,QString fm)
   QString txModeArg;
   txModeArg.sprintf("FT8fox %d",i+1);
   ui->decodedTextBrowser2->displayTransmittedText(fm.trimmed(), txModeArg,
-        ui->TxFreqSpinBox->value()+60*i,m_config.color_TxMsg(),m_bFastMode);
+        ui->TxFreqSpinBox->value()+60*i,m_config.color_ReceivedMsg(),m_bFastMode);
   foxcom_.i3bit[i]=0;
   if(fm.indexOf("<")>0) foxcom_.i3bit[i]=1;
   strncpy(&foxcom_.cmsg[i][0],fm.toLatin1(),40);   //Copy this message into cmsg[i]

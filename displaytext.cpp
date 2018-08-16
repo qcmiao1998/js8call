@@ -277,7 +277,7 @@ void DisplayText::displayDecodedText(DecodedText const& decodedText, QString con
 
 
 void DisplayText::displayTransmittedText(QString text, QString modeTx, qint32 txFreq,
-                                         QColor color_TxMsg, bool bFastMode)
+                                         QColor color_ReceivedMsg, bool bFastMode)
 {
     QString t1=" @  ";
     if(modeTx=="FT8") t1=" ~  ";
@@ -297,7 +297,7 @@ void DisplayText::displayTransmittedText(QString text, QString modeTx, qint32 tx
       t = QDateTime::currentDateTimeUtc().toString("hhmm") + \
         "  Tx      " + t2 + t1 + text;
     }
-    appendText (t, color_TxMsg);
+    appendText (t, color_ReceivedMsg);
 }
 
 void DisplayText::displayQSY(QString text)
