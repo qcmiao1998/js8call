@@ -3391,7 +3391,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 }
             }
 
-            ActivityDetail d;
+            ActivityDetail d = {};
             d.isLowConfidence = decodedtext.isLowConfidence();
             d.isFree = !decodedtext.isStandardMessage();
             d.isCompound = decodedtext.isCompound();
@@ -3431,7 +3431,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
           qDebug() << "decoded" << decodedtext.frameType() << decodedtext.isCompound() << decodedtext.isDirectedMessage() << decodedtext.isBeacon();
           bool shouldProcessCompound = true;
           if(shouldProcessCompound && decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
-            CallDetail cd;
+            CallDetail cd = {};
             cd.call = decodedtext.compoundCall();
             cd.grid = decodedtext.extra(); // compound calls via beacons may contain grid...
             cd.snr = decodedtext.snr();
@@ -3455,7 +3455,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
           if(shouldProcessDirected && decodedtext.isDirectedMessage()){
               auto parts = decodedtext.directedMessage();
 
-              CommandDetail d;
+              CommandDetail d = {};
               d.from = parts.at(0);
               d.to = parts.at(1);
               d.cmd = parts.at(2);
@@ -3520,7 +3520,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             if(!calls.isEmpty() && !calls.first().isEmpty()){
                 theircall = calls.first();
 
-                CallDetail d;
+                CallDetail d = {};
                 d.bits = decodedtext.bits();
                 d.call = theircall;
                 d.grid = theirgrid;
@@ -8734,7 +8734,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // log call activity...
-        CallDetail cd;
+        CallDetail cd = {};
         cd.call = d.from;
         cd.grid = d.grid;
         cd.snr = d.snr;
@@ -8760,7 +8760,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // display the command activity
-        ActivityDetail ad;
+        ActivityDetail ad = {};
         ad.isLowConfidence = false;
         ad.isFree = true;
         ad.isDirected = true;
