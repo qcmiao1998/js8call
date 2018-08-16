@@ -135,6 +135,7 @@ public slots:
   void clearActivity();
   void displayTextForFreq(QString text, int freq, QDateTime date, bool isTx, bool isNewLine, bool isLast);
   int writeMessageTextToUI(QDateTime date, QString text, int freq, bool bold, int block=-1);
+  bool isMessageQueuedForTransmit();
   void addMessageText(QString text, bool clear=false);
   void enqueueMessage(int priority, QString message, int freq, Callback c);
   void resetMessage();

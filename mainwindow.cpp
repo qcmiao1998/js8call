@@ -1251,6 +1251,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   qDebug() << "packing" << Varicode::pack72bits((((quint64)1)<<62)-1, (1<<7)-1) << v << r;
 #endif
 
+
+
+
   // this must be the last statement of constructor
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
@@ -1272,6 +1275,14 @@ void MainWindow::not_GA_warning_message ()
                                 "and carry a responsiblity to report any problems to:\n"
                                 "Jordan Sherer (KN4CRD) kn4crd@gmail.com\n\n").arg(QApplication::applicationName()).arg(eol.toString()));
 
+
+  CallDetail cd;
+  cd.call = "KN4CRD";
+  cd.freq = 1200;
+  cd.bits = Varicode::FT8CallLast;
+  cd.utcTimestamp = QDateTime::currentDateTimeUtc();
+  logCallActivity(cd, false);
+  m_rxDirty = true;
 }
 
 void MainWindow::initialize_fonts ()
@@ -5724,7 +5735,16 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
     return c.blockNumber();
 }
 
+bool MainWindow::isMessageQueuedForTransmit(){
+    return m_transmitting || m_txFrameCount > 0;
+}
+
 void MainWindow::addMessageText(QString text, bool clear){
+    // don't add message text if we already have a transmission queued...
+    if(isMessageQueuedForTransmit()){
+        return;
+    }
+
     if(clear){
         ui->extFreeTextMsgEdit->clear();
     }
@@ -7591,6 +7611,11 @@ bool MainWindow::tryRestoreFreqOffset(){
 
 void MainWindow::setFreq4(int rxFreq, int txFreq)
 {
+  // don't allow QSY if we've already queued a transmission
+  if(isMessageQueuedForTransmit()){
+      return;
+  }
+
   if(rxFreq != txFreq){
       txFreq = rxFreq;
   }
