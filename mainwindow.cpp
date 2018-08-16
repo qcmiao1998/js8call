@@ -1275,14 +1275,17 @@ void MainWindow::not_GA_warning_message ()
                                 "and carry a responsiblity to report any problems to:\n"
                                 "Jordan Sherer (KN4CRD) kn4crd@gmail.com\n\n").arg(QApplication::applicationName()).arg(eol.toString()));
 
-
+#if 0
+  for(int i = 0; i < 13; i++){
   CallDetail cd;
-  cd.call = "KN4CRD";
+  cd.call = QString("KN%1CRD").arg(i);
   cd.freq = 1200;
   cd.bits = Varicode::FT8CallLast;
   cd.utcTimestamp = QDateTime::currentDateTimeUtc();
   logCallActivity(cd, false);
   m_rxDirty = true;
+  }
+#endif
 }
 
 void MainWindow::initialize_fonts ()
@@ -8965,119 +8968,131 @@ void MainWindow::displayBandActivity() {
         selectedOffset = selectedItems.first()->text().toInt();
     }
 
-    // Clear the table
-    clearTableWidget(ui->tableWidgetRXAll);
+    ui->tableWidgetRXAll->setUpdatesEnabled(false);
+    {
+        // Scroll Position
+        auto currentScrollPos = ui->tableWidgetRXAll->verticalScrollBar()->value();
 
-    // Sort directed & recent messages first
-    QList < int > keys = m_bandActivity.keys();
-    qSort(keys.begin(), keys.end(), [this](const int left, int right) {
-        if (m_rxDirectedCache.contains(left / 10 * 10)) {
-            return true;
-        }
-        if (m_rxDirectedCache.contains(right / 10 * 10)) {
-            return false;
-        }
-        if (m_rxRecentCache.contains(left / 10 * 10)) {
-            return true;
-        }
-        if (m_rxRecentCache.contains(right / 10 * 10)) {
-            return false;
-        }
-        return left < right;
-    });
+        // Clear the table
+        clearTableWidget(ui->tableWidgetRXAll);
 
-    // Build the table
-    foreach(int offset, keys) {
-        QList < ActivityDetail > items = m_bandActivity[offset];
-        if (items.length() > 0) {
-            QStringList text;
-            QString age;
-            int snr = 0;
-            int activityAging = m_config.activity_aging();
-            foreach(ActivityDetail item, items) {
-                if (activityAging && item.utcTimestamp.secsTo(now) / 60 >= activityAging) {
-                    continue;
-                }
-                if (item.text.isEmpty()) {
-                    continue;
-                }
+        // Sort directed & recent messages first
+        QList < int > keys = m_bandActivity.keys();
+        qSort(keys.begin(), keys.end(), [this](const int left, int right) {
 #if 0
-                if (item.isCompound || (item.isDirected && item.text.contains("<....>"))){
-                    //continue;
-                    item.text = "[...]";
-                }
+            if (m_rxDirectedCache.contains(left / 10 * 10)) {
+                return true;
+            }
+            if (m_rxDirectedCache.contains(right / 10 * 10)) {
+                return false;
+            }
+            if (m_rxRecentCache.contains(left / 10 * 10)) {
+                return true;
+            }
+            if (m_rxRecentCache.contains(right / 10 * 10)) {
+                return false;
+            }
 #endif
-                if (item.isLowConfidence) {
-                    item.text = QString("[%1]").arg(item.text);
+            return left < right;
+        });
+
+        // Build the table
+        foreach(int offset, keys) {
+            QList < ActivityDetail > items = m_bandActivity[offset];
+            if (items.length() > 0) {
+                QStringList text;
+                QString age;
+                int snr = 0;
+                int activityAging = m_config.activity_aging();
+                foreach(ActivityDetail item, items) {
+                    if (activityAging && item.utcTimestamp.secsTo(now) / 60 >= activityAging) {
+                        continue;
+                    }
+                    if (item.text.isEmpty()) {
+                        continue;
+                    }
+    #if 0
+                    if (item.isCompound || (item.isDirected && item.text.contains("<....>"))){
+                        //continue;
+                        item.text = "[...]";
+                    }
+    #endif
+                    if (item.isLowConfidence) {
+                        item.text = QString("[%1]").arg(item.text);
+                    }
+                    if ((item.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast) {
+                        // can also use \u0004 \u2666 \u2404
+                        item.text = QString("%1 \u2301 ").arg(item.text);
+                    }
+                    text.append(item.text);
+                    snr = item.snr;
+                    age = since(item.utcTimestamp);
                 }
-                if ((item.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast) {
-                    // can also use \u0004 \u2666 \u2404
-                    item.text = QString("%1 \u2301 ").arg(item.text);
+
+                auto joined = text.join("     ");
+                if (joined.isEmpty()) {
+                    continue;
                 }
-                text.append(item.text);
-                snr = item.snr;
-                age = since(item.utcTimestamp);
-            }
 
-            auto joined = text.join("     ");
-            if (joined.isEmpty()) {
-                continue;
-            }
+                ui->tableWidgetRXAll->insertRow(ui->tableWidgetRXAll->rowCount());
 
-            ui->tableWidgetRXAll->insertRow(ui->tableWidgetRXAll->rowCount());
+                auto offsetItem = new QTableWidgetItem(QString("%1").arg(offset));
+                offsetItem->setData(Qt::UserRole, QVariant(offset));
+                ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, offsetItem);
 
-            auto offsetItem = new QTableWidgetItem(QString("%1").arg(offset));
-            offsetItem->setData(Qt::UserRole, QVariant(offset));
-            ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, offsetItem);
+                auto ageItem = new QTableWidgetItem(QString("(%1)").arg(age));
+                ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+                ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, ageItem);
 
-            auto ageItem = new QTableWidgetItem(QString("(%1)").arg(age));
-            ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-            ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, ageItem);
+                auto snrItem = new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(snr)));
+                snrItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+                ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, snrItem);
 
-            auto snrItem = new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(snr)));
-            snrItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-            ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, snrItem);
+                // align right if eliding...
+                int colWidth = ui->tableWidgetRXAll->columnWidth(3);
+                auto textItem = new QTableWidgetItem(joined);
+                QFontMetrics fm(textItem->font());
+                auto elidedText = fm.elidedText(joined, Qt::ElideLeft, colWidth);
+                auto flag = Qt::AlignLeft | Qt::AlignVCenter;
+                if (elidedText != joined) {
+                    flag = Qt::AlignRight | Qt::AlignVCenter;
+                    textItem->setText(joined);
+                }
+                textItem->setTextAlignment(flag);
 
-            // align right if eliding...
-            int colWidth = ui->tableWidgetRXAll->columnWidth(3);
-            auto textItem = new QTableWidgetItem(joined);
-            QFontMetrics fm(textItem->font());
-            auto elidedText = fm.elidedText(joined, Qt::ElideLeft, colWidth);
-            auto flag = Qt::AlignLeft | Qt::AlignVCenter;
-            if (elidedText != joined) {
-                flag = Qt::AlignRight | Qt::AlignVCenter;
-                textItem->setText(joined);
-            }
-            textItem->setTextAlignment(flag);
+                if (text.last().contains(QRegularExpression {
+                        "\\b(CQCQCQ|BEACON)\\b"
+                    })) {
+                    offsetItem->setBackground(QBrush(m_config.color_CQ()));
+                    ageItem->setBackground(QBrush(m_config.color_CQ()));
+                    snrItem->setBackground(QBrush(m_config.color_CQ()));
+                    textItem->setBackground(QBrush(m_config.color_CQ()));
+                }
 
-            if (text.last().contains(QRegularExpression {
-                    "\\b(CQCQCQ|BEACON)\\b"
-                })) {
-                offsetItem->setBackground(QBrush(m_config.color_CQ()));
-                ageItem->setBackground(QBrush(m_config.color_CQ()));
-                snrItem->setBackground(QBrush(m_config.color_CQ()));
-                textItem->setBackground(QBrush(m_config.color_CQ()));
-            }
+                if (isDirectedOffset(offset)) {
+                    offsetItem->setBackground(QBrush(m_config.color_MyCall()));
+                    ageItem->setBackground(QBrush(m_config.color_MyCall()));
+                    snrItem->setBackground(QBrush(m_config.color_MyCall()));
+                    textItem->setBackground(QBrush(m_config.color_MyCall()));
+                }
 
-            if (m_rxDirectedCache.contains(offset / 10 * 10)) {
-                offsetItem->setBackground(QBrush(m_config.color_MyCall()));
-                ageItem->setBackground(QBrush(m_config.color_MyCall()));
-                snrItem->setBackground(QBrush(m_config.color_MyCall()));
-                textItem->setBackground(QBrush(m_config.color_MyCall()));
-            }
+                ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 3, textItem);
 
-            ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 3, textItem);
-
-            if (offset == selectedOffset) {
-                ui->tableWidgetRXAll->selectRow(ui->tableWidgetRXAll->rowCount() - 1);
+                if (offset == selectedOffset) {
+                    ui->tableWidgetRXAll->selectRow(ui->tableWidgetRXAll->rowCount() - 1);
+                }
             }
         }
-    }
 
-    // Resize the table columns
-    ui->tableWidgetRXAll->resizeColumnToContents(0);
-    ui->tableWidgetRXAll->resizeColumnToContents(1);
-    ui->tableWidgetRXAll->resizeColumnToContents(2);
+        // Resize the table columns
+        ui->tableWidgetRXAll->resizeColumnToContents(0);
+        ui->tableWidgetRXAll->resizeColumnToContents(1);
+        ui->tableWidgetRXAll->resizeColumnToContents(2);
+
+        // Reset the scroll position
+        ui->tableWidgetRXAll->verticalScrollBar()->setValue(currentScrollPos);
+    }
+    ui->tableWidgetRXAll->setUpdatesEnabled(true);
 }
 
 void MainWindow::displayCallActivity() {
@@ -9086,54 +9101,63 @@ void MainWindow::displayCallActivity() {
     // Selected callsign
     QString selectedCall = callsignSelected();
 
-    // Clear the table
-    clearTableWidget(ui->tableWidgetCalls);
+    ui->tableWidgetCalls->setUpdatesEnabled(false);
+    {
+        auto currentScrollPos = ui->tableWidgetCalls->verticalScrollBar()->value();
 
-    // Create the ALLCALL item
-    auto item = new QTableWidgetItem("ALLCALL");
-    ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
-    item->setData(Qt::UserRole, QVariant("ALLCALL"));
-    ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, item);
-    ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
-    if (isAllCallIncluded(selectedCall)) {
-        ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
-    }
+        // Clear the table
+        clearTableWidget(ui->tableWidgetCalls);
 
-    // Build the table
-    QList < QString > calls = m_callActivity.keys();
-    qSort(calls.begin(), calls.end());
-    int callsignAging = m_config.callsign_aging();
-    foreach(QString call, calls) {
-        CallDetail d = m_callActivity[call];
-
-        if (callsignAging && d.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
-            continue;
-        }
-
+        // Create the ALLCALL item
+        auto item = new QTableWidgetItem("ALLCALL");
         ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
-
-        QString displayCall = d.through.isEmpty() ? d.call : QString("%1 | %2").arg(d.through).arg(d.call);
-        auto displayItem = new QTableWidgetItem(displayCall);
-        displayItem->setData(Qt::UserRole, QVariant((d.call)));
-        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, displayItem);
-        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
-        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 2, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
-        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 3, new QTableWidgetItem(QString("%1").arg(d.grid)));
-
-        auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
-        distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 4, distanceItem);
-
-        if (call == selectedCall) {
+        item->setData(Qt::UserRole, QVariant("ALLCALL"));
+        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, item);
+        ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
+        if (isAllCallIncluded(selectedCall)) {
             ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
         }
-    }
 
-    // Resize the table columns
-    ui->tableWidgetCalls->resizeColumnToContents(0);
-    ui->tableWidgetCalls->resizeColumnToContents(1);
-    ui->tableWidgetCalls->resizeColumnToContents(2);
-    ui->tableWidgetCalls->resizeColumnToContents(3);
+        // Build the table
+        QList < QString > calls = m_callActivity.keys();
+        qSort(calls.begin(), calls.end());
+        int callsignAging = m_config.callsign_aging();
+        foreach(QString call, calls) {
+            CallDetail d = m_callActivity[call];
+
+            if (callsignAging && d.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+                continue;
+            }
+
+            ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+
+            QString displayCall = d.through.isEmpty() ? d.call : QString("%1 | %2").arg(d.through).arg(d.call);
+            auto displayItem = new QTableWidgetItem(displayCall);
+            displayItem->setData(Qt::UserRole, QVariant((d.call)));
+            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, displayItem);
+            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
+            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 2, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
+            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 3, new QTableWidgetItem(QString("%1").arg(d.grid)));
+
+            auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
+            distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 4, distanceItem);
+
+            if (call == selectedCall) {
+                ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
+            }
+        }
+
+        // Resize the table columns
+        ui->tableWidgetCalls->resizeColumnToContents(0);
+        ui->tableWidgetCalls->resizeColumnToContents(1);
+        ui->tableWidgetCalls->resizeColumnToContents(2);
+        ui->tableWidgetCalls->resizeColumnToContents(3);
+
+        // Reset the scroll position
+        ui->tableWidgetCalls->verticalScrollBar()->setValue(currentScrollPos);
+    }
+    ui->tableWidgetCalls->setUpdatesEnabled(true);
 }
 
 void MainWindow::postWSPRDecode (bool is_new, QStringList parts)
