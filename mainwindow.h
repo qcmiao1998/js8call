@@ -724,6 +724,11 @@ private:
       }
   };
 
+  struct CachedDirectedType {
+      bool isAllcall;
+      QDateTime date;
+  };
+
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent
   QQueue<QString> m_txFrameQueue; // frames to be sent
   QQueue<ActivityDetail> m_rxActivityQueue; // all rx activity queue
@@ -732,7 +737,7 @@ private:
   QMap<QString, QString> m_compoundCallCache; // base callsign -> compound callsign
   QCache<QString, QDateTime> m_txAllcallCommandCache; // callsign -> last tx
   QCache<int, QDateTime> m_rxRecentCache; // freq -> last rx
-  QCache<int, QDateTime> m_rxDirectedCache; // freq -> last directed rx
+  QCache<int, CachedDirectedType> m_rxDirectedCache; // freq -> last directed rx
   QCache<QString, int> m_rxCallCache; // call -> last freq seen
   QMap<int, int> m_rxFrameBlockNumbers; // freq -> block
   QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
@@ -836,8 +841,8 @@ private:
   QString callsignSelected();
   bool isRecentOffset(int offset);
   void markOffsetRecent(int offset);
-  bool isDirectedOffset(int offset);
-  void markOffsetDirected(int offset);
+  bool isDirectedOffset(int offset, bool *pIsAllCall);
+  void markOffsetDirected(int offset, bool isAllCall);
   void processActivity(bool force=false);
   void processRxActivity();
   void processCompoundActivity();

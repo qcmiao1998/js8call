@@ -6197,7 +6197,7 @@ bool MainWindow::isFreqOffsetFree(int f, int bw){
     }
 
     // if this frequency is in our directed cache, it's always "free"
-    if(m_rxDirectedCache.contains(f/10*10)){
+    if(isDirectedOffset(f, nullptr)){
         return true;
     }
 
@@ -8381,16 +8381,24 @@ void MainWindow::markOffsetRecent(int offset){
     m_rxRecentCache.insert(offset/10*10+10, new QDateTime(QDateTime::currentDateTimeUtc()), 10);
 }
 
-bool MainWindow::isDirectedOffset(int offset){
-    return (
+bool MainWindow::isDirectedOffset(int offset, bool *pIsAllCall){
+    bool isDirected = (
         m_rxDirectedCache.contains(offset/10*10) &&
-        m_rxDirectedCache[offset/10*10]->secsTo(QDateTime::currentDateTimeUtc()) < 300
+        m_rxDirectedCache[offset/10*10]->date.secsTo(QDateTime::currentDateTimeUtc()) < 300
     );
+
+    if(isDirected){
+        if(pIsAllCall) *pIsAllCall = m_rxDirectedCache[offset/10*10]->isAllcall;
+    }
+
+    return isDirected;
 }
 
-void MainWindow::markOffsetDirected(int offset){
-    m_rxDirectedCache.insert(offset/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 10);
-    m_rxDirectedCache.insert(offset/10*10+10, new QDateTime(QDateTime::currentDateTimeUtc()), 10);
+void MainWindow::markOffsetDirected(int offset, bool isAllCall){
+    CachedDirectedType *d1 = new CachedDirectedType{ isAllCall, QDateTime::currentDateTimeUtc() };
+    CachedDirectedType *d2 = new CachedDirectedType{ isAllCall, QDateTime::currentDateTimeUtc() };
+    m_rxDirectedCache.insert(offset/10*10,    d1, 10);
+    m_rxDirectedCache.insert(offset/10*10+10, d2, 10);
 }
 
 bool MainWindow::isMyCallIncluded(const QString &text){
@@ -8463,8 +8471,9 @@ void MainWindow::processRxActivity() {
 
         // if this is a (recent) directed offset, bump the cache, and display...
         // this will allow a directed free text command followed by non-buffered data frames.
-        if(isDirectedOffset(d.freq)){
-            markOffsetDirected(d.freq);
+        bool isDirectedAllCall = false;
+        if(isDirectedOffset(d.freq, &isDirectedAllCall)){
+            markOffsetDirected(d.freq, isDirectedAllCall);
             shouldDisplay = true;
         }
 
@@ -8745,7 +8754,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // and mark the offset as a directed offset so future free text is displayed
-        markOffsetDirected(ad.freq);
+        markOffsetDirected(ad.freq, isAllCall);
 
         // construct a reply, if needed
         QString reply;
@@ -9073,7 +9082,8 @@ void MainWindow::displayBandActivity() {
                     textItem->setBackground(QBrush(m_config.color_CQ()));
                 }
 
-                if (isDirectedOffset(offset)) {
+                bool isDirectedAllCall = false;
+                if (isDirectedOffset(offset, &isDirectedAllCall) && !isDirectedAllCall) {
                     offsetItem->setBackground(QBrush(m_config.color_MyCall()));
                     ageItem->setBackground(QBrush(m_config.color_MyCall()));
                     snrItem->setBackground(QBrush(m_config.color_MyCall()));
