@@ -30,6 +30,7 @@ namespace
     {
 #if ALTFREQS
       { 1834000, Modes::FT8CALL, IARURegions::ALL}, // 6 below
+      { 1842000, Modes::FT8CALL, IARURegions::ALL}, // 2 above
 #else
       { 1838000, Modes::FT8CALL, IARURegions::ALL}, // 2 below
 #endif
@@ -42,12 +43,14 @@ namespace
       {10130000, Modes::FT8CALL, IARURegions::ALL}, // 6 below
 #if ALTFREQS
       {14090000, Modes::FT8CALL, IARURegions::ALL}, // 16 above
+      {14078000, Modes::FT8CALL, IARURegions::ALL}, // 16 above
 #else
       {14080000, Modes::FT8CALL, IARURegions::ALL}, // 6 above
 #endif
       {18104000, Modes::FT8CALL, IARURegions::ALL}, // 4 above
 #if ALTFREQS
       {21100000, Modes::FT8CALL, IARURegions::ALL}, // 26 above
+      {21078000, Modes::FT8CALL, IARURegions::ALL}, // 4 above
 #else
       {21080000, Modes::FT8CALL, IARURegions::ALL}, // 6 above
 #endif
