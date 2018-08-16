@@ -304,6 +304,7 @@ set (wsjtx_CXXSRCS
   messageaveraging.cpp
   WsprTxScheduler.cpp
   varicode.cpp
+  SelfDestructMessageBox.cpp
   mainwindow.cpp
   Configuration.cpp
   main.cpp

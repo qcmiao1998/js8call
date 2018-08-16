@@ -134,6 +134,7 @@ public slots:
   QString lookupCallInCompoundCache(QString const &call);
   void clearActivity();
   void displayTextForFreq(QString text, int freq, QDateTime date, bool isTx, bool isNewLine, bool isLast);
+  void writeNoticeTextToUI(QDateTime date, QString text);
   int writeMessageTextToUI(QDateTime date, QString text, int freq, bool bold, int block=-1);
   bool isMessageQueuedForTransmit();
   void addMessageText(QString text, bool clear=false);

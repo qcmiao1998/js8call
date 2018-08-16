@@ -70,7 +70,8 @@ SOURCES += \
   EqualizationToolsDialog.cpp \
     varicode.cpp \
     NetworkMessage.cpp \
-    MessageClient.cpp
+    MessageClient.cpp \
+    SelfDestructMessageBox.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -92,7 +93,8 @@ HEADERS  += qt_helpers.hpp \
     qpriorityqueue.h \
     crc.h \
     NetworkMessage.hpp \
-    MessageClient.hpp
+    MessageClient.hpp \
+    SelfDestructMessageBox.h
 
 
 INCLUDEPATH += qmake_only

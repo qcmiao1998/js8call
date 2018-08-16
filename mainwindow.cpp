@@ -58,6 +58,7 @@
 #include "MaidenheadLocatorValidator.hpp"
 #include "CallsignValidator.hpp"
 #include "EqualizationToolsDialog.hpp"
+#include "SelfDestructMessageBox.h"
 
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
@@ -1336,6 +1337,11 @@ void MainWindow::tryBandHop(){
       return;
   }
 
+  // make sure we're not transmitting
+  if(isMessageQueuedForTransmit()){
+      return;
+  }
+
   // get the current band
   auto dialFreq = dialFrequency();
 
@@ -1382,21 +1388,43 @@ void MainWindow::tryBandHop(){
         freqIsDifferent
       );
 
-      //qDebug() << "Can switch to" << station.band_name_ << "=" << canSwitch << station.switch_at_.time().toString("hh:mm") << "<=" << d.time().toString("hh:mm") << "<=" << station.switch_until_.time().toString("hh:mm") << m_bandHopped << m_bandHoppedFreq;
-
       // switch, if we can and the band is different than our current band
       if(canSwitch){
+          Frequency frequency = station.frequency_;
 
-          qDebug() << "Automatic band hop from" << currentBand << "to" << station.band_name_ << "at" << Radio::frequency_MHz_string(station.frequency_);
+          m_bandHopped = false;
+          m_bandHoppedFreq = frequency;
 
-          // cache the frequency set by bandHop...
-          m_bandHopped = true;
-          m_bandHoppedFreq = station.frequency_;
+          SelfDestructMessageBox * m = new SelfDestructMessageBox(30,
+            "Scheduled Frequency Change",
+            QString("A scheduled frequency change has arrived. The rig frequency will be changed to %1 MHz in %2 second(s).").arg(Radio::frequency_MHz_string(station.frequency_)),
+            QMessageBox::Information,
+            QMessageBox::Ok | QMessageBox::Cancel,
+            QMessageBox::Ok,
+            this);
 
-          // TODO: jsherer - is this the right way to switch the rig freq?
-          setRig(station.frequency_);
+          connect(m, &SelfDestructMessageBox::accepted, this, [this, frequency](){
+              m_bandHopped = true;
+              setRig(frequency);
+          });
 
-          break;
+          m->show();
+
+#if 0
+          // TODO: jsherer - this is totally a hack because of the signal that gets emitted to clearActivity on band change...
+          QTimer *t = new QTimer(this);
+          t->setInterval(250);
+          t->setSingleShot(true);
+          connect(t, &QTimer::timeout, this, [this, station, dialFreq](){
+              auto message = QString("Scheduled frequency switch from %1 MHz to %2 MHz");
+              message = message.arg(Radio::frequency_MHz_string(dialFreq));
+              message = message.arg(Radio::frequency_MHz_string(station.frequency_));
+              writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), message);
+          });
+          t->start();
+#endif
+
+          return;
       }
   }
 }
@@ -5704,6 +5732,24 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
         m_rxFrameBlockNumbers.insert(highFreq, block);
     }
 }
+
+void MainWindow::writeNoticeTextToUI(QDateTime date, QString text){
+    auto c = ui->textEditRX->textCursor();
+    c.movePosition(QTextCursor::End);
+    if(c.block().length() > 1){
+        c.insertBlock();
+    }
+
+    text = text.toHtmlEscaped();
+    c.insertBlock();
+    c.insertHtml(QString("<strong>%1 - %2</strong>").arg(date.time().toString()).arg(text));
+
+    c.movePosition(QTextCursor::End);
+
+    ui->textEditRX->ensureCursorVisible();
+    ui->textEditRX->verticalScrollBar()->setValue(ui->textEditRX->verticalScrollBar()->maximum());
+}
+
 
 int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, bool bold, int block){
     auto c = ui->textEditRX->textCursor();
