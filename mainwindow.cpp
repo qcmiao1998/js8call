@@ -9231,6 +9231,7 @@ void MainWindow::networkMessage(Message const &message)
     }
 
     // RX.GET_CALL_ACTIVITY
+    // RX.GET_CALL_SELECTED
     // RX.GET_BAND_ACTIVITY
     // RX.GET_TEXT
 
@@ -9245,6 +9246,11 @@ void MainWindow::networkMessage(Message const &message)
         }
 
         sendNetworkMessage("RX.CALL_ACTIVITY", "", calls);
+        return;
+    }
+
+    if(type == "RX.GET_CALL_SELECTED"){
+        sendNetworkMessage("RX.CALL_SELECTED", callsignSelected());
         return;
     }
 
