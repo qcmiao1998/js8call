@@ -200,7 +200,10 @@ namespace
 
   // Magic numbers for file validation
   constexpr quint32 qrg_magic {0xadbccbdb};
-  constexpr quint32 qrg_version {101}; // M.mm
+  constexpr quint32 qrg_version {102}; // M.mm
+
+  // Bump this versioned key every time we need to "reset" our working frequencies...
+  const char * versionedFrequenciesSettingsKey = "FrequenciesForRegionModes_01";
 }
 
 
@@ -1474,9 +1477,9 @@ void Configuration::impl::read_settings ()
 
   region_ = settings_->value ("Region", QVariant::fromValue (IARURegions::ALL)).value<IARURegions::Region> ();
 
-  if (settings_->contains ("FrequenciesForRegionModes"))
+  if (settings_->contains (versionedFrequenciesSettingsKey))
     {
-      auto const& v = settings_->value ("FrequenciesForRegionModes");
+      auto const& v = settings_->value (versionedFrequenciesSettingsKey);
       if (v.isValid ())
         {
           frequencies_.frequency_list (v.value<FrequencyList_v2::FrequencyItems> ());
@@ -1605,7 +1608,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("After73", id_after_73_);
   settings_->setValue ("TxQSYAllowed", tx_QSY_allowed_);
   settings_->setValue ("Macros", macros_.stringList ());
-  settings_->setValue ("FrequenciesForRegionModes", QVariant::fromValue (frequencies_.frequency_list ()));
+  settings_->setValue (versionedFrequenciesSettingsKey, QVariant::fromValue (frequencies_.frequency_list ()));
   settings_->setValue ("stations", QVariant::fromValue (stations_.station_list ()));
   settings_->setValue ("toRTTY", log_as_RTTY_);
   settings_->setValue ("dBtoComments", report_in_comments_);
