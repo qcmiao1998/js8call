@@ -163,7 +163,7 @@ QVector<QColor> g_ColorTbl;
 namespace
 {
   Radio::Frequency constexpr default_frequency {14074000};
-  QRegExp message_alphabet {"[- A-Za-z0-9+./?:!]*"}; // base alphabet supported by FT8
+  QRegExp message_alphabet {"[^\\x00-\\x1F]*"}; // base alphabet supported by FT8CALL
   // grid exact match excluding RR73
   QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
 

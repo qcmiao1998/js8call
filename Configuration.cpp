@@ -196,11 +196,11 @@ namespace
   int const combo_box_item_disabled (0);
 
 //  QRegExp message_alphabet {"[- A-Za-z0-9+./?]*"};
-  QRegExp message_alphabet {"[- @A-Za-z0-9+./?#<>]*"};
+  QRegExp message_alphabet {"[^\\x00-\\x1F]*"};
 
   // Magic numbers for file validation
   constexpr quint32 qrg_magic {0xadbccbdb};
-  constexpr quint32 qrg_version {100}; // M.mm
+  constexpr quint32 qrg_version {101}; // M.mm
 }
 
 
