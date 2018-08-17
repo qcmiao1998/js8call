@@ -1081,16 +1081,31 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       displayActivity(true);
   });
 
+  auto logAction = new QAction(QString("Log..."), ui->tableWidgetCalls);
+  connect(logAction, &QAction::triggered, this, &MainWindow::on_logQSOButton_clicked);
+
 
   ui->tableWidgetRXAll->setContextMenuPolicy(Qt::CustomContextMenu);
-  connect(ui->tableWidgetRXAll, &QTableWidget::customContextMenuRequested, this, [this, clearAction3, clearActionAll, removeActivity](QPoint const &point){
+  connect(ui->tableWidgetRXAll, &QTableWidget::customContextMenuRequested, this, [this, clearAction3, clearActionAll, removeActivity, logAction](QPoint const &point){
     QMenu * menu = new QMenu(ui->tableWidgetRXAll);
+
+    QString selectedCall = callsignSelected();
+    bool missingCallsign = selectedCall.isEmpty();
 
     int selectedOffset = -1;
     if(!ui->tableWidgetRXAll->selectedItems().isEmpty()){
         auto selectedItems = ui->tableWidgetRXAll->selectedItems();
         selectedOffset = selectedItems.first()->text().toInt();
     }
+
+    menu->addAction(logAction);
+    logAction->setDisabled(missingCallsign);
+
+    auto directedMenu = menu->addMenu("Directed");
+    directedMenu->setDisabled(missingCallsign);
+    buildQueryMenu(directedMenu);
+
+    menu->addSeparator();
 
     removeActivity->setDisabled(selectedOffset == -1);
     menu->addAction(removeActivity);
@@ -1117,8 +1132,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       }
   });
 
-  auto logAction = new QAction(QString("Log..."), ui->tableWidgetCalls);
-  connect(logAction, &QAction::triggered, this, &MainWindow::on_logQSOButton_clicked);
 
   ui->tableWidgetCalls->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, logAction, clearAction4, clearActionAll, removeStation](QPoint const &point){
