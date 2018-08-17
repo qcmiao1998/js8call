@@ -6508,7 +6508,7 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   m_logDlg->initLogQSO (call, grid, m_modeTx == "FT8" ? "FT8CALL" : m_modeTx, m_rptSent, m_rptRcvd,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),
                         m_config.my_callsign(), m_config.my_grid(),
-                        m_config.log_as_RTTY(), m_config.report_in_comments(),
+                        m_config.log_as_DATA(), m_config.report_in_comments(),
                         m_config.bFox(), m_opCall);
 }
 
@@ -8813,6 +8813,19 @@ void MainWindow::processCommandActivity() {
 
             // log it to the display!
             displayTextForFreq(ad.text, ad.freq, ad.utcTimestamp, false, true, false);
+
+            // and send it to the network in case we want to interact with it from an external app...
+            sendNetworkMessage("RX.DIRECTED", ad.text, {
+                {"FROM", QVariant(d.from)},
+                {"TO", QVariant(d.to)},
+                {"CMD", QVariant(d.cmd)},
+                {"GRID", QVariant(d.grid)},
+                {"EXTRA", QVariant(d.extra)},
+                {"TEXT", QVariant(d.text)},
+                {"FREQ", QVariant(ad.freq)},
+                {"SNR", QVariant(ad.snr)},
+                {"UTC", QVariant(ad.utcTimestamp.toMSecsSinceEpoch())}
+            });
         }
 
         // and mark the offset as a directed offset so future free text is displayed

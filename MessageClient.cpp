@@ -329,6 +329,7 @@ auto MessageClient::server_port () const -> port_type
 
 void MessageClient::set_server (QString const& server)
 {
+    qDebug() << "server changed to" << server;
   m_->server_.clear ();
   m_->server_string_ = server;
   if (!server.isEmpty ())

@@ -580,7 +580,7 @@ private:
   bool autoreply_off_at_startup_;
   bool monitor_off_at_startup_;
   bool monitor_last_used_;
-  bool log_as_RTTY_;
+  bool log_as_DATA_;
   bool report_in_comments_;
   bool prompt_to_log_;
   bool insert_blank_;
@@ -615,6 +615,7 @@ private:
   bool accept_udp_requests_;
   bool udpWindowToFront_;
   bool udpWindowRestore_;
+  bool udpEnabled_;
   DataMode data_mode_;
   bool pwrBandTxMemory_;
   bool pwrBandTuneMemory_;
@@ -692,7 +693,7 @@ void Configuration::set_spot_to_psk_reporter (bool spot)
 bool Configuration::autoreply_off_at_startup () const {return m_->autoreply_off_at_startup_;}
 bool Configuration::monitor_off_at_startup () const {return m_->monitor_off_at_startup_;}
 bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->monitor_last_used_;}
-bool Configuration::log_as_RTTY () const {return m_->log_as_RTTY_;}
+bool Configuration::log_as_DATA () const {return m_->log_as_DATA_;}
 bool Configuration::report_in_comments () const {return m_->report_in_comments_;}
 bool Configuration::prompt_to_log () const {return m_->prompt_to_log_;}
 bool Configuration::insert_blank () const {return m_->insert_blank_;}
@@ -723,6 +724,7 @@ auto Configuration::n1mm_server_port () const -> port_type {return m_->n1mm_serv
 bool Configuration::broadcast_to_n1mm () const {return m_->broadcast_to_n1mm_;}
 bool Configuration::udpWindowToFront () const {return m_->udpWindowToFront_;}
 bool Configuration::udpWindowRestore () const {return m_->udpWindowRestore_;}
+bool Configuration::udpEnabled () const {return m_->udpEnabled_;}
 Bands * Configuration::bands () {return &m_->bands_;}
 Bands const * Configuration::bands () const {return &m_->bands_;}
 StationList * Configuration::stations () {return &m_->stations_;}
@@ -1264,7 +1266,7 @@ void Configuration::impl::initialize_models ()
   ui_->autoreply_off_check_box->setChecked (autoreply_off_at_startup_);
   ui_->monitor_off_check_box->setChecked (monitor_off_at_startup_);
   ui_->monitor_last_used_check_box->setChecked (monitor_last_used_);
-  ui_->log_as_RTTY_check_box->setChecked (log_as_RTTY_);
+  ui_->log_as_RTTY_check_box->setChecked (log_as_DATA_);
   ui_->stations_table_view->setEnabled(ui_->auto_switch_bands_check_box->isChecked());
   ui_->report_in_comments_check_box->setChecked (report_in_comments_);
   ui_->prompt_to_log_check_box->setChecked (prompt_to_log_);
@@ -1322,6 +1324,7 @@ void Configuration::impl::initialize_models ()
   ui_->n1mm_server_port_spin_box->setValue (n1mm_server_port_);
   ui_->enable_n1mm_broadcast_check_box->setChecked (broadcast_to_n1mm_);
   ui_->udpWindowToFront->setChecked(udpWindowToFront_);
+  ui_->udpEnable->setChecked(udpEnabled_);
   ui_->udpWindowRestore->setChecked(udpWindowRestore_);
   ui_->calibration_intercept_spin_box->setValue (calibration_.intercept);
   ui_->calibration_slope_ppm_spin_box->setValue (calibration_.slope_ppm);
@@ -1496,7 +1499,7 @@ void Configuration::impl::read_settings ()
 
   stations_.station_list (settings_->value ("stations").value<StationList::Stations> ());
 
-  log_as_RTTY_ = settings_->value ("toRTTY", false).toBool ();
+  log_as_DATA_ = settings_->value ("toRTTY", false).toBool ();
   report_in_comments_ = settings_->value("dBtoComments", false).toBool ();
   rig_params_.rig_name = settings_->value ("Rig", TransceiverFactory::basic_transceiver_name_).toString ();
   rig_is_dummy_ = TransceiverFactory::basic_transceiver_name_ == rig_params_.rig_name;
@@ -1543,6 +1546,7 @@ void Configuration::impl::read_settings ()
   n1mm_server_port_ = settings_->value ("N1MMServerPort", 2333).toUInt ();
   broadcast_to_n1mm_ = settings_->value ("BroadcastToN1MM", false).toBool ();
   accept_udp_requests_ = settings_->value ("AcceptUDPRequests", false).toBool ();
+  udpEnabled_ = settings_->value("UDPEnabled", false).toBool();
   udpWindowToFront_ = settings_->value ("udpWindowToFront",false).toBool ();
   udpWindowRestore_ = settings_->value ("udpWindowRestore",false).toBool ();
   calibration_.intercept = settings_->value ("CalibrationIntercept", 0.).toDouble ();
@@ -1610,7 +1614,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("Macros", macros_.stringList ());
   settings_->setValue (versionedFrequenciesSettingsKey, QVariant::fromValue (frequencies_.frequency_list ()));
   settings_->setValue ("stations", QVariant::fromValue (stations_.station_list ()));
-  settings_->setValue ("toRTTY", log_as_RTTY_);
+  settings_->setValue ("toRTTY", log_as_DATA_);
   settings_->setValue ("dBtoComments", report_in_comments_);
   settings_->setValue ("Rig", rig_params_.rig_name);
   settings_->setValue ("CATNetworkPort", rig_params_.network_port);
@@ -1654,6 +1658,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("N1MMServerPort", n1mm_server_port_);
   settings_->setValue ("BroadcastToN1MM", broadcast_to_n1mm_);
   settings_->setValue ("AcceptUDPRequests", accept_udp_requests_);
+  settings_->setValue ("UDPEnabled", udpEnabled_);
   settings_->setValue ("udpWindowToFront", udpWindowToFront_);
   settings_->setValue ("udpWindowRestore", udpWindowRestore_);
   settings_->setValue ("CalibrationIntercept", calibration_.intercept);
@@ -2036,7 +2041,7 @@ void Configuration::impl::accept ()
   monitor_off_at_startup_ = ui_->monitor_off_check_box->isChecked ();
   monitor_last_used_ = ui_->monitor_last_used_check_box->isChecked ();
   type_2_msg_gen_ = static_cast<Type2MsgGen> (ui_->type_2_msg_gen_combo_box->currentIndex ());
-  log_as_RTTY_ = ui_->log_as_RTTY_check_box->isChecked ();
+  log_as_DATA_ = ui_->log_as_RTTY_check_box->isChecked ();
   report_in_comments_ = ui_->report_in_comments_check_box->isChecked ();
   prompt_to_log_ = ui_->prompt_to_log_check_box->isChecked ();
   insert_blank_ = ui_->insert_blank_check_box->isChecked ();
@@ -2065,11 +2070,15 @@ void Configuration::impl::accept ()
   pwrBandTxMemory_ = ui_->checkBoxPwrBandTxMemory->isChecked ();
   pwrBandTuneMemory_ = ui_->checkBoxPwrBandTuneMemory->isChecked ();
   opCall_=ui_->opCallEntry->text();
+
+  auto newUdpEnabled = ui_->udpEnable->isChecked();
   auto new_server = ui_->udp_server_line_edit->text ();
-  if (new_server != udp_server_name_)
+  if (new_server != udp_server_name_ || newUdpEnabled != udpEnabled_)
     {
       udp_server_name_ = new_server;
-      Q_EMIT self_->udp_server_changed (new_server);
+      udpEnabled_ = newUdpEnabled;
+
+      Q_EMIT self_->udp_server_changed (udpEnabled_ ? new_server : "");
     }
 
   auto new_port = ui_->udp_server_port_spin_box->value ();
@@ -2078,7 +2087,7 @@ void Configuration::impl::accept ()
       udp_server_port_ = new_port;
       Q_EMIT self_->udp_server_port_changed (new_port);
     }
-  
+
   accept_udp_requests_ = ui_->accept_udp_requests_check_box->isChecked ();
   auto new_n1mm_server = ui_->n1mm_server_name_line_edit->text ();
   n1mm_server_name_ = new_n1mm_server;
@@ -2088,6 +2097,7 @@ void Configuration::impl::accept ()
 
   udpWindowToFront_ = ui_->udpWindowToFront->isChecked ();
   udpWindowRestore_ = ui_->udpWindowRestore->isChecked ();
+
 
   if (macros_.stringList () != next_macros_.stringList ())
     {

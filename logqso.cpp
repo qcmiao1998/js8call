@@ -75,7 +75,7 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
     if(rptRcvd!="") t+="  Rcvd: " + rptRcvd;
     ui->comments->setText(t);
   }
-  if(toRTTY) mode="RTTY";
+  if(toRTTY) mode="DATA";
   ui->mode->setText(mode);
   ui->sent->setText(rptSent);
   ui->rcvd->setText(rptRcvd);

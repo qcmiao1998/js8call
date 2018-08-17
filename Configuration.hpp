@@ -117,7 +117,7 @@ public:
   bool autoreply_off_at_startup () const;
   bool monitor_off_at_startup () const;
   bool monitor_last_used () const;
-  bool log_as_RTTY () const;
+  bool log_as_DATA () const;
   bool report_in_comments () const;
   bool prompt_to_log () const;
   bool insert_blank () const;
@@ -156,6 +156,7 @@ public:
   bool accept_udp_requests () const;
   bool udpWindowToFront () const;
   bool udpWindowRestore () const;
+  bool udpEnabled () const;
   Bands * bands ();
   Bands const * bands () const;
   IARURegions::Region region () const;
