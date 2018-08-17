@@ -632,7 +632,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       setDecodedTextFont (font);
     });
   connect (&m_config, &Configuration::colors_changed, [this](){
-     ui->textEditRX->setStyleSheet(QString("background: %1").arg(m_config.color_ReceivedMsg().name()));
+     ui->textEditRX->setStyleSheet(QString("QTextEdit{ background: %1 }").arg(m_config.color_ReceivedMsg().name()));
   });
 
   setWindowTitle (program_title ());
@@ -1632,7 +1632,7 @@ void MainWindow::readSettings()
   //ui->bandHorizontalWidget->setGeometry( m_settings->value("PanelWaterfallGeometry", ui->bandHorizontalWidget->geometry()).toRect());
   //qDebug() << m_settings->value("PanelTopGeometry") << ui->extFreeTextMsg;
 
-  ui->textEditRX->setStyleSheet(QString("background: %1").arg(m_config.color_ReceivedMsg().name()));
+  ui->textEditRX->setStyleSheet(QString("QTextEdit { background: %1 }").arg(m_config.color_ReceivedMsg().name()));
 
   {
     auto const& coeffs = m_settings->value ("PhaseEqualizationCoefficients"
