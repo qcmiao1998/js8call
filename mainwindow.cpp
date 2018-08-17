@@ -1101,9 +1101,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     menu->addAction(logAction);
     logAction->setDisabled(missingCallsign);
 
-    auto directedMenu = menu->addMenu("Directed");
+    auto directedMenu = menu->addMenu(QString("Directed to %1...").arg(selectedCall));
     directedMenu->setDisabled(missingCallsign);
-    buildQueryMenu(directedMenu);
+    buildQueryMenu(directedMenu, selectedCall);
 
     menu->addSeparator();
 
@@ -1147,9 +1147,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     menu->addAction(logAction);
     logAction->setDisabled(missingCallsign || isAllCall);
 
-    auto directedMenu = menu->addMenu("Directed");
+    auto directedMenu = menu->addMenu(QString("Directed to %1...").arg(selectedCall));
     directedMenu->setDisabled(missingCallsign);
-    buildQueryMenu(directedMenu);
+    buildQueryMenu(directedMenu, selectedCall);
 
     menu->addSeparator();
 
@@ -7116,15 +7116,13 @@ void MainWindow::on_qthMacroButton_clicked(){
     addMessageText(qth);
 }
 
-void MainWindow::buildQueryMenu(QMenu * menu){
-    QString call = callsignSelected();
-    if(call.isEmpty()){
-        return;
-    }
-
+void MainWindow::buildQueryMenu(QMenu * menu, QString call){
     bool isAllCall = isAllCallIncluded(call);
 
-    auto sendReplyAction = menu->addAction("CALL - Send a message to selected callsign");
+    // for now, we're going to omit displaying the call...delete this if we want the other functionality
+    call = "";
+
+    auto sendReplyAction = menu->addAction(QString("Send a message to selected callsign"));
 
     connect(sendReplyAction, &QAction::triggered, this, [this](){
 
@@ -7133,11 +7131,11 @@ void MainWindow::buildQueryMenu(QMenu * menu){
             return;
         }
 
-        addMessageText(QString("%1").arg(selectedCall), true);
+        addMessageText(QString("%1 ").arg(selectedCall), true);
     });
 
 
-    auto sendSNRAction = menu->addAction("SNR - Send a signal report to the selected callsign");
+    auto sendSNRAction = menu->addAction(QString("%1 SNR - Send a signal report to the selected callsign").arg(call).trimmed());
     sendSNRAction->setEnabled(m_callActivity.contains(call));
     connect(sendSNRAction, &QAction::triggered, this, [this](){
 
@@ -7152,12 +7150,10 @@ void MainWindow::buildQueryMenu(QMenu * menu){
 
         auto d = m_callActivity[selectedCall];
         addMessageText(QString("%1 SNR %2").arg(selectedCall).arg(Varicode::formatSNR(d.snr)), true);
-
-        // perhaps a better name here?
         toggleTx(true);
     });
 
-    auto sendPWRAction = menu->addAction("PWR - Send station power level to the selected callsign");
+    auto sendPWRAction = menu->addAction(QString("%1 PWR - Send station power level to the selected callsign").arg(call).trimmed());
     sendPWRAction->setDisabled(isAllCall || m_config.my_dBm() < 0);
     connect(sendPWRAction, &QAction::triggered, this, [this](){
 
@@ -7167,15 +7163,13 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         }
 
         addMessageText(QString("%1 PWR %2").arg(selectedCall).arg(Varicode::formatPWR(m_config.my_dBm())), true);
-
-        // perhaps a better name here?
         toggleTx(true);
     });
 
     menu->addSeparator();
 
     /*
-    auto ackQueryAction = menu->addAction("^ - Are you hearing me?");
+    auto ackQueryAction = menu->addAction(QString("%1^ - Are you hearing me?").arg(call));
     connect(ackQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7188,7 +7182,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
     });
     */
 
-    auto snrQueryAction = menu->addAction("? - What is my signal report?");
+    auto snrQueryAction = menu->addAction(QString("%1? - What is my signal report?").arg(call));
     connect(snrQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7200,7 +7194,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto qthQueryAction = menu->addAction("@ - What is your QTH message?");
+    auto qthQueryAction = menu->addAction(QString("%1@ - What is your QTH message?").arg(call));
     qthQueryAction->setDisabled(isAllCall);
     connect(qthQueryAction, &QAction::triggered, this, [this](){
 
@@ -7213,7 +7207,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto stationMessageQueryAction = menu->addAction("&& - What is your station message?");
+    auto stationMessageQueryAction = menu->addAction(QString("%1&& - What is your station message?").arg(call).trimmed());
     stationMessageQueryAction->setDisabled(isAllCall);
     connect(stationMessageQueryAction, &QAction::triggered, this, [this](){
 
@@ -7226,7 +7220,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto stationPowerQueryAction = menu->addAction("% - What is your station power?");
+    auto stationPowerQueryAction = menu->addAction(QString("%1% - What is your station power?").arg(call).trimmed());
     stationPowerQueryAction->setDisabled(isAllCall);
     connect(stationPowerQueryAction, &QAction::triggered, this, [this](){
 
@@ -7239,7 +7233,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto heardQueryAction = menu->addAction("$ - What are the stations are you hearing? (Top 4 ranked by SNR)");
+    auto heardQueryAction = menu->addAction(QString("%1$ - What are the stations are you hearing? (Top 4 ranked by SNR)").arg(call).trimmed());
     heardQueryAction->setDisabled(isAllCall);
     connect(heardQueryAction, &QAction::triggered, this, [this](){
 
@@ -7252,7 +7246,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto hashAction = menu->addAction("#message - Please ACK if you receive this message in its entirety");
+    auto hashAction = menu->addAction(QString("%1#message - Please ACK if you receive this message in its entirety").arg(call).trimmed());
     hashAction->setDisabled(isAllCall);
     connect(hashAction, &QAction::triggered, this, [this](){
 
@@ -7264,7 +7258,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         addMessageText(QString("%1#").arg(selectedCall), true);
     });
 
-    auto retransmitAction = menu->addAction("|message - Please ACK and retransmit the following message");
+    auto retransmitAction = menu->addAction(QString("%1|message - Please ACK and retransmit the following message").arg(call).trimmed());
     retransmitAction->setDisabled(isAllCall);
     connect(retransmitAction, &QAction::triggered, this, [this](){
 
@@ -7276,7 +7270,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         addMessageText(QString("%1|").arg(selectedCall), true);
     });
 
-    auto alertAction = menu->addAction("!message - Please display this message in an alert dialog and ACK if acknowledged");
+    auto alertAction = menu->addAction(QString("%1!message - Please display this message in an alert dialog and ACK if acknowledged").arg(call).trimmed());
     alertAction->setDisabled(isAllCall);
     connect(alertAction, &QAction::triggered, this, [this](){
 
@@ -7290,7 +7284,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
 
     menu->addSeparator();
 
-    auto agnAction = menu->addAction("AGN? - Please repeat your last transmission");
+    auto agnAction = menu->addAction(QString("%1 AGN? - Please repeat your last transmission").arg(call).trimmed());
     connect(agnAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7302,7 +7296,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto qslQueryAction = menu->addAction("QSL? - Did you receive my last transmission?");
+    auto qslQueryAction = menu->addAction(QString("%1 QSL? - Did you receive my last transmission?").arg(call).trimmed());
     connect(qslQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7314,7 +7308,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto qslAction = menu->addAction("QSL - I confirm I received your last transmission");
+    auto qslAction = menu->addAction(QString("%1 QSL - I confirm I received your last transmission").arg(call).trimmed());
     connect(qslAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7326,7 +7320,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto yesAction = menu->addAction("YES - I confirm your last inquiry");
+    auto yesAction = menu->addAction(QString("%1 YES - I confirm your last inquiry").arg(call).trimmed());
     connect(yesAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7338,7 +7332,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto noAction = menu->addAction("NO - I do not confirm your last inquiry");
+    auto noAction = menu->addAction(QString("%1 NO - I do not confirm your last inquiry").arg(call).trimmed());
     connect(noAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7350,7 +7344,7 @@ void MainWindow::buildQueryMenu(QMenu * menu){
         toggleTx(true);
     });
 
-    auto sevenThreeAction = menu->addAction("73 - I send my best regards / end of contact");
+    auto sevenThreeAction = menu->addAction(QString("%1 73 - I send my best regards / end of contact").arg(call).trimmed());
     connect(sevenThreeAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7370,7 +7364,7 @@ void MainWindow::on_queryButton_pressed(){
     }
     menu->clear();
 
-    buildQueryMenu(menu);
+    buildQueryMenu(menu, callsignSelected());
 
     ui->queryButton->setMenu(menu);
     ui->queryButton->showMenu();
@@ -8411,7 +8405,17 @@ QString MainWindow::callsignSelected(){
         int selectedOffset = -1;
         auto selectedItems = ui->tableWidgetRXAll->selectedItems();
         selectedOffset = selectedItems.first()->text().toInt();
-        foreach(auto call, m_callActivity.keys()){
+
+        auto keys = m_callActivity.keys();
+        qSort(keys.begin(), keys.end(), [this](QString const &a, QString const &b){
+            auto tA = m_callActivity[a].utcTimestamp;
+            auto tB = m_callActivity[b].utcTimestamp;
+            if(tA == tB){
+                return a < b;
+            }
+            return tB < tA;
+        });
+        foreach(auto call, keys){
             auto d = m_callActivity[call];
             if(d.freq == selectedOffset){
                 return d.call;

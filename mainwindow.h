@@ -257,7 +257,7 @@ private slots:
   void on_cqMacroButton_clicked();
   void on_qtcMacroButton_clicked();
   void on_qthMacroButton_clicked();
-  void buildQueryMenu(QMenu *);
+  void buildQueryMenu(QMenu *, QString callsign);
   void on_queryButton_pressed();
   void on_macrosMacroButton_pressed();
   void on_tableWidgetRXAll_cellClicked(int row, int col);
