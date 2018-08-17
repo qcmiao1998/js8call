@@ -163,8 +163,10 @@ QVector<QColor> g_ColorTbl;
 
 namespace
 {
-  Radio::Frequency constexpr default_frequency {14074000};
+  Radio::Frequency constexpr default_frequency {14078500};
+
   QRegExp message_alphabet {"[^\\x00-\\x1F]*"}; // base alphabet supported by FT8CALL
+
   // grid exact match excluding RR73
   QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
 
@@ -5852,6 +5854,7 @@ void MainWindow::resetMessageUI(){
 bool MainWindow::ensureCallsignSet(){
     if(m_config.my_callsign().trimmed().isEmpty()){
         MessageBox::warning_message(this, tr ("Please enter your callsign in the settings."));
+        on_actionSettings_triggered();
         return false;
     }
 
