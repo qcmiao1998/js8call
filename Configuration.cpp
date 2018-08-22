@@ -1017,7 +1017,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   // validation
   //
   ui_->callsign_line_edit->setValidator (new CallsignValidator {this});
-  ui_->grid_line_edit->setValidator (new MaidenheadLocatorValidator {this});
+  ui_->grid_line_edit->setValidator (new MaidenheadLocatorValidator {this, MaidenheadLocatorValidator::Length::doubleextended});
   ui_->add_macro_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->station_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->qth_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});

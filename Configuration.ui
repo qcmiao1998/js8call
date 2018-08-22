@@ -80,7 +80,7 @@
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;4-digit Maidenhead Locator&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="maxLength">
-                 <number>4</number>
+                 <number>16</number>
                 </property>
                </widget>
               </item>
