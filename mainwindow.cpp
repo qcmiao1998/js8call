@@ -7762,6 +7762,9 @@ void MainWindow::setFreq4(int rxFreq, int txFreq)
       txFreq = rxFreq;
   }
 
+  rxFreq = max(500, rxFreq);
+  txFreq = max(500, txFreq);
+
   m_previousFreq = currentFreqOffset();
 
   if (ui->RxFreqSpinBox->isEnabled ()) ui->RxFreqSpinBox->setValue(rxFreq);

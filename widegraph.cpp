@@ -80,14 +80,14 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     ui->widePlot->setBinsPerPixel(nbpp);
     ui->sbPercent2dPlot->setValue(m_Percent2DScreen);
     ui->widePlot->SetPercent2DScreen(m_Percent2DScreen);
-    ui->widePlot->setStartFreq(m_settings->value("StartFreq",0).toInt());
+    ui->widePlot->setStartFreq(m_settings->value("StartFreq", 500).toInt());
     ui->fStartSpinBox->setValue(ui->widePlot->startFreq());
     m_waterfallPalette=m_settings->value("WaterfallPalette","Default").toString();
     m_userPalette = WFPalette {m_settings->value("UserPalette").value<WFPalette::Colours> ()};
     m_fMinPerBand = m_settings->value ("FminPerBand").toHash ();
     setRxRange ();
-    ui->controls_widget->setVisible(!m_settings->value("HideControls", true).toBool());
-    ui->cbControls->setChecked(!m_settings->value("HideControls", true).toBool());
+    ui->controls_widget->setVisible(!m_settings->value("HideControls", false).toBool());
+    ui->cbControls->setChecked(!m_settings->value("HideControls", false).toBool());
   }
 
   int index=0;
@@ -211,6 +211,8 @@ void WideGraph::on_offsetSpinBox_valueChanged(int n){
   if(n == rxFreq()){
       return;
   }
+
+  n = qMax(500, n);
 
   setRxFreq(n);
   setTxFreq(n);

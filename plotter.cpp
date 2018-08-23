@@ -329,6 +329,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   QPen penOrange(QColor(255,165,0),3);
   QPen penGreen(Qt::green, 3);                 //Mark Tol range with green line
   QPen penRed(Qt::red, 3);                     //Mark Tx freq with red
+  QPen penYellow(QColor(243, 156, 18), 3);     //Mark band block freq with this pen
   QPainter painter(&m_OverlayPixmap);
   painter.initFrom(this);
   QLinearGradient gradient(0, 0, 0 ,m_h2);     //fill background with gradient
@@ -396,7 +397,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   if(m_freqPerDiv==200) minor=4;
   for( int i=1; i<minor*m_hdivs; i++) {             //minor ticks
     x = i*pixperdiv/minor;
-    painter0.drawLine(x,24,x,30);
+    painter0.drawLine(x,22,x,30);
   }
 
   //draw frequency values
@@ -555,6 +556,14 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       painter0.setPen(penOrange);               //Mark WSPR sub-band orange
       painter0.drawLine(x1,9,x2,9);
     }
+  }
+
+  x1=XfromFreq(0);
+  x2=XfromFreq(500);
+  if(x1<=m_w and x2>=0) {
+    painter0.setPen(penYellow);               //Mark bottom of sub-band
+    painter0.drawLine(x1,26,x2,26);
+    painter0.drawLine(x1,28,x2,28);
   }
 
   if(m_mode=="FT8"){
