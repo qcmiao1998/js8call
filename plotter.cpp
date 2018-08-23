@@ -560,10 +560,10 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   x1=XfromFreq(0);
   x2=XfromFreq(500);
-  if(x1<=m_w and x2>=0) {
+  if(x1<=m_w and x2>0) {
     painter0.setPen(penYellow);               //Mark bottom of sub-band
-    painter0.drawLine(x1,26,x2,26);
-    painter0.drawLine(x1,28,x2,28);
+    painter0.drawLine(x1+1,26,x2-2,26);
+    painter0.drawLine(x1+1,28,x2-2,28);
   }
 
   if(m_mode=="FT8"){
