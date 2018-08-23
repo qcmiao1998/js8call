@@ -1110,6 +1110,18 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     removeActivity->setDisabled(selectedOffset == -1);
     menu->addAction(removeActivity);
 
+
+    menu->addSeparator();
+
+    auto sortMenu = menu->addMenu(QString("Sort by..."));
+    buildSortByMenu(sortMenu, "bandActivity", "offset", {
+                        {"Frequency Offset", "offset"},
+                        {"Last heard timestamp (oldest first)", "timestamp"},
+                        {"Last heard timestamp (newest first)", "-timestamp"},
+                        {"SNR (weakest first)", "snr"},
+                        {"SNR (strongest first)", "-snr"}
+                    });
+
     menu->addSeparator();
     menu->addAction(clearAction3);
     menu->addAction(clearActionAll);
@@ -1155,6 +1167,19 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
     removeStation->setDisabled(missingCallsign || isAllCall);
     menu->addAction(removeStation);
+
+    menu->addSeparator();
+
+    auto sortMenu = menu->addMenu(QString("Sort by..."));
+    buildSortByMenu(sortMenu, "callActivity", "callsign", {
+                        {"Callsign", "callsign"},
+                        {"Distance (closest first)", "distance"},
+                        {"Distance (farthest first)", "-distance"},
+                        {"Last heard timestamp (oldest first)", "timestamp"},
+                        {"Last heard timestamp (newest first)", "-timestamp"},
+                        {"SNR (weakest first)", "snr"},
+                        {"SNR (strongest first)", "-snr"}
+                    });
 
     menu->addSeparator();
     menu->addAction(clearAction4);
@@ -1521,6 +1546,9 @@ void MainWindow::writeSettings()
   m_settings->setValue("pwrBandTuneMemory",m_pwrBandTuneMemory);
   m_settings->setValue ("FT8AP", ui->actionEnable_AP_FT8->isChecked ());
   m_settings->setValue ("JT65AP", ui->actionEnable_AP_JT65->isChecked ());
+  m_settings->setValue("SortBy", QVariant(m_sortCache));
+
+
 
   // TODO: jsherer - need any other customizations?
   /*m_settings->setValue("PanelLeftGeometry", ui->tableWidgetRXAll->geometry());
@@ -1635,6 +1663,8 @@ void MainWindow::readSettings()
   m_pwrBandTuneMemory=m_settings->value("pwrBandTuneMemory").toHash();
   ui->actionEnable_AP_FT8->setChecked (m_settings->value ("FT8AP", false).toBool());
   ui->actionEnable_AP_JT65->setChecked (m_settings->value ("JT65AP", false).toBool());
+
+  m_sortCache = m_settings->value("SortBy").toMap();
 
   // TODO: jsherer - any other customizations?
   //ui->mainSplitter->setSizes(m_settings->value("MainSplitter", QVariant::fromValue(ui->mainSplitter->sizes())).value<QList<int> >());
@@ -6387,7 +6417,7 @@ void MainWindow::prepareBacon(){
 
 
 
-QString MainWindow::calculateDistance(QString const& value)
+QString MainWindow::calculateDistance(QString const& value, int *pDistance)
 {
     QString grid = value.trimmed();
     if(grid.isEmpty() || grid.length() < 4){
@@ -6402,9 +6432,11 @@ QString MainWindow::calculateDistance(QString const& value)
             &nAz,&nEl,&nDmiles,&nDkm,&nHotAz,&nHotABetter,6,6);
 
     if(m_config.miles()){
+        if(pDistance) *pDistance = nDmiles;
         return QString("%1 mi").arg(nDmiles);
     }
 
+    if(pDistance) *pDistance = nDkm;
     return QString("%1 km").arg(nDkm);
 }
 
@@ -7114,6 +7146,37 @@ void MainWindow::on_qthMacroButton_clicked(){
         return;
     }
     addMessageText(qth);
+}
+
+void MainWindow::setSortBy(QString key, QString value){
+    m_sortCache[key] = QVariant(value);
+    displayBandActivity();
+    displayCallActivity();
+}
+
+QString MainWindow::getSortBy(QString key, QString defaultValue){
+    return m_sortCache.value(key, QVariant(defaultValue)).toString();
+}
+
+void MainWindow::buildSortByMenu(QMenu * menu, QString key, QString defaultValue, QMap<QString, QString> values){
+    auto currentSortBy = getSortBy(key, defaultValue);
+
+    QActionGroup * g = new QActionGroup(menu);
+    g->setExclusive(true);
+
+    foreach(auto k, values.keys()){
+        auto v = values[k];
+        auto a = menu->addAction(k);
+        a->setCheckable(true);
+        a->setChecked(v == currentSortBy);
+        a->setActionGroup(g);
+
+        connect(a, &QAction::triggered, this, [this, a, key, v](){
+            if(a->isChecked()){
+                setSortBy(key, v);
+            }
+        });
+    }
 }
 
 void MainWindow::buildQueryMenu(QMenu * menu, QString call){
@@ -9055,6 +9118,15 @@ void MainWindow::displayActivity(bool force) {
     m_rxDisplayDirty = false;
 }
 
+template<typename T>
+QList<T> listCopyReverse(QList<T> const &list){
+    QList<T> newList = QList<T>();
+    for(auto iter = list.rbegin(); iter != list.rend(); iter++){
+        newList.append(*iter);
+    }
+    return newList;
+}
+
 void MainWindow::displayBandActivity() {
     auto now = QDateTime::currentDateTimeUtc();
 
@@ -9073,25 +9145,64 @@ void MainWindow::displayBandActivity() {
         // Clear the table
         clearTableWidget(ui->tableWidgetRXAll);
 
-        // Sort directed & recent messages first
+        // Sort!
         QList < int > keys = m_bandActivity.keys();
-        qSort(keys.begin(), keys.end(), [this](const int left, int right) {
-#if 0
-            if (m_rxDirectedCache.contains(left / 10 * 10)) {
-                return true;
-            }
-            if (m_rxDirectedCache.contains(right / 10 * 10)) {
+
+        auto compareTimestamp = [this](const int left, int right) {
+            auto leftItems = m_bandActivity[left];
+            auto rightItems = m_bandActivity[right];
+
+            if(leftItems.isEmpty()){
                 return false;
             }
-            if (m_rxRecentCache.contains(left / 10 * 10)) {
+
+            if(rightItems.isEmpty()){
                 return true;
             }
-            if (m_rxRecentCache.contains(right / 10 * 10)) {
+
+            auto leftLast = leftItems.last();
+            auto rightLast = rightItems.last();
+
+            return leftLast.utcTimestamp < rightLast.utcTimestamp;
+        };
+
+        auto compareSNR = [this](const int left, int right) {
+            auto leftItems = m_bandActivity[left];
+            auto rightItems = m_bandActivity[right];
+
+            if(leftItems.isEmpty()){
                 return false;
             }
-#endif
-            return left < right;
-        });
+
+            if(rightItems.isEmpty()){
+                return true;
+            }
+
+            auto leftLast = leftItems.last();
+            auto rightLast = rightItems.last();
+
+            return leftLast.snr < rightLast.snr;
+        };
+
+        auto sortBy = getSortBy("bandActivity", "offset");
+        bool reverse = false;
+        if(sortBy.startsWith("-")){
+            sortBy = sortBy.mid(1);
+            reverse = true;
+        }
+
+        if(sortBy == "timestamp"){
+            qSort(keys.begin(), keys.end(), compareTimestamp);
+        } else if(sortBy == "snr"){
+            qSort(keys.begin(), keys.end(), compareSNR);
+        } else {
+            // compare offset
+            qSort(keys.begin(), keys.end());
+        }
+
+        if(reverse){
+            keys = listCopyReverse(keys);
+        }
 
         // Build the table
         foreach(int offset, keys) {
@@ -9217,10 +9328,66 @@ void MainWindow::displayCallActivity() {
         }
 
         // Build the table
-        QList < QString > calls = m_callActivity.keys();
-        qSort(calls.begin(), calls.end());
+        QList < QString > keys = m_callActivity.keys();
+
+        auto compareDistance = [this](const QString left, QString right) {
+            auto leftActivity = m_callActivity[left];
+            auto rightActivity = m_callActivity[right];
+
+            if(leftActivity.grid.isEmpty()){
+                return false;
+            }
+
+            if(rightActivity.grid.isEmpty()){
+                return true;
+            }
+
+            int leftDistance = 0;
+            int rightDistance = 0;
+            calculateDistance(leftActivity.grid, &leftDistance);
+            calculateDistance(rightActivity.grid, &rightDistance);
+
+            return leftDistance < rightDistance;
+        };
+
+        auto compareTimestamp = [this](const QString left, QString right) {
+            auto leftActivity = m_callActivity[left];
+            auto rightActivity = m_callActivity[right];
+
+            return leftActivity.utcTimestamp < rightActivity.utcTimestamp;
+        };
+
+        auto compareSNR = [this](const QString left, QString right) {
+            auto leftActivity = m_callActivity[left];
+            auto rightActivity = m_callActivity[right];
+
+            return leftActivity.snr < rightActivity.snr;
+        };
+
+        auto sortBy = getSortBy("callActivity", "callsign");
+        bool reverse = false;
+        if(sortBy.startsWith("-")){
+            sortBy = sortBy.mid(1);
+            reverse = true;
+        }
+
+        if(sortBy == "distance"){
+            qSort(keys.begin(), keys.end(), compareDistance);
+        } else if(sortBy == "timestamp"){
+            qSort(keys.begin(), keys.end(), compareTimestamp);
+        } else if(sortBy == "snr"){
+            qSort(keys.begin(), keys.end(), compareSNR);
+        } else {
+            // compare callsign
+            qSort(keys.begin(), keys.end());
+        }
+
+        if(reverse){
+            keys = listCopyReverse(keys);
+        }
+
         int callsignAging = m_config.callsign_aging();
-        foreach(QString call, calls) {
+        foreach(QString call, keys) {
             CallDetail d = m_callActivity[call];
 
             if (callsignAging && d.utcTimestamp.secsTo(now) / 60 >= callsignAging) {

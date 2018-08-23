@@ -257,6 +257,9 @@ private slots:
   void on_cqMacroButton_clicked();
   void on_qtcMacroButton_clicked();
   void on_qthMacroButton_clicked();
+  void setSortBy(QString key, QString value);
+  QString getSortBy(QString key, QString defaultValue);
+  void buildSortByMenu(QMenu * menu, QString key, QString defaultValue, QMap<QString, QString> values);
   void buildQueryMenu(QMenu *, QString callsign);
   void on_queryButton_pressed();
   void on_macrosMacroButton_pressed();
@@ -280,7 +283,7 @@ private slots:
   void pauseBacon();
   void checkBacon();
   void prepareBacon();
-  QString calculateDistance(QString const& grid);
+  QString calculateDistance(QString const& grid, int *pDistance=nullptr);
   void on_rptSpinBox_valueChanged(int n);
   void killFile();
   void on_tuneButton_clicked (bool);
@@ -730,6 +733,7 @@ private:
       QDateTime date;
   };
 
+  QMap<QString, QVariant> m_sortCache; // table key -> sort by
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent
   QQueue<QString> m_txFrameQueue; // frames to be sent
   QQueue<ActivityDetail> m_rxActivityQueue; // all rx activity queue
