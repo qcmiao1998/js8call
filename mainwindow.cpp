@@ -1114,13 +1114,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     menu->addSeparator();
 
     auto sortMenu = menu->addMenu(QString("Sort by..."));
-    buildSortByMenu(sortMenu, "bandActivity", "offset", {
-                        {"Frequency Offset", "offset"},
-                        {"Last heard timestamp (oldest first)", "timestamp"},
-                        {"Last heard timestamp (newest first)", "-timestamp"},
-                        {"SNR (weakest first)", "snr"},
-                        {"SNR (strongest first)", "-snr"}
-                    });
+    buildBandActivitySortByMenu(sortMenu);
 
     menu->addSeparator();
     menu->addAction(clearAction3);
@@ -1171,15 +1165,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     menu->addSeparator();
 
     auto sortMenu = menu->addMenu(QString("Sort by..."));
-    buildSortByMenu(sortMenu, "callActivity", "callsign", {
-                        {"Callsign", "callsign"},
-                        {"Distance (closest first)", "distance"},
-                        {"Distance (farthest first)", "-distance"},
-                        {"Last heard timestamp (oldest first)", "timestamp"},
-                        {"Last heard timestamp (newest first)", "-timestamp"},
-                        {"SNR (weakest first)", "snr"},
-                        {"SNR (strongest first)", "-snr"}
-                    });
+    buildCallActivitySortByMenu(sortMenu);
 
     menu->addSeparator();
     menu->addAction(clearAction4);
@@ -2138,6 +2124,14 @@ void MainWindow::on_menuWindow_aboutToShow(){
 
     auto vsizes = ui->mainSplitter->sizes();
     ui->actionShow_Waterfall->setChecked(vsizes.last() > 0);
+
+    QMenu * sortBandMenu = new QMenu(ui->menuWindow);
+    buildBandActivitySortByMenu(sortBandMenu);
+    ui->actionSort_Band_Activity->setMenu(sortBandMenu);
+
+    QMenu * sortCallMenu = new QMenu(ui->menuWindow);
+    buildCallActivitySortByMenu(sortCallMenu);
+    ui->actionSort_Call_Activity->setMenu(sortCallMenu);
 }
 
 void MainWindow::on_actionShow_Band_Activity_triggered(bool checked){
@@ -7177,6 +7171,28 @@ void MainWindow::buildSortByMenu(QMenu * menu, QString key, QString defaultValue
             }
         });
     }
+}
+
+void MainWindow::buildBandActivitySortByMenu(QMenu * menu){
+    buildSortByMenu(menu, "bandActivity", "offset", {
+        {"Frequency Offset", "offset"},
+        {"Last heard timestamp (oldest first)", "timestamp"},
+        {"Last heard timestamp (newest first)", "-timestamp"},
+        {"SNR (weakest first)", "snr"},
+        {"SNR (strongest first)", "-snr"}
+    });
+}
+
+void MainWindow::buildCallActivitySortByMenu(QMenu * menu){
+    buildSortByMenu(menu, "callActivity", "callsign", {
+        {"Callsign", "callsign"},
+        {"Distance (closest first)", "distance"},
+        {"Distance (farthest first)", "-distance"},
+        {"Last heard timestamp (oldest first)", "timestamp"},
+        {"Last heard timestamp (newest first)", "-timestamp"},
+        {"SNR (weakest first)", "snr"},
+        {"SNR (strongest first)", "-snr"}
+    });
 }
 
 void MainWindow::buildQueryMenu(QMenu * menu, QString call){

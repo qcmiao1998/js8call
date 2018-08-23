@@ -260,6 +260,8 @@ private slots:
   void setSortBy(QString key, QString value);
   QString getSortBy(QString key, QString defaultValue);
   void buildSortByMenu(QMenu * menu, QString key, QString defaultValue, QMap<QString, QString> values);
+  void buildBandActivitySortByMenu(QMenu * menu);
+  void buildCallActivitySortByMenu(QMenu * menu);
   void buildQueryMenu(QMenu *, QString callsign);
   void on_queryButton_pressed();
   void on_macrosMacroButton_pressed();

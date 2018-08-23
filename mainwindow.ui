@@ -4353,6 +4353,9 @@ list. The list can be maintained in Settings (F2).</string>
     <property name="title">
      <string>Window</string>
     </property>
+    <addaction name="actionSort_Band_Activity"/>
+    <addaction name="actionSort_Call_Activity"/>
+    <addaction name="separator"/>
     <addaction name="actionShow_Band_Activity"/>
     <addaction name="actionShow_Call_Activity"/>
     <addaction name="actionShow_Waterfall"/>
@@ -5046,6 +5049,16 @@ list. The list can be maintained in Settings (F2).</string>
   <action name="actionReset_Window_Sizes">
    <property name="text">
     <string>Reset Window Sizes</string>
+   </property>
+  </action>
+  <action name="actionSort_Band_Activity">
+   <property name="text">
+    <string>Sort Band Activity...</string>
+   </property>
+  </action>
+  <action name="actionSort_Call_Activity">
+   <property name="text">
+    <string>Sort Call Activity...</string>
    </property>
   </action>
  </widget>
