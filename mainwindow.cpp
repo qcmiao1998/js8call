@@ -7171,7 +7171,7 @@ void MainWindow::buildBandActivitySortByMenu(QMenu * menu){
     buildSortByMenu(menu, "bandActivity", "offset", {
         {"Frequency Offset", "offset"},
         {"Last heard timestamp (oldest first)", "timestamp"},
-        {"Last heard timestamp (newest first)", "-timestamp"},
+        {"Last heard timestamp (recent first)", "-timestamp"},
         {"SNR (weakest first)", "snr"},
         {"SNR (strongest first)", "-snr"}
     });
@@ -7183,7 +7183,7 @@ void MainWindow::buildCallActivitySortByMenu(QMenu * menu){
         {"Distance (closest first)", "distance"},
         {"Distance (farthest first)", "-distance"},
         {"Last heard timestamp (oldest first)", "timestamp"},
-        {"Last heard timestamp (newest first)", "-timestamp"},
+        {"Last heard timestamp (recent first)", "-timestamp"},
         {"SNR (weakest first)", "snr"},
         {"SNR (strongest first)", "-snr"}
     });
