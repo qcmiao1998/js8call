@@ -44,8 +44,8 @@ QMap<QString, int> directed_cmds = {
     {"@",     1  }, // query qth
     {"&",     2  }, // query station message
     {"$",     3  }, // query station(s) heard
-    {"%",     5  }, // query pwr
 
+    {"%",     5  }, // query pwr
     {"|",     6  }, // retransmit message
     {"!",     7  }, // alert message
     {"#",     8  }, // all or nothing message
@@ -54,10 +54,12 @@ QMap<QString, int> directed_cmds = {
     // {"/",     10  }, // unused? (can we even use stroke?)
 
     // directed responses
-    {" HW?",     18  }, // how do you copy?
-    {" QRZ",     19  }, // who is calling me?
+    {" QTC",     16  }, // this is my qtc
+    {" QTH",     17  }, // this is my qth
+    {" FB",      18  }, // fine business
+    {" HW CPY?",     19  }, // how do you copy?
     {" HEARING", 20  }, // i am hearing the following stations
-    {" RR",      21  }, // roger roger (not visible in UI but still exists)
+    {" RR",      21  }, // roger roger
     {" QSL?",    22  }, // do you copy?
     {" QSL",     23  }, // i copy
     {" PWR",     24  }, // power level
@@ -70,12 +72,12 @@ QMap<QString, int> directed_cmds = {
     {" ",        31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, 3, /*4,*/ 5, 6, 7, 8, /*...*/ 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, 3, /*4,*/ 5, 6, 7, 8, /*...*/ 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 QSet<int> buffered_cmds = {6, 7, 8};
 
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|PWR|QSL[?]?|RR|HEARING|[?@&$%|!# ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|PWR|QSL[?]?|RR|HEARING|HW CPY[?]|FB|QTH|QTC|[?@&$%|!# ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_pwr_pattern = QString("(?<pwr>(?<=PWR)\\s?\\d+\\s?[KM]?W)?");

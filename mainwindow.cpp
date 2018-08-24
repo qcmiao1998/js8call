@@ -7417,6 +7417,43 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         toggleTx(true);
     });
 
+    auto hwAction = menu->addAction(QString("%1 HW CPY? - How do you copy?").arg(call).trimmed());
+    connect(hwAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 HW CPY?").arg(selectedCall), true);
+        toggleTx(true);
+    });
+
+    auto rrAction = menu->addAction(QString("%1 RR - Roger. Received. I copy.").arg(call).trimmed());
+    connect(rrAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 RR").arg(selectedCall), true);
+        toggleTx(true);
+    });
+
+    auto fbAction = menu->addAction(QString("%1 FB - Fine Business").arg(call).trimmed());
+    connect(fbAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 FB").arg(selectedCall), true);
+        toggleTx(true);
+    });
+
+
     auto sevenThreeAction = menu->addAction(QString("%1 73 - I send my best regards / end of contact").arg(call).trimmed());
     connect(sevenThreeAction, &QAction::triggered, this, [this](){
 
@@ -8933,11 +8970,11 @@ void MainWindow::processCommandActivity() {
                 qth = grid;
             }
 
-            reply = QString("%1 %2").arg(d.from).arg(qth);
+            reply = QString("%1 QTH %2").arg(d.from).arg(qth);
         }
         // QUERIED STATION MESSAGE
         else if (d.cmd == "&" && !isAllCall) {
-            reply = QString("%1 %2").arg(d.from).arg(m_config.my_station());
+            reply = QString("%1 QTC %2").arg(d.from).arg(m_config.my_station());
         }
         // QUERIED STATIONS HEARD
         else if (d.cmd == "$" && !isAllCall) {
