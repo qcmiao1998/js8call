@@ -2028,7 +2028,7 @@ This is used for reverse beacon analysis which is very useful
 for assessing propagation and system performance.</string>
             </property>
             <property name="text">
-             <string>Enable &amp;PSK Reporter Spotting</string>
+             <string>Enable spotting to reporting networks (PSKReporter, APRS-IS, etc)</string>
             </property>
            </widget>
           </item>
