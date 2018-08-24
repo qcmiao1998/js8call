@@ -1281,16 +1281,13 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   qDebug() << "packing" << Varicode::pack72bits((((quint64)1)<<62)-1, (1<<7)-1) << v << r;
 #endif
 
-
-
-
   // this must be the last statement of constructor
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
 
 void MainWindow::not_GA_warning_message ()
 {
-  QDate eol(2018, 9, 3);
+  QDate eol(2018, 9, 15);
 
   if(QDate::currentDate() >= eol){
       MessageBox::critical_message (this, QString("This pre-release development build of FT8Call has expired. Please upgrade to the latest version."));
@@ -1305,17 +1302,8 @@ void MainWindow::not_GA_warning_message ()
                                 "and carry a responsiblity to report any problems to:\n"
                                 "Jordan Sherer (KN4CRD) kn4crd@gmail.com\n\n").arg(QApplication::applicationName()).arg(eol.toString()));
 
-#if 0
-  for(int i = 0; i < 13; i++){
-  CallDetail cd;
-  cd.call = QString("KN%1CRD").arg(i);
-  cd.freq = 1200;
-  cd.bits = Varicode::FT8CallLast;
-  cd.utcTimestamp = QDateTime::currentDateTimeUtc();
-  logCallActivity(cd, false);
-  m_rxDirty = true;
-  }
-#endif
+
+  ensureCallsignSet(false);
 }
 
 void MainWindow::initialize_fonts ()
@@ -5888,9 +5876,15 @@ void MainWindow::resetMessageUI(){
     }
 }
 
-bool MainWindow::ensureCallsignSet(){
+bool MainWindow::ensureCallsignSet(bool alert){
     if(m_config.my_callsign().trimmed().isEmpty()){
-        MessageBox::warning_message(this, tr ("Please enter your callsign in the settings."));
+        if(alert) MessageBox::warning_message(this, tr ("Please enter your callsign in the settings."));
+        on_actionSettings_triggered();
+        return false;
+    }
+
+    if(m_config.my_grid().trimmed().isEmpty()){
+        if(alert) MessageBox::warning_message(this, tr ("Please enter your grid locator in the settings."));
         on_actionSettings_triggered();
         return false;
     }
