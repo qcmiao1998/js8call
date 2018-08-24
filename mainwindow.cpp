@@ -7306,7 +7306,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         toggleTx(true);
     });
 
-    auto heardQueryAction = menu->addAction(QString("%1$ - What are the stations are you hearing? (Top 4 ranked by SNR)").arg(call).trimmed());
+    auto heardQueryAction = menu->addAction(QString("%1$ - What are the stations are you hearing? (Top 4 ranked by strongest SNR)").arg(call).trimmed());
     heardQueryAction->setDisabled(isAllCall);
     connect(heardQueryAction, &QAction::triggered, this, [this](){
 

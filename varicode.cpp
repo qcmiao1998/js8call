@@ -45,7 +45,7 @@ QMap<QString, int> directed_cmds = {
     {"&",     2  }, // query station message
     {"$",     3  }, // query station(s) heard
     {"%",     5  }, // query pwr
-    // 4.
+
     {"|",     6  }, // retransmit message
     {"!",     7  }, // alert message
     {"#",     8  }, // all or nothing message
@@ -54,6 +54,8 @@ QMap<QString, int> directed_cmds = {
     // {"/",     10  }, // unused? (can we even use stroke?)
 
     // directed responses
+    {" HW?",     18  }, // how do you copy?
+    {" QRZ",     19  }, // who is calling me?
     {" HEARING", 20  }, // i am hearing the following stations
     {" RR",      21  }, // roger roger (not visible in UI but still exists)
     {" QSL?",    22  }, // do you copy?
@@ -68,7 +70,7 @@ QMap<QString, int> directed_cmds = {
     {" ",        31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, 3, /*4,*/ 5, 6, 7, 8, /*...*/ 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, 3, /*4,*/ 5, 6, 7, 8, /*...*/ 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 QSet<int> buffered_cmds = {6, 7, 8};
 
