@@ -577,6 +577,7 @@ private:
   bool id_after_73_;
   bool tx_QSY_allowed_;
   bool spot_to_psk_reporter_;
+  bool transmit_directed_;
   bool autoreply_off_at_startup_;
   bool monitor_off_at_startup_;
   bool monitor_last_used_;
@@ -690,6 +691,7 @@ void Configuration::set_spot_to_psk_reporter (bool spot)
     }
 }
 
+bool Configuration::transmit_directed() const { return m_->transmit_directed_; }
 bool Configuration::autoreply_off_at_startup () const {return m_->autoreply_off_at_startup_;}
 bool Configuration::monitor_off_at_startup () const {return m_->monitor_off_at_startup_;}
 bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->monitor_last_used_;}
@@ -1263,6 +1265,7 @@ void Configuration::impl::initialize_models ()
   ui_->CW_id_after_73_check_box->setChecked (id_after_73_);
   ui_->tx_QSY_check_box->setChecked (tx_QSY_allowed_);
   ui_->psk_reporter_check_box->setChecked (spot_to_psk_reporter_);
+  ui_->transmit_directed_check_box->setChecked(transmit_directed_);
   ui_->autoreply_off_check_box->setChecked (autoreply_off_at_startup_);
   ui_->monitor_off_check_box->setChecked (monitor_off_at_startup_);
   ui_->monitor_last_used_check_box->setChecked (monitor_last_used_);
@@ -1466,6 +1469,7 @@ void Configuration::impl::read_settings ()
 
   type_2_msg_gen_ = settings_->value ("Type2MsgGen", QVariant::fromValue (Configuration::type_2_msg_3_full)).value<Configuration::Type2MsgGen> ();
 
+  transmit_directed_ = settings_->value ("TransmitDirected", true).toBool();
   autoreply_off_at_startup_ = settings_->value ("AutoreplyOFF", false).toBool ();
   monitor_off_at_startup_ = settings_->value ("MonitorOFF", false).toBool ();
   monitor_last_used_ = settings_->value ("MonitorLastUsed", false).toBool ();
@@ -1605,6 +1609,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("AudioInputChannel", AudioDevice::toString (audio_input_channel_));
   settings_->setValue ("AudioOutputChannel", AudioDevice::toString (audio_output_channel_));
   settings_->setValue ("Type2MsgGen", QVariant::fromValue (type_2_msg_gen_));
+  settings_->setValue ("TransmitDirected", transmit_directed_);
   settings_->setValue ("AutoreplyOFF", autoreply_off_at_startup_);
   settings_->setValue ("MonitorOFF", monitor_off_at_startup_);
   settings_->setValue ("MonitorLastUsed", monitor_last_used_);
@@ -2037,6 +2042,7 @@ void Configuration::impl::accept ()
   RxBandwidth_ = ui_->sbBandwidth->value ();
   id_after_73_ = ui_->CW_id_after_73_check_box->isChecked ();
   tx_QSY_allowed_ = ui_->tx_QSY_check_box->isChecked ();
+  transmit_directed_ = ui_->transmit_directed_check_box->isChecked();
   autoreply_off_at_startup_ = ui_->autoreply_off_check_box->isChecked ();
   monitor_off_at_startup_ = ui_->monitor_off_check_box->isChecked ();
   monitor_last_used_ = ui_->monitor_last_used_check_box->isChecked ();

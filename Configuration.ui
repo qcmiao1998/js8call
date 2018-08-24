@@ -376,7 +376,20 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="transmit_directed_check_box">
+            <property name="text">
+             <string>Immediately transmit directed responses from the menu</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="single_decode_check_box">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="visible">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>Single decode</string>
             </property>

@@ -7223,7 +7223,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
 
         auto d = m_callActivity[selectedCall];
         addMessageText(QString("%1 SNR %2").arg(selectedCall).arg(Varicode::formatSNR(d.snr)), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     auto sendPWRAction = menu->addAction(QString("%1 PWR - Send station power level to the selected callsign").arg(call).trimmed());
@@ -7236,7 +7237,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 PWR %2").arg(selectedCall).arg(Varicode::formatPWR(m_config.my_dBm())), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     menu->addSeparator();
@@ -7264,7 +7266,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1?").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     auto qthQueryAction = menu->addAction(QString("%1@ - What is your QTH message?").arg(call));
@@ -7277,7 +7280,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1@").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     auto stationMessageQueryAction = menu->addAction(QString("%1&& - What is your station message?").arg(call).trimmed());
@@ -7290,7 +7294,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1&").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     auto stationPowerQueryAction = menu->addAction(QString("%1% - What is your station power?").arg(call).trimmed());
@@ -7303,7 +7308,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1%").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     auto heardQueryAction = menu->addAction(QString("%1$ - What are the stations are you hearing? (Top 4 ranked by strongest SNR)").arg(call).trimmed());
@@ -7316,7 +7322,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1$").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     auto hashAction = menu->addAction(QString("%1#message - Please ACK if you receive this message in its entirety").arg(call).trimmed());
@@ -7366,7 +7373,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 AGN?").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     auto qslQueryAction = menu->addAction(QString("%1 QSL? - Did you receive my last transmission?").arg(call).trimmed());
@@ -7378,7 +7386,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 QSL?").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     auto qslAction = menu->addAction(QString("%1 QSL - I confirm I received your last transmission").arg(call).trimmed());
@@ -7390,7 +7399,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 QSL").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     auto yesAction = menu->addAction(QString("%1 YES - I confirm your last inquiry").arg(call).trimmed());
@@ -7402,7 +7412,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 YES").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     auto noAction = menu->addAction(QString("%1 NO - I do not confirm your last inquiry").arg(call).trimmed());
@@ -7414,7 +7425,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 NO").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     auto hwAction = menu->addAction(QString("%1 HW CPY? - How do you copy?").arg(call).trimmed());
@@ -7426,7 +7438,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 HW CPY?").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     auto rrAction = menu->addAction(QString("%1 RR - Roger. Received. I copy.").arg(call).trimmed());
@@ -7438,7 +7451,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 RR").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
     auto fbAction = menu->addAction(QString("%1 FB - Fine Business").arg(call).trimmed());
@@ -7450,7 +7464,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 FB").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 
 
@@ -7463,7 +7478,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 73").arg(selectedCall), true);
-        toggleTx(true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
     });
 }
 
