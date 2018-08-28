@@ -7181,12 +7181,12 @@ void MainWindow::on_cqMacroButton_clicked(){
     addMessageText(text);
 }
 
-void MainWindow::on_qtcMacroButton_clicked(){
-    QString qtc = m_config.my_station();
-    if(qtc.isEmpty()){
+void MainWindow::on_replyMacroButton_clicked(){
+    QString call = callsignSelected();
+    if(call.isEmpty()){
         return;
     }
-    addMessageText(QString("QTC %1").arg(qtc));
+    addMessageText(QString("%1 ").arg(call));
 }
 
 void MainWindow::on_qthMacroButton_clicked(){
@@ -7439,7 +7439,11 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
 
     menu->addSeparator();
 
+    bool emptyQTC = m_config.my_station().isEmpty();
+    bool emptyQTH = m_config.my_qth().isEmpty() && m_config.my_grid().isEmpty();
+
     auto qtcAction = menu->addAction(QString("%1 QTC message - Send my station message").arg(call).trimmed());
+    qtcAction->setDisabled(emptyQTC);
     connect(qtcAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7453,6 +7457,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
     });
 
     auto qthAction = menu->addAction(QString("%1 QTH message - Send my station location message").arg(call).trimmed());
+    qthAction->setDisabled(emptyQTH);
     connect(qthAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7466,7 +7471,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
     });
 
     auto grid = m_config.my_grid();
-    auto gridAction = menu->addAction(QString("%1 GRID %2 - Send my current station grid location").arg(call).arg(grid).trimmed());
+    auto gridAction = menu->addAction(QString("%1 GRID %2 - Send my current station Maidenhead grid locator").arg(call).arg(grid).trimmed());
     connect(gridAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -8633,12 +8638,9 @@ void MainWindow::updateButtonDisplay(){
 
     bool isTransmitting = m_transmitting || m_txFrameCount > 0;
     bool emptyCallsign = callsignSelected().isEmpty();
-    bool emptyQTC = m_config.my_station().isEmpty();
-    bool emptyQTH = m_config.my_qth().isEmpty() && m_config.my_grid().isEmpty();
 
     ui->cqMacroButton->setDisabled(isTransmitting);
-    ui->qtcMacroButton->setDisabled(isTransmitting || emptyQTC);
-    ui->qthMacroButton->setDisabled(isTransmitting || emptyQTH);
+    ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
     ui->macrosMacroButton->setDisabled(isTransmitting);
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
 }
@@ -9463,7 +9465,7 @@ void MainWindow::displayBandActivity() {
                     age = since(item.utcTimestamp);
                 }
 
-                auto joined = text.join("     ");
+                auto joined = text.join("");
                 if (joined.isEmpty()) {
                     continue;
                 }

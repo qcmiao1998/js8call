@@ -1303,10 +1303,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
          </widget>
         </item>
         <item row="1" column="2">
-         <widget class="QPushButton" name="qtcMacroButton">
-          <property name="visible">
-            <bool>false</bool>
-          </property>
+         <widget class="QPushButton" name="replyMacroButton">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -1314,10 +1311,10 @@ QTextEdit[transmitting=&quot;true&quot;] {
            </size>
           </property>
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send your station message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reply to a CQ&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
-           <string>QTC</string>
+           <string>Reply</string>
           </property>
          </widget>
         </item>
