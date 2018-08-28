@@ -7207,14 +7207,15 @@ QString MainWindow::getSortBy(QString key, QString defaultValue){
     return m_sortCache.value(key, QVariant(defaultValue)).toString();
 }
 
-void MainWindow::buildSortByMenu(QMenu * menu, QString key, QString defaultValue, QMap<QString, QString> values){
+void MainWindow::buildSortByMenu(QMenu * menu, QString key, QString defaultValue, QList<QPair<QString, QString>> values){
     auto currentSortBy = getSortBy(key, defaultValue);
 
     QActionGroup * g = new QActionGroup(menu);
     g->setExclusive(true);
 
-    foreach(auto k, values.keys()){
-        auto v = values[k];
+    foreach(auto p, values){
+        auto k = p.first;
+        auto v = p.second;
         auto a = menu->addAction(k);
         a->setCheckable(true);
         a->setChecked(v == currentSortBy);
@@ -7241,6 +7242,7 @@ void MainWindow::buildBandActivitySortByMenu(QMenu * menu){
 void MainWindow::buildCallActivitySortByMenu(QMenu * menu){
     buildSortByMenu(menu, "callActivity", "callsign", {
         {"Callsign", "callsign"},
+        {"Frequency Offset", "offset"},
         {"Distance (closest first)", "distance"},
         {"Distance (farthest first)", "-distance"},
         {"Last heard timestamp (oldest first)", "timestamp"},
@@ -9558,6 +9560,13 @@ void MainWindow::displayCallActivity() {
         // Build the table
         QList < QString > keys = m_callActivity.keys();
 
+        auto compareOffset = [this](const QString left, QString right) {
+            auto leftActivity = m_callActivity[left];
+            auto rightActivity = m_callActivity[right];
+
+            return leftActivity.freq < rightActivity.freq;
+        };
+
         auto compareDistance = [this](const QString left, QString right) {
             auto leftActivity = m_callActivity[left];
             auto rightActivity = m_callActivity[right];
@@ -9599,7 +9608,9 @@ void MainWindow::displayCallActivity() {
             reverse = true;
         }
 
-        if(sortBy == "distance"){
+        if(sortBy == "offset"){
+            qSort(keys.begin(), keys.end(), compareOffset);
+        } else if(sortBy == "distance"){
             qSort(keys.begin(), keys.end(), compareDistance);
         } else if(sortBy == "timestamp"){
             qSort(keys.begin(), keys.end(), compareTimestamp);
@@ -9629,12 +9640,13 @@ void MainWindow::displayCallActivity() {
             displayItem->setData(Qt::UserRole, QVariant((d.call)));
             ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, displayItem);
             ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
-            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 2, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
-            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 3, new QTableWidgetItem(QString("%1").arg(d.grid)));
+            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 2, new QTableWidgetItem(QString("%1").arg(d.freq)));
+            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 3, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
+            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 4, new QTableWidgetItem(QString("%1").arg(d.grid)));
 
             auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
             distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 4, distanceItem);
+            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 5, distanceItem);
 
             if (call == selectedCall) {
                 ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
@@ -9646,6 +9658,7 @@ void MainWindow::displayCallActivity() {
         ui->tableWidgetCalls->resizeColumnToContents(1);
         ui->tableWidgetCalls->resizeColumnToContents(2);
         ui->tableWidgetCalls->resizeColumnToContents(3);
+        ui->tableWidgetCalls->resizeColumnToContents(4);
 
         // Reset the scroll position
         ui->tableWidgetCalls->verticalScrollBar()->setValue(currentScrollPos);

@@ -221,7 +221,7 @@ QPushButton[oob=&quot;true&quot;] {
 </string>
                 </property>
                 <property name="text">
-                 <string>14.074 000</string>
+                 <string>14.078 000</string>
                 </property>
                 <property name="flat">
                  <bool>true</bool>
@@ -1180,6 +1180,11 @@ QTextEdit[transmitting=&quot;true&quot;] {
         </column>
         <column>
          <property name="text">
+          <string>Offset</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
           <string>Age</string>
          </property>
         </column>
@@ -1250,14 +1255,14 @@ QTextEdit[transmitting=&quot;true&quot;] {
         </item>
         <item row="1" column="4">
          <widget class="QPushButton" name="qthMacroButton">
-          <property name="visible">
-           <bool>false</bool>
-          </property>
           <property name="minimumSize">
            <size>
             <width>0</width>
             <height>30</height>
            </size>
+          </property>
+          <property name="visible">
+           <bool>false</bool>
           </property>
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send your station location message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
