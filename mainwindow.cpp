@@ -6609,6 +6609,23 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
   m_messageClient->qso_logged (QSO_date_off, call, grid, dial_freq, mode, rpt_sent, rpt_received, tx_power, comments, name, QSO_date_on, operator_call, my_call, my_grid);
   m_messageClient->logged_ADIF (ADIF);
 #endif
+
+  sendNetworkMessage("LOG.QSO", QString(ADIF), {
+      {"UTC.ON", QVariant(QSO_date_on.toMSecsSinceEpoch())},
+      {"UTC.OFF", QVariant(QSO_date_off.toMSecsSinceEpoch())},
+      {"CALL", QVariant(call)},
+      {"GRID", QVariant(grid)},
+      {"FREQ", QVariant(dial_freq)},
+      {"MODE", QVariant(mode)},
+      {"RPT.SENT", QVariant(rpt_sent)},
+      {"RPT.RECV", QVariant(rpt_received)},
+      {"NAME", QVariant(name)},
+      {"COMMENTS", QVariant(comments)},
+      {"STATION.OP", QVariant(operator_call)},
+      {"STATION.CALL", QVariant(my_call)},
+      {"STATION.GRID", QVariant(my_grid)}
+  });
+
   if (m_config.clear_DX () and !m_config.bHound()) clearDX ();
   m_dateTimeQSOOn = QDateTime {};
 }
