@@ -2390,6 +2390,8 @@ void MainWindow::displayDialFrequency ()
   // lookup band
   auto const& band_name = m_config.bands ()->find (dial_frequency);
   if (m_lastBand != band_name){
+      cacheActivity(m_lastBand);
+
       // only change this when necessary as we get called a lot and it
       // would trash any user input to the band combo box line edit
       ui->bandComboBox->setCurrentText (band_name);
@@ -2398,6 +2400,8 @@ void MainWindow::displayDialFrequency ()
       band_changed(dial_frequency);
 
       clearActivity();
+
+      restoreActivity(m_lastBand);
   }
 
   // TODO: jsherer - this doesn't validate anything else right? we are disabling this because as long as you're in a band, it's valid.
@@ -5723,6 +5727,28 @@ void MainWindow::on_tx6_editingFinished()                       //tx6 edited
     if(t1.size()==2) m_CQtype="CQ " + t1;
   }
   msgtype(t, ui->tx6);
+}
+
+void MainWindow::cacheActivity(QString key){
+    m_callActivityCache[key] = m_callActivity;
+    m_bandActivityCache[key] = m_bandActivity;
+    m_rxTextCache[key] = ui->textEditRX->toHtml();
+}
+
+void MainWindow::restoreActivity(QString key){
+    if(m_callActivityCache.contains(key)){
+        m_callActivity = m_callActivityCache[key];
+    }
+
+    if(m_bandActivityCache.contains(key)){
+        m_bandActivity = m_bandActivityCache[key];
+    }
+
+    if(m_rxTextCache.contains(key)){
+        ui->textEditRX->setHtml(m_rxTextCache[key]);
+    }
+
+    displayActivity(true);
 }
 
 void MainWindow::clearActivity(){
@@ -9258,7 +9284,7 @@ void MainWindow::processTxQueue(){
     }
 
     if(!isFreqOffsetFree(f, 60)){
-        f = findFreeFreqOffset(500, 2500, 60);
+        f = findFreeFreqOffset(500, 2000, 60);
     }
 
     // we need a valid frequency...

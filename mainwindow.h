@@ -133,6 +133,8 @@ public slots:
 
   void logCallActivity(CallDetail d, bool spot=true);
   QString lookupCallInCompoundCache(QString const &call);
+  void cacheActivity(QString key);
+  void restoreActivity(QString key);
   void clearActivity();
   void displayTextForFreq(QString text, int freq, QDateTime date, bool isTx, bool isNewLine, bool isLast);
   void writeNoticeTextToUI(QDateTime date, QString text);
@@ -751,6 +753,11 @@ private:
   QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
   QMap<int, MessageBuffer> m_messageBuffer; // freq -> (cmd, [frames, ...])
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
+
+  QMap<QString, QMap<QString, CallDetail>> m_callActivityCache; // band -> call activity
+  QMap<QString, QMap<int, QList<ActivityDetail>>> m_bandActivityCache; // band -> band activity
+  QMap<QString, QString> m_rxTextCache; // band -> rx text
+
   QSet<QString> m_callSeenBeacon; // call
   int m_previousFreq;
   bool m_shouldRestoreFreq;
