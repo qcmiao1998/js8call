@@ -42,7 +42,7 @@ data = s.recv(1024)
 print data
 
 if 1:
-    message = "{}>APRS,TCPIP*::EMAIL-2  :kn4crd@gmail.com testing456{{AA}}\n".format(call)
+    message = "{}>APRS,TCPIP*::EMAIL-2  :kn4crd@gmail.com testing456{{01}}\n".format(call)
     s.send(message)
 
 if 0:
