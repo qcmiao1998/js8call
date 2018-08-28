@@ -41,19 +41,24 @@ print "Login sent...", login
 data = s.recv(1024)
 print data
 
-if 1:
+if 0:
+    message = "KN4CRD>OH8STN,APRS,TCPIP*::EMAIL-2  :KN4CRD@GMAIL.COM TESTING!{04}\n"
+    s.send(message)
+
+if 0:
     message = "{}>APRS,TCPIP*::EMAIL-2  :kn4crd@gmail.com testing456{{01}}\n".format(call)
+    message = "KN4CRD>APRS,TCPIP*::EMAIL-2  :KN4CRD@GMAIL.COM TESTING!{02}\n"
     s.send(message)
 
 if 0:
     payload = ":This is a test message"
     message = "{}>APRS,TCPIP*::{}   {}\n".format(call, call, payload)
     s.send(message)
-if 0:
+if 1:
     position = "=3352.45N/08422.71Wn"
     status = "FT8CALL VIA XX9XXX/XXXX 14.082500MHz -20dB"
     payload = "".join((position, status))
-    message = "{}>APRS,TCPIP*:{}\n".format(call, payload)
+    message = "{}>OH8STN,APRS,TCPIP*:{}\n".format(call, payload)
     s.send(message)
 
 print "Spot sent...", message

@@ -9160,6 +9160,11 @@ void MainWindow::processCommandActivity() {
 
            reply = QString("%1 ACK").arg(d.from);
         }
+        // PROCESS APRS
+        else if(d.cmd == " APRS:" && m_config.spot_to_reporting_networks()){
+            m_aprsClient->enqueueThirdParty(Radio::base_callsign(d.from), d.text);
+            reply = QString("%1 ACK").arg(d.from);
+        }
         // PROCESS ALERT
         else if (d.cmd == "!" && !isAllCall) {
             QMessageBox * msgBox = new QMessageBox(this);
@@ -9184,6 +9189,9 @@ void MainWindow::processCommandActivity() {
             });
 
             msgBox->show();
+
+            // make sure this is explicit
+            continue;
         }
 
         if (reply.isEmpty()) {

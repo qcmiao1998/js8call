@@ -23,7 +23,7 @@ public:
 
     void enqueueSpot(QString theircall, QString grid, quint64 frequency, int snr);
     void enqueueMessage(QString tocall, QString message);
-    void enqueueMail(QString email, QString message);
+    void enqueueThirdParty(QString theircall, QString payload);
     void enqueueRaw(QString aprsFrame);
 
     void processQueue(bool disconnect=false);

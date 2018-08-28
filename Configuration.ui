@@ -2030,6 +2030,9 @@ for assessing propagation and system performance.</string>
             <property name="text">
              <string>Enable spotting to reporting networks (PSKReporter, APRS-IS, etc)</string>
             </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
          </layout>

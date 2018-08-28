@@ -188,11 +188,11 @@ void APRSISClient::enqueueSpot(QString theircall, QString grid, quint64 frequenc
     if(m_localCall.isEmpty()) return;
 
     auto geo = APRSISClient::grid2aprs(grid);
-    auto spotFrame = QString("%1>APRS,TCPIP*:=%2/%3nFT8CALL %4 %5 %6MHz %7dB\n");
+    auto spotFrame = QString("%1>%2,APRS,TCPIP*:=%3/%4nFT8CALL %5 %6MHz %7dB\n");
     spotFrame = spotFrame.arg(theircall);
+    spotFrame = spotFrame.arg(m_localCall);
     spotFrame = spotFrame.arg(geo.first);
     spotFrame = spotFrame.arg(geo.second);
-    spotFrame = spotFrame.arg(m_localCall);
     spotFrame = spotFrame.arg(m_localGrid.left(4));
     spotFrame = spotFrame.arg(Radio::frequency_MHz_string(frequency));
     spotFrame = spotFrame.arg(Varicode::formatSNR(snr));
@@ -207,6 +207,14 @@ void APRSISClient::enqueueMessage(QString tocall, QString message){
     messageFrame = messageFrame.arg(tocall + QString(" ").repeated(9-tocall.length()));
     messageFrame = messageFrame.arg(message);
     enqueueRaw(messageFrame);
+}
+
+void APRSISClient::enqueueThirdParty(QString theircall, QString payload){
+    auto frame = QString("%1>%2,APRS,TCPIP*:%3\n");
+    frame = frame.arg(theircall);
+    frame = frame.arg(m_localCall);
+    frame = frame.arg(payload);
+    enqueueRaw(frame);
 }
 
 void APRSISClient::enqueueRaw(QString aprsFrame){
