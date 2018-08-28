@@ -1250,6 +1250,9 @@ QTextEdit[transmitting=&quot;true&quot;] {
         </item>
         <item row="1" column="4">
          <widget class="QPushButton" name="qthMacroButton">
+          <property name="visible">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -1301,14 +1304,14 @@ QTextEdit[transmitting=&quot;true&quot;] {
         </item>
         <item row="1" column="2">
          <widget class="QPushButton" name="qtcMacroButton">
+          <property name="visible">
+            <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>0</width>
             <height>30</height>
            </size>
-          </property>
-          <property name="visible">
-           <bool>true</bool>
           </property>
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send your station message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>

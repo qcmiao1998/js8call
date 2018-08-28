@@ -1,5 +1,6 @@
 ﻿//---------------------------------------------------------- MainWindow
 #include "mainwindow.h"
+#include <cmath>
 #include <cinttypes>
 #include <limits>
 #include <functional>
@@ -25,6 +26,7 @@
 #include <QActionGroup>
 #include <QSplashScreen>
 
+#include "APRSISClient.h"
 #include "revision_utils.hpp"
 #include "qt_helpers.hpp"
 #include "NetworkAccessManager.hpp"
@@ -466,6 +468,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         version (), revision (),
         m_config.udp_server_name (), m_config.udp_server_port (),
         this}},
+  m_aprsClient {new APRSISClient{"rotate.aprs2.net", 14580, this}},
   psk_Reporter {new PSK_Reporter {m_messageClient, this}},
   m_i3bit {0},
   m_manual {&m_network_manager},
@@ -1014,7 +1017,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   setFreqOffsetForRestore(f, false);
   ui->cbVHFcontest->setChecked(false); // this needs to always be false
 
-  ui->spotButton->setChecked(m_config.spot_to_psk_reporter());
+  ui->spotButton->setChecked(m_config.spot_to_reporting_networks());
 
   auto enterFilter = new EnterKeyPressEater();
   connect(enterFilter, &EnterKeyPressEater::enterKeyPressed, this, [this](QObject *, QKeyEvent *, bool *pProcessed){
@@ -1279,6 +1282,17 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   quint8 r = 0;
   quint64 v = Varicode::unpack72bits(Varicode::pack72bits((((quint64)1)<<62)-1, (1<<7)-1), &r);
   qDebug() << "packing" << Varicode::pack72bits((((quint64)1)<<62)-1, (1<<7)-1) << v << r;
+
+  qDebug() << APRSISClient::grid2deg("EM73");
+  qDebug() << APRSISClient::grid2deg("EM73TU");
+  qDebug() << APRSISClient::grid2deg("EM73TU49NT");
+
+  qDebug() << APRSISClient::grid2aprs("EM73");
+  qDebug() << APRSISClient::grid2aprs("EM73TU");
+  qDebug() << APRSISClient::grid2aprs("EM73TU49NT");
+
+  qDebug() << APRSISClient::grid2aprs("FI08VE49");
+  qDebug() << APRSISClient::grid2aprs("OM25CU");
 #endif
 
   // this must be the last statement of constructor
@@ -2035,7 +2049,7 @@ void MainWindow::fastSink(qint64 frames)
     writeAllTxt(message);
     bool stdMsg = decodedtext.report(m_baseCall,
                   Radio::base_callsign(ui->dxCallEntry->text()),m_rptRcvd);
-    if (stdMsg) pskPost (decodedtext);
+    //if (stdMsg) pskPost (decodedtext);
   }
 
   float fracTR=float(k)/(12000.0*m_TRperiod);
@@ -2183,7 +2197,7 @@ void MainWindow::on_actionSettings_triggered()               //Setup Dialog
     on_dxGridEntry_textChanged (m_hisGrid); // recalculate distances in case of units change
     enable_DXCC_entity (m_config.DXCC ());  // sets text window proportions and (re)inits the logbook
 
-    preparePSKReporter();
+    prepareSpotting();
 
     if(m_config.restart_audio_input ()) {
       Q_EMIT startAudioInputStream (m_config.audio_input_device (),
@@ -2233,9 +2247,10 @@ void MainWindow::on_actionSettings_triggered()               //Setup Dialog
   }
 }
 
-void MainWindow::preparePSKReporter(){
-    if(m_config.spot_to_psk_reporter ()){
-        pskSetLocal ();
+void MainWindow::prepareSpotting(){
+    if(m_config.spot_to_reporting_networks ()){
+        pskSetLocal();
+        aprsSetLocal();
         ui->spotButton->setChecked(true);
     } else {
         ui->spotButton->setChecked(false);
@@ -2244,10 +2259,10 @@ void MainWindow::preparePSKReporter(){
 
 void MainWindow::on_spotButton_clicked(bool checked){
     // 1. save setting
-    m_config.set_spot_to_psk_reporter(checked);
+    m_config.set_spot_to_reporting_networks(checked);
 
     // 2. prepare
-    preparePSKReporter();
+    prepareSpotting();
 }
 
 void MainWindow::on_monitorButton_clicked (bool checked)
@@ -3247,12 +3262,12 @@ void::MainWindow::fast_decode_done()
     writeAllTxt(message);
 
     if(m_mode=="JT9" or m_mode=="MSK144") {
-// find and extract any report for myCall
+      // find and extract any report for myCall
       bool stdMsg = decodedtext.report(m_baseCall,
                     Radio::base_callsign(ui->dxCallEntry->text()), m_rptRcvd);
 
-// extract details and send to PSKreporter
-      if (stdMsg) pskPost (decodedtext);
+      // extract details and send to PSKreporter
+      //if (stdMsg) pskPost (decodedtext);
     }
     if (tmax >= 0.0) auto_sequence (decodedtext, ui->sbFtol->value (), ui->sbFtol->value ());
   }
@@ -3688,7 +3703,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
            m_mode=="JT9") auto_sequence (decodedtext, 25, 50);
         postDecode (true, decodedtext.string ());
 
-// find and extract any report for myCall, but save in m_rptRcvd only if it's from DXcall
+        // find and extract any report for myCall, but save in m_rptRcvd only if it's from DXcall
         QString rpt;
         bool stdMsg = decodedtext.report(m_baseCall,
             Radio::base_callsign(ui->dxCallEntry->text()), rpt);
@@ -3699,10 +3714,11 @@ void MainWindow::readFromStdout()                             //readFromStdout
           QString t=Radio::base_callsign(ui->dxCallEntry->text());
           if((t==deCall or t=="") and rpt!="") m_rptRcvd=rpt;
         }
-// extract details and send to PSKreporter
+        // extract details and send to PSKreporter
         int nsec=QDateTime::currentMSecsSinceEpoch()/1000-m_secBandChanged;
         bool okToPost=(nsec>(4*m_TRperiod)/5);
-        if (stdMsg && okToPost) pskPost(decodedtext);
+
+        //if (stdMsg && okToPost) pskPost(decodedtext);
 
         if((m_mode=="JT4" or m_mode=="JT65" or m_mode=="QRA64") and m_msgAvgWidget!=NULL) {
           if(m_msgAvgWidget->isVisible()) {
@@ -3811,7 +3827,8 @@ void MainWindow::auto_sequence (DecodedText const& message, unsigned start_toler
 
 void MainWindow::pskPost (DecodedText const& decodedtext)
 {
-  if (m_diskData || !m_config.spot_to_psk_reporter() || decodedtext.isLowConfidence ()) return;
+#if 0
+  if (m_diskData || !m_config.spot_to_reporting_networks() || decodedtext.isLowConfidence ()) return;
 
   QString msgmode=m_mode;
   if(m_mode=="JT9+JT65") {
@@ -3826,6 +3843,7 @@ void MainWindow::pskPost (DecodedText const& decodedtext)
     audioFrequency=decodedtext.string().mid(16,4).toInt();
   }
   int snr = decodedtext.snr();
+
   pskSetLocal ();
   if(grid.contains (grid_regexp)) {
 //    qDebug() << "To PSKreporter:" << deCall << grid << frequency << msgmode << snr;
@@ -3833,10 +3851,11 @@ void MainWindow::pskPost (DecodedText const& decodedtext)
 //           QString::number(snr),QString::number(QDateTime::currentDateTime().toTime_t()));
       pskLogReport(msgmode, audioFrequency, snr, deCall, grid);
   }
+#endif
 }
 
 void MainWindow::pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid){
-    if(!m_config.spot_to_psk_reporter()) return;
+    if(!m_config.spot_to_reporting_networks()) return;
 
     Frequency frequency = m_freqNominal + offset;
 
@@ -3847,6 +3866,19 @@ void MainWindow::pskLogReport(QString mode, int offset, int snr, QString callsig
        mode,
        QString::number(snr),
        QString::number(QDateTime::currentDateTime().toTime_t()));
+}
+
+void MainWindow::aprsLogReport(int offset, int snr, QString callsign, QString grid){
+    if(!m_config.spot_to_reporting_networks()) return;
+
+    Frequency frequency = m_freqNominal + offset;
+
+    if(grid.length() < 6){
+        qDebug() << "APRSISClient Spot Skipped:" << callsign << grid;
+        return;
+    }
+
+    m_aprsClient->enqueueSpot(Radio::base_callsign(callsign), grid, frequency, snr);
 }
 
 void MainWindow::killFile ()
@@ -6946,6 +6978,7 @@ void MainWindow::band_changed (Frequency f)
     m_bandEdited = false;
 
     psk_Reporter->sendReport();      // Upload any queued spots before changing band
+    m_aprsClient->processQueue();
     if (!m_transmitting) monitor (true);
     if ("FreqCal" == m_mode)
       {
@@ -7122,18 +7155,15 @@ void MainWindow::on_qtcMacroButton_clicked(){
     if(qtc.isEmpty()){
         return;
     }
-    addMessageText(qtc);
+    addMessageText(QString("QTC %1").arg(qtc));
 }
 
 void MainWindow::on_qthMacroButton_clicked(){
     QString qth = m_config.my_qth();
     if(qth.isEmpty()){
-        qth = m_config.my_grid();
-    }
-    if(qth.isEmpty()){
         return;
     }
-    addMessageText(qth);
+    addMessageText(QString("QTH %1").arg(qth));
 }
 
 void MainWindow::setSortBy(QString key, QString value){
@@ -7284,6 +7314,20 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
+    auto gridQueryAction = menu->addAction(QString("%1^ - What is your current grid locator?").arg(call));
+    gridQueryAction->setDisabled(isAllCall);
+    connect(gridQueryAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1^").arg(selectedCall), true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
+    });
+
     auto stationMessageQueryAction = menu->addAction(QString("%1&& - What is your station message?").arg(call).trimmed());
     stationMessageQueryAction->setDisabled(isAllCall);
     connect(stationMessageQueryAction, &QAction::triggered, this, [this](){
@@ -7361,6 +7405,49 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
 
         addMessageText(QString("%1!").arg(selectedCall), true);
     });
+
+    menu->addSeparator();
+
+    auto qtcAction = menu->addAction(QString("%1 QTC message - Send my station message").arg(call).trimmed());
+    connect(qtcAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 QTC %2").arg(selectedCall).arg(m_config.my_station()), true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
+    });
+
+    auto qthAction = menu->addAction(QString("%1 QTH message - Send my station location message").arg(call).trimmed());
+    connect(qthAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 QTH %2").arg(selectedCall).arg(m_config.my_qth()), true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
+    });
+
+    auto grid = m_config.my_grid();
+    auto gridAction = menu->addAction(QString("%1 GRID %2 - Send my current station grid location").arg(call).arg(grid).trimmed());
+    connect(gridAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 GRID %2").arg(selectedCall).arg(m_config.my_grid()), true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
+    });
+
 
     menu->addSeparator();
 
@@ -7908,8 +7995,9 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
               }
             }
 
-            if (m_config.spot_to_psk_reporter ()) {
-              pskSetLocal ();
+            if (m_config.spot_to_reporting_networks ()) {
+              pskSetLocal();
+              aprsSetLocal();
             }
             statusChanged();
             m_wideGraph->setDialFreq(m_freqNominal / 1.e6);
@@ -8165,6 +8253,11 @@ void MainWindow::pskSetLocal ()
 {
   psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (),
         m_config.my_station(), QString {"FT8Call v" + version() }.simplified ());
+}
+
+void MainWindow::aprsSetLocal ()
+{
+    m_aprsClient->setLocalStation(Radio::base_callsign(m_config.my_callsign()), m_config.my_grid());
 }
 
 void MainWindow::transmitDisplay (bool transmitting)
@@ -8979,14 +9072,19 @@ void MainWindow::processCommandActivity() {
         else if (d.cmd == "@" && !isAllCall) {
             QString qth = m_config.my_qth();
             if (qth.isEmpty()) {
-                QString grid = m_config.my_grid();
-                if (grid.isEmpty()) {
-                    continue;
-                }
-                qth = grid;
+                continue;
             }
 
             reply = QString("%1 QTH %2").arg(d.from).arg(qth);
+        }
+        // QUERIED GRID
+        else if (d.cmd == "^" && !isAllCall) {
+            QString grid = m_config.my_grid();
+            if (grid.isEmpty()) {
+                continue;
+            }
+
+            reply = QString("%1 GRID %2").arg(d.from).arg(grid);
         }
         // QUERIED STATION MESSAGE
         else if (d.cmd == "&" && !isAllCall) {
@@ -9031,9 +9129,30 @@ void MainWindow::processCommandActivity() {
         else if (d.cmd == "#" && !isAllCall) {
             reply = QString("%1 ACK").arg(d.from);
         }
+        // PROCESS AGN
+        else if (d.cmd == " AGN?" && !isAllCall && !m_lastTxMessage.isEmpty()) {
+           reply = m_lastTxMessage;
+        }
+        // PROCESS BUFFERED QTH
+        else if (d.cmd == " GRID"){
+           // 1. parse grids
+           // 2. log it to reporting networks
+           auto grids = Varicode::parseGrids(d.text);
+           foreach(auto grid, grids){
+               CallDetail cd = {};
+               cd.bits = d.bits;
+               cd.call = d.from;
+               cd.freq = d.freq;
+               cd.grid = grid;
+               cd.snr = d.snr;
+               cd.utcTimestamp = d.utcTimestamp;
+               logCallActivity(cd, true);
+           }
+
+           reply = QString("%1 ACK").arg(d.from);
+        }
         // PROCESS ALERT
         else if (d.cmd == "!" && !isAllCall) {
-
             QMessageBox * msgBox = new QMessageBox(this);
             msgBox->setIcon(QMessageBox::Information);
 
@@ -9056,10 +9175,6 @@ void MainWindow::processCommandActivity() {
             });
 
             msgBox->show();
-
-            continue;
-        } else if (d.cmd == " AGN?" && !isAllCall && !m_lastTxMessage.isEmpty()) {
-            reply = m_lastTxMessage;
         }
 
         if (reply.isEmpty()) {
@@ -9098,14 +9213,16 @@ void MainWindow::processSpots() {
 
     // Process spots to be sent...
     pskSetLocal();
+    aprsSetLocal();
 
     while(!m_rxCallQueue.isEmpty()){
         CallDetail d = m_rxCallQueue.dequeue();
         if(d.call.isEmpty()){
             continue;
         }
-        qDebug() << "spotting call to psk reporter" << d.call << d.snr << d.freq;
+        qDebug() << "spotting call to reporting networks" << d.call << d.snr << d.freq;
         pskLogReport("FT8CALL", d.freq, d.snr, d.call, d.grid);
+        aprsLogReport(d.freq, d.snr, d.call, d.grid);
     }
 }
 

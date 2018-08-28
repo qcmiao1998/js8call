@@ -71,7 +71,8 @@ SOURCES += \
     varicode.cpp \
     NetworkMessage.cpp \
     MessageClient.cpp \
-    SelfDestructMessageBox.cpp
+    SelfDestructMessageBox.cpp \
+    APRSISClient.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -94,7 +95,8 @@ HEADERS  += qt_helpers.hpp \
     crc.h \
     NetworkMessage.hpp \
     MessageClient.hpp \
-    SelfDestructMessageBox.h
+    SelfDestructMessageBox.h \
+    APRSISClient.h
 
 
 INCLUDEPATH += qmake_only

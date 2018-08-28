@@ -44,6 +44,7 @@
 #include "qpriorityqueue.h"
 #include "varicode.h"
 #include "MessageClient.hpp"
+#include "APRSISClient.h"
 
 #define NUM_JT4_SYMBOLS 206                //(72+31)*2, embedded sync
 #define NUM_JT65_SYMBOLS 126               //63 data + 63 sync
@@ -167,7 +168,7 @@ private slots:
   void on_actionShow_Waterfall_triggered(bool checked);
   void on_actionReset_Window_Sizes_triggered();
   void on_actionSettings_triggered();
-  void preparePSKReporter();
+  void prepareSpotting();
   void on_spotButton_clicked(bool checked);
   void on_monitorButton_clicked (bool);
   void on_actionAbout_triggered();
@@ -805,6 +806,7 @@ private:
   QTimer m_heartbeat;
   MessageClient * m_messageClient;
   PSK_Reporter *psk_Reporter;
+  APRSISClient * m_aprsClient;
   DisplayManual m_manual;
   QHash<QString, QVariant> m_pwrBandTxMemory; // Remembers power level by band
   QHash<QString, QVariant> m_pwrBandTuneMemory; // Remembers power level by band for tuning
@@ -831,8 +833,10 @@ private:
   void transmit (double snr = 99.);
   void rigFailure (QString const& reason);
   void pskSetLocal ();
+  void aprsSetLocal ();
   void pskPost(DecodedText const& decodedtext);
   void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
+  void aprsLogReport(int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
   void displayDialFrequency ();
   void transmitDisplay (bool);

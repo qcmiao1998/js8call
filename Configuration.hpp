@@ -112,8 +112,8 @@ public:
   double txDelay() const;
   bool id_after_73 () const;
   bool tx_QSY_allowed () const;
-  bool spot_to_psk_reporter () const;
-  void set_spot_to_psk_reporter (bool);
+  bool spot_to_reporting_networks () const;
+  void set_spot_to_reporting_networks (bool);
   bool transmit_directed() const;
   bool autoreply_off_at_startup () const;
   bool monitor_off_at_startup () const;

@@ -576,7 +576,7 @@ private:
   double txDelay_;
   bool id_after_73_;
   bool tx_QSY_allowed_;
-  bool spot_to_psk_reporter_;
+  bool spot_to_reporting_networks_;
   bool transmit_directed_;
   bool autoreply_off_at_startup_;
   bool monitor_off_at_startup_;
@@ -678,15 +678,15 @@ double Configuration::txDelay() const {return m_->txDelay_;}
 qint32 Configuration::RxBandwidth() const {return m_->RxBandwidth_;}
 bool Configuration::id_after_73 () const {return m_->id_after_73_;}
 bool Configuration::tx_QSY_allowed () const {return m_->tx_QSY_allowed_;}
-bool Configuration::spot_to_psk_reporter () const
+bool Configuration::spot_to_reporting_networks () const
 {
   // rig must be open and working to spot externally
-  return is_transceiver_online () && m_->spot_to_psk_reporter_;
+  return is_transceiver_online () && m_->spot_to_reporting_networks_;
 }
-void Configuration::set_spot_to_psk_reporter (bool spot)
+void Configuration::set_spot_to_reporting_networks (bool spot)
 {
-    if(m_->spot_to_psk_reporter_ != spot){
-        m_->spot_to_psk_reporter_ = spot;
+    if(m_->spot_to_reporting_networks_ != spot){
+        m_->spot_to_reporting_networks_ = spot;
         m_->write_settings();
     }
 }
@@ -1264,7 +1264,7 @@ void Configuration::impl::initialize_models ()
   ui_->azel_path_display_label->setText (azel_directory_.absolutePath ());
   ui_->CW_id_after_73_check_box->setChecked (id_after_73_);
   ui_->tx_QSY_check_box->setChecked (tx_QSY_allowed_);
-  ui_->psk_reporter_check_box->setChecked (spot_to_psk_reporter_);
+  ui_->psk_reporter_check_box->setChecked (spot_to_reporting_networks_);
   ui_->transmit_directed_check_box->setChecked(transmit_directed_);
   ui_->autoreply_off_check_box->setChecked (autoreply_off_at_startup_);
   ui_->monitor_off_check_box->setChecked (monitor_off_at_startup_);
@@ -1473,7 +1473,7 @@ void Configuration::impl::read_settings ()
   autoreply_off_at_startup_ = settings_->value ("AutoreplyOFF", false).toBool ();
   monitor_off_at_startup_ = settings_->value ("MonitorOFF", false).toBool ();
   monitor_last_used_ = settings_->value ("MonitorLastUsed", false).toBool ();
-  spot_to_psk_reporter_ = settings_->value ("PSKReporter", true).toBool ();
+  spot_to_reporting_networks_ = settings_->value ("PSKReporter", true).toBool ();
   id_after_73_ = settings_->value ("After73", false).toBool ();
   tx_QSY_allowed_ = settings_->value ("TxQSYAllowed", false).toBool ();
   use_dynamic_info_ = settings_->value ("AutoGrid", false).toBool ();
@@ -1613,7 +1613,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("AutoreplyOFF", autoreply_off_at_startup_);
   settings_->setValue ("MonitorOFF", monitor_off_at_startup_);
   settings_->setValue ("MonitorLastUsed", monitor_last_used_);
-  settings_->setValue ("PSKReporter", spot_to_psk_reporter_);
+  settings_->setValue ("PSKReporter", spot_to_reporting_networks_);
   settings_->setValue ("After73", id_after_73_);
   settings_->setValue ("TxQSYAllowed", tx_QSY_allowed_);
   settings_->setValue ("Macros", macros_.stringList ());
@@ -2033,7 +2033,7 @@ void Configuration::impl::accept ()
   my_qth_ = ui_->qth_message_line_edit->text().toUpper();
   callsign_aging_ = ui_->callsign_aging_spin_box->value();
   activity_aging_ = ui_->activity_aging_spin_box->value();
-  spot_to_psk_reporter_ = ui_->psk_reporter_check_box->isChecked ();
+  spot_to_reporting_networks_ = ui_->psk_reporter_check_box->isChecked ();
   id_interval_ = ui_->CW_id_interval_spin_box->value ();
   ntrials_ = ui_->sbNtrials->value ();
   txDelay_ = ui_->sbTxDelay->value ();

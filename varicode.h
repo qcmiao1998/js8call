@@ -109,6 +109,8 @@ public:
     static quint32 packCallsign(QString const& value);
     static QString unpackCallsign(quint32 value);
 
+    static QString deg2grid(float dlong, float dlat);
+    static QPair<float, float> grid2deg(QString const &grid);
     static quint16 packGrid(QString const& value);
     static QString unpackGrid(quint16 value);
 

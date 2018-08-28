@@ -30,7 +30,7 @@
 const int nalphabet = 41;
 QString alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-./?"}; // alphabet to encode _into_ for FT8 freetext transmission
 QString alphabet72 = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+/?."};
-QString grid_pattern = {R"((?<grid>[A-R]{2}[0-9]{2})+)"};
+QString grid_pattern = {R"((?<grid>[A-X]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*)+)"};
 QString orig_compound_callsign_pattern = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){2,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
 QString compound_callsign_pattern = {R"((?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
 QString pack_callsign_pattern = {R"(([0-9A-Z ])([0-9A-Z])([0-9])([A-Z ])([A-Z ])([A-Z ]))"};
@@ -44,6 +44,7 @@ QMap<QString, int> directed_cmds = {
     {"@",     1  }, // query qth
     {"&",     2  }, // query station message
     {"$",     3  }, // query station(s) heard
+    {"^",     4  }, // query grid
 
     {"%",     5  }, // query pwr
     {"|",     6  }, // retransmit message
@@ -54,10 +55,11 @@ QMap<QString, int> directed_cmds = {
     // {"/",     10  }, // unused? (can we even use stroke?)
 
     // directed responses
-    {" QTC",     16  }, // this is my qtc
-    {" QTH",     17  }, // this is my qth
+    {" GRID",    15  }, // this is my current grid locator
+    {" QTC",     16  }, // this is my qtc message
+    {" QTH",     17  }, // this is my qth message
     {" FB",      18  }, // fine business
-    {" HW CPY?",     19  }, // how do you copy?
+    {" HW CPY?", 19  }, // how do you copy?
     {" HEARING", 20  }, // i am hearing the following stations
     {" RR",      21  }, // roger roger
     {" QSL?",    22  }, // do you copy?
@@ -72,12 +74,12 @@ QMap<QString, int> directed_cmds = {
     {" ",        31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, 3, /*4,*/ 5, 6, 7, 8, /*...*/ 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 8, /*...*/ 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
-QSet<int> buffered_cmds = {6, 7, 8};
+QSet<int> buffered_cmds = {6, 7, 8, 15};
 
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|PWR|QSL[?]?|RR|HEARING|HW CPY[?]|FB|QTH|QTC|[?@&$%|!# ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|PWR|QSL[?]?|RR|HEARING|HW CPY[?]|FB|QTH|QTC|GRID|[?@&$%|!#^ ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_pwr_pattern = QString("(?<pwr>(?<=PWR)\\s?\\d+\\s?[KM]?W)?");
@@ -951,7 +953,7 @@ QString Varicode::unpackCallsign(quint32 value){
     return callsign;
 }
 
-QString deg2grid(float dlong, float dlat){
+QString Varicode::deg2grid(float dlong, float dlat){
     QChar grid[6];
 
     if(dlong < -180){
@@ -984,7 +986,7 @@ QString deg2grid(float dlong, float dlat){
     return QString(grid, 6);
 }
 
-QPair<float, float> grid2deg(QString const &grid){
+QPair<float, float> Varicode::grid2deg(QString const &grid){
     QPair<float, float> longLat;
 
     QString g = grid;
@@ -1016,7 +1018,7 @@ quint16 Varicode::packGrid(QString const& value){
         return (1<<15)-1;
     }
 
-    auto pair = grid2deg(grid.left(4));
+    auto pair = Varicode::grid2deg(grid.left(4));
     int ilong = pair.first;
     int ilat = pair.second + 90;
 
@@ -1031,7 +1033,7 @@ QString Varicode::unpackGrid(quint16 value){
     float dlat = value % 180 - 90;
     float dlong = value / 180 * 2 - 180 + 2;
 
-    return deg2grid(dlong, dlat).left(4);
+    return Varicode::deg2grid(dlong, dlat).left(4);
 }
 
 // pack a number or snr into an integer between 0 & 62
