@@ -5835,6 +5835,7 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
         if(bold){
             text = QString("<strong>%1</strong>").arg(text);
         }
+        c.insertBlock();
         c.insertHtml(QString("<strong>%1 - (%2)</strong> - %3").arg(date.time().toString()).arg(freq).arg(text));
     }
 
