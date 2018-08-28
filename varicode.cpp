@@ -78,6 +78,13 @@ QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 8, /*...*/ 15, 16, 17, 18, 19,
 
 QSet<int> buffered_cmds = {6, 7, 8, 15};
 
+QMap<int, int> checksum_cmds = {
+    {6, 16},
+    {7, 16},
+    {8, 32},
+    {15, 0}
+};
+
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
 QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|PWR|QSL[?]?|RR|HEARING|HW CPY[?]|FB|QTH|QTC|GRID|[?@&$%|!#^ ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
@@ -1119,6 +1126,14 @@ bool Varicode::isCommandAllowed(const QString &cmd){
 
 bool Varicode::isCommandBuffered(const QString &cmd){
     return directed_cmds.contains(cmd) && buffered_cmds.contains(directed_cmds[cmd]);
+}
+
+int Varicode::isCommandChecksumed(const QString &cmd){
+    if(!directed_cmds.contains(cmd) || !checksum_cmds.contains(directed_cmds[cmd])){
+        return 0;
+    }
+
+    return checksum_cmds[directed_cmds[cmd]];
 }
 
 // CQCQCQ EM73

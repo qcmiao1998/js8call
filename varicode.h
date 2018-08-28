@@ -121,6 +121,7 @@ public:
 
     static bool isCommandAllowed(const QString &cmd);
     static bool isCommandBuffered(const QString &cmd);
+    static int isCommandChecksumed(const QString &cmd);
 
     static QString packBeaconMessage(QString const &text, QString const&callsign, int *n);
     static QStringList unpackBeaconMessage(const QString &text, quint8 *pType, bool *isAlt);

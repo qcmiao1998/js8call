@@ -3742,7 +3742,7 @@ void MainWindow::logCallActivity(CallDetail d, bool spot){
     if(m_callActivity.contains(d.call)){
         // update (keep grid)
         CallDetail old = m_callActivity[d.call];
-        if(!old.grid.isEmpty()){
+        if(d.grid.isEmpty() && !old.grid.isEmpty()){
             d.grid = old.grid;
         }
         m_callActivity[d.call] = d;
@@ -6190,10 +6190,14 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
                   line = lstrip(line);
 
                   qDebug() << "before:" << line;
-                  if(dirCmd == "#"){
-                    line = line + " " + Varicode::checksum32(line);
-                  } else {
-                    line = line + " " + Varicode::checksum16(line);
+                  int checksumSize = Varicode::isCommandChecksumed(dirCmd);
+
+                  if(checksumSize == 32){
+                      line = line + " " + Varicode::checksum32(line);
+                  } else if (checksumSize == 16) {
+                      line = line + " " + Varicode::checksum16(line);
+                  } else if (checksumSize == 0) {
+                      // pass
                   }
                   qDebug() << "after:" << line;
               }
@@ -8909,14 +8913,18 @@ void MainWindow::processBufferedActivity() {
         bool valid = false;
 
         if(Varicode::isCommandBuffered(buffer.cmd.cmd)){
-            if(buffer.cmd.cmd == "#"){
+            int checksumSize = Varicode::isCommandChecksumed(buffer.cmd.cmd);
+
+            if(checksumSize == 32) {
                 checksum = message.right(6);
                 message = message.left(message.length() - 7);
                 valid = Varicode::checksum32Valid(checksum, message);
-            } else {
+            } else if(checksumSize == 16) {
                 checksum = message.right(3);
                 message = message.left(message.length() - 4);
                 valid = Varicode::checksum16Valid(checksum, message);
+            } else if (checksumSize == 0) {
+                valid = true;
             }
         } else {
             valid = true;
