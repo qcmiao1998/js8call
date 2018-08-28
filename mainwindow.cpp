@@ -1299,15 +1299,20 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
 
+QDate eol(2018, 9, 17);
+
+void MainWindow::expiry_warning_message()
+{
+    if(QDate::currentDate() >= eol){
+        MessageBox::critical_message (this, QString("This pre-release development build of FT8Call has expired. Please upgrade to the latest version."));
+        close();
+        return;
+    }
+}
+
 void MainWindow::not_GA_warning_message ()
 {
-  QDate eol(2018, 9, 15);
-
-  if(QDate::currentDate() >= eol){
-      MessageBox::critical_message (this, QString("This pre-release development build of FT8Call has expired. Please upgrade to the latest version."));
-      close();
-      return;
-  }
+  expiry_warning_message();
 
   MessageBox::critical_message (this,
                                 QString("This version of %1 is a pre-release development\n"

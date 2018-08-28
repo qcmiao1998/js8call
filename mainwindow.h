@@ -364,6 +364,7 @@ private slots:
   void on_sbMax_dB_valueChanged(int n);
   void on_pbFoxReset_clicked();
   void on_comboBoxHoundSort_activated (int index);
+  void expiry_warning_message ();
   void not_GA_warning_message ();
 
 private:
