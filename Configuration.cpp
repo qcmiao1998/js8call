@@ -994,6 +994,15 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
         throw std::runtime_error {"Failed to create samples directory"};
       }
 
+    QString messages_dir {"messages"};
+    if (!default_save_directory_.mkpath (messages_dir))
+      {
+        MessageBox::critical_message (this, tr ("Failed to create messages directory"),
+                                      tr ("path: \"%1\"")
+                                      .arg (default_save_directory_.absoluteFilePath (messages_dir)));
+        throw std::runtime_error {"Failed to create messages directory"};
+      }
+
     // copy in any new sample files to the sample directory
     QDir dest_dir {default_save_directory_};
     dest_dir.cd (samples_dir);
