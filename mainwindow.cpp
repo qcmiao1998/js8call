@@ -5883,7 +5883,7 @@ bool MainWindow::isMessageQueuedForTransmit(){
     return m_transmitting || m_txFrameCount > 0;
 }
 
-void MainWindow::addMessageText(QString text, bool clear){
+void MainWindow::addMessageText(QString text, bool clear, bool selectFirstPlaceholder){
     // don't add message text if we already have a transmission queued...
     if(isMessageQueuedForTransmit()){
         return;
@@ -5912,6 +5912,16 @@ void MainWindow::addMessageText(QString text, bool clear){
     }
 
     c.insertText(text);
+
+    if(selectFirstPlaceholder){
+        auto match = QRegularExpression("(\\[.+\\])").match(ui->extFreeTextMsgEdit->toPlainText());
+        if(match.hasMatch()){
+            c.setPosition(match.capturedStart());
+            c.setPosition(match.capturedEnd(), QTextCursor::KeepAnchor);
+            ui->extFreeTextMsgEdit->setTextCursor(c);
+        }
+    }
+
     ui->extFreeTextMsgEdit->setFocus();
 }
 
@@ -7326,21 +7336,18 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    menu->addSeparator();
-
-    /*
-    auto ackQueryAction = menu->addAction(QString("%1^ - Are you hearing me?").arg(call));
-    connect(ackQueryAction, &QAction::triggered, this, [this](){
+    auto qsoQueryAction = menu->addAction(QString("%1 QSO [CALLSIGN]? - Query if selected callsign can communicate with [CALLSIGN]?").arg(call).trimmed());
+    connect(qsoQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
         if(selectedCall.isEmpty()){
             return;
         }
 
-        addMessageText(QString("%1?").arg(selectedCall), true);
-        toggleTx(true);
+        addMessageText(QString("%1 QSO [CALLSIGN]?").arg(selectedCall), true, true);
     });
-    */
+
+    menu->addSeparator();
 
     auto snrQueryAction = menu->addAction(QString("%1? - What is my signal report?").arg(call));
     connect(snrQueryAction, &QAction::triggered, this, [this](){
@@ -7425,7 +7432,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto hashAction = menu->addAction(QString("%1#message - Please ACK if you receive this message in its entirety").arg(call).trimmed());
+    auto hashAction = menu->addAction(QString("%1#[MESSAGE] - Please ACK if you receive this message in its entirety").arg(call).trimmed());
     hashAction->setDisabled(isAllCall);
     connect(hashAction, &QAction::triggered, this, [this](){
 
@@ -7434,10 +7441,10 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1#").arg(selectedCall), true);
+        addMessageText(QString("%1#[MESSAGE]").arg(selectedCall), true, true);
     });
 
-    auto retransmitAction = menu->addAction(QString("%1|message - Please ACK and retransmit the following message").arg(call).trimmed());
+    auto retransmitAction = menu->addAction(QString("%1|[MESSAGE] - Please ACK and retransmit the following message").arg(call).trimmed());
     retransmitAction->setDisabled(isAllCall);
     connect(retransmitAction, &QAction::triggered, this, [this](){
 
@@ -7446,10 +7453,10 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1|").arg(selectedCall), true);
+        addMessageText(QString("%1|[MESSAGE]").arg(selectedCall), true, true);
     });
 
-    auto alertAction = menu->addAction(QString("%1!message - Please display this message in an alert dialog and ACK if acknowledged").arg(call).trimmed());
+    auto alertAction = menu->addAction(QString("%1![MESSAGE] - Please display this message in an alert dialog and ACK if acknowledged").arg(call).trimmed());
     alertAction->setDisabled(isAllCall);
     connect(alertAction, &QAction::triggered, this, [this](){
 
@@ -7458,7 +7465,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1!").arg(selectedCall), true);
+        addMessageText(QString("%1![MESSAGE]").arg(selectedCall), true, true);
     });
 
     menu->addSeparator();
@@ -7466,7 +7473,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
     bool emptyQTC = m_config.my_station().isEmpty();
     bool emptyQTH = m_config.my_qth().isEmpty() && m_config.my_grid().isEmpty();
 
-    auto qtcAction = menu->addAction(QString("%1 QTC message - Send my station message").arg(call).trimmed());
+    auto qtcAction = menu->addAction(QString("%1 QTC - Send my station message").arg(call).trimmed());
     qtcAction->setDisabled(emptyQTC);
     connect(qtcAction, &QAction::triggered, this, [this](){
 
@@ -7480,7 +7487,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto qthAction = menu->addAction(QString("%1 QTH message - Send my station location message").arg(call).trimmed());
+    auto qthAction = menu->addAction(QString("%1 QTH - Send my station location message").arg(call).trimmed());
     qthAction->setDisabled(emptyQTH);
     connect(qthAction, &QAction::triggered, this, [this](){
 
@@ -9208,7 +9215,24 @@ void MainWindow::processCommandActivity() {
         }
         // PROCESS AGN
         else if (d.cmd == " AGN?" && !isAllCall && !m_lastTxMessage.isEmpty()) {
-           reply = m_lastTxMessage;
+            reply = m_lastTxMessage;
+        }
+        // PROCESS BUFFERED QSO QUERY
+        else if (d.cmd == " QSO"){
+            auto who = d.text;
+            if(who.isEmpty()){
+                continue;
+            }
+
+            auto callsigns = Varicode::parseCallsigns(who);
+            if(callsigns.isEmpty()){
+                continue;
+            }
+
+            if(m_callActivity.contains(callsigns.first())){
+                auto cd = m_callActivity[callsigns.first()];
+                reply = QString("%1 ACK %2 %3 (%4)").arg(d.from).arg(cd.call).arg(Varicode::formatSNR(cd.snr)).arg(since(cd.utcTimestamp));
+            }
         }
         // PROCESS BUFFERED QTH
         else if (d.cmd == " GRID"){

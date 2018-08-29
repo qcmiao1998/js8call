@@ -57,6 +57,7 @@ QMap<QString, int> directed_cmds = {
     // {"/",     13  }, // unused
 
     // directed responses
+    {" QSO",     13  }, // can you communicate with? i can communicate with
     {" APRS:",   14  }, // send an aprs packet
     {" GRID",    15  }, // this is my current grid locator
     {" QTC",     16  }, // this is my qtc message
@@ -77,20 +78,21 @@ QMap<QString, int> directed_cmds = {
     {" ",        31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 8, /*...*/ 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 8, /*...*/ 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
-QSet<int> buffered_cmds = {6, 7, 8, 14, 15};
+QSet<int> buffered_cmds = {6, 7, 8, 13, 14, 15};
 
 QMap<int, int> checksum_cmds = {
     {  6, 16 },
     {  7, 16 },
     {  8, 32 },
+    { 13, 16 },
     { 14, 16 },
     { 15,  0 }
 };
 
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|PWR|QSL[?]?|RR|HEARING|HW CPY[?]|FB|QTH|QTC|GRID|APRS[:]|[?@&$%|!#^ ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|PWR|QSL[?]?|RR|HEARING|HW CPY[?]|FB|QTH|QTC|GRID|APRS[:]|QSO|[?@&$%|!#^ ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_pwr_pattern = QString("(?<pwr>(?<=PWR)\\s?\\d+\\s?[KM]?W)?");
