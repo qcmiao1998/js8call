@@ -7336,17 +7336,6 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto qsoQueryAction = menu->addAction(QString("%1 QSO [CALLSIGN]? - Query if selected callsign can communicate with [CALLSIGN]?").arg(call).trimmed());
-    connect(qsoQueryAction, &QAction::triggered, this, [this](){
-
-        QString selectedCall = callsignSelected();
-        if(selectedCall.isEmpty()){
-            return;
-        }
-
-        addMessageText(QString("%1 QSO [CALLSIGN]?").arg(selectedCall), true, true);
-    });
-
     menu->addSeparator();
 
     auto snrQueryAction = menu->addAction(QString("%1? - What is my signal report?").arg(call));
@@ -7430,6 +7419,17 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1$").arg(selectedCall), true);
 
         if(m_config.transmit_directed()) toggleTx(true);
+    });
+
+    auto qsoQueryAction = menu->addAction(QString("%1 QSO [CALLSIGN]? - Can you communicate directly with [CALLSIGN]?").arg(call).trimmed());
+    connect(qsoQueryAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 QSO [CALLSIGN]?").arg(selectedCall), true, true);
     });
 
     auto hashAction = menu->addAction(QString("%1#[MESSAGE] - Please ACK if you receive this message in its entirety").arg(call).trimmed());
