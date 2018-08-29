@@ -9421,8 +9421,9 @@ void MainWindow::displayActivity(bool force) {
 template<typename T>
 QList<T> listCopyReverse(QList<T> const &list){
     QList<T> newList = QList<T>();
-    for(auto iter = list.rbegin(); iter != list.rend(); iter++){
-        newList.append(*iter);
+    auto iter = list.end();
+    while(iter != list.begin()){
+        newList.append(*(--iter));
     }
     return newList;
 }
