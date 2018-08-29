@@ -1539,7 +1539,7 @@ void Configuration::impl::read_settings ()
   miles_ = settings_->value ("Miles", false).toBool ();
   quick_call_ = settings_->value ("QuickCall", false).toBool ();
   disable_TX_on_73_ = settings_->value ("73TxDisable", false).toBool ();
-  beacon_ = settings_->value ("TxBeacon", 15).toInt ();
+  beacon_ = settings_->value ("TxBeacon", 30).toInt ();
   watchdog_ = settings_->value ("TxWatchdog", 0).toInt ();
   TX_messages_ = settings_->value ("Tx2QSO", true).toBool ();
   enable_VHF_features_ = settings_->value("VHFUHF",false).toBool ();
