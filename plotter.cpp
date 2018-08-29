@@ -50,6 +50,8 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   setAttribute(Qt::WA_NoSystemBackground, true);
   m_bReplot=false;
 
+  setMouseTracking(true);
+
   // contextual pop up menu
   setContextMenuPolicy (Qt::CustomContextMenu);
   connect (this, &QWidget::customContextMenuRequested, [this] (QPoint const& pos) {
@@ -91,8 +93,10 @@ void CPlotter::resizeEvent(QResizeEvent* )                    //resizeEvent()
     m_h1=m_h-m_h2;
 //    m_line=0;
 
-    m_FullOverlayPixmap = QPixmap(m_Size.width(), m_h);
-    m_FullOverlayPixmap.fill(Qt::transparent);
+    m_DialOverlayPixmap = QPixmap(m_Size.width(), m_h);
+    m_DialOverlayPixmap.fill(Qt::transparent);
+    m_HoverOverlayPixmap = QPixmap(m_Size.width(), m_h);
+    m_HoverOverlayPixmap.fill(Qt::transparent);
     m_2DPixmap = QPixmap(m_Size.width(), m_h2);
     m_2DPixmap.fill(Qt::black);
     m_WaterfallPixmap = QPixmap(m_Size.width(), m_h1);
@@ -117,7 +121,12 @@ void CPlotter::paintEvent(QPaintEvent *)                                // paint
   painter.drawPixmap(0,m_h1,m_2DPixmap);
 
   int x = XfromFreq(m_rxFreq);
-  painter.drawPixmap(x,0,m_FullOverlayPixmap);
+  painter.drawPixmap(x,0,m_DialOverlayPixmap);
+
+  if(m_lastMouseX >= 0 && m_lastMouseX != x){
+    painter.drawPixmap(m_lastMouseX, 0, m_HoverOverlayPixmap);
+  }
+
   m_paintEventBusy=false;
 }
 
@@ -568,7 +577,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   if(m_mode=="FT8"){
       int fwidth=XfromFreq(m_rxFreq+bw)-XfromFreq(m_rxFreq);
-      QPainter overPainter(&m_FullOverlayPixmap);
+      QPainter overPainter(&m_DialOverlayPixmap);
       overPainter.initFrom(this);
       overPainter.setCompositionMode(QPainter::CompositionMode_Source);
       overPainter.fillRect(0, 0, m_Size.width(), m_h, Qt::transparent);
@@ -580,6 +589,20 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       overPainter.setPen(penRed);
       overPainter.drawLine(0, 26, fwidth, 26);
       overPainter.drawLine(0, 28, fwidth, 28);
+
+      QPainter hoverPainter(&m_HoverOverlayPixmap);
+      hoverPainter.initFrom(this);
+      hoverPainter.setCompositionMode(QPainter::CompositionMode_Source);
+      hoverPainter.fillRect(0, 0, m_Size.width(), m_h, Qt::transparent);
+      hoverPainter.setPen(QPen(Qt::white));
+      hoverPainter.drawLine(0, 30, 0, m_h);
+      hoverPainter.drawLine(fwidth+1, 30, fwidth+1, m_h);
+
+#if DRAW_FREQ_OVERLAY
+      int f = FreqfromX(m_lastMouseX);
+      hoverPainter.setFont(Font);
+      hoverPainter.drawText(fwidth + 5, m_h, QString("%1").arg(f));
+#endif
   }
 }
 
@@ -700,6 +723,46 @@ void CPlotter::setRxFreq (int x)                               //setRxFreq
 }
 
 int CPlotter::rxFreq() {return m_rxFreq;}                      //rxFreq
+
+void CPlotter::leaveEvent(QEvent *event)
+{
+    m_lastMouseX = -1;
+}
+
+void CPlotter::wheelEvent(QWheelEvent *event){
+    auto delta = event->angleDelta();
+    if(delta.isNull()){
+        event->ignore();
+        return;
+    }
+
+    int newFreq = rxFreq();
+    int dir = delta.y() > 0 ? 1 : -1;
+
+    bool ctrl = (event->modifiers() & Qt::ControlModifier);
+    if(ctrl){
+        newFreq += dir;
+    } else {
+        newFreq = newFreq/10*10 + dir*10;
+    }
+
+    emit setFreq1 (newFreq, newFreq);
+}
+
+void CPlotter::mouseMoveEvent (QMouseEvent * event)
+{
+    int x = event->x();
+    if(x < 0) x = 0;
+    if(x>m_Size.width()) x = m_Size.width();
+
+    m_lastMouseX = x;
+#if DRAW_FREQ_OVERLAY
+    DrawOverlay();
+#endif
+    update();
+
+    event->ignore();
+}
 
 void CPlotter::mouseReleaseEvent (QMouseEvent * event)
 {

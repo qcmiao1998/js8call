@@ -95,6 +95,9 @@ protected:
   //re-implemented widget event handlers
   void paintEvent(QPaintEvent *event) override;
   void resizeEvent(QResizeEvent* event) override;
+  void leaveEvent(QEvent *event) override;
+  void wheelEvent(QWheelEvent *event) override;
+  void mouseMoveEvent(QMouseEvent * event) override;
   void mouseReleaseEvent (QMouseEvent * event) override;
   void mouseDoubleClickEvent (QMouseEvent * event) override;
 
@@ -128,7 +131,8 @@ private:
   qint32  m_ia;
   qint32  m_ib;
 
-  QPixmap m_FullOverlayPixmap;
+  QPixmap m_DialOverlayPixmap;
+  QPixmap m_HoverOverlayPixmap;
   QPixmap m_WaterfallPixmap;
   QPixmap m_2DPixmap;
   QPixmap m_ScalePixmap;
@@ -174,6 +178,7 @@ private:
   qint32  m_startFreq;
   qint32  m_tol;
   qint32  m_j;
+  qint32  m_lastMouseX;
 
   char    m_sutc[6];
 };
