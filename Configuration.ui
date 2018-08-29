@@ -175,45 +175,65 @@
              <property name="bottomMargin">
               <number>0</number>
              </property>
-             <item row="0" column="0">
+             <item row="1" column="0">
               <widget class="QLabel" name="label_14">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="text">
                 <string>QTH Message:</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
+             <item row="1" column="1">
               <widget class="QLineEdit" name="qth_message_line_edit">
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message that is transmitted in response to &amp;quot;@&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
+             <item row="2" column="0">
               <widget class="QLabel" name="label_15">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station Description Message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="text">
-                <string>Station Message:</string>
+                <string>QTC Message:</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
+             <item row="2" column="1">
               <widget class="QLineEdit" name="station_message_line_edit">
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station message that is transmitted in response to &amp;quot;&amp;amp;&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
+             <item row="3" column="0">
               <widget class="QLabel" name="label_16">
                <property name="text">
                 <string>Station Power:</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
+             <item row="3" column="1">
               <widget class="QComboBox" name="station_power_combo_box">
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Approximate or average station transmit power to be sent in response to &amp;quot;%&amp;quot; directed queries. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_17">
+               <property name="text">
+                <string>Reply Message:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="reply_message_line_edit">
+               <property name="text">
+                <string>HW CPY?</string>
                </property>
               </widget>
              </item>
@@ -368,7 +388,7 @@
              <bool>true</bool>
             </property>
             <property name="visible">
-              <bool>false</bool>
+             <bool>false</bool>
             </property>
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Some rigs are not able to process CAT commands while transmitting. This means that if you are operating in split mode you may have to uncheck this option.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -3172,12 +3192,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
+  <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="TX_mode_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
   <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="TX_mode_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="PTT_method_button_group"/>
  </buttongroups>
 </ui>

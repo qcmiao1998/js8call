@@ -7218,7 +7218,7 @@ void MainWindow::on_replyMacroButton_clicked(){
     if(call.isEmpty()){
         return;
     }
-    addMessageText(QString("%1 ").arg(call));
+    addMessageText(QString("%1 %2").arg(call).arg(m_config.reply()));
 }
 
 void MainWindow::on_qthMacroButton_clicked(){
@@ -7290,9 +7290,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
     // for now, we're going to omit displaying the call...delete this if we want the other functionality
     call = "";
 
-    auto sendReplyAction = menu->addAction(QString("Send a message to selected callsign"));
-
-    connect(sendReplyAction, &QAction::triggered, this, [this](){
+    auto callAction = menu->addAction(QString("Send a directed message to selected callsign"));
+    connect(callAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
         if(selectedCall.isEmpty()){
@@ -7302,6 +7301,15 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1 ").arg(selectedCall), true);
     });
 
+    auto sendReplyAction = menu->addAction(QString("%1 Reply - Send reply message to selected callsign").arg(call).trimmed());
+    connect(sendReplyAction, &QAction::triggered, this, [this](){
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 %2").arg(selectedCall).arg(m_config.reply()), true);
+    });
 
     auto sendSNRAction = menu->addAction(QString("%1 SNR - Send a signal report to the selected callsign").arg(call).trimmed());
     sendSNRAction->setEnabled(m_callActivity.contains(call));
