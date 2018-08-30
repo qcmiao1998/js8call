@@ -240,19 +240,56 @@ void APRSISClient::processQueue(bool disconnect){
         }
     }
 
+    auto re = QRegExp("full|unavailable|busy");
+    auto line = QString(readLine());
+    if(line.toLower().indexOf(re) >= 0){
+        qDebug() << "APRSISClient Connection Busy:" << line;
+        return;
+    }
+
     if(write(loginFrame(m_localCall).toLocal8Bit()) == -1){
         qDebug() << "APRSISClient Write Login Error:" << errorString();
         return;
     }
 
+    if(!waitForReadyRead(5000)){
+        qDebug() << "APRSISClient Login Error: Server Not Responding";
+        return;
+    }
+
+    line = QString(readAll());
+    if(line.toLower().indexOf(re) >= 0){
+        qDebug() << "APRSISClient Server Busy:" << line;
+        return;
+    }
+
     while(!m_frameQueue.isEmpty()){
-        if(write(m_frameQueue.head().toLocal8Bit()) == -1){
+        QByteArray data = m_frameQueue.head().toLocal8Bit();
+
+        if(write(data) == -1){
             qDebug() << "APRSISClient Write Error:" << errorString();
             return;
         }
 
-        auto frame = m_frameQueue.dequeue();
-        qDebug() << "APRISISClient Write:" << frame;
+        if(!waitForBytesWritten(5000)){
+            qDebug() << "APRSISClient Cannot Write Error: Write Timeout";
+            return;
+        }
+
+        qDebug() << "APRSISClient Write:" << data;
+
+        if(waitForReadyRead(5000)){
+            line = QString(readLine());
+
+            qDebug() << "APRSISClient Read:" << line;
+
+            if(line.toLower().indexOf(re) >= 0){
+                qDebug() << "APRSISClient Cannot Write Error:" << line;
+                return;
+            }
+        }
+
+        m_frameQueue.dequeue();
     }
 
     if(disconnect){

@@ -26,7 +26,7 @@ public:
     void enqueueThirdParty(QString theircall, QString payload);
     void enqueueRaw(QString aprsFrame);
 
-    void processQueue(bool disconnect=false);
+    void processQueue(bool disconnect=true);
 
 public slots:
     void sendReports(){ processQueue(true); }
