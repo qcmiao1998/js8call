@@ -7312,7 +7312,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
     });
 
     auto sendSNRAction = menu->addAction(QString("%1 SNR - Send a signal report to the selected callsign").arg(call).trimmed());
-    sendSNRAction->setEnabled(m_callActivity.contains(call));
+    sendSNRAction->setEnabled(m_callActivity.contains(callsignSelected()));
     connect(sendSNRAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
