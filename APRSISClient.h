@@ -21,7 +21,7 @@ public:
         m_localGrid = mygrid;
     }
 
-    void enqueueSpot(QString theircall, QString grid, quint64 frequency, int snr);
+    void enqueueSpot(QString theircall, QString grid, QString comment);
     void enqueueMessage(QString tocall, QString message);
     void enqueueThirdParty(QString theircall, QString payload);
     void enqueueRaw(QString aprsFrame);

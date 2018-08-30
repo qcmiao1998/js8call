@@ -3887,7 +3887,11 @@ void MainWindow::aprsLogReport(int offset, int snr, QString callsign, QString gr
         return;
     }
 
-    m_aprsClient->enqueueSpot(Radio::base_callsign(callsign), grid, frequency, snr);
+    auto comment = QString("%1MHz %2dB").arg(Radio::frequency_MHz_string(frequency)).arg(Varicode::formatSNR(snr));
+    if(callsign.contains("/")){
+        comment = QString("%1 %2").arg(callsign).arg(comment);
+    }
+    m_aprsClient->enqueueSpot(Radio::base_callsign(callsign), grid, comment);
 }
 
 void MainWindow::killFile ()

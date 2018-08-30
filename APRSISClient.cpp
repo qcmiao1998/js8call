@@ -184,17 +184,16 @@ QPair<QString, QString> APRSISClient::grid2aprs(QString grid){
     };
 }
 
-void APRSISClient::enqueueSpot(QString theircall, QString grid, quint64 frequency, int snr){
+void APRSISClient::enqueueSpot(QString theircall, QString grid, QString comment){
     if(m_localCall.isEmpty()) return;
 
     auto geo = APRSISClient::grid2aprs(grid);
-    auto spotFrame = QString("%1>%2,APRS,TCPIP*:=%3/%4nFT8CALL %5MHz %6dB\n");
+    auto spotFrame = QString("%1>%2,APRS,TCPIP*:=%3/%4nFT8CALL %5\n");
     spotFrame = spotFrame.arg(theircall);
     spotFrame = spotFrame.arg(m_localCall);
     spotFrame = spotFrame.arg(geo.first);
     spotFrame = spotFrame.arg(geo.second);
-    spotFrame = spotFrame.arg(Radio::frequency_MHz_string(frequency));
-    spotFrame = spotFrame.arg(Varicode::formatSNR(snr));
+    spotFrame = spotFrame.arg(comment.left(43));
     enqueueRaw(spotFrame);
 }
 
@@ -240,7 +239,7 @@ void APRSISClient::processQueue(bool disconnect){
         }
     }
 
-    auto re = QRegExp("full|unavailable|busy");
+    auto re = QRegExp("(full|unavailable|busy)");
     auto line = QString(readLine());
     if(line.toLower().indexOf(re) >= 0){
         qDebug() << "APRSISClient Connection Busy:" << line;
