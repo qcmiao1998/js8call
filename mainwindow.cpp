@@ -1029,7 +1029,13 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
           if(pProcessed) *pProcessed = false;
           return;
       }
+
       if(pProcessed) *pProcessed = true;
+
+      if(ui->extFreeTextMsgEdit->toPlainText().trimmed().isEmpty()){
+          return;
+      }
+
       toggleTx(true);
   });
   ui->extFreeTextMsgEdit->installEventFilter(enterFilter);
@@ -5800,8 +5806,9 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
     int highFreq = lowFreq + 10;
 
     int block = -1;
+
     if(m_rxFrameBlockNumbers.contains(freq)){
-        block =m_rxFrameBlockNumbers[freq];
+        block = m_rxFrameBlockNumbers[freq];
     } else if(m_rxFrameBlockNumbers.contains(lowFreq)){
         block = m_rxFrameBlockNumbers[lowFreq];
         freq = lowFreq;
@@ -5811,7 +5818,7 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
     }
 
     if(isNewLine){
-        m_rxFrameBlockNumbers.remove(freq);
+        //m_rxFrameBlockNumbers.remove(freq);
         m_rxFrameBlockNumbers.remove(lowFreq);
         m_rxFrameBlockNumbers.remove(highFreq);
         block = -1;
@@ -5820,7 +5827,9 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
     block = writeMessageTextToUI(date, text, freq, isTx, block);
 
     // never cache tx or last lines
-    if(!isTx && !isLast){
+    if(isTx || isLast) {
+        // pass
+    } else {
         m_rxFrameBlockNumbers.insert(freq, block);
         m_rxFrameBlockNumbers.insert(lowFreq, block);
         m_rxFrameBlockNumbers.insert(highFreq, block);
@@ -5875,7 +5884,6 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
     }
 
     c.movePosition(QTextCursor::End);
-
 
     ui->textEditRX->ensureCursorVisible();
     ui->textEditRX->verticalScrollBar()->setValue(ui->textEditRX->verticalScrollBar()->maximum());
@@ -9107,12 +9115,18 @@ void MainWindow::processCommandActivity() {
         // we'd be double printing here if were on frequency, so let's be "smart" about this...
         bool shouldDisplay = true;
         if(shouldDisplay){
-            if(isRecentOffset(d.freq) && ui->textEditRX->find(QString("(%1)").arg(ad.freq), QTextDocument::FindBackward)){
+            auto c = ui->textEditRX->textCursor();
+            c.movePosition(QTextCursor::End);
+            ui->textEditRX->setTextCursor(c);
+
+            if(isRecentOffset(d.freq) && ui->textEditRX->find(d.utcTimestamp.time().toString(), QTextDocument::FindBackward)){
                 // ... maybe we could delete the last line that had this message on this frequency...
-                auto c = ui->textEditRX->textCursor();
+                c = ui->textEditRX->textCursor();
                 c.movePosition(QTextCursor::StartOfBlock);
                 c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
                 qDebug() << "should display directed message, erasing last rx activity line..." << c.selectedText();
+                c.deletePreviousChar();
+                c.deletePreviousChar();
                 c.deleteChar();
                 c.deleteChar();
             }
