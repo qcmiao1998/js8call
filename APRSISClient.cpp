@@ -13,7 +13,7 @@ APRSISClient::APRSISClient(QString host, quint16 port, QObject *parent):
     m_port(port)
 {
     connect(&m_timer, &QTimer::timeout, this, &APRSISClient::sendReports);
-    m_timer.setInterval(60*1000); // every minute
+    m_timer.setInterval(30*1000); // every 30 seconds
     m_timer.start();
 }
 
@@ -188,12 +188,11 @@ void APRSISClient::enqueueSpot(QString theircall, QString grid, quint64 frequenc
     if(m_localCall.isEmpty()) return;
 
     auto geo = APRSISClient::grid2aprs(grid);
-    auto spotFrame = QString("%1>%2,APRS,TCPIP*:=%3/%4nFT8CALL %5 %6MHz %7dB\n");
+    auto spotFrame = QString("%1>%2,APRS,TCPIP*:=%3/%4nFT8CALL %5MHz %6dB\n");
     spotFrame = spotFrame.arg(theircall);
     spotFrame = spotFrame.arg(m_localCall);
     spotFrame = spotFrame.arg(geo.first);
     spotFrame = spotFrame.arg(geo.second);
-    spotFrame = spotFrame.arg(m_localGrid.left(4));
     spotFrame = spotFrame.arg(Radio::frequency_MHz_string(frequency));
     spotFrame = spotFrame.arg(Varicode::formatSNR(snr));
     enqueueRaw(spotFrame);
@@ -222,7 +221,11 @@ void APRSISClient::enqueueRaw(QString aprsFrame){
 }
 
 void APRSISClient::processQueue(bool disconnect){
+    // don't process queue if we haven't set our local callsign
     if(m_localCall.isEmpty()) return;
+
+    // don't process queue if there's nothing to process
+    if(m_frameQueue.isEmpty()) return;
 
     // 1. connect (and read)
     // 2. login (and read)

@@ -7041,7 +7041,7 @@ void MainWindow::band_changed (Frequency f)
     m_bandEdited = false;
 
     psk_Reporter->sendReport();      // Upload any queued spots before changing band
-    m_aprsClient->processQueue();
+    m_aprsClient->processQueue(true);
     if (!m_transmitting) monitor (true);
     if ("FreqCal" == m_mode)
       {
