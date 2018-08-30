@@ -9548,18 +9548,19 @@ void MainWindow::displayBandActivity() {
                 }
 
                 ui->tableWidgetRXAll->insertRow(ui->tableWidgetRXAll->rowCount());
+                int row = ui->tableWidgetRXAll->rowCount() - 1;
 
                 auto offsetItem = new QTableWidgetItem(QString("%1").arg(offset));
                 offsetItem->setData(Qt::UserRole, QVariant(offset));
-                ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 0, offsetItem);
+                ui->tableWidgetRXAll->setItem(row, 0, offsetItem);
 
                 auto ageItem = new QTableWidgetItem(QString("(%1)").arg(age));
                 ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-                ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 1, ageItem);
+                ui->tableWidgetRXAll->setItem(row, 1, ageItem);
 
                 auto snrItem = new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(snr)));
                 snrItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-                ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 2, snrItem);
+                ui->tableWidgetRXAll->setItem(row, 2, snrItem);
 
                 // align right if eliding...
                 int colWidth = ui->tableWidgetRXAll->columnWidth(3);
@@ -9590,10 +9591,12 @@ void MainWindow::displayBandActivity() {
                     textItem->setBackground(QBrush(m_config.color_MyCall()));
                 }
 
-                ui->tableWidgetRXAll->setItem(ui->tableWidgetRXAll->rowCount() - 1, 3, textItem);
+                ui->tableWidgetRXAll->setItem(row, 3, textItem);
 
                 if (offset == selectedOffset) {
-                    ui->tableWidgetRXAll->selectRow(ui->tableWidgetRXAll->rowCount() - 1);
+                    for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
+                        ui->tableWidgetRXAll->item(row, i)->setSelected(true);
+                    }
                 }
             }
         }
@@ -9615,10 +9618,10 @@ void MainWindow::displayCallActivity() {
     // Selected callsign
     QString selectedCall = callsignSelected();
 
+    auto currentScrollPos = ui->tableWidgetCalls->verticalScrollBar()->value();
+
     ui->tableWidgetCalls->setUpdatesEnabled(false);
     {
-        auto currentScrollPos = ui->tableWidgetCalls->verticalScrollBar()->value();
-
         // Clear the table
         clearTableWidget(ui->tableWidgetCalls);
 
@@ -9709,22 +9712,25 @@ void MainWindow::displayCallActivity() {
             }
 
             ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+            int row = ui->tableWidgetCalls->rowCount() - 1;
 
             QString displayCall = d.through.isEmpty() ? d.call : QString("%1 | %2").arg(d.through).arg(d.call);
             auto displayItem = new QTableWidgetItem(displayCall);
             displayItem->setData(Qt::UserRole, QVariant((d.call)));
-            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, displayItem);
-            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
-            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 2, new QTableWidgetItem(QString("%1").arg(d.freq)));
-            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 3, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
-            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 4, new QTableWidgetItem(QString("%1").arg(d.grid)));
+            ui->tableWidgetCalls->setItem(row, 0, displayItem);
+            ui->tableWidgetCalls->setItem(row, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
+            ui->tableWidgetCalls->setItem(row, 2, new QTableWidgetItem(QString("%1").arg(d.freq)));
+            ui->tableWidgetCalls->setItem(row, 3, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
+            ui->tableWidgetCalls->setItem(row, 4, new QTableWidgetItem(QString("%1").arg(d.grid)));
 
             auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
             distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
             ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 5, distanceItem);
 
             if (call == selectedCall) {
-                ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
+                for(int i = 0; i < ui->tableWidgetCalls->columnCount(); i++){
+                    ui->tableWidgetCalls->item(row, i)->setSelected(true);
+                }
             }
         }
 
