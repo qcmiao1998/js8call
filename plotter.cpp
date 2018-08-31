@@ -40,7 +40,8 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_Percent2DScreen0 {0},
   m_rxFreq {1020},
   m_txFreq {0},
-  m_startFreq {0}
+  m_startFreq {0},
+  m_lastMouseX {-1}
 {
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   setFocusPolicy(Qt::StrongFocus);
