@@ -9276,7 +9276,7 @@ void MainWindow::processCommandActivity() {
                logCallActivity(cd, true);
            }
 
-           reply = QString("%1 ACK").arg(d.from);
+           continue;
         }
         // PROCESS APRS
         else if(d.cmd == " APRS:" && m_config.spot_to_reporting_networks()){
