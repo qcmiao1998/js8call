@@ -1053,6 +1053,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->textEditRX->addAction(clearAction1);
   ui->textEditRX->addAction(clearActionAll);
 
+
+
   auto clearAction2 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->extFreeTextMsgEdit);
   connect(clearAction2, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->extFreeTextMsgEdit); });
   ui->extFreeTextMsgEdit->setContextMenuPolicy(Qt::ActionsContextMenu);
@@ -1074,6 +1076,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     menu->popup(ui->extFreeTextMsgEdit->mapToGlobal(point));
   });
 
+
+
   auto clearAction3 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetRXAll);
   connect(clearAction3, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetRXAll); });
 
@@ -1092,6 +1096,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   auto logAction = new QAction(QString("Log..."), ui->tableWidgetCalls);
   connect(logAction, &QAction::triggered, this, &MainWindow::on_logQSOButton_clicked);
+
 
 
   ui->tableWidgetRXAll->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -1113,6 +1118,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     auto directedMenu = menu->addMenu(QString("Directed to %1...").arg(selectedCall));
     directedMenu->setDisabled(missingCallsign);
     buildQueryMenu(directedMenu, selectedCall);
+
+    auto deselect = menu->addAction("Deselect");
+    deselect->setDisabled(missingCallsign);
+    connect(deselect, &QAction::triggered, this, [this](){
+        ui->tableWidgetRXAll->clearSelection();
+    });
 
     menu->addSeparator();
 
@@ -1165,6 +1176,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     auto directedMenu = menu->addMenu(QString("Directed to %1...").arg(selectedCall));
     directedMenu->setDisabled(missingCallsign);
     buildQueryMenu(directedMenu, selectedCall);
+
+    auto deselect = menu->addAction("Deselect");
+    deselect->setDisabled(missingCallsign);
+    connect(deselect, &QAction::triggered, this, [this](){
+        ui->tableWidgetCalls->clearSelection();
+    });
 
     menu->addSeparator();
 
