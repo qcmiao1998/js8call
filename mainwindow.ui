@@ -1118,7 +1118,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
           <bool>false</bool>
          </property>
          <property name="placeholderText">
-          <string>Type your outgoing messages / commands here.</string>
+          <string>Type your outgoing messages here.</string>
          </property>
         </widget>
        </widget>
