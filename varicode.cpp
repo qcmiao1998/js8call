@@ -45,7 +45,7 @@ QMap<QString, int> directed_cmds = {
     {"&",     2  }, // query station message
     {"$",     3  }, // query station(s) heard
     {"^",     4  }, // query grid
-    {"%",     5  }, // query pwr
+    // {"%"   5  }, // unused
     {"|",     6  }, // retransmit message
     {"!",     7  }, // alert message
     {"#",     8  }, // all or nothing message
@@ -68,7 +68,7 @@ QMap<QString, int> directed_cmds = {
     {" RR",      21  }, // roger roger
     {" QSL?",    22  }, // do you copy?
     {" QSL",     23  }, // i copy
-    {" PWR",     24  }, // power level
+    // {"",     24  },  // unused
     {" SNR",     25  }, // seen a station at the provided snr
     {" NO",      26  }, // negative confirm
     {" YES",     27  }, // confirm
@@ -78,7 +78,7 @@ QMap<QString, int> directed_cmds = {
     {" ",        31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, 6, 7, 8, /*...*/ 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {0, 1, 2, 3, 4, /*5,*/ 6, 7, 8, /*...*/ 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, /*24,*/ 25, 26, 27, 28, 29, 30, 31};
 
 QSet<int> buffered_cmds = {6, 7, 8, 13, 14, 15};
 
@@ -92,16 +92,14 @@ QMap<int, int> checksum_cmds = {
 };
 
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|PWR|QSL[?]?|RR|HEARING|HW CPY[?]|FB|QTH|QTC|GRID|APRS[:]|QSO|[?@&$%|!#^ ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|QSL[?]?|RR|HEARING|HW CPY[?]|FB|QTH|QTC|GRID|APRS[:]|QSO|[?@&$%|!#^ ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
-QString optional_pwr_pattern = QString("(?<pwr>(?<=PWR)\\s?\\d+\\s?[KM]?W)?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR|HEARING)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
 
 QRegularExpression directed_re("^"                    +
                                callsign_pattern       +
                                optional_cmd_pattern   +
-                               optional_pwr_pattern   +
                                optional_num_pattern);
 
 QRegularExpression beacon_re(R"(^\s*(?<type>CQCQCQ|BEACON)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
@@ -111,7 +109,6 @@ QRegularExpression compound_re("^\\s*[<]"                  +
                                "(?<extra>"             +
                                  optional_grid_pattern +
                                  optional_cmd_pattern  +
-                                 optional_pwr_pattern  +
                                  optional_num_pattern  +
                                ")[>]");
 
@@ -438,19 +435,6 @@ QString Varicode::formatSNR(int snr){
     }
 
     return QString("%1%2").arg(snr >= 0 ? "+" : "").arg(snr, snr < 0 ? 3 : 2, 10, QChar('0'));
-}
-
-QString Varicode::formatPWR(int dbm){
-    if(dbm < 0 || dbm > 60){
-        return QString();
-    }
-
-    int mwatts = dbmTomwatts(dbm);
-    if(mwatts < 1000){
-        return QString("%1mW").arg(mwatts);
-    }
-
-    return QString("%1W").arg(mwatts/1000);
 }
 
 QString Varicode::checksum16(QString const &input){
@@ -1061,43 +1045,18 @@ quint8 Varicode::packNum(QString const &num, bool *ok){
     return inum + 30 + 1;
 }
 
-// pack pwr string into a dbm between 0 and 62
-quint8 Varicode::packPwr(QString const &pwr, bool *ok){
-    int ipwr = 0;
-    if(pwr.isEmpty()){
-        if(ok) *ok = false;
-        return ipwr;
-    }
-
-    int factor = 1000;
-    if(pwr.endsWith("KW")){
-        factor = 1000000;
-    }
-    else if(pwr.endsWith("MW")){
-        factor = 1;
-    }
-
-    ipwr = QString(pwr).replace(QRegExp("[KM]?W", Qt::CaseInsensitive), "").toInt() * factor;
-    ipwr = mwattsToDbm(ipwr);
-
-    if(ok) *ok = true;
-    return ipwr + 1;
-}
-
 // pack a reduced fidelity command and a number into the extra bits provided between nbasegrid and nmaxgrid
 quint8 Varicode::packCmd(quint8 cmd, quint8 num, bool *pPackedNum){
     //quint8 allowed = nmaxgrid - nbasegrid - 1;
 
-    // if cmd == pwr || cmd == snr
+    // if cmd == snr
     quint8 value = 0;
-    if(cmd == directed_cmds[" PWR"] || cmd == directed_cmds[" SNR"]){
+    if(cmd == directed_cmds[" SNR"]){
         // 8 bits - 1 bit flag + 1 bit type + 6 bit number
         // [1][X][6]
         // X = 0 == SNR
-        // X = 1 == PWR
-
-        value = ((1 << 1) + ((int)cmd == directed_cmds[" PWR"])) << 6;
-        value = value + num;
+        value = (1 << 1) << 6;
+        value = value + (num & ((1<<6)-1));
         if(pPackedNum) *pPackedNum = true;
     } else {
         value = cmd & ((1<<7)-1);
@@ -1108,18 +1067,10 @@ quint8 Varicode::packCmd(quint8 cmd, quint8 num, bool *pPackedNum){
 }
 
 quint8 Varicode::unpackCmd(quint8 value, quint8 *pNum){
-    // if the first bit is 1, the second bit will indicate if its pwr or snr...
+    // if the first bit is 1, this is an SNR with a number encoded in the lower 6 bits
     if(value & (1<<7)){
-        // either pwr or snr...
-        bool pwr = value & (1<<6);
-
         if(pNum) *pNum = value & ((1<<6)-1);
-
-        if(pwr){
-            return directed_cmds[" PWR"];
-        } else {
-            return directed_cmds[" SNR"];
-        }
+        return directed_cmds[" SNR"];
     } else {
         if(pNum) *pNum = 0;
         return value & ((1<<7)-1);
@@ -1238,7 +1189,6 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
     QString grid = parsedText.captured("grid");
     QString cmd = parsedText.captured("cmd");
     QString num = parsedText.captured("num").trimmed();
-    QString pwr = parsedText.captured("pwr").trimmed().toUpper();
 
     QString base;
     QString fix;
@@ -1272,9 +1222,6 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
     if (!cmd.isEmpty() && directed_cmds.contains(cmd) && Varicode::isCommandAllowed(cmd)){
         bool packedNum = false;
         qint8 inum = Varicode::packNum(num, nullptr);
-        if(cmd == " PWR"){
-            inum = Varicode::packPwr(pwr, nullptr);
-        }
         extra = nusergrid + Varicode::packCmd(directed_cmds[cmd], inum, &packedNum);
 
         type = FrameCompoundDirected;
@@ -1305,9 +1252,7 @@ QStringList Varicode::unpackCompoundMessage(const QString &text, quint8 *pType){
 
         unpacked.append(directed_cmds.key(cmd));
 
-        if(cmd == directed_cmds[" PWR"]){
-            unpacked.append(Varicode::formatPWR(num - 1));
-        } else if(cmd == directed_cmds[" SNR"]){
+        if(cmd == directed_cmds[" SNR"]){
             unpacked.append(Varicode::formatSNR(num - 31));
         }
     }
@@ -1412,7 +1357,6 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
     QString to = match.captured("callsign");
     QString cmd = match.captured("cmd");
     QString num = match.captured("num").trimmed();
-    QString pwr = match.captured("pwr").trimmed().toUpper();
 
     // ensure we have a directed command
     if(cmd.isEmpty()){
@@ -1446,15 +1390,8 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
     }
 
     // packing general number...
-    quint8 inum = 0;
-
-    if(cmd.trimmed() == "PWR"){
-        inum = Varicode::packPwr(pwr, nullptr);
-        if(pNum) *pNum = pwr;
-    } else {
-        inum = Varicode::packNum(num, nullptr);
-        if(pNum) *pNum = num;
-    }
+    quint8 inum = Varicode::packNum(num, nullptr);
+    if(pNum) *pNum = num;
 
     quint32 packed_from = Varicode::packCallsign(from);
     quint32 packed_to = Varicode::packCallsign(to);
@@ -1517,9 +1454,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
 
     if(extra != 0){
         // TODO: jsherer - should we decide which format to use on the command, or something else?
-        if(packed_cmd == directed_cmds[" PWR"]){
-            unpacked.append(Varicode::formatPWR(extra-1));
-        } else if(packed_cmd == directed_cmds[" SNR"]) {
+        if(packed_cmd == directed_cmds[" SNR"]) {
             unpacked.append(Varicode::formatSNR((int)extra-31));
         } else {
             unpacked.append(QString("%1").arg(extra-31));

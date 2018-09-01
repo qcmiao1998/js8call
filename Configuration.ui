@@ -175,6 +175,20 @@
              <property name="bottomMargin">
               <number>0</number>
              </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_17">
+               <property name="text">
+                <string>Reply Message:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="reply_message_line_edit">
+               <property name="text">
+                <string>HW CPY?</string>
+               </property>
+              </widget>
+             </item>
              <item row="1" column="0">
               <widget class="QLabel" name="label_14">
                <property name="toolTip">
@@ -206,34 +220,6 @@
               <widget class="QLineEdit" name="station_message_line_edit">
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station message that is transmitted in response to &amp;quot;&amp;amp;&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="label_16">
-               <property name="text">
-                <string>Station Power:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QComboBox" name="station_power_combo_box">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Approximate or average station transmit power to be sent in response to &amp;quot;%&amp;quot; directed queries. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_17">
-               <property name="text">
-                <string>Reply Message:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLineEdit" name="reply_message_line_edit">
-               <property name="text">
-                <string>HW CPY?</string>
                </property>
               </widget>
              </item>
@@ -2042,21 +2028,70 @@ comments field.</string>
           <string>Network Services</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_17">
-          <item row="0" column="0">
-           <widget class="QCheckBox" name="psk_reporter_check_box">
-            <property name="toolTip">
-             <string>The program can send your station details and all
+          <item row="1" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <property name="bottomMargin">
+             <number>20</number>
+            </property>
+            <item>
+             <widget class="QCheckBox" name="psk_reporter_check_box">
+              <property name="toolTip">
+               <string>The program can send your station details and all
 decoded signals as spots to the http://pskreporter.info web site.
 This is used for reverse beacon analysis which is very useful
 for assessing propagation and system performance.</string>
-            </property>
-            <property name="text">
-             <string>Enable spotting to reporting networks (PSKReporter, APRS-IS, etc)</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
+              </property>
+              <property name="text">
+               <string>Enable spotting to reporting networks (PSKReporter &amp;&amp; APRS-IS)</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_16">
+              <property name="toolTip">
+               <string>The SSID to be used for local APRS spots</string>
+              </property>
+              <property name="text">
+               <string>APRS SSID:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="aprs_ssid_line_edit">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>-0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -3100,7 +3135,6 @@ soundcard changes</string>
   <tabstop>delete_macro_push_button</tabstop>
   <tabstop>macros_list_view</tabstop>
   <tabstop>prompt_to_log_check_box</tabstop>
-  <tabstop>psk_reporter_check_box</tabstop>
   <tabstop>udp_server_line_edit</tabstop>
   <tabstop>udp_server_port_spin_box</tabstop>
   <tabstop>accept_udp_requests_check_box</tabstop>
@@ -3192,12 +3226,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
   <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
  </buttongroups>
 </ui>

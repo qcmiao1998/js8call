@@ -7400,20 +7400,6 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto sendPWRAction = menu->addAction(QString("%1 PWR - Send station power level to the selected callsign").arg(call).trimmed());
-    sendPWRAction->setDisabled(isAllCall || m_config.my_dBm() < 0);
-    connect(sendPWRAction, &QAction::triggered, this, [this](){
-
-        QString selectedCall = callsignSelected();
-        if(selectedCall.isEmpty()){
-            return;
-        }
-
-        addMessageText(QString("%1 PWR %2").arg(selectedCall).arg(Varicode::formatPWR(m_config.my_dBm())), true);
-
-        if(m_config.transmit_directed()) toggleTx(true);
-    });
-
     menu->addSeparator();
 
     auto snrQueryAction = menu->addAction(QString("%1? - What is my signal report?").arg(call));
@@ -8411,7 +8397,15 @@ void MainWindow::pskSetLocal ()
 
 void MainWindow::aprsSetLocal ()
 {
-    m_aprsClient->setLocalStation(Radio::base_callsign(m_config.my_callsign()), m_config.my_grid());
+    auto ssid = m_config.aprs_ssid();
+    auto call = Radio::base_callsign(m_config.my_callsign());
+    if(!ssid.isEmpty()){
+        if(!ssid.startsWith("-")){
+            ssid = "-" + ssid;
+        }
+        call = call + ssid;
+    }
+    m_aprsClient->setLocalStation(call, m_config.my_grid());
 }
 
 void MainWindow::transmitDisplay (bool transmitting)
@@ -9238,10 +9232,6 @@ void MainWindow::processCommandActivity() {
         // QUERIED SNR
         if (d.cmd == "?") {
             reply = QString("%1 SNR %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
-        }
-        // QUERIED PWR
-        else if (d.cmd == "%" && !isAllCall && m_config.my_dBm() >= 0) {
-            reply = QString("%1 PWR %2").arg(d.from).arg(Varicode::formatPWR(m_config.my_dBm()));
         }
         // QUERIED QTH
         else if (d.cmd == "@" && !isAllCall) {
