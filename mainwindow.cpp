@@ -1351,6 +1351,20 @@ void MainWindow::not_GA_warning_message ()
 
 
   ensureCallsignSet(false);
+
+  CallDetail cd1 = {};
+  cd1.call = "KN4CRD/P";
+  m_callActivity["KN4CRD/P"] = cd1;
+
+  CallDetail cd2 = {};
+  cd2.call = "KN4CRD/QRP";
+  m_callActivity["KN4CRD/QRP"] = cd2;
+
+  CallDetail cd3 = {};
+  cd3.call = "OH8STN/QRP";
+  m_callActivity["OH8STN/QRP"] = cd3;
+
+  displayActivity(true);
 }
 
 void MainWindow::initialize_fonts ()
@@ -9326,10 +9340,15 @@ void MainWindow::processCommandActivity() {
                 continue;
             }
 
-            if(m_callActivity.contains(callsigns.first())){
-                auto cd = m_callActivity[callsigns.first()];
-                reply = QString("%1 ACK %2 %3 (%4)").arg(d.from).arg(cd.call).arg(Varicode::formatSNR(cd.snr)).arg(since(cd.utcTimestamp));
+            QStringList replies;
+            auto baseCall = callsigns.first();
+            foreach(auto cd, m_callActivity.values()){
+                if(baseCall == cd.call || baseCall == Radio::base_callsign(cd.call)){
+                    auto r = QString("%1 ACK %2 %3 (%4)").arg(d.from).arg(cd.call).arg(Varicode::formatSNR(cd.snr)).arg(since(cd.utcTimestamp));
+                    replies.append(r);
+                }
             }
+            reply = replies.join("\n");
         }
         // PROCESS BUFFERED QTH
         else if (d.cmd == " GRID"){
