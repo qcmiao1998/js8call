@@ -6043,7 +6043,7 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
       lines.append(dt.message());
   }
 
-  displayTextForFreq(lines.join(""), freq, QDateTime::currentDateTimeUtc(), true, true, true);
+  displayTextForFreq(lines.join("") + " \u2301 ", freq, QDateTime::currentDateTimeUtc(), true, true, true);
 
   // keep track of the last message text sent
   m_lastTxMessage = text;
