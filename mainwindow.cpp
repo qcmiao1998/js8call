@@ -8416,6 +8416,7 @@ void MainWindow::pskSetLocal ()
 
 void MainWindow::aprsSetLocal ()
 {
+#if 0
     auto ssid = m_config.aprs_ssid();
     auto call = Radio::base_callsign(m_config.my_callsign());
     if(!ssid.isEmpty()){
@@ -8424,7 +8425,8 @@ void MainWindow::aprsSetLocal ()
         }
         call = call + ssid;
     }
-    m_aprsClient->setLocalStation(call, m_config.my_grid());
+#endif
+    m_aprsClient->setLocalStation(m_config.my_callsign(), m_config.my_grid());
 }
 
 void MainWindow::transmitDisplay (bool transmitting)
