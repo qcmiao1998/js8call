@@ -9004,6 +9004,7 @@ void MainWindow::processCompoundActivity() {
             buffer.cmd.from = d.call;
             buffer.cmd.grid = d.grid;
             buffer.cmd.isCompound = true;
+            buffer.cmd.utcTimestamp = qMin(buffer.cmd.utcTimestamp, d.utcTimestamp);
 
             if ((d.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast) {
                 buffer.cmd.bits = d.bits;
@@ -9014,6 +9015,7 @@ void MainWindow::processCompoundActivity() {
             auto d = buffer.compound.dequeue();
             buffer.cmd.to = d.call;
             buffer.cmd.isCompound = true;
+            buffer.cmd.utcTimestamp = qMin(buffer.cmd.utcTimestamp, d.utcTimestamp);
 
             if ((d.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast) {
                 buffer.cmd.bits = d.bits;
@@ -9024,6 +9026,18 @@ void MainWindow::processCompoundActivity() {
             qDebug() << "-> still not last message...skip";
             continue;
         }
+
+        // fixup the datetime with the "minimum" dt seen
+        // this will allow us to delete the activity lines
+        // when the compound buffered command comes in.
+        auto dt = buffer.cmd.utcTimestamp;
+        foreach(auto c, buffer.compound){
+            dt = qMin(dt, c.utcTimestamp);
+        }
+        foreach(auto m, buffer.msgs){
+            dt = qMin(dt, m.utcTimestamp);
+        }
+        buffer.cmd.utcTimestamp = dt;
 
         qDebug() << "buffered compound command ready" << buffer.cmd.from << buffer.cmd.to << buffer.cmd.cmd;
 
