@@ -1103,6 +1103,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->tableWidgetRXAll, &QTableWidget::customContextMenuRequested, this, [this, clearAction3, clearActionAll, removeActivity, logAction](QPoint const &point){
     QMenu * menu = new QMenu(ui->tableWidgetRXAll);
 
+    // clear the selection of the call widget on right click
+    ui->tableWidgetCalls->selectionModel()->clearSelection();
+
     QString selectedCall = callsignSelected();
     bool missingCallsign = selectedCall.isEmpty();
 
@@ -1163,6 +1166,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->tableWidgetCalls->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, logAction, clearAction4, clearActionAll, removeStation](QPoint const &point){
     QMenu * menu = new QMenu(ui->tableWidgetCalls);
+
+    ui->tableWidgetRXAll->selectionModel()->clearSelection();
 
     QString selectedCall = callsignSelected();
     bool isAllCall = isAllCallIncluded(selectedCall);
