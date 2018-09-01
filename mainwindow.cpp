@@ -2178,6 +2178,8 @@ void MainWindow::on_menuWindow_aboutToShow(){
 
     auto vsizes = ui->mainSplitter->sizes();
     ui->actionShow_Waterfall->setChecked(vsizes.last() > 0);
+    ui->actionShow_Waterfall_Controls->setChecked(m_wideGraph->controlsVisible());
+    ui->actionShow_Waterfall_Controls->setEnabled(ui->actionShow_Waterfall->isChecked());
 
     QMenu * sortBandMenu = new QMenu(ui->menuWindow);
     buildBandActivitySortByMenu(sortBandMenu);
@@ -2208,6 +2210,10 @@ void MainWindow::on_actionShow_Waterfall_triggered(bool checked){
     vsizes[1] += oldHeight - newHeight;
     vsizes[vsizes.length()-1] = newHeight;
     ui->mainSplitter->setSizes(vsizes);
+}
+
+void MainWindow::on_actionShow_Waterfall_Controls_triggered(bool checked){
+    m_wideGraph->setControlsVisible(checked);
 }
 
 void MainWindow::on_actionReset_Window_Sizes_triggered(){

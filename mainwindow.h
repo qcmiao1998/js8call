@@ -168,6 +168,7 @@ private slots:
   void on_actionShow_Band_Activity_triggered(bool checked);
   void on_actionShow_Call_Activity_triggered(bool checked);
   void on_actionShow_Waterfall_triggered(bool checked);
+  void on_actionShow_Waterfall_Controls_triggered(bool checked);
   void on_actionReset_Window_Sizes_triggered();
   void on_actionSettings_triggered();
   void prepareSpotting();

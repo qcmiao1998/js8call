@@ -4364,6 +4364,7 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionShow_Band_Activity"/>
     <addaction name="actionShow_Call_Activity"/>
     <addaction name="actionShow_Waterfall"/>
+    <addaction name="actionShow_Waterfall_Controls"/>
     <addaction name="separator"/>
     <addaction name="actionReset_Window_Sizes"/>
    </widget>
@@ -5064,6 +5065,17 @@ list. The list can be maintained in Settings (F2).</string>
   <action name="actionSort_Call_Activity">
    <property name="text">
     <string>Sort Call Activity...</string>
+   </property>
+  </action>
+  <action name="actionShow_Waterfall_Controls">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Waterfall Controls</string>
    </property>
   </action>
  </widget>

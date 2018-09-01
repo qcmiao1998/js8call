@@ -363,6 +363,15 @@ void WideGraph::setDialFreq(double d)                             //setDialFreq
   ui->widePlot->setDialFreq(d);
 }
 
+void WideGraph::setControlsVisible(bool visible)
+{
+  ui->cbControls->setChecked(visible);
+}
+
+bool WideGraph::controlsVisible(){
+  return ui->cbControls->isChecked();
+}
+
 void WideGraph::setRxBand (QString const& band)
 {
   m_rxBand = band;

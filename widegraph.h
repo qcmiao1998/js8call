@@ -60,6 +60,8 @@ public slots:
   void wideFreezeDecode(int n);
   void setFreq2(int rxFreq, int txFreq);
   void setDialFreq(double d);
+  void setControlsVisible(bool visible);
+  bool controlsVisible();
 
 protected:
   void keyPressEvent (QKeyEvent *e) override;
