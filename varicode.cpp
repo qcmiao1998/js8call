@@ -1439,9 +1439,8 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         }
     }
 
-
     // validate command
-    if(!Varicode::isCommandAllowed(cmd)){
+    if(!Varicode::isCommandAllowed(cmd) && !Varicode::isCommandAllowed(cmd.trimmed())){
         if(n) *n = 0;
         return frame;
     }
@@ -1465,7 +1464,13 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         return frame;
     }
 
-    quint8 packed_cmd = directed_cmds[cmd];
+    quint8 packed_cmd = 0;
+    if(directed_cmds.contains(cmd)){
+        packed_cmd = directed_cmds[cmd];
+    }
+    if(directed_cmds.contains(cmd.trimmed())){
+        packed_cmd = directed_cmds[cmd.trimmed()];
+    }
     quint8 packed_flag = FrameDirected;
     quint8 packed_extra = inum;
 

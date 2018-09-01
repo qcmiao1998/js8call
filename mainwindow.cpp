@@ -1123,6 +1123,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     deselect->setDisabled(missingCallsign);
     connect(deselect, &QAction::triggered, this, [this](){
         ui->tableWidgetRXAll->clearSelection();
+        ui->tableWidgetCalls->clearSelection();
     });
 
     menu->addSeparator();
@@ -1180,6 +1181,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     auto deselect = menu->addAction("Deselect");
     deselect->setDisabled(missingCallsign);
     connect(deselect, &QAction::triggered, this, [this](){
+        ui->tableWidgetRXAll->clearSelection();
         ui->tableWidgetCalls->clearSelection();
     });
 
@@ -1199,6 +1201,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
     menu->popup(ui->tableWidgetCalls->mapToGlobal(point));
   });
+
+  connect(ui->tableWidgetRXAll->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::on_tableWidgetRXAll_selectionChanged);
+  connect(ui->tableWidgetCalls->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::on_tableWidgetCalls_selectionChanged);
 
 
   // Don't block beacon's first run...
@@ -2377,8 +2382,8 @@ void MainWindow::keyPressEvent (QKeyEvent * e)
 {
     switch (e->key()) {
         case Qt::Key_Escape:
-            stopTx();
             on_stopTxButton_clicked();
+            stopTx();
             return;
     }
 
@@ -6000,12 +6005,14 @@ void MainWindow::createMessage(QString const& text){
         on_stopTxButton_clicked();
         return;
     }
+
     resetMessageTransmitQueue();
     createMessageTransmitQueue(text);
 }
 
 void MainWindow::createMessageTransmitQueue(QString const& text){
   auto frames = buildFT8MessageFrames(text);
+
   m_txFrameQueue.append(frames);
   m_txFrameCount = frames.length();
 
@@ -6087,7 +6094,13 @@ int MainWindow::countFT8MessageFrames(QString const& text){
 }
 
 QStringList MainWindow::buildFT8MessageFrames(QString const& text){
+    #define ALLOW_SEND_COMPOUND 1
+    #define AUTO_PREPEND_DIRECTED 1
+
     QStringList frames;
+
+    // prepare selected callsign for directed message
+    QString selectedCall = callsignSelected();
 
     // prepare compound
     bool compound = Radio::is_compound_callsign(m_config.my_callsign());
@@ -6099,7 +6112,6 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
     }
 
     foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
-
         // once we find a directed call, data encode the rest of the line.
         bool hasDirected = false;
 
@@ -6114,7 +6126,33 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
             line = lstrip(line.mid(basecall.length() + 1));
         }
 
-#define ALLOW_SEND_COMPOUND 1
+#if AUTO_PREPEND_DIRECTED
+        // see if we need to prepend the directed call to the line...
+        // if we have a selected call and the text doesn't start with that call...
+        // and if this isn't a raw message (starting with "<")... then...
+        if(!selectedCall.isEmpty() && !line.startsWith(selectedCall) && !line.startsWith("<")){
+            auto calls = Varicode::parseCallsigns(line);
+
+            bool lineStartsWithBaseCall = (
+                line.startsWith("ALLCALL") ||
+                line.startsWith("CQCQCQ")  ||
+                line.startsWith("BEACON")
+            );
+
+            bool lineStartsWithStandardCall = !calls.isEmpty() && line.startsWith(calls.first());
+
+            if(lineStartsWithBaseCall || lineStartsWithStandardCall){
+                // pass
+            } else {
+                // if the message doesn't start with a base call
+                // and if there are no other callsigns in this message
+                // or if the first callsign in the message isn't at the beginning...
+                // then we should be auto-prefixing this line with the selected call
+
+                line = QString("%1 %2").arg(selectedCall).arg(line);
+            }
+        }
+#endif
 
         while(line.size() > 0){
           QString frame;
@@ -6544,6 +6582,7 @@ void MainWindow::on_startTxButton_toggled(bool checked)
     } else {
         resetMessage();
         stopTx();
+        on_stopTxButton_clicked();
     }
 }
 
@@ -7330,6 +7369,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1 ").arg(selectedCall), true);
     });
 
+    menu->addSeparator();
+
     auto sendReplyAction = menu->addAction(QString("%1 Reply - Send reply message to selected callsign").arg(call).trimmed());
     connect(sendReplyAction, &QAction::triggered, this, [this](){
         QString selectedCall = callsignSelected();
@@ -7759,6 +7800,15 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
 }
 
 void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/){
+    on_extFreeTextMsgEdit_currentTextChanged(ui->extFreeTextMsgEdit->toPlainText());
+
+    auto placeholderText = QString("Type your outgoing messages here.");
+    auto selectedCall = callsignSelected();
+    if(!selectedCall.isEmpty()){
+        placeholderText = QString("Type your outgoing directed message to %1 here.").arg(selectedCall);
+    }
+    ui->extFreeTextMsgEdit->setPlaceholderText(placeholderText);
+
     updateButtonDisplay();
 }
 
