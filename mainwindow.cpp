@@ -1356,20 +1356,6 @@ void MainWindow::not_GA_warning_message ()
 
 
   ensureCallsignSet(false);
-
-  CallDetail cd1 = {};
-  cd1.call = "KN4CRD/P";
-  m_callActivity["KN4CRD/P"] = cd1;
-
-  CallDetail cd2 = {};
-  cd2.call = "KN4CRD/QRP";
-  m_callActivity["KN4CRD/QRP"] = cd2;
-
-  CallDetail cd3 = {};
-  cd3.call = "OH8STN/QRP";
-  m_callActivity["OH8STN/QRP"] = cd3;
-
-  displayActivity(true);
 }
 
 void MainWindow::initialize_fonts ()
