@@ -2295,8 +2295,11 @@ void MainWindow::prepareSpotting(){
     if(m_config.spot_to_reporting_networks ()){
         pskSetLocal();
         aprsSetLocal();
+        m_aprsClient->setServer(m_config.aprs_server_name(), m_config.aprs_server_port());
+        m_aprsClient->setPaused(false);
         ui->spotButton->setChecked(true);
     } else {
+        m_aprsClient->setPaused(true);
         ui->spotButton->setChecked(false);
     }
 }
@@ -7120,7 +7123,7 @@ void MainWindow::band_changed (Frequency f)
     m_bandEdited = false;
 
     psk_Reporter->sendReport();      // Upload any queued spots before changing band
-    m_aprsClient->processQueue(true);
+    m_aprsClient->sendReports();
     if (!m_transmitting) monitor (true);
     if ("FreqCal" == m_mode)
       {

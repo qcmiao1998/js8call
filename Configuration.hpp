@@ -98,7 +98,6 @@ public:
   QString my_callsign () const;
   QString my_grid () const;
   QString my_station () const;
-  QString aprs_ssid() const;
   int activity_aging() const;
   int callsign_aging() const;
   QString my_qth () const;
@@ -149,6 +148,8 @@ public:
   bool EMEonly() const;
   bool post_decodes () const;
   QString opCall() const;
+  QString aprs_server_name () const;
+  port_type aprs_server_port () const;
   QString udp_server_name () const;
   port_type udp_server_port () const;
   QString n1mm_server_name () const;

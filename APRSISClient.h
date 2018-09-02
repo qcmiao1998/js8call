@@ -16,6 +16,19 @@ public:
     static QPair<float, float> grid2deg(QString grid);
     static QPair<QString, QString> grid2aprs(QString grid);
 
+    void setServer(QString host, quint16 port){
+        if(state() == QTcpSocket::ConnectedState){
+            disconnectFromHost();
+        }
+
+        m_host = host;
+        m_port = port;
+    }
+
+    void setPaused(bool paused){
+        m_paused = paused;
+    }
+
     void setLocalStation(QString mycall, QString mygrid){
         m_localCall = mycall;
         m_localGrid = mygrid;
@@ -29,7 +42,11 @@ public:
     void processQueue(bool disconnect=true);
 
 public slots:
-    void sendReports(){ processQueue(true); }
+    void sendReports(){
+        if(m_paused) return;
+
+        processQueue(true);
+    }
 
 private:
     QString m_localCall;
@@ -39,6 +56,7 @@ private:
     QString m_host;
     quint16 m_port;
     QTimer m_timer;
+    bool m_paused;
 };
 
 #endif // APRSISCLIENT_H

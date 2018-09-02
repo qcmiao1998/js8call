@@ -555,7 +555,6 @@ private:
   QString my_callsign_;
   QString my_grid_;
   QString my_station_;
-  QString aprs_ssid_;
   QString my_qth_;
   QString reply_;
   int callsign_aging_;
@@ -606,6 +605,10 @@ private:
   bool x4ToneSpacing_;
   bool use_dynamic_info_;
   QString opCall_;
+
+  QString aprs_server_name_;
+  port_type aprs_server_port_;
+
   QString udp_server_name_;
   port_type udp_server_port_;
 //  QString n1mm_server_name () const;
@@ -720,6 +723,8 @@ bool Configuration::x2ToneSpacing() const {return m_->x2ToneSpacing_;}
 bool Configuration::x4ToneSpacing() const {return m_->x4ToneSpacing_;}
 bool Configuration::split_mode () const {return m_->split_mode ();}
 QString Configuration::opCall() const {return m_->opCall_;}
+QString Configuration::aprs_server_name () const {return m_->aprs_server_name_;}
+auto Configuration::aprs_server_port () const -> port_type {return m_->aprs_server_port_;}
 QString Configuration::udp_server_name () const {return m_->udp_server_name_;}
 auto Configuration::udp_server_port () const -> port_type {return m_->udp_server_port_;}
 bool Configuration::accept_udp_requests () const {return m_->accept_udp_requests_;}
@@ -863,10 +868,6 @@ QString Configuration::my_station() const
         station = m_->dynamic_qtc_;
     }
     return station;
-}
-
-QString Configuration::aprs_ssid() const {
-    return m_->aprs_ssid_;
 }
 
 QString Configuration::my_qth() const
@@ -1304,6 +1305,8 @@ void Configuration::impl::initialize_models ()
   ui_->TX_audio_source_button_group->button (rig_params_.audio_source)->setChecked (true);
   ui_->CAT_poll_interval_spin_box->setValue (rig_params_.poll_interval);
   ui_->opCallEntry->setText (opCall_);
+  ui_->aprs_server_line_edit->setText (aprs_server_name_);
+  ui_->aprs_server_port_spin_box->setValue (aprs_server_port_);
   ui_->udp_server_line_edit->setText (udp_server_name_);
   ui_->udp_server_port_spin_box->setValue (udp_server_port_);
   ui_->accept_udp_requests_check_box->setChecked (accept_udp_requests_);
@@ -1356,7 +1359,6 @@ void Configuration::impl::read_settings ()
   my_callsign_ = settings_->value ("MyCall", QString {}).toString ();
   my_grid_ = settings_->value ("MyGrid", QString {}).toString ();
   my_station_ = settings_->value("MyStation", QString {}).toString();
-  aprs_ssid_ = settings_->value("APRSSSID", "-0").toString();
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
   my_qth_ = settings_->value("MyQTH", QString {}).toString();
@@ -1529,6 +1531,8 @@ void Configuration::impl::read_settings ()
   rig_params_.poll_interval = settings_->value ("Polling", 0).toInt ();
   rig_params_.split_mode = settings_->value ("SplitMode", QVariant::fromValue (TransceiverFactory::split_mode_none)).value<TransceiverFactory::SplitMode> ();
   opCall_ = settings_->value ("OpCall", "").toString ();
+  aprs_server_name_ = settings_->value ("aprsServer", "rotate.aprs2.net").toString ();
+  aprs_server_port_ = settings_->value ("aprsServerPort", 14580).toUInt ();
   udp_server_name_ = settings_->value ("UDPServer", "127.0.0.1").toString ();
   udp_server_port_ = settings_->value ("UDPServerPort", 2237).toUInt ();
   n1mm_server_name_ = settings_->value ("N1MMServer", "127.0.0.1").toString ();
@@ -1552,7 +1556,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MyCall", my_callsign_);
   settings_->setValue ("MyGrid", my_grid_);
   settings_->setValue ("MyStation", my_station_);
-  settings_->setValue ("APRSSSID", aprs_ssid_);
   settings_->setValue ("MyQTH", my_qth_);
   settings_->setValue ("Reply", reply_);
   settings_->setValue ("CallsignAging", callsign_aging_);
@@ -1643,6 +1646,8 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("x2ToneSpacing", x2ToneSpacing_);
   settings_->setValue ("x4ToneSpacing", x4ToneSpacing_);
   settings_->setValue ("OpCall", opCall_);
+  settings_->setValue ("aprsServer", aprs_server_name_);
+  settings_->setValue ("aprsServerPort", aprs_server_port_);
   settings_->setValue ("UDPServer", udp_server_name_);
   settings_->setValue ("UDPServerPort", udp_server_port_);
   settings_->setValue ("N1MMServer", n1mm_server_name_);
@@ -2016,7 +2021,6 @@ void Configuration::impl::accept ()
   my_grid_ = ui_->grid_line_edit->text ();
   my_station_ = ui_->station_message_line_edit->text().toUpper();
   reply_ = ui_->reply_message_line_edit->text().toUpper();
-  aprs_ssid_ = ui_->aprs_ssid_line_edit->text().toUpper();
   my_qth_ = ui_->qth_message_line_edit->text().toUpper();
   callsign_aging_ = ui_->callsign_aging_spin_box->value();
   activity_aging_ = ui_->activity_aging_spin_box->value();
@@ -2063,6 +2067,9 @@ void Configuration::impl::accept ()
   pwrBandTxMemory_ = ui_->checkBoxPwrBandTxMemory->isChecked ();
   pwrBandTuneMemory_ = ui_->checkBoxPwrBandTuneMemory->isChecked ();
   opCall_=ui_->opCallEntry->text();
+
+  aprs_server_name_ = ui_->aprs_server_line_edit->text();
+  aprs_server_port_ = ui_->aprs_server_port_spin_box->value();
 
   auto newUdpEnabled = ui_->udpEnable->isChecked();
   auto new_server = ui_->udp_server_line_edit->text ();

@@ -4,15 +4,13 @@
 
 #include "varicode.h"
 
-
-
 APRSISClient::APRSISClient(QString host, quint16 port, QObject *parent):
     QTcpSocket(parent),
     m_host(host),
     m_port(port)
 {
     connect(&m_timer, &QTimer::timeout, this, &APRSISClient::sendReports);
-    m_timer.setInterval(30*1000); // every 30 seconds
+    m_timer.setInterval(60*1000); // every 60 seconds
     m_timer.start();
 }
 
