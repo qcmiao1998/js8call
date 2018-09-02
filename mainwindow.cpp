@@ -8408,17 +8408,23 @@ void MainWindow::pskSetLocal ()
 
 void MainWindow::aprsSetLocal ()
 {
-#if 0
-    auto ssid = m_config.aprs_ssid();
-    auto call = Radio::base_callsign(m_config.my_callsign());
-    if(!ssid.isEmpty()){
-        if(!ssid.startsWith("-")){
-            ssid = "-" + ssid;
+    auto grid = m_config.my_grid();
+
+    auto call = m_config.my_callsign();
+    auto base = Radio::base_callsign(call);
+    if(call != base){
+        QRegularExpression re("[/](?<ssid>\\d+)");
+        auto matcher = re.globalMatch(call);
+        if(matcher.hasNext()){
+            auto match = matcher.next();
+            call = base + "-" + match.captured("ssid");
+        } else {
+            call = base;
         }
-        call = call + ssid;
     }
-#endif
-    m_aprsClient->setLocalStation(m_config.my_callsign(), m_config.my_grid());
+
+    qDebug() << "APRSISClient Set Local Station:" << call << grid;
+    m_aprsClient->setLocalStation(call, grid);
 }
 
 void MainWindow::transmitDisplay (bool transmitting)
