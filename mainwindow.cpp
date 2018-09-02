@@ -8408,10 +8408,11 @@ void MainWindow::pskSetLocal ()
 
 void MainWindow::aprsSetLocal ()
 {
-    auto grid = m_config.my_grid();
-
     auto call = m_config.my_callsign();
     auto base = Radio::base_callsign(call);
+    auto grid = m_config.my_grid();
+
+#if SPOT_SSID_SUFFIX
     if(call != base){
         QRegularExpression re("[/](?<ssid>\\d+)");
         auto matcher = re.globalMatch(call);
@@ -8422,9 +8423,10 @@ void MainWindow::aprsSetLocal ()
             call = base;
         }
     }
+#endif
 
-    qDebug() << "APRSISClient Set Local Station:" << call << grid;
-    m_aprsClient->setLocalStation(call, grid);
+    qDebug() << "APRSISClient Set Local Station:" << base << grid;
+    m_aprsClient->setLocalStation(base, grid);
 }
 
 void MainWindow::transmitDisplay (bool transmitting)
