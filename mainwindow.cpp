@@ -8776,6 +8776,12 @@ void MainWindow::updateButtonDisplay(){
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
     ui->macrosMacroButton->setDisabled(isTransmitting);
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
+
+    if(isTransmitting){
+        int count = m_txFrameCount;
+        int sent = count - m_txFrameQueue.count();
+        ui->startTxButton->setText(QString("Sending (%1/%2)").arg(sent).arg(count));
+    }
 }
 
 QString MainWindow::callsignSelected(){
