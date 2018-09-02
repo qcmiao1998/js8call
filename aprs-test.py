@@ -17,6 +17,7 @@ def do_hash(callsign):
     return int(hash & 0x7fff)
 
 HOST = 'rotate.aprs2.net'
+#HOST = 'rotate.aprs.net'
 PORT = 14580
 
 print "Connecting..."
