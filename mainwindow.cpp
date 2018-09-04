@@ -9752,7 +9752,7 @@ void MainWindow::displayCallActivity() {
         ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, item);
         ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
         if (isAllCallIncluded(selectedCall)) {
-            ui->tableWidgetCalls->selectRow(ui->tableWidgetCalls->rowCount() - 1);
+            ui->tableWidgetCalls->item(0, 0)->setSelected(true);
         }
 
         // Build the table
