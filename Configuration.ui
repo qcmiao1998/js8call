@@ -77,7 +77,7 @@
               <item row="0" column="1">
                <widget class="QLineEdit" name="grid_line_edit">
                 <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;4-digit Maidenhead Locator&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;4 to 12-digit Maidenhead Locator&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="maxLength">
                  <number>12</number>
@@ -3239,12 +3239,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
  </buttongroups>
 </ui>
