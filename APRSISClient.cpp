@@ -4,6 +4,8 @@
 
 #include "varicode.h"
 
+const int PACKET_TIMEOUT_SECONDS = 300;
+
 APRSISClient::APRSISClient(QString host, quint16 port, QObject *parent):
     QTcpSocket(parent),
     m_host(host),
@@ -207,7 +209,7 @@ void APRSISClient::enqueueThirdParty(QString theircall, QString payload){
 }
 
 void APRSISClient::enqueueRaw(QString aprsFrame){
-    m_frameQueue.enqueue(aprsFrame);
+    m_frameQueue.enqueue({ aprsFrame, QDateTime::currentDateTimeUtc() });
 }
 
 void APRSISClient::processQueue(bool disconnect){
@@ -254,8 +256,18 @@ void APRSISClient::processQueue(bool disconnect){
     }
 
     while(!m_frameQueue.isEmpty()){
-        QByteArray data = m_frameQueue.head().toLocal8Bit();
+        auto pair = m_frameQueue.head();
+        auto frame = pair.first;
+        auto timestamp = pair.second;
 
+        // if the packet is older than the timeout, drop it.
+        if(timestamp.secsTo(QDateTime::currentDateTimeUtc()) > PACKET_TIMEOUT_SECONDS){
+            qDebug() << "APRSISClient Packet Timeout:" << frame;
+            m_frameQueue.dequeue();
+            continue;
+        }
+
+        QByteArray data = frame.toLocal8Bit();
         if(write(data) == -1){
             qDebug() << "APRSISClient Write Error:" << errorString();
             return;

@@ -1,6 +1,7 @@
 #ifndef APRSISCLIENT_H
 #define APRSISCLIENT_H
 
+#include <QDateTime>
 #include <QTcpSocket>
 #include <QQueue>
 #include <QPair>
@@ -55,7 +56,7 @@ private:
     QString m_localGrid;
     QString m_localPasscode;
 
-    QQueue<QString> m_frameQueue;
+    QQueue<QPair<QString, QDateTime>> m_frameQueue;
     QString m_host;
     quint16 m_port;
     QTimer m_timer;
