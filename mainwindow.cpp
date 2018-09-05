@@ -1210,9 +1210,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->tableWidgetRXAll->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::on_tableWidgetRXAll_selectionChanged);
   connect(ui->tableWidgetCalls->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::on_tableWidgetCalls_selectionChanged);
 
-
   // Don't block beacon's first run...
   m_lastTxTime = QDateTime::currentDateTimeUtc().addSecs(-300);
+
+  pskSetLocal();
+  aprsSetLocal();
 
   displayActivity(true);
 
@@ -6323,6 +6325,11 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
                   }
                   qDebug() << "after:" << line;
               }
+
+              // APRS:
+              if(dirCmd.trimmed() == "APRS:" && !m_aprsClient->isPasscodeValid()){
+                  MessageBox::warning_message(this, tr ("Please enter a valid APRS passcode in the settings to send an APRS packet."));
+              }
           }
 
           if(useDat){
@@ -8414,6 +8421,7 @@ void MainWindow::aprsSetLocal ()
     auto call = m_config.my_callsign();
     auto base = Radio::base_callsign(call);
     auto grid = m_config.my_grid();
+    auto passcode = m_config.aprs_passcode();
 
 #if SPOT_SSID_SUFFIX
     if(call != base){
@@ -8428,8 +8436,8 @@ void MainWindow::aprsSetLocal ()
     }
 #endif
 
-    qDebug() << "APRSISClient Set Local Station:" << base << grid;
-    m_aprsClient->setLocalStation(base, grid);
+    qDebug() << "APRSISClient Set Local Station:" << base << grid << passcode;
+    m_aprsClient->setLocalStation(base, grid, passcode);
 }
 
 void MainWindow::transmitDisplay (bool transmitting)

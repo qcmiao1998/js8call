@@ -194,17 +194,11 @@ void APRSISClient::enqueueSpot(QString theircall, QString grid, QString comment)
     enqueueRaw(spotFrame);
 }
 
-void APRSISClient::enqueueMessage(QString tocall, QString message){
-    if(m_localCall.isEmpty()) return;
-
-    auto messageFrame = QString("%1>APRS,TCPIP*::%2:%3\n");
-    messageFrame = messageFrame.arg(m_localCall);
-    messageFrame = messageFrame.arg(tocall + QString(" ").repeated(9-tocall.length()));
-    messageFrame = messageFrame.arg(message);
-    enqueueRaw(messageFrame);
-}
-
 void APRSISClient::enqueueThirdParty(QString theircall, QString payload){
+    if(m_localPasscode != hashCallsign(m_localCall)){
+        return;
+    }
+
     auto frame = QString("%1>%2,APRS,TCPIP*:%3\n");
     frame = frame.arg(theircall);
     frame = frame.arg(m_localCall);

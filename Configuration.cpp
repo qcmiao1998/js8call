@@ -607,6 +607,7 @@ private:
   QString opCall_;
 
   QString aprs_server_name_;
+  QString aprs_passcode_;
   port_type aprs_server_port_;
 
   QString udp_server_name_;
@@ -725,6 +726,7 @@ bool Configuration::split_mode () const {return m_->split_mode ();}
 QString Configuration::opCall() const {return m_->opCall_;}
 QString Configuration::aprs_server_name () const {return m_->aprs_server_name_;}
 auto Configuration::aprs_server_port () const -> port_type {return m_->aprs_server_port_;}
+QString Configuration::aprs_passcode() const { return m_->aprs_passcode_; }
 QString Configuration::udp_server_name () const {return m_->udp_server_name_;}
 auto Configuration::udp_server_port () const -> port_type {return m_->udp_server_port_;}
 bool Configuration::accept_udp_requests () const {return m_->accept_udp_requests_;}
@@ -1307,6 +1309,7 @@ void Configuration::impl::initialize_models ()
   ui_->opCallEntry->setText (opCall_);
   ui_->aprs_server_line_edit->setText (aprs_server_name_);
   ui_->aprs_server_port_spin_box->setValue (aprs_server_port_);
+  ui_->aprs_passcode_line_edit->setText(aprs_passcode_);
   ui_->udp_server_line_edit->setText (udp_server_name_);
   ui_->udp_server_port_spin_box->setValue (udp_server_port_);
   ui_->accept_udp_requests_check_box->setChecked (accept_udp_requests_);
@@ -1533,6 +1536,7 @@ void Configuration::impl::read_settings ()
   opCall_ = settings_->value ("OpCall", "").toString ();
   aprs_server_name_ = settings_->value ("aprsServer", "rotate.aprs2.net").toString ();
   aprs_server_port_ = settings_->value ("aprsServerPort", 14580).toUInt ();
+  aprs_passcode_ = settings_->value ("aprsPasscode", "").toString();
   udp_server_name_ = settings_->value ("UDPServer", "127.0.0.1").toString ();
   udp_server_port_ = settings_->value ("UDPServerPort", 2237).toUInt ();
   n1mm_server_name_ = settings_->value ("N1MMServer", "127.0.0.1").toString ();
@@ -1648,6 +1652,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("OpCall", opCall_);
   settings_->setValue ("aprsServer", aprs_server_name_);
   settings_->setValue ("aprsServerPort", aprs_server_port_);
+  settings_->setValue ("aprsPasscode", aprs_passcode_);
   settings_->setValue ("UDPServer", udp_server_name_);
   settings_->setValue ("UDPServerPort", udp_server_port_);
   settings_->setValue ("N1MMServer", n1mm_server_name_);
@@ -2070,6 +2075,7 @@ void Configuration::impl::accept ()
 
   aprs_server_name_ = ui_->aprs_server_line_edit->text();
   aprs_server_port_ = ui_->aprs_server_port_spin_box->value();
+  aprs_passcode_ = ui_->aprs_passcode_line_edit->text();
 
   auto newUdpEnabled = ui_->udpEnable->isChecked();
   auto new_server = ui_->udp_server_line_edit->text ();

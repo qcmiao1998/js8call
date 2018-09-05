@@ -2104,6 +2104,19 @@ for assessing propagation and system performance.</string>
               </property>
              </widget>
             </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_16">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;APRS Server Passcode for Sending APRS Packets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>APRS Passcode:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="aprs_passcode_line_edit"/>
+            </item>
            </layout>
           </item>
          </layout>
