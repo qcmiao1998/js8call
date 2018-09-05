@@ -5895,14 +5895,23 @@ void MainWindow::writeNoticeTextToUI(QDateTime date, QString text){
 int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, bool bold, int block){
     auto c = ui->textEditRX->textCursor();
 
-    // find an existing block (
+    // find an existing block (that does not contain an EOT marker)
     bool found = false;
     if(block != -1){
         QTextBlock b = c.document()->findBlockByNumber(block);
         c.setPosition(b.position());
-        c.movePosition(QTextCursor::EndOfBlock);
-        found = true;
-    } else {
+        c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+
+        auto blockText = c.selectedText();
+        c.clearSelection();
+        c.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
+
+        if(!blockText.contains("\u2301")){
+            found = true;
+        }
+    }
+
+    if(!found){
         c.movePosition(QTextCursor::End);
         if(c.block().length() > 1){
             c.insertBlock();
