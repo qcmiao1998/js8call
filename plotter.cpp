@@ -53,6 +53,7 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
 
   setMouseTracking(true);
 
+#if 0
   // contextual pop up menu
   setContextMenuPolicy (Qt::CustomContextMenu);
   connect (this, &QWidget::customContextMenuRequested, [this] (QPoint const& pos) {
@@ -65,6 +66,7 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
       menu.exec (mapToGlobal (pos));
       disconnect (connection);
     });
+#endif
 }
 
 CPlotter::~CPlotter() { }                                      // Destructor
