@@ -6739,6 +6739,8 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
       {"STATION.GRID", QVariant(my_grid)}
   });
 
+  clearCallsignSelected();
+
   if (m_config.clear_DX () and !m_config.bHound()) clearDX ();
   m_dateTimeQSOOn = QDateTime {};
 }
@@ -8844,6 +8846,11 @@ QString MainWindow::callsignSelected(){
     }
 
     return QString();
+}
+
+void MainWindow::clearCallsignSelected(){
+    ui->tableWidgetCalls->clearSelection();
+    ui->tableWidgetRXAll->clearSelection();
 }
 
 bool MainWindow::isRecentOffset(int offset){

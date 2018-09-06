@@ -859,6 +859,7 @@ private:
   bool isMyCallIncluded(QString const &text);
   bool isAllCallIncluded(QString const &text);
   QString callsignSelected();
+  void clearCallsignSelected();
   bool isRecentOffset(int offset);
   void markOffsetRecent(int offset);
   bool isDirectedOffset(int offset, bool *pIsAllCall);
