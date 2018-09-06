@@ -102,7 +102,7 @@ QRegularExpression directed_re("^"                    +
                                optional_cmd_pattern   +
                                optional_num_pattern);
 
-QRegularExpression beacon_re(R"(^\s*(?<type>CQCQCQ|BEACON)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
+QRegularExpression beacon_re(R"(^\s*(?<type>CQCQCQ|CQ QRP|CQ DX|CQ TEST|BEACON)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
 QRegularExpression compound_re("^\\s*[<]"                  +
                                callsign_pattern        +
@@ -346,6 +346,13 @@ QMap<QString, quint32> basecalls = {
     { "ALLCALL", nbasecall + 2 },
 };
 
+QMap<quint32, QString> cqs = {
+    { 0, "CQCQCQ" },
+    { 1, "CQ DX"  },
+    { 2, "CQ QRP" },
+    { 3, "CQ TEST" },
+};
+
 QMap<int, int> dbm2mw = {
     {0  , 1},       //   1mW
     {3  , 2},       //   2mW
@@ -428,6 +435,13 @@ int dbmTomwatts(int dbm){
 /*
  * VARICODE
  */
+
+QString Varicode::cqString(int number){
+    if(!cqs.contains(number)){
+        return QString{};
+    }
+    return cqs[number];
+}
 
 QString Varicode::formatSNR(int snr){
     if(snr < -60 || snr > 60){
@@ -1094,6 +1108,8 @@ int Varicode::isCommandChecksumed(const QString &cmd){
 }
 
 // CQCQCQ EM73
+// CQ DX EM73
+// CQ QRP EM73
 // BEACON EM73
 QString Varicode::packBeaconMessage(QString const &text, const QString &callsign, int *n){
     QString frame;
@@ -1141,8 +1157,9 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
         packed_extra |= (1<<15);
     }
 
+    quint8 cqNumber = cqs.key(type, 0);
 
-    frame = packCompoundFrame(base, fix, isPrefix, FrameBeacon, packed_extra);
+    frame = packCompoundFrame(base, fix, isPrefix, FrameBeacon, packed_extra, cqNumber);
     if(frame.isEmpty()){
         if(n) *n = 0;
         return frame;
@@ -1152,11 +1169,12 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
     return frame;
 }
 
-QStringList Varicode::unpackBeaconMessage(const QString &text, quint8 *pType, bool * isAlt){
+QStringList Varicode::unpackBeaconMessage(const QString &text, quint8 *pType, bool * isAlt, quint8 * pBits3){
     quint8 type = FrameBeacon;
     quint16 num = nmaxgrid;
+    quint8 bits3 = 0;
 
-    QStringList unpacked = unpackCompoundFrame(text, &type, &num);
+    QStringList unpacked = unpackCompoundFrame(text, &type, &num, &bits3);
     if(unpacked.isEmpty() || type != FrameBeacon){
         return QStringList{};
     }
@@ -1165,6 +1183,7 @@ QStringList Varicode::unpackBeaconMessage(const QString &text, quint8 *pType, bo
 
     if(isAlt) *isAlt = (num & (1<<15));
     if(pType) *pType = type;
+    if(pBits3) *pBits3 = bits3;
 
     return unpacked;
 }
@@ -1229,17 +1248,18 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
         extra = Varicode::packGrid(grid);
     }
 
-    frame = Varicode::packCompoundFrame(base, fix, isPrefix, type, extra);
+    frame = Varicode::packCompoundFrame(base, fix, isPrefix, type, extra, 0);
 
     if(n) *n = parsedText.captured(0).length();
     return frame;
 }
 
-QStringList Varicode::unpackCompoundMessage(const QString &text, quint8 *pType){
+QStringList Varicode::unpackCompoundMessage(const QString &text, quint8 *pType, quint8 *pBits3){
     quint8 type = FrameCompound;
     quint16 extra = nmaxgrid;
+    quint8 bits3 = 0;
 
-    QStringList unpacked = unpackCompoundFrame(text, &type, &extra);
+    QStringList unpacked = unpackCompoundFrame(text, &type, &extra, &bits3);
     if(unpacked.isEmpty() || (type != FrameCompound && type != FrameCompoundDirected)){
         return QStringList {};
     }
@@ -1258,11 +1278,12 @@ QStringList Varicode::unpackCompoundMessage(const QString &text, quint8 *pType){
     }
 
     if(pType) *pType = type;
+    if(pBits3) *pBits3 = bits3;
 
     return unpacked;
 }
 
-QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, quint8 type, quint16 num){
+QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, quint8 type, quint16 num, quint8 bits3){
     QString frame;
 
     // needs to be a compound type...
@@ -1283,8 +1304,9 @@ QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &
 
     quint16 packed_11 = (num & mask11) >> 5;
     quint8 packed_5 = num & mask5;
+    quint8 packed_8 = (packed_5 << 3) | bits3;
 
-    // [3][28][22][11],[3][5] = 72
+    // [3][28][22][11],[5][3] = 72
     auto bits = (
         Varicode::intToBits(packed_flag,  3) +
         Varicode::intToBits(packed_base, 28) +
@@ -1292,19 +1314,22 @@ QString Varicode::packCompoundFrame(const QString &baseCallsign, const QString &
         Varicode::intToBits(packed_11,   11)
     );
 
-    return Varicode::pack72bits(Varicode::bitsToInt(bits), packed_5 % 32);
+    return Varicode::pack72bits(Varicode::bitsToInt(bits), packed_8);
 }
 
-QStringList Varicode::unpackCompoundFrame(const QString &text, quint8 *pType, quint16 *pNum){
+QStringList Varicode::unpackCompoundFrame(const QString &text, quint8 *pType, quint16 *pNum, quint8 *pBits3){
     QStringList unpacked;
 
     if(text.length() < 12 || text.contains(" ")){
         return unpacked;
     }
 
-    // [3][28][22][11],[3][5] = 72
-    quint8 packed_5 = 0;
-    auto bits = Varicode::intToBits(Varicode::unpack72bits(text, &packed_5), 64);
+    // [3][28][22][11],[5][3] = 72
+    quint8 packed_8 = 0;
+    auto bits = Varicode::intToBits(Varicode::unpack72bits(text, &packed_8), 64);
+
+    quint8 packed_5 = packed_8 >> 3;
+    quint8 packed_3 = packed_8 & ((1<<3)-1);
 
     quint8 packed_flag = Varicode::bitsToInt(bits.mid(0, 3));
 
@@ -1326,6 +1351,7 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, quint8 *pType, qu
 
     if(pType) *pType = packed_flag;
     if(pNum) *pNum = num;
+    if(pBits3) *pBits3 = packed_3;
 
     if(isPrefix){
         unpacked.append(fix);

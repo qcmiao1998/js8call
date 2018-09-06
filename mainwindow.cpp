@@ -6161,6 +6161,7 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
             bool lineStartsWithBaseCall = (
                 line.startsWith("ALLCALL") ||
                 line.startsWith("CQCQCQ")  ||
+                line.startsWith("CQ ")     ||
                 line.startsWith("BEACON")
             );
 
@@ -7308,9 +7309,13 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
 }
 
 void MainWindow::on_cqMacroButton_clicked(){
-    QString mygrid = m_config.my_grid().left(4);
-    QString text = QString("CQCQCQ %1").arg(mygrid).trimmed();
-    addMessageText(text);
+    auto message = m_config.cq_message();
+    if(message.isEmpty()){
+        QString mygrid = m_config.my_grid().left(4);
+        message = QString("CQCQCQ %1").arg(mygrid).trimmed();
+    }
+
+    addMessageText(message);
 }
 
 void MainWindow::on_replyMacroButton_clicked(){
@@ -7318,7 +7323,7 @@ void MainWindow::on_replyMacroButton_clicked(){
     if(call.isEmpty()){
         return;
     }
-    addMessageText(QString("%1 %2").arg(call).arg(m_config.reply()));
+    addMessageText(QString("%1 %2").arg(call).arg(m_config.reply_message()));
 }
 
 void MainWindow::on_qthMacroButton_clicked(){
@@ -7410,7 +7415,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1 %2").arg(selectedCall).arg(m_config.reply()), true);
+        addMessageText(QString("%1 %2").arg(selectedCall).arg(m_config.reply_message()), true);
     });
 
     auto sendSNRAction = menu->addAction(QString("%1 SNR - Send a signal report to the selected callsign").arg(call).trimmed());
@@ -9719,7 +9724,7 @@ void MainWindow::displayBandActivity() {
                 textItem->setTextAlignment(flag);
 
                 if (text.last().contains(QRegularExpression {
-                        "\\b(CQCQCQ|BEACON)\\b"
+                        "\\b(CQCQCQ|CQ)\\b"
                     })) {
                     offsetItem->setBackground(QBrush(m_config.color_CQ()));
                     ageItem->setBackground(QBrush(m_config.color_CQ()));

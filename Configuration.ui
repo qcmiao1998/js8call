@@ -175,21 +175,21 @@
              <property name="bottomMargin">
               <number>0</number>
              </property>
-             <item row="0" column="0">
+             <item row="1" column="0">
               <widget class="QLabel" name="label_17">
                <property name="text">
                 <string>Reply Message:</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
+             <item row="1" column="1">
               <widget class="QLineEdit" name="reply_message_line_edit">
                <property name="text">
                 <string>HW CPY?</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
+             <item row="2" column="0">
               <widget class="QLabel" name="label_14">
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -199,14 +199,14 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
+             <item row="2" column="1">
               <widget class="QLineEdit" name="qth_message_line_edit">
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message that is transmitted in response to &amp;quot;@&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
+             <item row="3" column="0">
               <widget class="QLabel" name="label_15">
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station Description Message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -216,10 +216,24 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
+             <item row="3" column="1">
               <widget class="QLineEdit" name="station_message_line_edit">
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station message that is transmitted in response to &amp;quot;&amp;amp;&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_19">
+               <property name="text">
+                <string>CQ Message:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="cq_message_line_edit">
+               <property name="text">
+                <string>CQCQCQ</string>
                </property>
               </widget>
              </item>
@@ -2625,7 +2639,7 @@ Right click for insert and delete options.</string>
                </size>
               </property>
               <property name="text">
-               <string>CQ and BEACON</string>
+               <string>CQ</string>
               </property>
              </widget>
             </item>

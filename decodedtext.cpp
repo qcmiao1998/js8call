@@ -108,7 +108,8 @@ bool DecodedText::tryUnpackBeacon(){
 
     bool isAlt = false;
     quint8 type = Varicode::FrameUnknown;
-    QStringList parts = Varicode::unpackBeaconMessage(m, &type, &isAlt);
+    quint8 bits3 = 0;
+    QStringList parts = Varicode::unpackBeaconMessage(m, &type, &isAlt, &bits3);
 
     if(parts.isEmpty() || parts.length() < 2){
         return false;
@@ -130,7 +131,7 @@ bool DecodedText::tryUnpackBeacon(){
         cmp.append(parts.at(1));
     }
     compound_ = cmp.join("/");
-    message_ = QString("%1: %2 %3 ").arg(compound_).arg(isAlt ? "CQCQCQ" : "BEACON").arg(extra_);
+    message_ = QString("%1: %2 %3 ").arg(compound_).arg(isAlt ? Varicode::cqString(bits3) : "BEACON").arg(extra_);
     frameType_ = type;
     return true;
 }
@@ -143,7 +144,8 @@ bool DecodedText::tryUnpackCompound(){
     }
 
     quint8 type = Varicode::FrameUnknown;
-    auto parts = Varicode::unpackCompoundMessage(m, &type);
+    quint8 bits3 = 0;
+    auto parts = Varicode::unpackCompoundMessage(m, &type, &bits3);
     if(parts.isEmpty() || parts.length() < 2){
         return false;
     }

@@ -101,7 +101,8 @@ public:
   int activity_aging() const;
   int callsign_aging() const;
   QString my_qth () const;
-  QString reply () const;
+  QString cq_message () const;
+  QString reply_message () const;
   QFont text_font () const;
   QFont decoded_text_font () const;
   qint32 id_interval () const;

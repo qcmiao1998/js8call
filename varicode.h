@@ -56,6 +56,7 @@ public:
 
     //Varicode();
 
+    static QString cqString(int number);
     static QString formatSNR(int snr);
     static QString formatPWR(int dbm);
 
@@ -124,13 +125,13 @@ public:
     static int isCommandChecksumed(const QString &cmd);
 
     static QString packBeaconMessage(QString const &text, QString const&callsign, int *n);
-    static QStringList unpackBeaconMessage(const QString &text, quint8 *pType, bool *isAlt);
+    static QStringList unpackBeaconMessage(const QString &text, quint8 *pType, bool *isAlt, quint8 *pBits3);
 
     static QString packCompoundMessage(QString const &text, int *n);
-    static QStringList unpackCompoundMessage(const QString &text, quint8 *pType);
+    static QStringList unpackCompoundMessage(const QString &text, quint8 *pType, quint8 *pBits3);
 
-    static QString packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, quint8 type, quint16 num);
-    static QStringList unpackCompoundFrame(const QString &text, quint8 *pType, quint16 *pNum);
+    static QString packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, quint8 type, quint16 num, quint8 bits3);
+    static QStringList unpackCompoundFrame(const QString &text, quint8 *pType, quint16 *pNum, quint8 *pBits3);
 
     static QString packDirectedMessage(QString const& text, QString const& callsign, QString *pTo, QString * pCmd, QString *pNum, int *n);
     static QStringList unpackDirectedMessage(QString const& text, quint8 *pType);

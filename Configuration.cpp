@@ -454,6 +454,7 @@ private:
   Q_SLOT void on_PTT_method_button_group_buttonClicked (int);
   Q_SLOT void on_station_message_line_edit_textChanged(QString const&);
   Q_SLOT void on_qth_message_line_edit_textChanged(QString const&);
+  Q_SLOT void on_cq_message_line_edit_textChanged(QString const&);
   Q_SLOT void on_reply_message_line_edit_textChanged(QString const&);
   Q_SLOT void on_add_macro_line_edit_editingFinished ();
   Q_SLOT void delete_macro ();
@@ -556,6 +557,7 @@ private:
   QString my_grid_;
   QString my_station_;
   QString my_qth_;
+  QString cq_;
   QString reply_;
   int callsign_aging_;
   int activity_aging_;
@@ -877,7 +879,12 @@ QString Configuration::my_qth() const
     return m_->my_qth_;
 }
 
-QString Configuration::reply() const
+QString Configuration::cq_message() const
+{
+    return m_->cq_;
+}
+
+QString Configuration::reply_message() const
 {
     return m_->reply_;
 }
@@ -1043,6 +1050,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   ui_->station_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->qth_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->reply_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
+  ui_->cq_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
 
   ui_->udp_server_port_spin_box->setMinimum (1);
   ui_->udp_server_port_spin_box->setMaximum (std::numeric_limits<port_type>::max ());
@@ -1233,6 +1241,7 @@ void Configuration::impl::initialize_models ()
   ui_->activity_aging_spin_box->setValue(activity_aging_);
   ui_->station_message_line_edit->setText (my_station_.toUpper());
   ui_->qth_message_line_edit->setText (my_qth_.toUpper());
+  ui_->cq_message_line_edit->setText(cq_.toUpper());
   ui_->reply_message_line_edit->setText (reply_.toUpper());
   ui_->use_dynamic_grid->setChecked(use_dynamic_info_);
   ui_->labCQ->setStyleSheet(QString("background: %1").arg(color_CQ_.name()));
@@ -1365,6 +1374,7 @@ void Configuration::impl::read_settings ()
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
   my_qth_ = settings_->value("MyQTH", QString {}).toString();
+  cq_ = settings_->value("CQMessage", QString {"CQCQCQ"}).toString();
   reply_ = settings_->value("Reply", QString {"HW CPY?"}).toString();
   next_color_CQ_ = color_CQ_ = settings_->value("colorCQ","#66ff66").toString();
   next_color_MyCall_ = color_MyCall_ = settings_->value("colorMyCall","#ff6666").toString();
@@ -1561,6 +1571,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MyGrid", my_grid_);
   settings_->setValue ("MyStation", my_station_);
   settings_->setValue ("MyQTH", my_qth_);
+  settings_->setValue ("CQMessage", cq_);
   settings_->setValue ("Reply", reply_);
   settings_->setValue ("CallsignAging", callsign_aging_);
   settings_->setValue ("ActivityAging", activity_aging_);
@@ -2025,6 +2036,7 @@ void Configuration::impl::accept ()
   my_callsign_ = ui_->callsign_line_edit->text ();
   my_grid_ = ui_->grid_line_edit->text ();
   my_station_ = ui_->station_message_line_edit->text().toUpper();
+  cq_ = ui_->cq_message_line_edit->text().toUpper();
   reply_ = ui_->reply_message_line_edit->text().toUpper();
   my_qth_ = ui_->qth_message_line_edit->text().toUpper();
   callsign_aging_ = ui_->callsign_aging_spin_box->value();
@@ -2338,6 +2350,14 @@ void Configuration::impl::on_qth_message_line_edit_textChanged(QString const &te
   QString upper = text.toUpper();
   if(text != upper){
     ui_->qth_message_line_edit->setText (upper);
+  }
+}
+
+void Configuration::impl::on_cq_message_line_edit_textChanged(QString const &text)
+{
+  QString upper = text.toUpper();
+  if(text != upper){
+    ui_->cq_message_line_edit->setText (upper);
   }
 }
 
