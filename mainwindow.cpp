@@ -3337,7 +3337,7 @@ void MainWindow::writeAllTxt(QString message)
       if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
         QTextStream out(&f);
         if(m_RxLog==1) {
-          out << QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm")
+          out << QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
               << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
               << m_mode << endl;
           m_RxLog=0;
@@ -3413,7 +3413,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
       if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
         QTextStream out(&f);
         if(m_RxLog==1) {
-          out << QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm")
+          out << QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
               << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
               << m_mode << endl;
           m_RxLog=0;
@@ -8161,7 +8161,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
               QFile f2 {m_config.writeable_data_dir ().absoluteFilePath ("ALL.TXT")};
               if (f2.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
                 QTextStream out(&f2);
-                out << QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm")
+                out << QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
                     << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
                     << m_mode << endl;
                 f2.close();
@@ -9358,7 +9358,7 @@ void MainWindow::processCommandActivity() {
               QTextStream out(&f);
               auto df = dialFrequency();
               auto text = QString("%1\t%2MHz\t%3Hz\t%4dB\t%5");
-              text = text.arg(d.utcTimestamp.toString());
+              text = text.arg(d.utcTimestamp.toString("yyyy-MM-dd hh:mm:ss"));
               text = text.arg(Radio::frequency_MHz_string(df));
               text = text.arg(d.freq);
               text = text.arg(Varicode::formatSNR(d.snr));
@@ -10648,7 +10648,7 @@ void MainWindow::write_transmit_entry (QString const& file_name)
       auto time = QDateTime::currentDateTimeUtc ();
       time = time.addSecs (-(time.time ().second () % m_TRperiod));
       auto dt = DecodedText(m_currentMessage);
-      out << time.toString("yyMMdd_hhmmss")
+      out << time.toString("yyyy-MM-dd hh:mm:ss")
           << "  Transmitting " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6)
           << " MHz  " << m_modeTx
           << ":  " << dt.message() << endl;
