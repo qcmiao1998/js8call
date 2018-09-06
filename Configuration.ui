@@ -448,7 +448,7 @@
                <number>0</number>
               </property>
               <property name="maximum">
-               <number>60</number>
+               <number>1440</number>
               </property>
               <property name="singleStep">
                <number>1</number>
@@ -490,7 +490,7 @@
                <number>0</number>
               </property>
               <property name="maximum">
-               <number>60</number>
+               <number>1440</number>
               </property>
               <property name="singleStep">
                <number>1</number>
@@ -526,7 +526,7 @@
                <string/>
               </property>
               <property name="minimum">
-               <number>5</number>
+               <number>15</number>
               </property>
               <property name="maximum">
                <number>60</number>
