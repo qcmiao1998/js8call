@@ -6481,7 +6481,7 @@ bool MainWindow::isFreqOffsetFree(int f, int bw){
             continue;
         }
 
-        // otherwise, if this is an occupied slot within our 60Hz of where we'd like to transmit... it's not free...
+        // otherwise, if this is an occupied slot within our bw of where we'd like to transmit... it's not free...
         if(qAbs(offset - f) < bw){
             return false;
         }
@@ -6508,8 +6508,8 @@ int MainWindow::findFreeFreqOffset(int fmin, int fmax, int bw){
         }
     }
 
-    // return 0 if there's no free offset
-    return 0;
+    // return fmin if there's no free offset
+    return fmin;
 }
 
 // scheduleBeacon
@@ -6565,7 +6565,6 @@ void MainWindow::checkBacon(){
         return;
     }
 
-    qDebug() << "PREPARING BACON!!";
     prepareBacon();
 }
 
@@ -6584,8 +6583,11 @@ void MainWindow::prepareBacon(){
         lines.append(QString("%1: BEACON %2").arg(mycall).arg(mygrid));
     }
 
+    // Choose a beacon frequency
+    auto f = findFreeFreqOffset(500, 1000, 50);
+
     // Queue the beacon
-    enqueueMessage(PriorityLow, lines.join(QChar('\n')), currentFreqOffset(), [this](){
+    enqueueMessage(PriorityLow, lines.join(QChar('\n')), f, [this](){
         m_nextBeaconQueued = false;
     });
 
