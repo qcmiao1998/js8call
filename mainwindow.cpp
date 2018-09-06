@@ -1049,15 +1049,24 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // setup tablewidget context menus
   auto clearAction1 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->textEditRX);
   connect(clearAction1, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->textEditRX); });
-  ui->textEditRX->setContextMenuPolicy(Qt::ActionsContextMenu);
-  ui->textEditRX->addAction(clearAction1);
-  ui->textEditRX->addAction(clearActionAll);
 
+  ui->textEditRX->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->textEditRX, &QTableWidget::customContextMenuRequested, this, [this, clearAction1, clearActionAll](QPoint const &point){
+      QMenu * menu = new QMenu(ui->textEditRX);
 
+      buildEditMenu(ui->textEditRX, menu);
+
+      menu->addSeparator();
+
+      menu->addAction(clearAction1);
+      menu->addAction(clearActionAll);
+
+      menu->popup(ui->textEditRX->mapToGlobal(point));
+
+  });
 
   auto clearAction2 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->extFreeTextMsgEdit);
   connect(clearAction2, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->extFreeTextMsgEdit); });
-  ui->extFreeTextMsgEdit->setContextMenuPolicy(Qt::ActionsContextMenu);
 
   auto restoreAction = new QAction(QString("Restore Previous Message"), ui->extFreeTextMsgEdit);
   connect(restoreAction, &QAction::triggered, this, [this](){ this->restoreMessage(); });
@@ -1065,6 +1074,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->extFreeTextMsgEdit->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->extFreeTextMsgEdit, &QTableWidget::customContextMenuRequested, this, [this, clearAction2, clearActionAll, restoreAction](QPoint const &point){
     QMenu * menu = new QMenu(ui->extFreeTextMsgEdit);
+
+    buildEditMenu(ui->extFreeTextMsgEdit, menu);
+
+    menu->addSeparator();
 
     restoreAction->setDisabled(m_lastTxMessage.isEmpty());
     menu->addAction(restoreAction);
@@ -7736,6 +7749,31 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
+}
+
+void MainWindow::buildEditMenu(QTextEdit *edit, QMenu *menu){
+    bool hasSelection = !edit->textCursor().selectedText().isEmpty();
+
+    auto cut = menu->addAction("Cu&t");
+    cut->setEnabled(hasSelection && !edit->isReadOnly());
+    connect(edit, &QTextEdit::copyAvailable, this, [this, edit, cut](bool copyAvailable){
+        cut->setEnabled(copyAvailable && !edit->isReadOnly());
+    });
+    connect(cut, &QAction::triggered, this, [this, edit](){
+        edit->copy();
+        edit->textCursor().removeSelectedText();
+    });
+
+    auto copy = menu->addAction("&Copy");
+    copy->setEnabled(hasSelection);
+    connect(edit, &QTextEdit::copyAvailable, this, [this, copy](bool copyAvailable){
+        copy->setEnabled(copyAvailable);
+    });
+    connect(copy, &QAction::triggered, edit, &QTextEdit::copy);
+
+    auto paste = menu->addAction("&Paste");
+    paste->setEnabled(edit->canPaste());
+    connect(paste, &QAction::triggered, edit, &QTextEdit::paste);
 }
 
 void MainWindow::on_queryButton_pressed(){
