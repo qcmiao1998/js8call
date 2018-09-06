@@ -139,7 +139,10 @@
               <bool>false</bool>
              </property>
              <property name="styleSheet">
-              <string notr="true">color:white; background-color:rgb(0,0,0);</string>
+              <string notr="true">QFrame { 
+	color:white;
+	background-color:rgb(0,0,0);
+}</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::NoFrame</enum>
@@ -191,8 +194,7 @@
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select operating band or enter frequency in MHz or enter kHz increment followed by k.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">background-color:white;
-color:black;</string>
+                 <string notr="true"/>
                 </property>
                 <property name="editable">
                  <bool>true</bool>
@@ -279,8 +281,7 @@ QPushButton[oob=&quot;true&quot;] {
            <item>
             <widget class="QFrame" name="frame_6">
              <property name="styleSheet">
-              <string notr="true">background-color : black;
-o</string>
+              <string notr="true">QFrame, QLabel { background-color : black; }</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::StyledPanel</enum>
@@ -427,7 +428,10 @@ color : white;
               </sizepolicy>
              </property>
              <property name="styleSheet">
-              <string notr="true">color:white; background-color:rgb(0,0,0);</string>
+              <string notr="true">QFrame { 
+	color:white;
+	background-color:rgb(0,0,0);
+}</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::NoFrame</enum>
@@ -1070,7 +1074,7 @@ background-color: #00ff00;
          <property name="font">
           <font>
            <pointsize>12</pointsize>
-           <italic>true</italic>
+           <italic>false</italic>
           </font>
          </property>
          <property name="autoFillBackground">
@@ -1477,6 +1481,10 @@ background:yellow;
                     <height>0</height>
                    </size>
                   </property>
+                  <property name="styleSheet">
+                   <string notr="true">QFrame { background-color:black; }
+</string>
+                  </property>
                   <property name="frameShape">
                    <enum>QFrame::NoFrame</enum>
                   </property>
@@ -1580,7 +1588,7 @@ background-color: #00ff00;
                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;30dB recommended when only noise present&lt;br/&gt;Green when good&lt;br/&gt;Red when clipping may occur&lt;br/&gt;Yellow when too low&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                      </property>
                      <property name="styleSheet">
-                      <string notr="true">background-color:black;</string>
+                      <string notr="true"/>
                      </property>
                      <property name="frameShape">
                       <enum>QFrame::NoFrame</enum>
