@@ -175,6 +175,8 @@ public:
   QStringListModel const * macros () const;
   QDir save_directory () const;
   QDir azel_directory () const;
+  QString sound_dm_path() const;
+  QString sound_am_path() const;
   QString rig_name () const;
   Type2MsgGen type_2_msg_gen () const;
   QColor color_CQ () const;

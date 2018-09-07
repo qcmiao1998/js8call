@@ -25,6 +25,7 @@
 #include <QAction>
 #include <QActionGroup>
 #include <QSplashScreen>
+#include <QSound>
 
 #include "APRSISClient.h"
 #include "revision_utils.hpp"
@@ -9318,6 +9319,11 @@ void MainWindow::processCommandActivity() {
                 {"SNR", QVariant(ad.snr)},
                 {"UTC", QVariant(ad.utcTimestamp.toMSecsSinceEpoch())}
             });
+
+            auto wav = m_config.sound_dm_path();
+            if(!wav.isEmpty()){
+                QSound::play(wav);
+            }
         }
 
         // and mark the offset as a directed offset so future free text is displayed
@@ -9488,6 +9494,11 @@ void MainWindow::processCommandActivity() {
 
                 enqueueMessage(PriorityHigh, QString("%1 ACK").arg(d.from), d.freq, nullptr);
             });
+
+            auto wav = m_config.sound_am_path();
+            if(!wav.isEmpty()){
+                QSound::play(wav);
+            }
 
             msgBox->show();
 

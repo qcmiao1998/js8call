@@ -1791,6 +1791,95 @@ both here.</string>
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="groupBox_13">
+         <property name="title">
+          <string>Notification Sounds</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_18">
+          <item row="1" column="0">
+           <widget class="QLabel" name="sound_dm_path_label">
+            <property name="text">
+             <string>Directed Message Received:</string>
+            </property>
+            <property name="buddy">
+             <cstring>azel_path_select_push_button</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="sound_dm_path_display_label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>1</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QPushButton" name="sound_dm_path_select_push_button">
+            <property name="text">
+             <string>Select</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QPushButton" name="sound_dm_path_reset_push_button">
+            <property name="text">
+             <string>Clear</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="sound_am_path_label">
+            <property name="text">
+             <string>Alert Message Received:</string>
+            </property>
+            <property name="buddy">
+             <cstring>azel_path_select_push_button</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QPushButton" name="sound_am_path_select_push_button">
+            <property name="text">
+             <string>Select</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QPushButton" name="sound_am_path_reset_push_button">
+            <property name="text">
+             <string>Clear</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="sound_am_path_display_label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>1</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="split_operation_group_box_2">
          <property name="toolTip">
           <string>Power Memory By Band</string>
