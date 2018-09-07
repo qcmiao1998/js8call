@@ -270,6 +270,7 @@ private slots:
   void buildEditMenu(QTextEdit *, QMenu *);
   void on_queryButton_pressed();
   void on_macrosMacroButton_pressed();
+  void on_deselectButton_pressed();
   void on_tableWidgetRXAll_cellClicked(int row, int col);
   void on_tableWidgetRXAll_cellDoubleClicked(int row, int col);
   void on_tableWidgetRXAll_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);

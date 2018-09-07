@@ -7904,6 +7904,9 @@ void MainWindow::on_macrosMacroButton_pressed(){
     ui->macrosMacroButton->showMenu();
 }
 
+void MainWindow::on_deselectButton_pressed(){
+    clearCallsignSelected();
+}
 
 void MainWindow::on_tableWidgetRXAll_cellClicked(int row, int /*col*/){
     auto item = ui->tableWidgetRXAll->item(row, 0);
@@ -8930,6 +8933,7 @@ void MainWindow::updateButtonDisplay(){
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
     ui->macrosMacroButton->setDisabled(isTransmitting);
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
+    ui->deselectButton->setDisabled(isTransmitting || emptyCallsign);
 
     if(isTransmitting){
         int count = m_txFrameCount;
