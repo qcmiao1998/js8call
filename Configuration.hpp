@@ -104,7 +104,8 @@ public:
   QString cq_message () const;
   QString reply_message () const;
   QFont text_font () const;
-  QFont decoded_text_font () const;
+  QFont rx_text_font () const;
+  QFont tx_text_font () const;
   qint32 id_interval () const;
   qint32 ntrials() const;
   qint32 aggressive() const;
@@ -178,7 +179,10 @@ public:
   Type2MsgGen type_2_msg_gen () const;
   QColor color_CQ () const;
   QColor color_MyCall () const;
-  QColor color_ReceivedMsg () const;
+  QColor color_rx_background () const;
+  QColor color_rx_foreground () const;
+  QColor color_tx_background () const;
+  QColor color_tx_foreground () const;
   QColor color_DXCC () const;
   QColor color_NewCall () const;
   bool pwrBandTxMemory () const;
@@ -271,8 +275,9 @@ public:
   // These signals indicate a font has been selected and accepted for
   // the application text and decoded text respectively.
   //
-  Q_SIGNAL void text_font_changed (QFont);
-  Q_SIGNAL void decoded_text_font_changed (QFont);
+  Q_SIGNAL void gui_text_font_changed (QFont);
+  Q_SIGNAL void tx_text_font_changed (QFont);
+  Q_SIGNAL void rx_text_font_changed (QFont);
   Q_SIGNAL void colors_changed ();
 
   //

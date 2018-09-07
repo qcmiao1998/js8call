@@ -65,6 +65,9 @@
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
 
+#define STATE_RX 1
+#define STATE_TX 2
+
 
 extern "C" {
   //----------------------------------------------------- C and Fortran routines
@@ -276,6 +279,52 @@ namespace
         return str.mid(n);
     }
     return "";
+  }
+
+  void setTextEditFont(QTextEdit *edit, QFont font){
+    edit->setFont(font);
+    edit->setFontFamily(font.family());
+    edit->setFontItalic(font.italic());
+    edit->setFontPointSize(font.pointSize());
+    edit->setFontUnderline(font.underline());
+    edit->setFontWeight(font.weight());
+
+    auto d = edit->document();
+    d->setDefaultFont(font);
+    edit->setDocument(d);
+
+    auto c = edit->textCursor();
+    c.select(QTextCursor::Document);
+    auto cf = c.blockCharFormat();
+    cf.setFont(font);
+    c.mergeBlockCharFormat(cf);
+
+    edit->updateGeometry();
+  }
+
+  void setTextEditBackground(QTextEdit *edit, QColor color){
+    edit->setStyleSheet(QString("QTextEdit{ background: %1 }").arg(color.name()));
+  }
+
+  void highlightBlock(QTextBlock block, QFont font, QColor foreground, QColor background){
+    QTextCursor cursor(block);
+
+    // Set background color
+    QTextBlockFormat blockFormat = cursor.blockFormat();
+    blockFormat.setBackground(background);
+    cursor.setBlockFormat(blockFormat);
+
+    // Set font
+    for (QTextBlock::iterator it = cursor.block().begin(); !(it.atEnd()); ++it) {
+      QTextCharFormat charFormat = it.fragment().charFormat();
+      charFormat.setFont(font);
+      charFormat.setForeground(QBrush(foreground));
+
+      QTextCursor tempCursor = cursor;
+      tempCursor.setPosition(it.fragment().position());
+      tempCursor.setPosition(it.fragment().position() + it.fragment().length(), QTextCursor::KeepAnchor);
+      tempCursor.setCharFormat(charFormat);
+    }
   }
 }
 
@@ -628,14 +677,37 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // defer initialization until after construction otherwise menu
   // fonts do not get set
   QTimer::singleShot (0, this, SLOT (initialize_fonts ()));
-  connect (&m_config, &Configuration::text_font_changed, [this] (QFont const& font) {
+  connect (&m_config, &Configuration::gui_text_font_changed, [this] (QFont const& font) {
       set_application_font (font);
-    });
-  connect (&m_config, &Configuration::decoded_text_font_changed, [this] (QFont const& font) {
-      setDecodedTextFont (font);
-    });
+  });
+  connect (&m_config, &Configuration::rx_text_font_changed, [this] (QFont const&) {
+      setTextEditFont(ui->textEditRX, m_config.rx_text_font());
+  });
+  connect (&m_config, &Configuration::tx_text_font_changed, [this] (QFont const&) {
+      setTextEditFont(ui->extFreeTextMsgEdit, m_config.tx_text_font());
+  });
   connect (&m_config, &Configuration::colors_changed, [this](){
-     ui->textEditRX->setStyleSheet(QString("QTextEdit{ background: %1 }").arg(m_config.color_ReceivedMsg().name()));
+     setTextEditBackground(ui->textEditRX, m_config.color_rx_background());
+     setTextEditBackground(ui->extFreeTextMsgEdit, m_config.color_tx_background());
+
+     // rehighlight
+     auto d = ui->textEditRX->document();
+     if(d){
+         for(int i = 0; i < d->lineCount(); i++){
+             auto b = d->findBlockByLineNumber(i);
+
+             switch(b.userState()){
+             case STATE_RX:
+                 highlightBlock(b, m_config.rx_text_font(), m_config.color_rx_foreground(), QColor(Qt::transparent));
+                 break;
+             case STATE_TX:
+                 highlightBlock(b, m_config.tx_text_font(), m_config.color_tx_foreground(), QColor(Qt::transparent));
+                 break;
+             }
+         }
+     }
+
+
   });
 
   setWindowTitle (program_title ());
@@ -1376,7 +1448,9 @@ void MainWindow::not_GA_warning_message ()
 void MainWindow::initialize_fonts ()
 {
   set_application_font (m_config.text_font ());
-  setDecodedTextFont (m_config.decoded_text_font ());
+
+  setTextEditFont(ui->textEditRX, m_config.rx_text_font());
+  setTextEditFont(ui->extFreeTextMsgEdit, m_config.tx_text_font());
 }
 
 void MainWindow::splash_done ()
@@ -1716,7 +1790,7 @@ void MainWindow::readSettings()
   //ui->bandHorizontalWidget->setGeometry( m_settings->value("PanelWaterfallGeometry", ui->bandHorizontalWidget->geometry()).toRect());
   //qDebug() << m_settings->value("PanelTopGeometry") << ui->extFreeTextMsg;
 
-  ui->textEditRX->setStyleSheet(QString("QTextEdit { background: %1 }").arg(m_config.color_ReceivedMsg().name()));
+  ui->textEditRX->setStyleSheet(QString("QTextEdit { background: %1 }").arg(m_config.color_rx_background().name()));
 
   {
     auto const& coeffs = m_settings->value ("PhaseEqualizationCoefficients"
@@ -2898,6 +2972,7 @@ void MainWindow::on_actionFox_Log_triggered()
 
 void MainWindow::on_actionMessage_averaging_triggered()
 {
+#if 0
   if (!m_msgAvgWidget)
     {
       m_msgAvgWidget.reset (new MessageAveraging {m_settings, m_config.decoded_text_font ()});
@@ -2908,6 +2983,7 @@ void MainWindow::on_actionMessage_averaging_triggered()
   m_msgAvgWidget->showNormal();
   m_msgAvgWidget->raise ();
   m_msgAvgWidget->activateWindow ();
+#endif
 }
 
 void MainWindow::on_actionOpen_triggered()                     //Open File
@@ -4347,7 +4423,7 @@ void MainWindow::guiUpdate()
       write_transmit_entry ("ALL.TXT");
       if (m_config.TX_messages ()) {
         ui->decodedTextBrowser2->displayTransmittedText(m_currentMessage,m_modeTx,
-                     ui->TxFreqSpinBox->value(),m_config.color_ReceivedMsg(),m_bFastMode);
+                     ui->TxFreqSpinBox->value(),m_config.color_rx_background(),m_bFastMode);
         }
     }
 
@@ -4451,7 +4527,7 @@ void MainWindow::guiUpdate()
 
       if (m_config.TX_messages () && !m_tune && !m_config.bFox()) {
         ui->decodedTextBrowser2->displayTransmittedText(current_message, m_modeTx,
-              ui->TxFreqSpinBox->value(),m_config.color_ReceivedMsg(),m_bFastMode);
+              ui->TxFreqSpinBox->value(),m_config.color_rx_background(),m_bFastMode);
       }
 
       switch (m_ntx)
@@ -5904,7 +5980,6 @@ void MainWindow::writeNoticeTextToUI(QDateTime date, QString text){
     ui->textEditRX->verticalScrollBar()->setValue(ui->textEditRX->verticalScrollBar()->maximum());
 }
 
-
 int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, bool bold, int block){
     auto c = ui->textEditRX->textCursor();
 
@@ -5943,7 +6018,13 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
         c.insertHtml(QString("<strong>%1 - (%2)</strong> - %3").arg(date.time().toString()).arg(freq).arg(text));
     }
 
-    c.movePosition(QTextCursor::End);
+    if(bold){
+        c.block().setUserState(STATE_TX);
+        highlightBlock(c.block(), m_config.tx_text_font(), m_config.color_tx_foreground(), QColor(Qt::transparent));
+    } else {
+        c.block().setUserState(STATE_RX);
+        highlightBlock(c.block(), m_config.rx_text_font(), m_config.color_rx_foreground(), QColor(Qt::transparent));
+    }
 
     ui->textEditRX->ensureCursorVisible();
     ui->textEditRX->verticalScrollBar()->setValue(ui->textEditRX->verticalScrollBar()->maximum());
@@ -6110,6 +6191,9 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
       ui->extFreeTextMsgEdit->setPlainText(x);
       QTextCursor c = ui->extFreeTextMsgEdit->textCursor();
       c.setPosition(pos < maxpos ? pos : maxpos, QTextCursor::MoveAnchor);
+
+      highlightBlock(c.block(), m_config.tx_text_font(), QColor(Qt::black), QColor(Qt::transparent));
+
       ui->extFreeTextMsgEdit->setTextCursor(c);
     }
 
@@ -6121,6 +6205,9 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
         ui->startTxButton->setText("Send");
         ui->startTxButton->setEnabled(false);
     }
+
+
+
 }
 
 int MainWindow::currentFreqOffset(){
@@ -11235,7 +11322,7 @@ void MainWindow::foxGenWaveform(int i,QString fm)
   QString txModeArg;
   txModeArg.sprintf("FT8fox %d",i+1);
   ui->decodedTextBrowser2->displayTransmittedText(fm.trimmed(), txModeArg,
-        ui->TxFreqSpinBox->value()+60*i,m_config.color_ReceivedMsg(),m_bFastMode);
+        ui->TxFreqSpinBox->value()+60*i,m_config.color_rx_background(),m_bFastMode);
   foxcom_.i3bit[i]=0;
   if(fm.indexOf("<")>0) foxcom_.i3bit[i]=1;
   strncpy(&foxcom_.cmsg[i][0],fm.toLatin1(),40);   //Copy this message into cmsg[i]

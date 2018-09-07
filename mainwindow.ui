@@ -1073,7 +1073,7 @@ background-color: #00ff00;
          </property>
          <property name="font">
           <font>
-           <pointsize>12</pointsize>
+           <pointsize>14</pointsize>
            <italic>false</italic>
           </font>
          </property>
@@ -1102,7 +1102,7 @@ background-color: #00ff00;
          </property>
          <property name="font">
           <font>
-           <pointsize>12</pointsize>
+           <pointsize>14</pointsize>
           </font>
          </property>
          <property name="styleSheet">

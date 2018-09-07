@@ -433,7 +433,6 @@ private:
   void insert_station ();
 
   Q_SLOT void on_font_push_button_clicked ();
-  Q_SLOT void on_decoded_text_font_push_button_clicked ();
   Q_SLOT void on_PTT_port_combo_box_activated (int);
   Q_SLOT void on_CAT_port_combo_box_activated (int);
   Q_SLOT void on_CAT_serial_baud_combo_box_currentIndexChanged (int);
@@ -467,9 +466,13 @@ private:
   Q_SLOT void handle_transceiver_failure (QString const& reason);
   Q_SLOT void on_pbCQmsg_clicked();
   Q_SLOT void on_pbMyCall_clicked();
-  Q_SLOT void on_pbTxMsg_clicked();
-  Q_SLOT void on_pbNewDXCC_clicked();
-  Q_SLOT void on_pbNewCall_clicked();
+  Q_SLOT void on_rxBackgroundButton_clicked();
+  Q_SLOT void on_rxForegroundButton_clicked();
+  Q_SLOT void on_rxFontButton_clicked();
+  Q_SLOT void on_txBackgroundButton_clicked();
+  Q_SLOT void on_txForegroundButton_clicked();
+  Q_SLOT void on_txFontButton_clicked();
+
   Q_SLOT void on_cbFox_clicked (bool);
   Q_SLOT void on_cbHound_clicked (bool);
   Q_SLOT void on_cbx2ToneSpacing_clicked(bool);
@@ -503,8 +506,11 @@ private:
   QFont font_;
   QFont next_font_;
 
-  QFont decoded_text_font_;
-  QFont next_decoded_text_font_;
+  QFont rx_text_font_;
+  QFont next_rx_text_font_;
+
+  QFont tx_text_font_;
+  QFont next_tx_text_font_;
 
   bool restart_sound_input_device_;
   bool restart_sound_output_device_;
@@ -561,12 +567,18 @@ private:
   QString reply_;
   int callsign_aging_;
   int activity_aging_;
-  QColor color_CQ_;
-  QColor next_color_CQ_;
-  QColor color_MyCall_;
-  QColor next_color_MyCall_;
-  QColor color_ReceivedMsg_;
-  QColor next_color_ReceivedMsg_;
+  QColor color_cq_;
+  QColor next_color_cq_;
+  QColor color_mycall_;
+  QColor next_color_mycall_;
+  QColor color_rx_background_;
+  QColor next_color_rx_background_;
+  QColor color_rx_foreground_;
+  QColor next_color_rx_foreground_;
+  QColor color_tx_background_;
+  QColor next_color_tx_background_;
+  QColor color_tx_foreground_;
+  QColor next_color_tx_foreground_;
   QColor color_DXCC_;
   QColor next_color_DXCC_;
   QColor color_NewCall_;
@@ -671,13 +683,17 @@ bool Configuration::restart_audio_output () const {return m_->restart_sound_outp
 auto Configuration::type_2_msg_gen () const -> Type2MsgGen {return m_->type_2_msg_gen_;}
 bool Configuration::use_dynamic_grid() const {return m_->use_dynamic_info_; }
 QString Configuration::my_callsign () const {return m_->my_callsign_;}
-QColor Configuration::color_CQ () const {return m_->color_CQ_;}
-QColor Configuration::color_MyCall () const {return m_->color_MyCall_;}
-QColor Configuration::color_ReceivedMsg () const {return m_->color_ReceivedMsg_;}
+QColor Configuration::color_CQ () const {return m_->color_cq_;}
+QColor Configuration::color_MyCall () const {return m_->color_mycall_;}
+QColor Configuration::color_rx_background () const {return m_->color_rx_background_;}
+QColor Configuration::color_rx_foreground () const {return m_->color_rx_foreground_;}
+QColor Configuration::color_tx_background () const {return m_->color_tx_background_;}
+QColor Configuration::color_tx_foreground () const {return m_->color_tx_foreground_;}
 QColor Configuration::color_DXCC () const {return m_->color_DXCC_;}
 QColor Configuration::color_NewCall () const {return m_->color_NewCall_;}
 QFont Configuration::text_font () const {return m_->font_;}
-QFont Configuration::decoded_text_font () const {return m_->decoded_text_font_;}
+QFont Configuration::rx_text_font () const {return m_->rx_text_font_;}
+QFont Configuration::tx_text_font () const {return m_->tx_text_font_;}
 qint32 Configuration::id_interval () const {return m_->id_interval_;}
 qint32 Configuration::ntrials() const {return m_->ntrials_;}
 qint32 Configuration::aggressive() const {return m_->aggressive_;}
@@ -1244,11 +1260,14 @@ void Configuration::impl::initialize_models ()
   ui_->cq_message_line_edit->setText(cq_.toUpper());
   ui_->reply_message_line_edit->setText (reply_.toUpper());
   ui_->use_dynamic_grid->setChecked(use_dynamic_info_);
-  ui_->labCQ->setStyleSheet(QString("background: %1").arg(color_CQ_.name()));
-  ui_->labMyCall->setStyleSheet(QString("background: %1").arg(color_MyCall_.name()));
-  ui_->labTx->setStyleSheet(QString("background: %1").arg(color_ReceivedMsg_.name()));
-  ui_->labDXCC->setStyleSheet(QString("background: %1").arg(color_DXCC_.name()));
-  ui_->labNewCall->setStyleSheet(QString("background: %1").arg(color_NewCall_.name()));
+  ui_->labCQ->setStyleSheet(QString("background: %1").arg(color_cq_.name()));
+  ui_->labMyCall->setStyleSheet(QString("background: %1").arg(color_mycall_.name()));
+
+  ui_->rxLabel->setStyleSheet(QString("background: %1").arg(color_rx_background_.name()));
+  ui_->txLabel->setStyleSheet(QString("background: %1").arg(color_tx_background_.name()));
+  ui_->rxForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_rx_background_.name()).arg(color_rx_foreground_.name()));
+  ui_->txForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_rx_background_.name()).arg(color_tx_foreground_.name()));
+
   ui_->CW_id_interval_spin_box->setValue (id_interval_);  
   ui_->sbNtrials->setValue (ntrials_);
   ui_->sbTxDelay->setValue (txDelay_);
@@ -1376,9 +1395,12 @@ void Configuration::impl::read_settings ()
   my_qth_ = settings_->value("MyQTH", QString {}).toString();
   cq_ = settings_->value("CQMessage", QString {"CQCQCQ"}).toString();
   reply_ = settings_->value("Reply", QString {"HW CPY?"}).toString();
-  next_color_CQ_ = color_CQ_ = settings_->value("colorCQ","#66ff66").toString();
-  next_color_MyCall_ = color_MyCall_ = settings_->value("colorMyCall","#ff6666").toString();
-  next_color_ReceivedMsg_ = color_ReceivedMsg_ = settings_->value("colorReceivedMsg","#ffeaa7").toString();
+  next_color_cq_ = color_cq_ = settings_->value("colorCQ","#66ff66").toString();
+  next_color_mycall_ = color_mycall_ = settings_->value("colorMyCall","#ff6666").toString();
+  next_color_rx_background_ = color_rx_background_ = settings_->value("color_rx_background","#ffeaa7").toString();
+  next_color_rx_foreground_ = color_rx_foreground_ = settings_->value("color_rx_foreground","#000000").toString();
+  next_color_tx_background_ = color_tx_background_ = settings_->value("color_tx_background","#ffffff").toString();
+  next_color_tx_foreground_ = color_tx_foreground_ = settings_->value("color_tx_foreground","#000000").toString();
   next_color_DXCC_ = color_DXCC_ = settings_->value("colorDXCC","#ff00ff").toString();
   next_color_NewCall_ = color_NewCall_ = settings_->value("colorNewCall","#ffaaff").toString();
 
@@ -1386,22 +1408,38 @@ void Configuration::impl::read_settings ()
       && next_font_ != font_)
     {
       font_ = next_font_;
-      Q_EMIT self_->text_font_changed (font_);
+      Q_EMIT self_->gui_text_font_changed (font_);
     }
   else
     {
       next_font_ = font_;
     }
-  if (next_decoded_text_font_.fromString (settings_->value ("DecodedTextFont", "Courier, 10").toString ())
-      && next_decoded_text_font_ != decoded_text_font_)
+
+  if (next_tx_text_font_.fromString (settings_->value ("TXTextFont", QGuiApplication::font ().toString ()).toString ())
+      && next_tx_text_font_ != tx_text_font_)
     {
-      decoded_text_font_ = next_decoded_text_font_;
-      Q_EMIT self_->decoded_text_font_changed (decoded_text_font_);
+      tx_text_font_ = next_tx_text_font_;
+      Q_EMIT self_->tx_text_font_changed (tx_text_font_);
     }
   else
     {
-      next_decoded_text_font_ = decoded_text_font_;
+      next_tx_text_font_ = tx_text_font_;
     }
+
+  ui_->txFontButton->setText(QString("Font (%1 %2)").arg(next_tx_text_font_.family()).arg(next_tx_text_font_.pointSize()));
+
+  if (next_rx_text_font_.fromString (settings_->value ("RXTextFont", QGuiApplication::font ().toString ()).toString ())
+      && next_rx_text_font_ != rx_text_font_)
+    {
+      rx_text_font_ = next_rx_text_font_;
+      Q_EMIT self_->rx_text_font_changed (rx_text_font_);
+    }
+  else
+    {
+      next_rx_text_font_ = rx_text_font_;
+    }
+
+  ui_->rxFontButton->setText(QString("Font (%1 %2)").arg(next_rx_text_font_.family()).arg(next_rx_text_font_.pointSize()));
 
   id_interval_ = settings_->value ("IDint", 0).toInt ();
   ntrials_ = settings_->value ("nTrials", 6).toInt ();
@@ -1575,13 +1613,17 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("Reply", reply_);
   settings_->setValue ("CallsignAging", callsign_aging_);
   settings_->setValue ("ActivityAging", activity_aging_);
-  settings_->setValue("colorCQ",color_CQ_);
-  settings_->setValue("colorMyCall",color_MyCall_);
-  settings_->setValue("colorReceivedMsg",color_ReceivedMsg_);
+  settings_->setValue("colorCQ",color_cq_);
+  settings_->setValue("colorMyCall",color_mycall_);
+  settings_->setValue("color_rx_background",color_rx_background_);
+  settings_->setValue("color_rx_foreground",color_rx_foreground_);
+  settings_->setValue("color_tx_background",color_tx_background_);
+  settings_->setValue("color_tx_foreground",color_tx_foreground_);
   settings_->setValue("colorDXCC",color_DXCC_);
   settings_->setValue("colorNewCall",color_NewCall_);
   settings_->setValue ("Font", font_.toString ());
-  settings_->setValue ("DecodedTextFont", decoded_text_font_.toString ());
+  settings_->setValue ("RXTextFont", rx_text_font_.toString ());
+  settings_->setValue ("TXTextFont", tx_text_font_.toString ());
   settings_->setValue ("IDint", id_interval_);
   settings_->setValue ("nTrials", ntrials_);
   settings_->setValue ("TxDelay", txDelay_);
@@ -1937,18 +1979,27 @@ void Configuration::impl::accept ()
   if (next_font_ != font_)
     {
       font_ = next_font_;
-      Q_EMIT self_->text_font_changed (font_);
+      Q_EMIT self_->gui_text_font_changed (font_);
     }
 
-  if (next_decoded_text_font_ != decoded_text_font_)
+  if (next_tx_text_font_ != tx_text_font_)
     {
-      decoded_text_font_ = next_decoded_text_font_;
-      Q_EMIT self_->decoded_text_font_changed (decoded_text_font_);
+      tx_text_font_ = next_tx_text_font_;
+      Q_EMIT self_->tx_text_font_changed (tx_text_font_);
     }
 
-  color_CQ_ = next_color_CQ_;
-  color_MyCall_ = next_color_MyCall_;
-  color_ReceivedMsg_ = next_color_ReceivedMsg_;
+  if (next_rx_text_font_ != rx_text_font_)
+    {
+      rx_text_font_ = next_rx_text_font_;
+      Q_EMIT self_->rx_text_font_changed (rx_text_font_);
+    }
+
+  color_cq_ = next_color_cq_;
+  color_mycall_ = next_color_mycall_;
+  color_rx_background_ = next_color_rx_background_;
+  color_rx_foreground_ = next_color_rx_foreground_;
+  color_tx_background_ = next_color_tx_background_;
+  color_tx_foreground_ = next_color_tx_foreground_;
   color_DXCC_ = next_color_DXCC_;
   color_NewCall_ = next_color_NewCall_;
 
@@ -2176,64 +2227,115 @@ void Configuration::impl::on_font_push_button_clicked ()
   next_font_ = QFontDialog::getFont (0, next_font_, this);
 }
 
+QColor getColor(QColor initial, QWidget *parent, QString title){
+    QList<QColor> custom = {
+        QColor("#66FF66"),
+        QColor("#FF6666"),
+        QColor("#FFEAA7")
+    };
+
+    auto d = new QColorDialog(initial, parent);
+    d->setWindowTitle(title);
+    for(int i = 0; i < custom.length(); i++){
+        d->setCustomColor(i, custom.at(i));
+    }
+
+    if(d->exec() == QColorDialog::Accepted){
+        return d->selectedColor();
+    } else {
+        return initial;
+    }
+}
+
 void Configuration::impl::on_pbCQmsg_clicked()
 {
-  auto new_color = QColorDialog::getColor(next_color_CQ_, this, "CQ and BEACON Messages Color");
+  auto new_color = getColor(next_color_cq_, this, "CQ Messages Color");
   if (new_color.isValid ())
     {
-      next_color_CQ_ = new_color;
-      ui_->labCQ->setStyleSheet(QString("background: %1").arg(next_color_CQ_.name()));
+      next_color_cq_ = new_color;
+      ui_->labCQ->setStyleSheet(QString("background: %1").arg(next_color_cq_.name()));
     }
 }
 
 void Configuration::impl::on_pbMyCall_clicked()
 {
-  auto new_color = QColorDialog::getColor(next_color_MyCall_, this, "Directed Messages Color");
+  auto new_color = getColor(next_color_mycall_, this, "Directed Messages Color");
   if (new_color.isValid ())
     {
-      next_color_MyCall_ = new_color;
-      ui_->labMyCall->setStyleSheet(QString("background: %1").arg(next_color_MyCall_.name()));
+      next_color_mycall_ = new_color;
+      ui_->labMyCall->setStyleSheet(QString("background: %1").arg(next_color_mycall_.name()));
     }
 }
 
-void Configuration::impl::on_pbTxMsg_clicked()
+void Configuration::impl::on_rxBackgroundButton_clicked()
 {
-  auto new_color = QColorDialog::getColor(next_color_ReceivedMsg_, this, "Received Messages Textarea Color");
+  auto new_color = getColor(next_color_rx_background_, this, "Received Messages Background Color");
   if (new_color.isValid ())
     {
-      next_color_ReceivedMsg_ = new_color;
-      ui_->labTx->setStyleSheet(QString("background: %1").arg(next_color_ReceivedMsg_.name()));
+      next_color_rx_background_ = new_color;
+      ui_->rxLabel->setStyleSheet(QString("background: %1").arg(next_color_rx_background_.name()));
+      ui_->rxForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_rx_foreground_.name()));
+      ui_->txForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_tx_foreground_.name()));
     }
 }
 
-void Configuration::impl::on_pbNewDXCC_clicked()
+void Configuration::impl::on_rxForegroundButton_clicked()
 {
-  auto new_color = QColorDialog::getColor(next_color_DXCC_, this, "New DXCC Messages Color");
+  auto new_color = getColor(next_color_rx_foreground_, this, "Received Messages Foreground Color");
   if (new_color.isValid ())
     {
-      next_color_DXCC_ = new_color;
-      ui_->labDXCC->setStyleSheet(QString("background: %1").arg(next_color_DXCC_.name()));
+      next_color_rx_foreground_ = new_color;
+      ui_->rxLabel->setStyleSheet(QString("background: %1").arg(next_color_rx_background_.name()));
+      ui_->rxForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_rx_foreground_.name()));
+      ui_->txForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_tx_foreground_.name()));
     }
 }
 
-void Configuration::impl::on_pbNewCall_clicked()
+void Configuration::impl::on_rxFontButton_clicked ()
 {
-  auto new_color = QColorDialog::getColor(next_color_NewCall_, this, "New Call Messages Color");
-  if (new_color.isValid ())
-    {
-      next_color_NewCall_ = new_color;
-      ui_->labNewCall->setStyleSheet(QString("background: %1").arg(next_color_NewCall_.name()));
-    }
-}
-
-void Configuration::impl::on_decoded_text_font_push_button_clicked ()
-{
-  next_decoded_text_font_ = QFontDialog::getFont (0, decoded_text_font_ , this
+  next_rx_text_font_ = QFontDialog::getFont (0, rx_text_font_ , this
                                                   , tr ("Font Chooser")
 #if QT_VERSION >= 0x050201
-                                                  , QFontDialog::MonospacedFonts
+                                                  , 0
 #endif
                                                   );
+  ui_->rxFontButton->setText(QString("Font (%1 %2)").arg(next_rx_text_font_.family()).arg(next_rx_text_font_.pointSize()));
+}
+
+void Configuration::impl::on_txBackgroundButton_clicked()
+{
+  auto new_color = getColor(next_color_tx_background_, this, "Transmitted Messages Background Color");
+  if (new_color.isValid ())
+    {
+      next_color_tx_background_ = new_color;
+      ui_->txLabel->setStyleSheet(QString("background: %1").arg(next_color_tx_background_.name()));
+      ui_->rxForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_rx_foreground_.name()));
+      ui_->txForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_tx_foreground_.name()));
+    }
+}
+
+void Configuration::impl::on_txForegroundButton_clicked()
+{
+  auto new_color = getColor(next_color_tx_foreground_, this, "Transmitted Messages Foreground Color");
+  if (new_color.isValid ())
+    {
+      next_color_tx_foreground_ = new_color;
+      ui_->txLabel->setStyleSheet(QString("background: %1").arg(next_color_tx_background_.name()));
+      ui_->rxForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_rx_foreground_.name()));
+      ui_->txForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_tx_foreground_.name()));
+    }
+}
+
+void Configuration::impl::on_txFontButton_clicked ()
+{
+  next_tx_text_font_ = QFontDialog::getFont (0, tx_text_font_ , this
+                                                  , tr ("Font Chooser")
+#if QT_VERSION >= 0x050201
+                                                  , 0
+#endif
+                                                  );
+
+  ui_->txFontButton->setText(QString("Font (%1 %2)").arg(next_tx_text_font_.family()).arg(next_tx_text_font_.pointSize()));
 }
 
 void Configuration::impl::on_PTT_port_combo_box_activated (int /* index */)
