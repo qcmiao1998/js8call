@@ -1303,117 +1303,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   displayActivity(true);
 
-#if 0
-  // TESTING :P
-  qint64 a = QDateTime::currentSecsSinceEpoch();
-  qDebug() << a << Varicode::pack64bits(a) << Varicode::unpack64bits(Varicode::pack64bits(a));
-  qDebug() << a << Varicode::bitsToStr(Varicode::intToBits(a)) << Varicode::bitsToInt(Varicode::strToBits(Varicode::bitsToStr(Varicode::intToBits(a))));
-  auto input = "HELLO BRAVE NEW WORLD!\x04";
-  auto encoded = Varicode::huffEncode(input) + QList<QVector<bool>> {Varicode::strToBits("000000000")};
-  auto decoded = Varicode::huffDecode(Varicode::huffFlatten(encoded));
-  qDebug() << input << Varicode::bitsToStr(Varicode::huffFlatten(encoded)) << decoded;
-  qDebug() << Varicode::packCallsign("JY1") << Varicode::unpackCallsign(Varicode::packCallsign("JY1"));
-  auto frames = buildFT8MessageFrames("OH8STN:KN4CRD?");
-  qDebug() << frames.first() << Varicode::unpackDirectedMessage(frames.first());
-  qDebug() << Varicode::packGrid("EM73tu") << Varicode::unpackGrid(Varicode::packGrid("EM73tu"));
-
-  auto allbits = Varicode::huffEncode(QString("When simple things need instructions, it is a certain sign of poor design.\x04").toUpper());
-  qDebug() << "FTFrames" << qCeil((allbits.length()+(6+6+1))/13.0);
-  int lasti = 0;
-  int i = 0;
-  int frames = 0;
-  QVector<bool> nextFrame;
-  foreach(auto bits, allbits){
-      if(nextFrame.length() + bits.length() > (frames == 0 ? (8-3) : 64)){
-          // emit frame
-          qDebug() << "frame ready at" << i << "chars" << i-lasti << "size" << nextFrame.length() << "->" << Varicode::bitsToStr(nextFrame);
-          nextFrame.clear();
-          lasti = i;
-          frames++;
-      }
-
-      nextFrame += bits;
-      i++;
-  }
-  qDebug() << "frame ready at" << i << "size" << nextFrame.length() << "->" << Varicode::bitsToStr(nextFrame);
-  frames++;
-  qDebug() << "HuffFrames" << frames;
-  qDebug() << Varicode::packCallsignPrefixSuffix("VE3") << Varicode::unpackCallsignPrefixSuffix(Varicode::packCallsignPrefixSuffix("VE3");
-
-  auto calls = Varicode::parseCallsigns("VE3/KN4CRD 9E/KN4CRD KN4CRD/7 KN4CRD/P KN4CRD");
-  foreach(auto call, calls){
-    qDebug() << call << Radio::base_callsign(call) << QString(call).replace(Radio::base_callsign(call), "");
-
-    auto base = Radio::base_callsign(call);
-    auto fix = call.replace(base, "").replace("/", "");
-    qDebug() << fix;
-
-    auto packedCall = ((quint64)Varicode::packCallsign(base) << 32) | Varicode::packCallsignPrefixSuffix(fix);
-
-    auto packed = Varicode::pack64bits(packedCall);
-
-    qDebug() << call << packedCall << packed;
-  }
-
-  auto call = QString(m_config.my_callsign());
-  qDebug() << call;
-  auto basecall = Radio::base_callsign(call);
-  qDebug() << call << basecall;
-  auto fix = QString(call).replace(basecall, "");
-  qDebug() << call << basecall << fix;
-  auto prefix = !fix.startsWith("/");
-  fix = fix.replace("/", "");
-
-  auto packed = Varicode::packCompoundMessage(basecall, fix, prefix, 99);
-  qDebug() << packed << Varicode::unpackCompoundMessage(packed);
-
-  bool isCQ = false;
-
-  auto packed = Varicode::packBeaconMessage("KN4CRD/P", "EM73", true);
-  qDebug() << packed << Varicode::unpackBeaconMessage(packed, &isCQ) << isCQ;
-
-  packed = Varicode::packBeaconMessage("VE3/KN4CRD", "EM73", false);
-  qDebug() << packed << Varicode::unpackBeaconMessage(packed, &isCQ) << isCQ;
-
-
-  bool isCQ = false;
-
-  auto packed = Varicode::packBeaconMessage("P/KN4CRD", "", true);
-  qDebug() << packed << Varicode::unpackBeaconMessage(packed, &isCQ) << isCQ;
-
-  m_valid = false;
-
-  bool isPrefix = false;
-  qDebug() << Varicode::packCallsignPrefixSuffix("VE3", true) << Varicode::unpackCallsignPrefixSuffix(Varicode::packCallsignPrefixSuffix("VE3", true), &isPrefix) << isPrefix;
-
-
-#define BIT (quint64)1
-  quint64 val = 0;
-  quint8 rem = 0;
-  quint64 j = (BIT<<40)-1;
-  quint64 k = (BIT<<5)-1;
-
-  qDebug() << j << k << val << rem;
-  qDebug() << "packing" << Varicode::unpack72bits(Varicode::pack72bits(j, k), &val, &rem);
-  qDebug() << j << k << val << rem;
-
-  m_valid = false;
-
-  quint8 r = 0;
-  quint64 v = Varicode::unpack72bits(Varicode::pack72bits((((quint64)1)<<62)-1, (1<<7)-1), &r);
-  qDebug() << "packing" << Varicode::pack72bits((((quint64)1)<<62)-1, (1<<7)-1) << v << r;
-
-  qDebug() << APRSISClient::grid2deg("EM73");
-  qDebug() << APRSISClient::grid2deg("EM73TU");
-  qDebug() << APRSISClient::grid2deg("EM73TU49NT");
-
-  qDebug() << APRSISClient::grid2aprs("EM73");
-  qDebug() << APRSISClient::grid2aprs("EM73TU");
-  qDebug() << APRSISClient::grid2aprs("EM73TU49NT");
-
-  qDebug() << APRSISClient::grid2aprs("FI08VE49");
-  qDebug() << APRSISClient::grid2aprs("OM25CU");
-#endif
+  QTimer::singleShot(0, this, &MainWindow::initializeDummyData);
 
   // this must be the last statement of constructor
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
@@ -1441,8 +1331,16 @@ void MainWindow::not_GA_warning_message ()
                                 "and carry a responsiblity to report any problems to:\n"
                                 "Jordan Sherer (KN4CRD) kn4crd@gmail.com\n\n").arg(QApplication::applicationName()).arg(eol.toString()));
 
-
   ensureCallsignSet(false);
+}
+
+void MainWindow::initializeDummyData(){
+    auto dt = QDateTime::currentDateTimeUtc().addSecs(-300);
+    CallDetail cd = {};
+    cd.call = "OH8STN";
+    cd.utcTimestamp = dt;
+    logCallActivity(cd, false);
+    displayActivity(true);
 }
 
 void MainWindow::initialize_fonts ()
@@ -9308,8 +9206,7 @@ void MainWindow::processCommandActivity() {
     int f = currentFreq();
 #endif
 
-    // TODO: jsherer - should we, if we have _any_ directed messages, pause the beacon or maybe just bump it?
-    // pauseBacon();
+    auto now = QDateTime::currentDateTimeUtc();
 
     while (!m_rxCommandQueue.isEmpty()) {
         auto d = m_rxCommandQueue.dequeue();
@@ -9347,11 +9244,11 @@ void MainWindow::processCommandActivity() {
         // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past beacon interval)
         // that way we never get spammed by allcalls at a high frequency than what we would beacon
         if (isAllCall){
-            if(m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(QDateTime::currentDateTimeUtc()) / 60 < m_config.beacon()) {
+            if(m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < m_config.beacon()) {
                 continue;
             }
 
-            m_txAllcallCommandCache.insert(d.from, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+            m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 25);
         }
 
         // display the command activity
@@ -9460,12 +9357,17 @@ void MainWindow::processCommandActivity() {
 
             QStringList lines;
 
+            int callsignAging = m_config.callsign_aging();
+
             foreach(auto call, calls) {
                 if (i >= maxStations) {
                     break;
                 }
 
                 auto d = m_callActivity[call];
+                if (callsignAging && d.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+                    continue;
+                }
 
                 lines.append(QString("<%1 SNR %2>").arg(d.call).arg(Varicode::formatSNR(d.snr)));
 
@@ -9517,8 +9419,13 @@ void MainWindow::processCommandActivity() {
             }
 
             QStringList replies;
+            int callsignAging = m_config.callsign_aging();
             auto baseCall = callsigns.first();
             foreach(auto cd, m_callActivity.values()){
+                if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+                    continue;
+                }
+
                 if(baseCall == cd.call || baseCall == Radio::base_callsign(cd.call)){
                     auto r = QString("%1 ACK %2 %3 (%4)").arg(d.from).arg(cd.call).arg(Varicode::formatSNR(cd.snr)).arg(since(cd.utcTimestamp));
                     replies.append(r);
@@ -9545,7 +9452,7 @@ void MainWindow::processCommandActivity() {
            continue;
         }
         // PROCESS APRS
-        else if(d.cmd == " APRS:" && m_config.spot_to_reporting_networks()){
+        else if(d.cmd == " APRS:" && m_config.spot_to_reporting_networks() && m_aprsClient->isPasscodeValid()){
             m_aprsClient->enqueueThirdParty(Radio::base_callsign(d.from), d.text);
             reply = QString("%1 ACK").arg(d.from);
         }
