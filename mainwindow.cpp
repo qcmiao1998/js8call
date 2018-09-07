@@ -1147,14 +1147,15 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->extFreeTextMsgEdit, &QTableWidget::customContextMenuRequested, this, [this, clearAction2, clearActionAll, restoreAction](QPoint const &point){
     QMenu * menu = new QMenu(ui->extFreeTextMsgEdit);
 
-    buildEditMenu(ui->extFreeTextMsgEdit, menu);
-
-    menu->addSeparator();
-
     restoreAction->setDisabled(m_lastTxMessage.isEmpty());
     menu->addAction(restoreAction);
 
     menu->addSeparator();
+
+    buildEditMenu(ui->extFreeTextMsgEdit, menu);
+
+    menu->addSeparator();
+
     menu->addAction(clearAction2);
     menu->addAction(clearActionAll);
 
@@ -1335,11 +1336,20 @@ void MainWindow::not_GA_warning_message ()
 }
 
 void MainWindow::initializeDummyData(){
+    if(!QApplication::applicationName().contains("dummy")){
+        return;
+    }
     auto dt = QDateTime::currentDateTimeUtc().addSecs(-300);
-    CallDetail cd = {};
-    cd.call = "OH8STN";
-    cd.utcTimestamp = dt;
-    logCallActivity(cd, false);
+    CallDetail cd1 = {};
+    cd1.call = "KN4CRD";
+    cd1.utcTimestamp = dt;
+    logCallActivity(cd1, false);
+
+    CallDetail cd2 = {};
+    cd2.call = "KN4CRD/P";
+    cd2.utcTimestamp = dt;
+    logCallActivity(cd2, false);
+
     displayActivity(true);
 }
 
