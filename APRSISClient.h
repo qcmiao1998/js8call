@@ -1,6 +1,7 @@
 #ifndef APRSISCLIENT_H
 #define APRSISCLIENT_H
 
+#include <QtGlobal>
 #include <QDateTime>
 #include <QTcpSocket>
 #include <QQueue>

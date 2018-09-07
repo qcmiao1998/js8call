@@ -260,6 +260,12 @@ void APRSISClient::processQueue(bool disconnect){
         auto frame = pair.first;
         auto timestamp = pair.second;
 
+        // random delay 50% of the time for throttling (a skip will add 60 seconds to the processing time)
+        if(qrand() % 100 <= 50){
+            qDebug() << "APRSISClient Throttle: Skipping Frame";
+            continue;
+        }
+
         // if the packet is older than the timeout, drop it.
         if(timestamp.secsTo(QDateTime::currentDateTimeUtc()) > PACKET_TIMEOUT_SECONDS){
             qDebug() << "APRSISClient Packet Timeout:" << frame;
