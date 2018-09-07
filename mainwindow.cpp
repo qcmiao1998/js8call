@@ -9320,9 +9320,11 @@ void MainWindow::processCommandActivity() {
                 {"UTC", QVariant(ad.utcTimestamp.toMSecsSinceEpoch())}
             });
 
-            auto wav = m_config.sound_dm_path();
-            if(!wav.isEmpty()){
-                QSound::play(wav);
+            if(!isAllCall){
+                auto wav = m_config.sound_dm_path();
+                if(!wav.isEmpty()){
+                    QSound::play(wav);
+                }
             }
         }
 
