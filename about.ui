@@ -5,8 +5,16 @@
   <property name="windowModality">
    <enum>Qt::NonModal</enum>
   </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>192</width>
+    <height>116</height>
+   </rect>
+  </property>
   <property name="windowTitle">
-   <string>About WSJT-X</string>
+   <string>About FT8Call</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
