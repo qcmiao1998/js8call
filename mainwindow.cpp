@@ -1297,6 +1297,17 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->tableWidgetRXAll->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::on_tableWidgetRXAll_selectionChanged);
   connect(ui->tableWidgetCalls->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::on_tableWidgetCalls_selectionChanged);
 
+  auto p = ui->tableWidgetRXAll->palette();
+  p.setColor(QPalette::Inactive, QPalette::Highlight, p.color(QPalette::Active, QPalette::Highlight));
+  ui->tableWidgetRXAll->setPalette(p);
+
+  p = ui->tableWidgetCalls->palette();
+  p.setColor(QPalette::Inactive, QPalette::Highlight, p.color(QPalette::Active, QPalette::Highlight));
+  ui->tableWidgetCalls->setPalette(p);
+
+
+
+
   // Don't block beacon's first run...
   m_lastTxTime = QDateTime::currentDateTimeUtc().addSecs(-300);
 
