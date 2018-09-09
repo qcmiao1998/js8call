@@ -9087,7 +9087,7 @@ void MainWindow::processRxActivity() {
         bool isDirectedAllCall = false;
         if(isDirectedOffset(d.freq, &isDirectedAllCall)){
             markOffsetDirected(d.freq, isDirectedAllCall);
-            shouldDisplay = true;
+            shouldDisplay = shouldDisplay || !isDirectedAllCall;
         }
 
         // TODO: jsherer - develop a better way to determine if we can display this band activity...
