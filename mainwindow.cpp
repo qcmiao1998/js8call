@@ -328,6 +328,16 @@ namespace
       tempCursor.setCharFormat(charFormat);
     }
   }
+
+  template<typename T>
+  QList<T> listCopyReverse(QList<T> const &list){
+      QList<T> newList = QList<T>();
+      auto iter = list.end();
+      while(iter != list.begin()){
+          newList.append(*(--iter));
+      }
+      return newList;
+  }
 }
 
 //--------------------------------------------------- MainWindow constructor
@@ -1214,6 +1224,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     directedMenu->setDisabled(missingCallsign);
     buildQueryMenu(directedMenu, selectedCall);
 
+    auto relayAction = buildRelayAction(selectedCall);
+    relayAction->setText(QString("Relay via %1...").arg(selectedCall));
+    relayAction->setDisabled(missingCallsign);
+    menu->addActions({ relayAction });
+
     auto deselect = menu->addAction("Deselect");
     deselect->setDisabled(missingCallsign);
     connect(deselect, &QAction::triggered, this, [this](){
@@ -1274,6 +1289,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     auto directedMenu = menu->addMenu(QString("Directed to %1...").arg(selectedCall));
     directedMenu->setDisabled(missingCallsign);
     buildQueryMenu(directedMenu, selectedCall);
+
+    auto relayAction = buildRelayAction(selectedCall);
+    relayAction->setText(QString("Relay via %1...").arg(selectedCall));
+    relayAction->setDisabled(missingCallsign || isAllCall);
+    menu->addActions({ relayAction });
 
     auto deselect = menu->addAction("Deselect");
     deselect->setDisabled(missingCallsign);
@@ -1356,16 +1376,30 @@ void MainWindow::initializeDummyData(){
     if(!QApplication::applicationName().contains("dummy")){
         return;
     }
-    auto dt = QDateTime::currentDateTimeUtc().addSecs(-300);
-    CallDetail cd1 = {};
-    cd1.call = "KN4CRD";
-    cd1.utcTimestamp = dt;
-    logCallActivity(cd1, false);
 
-    CallDetail cd2 = {};
-    cd2.call = "KN4CRD/P";
-    cd2.utcTimestamp = dt;
-    logCallActivity(cd2, false);
+    QList<QString> calls = {
+        "KN4CRD",
+        "KN4CRD/P",
+        "KC9QNE",
+        "KI6SSI",
+        "LB9YH",
+        "VE7/LB9YH",
+        "M0IAX",
+        "N0JDS",
+        "OH8STN",
+        "VA3OSO",
+        "VK1MIC",
+        "W0FW"
+    };
+
+    auto dt = QDateTime::currentDateTimeUtc().addSecs(-300);
+
+    foreach(auto call, calls){
+        CallDetail cd = {};
+        cd.call = call;
+        cd.utcTimestamp = dt;
+        logCallActivity(cd, false);
+    }
 
     displayActivity(true);
 }
@@ -5961,6 +5995,17 @@ bool MainWindow::isMessageQueuedForTransmit(){
     return m_transmitting || m_txFrameCount > 0;
 }
 
+void MainWindow::prependMessageText(QString text){
+    // don't add message text if we already have a transmission queued...
+    if(isMessageQueuedForTransmit()){
+        return;
+    }
+
+    auto c = QTextCursor(ui->extFreeTextMsgEdit->textCursor());
+    c.movePosition(QTextCursor::Start);
+    c.insertText(text);
+}
+
 void MainWindow::addMessageText(QString text, bool clear, bool selectFirstPlaceholder){
     // don't add message text if we already have a transmission queued...
     if(isMessageQueuedForTransmit()){
@@ -5971,7 +6016,6 @@ void MainWindow::addMessageText(QString text, bool clear, bool selectFirstPlaceh
         ui->extFreeTextMsgEdit->clear();
     }
 
-    // TODO: jsherer - check to make sure we're not transmitting currently
     QTextCursor c = ui->extFreeTextMsgEdit->textCursor();
     if(c.hasSelection()){
         c.removeSelectedText();
@@ -7569,6 +7613,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1#[MESSAGE]").arg(selectedCall), true, true);
     });
 
+#if 0
     auto retransmitAction = menu->addAction(QString("%1|[MESSAGE] - Please ACK and retransmit the following message").arg(call).trimmed());
     retransmitAction->setDisabled(isAllCall);
     connect(retransmitAction, &QAction::triggered, this, [this](){
@@ -7580,8 +7625,9 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
 
         addMessageText(QString("%1|[MESSAGE]").arg(selectedCall), true, true);
     });
+#endif
 
-    auto alertAction = menu->addAction(QString("%1![MESSAGE] - Please display this message in an alert dialog and ACK if acknowledged").arg(call).trimmed());
+    auto alertAction = menu->addAction(QString("%1>[MESSAGE] - Please (optionally relay) and display this message in an reply dialog").arg(call).trimmed());
     alertAction->setDisabled(isAllCall);
     connect(alertAction, &QAction::triggered, this, [this](){
 
@@ -7590,7 +7636,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1![MESSAGE]").arg(selectedCall), true, true);
+        addMessageText(QString("%1>[MESSAGE]").arg(selectedCall), true, true);
     });
 
     menu->addSeparator();
@@ -7770,14 +7816,16 @@ void MainWindow::buildRelayMenu(QMenu *menu){
             continue;
         }
 
-        auto call = cd.call;
-        auto a = menu->addAction(call);
-        connect(a, &QAction::triggered, this, [this, call](){
-            auto c = ui->extFreeTextMsgEdit->textCursor();
-            c.movePosition(QTextCursor::Start);
-            c.insertText(QString("%1>").arg(call));
-        });
+        menu->addAction(buildRelayAction(cd.call));
     }
+}
+
+QAction* MainWindow::buildRelayAction(QString call){
+    QAction *a = new QAction(call);
+    connect(a, &QAction::triggered, this, [this, call](){
+        prependMessageText(QString("%1>").arg(call));
+    });
+    return a;
 }
 
 void MainWindow::buildEditMenu(QMenu *menu, QTextEdit *edit){
@@ -9431,21 +9479,23 @@ void MainWindow::processCommandActivity() {
             reply = lines.join('\n');
         }
 
+#if 0
         // PROCESS RETRANSMIT
         else if (d.cmd == "|" && !isAllCall) {
             // TODO: jsherer - perhaps parse d.text and ensure it is a valid message as well as prefix it with our call...
 
             reply = QString("%1 ACK\n%2 DE %1").arg(d.from).arg(d.text);
         }
+#endif
 
         // PROCESS RELAY
         else if (d.cmd == ">" && !isAllCall) {
 
             // 1. see if there are any more hops to process
             // 2. if so, forward
-            // 3. otherwise, display alert
+            // 3. otherwise, display alert & reply dialog
 
-            QString callToPattern = {R"((?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?(?<type>[> ]))\b)"};
+            QString callToPattern = {R"(^(?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?(?<type>[> ]))\b)"};
             QRegularExpression re(callToPattern);
             auto text = d.text;
             auto match = re.match(text);
@@ -9568,6 +9618,7 @@ void MainWindow::processCommandActivity() {
            continue;
         }
 
+#if 0
         // PROCESS ALERT
         else if (d.cmd == "!" && !isAllCall) {
 
@@ -9577,6 +9628,7 @@ void MainWindow::processCommandActivity() {
             // make sure this is explicit
             continue;
         }
+#endif
 
         if (reply.isEmpty()) {
             continue;
@@ -9599,18 +9651,34 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
     QMessageBox * msgBox = new QMessageBox(this);
     msgBox->setIcon(QMessageBox::Information);
 
+    QList<QString> calls = listCopyReverse<QString>(from.split(">"));
+    auto fromLabel = calls.join(" via ");
+
+    calls.removeLast();
+
+    QString fromReplace = QString{};
+    foreach(auto call, calls){
+        fromReplace.append(" DE ");
+        fromReplace.append(call);
+    }
+
+    auto text = d.text;
+    if(!fromReplace.isEmpty()){
+        text = text.replace(fromReplace, "");
+    }
+
     auto header = QString("Message from %3 at %1 (%2):");
     header = header.arg(d.utcTimestamp.time().toString());
     header = header.arg(d.freq);
-    header = header.arg(d.from);
+    header = header.arg(fromLabel);
     msgBox->setText(header);
-    msgBox->setInformativeText(d.text);
+    msgBox->setInformativeText(text);
 
     auto ab = msgBox->addButton("ACK", QMessageBox::AcceptRole);
     auto rb = msgBox->addButton("Reply", QMessageBox::AcceptRole);
     auto db = msgBox->addButton("Discard", QMessageBox::NoRole);
 
-    connect(msgBox, &QMessageBox::buttonClicked, this, [this, cmd, from, d, db, rb, ab](QAbstractButton * btn) {
+    connect(msgBox, &QMessageBox::buttonClicked, this, [this, cmd, from, fromLabel, d, db, rb, ab](QAbstractButton * btn) {
         if (btn == db) {
             return;
         }
@@ -9622,7 +9690,7 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
         if(btn == rb){
             auto diag = new MessageReplyDialog(this);
             diag->setWindowTitle("Message Reply");
-            diag->setLabel(QString("Message to send to %1:").arg(from));
+            diag->setLabel(QString("Message to send to %1:").arg(fromLabel));
 
             connect(diag, &MessageReplyDialog::accepted, this, [this, diag, from, cmd, d](){
                 enqueueMessage(PriorityHigh, QString("%1%2%3").arg(from).arg(cmd).arg(diag->textValue()), d.freq, nullptr);
@@ -9745,16 +9813,6 @@ void MainWindow::displayActivity(bool force) {
     displayCallActivity();
 
     m_rxDisplayDirty = false;
-}
-
-template<typename T>
-QList<T> listCopyReverse(QList<T> const &list){
-    QList<T> newList = QList<T>();
-    auto iter = list.end();
-    while(iter != list.begin()){
-        newList.append(*(--iter));
-    }
-    return newList;
 }
 
 void MainWindow::displayBandActivity() {
