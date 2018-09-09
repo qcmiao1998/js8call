@@ -725,7 +725,7 @@ void Configuration::set_spot_to_reporting_networks (bool spot)
 
 bool Configuration::transmit_directed() const { return m_->transmit_directed_; }
 bool Configuration::autoreply_off_at_startup () const {return m_->autoreply_off_at_startup_;}
-bool Configuration::relay_off() const { m_->relay_disabled_; }
+bool Configuration::relay_off() const { return m_->relay_disabled_; }
 bool Configuration::monitor_off_at_startup () const {return m_->monitor_off_at_startup_;}
 bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->monitor_last_used_;}
 bool Configuration::log_as_DATA () const {return m_->log_as_DATA_;}
@@ -1414,7 +1414,7 @@ void Configuration::impl::read_settings ()
   next_color_rx_background_ = color_rx_background_ = settings_->value("color_rx_background","#ffeaa7").toString();
   next_color_rx_foreground_ = color_rx_foreground_ = settings_->value("color_rx_foreground","#000000").toString();
   next_color_tx_background_ = color_tx_background_ = settings_->value("color_tx_background","#ffffff").toString();
-  next_color_tx_foreground_ = color_tx_foreground_ = settings_->value("color_tx_foreground","#000000").toString();
+  next_color_tx_foreground_ = color_tx_foreground_ = settings_->value("color_tx_foreground","#ff0000").toString();
   next_color_DXCC_ = color_DXCC_ = settings_->value("colorDXCC","#ff00ff").toString();
   next_color_NewCall_ = color_NewCall_ = settings_->value("colorNewCall","#ffaaff").toString();
 
