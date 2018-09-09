@@ -2274,71 +2274,77 @@ void MainWindow::on_actionReset_Window_Sizes_triggered(){
     });
 }
 
-void MainWindow::on_actionSettings_triggered()               //Setup Dialog
-{
-  // things that might change that we need know about
-  auto callsign = m_config.my_callsign ();
-  auto my_grid = m_config.my_grid ();
-  if (QDialog::Accepted == m_config.exec ()) {
-    if (m_config.my_callsign () != callsign) {
-      m_baseCall = Radio::base_callsign (m_config.my_callsign ());
-      morse_(const_cast<char *> (m_config.my_callsign ().toLatin1().constData()),
-             const_cast<int *> (icw), &m_ncw, m_config.my_callsign ().length());
+void MainWindow::on_actionSettings_triggered(){
+    openSettings();
+}
+
+void MainWindow::openSettings(int tab){
+    m_config.select_tab(tab);
+
+    // things that might change that we need know about
+    auto callsign = m_config.my_callsign ();
+    auto my_grid = m_config.my_grid ();
+    if (QDialog::Accepted == m_config.exec ()) {
+        if (m_config.my_callsign () != callsign) {
+            m_baseCall = Radio::base_callsign (m_config.my_callsign ());
+            morse_(const_cast<char *> (m_config.my_callsign ().toLatin1().constData()),
+                    const_cast<int *> (icw), &m_ncw, m_config.my_callsign ().length());
+        }
+        if (m_config.my_callsign () != callsign || m_config.my_grid () != my_grid) {
+            statusUpdate ();
+        }
+
+        on_dxGridEntry_textChanged (m_hisGrid); // recalculate distances in case of units change
+        enable_DXCC_entity (m_config.DXCC ());  // sets text window proportions and (re)inits the logbook
+
+        prepareSpotting();
+
+        if(m_config.restart_audio_input ()) {
+            Q_EMIT startAudioInputStream (m_config.audio_input_device (),
+                m_framesAudioInputBuffered, m_detector, m_downSampleFactor,
+                m_config.audio_input_channel ());
+        }
+
+        if(m_config.restart_audio_output ()) {
+            Q_EMIT initializeAudioOutputStream (m_config.audio_output_device (),
+                AudioDevice::Mono == m_config.audio_output_channel () ? 1 : 2,
+                m_msAudioOutputBuffered);
+        }
+
+        displayDialFrequency ();
+        displayActivity(true);
+
+        bool vhf {m_config.enable_VHF_features()};
+        m_wideGraph->setVHF(vhf);
+        if (!vhf) ui->sbSubmode->setValue (0);
+
+        setup_status_bar (vhf);
+        bool b = vhf && (m_mode=="JT4" or m_mode=="JT65" or m_mode=="ISCAT" or
+            m_mode=="JT9" or m_mode=="MSK144" or m_mode=="QRA64");
+        if(b) VHF_features_enabled(b);
+        if(m_mode=="FT8") on_actionFT8_triggered();
+        if(b) VHF_features_enabled(b);
+
+        m_config.transceiver_online ();
+        if(!m_bFastMode) setXIT (ui->TxFreqSpinBox->value ());
+        if(m_config.single_decode() or m_mode=="JT4") {
+            ui->label_6->setText("Single-Period Decodes");
+            ui->label_7->setText("Average Decodes");
+        } else {
+            //      ui->label_6->setText("Band Activity");
+            //      ui->label_7->setText("Rx Frequency");
+        }
+        update_watchdog_label ();
+        if(!m_splitMode) ui->cbCQTx->setChecked(false);
+        if(!m_config.enable_VHF_features()) {
+            ui->actionInclude_averaging->setVisible(false);
+            ui->actionInclude_correlation->setVisible (false);
+            ui->actionInclude_averaging->setChecked(false);
+            ui->actionInclude_correlation->setChecked(false);
+            ui->actionEnable_AP_JT65->setVisible(false);
+        }
+        m_opCall=m_config.opCall();
     }
-    if (m_config.my_callsign () != callsign || m_config.my_grid () != my_grid) {
-      statusUpdate ();
-    }
-    on_dxGridEntry_textChanged (m_hisGrid); // recalculate distances in case of units change
-    enable_DXCC_entity (m_config.DXCC ());  // sets text window proportions and (re)inits the logbook
-
-    prepareSpotting();
-
-    if(m_config.restart_audio_input ()) {
-      Q_EMIT startAudioInputStream (m_config.audio_input_device (),
-                 m_framesAudioInputBuffered, m_detector, m_downSampleFactor,
-                                      m_config.audio_input_channel ());
-    }
-
-    if(m_config.restart_audio_output ()) {
-      Q_EMIT initializeAudioOutputStream (m_config.audio_output_device (),
-           AudioDevice::Mono == m_config.audio_output_channel () ? 1 : 2,
-                                          m_msAudioOutputBuffered);
-    }
-
-    displayDialFrequency ();
-    displayActivity(true);
-
-    bool vhf {m_config.enable_VHF_features()};
-    m_wideGraph->setVHF(vhf);
-    if (!vhf) ui->sbSubmode->setValue (0);
-
-    setup_status_bar (vhf);
-    bool b = vhf && (m_mode=="JT4" or m_mode=="JT65" or m_mode=="ISCAT" or
-                     m_mode=="JT9" or m_mode=="MSK144" or m_mode=="QRA64");
-    if(b) VHF_features_enabled(b);
-    if(m_mode=="FT8") on_actionFT8_triggered();
-    if(b) VHF_features_enabled(b);
-
-    m_config.transceiver_online ();
-    if(!m_bFastMode) setXIT (ui->TxFreqSpinBox->value ());
-    if(m_config.single_decode() or m_mode=="JT4") {
-      ui->label_6->setText("Single-Period Decodes");
-      ui->label_7->setText("Average Decodes");
-    } else {
-//      ui->label_6->setText("Band Activity");
-//      ui->label_7->setText("Rx Frequency");
-    }
-    update_watchdog_label ();
-    if(!m_splitMode) ui->cbCQTx->setChecked(false);
-    if(!m_config.enable_VHF_features()) {
-      ui->actionInclude_averaging->setVisible(false);
-      ui->actionInclude_correlation->setVisible (false);
-      ui->actionInclude_averaging->setChecked(false);
-      ui->actionInclude_correlation->setChecked(false);
-      ui->actionEnable_AP_JT65->setVisible(false);
-    }
-    m_opCall=m_config.opCall();
-  }
 }
 
 void MainWindow::prepareSpotting(){
@@ -6077,13 +6083,13 @@ void MainWindow::resetMessageUI(){
 bool MainWindow::ensureCallsignSet(bool alert){
     if(m_config.my_callsign().trimmed().isEmpty()){
         if(alert) MessageBox::warning_message(this, tr ("Please enter your callsign in the settings."));
-        on_actionSettings_triggered();
+        openSettings();
         return false;
     }
 
     if(m_config.my_grid().trimmed().isEmpty()){
         if(alert) MessageBox::warning_message(this, tr ("Please enter your grid locator in the settings."));
-        on_actionSettings_triggered();
+        openSettings();
         return false;
     }
 
@@ -7870,7 +7876,7 @@ void MainWindow::on_queryButton_pressed(){
 
 void MainWindow::on_macrosMacroButton_pressed(){
     if(m_config.macros()->stringList().isEmpty()){
-        on_actionSettings_triggered();
+        openSettings(3);
         return;
     }
 
@@ -7888,7 +7894,9 @@ void MainWindow::on_macrosMacroButton_pressed(){
     menu->addSeparator();
     auto action = new QAction(QIcon::fromTheme("edit-edit"), QString("Edit"), menu);
     menu->addAction(action);
-    connect(action, &QAction::triggered, this, &MainWindow::on_actionSettings_triggered);
+    connect(action, &QAction::triggered, this, [this](){
+        openSettings(3);
+    });
 
     ui->macrosMacroButton->setMenu(menu);
     ui->macrosMacroButton->showMenu();

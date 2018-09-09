@@ -173,6 +173,7 @@ private slots:
   void on_actionShow_Waterfall_Controls_triggered(bool checked);
   void on_actionReset_Window_Sizes_triggered();
   void on_actionSettings_triggered();
+  void openSettings(int tab=0);
   void prepareSpotting();
   void on_spotButton_clicked(bool checked);
   void on_monitorButton_clicked (bool);
