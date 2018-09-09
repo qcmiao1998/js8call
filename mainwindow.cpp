@@ -1394,9 +1394,11 @@ void MainWindow::initializeDummyData(){
 
     auto dt = QDateTime::currentDateTimeUtc().addSecs(-300);
 
+    int i = 0;
     foreach(auto call, calls){
         CallDetail cd = {};
         cd.call = call;
+        cd.snr = i++;
         cd.utcTimestamp = dt;
         logCallActivity(cd, false);
     }
@@ -1465,7 +1467,7 @@ void MainWindow::tryBandHop(){
   auto stations = m_config.stations()->station_list();
 
   // order stations by (switch_at, switch_until) time tuple
-  qSort(stations.begin(), stations.end(), [](StationList::Station const &a, StationList::Station const &b){
+  qStableSort(stations.begin(), stations.end(), [](StationList::Station const &a, StationList::Station const &b){
     return (a.switch_at_ < b.switch_at_) || (a.switch_at_ == b.switch_at_ && a.switch_until_ < b.switch_until_);
   });
 
@@ -7627,7 +7629,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
     });
 #endif
 
-    auto alertAction = menu->addAction(QString("%1>[MESSAGE] - Please (optionally relay) and display this message in an reply dialog").arg(call).trimmed());
+    auto alertAction = menu->addAction(QString("%1>[MESSAGE] - Please (optionally) relay and display this message in an reply dialog").arg(call).trimmed());
     alertAction->setDisabled(isAllCall);
     connect(alertAction, &QAction::triggered, this, [this](){
 
@@ -8947,7 +8949,7 @@ QString MainWindow::callsignSelected(){
         selectedOffset = selectedItems.first()->text().toInt();
 
         auto keys = m_callActivity.keys();
-        qSort(keys.begin(), keys.end(), [this](QString const &a, QString const &b){
+        qStableSort(keys.begin(), keys.end(), [this](QString const &a, QString const &b){
             auto tA = m_callActivity[a].utcTimestamp;
             auto tB = m_callActivity[b].utcTimestamp;
             if(tA == tB){
@@ -9448,7 +9450,7 @@ void MainWindow::processCommandActivity() {
             int i = 0;
             int maxStations = 4;
             auto calls = m_callActivity.keys();
-            qSort(calls.begin(), calls.end(), [this](QString
+            qStableSort(calls.begin(), calls.end(), [this](QString
                 const & a, QString
                 const & b) {
                 auto left = m_callActivity[a];
@@ -9879,13 +9881,13 @@ void MainWindow::displayBandActivity() {
             reverse = true;
         }
 
+        // compare offset
+        qStableSort(keys.begin(), keys.end());
+
         if(sortBy == "timestamp"){
-            qSort(keys.begin(), keys.end(), compareTimestamp);
+            qStableSort(keys.begin(), keys.end(), compareTimestamp);
         } else if(sortBy == "snr"){
-            qSort(keys.begin(), keys.end(), compareSNR);
-        } else {
-            // compare offset
-            qSort(keys.begin(), keys.end());
+            qStableSort(keys.begin(), keys.end(), compareSNR);
         }
 
         if(reverse){
@@ -10069,17 +10071,17 @@ void MainWindow::displayCallActivity() {
             reverse = true;
         }
 
+        // compare callsign
+        qStableSort(keys.begin(), keys.end());
+
         if(sortBy == "offset"){
-            qSort(keys.begin(), keys.end(), compareOffset);
+            qStableSort(keys.begin(), keys.end(), compareOffset);
         } else if(sortBy == "distance"){
-            qSort(keys.begin(), keys.end(), compareDistance);
+            qStableSort(keys.begin(), keys.end(), compareDistance);
         } else if(sortBy == "timestamp"){
-            qSort(keys.begin(), keys.end(), compareTimestamp);
+            qStableSort(keys.begin(), keys.end(), compareTimestamp);
         } else if(sortBy == "snr"){
-            qSort(keys.begin(), keys.end(), compareSNR);
-        } else {
-            // compare callsign
-            qSort(keys.begin(), keys.end());
+            qStableSort(keys.begin(), keys.end(), compareSNR);
         }
 
         if(reverse){
@@ -11026,9 +11028,9 @@ QString MainWindow::sortHoundCalls(QString t, int isort, int max_dB)
 
   if(isort>1) {
     if(bReverse) {
-      qSort(list.begin(),list.end(),qGreater<int>());
+      qStableSort(list.begin(),list.end(),qGreater<int>());
     } else {
-      qSort(list.begin(),list.end());
+      qStableSort(list.begin(),list.end());
     }
   }
 
