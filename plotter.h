@@ -90,6 +90,7 @@ public:
 signals:
   void freezeDecode1(int n);
   void setFreq1(int rxFreq, int txFreq);
+  void qsy(int hzDelta);
 
 protected:
   //re-implemented widget event handlers
@@ -179,6 +180,7 @@ private:
   qint32  m_tol;
   qint32  m_j;
   qint32  m_lastMouseX;
+  bool    m_menuOpen;
 
   char    m_sutc[6];
 };

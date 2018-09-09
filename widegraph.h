@@ -55,6 +55,7 @@ signals:
   void f11f12(int n);
   void setXIT2(int n);
   void setFreq3(int rxFreq, int txFreq);
+  void qsy(int hzDelta);
 
 public slots:
   void wideFreezeDecode(int n);
@@ -68,6 +69,7 @@ protected:
   void closeEvent (QCloseEvent *) override;
 
 private slots:
+  void on_qsyPushButton_clicked();
   void on_offsetSpinBox_valueChanged(int n);
   void on_waterfallAvgSpinBox_valueChanged(int arg1);
   void on_bppSpinBox_valueChanged(int arg1);

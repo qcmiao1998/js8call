@@ -125,6 +125,7 @@ public slots:
   void readFromStdout();
   void p1ReadFromStdout();
   void setXIT(int n, Frequency base = 0u);
+  void qsy(int hzDelta);
   void setFreqOffsetForRestore(int freq, bool shouldRestore);
   bool tryRestoreFreqOffset();
   void setFreq4(int rxFreq, int txFreq);

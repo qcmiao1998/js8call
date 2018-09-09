@@ -42,7 +42,12 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   connect(ui->widePlot, SIGNAL(setFreq1(int,int)),this,
           SLOT(setFreq2(int,int)));
 
+  connect(ui->widePlot, &CPlotter::qsy, this, [this](int hzDelta){
+    emit qsy(hzDelta);
+  });
+
   {
+
     //Restore user's settings
     SettingsGroup g {m_settings, "WideGraph"};
     restoreGeometry (m_settings->value ("geometry", saveGeometry ()).toByteArray ());
@@ -81,6 +86,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     ui->sbPercent2dPlot->setValue(m_Percent2DScreen);
     ui->widePlot->SetPercent2DScreen(m_Percent2DScreen);
     ui->widePlot->setStartFreq(m_settings->value("StartFreq", 500).toInt());
+    ui->centerSpinBox->setValue(m_settings->value("CenterOffset", 1500).toInt());
     ui->fStartSpinBox->setValue(ui->widePlot->startFreq());
     m_waterfallPalette=m_settings->value("WaterfallPalette","Default").toString();
     m_userPalette = WFPalette {m_settings->value("UserPalette").value<WFPalette::Colours> ()};
@@ -141,6 +147,7 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue("UseRef",m_bRef);
   m_settings->setValue ("HideControls", ui->controls_widget->isHidden ());
   m_settings->setValue ("FminPerBand", m_fMinPerBand);
+  m_settings->setValue ("CenterOffset", ui->centerSpinBox->value());
 }
 
 void WideGraph::drawRed(int ia, int ib)
@@ -205,6 +212,11 @@ void WideGraph::dataSink2(float s[], float df3, int ihsym, int ndiskdata)  //dat
 void WideGraph::on_bppSpinBox_valueChanged(int n)                            //bpp
 {
   ui->widePlot->setBinsPerPixel(n);
+}
+
+void WideGraph::on_qsyPushButton_clicked(){
+    int hzDelta = rxFreq() - ui->centerSpinBox->value();
+    emit qsy(hzDelta);
 }
 
 void WideGraph::on_offsetSpinBox_valueChanged(int n){

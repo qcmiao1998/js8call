@@ -868,6 +868,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(m_wideGraph.data (), SIGNAL(setFreq3(int,int)),this,
           SLOT(setFreq4(int,int)));
 
+  connect(m_wideGraph.data(), &WideGraph::qsy, this, &MainWindow::qsy);
+
   decodeBusy(false);
   QString t1[28]={"1 uW","2 uW","5 uW","10 uW","20 uW","50 uW","100 uW","200 uW","500 uW",
                   "1 mW","2 mW","5 mW","10 mW","20 mW","50 mW","100 mW","200 mW","500 mW",
@@ -8168,6 +8170,11 @@ void MainWindow::setXIT(int n, Frequency base)
   }
   //Now set the audio Tx freq
   Q_EMIT transmitFrequency (ui->TxFreqSpinBox->value () - m_XIT);
+}
+
+void MainWindow::qsy(int hzDelta){
+    setRig(m_freqNominal + hzDelta);
+    setFreqOffsetForRestore(1500, false);
 }
 
 void MainWindow::setFreqOffsetForRestore(int freq, bool shouldRestore){

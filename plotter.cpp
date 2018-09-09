@@ -41,7 +41,8 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_rxFreq {1020},
   m_txFreq {0},
   m_startFreq {0},
-  m_lastMouseX {-1}
+  m_lastMouseX {-1},
+  m_menuOpen {false}
 {
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   setFocusPolicy(Qt::StrongFocus);
@@ -52,21 +53,6 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_bReplot=false;
 
   setMouseTracking(true);
-
-#if 0
-  // contextual pop up menu
-  setContextMenuPolicy (Qt::CustomContextMenu);
-  connect (this, &QWidget::customContextMenuRequested, [this] (QPoint const& pos) {
-      QMenu menu {this};
-      menu.addAction (m_set_freq_action);
-      auto const& connection = connect (m_set_freq_action, &QAction::triggered, [this, pos] () {
-          int newFreq = FreqfromX (pos.x ()) + .5;
-          emit setFreq1 (newFreq, newFreq);
-        });
-      menu.exec (mapToGlobal (pos));
-      disconnect (connection);
-    });
-#endif
 }
 
 CPlotter::~CPlotter() { }                                      // Destructor
