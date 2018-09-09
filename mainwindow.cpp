@@ -9491,7 +9491,7 @@ void MainWindow::processCommandActivity() {
 #endif
 
         // PROCESS RELAY
-        else if (d.cmd == ">" && !isAllCall) {
+        else if (d.cmd == ">" && !isAllCall && !m_config.relay_off()) {
 
             // 1. see if there are any more hops to process
             // 2. if so, forward
@@ -9536,7 +9536,6 @@ void MainWindow::processCommandActivity() {
 
                 processAlertReplyForCommand(d, calls.join('>'), ">");
             }
-
         }
 
         // PROCESS BUFFERED MESSAGE

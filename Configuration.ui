@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>692</width>
-    <height>701</height>
+    <height>706</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -353,6 +353,13 @@
            <widget class="QCheckBox" name="autoreply_off_check_box">
             <property name="text">
              <string>Autoreply (AUTO) off at startup</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="relay_disabled_check_box">
+            <property name="text">
+             <string>Disable message passing (&gt;) when AUTO is enabled</string>
             </property>
            </widget>
           </item>
