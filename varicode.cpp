@@ -261,9 +261,7 @@ needed: ^,&@#$%'"()<>|*[]{}=;_~`
 QMap<QString, QString> huffescapes = {
 
     // 10 bits
-#if 0
-    {  "\\ ",   ""  },
-#endif
+    {  "\\ ",   " DE "  }, // 14 bits - 4 bit savings
     {  "\\E",   "," },
 
     // 11 bits
