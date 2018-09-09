@@ -872,6 +872,7 @@ private:
   void processCompoundActivity();
   void processBufferedActivity();
   void processCommandActivity();
+  void processAlertReplyForCommand(CommandDetail d, QString from, QString cmd);
   void processSpots();
   void processTxQueue();
   void displayActivity(bool force=false);

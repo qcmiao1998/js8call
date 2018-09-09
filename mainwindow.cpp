@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iterator>
 #include <fftw3.h>
+#include <QInputDialog>
 #include <QLineEdit>
 #include <QRegExpValidator>
 #include <QRegExp>
@@ -9349,6 +9350,7 @@ void MainWindow::processCommandActivity() {
         if (d.cmd == "?") {
             reply = QString("%1 SNR %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
         }
+
         // QUERIED QTH
         else if (d.cmd == "@" && !isAllCall) {
             QString qth = m_config.my_qth();
@@ -9358,6 +9360,7 @@ void MainWindow::processCommandActivity() {
 
             reply = QString("%1 QTH %2").arg(d.from).arg(qth);
         }
+
         // QUERIED GRID
         else if (d.cmd == "^" && !isAllCall) {
             QString grid = m_config.my_grid();
@@ -9367,10 +9370,12 @@ void MainWindow::processCommandActivity() {
 
             reply = QString("%1 GRID %2").arg(d.from).arg(grid);
         }
+
         // QUERIED STATION MESSAGE
         else if (d.cmd == "&" && !isAllCall) {
             reply = QString("%1 QTC %2").arg(d.from).arg(m_config.my_station());
         }
+
         // QUERIED STATIONS HEARD
         else if (d.cmd == "$" && !isAllCall) {
             int i = 0;
@@ -9406,14 +9411,62 @@ void MainWindow::processCommandActivity() {
             lines.prepend(QString("<%1 HEARING>").arg(m_config.my_callsign()));
             reply = lines.join('\n');
         }
+
         // PROCESS RETRANSMIT
         else if (d.cmd == "|" && !isAllCall) {
             // TODO: jsherer - perhaps parse d.text and ensure it is a valid message as well as prefix it with our call...
+
             reply = QString("%1 ACK\n%2 DE %1").arg(d.from).arg(d.text);
         }
+
+        // PROCESS RELAY
+        else if (d.cmd == ">" && !isAllCall) {
+
+            // 1. see if there are any more hops to process
+            // 2. if so, forward
+            // 3. otherwise, display alert
+
+            QString callToPattern = {R"((?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?[>])\b)"};
+            QRegularExpression re(callToPattern);
+            auto match = re.match(d.text);
+
+            // if the text starts with a callsign, relay.
+            if(match.hasMatch()){
+                reply = QString("%1 DE %2").arg(d.text).arg(d.from);
+
+            // otherwise, as long as we're not an ACK...alert the user and either send an ACK or Message
+            } else if(!d.text.startsWith("ACK DE")) {
+                QStringList calls;
+                QString callDePattern = {R"(\sDE\s(?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
+                QRegularExpression re(callDePattern);
+                auto iter = re.globalMatch(d.text);
+                while(iter.hasNext()){
+                    auto match = iter.next();
+                    calls.prepend(match.captured("callsign"));
+                }
+                calls.prepend(d.from);
+
+                processAlertReplyForCommand(d, calls.join('>'), ">");
+
+                //reply = QString("%1>ACK").arg(calls.join('>'));
+                //bool ok = false;
+                //reply = QString("%1>%2").arg(calls.join('>')).arg(ok && !text.isEmpty() ? text : "ACK");
+
+            }
+
+
+#if 0
+            KN4CRD: W0FW>N0JDS>OH8STN> Hello Julian...
+            W0FW: N0JDS>OH8STN> Hello Julian... <KN4CRD
+            N0JDS: OH8STN> Hello Julian... <KN4CRD<W0FW
+
+            OH8STN: N0JDS>W0FW>KN4CRD> ACK
+#endif
+
+        }
+
         // PROCESS BUFFERED MESSAGE
         else if (d.cmd == "#" && !isAllCall) {
-
             // open file /save/messages/[callsign].txt and append a message log entry...
             QFile f(QDir::toNativeSeparators(m_config.writeable_data_dir ().absolutePath()) + QString("/save/messages/%1.txt").arg(Radio::base_callsign(d.from)));
             if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
@@ -9431,10 +9484,12 @@ void MainWindow::processCommandActivity() {
 
             reply = QString("%1 ACK").arg(d.from);
         }
+
         // PROCESS AGN
         else if (d.cmd == " AGN?" && !isAllCall && !m_lastTxMessage.isEmpty()) {
             reply = m_lastTxMessage;
         }
+
         // PROCESS BUFFERED QSO QUERY
         else if (d.cmd == " QSO"){
             auto who = d.text;
@@ -9462,6 +9517,15 @@ void MainWindow::processCommandActivity() {
             }
             reply = replies.join("\n");
         }
+
+        // PROCESS BUFFERED APRS:
+        else if(d.cmd == " APRS:" && m_config.spot_to_reporting_networks() && m_aprsClient->isPasscodeValid()){
+            m_aprsClient->enqueueThirdParty(Radio::base_callsign(d.from), d.text);
+
+            // make sure this is explicit
+            continue;
+        }
+
         // PROCESS BUFFERED QTH
         else if (d.cmd == " GRID"){
            // 1. parse grids
@@ -9478,42 +9542,15 @@ void MainWindow::processCommandActivity() {
                logCallActivity(cd, true);
            }
 
+           // make sure this is explicit
            continue;
         }
-        // PROCESS APRS
-        else if(d.cmd == " APRS:" && m_config.spot_to_reporting_networks() && m_aprsClient->isPasscodeValid()){
-            m_aprsClient->enqueueThirdParty(Radio::base_callsign(d.from), d.text);
-            reply = QString("%1 ACK").arg(d.from);
-        }
+
         // PROCESS ALERT
         else if (d.cmd == "!" && !isAllCall) {
-            QMessageBox * msgBox = new QMessageBox(this);
-            msgBox->setIcon(QMessageBox::Information);
 
-            auto header = QString("Message from %3 at %1 (%2):");
-            header = header.arg(d.utcTimestamp.time().toString());
-            header = header.arg(d.freq);
-            header = header.arg(d.from);
-            msgBox->setText(header);
-            msgBox->setInformativeText(d.text);
-
-            auto ab = msgBox->addButton("ACK", QMessageBox::AcceptRole);
-            auto db = msgBox->addButton("Discard", QMessageBox::NoRole);
-
-            connect(msgBox, & QMessageBox::buttonClicked, this, [this, d, db, ab](QAbstractButton * btn) {
-                if (btn != ab) {
-                    return;
-                }
-
-                enqueueMessage(PriorityHigh, QString("%1 ACK").arg(d.from), d.freq, nullptr);
-            });
-
-            auto wav = m_config.sound_am_path();
-            if(!wav.isEmpty()){
-                QSound::play(wav);
-            }
-
-            msgBox->show();
+            // create alert dialog
+            processAlertReplyForCommand(d, d.from, " ");
 
             // make sure this is explicit
             continue;
@@ -9534,6 +9571,48 @@ void MainWindow::processCommandActivity() {
         // most information available to make a frequency selection.
         enqueueMessage(PriorityNormal, reply, isAllCall ? -1 : d.freq, nullptr);
     }
+}
+
+void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QString cmd){
+    QMessageBox * msgBox = new QMessageBox(this);
+    msgBox->setIcon(QMessageBox::Information);
+
+    auto header = QString("Message from %3 at %1 (%2):");
+    header = header.arg(d.utcTimestamp.time().toString());
+    header = header.arg(d.freq);
+    header = header.arg(d.from);
+    msgBox->setText(header);
+    msgBox->setInformativeText(d.text);
+
+    auto ab = msgBox->addButton("ACK", QMessageBox::AcceptRole);
+    auto rb = msgBox->addButton("Reply", QMessageBox::AcceptRole);
+    auto db = msgBox->addButton("Discard", QMessageBox::NoRole);
+
+    connect(msgBox, & QMessageBox::buttonClicked, this, [this, cmd, from, d, db, rb, ab](QAbstractButton * btn) {
+        if (btn == db) {
+            return;
+        }
+
+        if (btn == ab){
+            enqueueMessage(PriorityHigh, QString("%1%2ACK").arg(from).arg(cmd), d.freq, nullptr);
+        }
+
+        if(btn == rb){
+            bool ok = false;
+            QString text = QInputDialog::getMultiLineText(this, "Message Reply", QString("Message to send to %1:").arg(from), "", &ok);
+            if(ok && !text.isEmpty()){
+                enqueueMessage(PriorityHigh, QString("%1%2%3").arg(from).arg(cmd).arg(text), d.freq, nullptr);
+            }
+        }
+
+    });
+
+    auto wav = m_config.sound_am_path();
+    if(!wav.isEmpty()){
+        QSound::play(wav);
+    }
+
+    msgBox->show();
 }
 
 void MainWindow::processSpots() {
