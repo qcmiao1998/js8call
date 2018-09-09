@@ -7,7 +7,6 @@
 #include <fstream>
 #include <iterator>
 #include <fftw3.h>
-#include <QInputDialog>
 #include <QLineEdit>
 #include <QRegExpValidator>
 #include <QRegExp>
@@ -63,6 +62,7 @@
 #include "CallsignValidator.hpp"
 #include "EqualizationToolsDialog.hpp"
 #include "SelfDestructMessageBox.h"
+#include "messagereplydialog.h"
 
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
@@ -6126,9 +6126,6 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
         ui->startTxButton->setText("Send");
         ui->startTxButton->setEnabled(false);
     }
-
-
-
 }
 
 int MainWindow::currentFreqOffset(){
@@ -9588,7 +9585,7 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
     auto rb = msgBox->addButton("Reply", QMessageBox::AcceptRole);
     auto db = msgBox->addButton("Discard", QMessageBox::NoRole);
 
-    connect(msgBox, & QMessageBox::buttonClicked, this, [this, cmd, from, d, db, rb, ab](QAbstractButton * btn) {
+    connect(msgBox, &QMessageBox::buttonClicked, this, [this, cmd, from, d, db, rb, ab](QAbstractButton * btn) {
         if (btn == db) {
             return;
         }
@@ -9598,13 +9595,16 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
         }
 
         if(btn == rb){
-            bool ok = false;
-            QString text = QInputDialog::getMultiLineText(this, "Message Reply", QString("Message to send to %1:").arg(from), "", &ok);
-            if(ok && !text.isEmpty()){
-                enqueueMessage(PriorityHigh, QString("%1%2%3").arg(from).arg(cmd).arg(text), d.freq, nullptr);
-            }
-        }
+            auto diag = new MessageReplyDialog(this);
+            diag->setWindowTitle("Message Reply");
+            diag->setLabel(QString("Message to send to %1:").arg(from));
 
+            connect(diag, &MessageReplyDialog::accepted, this, [this, diag, from, cmd, d](){
+                enqueueMessage(PriorityHigh, QString("%1%2%3").arg(from).arg(cmd).arg(diag->textValue()), d.freq, nullptr);
+            });
+
+            diag->show();
+        }
     });
 
     auto wav = m_config.sound_am_path();

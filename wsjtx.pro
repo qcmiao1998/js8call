@@ -72,7 +72,8 @@ SOURCES += \
     NetworkMessage.cpp \
     MessageClient.cpp \
     SelfDestructMessageBox.cpp \
-    APRSISClient.cpp
+    APRSISClient.cpp \
+    messagereplydialog.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -96,7 +97,8 @@ HEADERS  += qt_helpers.hpp \
     NetworkMessage.hpp \
     MessageClient.hpp \
     SelfDestructMessageBox.h \
-    APRSISClient.h
+    APRSISClient.h \
+    messagereplydialog.h
 
 
 INCLUDEPATH += qmake_only
@@ -108,7 +110,8 @@ HEADERS += OmniRigTransceiver.hpp
 
 FORMS    += mainwindow.ui about.ui Configuration.ui widegraph.ui astro.ui \
     logqso.ui wf_palette_design_dialog.ui messageaveraging.ui echograph.ui \
-    fastgraph.ui
+    fastgraph.ui \
+    messagereplydialog.ui
 
 RC_FILE = wsjtx.rc
 RESOURCES = wsjtx.qrc

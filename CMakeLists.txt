@@ -305,6 +305,7 @@ set (wsjtx_CXXSRCS
   WsprTxScheduler.cpp
   varicode.cpp
   SelfDestructMessageBox.cpp
+  messagereplydialog.cpp
   APRSISClient.cpp
   mainwindow.cpp
   Configuration.cpp
@@ -668,6 +669,7 @@ set (wsjtx_UISRCS
   widegraph.ui
   logqso.ui
   Configuration.ui
+  messagereplydialog.ui
   )
 
 set (UDP_library_CXXSRCS
