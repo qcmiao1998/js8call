@@ -1128,7 +1128,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->textEditRX, &QTableWidget::customContextMenuRequested, this, [this, clearAction1, clearActionAll](QPoint const &point){
       QMenu * menu = new QMenu(ui->textEditRX);
 
-      buildEditMenu(ui->textEditRX, menu);
+      buildEditMenu(menu, ui->textEditRX);
 
       menu->addSeparator();
 
@@ -1152,9 +1152,13 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     restoreAction->setDisabled(m_lastTxMessage.isEmpty());
     menu->addAction(restoreAction);
 
+    auto relayMenu = menu->addMenu("Relay via...");
+    relayMenu->setDisabled(ui->extFreeTextMsgEdit->toPlainText().isEmpty() || m_callActivity.isEmpty());
+    buildRelayMenu(relayMenu);
+
     menu->addSeparator();
 
-    buildEditMenu(ui->extFreeTextMsgEdit, menu);
+    buildEditMenu(menu, ui->extFreeTextMsgEdit);
 
     menu->addSeparator();
 
@@ -7758,7 +7762,25 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
     });
 }
 
-void MainWindow::buildEditMenu(QTextEdit *edit, QMenu *menu){
+void MainWindow::buildRelayMenu(QMenu *menu){
+    auto now = QDateTime::currentDateTimeUtc();
+    int callsignAging = m_config.callsign_aging();
+    foreach(auto cd, m_callActivity.values()){
+        if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+            continue;
+        }
+
+        auto call = cd.call;
+        auto a = menu->addAction(call);
+        connect(a, &QAction::triggered, this, [this, call](){
+            auto c = ui->extFreeTextMsgEdit->textCursor();
+            c.movePosition(QTextCursor::Start);
+            c.insertText(QString("%1>").arg(call));
+        });
+    }
+}
+
+void MainWindow::buildEditMenu(QMenu *menu, QTextEdit *edit){
     bool hasSelection = !edit->textCursor().selectedText().isEmpty();
 
     auto cut = menu->addAction("Cu&t");
@@ -9423,42 +9445,45 @@ void MainWindow::processCommandActivity() {
             // 2. if so, forward
             // 3. otherwise, display alert
 
-            QString callToPattern = {R"((?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?[>])\b)"};
+            QString callToPattern = {R"((?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?(?<type>[> ]))\b)"};
             QRegularExpression re(callToPattern);
-            auto match = re.match(d.text);
+            auto text = d.text;
+            auto match = re.match(text);
 
             // if the text starts with a callsign, relay.
             if(match.hasMatch()){
-                reply = QString("%1 DE %2").arg(d.text).arg(d.from);
+                // replace freetext with relayed free text
+                if(match.captured("type") != ">"){
+                    text = text.replace(match.capturedStart("type"), match.capturedLength("type"), ">");
+                }
+                reply = QString("%1 DE %2").arg(text).arg(d.from);
 
             // otherwise, as long as we're not an ACK...alert the user and either send an ACK or Message
             } else if(!d.text.startsWith("ACK DE")) {
                 QStringList calls;
                 QString callDePattern = {R"(\sDE\s(?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
                 QRegularExpression re(callDePattern);
-                auto iter = re.globalMatch(d.text);
+                auto iter = re.globalMatch(text);
                 while(iter.hasNext()){
                     auto match = iter.next();
                     calls.prepend(match.captured("callsign"));
                 }
+
+                // put these third party calls in the heard list
+                foreach(auto call, calls){
+                    CallDetail cd = {};
+                    cd.call = call;
+                    cd.snr = -64;
+                    cd.freq = d.freq;
+                    cd.through = d.from;
+                    cd.utcTimestamp = QDateTime::currentDateTimeUtc();
+                    logCallActivity(cd, false);
+                }
+
                 calls.prepend(d.from);
 
                 processAlertReplyForCommand(d, calls.join('>'), ">");
-
-                //reply = QString("%1>ACK").arg(calls.join('>'));
-                //bool ok = false;
-                //reply = QString("%1>%2").arg(calls.join('>')).arg(ok && !text.isEmpty() ? text : "ACK");
-
             }
-
-
-#if 0
-            KN4CRD: W0FW>N0JDS>OH8STN> Hello Julian...
-            W0FW: N0JDS>OH8STN> Hello Julian... <KN4CRD
-            N0JDS: OH8STN> Hello Julian... <KN4CRD<W0FW
-
-            OH8STN: N0JDS>W0FW>KN4CRD> ACK
-#endif
 
         }
 
@@ -10014,7 +10039,11 @@ void MainWindow::displayCallActivity() {
             ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
             int row = ui->tableWidgetCalls->rowCount() - 1;
 
-            QString displayCall = d.through.isEmpty() ? d.call : QString("%1 | %2").arg(d.through).arg(d.call);
+#if SHOW_THROUGH_CALLS
+            QString displayCall = d.through.isEmpty() ? d.call : QString("%1>%2").arg(d.through).arg(d.call);
+#else
+            QString displayCall = d.call;
+#endif
             auto displayItem = new QTableWidgetItem(displayCall);
             displayItem->setData(Qt::UserRole, QVariant((d.call)));
             ui->tableWidgetCalls->setItem(row, 0, displayItem);

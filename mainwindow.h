@@ -268,7 +268,8 @@ private slots:
   void buildBandActivitySortByMenu(QMenu * menu);
   void buildCallActivitySortByMenu(QMenu * menu);
   void buildQueryMenu(QMenu *, QString callsign);
-  void buildEditMenu(QTextEdit *, QMenu *);
+  void buildRelayMenu(QMenu *menu);
+  void buildEditMenu(QMenu *, QTextEdit *);
   void on_queryButton_pressed();
   void on_macrosMacroButton_pressed();
   void on_deselectButton_pressed();
