@@ -823,6 +823,7 @@ endif (WIN32)
 #
 if (APPLE)
   set (WSJTX_BUNDLE_VERSION ${wsjtx_VERSION})
+  set (CMAKE_INSTALL_PREFIX "/")
 
   # make sure CMAKE_INSTALL_PREFIX ends in /
   string (LENGTH "${CMAKE_INSTALL_PREFIX}" LEN)

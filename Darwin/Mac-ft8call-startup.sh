@@ -1,7 +1,7 @@
 #!/bin/sh
 WSJTX_BUNDLE="`echo "$0" | sed -e 's/\/Contents\/MacOS\/.*//'`"
 WSJTX_RESOURCES="$WSJTX_BUNDLE/Contents/Resources"
-WSJTX_TEMP="/tmp/wsjtx/$UID"
+WSJTX_TEMP="/tmp/ft8call/$UID"
 
 echo "running $0"
 echo "WSJTX_BUNDLE: $WSJTX_BUNDLE"
@@ -13,4 +13,4 @@ export "DYLD_LIBRARY_PATH=$WSJTX_RESOURCES/lib"
 export "PATH=$WSJTX_RESOURCES/bin:$PATH"
 
 #export
-exec "$WSJTX_RESOURCES/bin/wsjtx"
+exec "$WSJTX_RESOURCES/bin/ft8call"
