@@ -7831,7 +7831,7 @@ void MainWindow::buildRelayMenu(QMenu *menu){
 }
 
 QAction* MainWindow::buildRelayAction(QString call){
-    QAction *a = new QAction(call);
+    QAction *a = new QAction(call, nullptr);
     connect(a, &QAction::triggered, this, [this, call](){
         prependMessageText(QString("%1>").arg(call));
     });
