@@ -1401,6 +1401,7 @@ if (UNIX)
   endif (NOT APPLE)
 endif (UNIX)
 
+
 #
 # installation
 #
@@ -1481,7 +1482,6 @@ if (APPLE)
     )
 endif (APPLE)
 
-
 #
 # uninstall support
 #
@@ -1519,17 +1519,24 @@ configure_file (
 
 
 if (NOT WIN32 AND NOT APPLE)
-  # install a desktop file so wsjtx appears in the application start
+  # install a desktop file so ft8call appears in the application start
   # menu with an icon
   install (
-    FILES ft8call.desktop message_aggregator.desktop
-    DESTINATION share/applications
+    FILES ft8call.desktop
+    DESTINATION /usr/share/applications
     #COMPONENT runtime
     )
   install (
     FILES icons/Unix/wsjtx_icon.png
-    DESTINATION share/pixmaps
+    DESTINATION /usr/share/pixmaps
     #COMPONENT runtime
+    )
+
+    execute_process(COMMAND ln -s /opt/ft8call/bin/ft8call lft8call)
+
+    install(FILES
+        ${CMAKE_BINARY_DIR}/lft8call DESTINATION /usr/bin/ RENAME ft8call
+        #COMPONENT runtime
     )
 endif (NOT WIN32 AND NOT APPLE)
 
