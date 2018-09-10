@@ -197,7 +197,7 @@ void APRSISClient::enqueueSpot(QString theircall, QString grid, QString comment)
 }
 
 void APRSISClient::enqueueThirdParty(QString theircall, QString payload){
-    if(m_localPasscode != hashCallsign(m_localCall)){
+    if(!isPasscodeValid()){
         return;
     }
 
