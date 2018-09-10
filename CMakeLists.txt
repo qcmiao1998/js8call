@@ -723,7 +723,7 @@ set (TOP_LEVEL_RESOURCES
   mouse_commands.txt
   prefixes.txt
   cty.dat
-  icons/Darwin/wsjtx.iconset/icon_128x128.png
+  icons/Darwin/FT8Call.iconset/icon_128x128.png
   contrib/gpl-v3-logo.svg
   artwork/splash.png
   )
@@ -1527,7 +1527,7 @@ if (NOT WIN32 AND NOT APPLE)
     #COMPONENT runtime
     )
   install (
-    FILES icons/Unix/wsjtx_icon.png
+    FILES icons/Unix/ft8call_icon.png
     DESTINATION /usr/share/pixmaps
     #COMPONENT runtime
     )
