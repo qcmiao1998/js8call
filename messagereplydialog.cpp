@@ -3,6 +3,8 @@
 
 #include "varicode.h"
 
+#include <QSet>
+
 MessageReplyDialog::MessageReplyDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MessageReplyDialog)
@@ -32,7 +34,7 @@ void MessageReplyDialog::on_textEdit_textChanged(){
 
     QString x;
     QString::const_iterator i;
-    auto validChars = Varicode::huffValidChars();
+    QSet<QString> validChars = Varicode::huffValidChars();
     for(i = text.constBegin(); i != text.constEnd(); i++){
         auto ch = (*i).toUpper();
         if(validChars.contains(ch)){

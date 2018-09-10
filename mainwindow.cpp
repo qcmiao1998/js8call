@@ -6157,7 +6157,7 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 {
     QString x;
     QString::const_iterator i;
-    auto validChars = Varicode::huffValidChars();
+    QSet<QString> validChars = Varicode::huffValidChars();
     for(i = text.constBegin(); i != text.constEnd(); i++){
         auto ch = (*i).toUpper();
         if(validChars.contains(ch) || ch == '\n'){
