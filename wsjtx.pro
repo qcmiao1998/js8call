@@ -73,7 +73,8 @@ SOURCES += \
     MessageClient.cpp \
     SelfDestructMessageBox.cpp \
     APRSISClient.cpp \
-    messagereplydialog.cpp
+    messagereplydialog.cpp \
+    keyeater.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -98,7 +99,8 @@ HEADERS  += qt_helpers.hpp \
     MessageClient.hpp \
     SelfDestructMessageBox.h \
     APRSISClient.h \
-    messagereplydialog.h
+    messagereplydialog.h \
+    keyeater.h
 
 
 INCLUDEPATH += qmake_only

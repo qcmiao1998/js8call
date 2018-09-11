@@ -215,7 +215,7 @@ void WideGraph::on_bppSpinBox_valueChanged(int n)                            //b
 }
 
 void WideGraph::on_qsyPushButton_clicked(){
-    int hzDelta = rxFreq() - ui->centerSpinBox->value();
+    int hzDelta = rxFreq() - centerFreq();
     emit qsy(hzDelta);
 }
 
@@ -267,6 +267,11 @@ void WideGraph::setRxFreq(int n)                                           //set
 int WideGraph::rxFreq()                                                   //rxFreq
 {
   return ui->widePlot->rxFreq();
+}
+
+int WideGraph::centerFreq()
+{
+  return ui->centerSpinBox->value();
 }
 
 int WideGraph::nStartFreq()                                             //nStartFreq

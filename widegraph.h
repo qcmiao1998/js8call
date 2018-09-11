@@ -29,6 +29,7 @@ public:
   void   dataSink2(float s[], float df3, int ihsym, int ndiskdata);
   void   setRxFreq(int n);
   int    rxFreq();
+  int    centerFreq();
   int    nStartFreq();
   int    Fmin();
   int    Fmax();

@@ -45,6 +45,7 @@
 #include "varicode.h"
 #include "MessageClient.hpp"
 #include "APRSISClient.h"
+#include "keyeater.h"
 
 #define NUM_JT4_SYMBOLS 206                //(72+31)*2, embedded sync
 #define NUM_JT65_SYMBOLS 126               //63 data + 63 sync
@@ -930,47 +931,6 @@ private:
   void foxTxSequencer();
   void foxGenWaveform(int i,QString fm);
   void writeFoxQSO(QString msg);
-};
-
-class EscapeKeyPressEater : public QObject
-{
-    Q_OBJECT
-protected:
-    bool eventFilter(QObject *obj, QEvent *event){
-        if (event->type() == QEvent::KeyPress) {
-            QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-            if(keyEvent->key() == Qt::Key_Escape){
-                return true;
-            }
-        }
-
-        // standard event processing
-        return QObject::eventFilter(obj, event);
-    }
-};
-
-class EnterKeyPressEater : public QObject
-{
-    Q_OBJECT
-protected:
-    bool eventFilter(QObject *obj, QEvent *event){
-        if (event->type() == QEvent::KeyPress) {
-            QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-            if(keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return){
-                bool processed = false;
-                emit this->enterKeyPressed(obj, keyEvent, &processed);
-                if(processed){
-                    return true;
-                }
-            }
-        }
-
-        // standard event processing
-        return QObject::eventFilter(obj, event);
-    }
-
-public:
-    Q_SIGNAL void enterKeyPressed(QObject *obj, QKeyEvent *evt, bool *pProcessed);
 };
 
 extern int killbyname(const char* progName);

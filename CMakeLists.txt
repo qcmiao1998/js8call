@@ -306,6 +306,7 @@ set (wsjtx_CXXSRCS
   varicode.cpp
   SelfDestructMessageBox.cpp
   messagereplydialog.cpp
+  keyeater.cpp
   APRSISClient.cpp
   mainwindow.cpp
   Configuration.cpp

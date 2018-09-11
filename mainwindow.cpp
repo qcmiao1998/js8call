@@ -8182,7 +8182,7 @@ void MainWindow::setXIT(int n, Frequency base)
 
 void MainWindow::qsy(int hzDelta){
     setRig(m_freqNominal + hzDelta);
-    setFreqOffsetForRestore(1500, false);
+    setFreqOffsetForRestore(m_wideGraph->centerFreq(), false);
 }
 
 void MainWindow::setFreqOffsetForRestore(int freq, bool shouldRestore){
@@ -9729,6 +9729,7 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
         QSound::play(wav);
     }
 
+    msgBox->setModal(false);
     msgBox->show();
 }
 
