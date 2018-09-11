@@ -5939,7 +5939,7 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
     }
 
     if(isNewLine){
-        //m_rxFrameBlockNumbers.remove(freq);
+        m_rxFrameBlockNumbers.remove(freq);
         m_rxFrameBlockNumbers.remove(lowFreq);
         m_rxFrameBlockNumbers.remove(highFreq);
         block = -1;
