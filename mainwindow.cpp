@@ -1219,6 +1219,14 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         selectedOffset = selectedItems.first()->text().toInt();
     }
 
+    if(selectedOffset != -1){
+        auto qsyAction = menu->addAction(QString("Jump to %1Hz").arg(selectedOffset));
+        connect(qsyAction, &QAction::triggered, this, [this, selectedOffset](){
+            setFreqOffsetForRestore(selectedOffset, true);
+        });
+        menu->addSeparator();
+    }
+
     menu->addAction(logAction);
     logAction->setDisabled(missingCallsign);
 
@@ -1231,9 +1239,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     relayAction->setDisabled(missingCallsign);
     menu->addActions({ relayAction });
 
-    auto deselect = menu->addAction("Deselect");
-    deselect->setDisabled(missingCallsign);
-    connect(deselect, &QAction::triggered, this, [this](){
+    auto deselectAction = menu->addAction(QString("Deselect %1").arg(selectedCall));
+    deselectAction->setDisabled(missingCallsign);
+    connect(deselectAction, &QAction::triggered, this, [this](){
         ui->tableWidgetRXAll->clearSelection();
         ui->tableWidgetCalls->clearSelection();
     });
@@ -1281,8 +1289,16 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     QString selectedCall = callsignSelected();
     bool isAllCall = isAllCallIncluded(selectedCall);
     bool missingCallsign = selectedCall.isEmpty();
-    if(!missingCallsign && m_callActivity.contains(selectedCall)){
-        setFreqOffsetForRestore(m_callActivity[selectedCall].freq, true);
+
+    if(!missingCallsign && !isAllCall){
+        int selectedOffset = m_callActivity[selectedCall].freq;
+        if(selectedOffset != -1){
+            auto qsyAction = menu->addAction(QString("Jump to %1Hz...").arg(selectedOffset));
+            connect(qsyAction, &QAction::triggered, this, [this, selectedOffset](){
+                setFreqOffsetForRestore(selectedOffset, true);
+            });
+            menu->addSeparator();
+        }
     }
 
     menu->addAction(logAction);
@@ -1297,7 +1313,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     relayAction->setDisabled(missingCallsign || isAllCall);
     menu->addActions({ relayAction });
 
-    auto deselect = menu->addAction("Deselect");
+    auto deselect = menu->addAction(QString("Deselect %1").arg(selectedCall));
     deselect->setDisabled(missingCallsign);
     connect(deselect, &QAction::triggered, this, [this](){
         ui->tableWidgetRXAll->clearSelection();
@@ -1400,6 +1416,7 @@ void MainWindow::initializeDummyData(){
     foreach(auto call, calls){
         CallDetail cd = {};
         cd.call = call;
+        cd.freq = 500 + 100*i;
         cd.snr = i++;
         cd.utcTimestamp = dt;
         logCallActivity(cd, false);
@@ -7916,12 +7933,7 @@ void MainWindow::on_deselectButton_pressed(){
     clearCallsignSelected();
 }
 
-void MainWindow::on_tableWidgetRXAll_cellClicked(int row, int /*col*/){
-    auto item = ui->tableWidgetRXAll->item(row, 0);
-    int offset = item->text().toInt();
-
-    setFreqOffsetForRestore(offset, false);
-
+void MainWindow::on_tableWidgetRXAll_cellClicked(int /*row*/, int /*col*/){
     ui->tableWidgetCalls->selectionModel()->select(
         ui->tableWidgetCalls->selectionModel()->selection(),
         QItemSelectionModel::Deselect);
@@ -7974,15 +7986,6 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
 }
 
 void MainWindow::on_tableWidgetCalls_cellClicked(int /*row*/, int /*col*/){
-    auto call = callsignSelected();
-
-    if(!m_callActivity.contains(call)){
-        return;
-    }
-
-    auto d = m_callActivity[call];
-    setFreqOffsetForRestore(d.freq, false);
-
     ui->tableWidgetRXAll->selectionModel()->select(
         ui->tableWidgetRXAll->selectionModel()->selection(),
         QItemSelectionModel::Deselect);
@@ -7992,6 +7995,7 @@ void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
     on_tableWidgetCalls_cellClicked(row, col);
 
     auto call = callsignSelected();
+
     addMessageText(call);
 }
 
@@ -8207,7 +8211,7 @@ bool MainWindow::tryRestoreFreqOffset(){
 
 void MainWindow::setFreq4(int rxFreq, int txFreq)
 {
-  // don't allow QSY if we've already queued a transmission
+  // don't allow QSY if we've already queued a transmission, unless we have that functionality enabled.
   if(isMessageQueuedForTransmit() && !m_config.tx_qsy_allowed()){
       return;
   }
@@ -9684,7 +9688,7 @@ void MainWindow::processCommandActivity() {
         // unless, this is an allcall, to which we should be responding on a clear frequency offset
         // we always want to make sure that the directed cache has been updated at this point so we have the
         // most information available to make a frequency selection.
-        enqueueMessage(PriorityNormal, reply, isAllCall ? -1 : d.freq, nullptr);
+        enqueueMessage(PriorityNormal, reply, -1, nullptr);
     }
 }
 
@@ -9725,7 +9729,7 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
         }
 
         if (btn == ab){
-            enqueueMessage(PriorityHigh, QString("%1%2ACK").arg(from).arg(cmd), d.freq, nullptr);
+            enqueueMessage(PriorityHigh, QString("%1%2ACK").arg(from).arg(cmd), -1, nullptr);
         }
 
         if(btn == rb){
@@ -9734,7 +9738,7 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
             diag->setLabel(QString("Message to send to %1:").arg(fromLabel));
 
             connect(diag, &MessageReplyDialog::accepted, this, [this, diag, from, cmd, d](){
-                enqueueMessage(PriorityHigh, QString("%1%2%3").arg(from).arg(cmd).arg(diag->textValue()), d.freq, nullptr);
+                enqueueMessage(PriorityHigh, QString("%1%2%3").arg(from).arg(cmd).arg(diag->textValue()), -1, nullptr);
             });
 
             diag->show();
@@ -9796,12 +9800,8 @@ void MainWindow::processTxQueue(){
         f = currentFreqOffset();
     }
 
-    if(!isFreqOffsetFree(f, 60)){
-        f = findFreeFreqOffset(500, 2000, 60);
-    }
-
     // we need a valid frequency...
-    if(f == 0){
+    if(f <= 0){
         return;
     }
 
@@ -9826,7 +9826,7 @@ void MainWindow::processTxQueue(){
     // add the message to the outgoing message text box
     addMessageText(message.message, true);
 
-    // check to see if we have autoreply enabled...(or if this is a beacon and the beacon button is enabled)
+    // check to see if this is a high priority message, or if we have autoreply enabled, or if this is a beacon and the beacon button is enabled
     if(message.priority >= PriorityHigh   ||
        (ui->autoReplyButton->isChecked()) ||
        (ui->beaconButton->isChecked() && message.message.contains("BEACON"))
