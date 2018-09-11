@@ -9461,6 +9461,13 @@ void MainWindow::processCommandActivity() {
 
         // QUERIED SNR
         if (d.cmd == "?") {
+            // do not respond to allcall ? if:
+            // 1. we recently responded to one
+            // 2. or, we are in a directed qso...(i.e., we have a callsign selected)
+            if(!callsignSelected().isEmpty()){
+                continue;
+            }
+
             reply = QString("%1 SNR %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
         }
 
