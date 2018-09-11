@@ -9251,6 +9251,23 @@ void MainWindow::processBufferedActivity() {
     foreach(auto freq, m_messageBuffer.keys()) {
         auto buffer = m_messageBuffer[freq];
 
+        // check to make sure we empty old buffers by getting the latest timestamp
+        // and checking to see if it's older than one minute.
+        auto dt = QDateTime::currentDateTimeUtc().addDays(-1);
+        if(buffer.cmd.utcTimestamp.isValid()){
+            dt = qMax(dt, buffer.cmd.utcTimestamp);
+        }
+        if(!buffer.compound.isEmpty()){
+            dt = qMax(dt, buffer.compound.last().utcTimestamp);
+        }
+        if(!buffer.msgs.isEmpty()){
+            dt = qMax(dt, buffer.msgs.last().utcTimestamp);
+        }
+        if(dt.secsTo(QDateTime::currentDateTimeUtc()) > 60){
+            m_messageBuffer.remove(freq);
+            continue;
+        }
+
         if (buffer.msgs.isEmpty()) {
             continue;
         }

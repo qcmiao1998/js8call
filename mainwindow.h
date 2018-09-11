@@ -711,8 +711,8 @@ private:
   };
 
   struct MessageBuffer {
-    QQueue<CallDetail> compound;
     CommandDetail cmd;
+    QQueue<CallDetail> compound;
     QList<ActivityDetail> msgs;
   };
 
