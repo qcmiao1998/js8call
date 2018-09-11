@@ -1406,6 +1406,10 @@ void MainWindow::initializeDummyData(){
     }
 
     displayActivity(true);
+
+    QTimer::singleShot(10000, this, [this](){
+        tx_watchdog(true);
+    });
 }
 
 void MainWindow::initialize_fonts ()
@@ -4682,6 +4686,10 @@ void MainWindow::guiUpdate()
 
 void MainWindow::startTx()
 {
+  if(m_tx_watchdog){
+      return;
+  }
+
   if(!prepareNextMessageFrame()){
     return;
   }
@@ -4755,7 +4763,7 @@ void MainWindow::stopTx()
     tx_status_label.setText("");
   }
 
-  if(prepareNextMessageFrame()){
+  if(!m_tx_watchdog && prepareNextMessageFrame()){
       continueTx();
   } else {
       // TODO: jsherer - split this up...
@@ -9506,7 +9514,7 @@ void MainWindow::processCommandActivity() {
 #endif
 
         // PROCESS RELAY
-        else if (d.cmd == ">" && !isAllCall && !m_config.relay_off()) {
+        else if (d.cmd == ">" && !isAllCall) {
 
             // 1. see if there are any more hops to process
             // 2. if so, forward
@@ -9517,8 +9525,8 @@ void MainWindow::processCommandActivity() {
             auto text = d.text;
             auto match = re.match(text);
 
-            // if the text starts with a callsign, relay.
-            if(match.hasMatch()){
+            // if the text starts with a callsign, and relay is not disabled, then relay.
+            if(match.hasMatch() && !m_config.relay_off()){
                 // replace freetext with relayed free text
                 if(match.captured("type") != ">"){
                     text = text.replace(match.capturedStart("type"), match.capturedLength("type"), ">");
@@ -10834,6 +10842,7 @@ void MainWindow::tx_watchdog (bool triggered)
       m_bTxTime=false;
       if (m_tune) stop_tuning ();
       if (m_auto) auto_tx_mode (false);
+      stopTx();
       tx_status_label.setStyleSheet ("QLabel{background-color: #ff0000}");
       tx_status_label.setText ("Runaway Tx watchdog");
       QApplication::alert (this);

@@ -359,7 +359,7 @@
           <item>
            <widget class="QCheckBox" name="relay_disabled_check_box">
             <property name="text">
-             <string>Disable message passing (&gt;) when AUTO is enabled</string>
+             <string>Disable message relay (&gt;) when AUTO is enabled</string>
             </property>
            </widget>
           </item>
@@ -570,6 +570,9 @@
               </property>
               <property name="prefix">
                <string/>
+              </property>
+              <property name="singleStep">
+               <number>5</number>
               </property>
               <property name="value">
                <number>0</number>

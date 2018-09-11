@@ -1587,6 +1587,9 @@ void Configuration::impl::read_settings ()
   disable_TX_on_73_ = settings_->value ("73TxDisable", false).toBool ();
   beacon_ = settings_->value ("TxBeacon", 30).toInt ();
   watchdog_ = settings_->value ("TxWatchdog", 0).toInt ();
+  if(watchdog_){
+      watchdog_ = qMax(5, watchdog_);
+  }
   TX_messages_ = settings_->value ("Tx2QSO", true).toBool ();
   enable_VHF_features_ = settings_->value("VHFUHF",false).toBool ();
   decode_at_52s_ = settings_->value("Decode52",false).toBool ();
