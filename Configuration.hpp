@@ -113,7 +113,7 @@ public:
   double degrade() const;
   double txDelay() const;
   bool id_after_73 () const;
-  bool tx_QSY_allowed () const;
+  bool tx_qsy_allowed () const;
   bool spot_to_reporting_networks () const;
   void set_spot_to_reporting_networks (bool);
   bool transmit_directed() const;

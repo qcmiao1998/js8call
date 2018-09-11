@@ -8137,7 +8137,7 @@ void MainWindow::on_pbTxMode_clicked()
 
 void MainWindow::setXIT(int n, Frequency base)
 {
-  if (m_transmitting && !m_config.tx_QSY_allowed ()) return;
+  if (m_transmitting && !m_config.tx_qsy_allowed ()) return;
   // If "CQ nnn ..." feature is active, set the proper Tx frequency
   if(m_config.split_mode () && ui->cbCQTx->isEnabled () && ui->cbCQTx->isVisible () &&
      ui->cbCQTx->isChecked())
@@ -8200,7 +8200,7 @@ bool MainWindow::tryRestoreFreqOffset(){
 void MainWindow::setFreq4(int rxFreq, int txFreq)
 {
   // don't allow QSY if we've already queued a transmission
-  if(isMessageQueuedForTransmit()){
+  if(isMessageQueuedForTransmit() && !m_config.tx_qsy_allowed()){
       return;
   }
 
@@ -8600,7 +8600,7 @@ void MainWindow::transmitDisplay (bool transmitting)
       m_btxok=true;
     }
 
-    auto QSY_allowed = !transmitting or m_config.tx_QSY_allowed () or
+    auto QSY_allowed = !transmitting or m_config.tx_qsy_allowed () or
       !m_config.split_mode ();
     if (ui->cbHoldTxFreq->isChecked ()) {
       ui->RxFreqSpinBox->setEnabled (QSY_allowed);
@@ -10616,9 +10616,9 @@ void MainWindow::astroUpdate ()
                                                    m_config.my_grid(), m_hisGrid,
                                                    m_freqNominal,
                                                    "Echo" == m_mode, m_transmitting,
-                                                   !m_config.tx_QSY_allowed (), m_TRperiod);
+                                                   !m_config.tx_qsy_allowed (), m_TRperiod);
       // no Doppler correction in Tx if rig can't do it
-      if (m_transmitting && !m_config.tx_QSY_allowed ()) return;
+      if (m_transmitting && !m_config.tx_qsy_allowed ()) return;
       if (!m_astroWidget->doppler_tracking ()) return;
       if ((m_monitoring || m_transmitting)
           // no Doppler correction below 6m
@@ -10680,7 +10680,7 @@ void MainWindow::setRig (Frequency f)
       && m_frequency_list_fcal_iter != m_config.frequencies ()->end ()) {
     m_freqNominal = m_frequency_list_fcal_iter->frequency_ - ui->RxFreqSpinBox->value ();
   }
-  if(m_transmitting && !m_config.tx_QSY_allowed ()) return;
+  if(m_transmitting && !m_config.tx_qsy_allowed ()) return;
   if ((m_monitoring || m_transmitting) && m_config.transceiver_online ())
     {
       if (m_transmitting && m_config.split_mode ())

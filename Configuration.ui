@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>692</width>
-    <height>706</height>
+    <height>735</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -390,25 +390,22 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="tx_QSY_check_box">
+           <widget class="QCheckBox" name="transmit_directed_check_box">
+            <property name="text">
+             <string>Immediately transmit directed responses from the menu</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="tx_qsy_check_box">
             <property name="enabled">
              <bool>true</bool>
-            </property>
-            <property name="visible">
-             <bool>false</bool>
             </property>
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Some rigs are not able to process CAT commands while transmitting. This means that if you are operating in split mode you may have to uncheck this option.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>Allow Tx frequency changes while transmitting</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="transmit_directed_check_box">
-            <property name="text">
-             <string>Immediately transmit directed responses from the menu</string>
             </property>
            </widget>
           </item>
@@ -3241,7 +3238,6 @@ soundcard changes</string>
   <tabstop>tx_watchdog_spin_box</tabstop>
   <tabstop>CW_id_after_73_check_box</tabstop>
   <tabstop>enable_VHF_features_check_box</tabstop>
-  <tabstop>tx_QSY_check_box</tabstop>
   <tabstop>single_decode_check_box</tabstop>
   <tabstop>decode_at_52s_check_box</tabstop>
   <tabstop>CW_id_interval_spin_box</tabstop>
@@ -3372,12 +3368,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
+  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="split_mode_button_group"/>
   <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
  </buttongroups>
 </ui>

@@ -597,7 +597,7 @@ private:
   double degrade_;
   double txDelay_;
   bool id_after_73_;
-  bool tx_QSY_allowed_;
+  bool tx_qsy_allowed_;
   bool spot_to_reporting_networks_;
   bool transmit_directed_;
   bool autoreply_off_at_startup_;
@@ -709,7 +709,7 @@ double Configuration::degrade() const {return m_->degrade_;}
 double Configuration::txDelay() const {return m_->txDelay_;}
 qint32 Configuration::RxBandwidth() const {return m_->RxBandwidth_;}
 bool Configuration::id_after_73 () const {return m_->id_after_73_;}
-bool Configuration::tx_QSY_allowed () const {return m_->tx_QSY_allowed_;}
+bool Configuration::tx_qsy_allowed () const {return m_->tx_qsy_allowed_;}
 bool Configuration::spot_to_reporting_networks () const
 {
   // rig must be open and working to spot externally
@@ -1291,7 +1291,7 @@ void Configuration::impl::initialize_models ()
   ui_->sound_dm_path_display_label->setText(sound_dm_path_);
   ui_->sound_am_path_display_label->setText(sound_am_path_);
   ui_->CW_id_after_73_check_box->setChecked (id_after_73_);
-  ui_->tx_QSY_check_box->setChecked (tx_QSY_allowed_);
+  ui_->tx_qsy_check_box->setChecked (tx_qsy_allowed_);
   ui_->psk_reporter_check_box->setChecked (spot_to_reporting_networks_);
   ui_->transmit_directed_check_box->setChecked(transmit_directed_);
   ui_->autoreply_off_check_box->setChecked (autoreply_off_at_startup_);
@@ -1530,7 +1530,7 @@ void Configuration::impl::read_settings ()
   monitor_last_used_ = settings_->value ("MonitorLastUsed", false).toBool ();
   spot_to_reporting_networks_ = settings_->value ("PSKReporter", true).toBool ();
   id_after_73_ = settings_->value ("After73", false).toBool ();
-  tx_QSY_allowed_ = settings_->value ("TxQSYAllowed", false).toBool ();
+  tx_qsy_allowed_ = settings_->value ("TxQSYAllowed", false).toBool ();
   use_dynamic_info_ = settings_->value ("AutoGrid", false).toBool ();
 
   auto loadedMacros = settings_->value ("Macros", QStringList {"TNX 73 GL"}).toStringList();
@@ -1681,7 +1681,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MonitorLastUsed", monitor_last_used_);
   settings_->setValue ("PSKReporter", spot_to_reporting_networks_);
   settings_->setValue ("After73", id_after_73_);
-  settings_->setValue ("TxQSYAllowed", tx_QSY_allowed_);
+  settings_->setValue ("TxQSYAllowed", tx_qsy_allowed_);
   settings_->setValue ("Macros", macros_.stringList ());
   settings_->setValue (versionedFrequenciesSettingsKey, QVariant::fromValue (frequencies_.frequency_list ()));
   settings_->setValue ("stations", QVariant::fromValue (stations_.station_list ()));
@@ -2120,7 +2120,7 @@ void Configuration::impl::accept ()
   degrade_ = ui_->sbDegrade->value ();
   RxBandwidth_ = ui_->sbBandwidth->value ();
   id_after_73_ = ui_->CW_id_after_73_check_box->isChecked ();
-  tx_QSY_allowed_ = ui_->tx_QSY_check_box->isChecked ();
+  tx_qsy_allowed_ = ui_->tx_qsy_check_box->isChecked ();
   transmit_directed_ = ui_->transmit_directed_check_box->isChecked();
   autoreply_off_at_startup_ = ui_->autoreply_off_check_box->isChecked ();
   relay_disabled_ = ui_->relay_disabled_check_box->isChecked();
