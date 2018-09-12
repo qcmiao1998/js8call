@@ -29,8 +29,9 @@ convert '/tmp/image-%d.png[0-1]' -background transparent	\
 rm /tmp/image-0.png /tmp/image-1.png
 identify -format '%f %p/%n %m %C/%Q %r %G %A %z\n' ../icons/windows-icons/ft8call.ico
 #
-inkscape -z -e /dev/stdout -w 150 -h 57 -b white installer_logo.svg | tail -n +4 |	\
-    convert png:- -resize 150x57 +matte BMP3:../icons/windows-icons/installer_logo.bmp
+#inkscape -z -e /dev/stdout -w 150 -h 57 -b white installer_logo.svg | tail -n +4 |	\
+#    convert png:- -resize 150x57 +matte BMP3:../icons/windows-icons/installer_logo.bmp
+convert png:installer_logo.svg.png -resize 150x57 +matte BMP3:../icons/windows-icons/installer_logo.bmp
 identify -format '%f %p/%n %m %C/%Q %r %G %A %z\n' ../icons/windows-icons/installer_logo.bmp
 
 #
