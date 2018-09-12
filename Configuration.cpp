@@ -1428,6 +1428,7 @@ void Configuration::impl::read_settings ()
     {
       next_font_ = font_;
     }
+  ui_->font_push_button->setText(QString("Application Font (%1 %2)").arg(next_font_.family()).arg(next_font_.pointSize()));
 
   if (next_tx_text_font_.fromString (settings_->value ("TXTextFont", QGuiApplication::font ().toString ()).toString ())
       && next_tx_text_font_ != tx_text_font_)
@@ -2251,6 +2252,8 @@ void Configuration::impl::reject ()
 void Configuration::impl::on_font_push_button_clicked ()
 {
   next_font_ = QFontDialog::getFont (0, next_font_, this);
+
+  ui_->font_push_button->setText(QString("Application Font (%1 %2)").arg(next_font_.family()).arg(next_font_.pointSize()));
 }
 
 QColor getColor(QColor initial, QWidget *parent, QString title){
