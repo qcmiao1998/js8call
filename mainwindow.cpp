@@ -1417,11 +1417,13 @@ void MainWindow::initializeDummyData(){
         CallDetail cd = {};
         cd.call = call;
         cd.freq = 500 + 100*i;
-        cd.snr = i;
+        cd.snr = i == 3 ? -100 : i;
         cd.utcTimestamp = dt;
+        cd.grid = i == 5 ? "J042" : i == 6 ? "FN42" : "";
         logCallActivity(cd, false);
 
         ActivityDetail ad = {};
+        ad.snr = i == 3 ? -100 : i;
         ad.freq = 500 + 100*i;
         ad.text = QString("%1: %2 TEST").arg(call).arg(m_config.my_callsign());
         ad.utcTimestamp = dt;
@@ -9914,6 +9916,13 @@ void MainWindow::displayBandActivity() {
         // Sort!
         QList < int > keys = m_bandActivity.keys();
 
+        auto sortBy = getSortBy("bandActivity", "offset");
+        bool reverse = false;
+        if(sortBy.startsWith("-")){
+            sortBy = sortBy.mid(1);
+            reverse = true;
+        }
+
         auto compareTimestamp = [this](const int left, int right) {
             auto leftItems = m_bandActivity[left];
             auto rightItems = m_bandActivity[right];
@@ -9932,7 +9941,7 @@ void MainWindow::displayBandActivity() {
             return leftLast.utcTimestamp < rightLast.utcTimestamp;
         };
 
-        auto compareSNR = [this](const int left, int right) {
+        auto compareSNR = [this, reverse](const int left, int right) {
             auto leftItems = m_bandActivity[left];
             auto rightItems = m_bandActivity[right];
 
@@ -9944,18 +9953,18 @@ void MainWindow::displayBandActivity() {
                 return true;
             }
 
-            auto leftLast = leftItems.last();
-            auto rightLast = rightItems.last();
+            auto leftActivity = leftItems.last();
+            auto rightActivity = rightItems.last();
 
-            return leftLast.snr < rightLast.snr;
+            if(leftActivity.snr < -60 || leftActivity.snr > 60) {
+                leftActivity.snr *= reverse ? 1 : -1;
+            }
+            if(rightActivity.snr < -60 || rightActivity.snr > 60) {
+                rightActivity.snr *= reverse ? 1 : -1;
+            }
+
+            return leftActivity.snr < rightActivity.snr;
         };
-
-        auto sortBy = getSortBy("bandActivity", "offset");
-        bool reverse = false;
-        if(sortBy.startsWith("-")){
-            sortBy = sortBy.mid(1);
-            reverse = true;
-        }
 
         // compare offset
         qStableSort(keys.begin(), keys.end());
@@ -10096,8 +10105,16 @@ void MainWindow::displayCallActivity() {
             ui->tableWidgetCalls->item(0, 0)->setSelected(true);
         }
 
+
         // Build the table
         QList < QString > keys = m_callActivity.keys();
+
+        auto sortBy = getSortBy("callActivity", "callsign");
+        bool reverse = false;
+        if(sortBy.startsWith("-")){
+            sortBy = sortBy.mid(1);
+            reverse = true;
+        }
 
         auto compareOffset = [this](const QString left, QString right) {
             auto leftActivity = m_callActivity[left];
@@ -10106,22 +10123,18 @@ void MainWindow::displayCallActivity() {
             return leftActivity.freq < rightActivity.freq;
         };
 
-        auto compareDistance = [this](const QString left, QString right) {
+        auto compareDistance = [this, reverse](const QString left, QString right) {
             auto leftActivity = m_callActivity[left];
             auto rightActivity = m_callActivity[right];
 
-            if(leftActivity.grid.isEmpty()){
-                return false;
+            int leftDistance = reverse ? -100000 : 100000;
+            int rightDistance = reverse ? -100000 : 100000;
+            if(!leftActivity.grid.isEmpty()){
+                calculateDistance(leftActivity.grid, &leftDistance);
             }
-
-            if(rightActivity.grid.isEmpty()){
-                return true;
+            if(!rightActivity.grid.isEmpty()){
+                calculateDistance(rightActivity.grid, &rightDistance);
             }
-
-            int leftDistance = 0;
-            int rightDistance = 0;
-            calculateDistance(leftActivity.grid, &leftDistance);
-            calculateDistance(rightActivity.grid, &rightDistance);
 
             return leftDistance < rightDistance;
         };
@@ -10133,19 +10146,20 @@ void MainWindow::displayCallActivity() {
             return leftActivity.utcTimestamp < rightActivity.utcTimestamp;
         };
 
-        auto compareSNR = [this](const QString left, QString right) {
+        auto compareSNR = [this, reverse](const QString left, QString right) {
             auto leftActivity = m_callActivity[left];
             auto rightActivity = m_callActivity[right];
+
+            if(leftActivity.snr < -60 || leftActivity.snr > 60) {
+                leftActivity.snr *= reverse ? 1 : -1;
+            }
+            if(rightActivity.snr < -60 || rightActivity.snr > 60) {
+                rightActivity.snr *= reverse ? 1 : -1;
+            }
 
             return leftActivity.snr < rightActivity.snr;
         };
 
-        auto sortBy = getSortBy("callActivity", "callsign");
-        bool reverse = false;
-        if(sortBy.startsWith("-")){
-            sortBy = sortBy.mid(1);
-            reverse = true;
-        }
 
         // compare callsign
         qStableSort(keys.begin(), keys.end());
