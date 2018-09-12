@@ -10054,7 +10054,11 @@ void MainWindow::displayBandActivity() {
                 }
 
                 bool isDirectedAllCall = false;
-                if (isDirectedOffset(offset, &isDirectedAllCall) && !isDirectedAllCall) {
+                // TODO: jsherer - there's a potential here for a previous allcall o poison the highlight.
+                if (
+                    (isDirectedOffset(offset, &isDirectedAllCall) && !isDirectedAllCall) ||
+                    (text.last().contains(Radio::base_callsign(m_config.my_callsign())))
+                ) {
                     offsetItem->setBackground(QBrush(m_config.color_MyCall()));
                     ageItem->setBackground(QBrush(m_config.color_MyCall()));
                     snrItem->setBackground(QBrush(m_config.color_MyCall()));
