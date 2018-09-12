@@ -1417,10 +1417,20 @@ void MainWindow::initializeDummyData(){
         CallDetail cd = {};
         cd.call = call;
         cd.freq = 500 + 100*i;
-        cd.snr = i++;
+        cd.snr = i;
         cd.utcTimestamp = dt;
         logCallActivity(cd, false);
+
+        ActivityDetail ad = {};
+        ad.freq = 500 + 100*i;
+        ad.text = QString("%1: %2 TEST").arg(call).arg(m_config.my_callsign());
+        ad.utcTimestamp = dt;
+        m_bandActivity[500+100*i] = { ad };
+
+        i++;
     }
+
+
 
     displayActivity(true);
 
@@ -8187,6 +8197,25 @@ void MainWindow::setXIT(int n, Frequency base)
 void MainWindow::qsy(int hzDelta){
     setRig(m_freqNominal + hzDelta);
     setFreqOffsetForRestore(m_wideGraph->centerFreq(), false);
+
+    // adjust band activity frequencies
+    QMap<int, QList<ActivityDetail>> newActivity;
+    foreach(auto offset, m_bandActivity.keys()){
+        if(m_bandActivity[offset].isEmpty()){
+            continue;
+        }
+        newActivity[offset - hzDelta] = m_bandActivity[offset];
+        newActivity[offset - hzDelta].last().freq -= hzDelta;
+    }
+    m_bandActivity.clear();
+    m_bandActivity.unite(newActivity);
+
+    // adjust call activity frequencies
+    foreach(auto call, m_callActivity.keys()){
+        m_callActivity[call].freq -= hzDelta;
+    }
+
+    displayActivity(true);
 }
 
 void MainWindow::setFreqOffsetForRestore(int freq, bool shouldRestore){
