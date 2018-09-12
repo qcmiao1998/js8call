@@ -4470,10 +4470,10 @@ list. The list can be maintained in Settings (F2).</string>
   </action>
   <action name="actionDelete_all_wav_files_in_SaveDir">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
-    <string>Delete all *.wav &amp;&amp; *.c2 files in SaveDir</string>
+    <string>Delete all *.wav files in SaveDir</string>
    </property>
   </action>
   <action name="actionQuickDecode">
@@ -4499,9 +4499,6 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>None</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
    </property>
   </action>
   <action name="actionSave_all">

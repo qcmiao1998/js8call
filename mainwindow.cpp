@@ -170,7 +170,7 @@ QVector<QColor> g_ColorTbl;
 
 namespace
 {
-  Radio::Frequency constexpr default_frequency {14078500};
+  Radio::Frequency constexpr default_frequency {14078000};
 
   QRegExp message_alphabet {"[^\\x00-\\x1F]*"}; // base alphabet supported by FT8CALL
 
@@ -1730,9 +1730,12 @@ void MainWindow::readSettings()
   m_modeTx=m_settings->value("ModeTx","JT9").toString();
   if(m_modeTx.mid(0,3)=="JT9") ui->pbTxMode->setText("Tx JT9  @");
   if(m_modeTx=="JT65") ui->pbTxMode->setText("Tx JT65  #");
-  ui->actionNone->setChecked(m_settings->value("SaveNone",true).toBool());
-  ui->actionSave_decoded->setChecked(m_settings->value("SaveDecoded",false).toBool());
-  ui->actionSave_all->setChecked(m_settings->value("SaveAll",false).toBool());
+
+  // these save settings should never be enabled unless specifically called out by the user for every session.
+  ui->actionNone->setChecked(true);
+  ui->actionSave_decoded->setChecked(false);
+  ui->actionSave_all->setChecked(false);
+
   ui->RxFreqSpinBox->setValue(0); // ensure a change is signaled
   ui->RxFreqSpinBox->setValue(m_settings->value("RxFreq",1500).toInt());
   m_nSubMode=m_settings->value("SubMode",0).toInt();
@@ -2001,11 +2004,15 @@ void MainWindow::dataSink(qint64 frames)
       }
       m_fileToSave.clear ();
 
-      // the following is potential a threading hazard - not a good
-      // idea to pass pointer to be processed in another thread
-      m_saveWAVWatcher.setFuture (QtConcurrent::run (std::bind (&MainWindow::save_wave_file,
-            this, m_fnameWE, &dec_data.d2[0], m_TRperiod, m_config.my_callsign(),
-            m_config.my_grid(), m_mode, m_nSubMode, m_freqNominal, m_hisCall, m_hisGrid)));
+      if(m_saveAll or m_bAltV or (m_bDecoded and m_saveDecoded) or (m_mode!="MSK144" and m_mode!="FT8")) {
+          m_bAltV=false;
+          // the following is potential a threading hazard - not a good
+          // idea to pass pointer to be processed in another thread
+          m_saveWAVWatcher.setFuture (QtConcurrent::run (std::bind (&MainWindow::save_wave_file,
+                this, m_fnameWE, &dec_data.d2[0], m_TRperiod, m_config.my_callsign(),
+                m_config.my_grid(), m_mode, m_nSubMode, m_freqNominal, m_hisCall, m_hisGrid)));
+      }
+
       if (m_mode=="WSPR") {
         QString c2name_string {m_fnameWE + ".c2"};
         int len1=c2name_string.length();
@@ -2096,6 +2103,7 @@ QString MainWindow::save_wave_file (QString const& name, short const * data, int
       {{{'I','C','M','T'}}, comment.toLocal8Bit ()},
         };
   auto file_name = name + ".wav";
+  qDebug() << "saving" << file_name;
   BWFFile wav {format, file_name, list_info};
   if (!wav.open (BWFFile::WriteOnly)
       || 0 > wav.write (reinterpret_cast<char const *> (data)
@@ -2208,7 +2216,7 @@ void MainWindow::fastSink(qint64 frames)
       auto const& period_start = now.addSecs (-n);
       m_fnameWE = m_config.save_directory ().absoluteFilePath (period_start.toString ("yyMMdd_hhmmss"));
       m_fileToSave.clear ();
-      if(m_saveAll or m_bAltV or (m_bDecoded and m_saveDecoded) or (m_mode!="MSK144")) {
+      if(m_saveAll or m_bAltV or (m_bDecoded and m_saveDecoded) or (m_mode!="MSK144" and m_mode!="FT8")) {
         m_bAltV=false;
         // the following is potential a threading hazard - not a good
         // idea to pass pointer to be processed in another thread
@@ -3119,7 +3127,7 @@ void MainWindow::diskDat()                                   //diskDat()
 void MainWindow::on_actionDelete_all_wav_files_in_SaveDir_triggered()
 {
   auto button = MessageBox::query_message (this, tr ("Confirm Delete"),
-                                             tr ("Are you sure you want to delete all *.wav and *.c2 files in \"%1\"?")
+                                             tr ("Are you sure you want to delete all *.wav files in \"%1\"?")
                                              .arg (QDir::toNativeSeparators (m_config.save_directory ().absolutePath ())));
   if (MessageBox::Yes == button) {
     Q_FOREACH (auto const& file
