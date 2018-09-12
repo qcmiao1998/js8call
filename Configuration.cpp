@@ -2322,7 +2322,7 @@ void Configuration::impl::on_rxForegroundButton_clicked()
 
 void Configuration::impl::on_rxFontButton_clicked ()
 {
-  next_rx_text_font_ = QFontDialog::getFont (0, rx_text_font_ , this
+  next_rx_text_font_ = QFontDialog::getFont (0, next_rx_text_font_ , this
                                                   , tr ("Font Chooser")
 #if QT_VERSION >= 0x050201
                                                   , 0
@@ -2357,7 +2357,7 @@ void Configuration::impl::on_txForegroundButton_clicked()
 
 void Configuration::impl::on_txFontButton_clicked ()
 {
-  next_tx_text_font_ = QFontDialog::getFont (0, tx_text_font_ , this
+  next_tx_text_font_ = QFontDialog::getFont (0, next_tx_text_font_ , this
                                                   , tr ("Font Chooser")
 #if QT_VERSION >= 0x050201
                                                   , 0
