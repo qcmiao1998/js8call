@@ -7667,20 +7667,6 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto stationPowerQueryAction = menu->addAction(QString("%1% - What is your station power?").arg(call).trimmed());
-    stationPowerQueryAction->setDisabled(isAllCall);
-    connect(stationPowerQueryAction, &QAction::triggered, this, [this](){
-
-        QString selectedCall = callsignSelected();
-        if(selectedCall.isEmpty()){
-            return;
-        }
-
-        addMessageText(QString("%1%").arg(selectedCall), true);
-
-        if(m_config.transmit_directed()) toggleTx(true);
-    });
-
     auto heardQueryAction = menu->addAction(QString("%1$ - What are the stations are you hearing? (Top 4 ranked by strongest SNR)").arg(call).trimmed());
     heardQueryAction->setDisabled(isAllCall);
     connect(heardQueryAction, &QAction::triggered, this, [this](){
