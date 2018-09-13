@@ -1466,7 +1466,7 @@ void MainWindow::initializeDummyData(){
         cd.freq = 500 + 100*i;
         cd.snr = i == 3 ? -100 : i;
         cd.utcTimestamp = dt;
-        cd.grid = i == 5 ? "J042" : i == 6 ? "FN42" : "";
+        cd.grid = i == 5 ? "J042" : i == 6 ? "FN42FN42FN" : "";
         logCallActivity(cd, false);
 
         ActivityDetail ad = {};
@@ -10262,7 +10262,9 @@ void MainWindow::displayCallActivity() {
             ui->tableWidgetCalls->setItem(row, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
             ui->tableWidgetCalls->setItem(row, 2, new QTableWidgetItem(QString("%1").arg(d.freq)));
             ui->tableWidgetCalls->setItem(row, 3, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
-            ui->tableWidgetCalls->setItem(row, 4, new QTableWidgetItem(QString("%1").arg(d.grid)));
+            auto gridItem = new QTableWidgetItem(QString("%1").arg(d.grid.left(4)));
+            gridItem->setToolTip(d.grid);
+            ui->tableWidgetCalls->setItem(row, 4, gridItem);
 
             auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
             distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
