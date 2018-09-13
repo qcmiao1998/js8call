@@ -9553,7 +9553,7 @@ void MainWindow::processCommandActivity() {
             // do not respond to allcall ? if:
             // 1. we recently responded to one
             // 2. or, we are in a directed qso...(i.e., we have a callsign selected)
-            if(!callsignSelected().isEmpty()){
+            if(isAllCall && !callsignSelected().isEmpty()){
                 continue;
             }
 
