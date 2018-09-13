@@ -1256,9 +1256,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     }
 
     if(selectedOffset != -1){
-        auto qsyAction = menu->addAction(QString("Jump to %1Hz").arg(selectedOffset));
+        auto qsyAction = menu->addAction(QString("Jump to %1Hz...").arg(selectedOffset));
         connect(qsyAction, &QAction::triggered, this, [this, selectedOffset](){
-            setFreqOffsetForRestore(selectedOffset, true);
+            setFreqOffsetForRestore(selectedOffset, false);
         });
         menu->addSeparator();
     }
@@ -1331,7 +1331,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         if(selectedOffset != -1){
             auto qsyAction = menu->addAction(QString("Jump to %1Hz...").arg(selectedOffset));
             connect(qsyAction, &QAction::triggered, this, [this, selectedOffset](){
-                setFreqOffsetForRestore(selectedOffset, true);
+                setFreqOffsetForRestore(selectedOffset, false);
             });
             menu->addSeparator();
         }
