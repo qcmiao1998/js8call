@@ -2747,7 +2747,7 @@ Right click for insert and delete options.</string>
           <item>
            <widget class="QGroupBox" name="groupBox_9">
             <property name="title">
-             <string>Band Activity Background</string>
+             <string>Band Activity Background:</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_15">
              <item row="0" column="0">
@@ -2818,12 +2818,55 @@ Right click for insert and delete options.</string>
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="groupBox_12">
+           <widget class="QGroupBox" name="groupBox_8">
             <property name="title">
-             <string>Message Background</string>
+             <string>Messages:</string>
             </property>
-            <layout class="QGridLayout" name="gridLayout_13">
-             <item row="0" column="0">
+            <layout class="QGridLayout" name="gridLayout_8">
+             <item row="6" column="1">
+              <widget class="QPushButton" name="rxFontButton">
+               <property name="text">
+                <string>Font</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QPushButton" name="rxBackgroundButton">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>140</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Textbox Color</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QPushButton" name="rxForegroundButton">
+               <property name="text">
+                <string>Foreground Color</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="0">
+              <widget class="QLabel" name="rxForegroundLabel">
+               <property name="styleSheet">
+                <string notr="true">QLabel{background-color: #ffeaa7}</string>
+               </property>
+               <property name="text">
+                <string>K1ABC</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
               <widget class="QLabel" name="rxLabel">
                <property name="enabled">
                 <bool>true</bool>
@@ -2845,24 +2888,98 @@ Right click for insert and delete options.</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
-              <widget class="QPushButton" name="rxBackgroundButton">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>140</width>
-                 <height>0</height>
-                </size>
+             <item row="9" column="0">
+              <widget class="QLabel" name="txForegroundLabel">
+               <property name="styleSheet">
+                <string notr="true">QLabel{background-color: #ffeaa7}</string>
                </property>
                <property name="text">
-                <string>Receive Background Color</string>
+                <string>K1ABC</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="txLabel">
+             <item row="8" column="0">
+              <widget class="QLabel" name="label_22">
+               <property name="text">
+                <string>Transmitted:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="10" column="1">
+              <widget class="QPushButton" name="txFontButton">
+               <property name="text">
+                <string>Font</string>
+               </property>
+              </widget>
+             </item>
+             <item row="9" column="1">
+              <widget class="QPushButton" name="txForegroundButton">
+               <property name="text">
+                <string>Foreground Color</string>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="1">
+              <spacer name="verticalSpacer_10">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="label_21">
+               <property name="text">
+                <string>Received:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <spacer name="verticalSpacer_9">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_14">
+            <property name="title">
+             <string>Message Composition:</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_18">
+             <item row="0" column="1">
+              <widget class="QPushButton" name="composeBackgroundButton">
+               <property name="text">
+                <string> Textbox Color</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QPushButton" name="composeFontButton">
+               <property name="text">
+                <string>Font</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="composeLabel">
                <property name="enabled">
                 <bool>true</bool>
                </property>
@@ -2883,84 +3000,25 @@ Right click for insert and delete options.</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QPushButton" name="txBackgroundButton">
-               <property name="text">
-                <string>Transmit Background Color</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBox_8">
-            <property name="title">
-             <string>Messages Received</string>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_8">
-             <item row="3" column="1">
-              <widget class="QPushButton" name="rxFontButton">
-               <property name="text">
-                <string>Font</string>
-               </property>
-              </widget>
-             </item>
              <item row="2" column="1">
-              <widget class="QPushButton" name="rxForegroundButton">
+              <widget class="QPushButton" name="composeForegroundButton">
                <property name="text">
                 <string>Foreground Color</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="rxForegroundLabel">
-               <property name="styleSheet">
-                <string notr="true">QLabel{background-color: #ffeaa7}</string>
-               </property>
-               <property name="text">
-                <string>K1ABC</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBox_11">
-            <property name="title">
-             <string>Messages Transmitted</string>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_5">
              <item row="1" column="1">
-              <widget class="QPushButton" name="txForegroundButton">
-               <property name="text">
-                <string>Foreground Color</string>
+              <spacer name="verticalSpacer_12">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
                </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QPushButton" name="txFontButton">
-               <property name="text">
-                <string>Font</string>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
                </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="txForegroundLabel">
-               <property name="styleSheet">
-                <string notr="true">QLabel{background-color: #ffeaa7}</string>
-               </property>
-               <property name="text">
-                <string>K1ABC</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
+              </spacer>
              </item>
             </layout>
            </widget>
@@ -3418,12 +3476,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="split_mode_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
  </buttongroups>
 </ui>

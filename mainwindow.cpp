@@ -304,9 +304,45 @@ namespace
     edit->updateGeometry();
   }
 
-  void setTextEditBackground(QTextEdit *edit, QColor color){
-    edit->setStyleSheet(QString("QTextEdit{ background: %1 }").arg(color.name()));
+  void setTextEditColors(QTextEdit *edit, QColor fg, QColor bg){
+    edit->setStyleSheet(QString("QTextEdit { color:%1; background: %2 }").arg(fg.name()).arg(bg.name()));
+
+    QTimer::singleShot(10, nullptr, [edit, fg, bg](){
+          QPalette p = edit->palette();
+          p.setColor(QPalette::Base, bg);
+          p.setColor(QPalette::Active, QPalette::Base, bg);
+          p.setColor(QPalette::Disabled, QPalette::Base, bg);
+          p.setColor(QPalette::Inactive, QPalette::Base, bg);
+
+          p.setColor(QPalette::Text, fg);
+          p.setColor(QPalette::Active, QPalette::Text, fg);
+          p.setColor(QPalette::Disabled, QPalette::Text, fg);
+          p.setColor(QPalette::Inactive, QPalette::Text, fg);
+
+          edit->setBackgroundRole(QPalette::Base);
+          edit->setForegroundRole(QPalette::Text);
+          edit->setPalette(p);
+
+          edit->updateGeometry();
+          edit->update();
+      });
   }
+
+  /*
+  void setTextEditForeground(QTextEdit *edit, QColor color){
+    QTimer::singleShot(20, nullptr, [edit, color](){
+        QPalette p = edit->palette();
+        p.setColor(QPalette::Text, color);
+        p.setColor(QPalette::Active, QPalette::Text, color);
+        p.setColor(QPalette::Disabled, QPalette::Text, color);
+        p.setColor(QPalette::Inactive, QPalette::Text, color);
+
+        edit->setPalette(p);
+        edit->updateGeometry();
+        edit->update();
+    });
+  }
+  */
 
   void highlightBlock(QTextBlock block, QFont font, QColor foreground, QColor background){
     QTextCursor cursor(block);
@@ -695,12 +731,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (&m_config, &Configuration::rx_text_font_changed, [this] (QFont const&) {
       setTextEditFont(ui->textEditRX, m_config.rx_text_font());
   });
-  connect (&m_config, &Configuration::tx_text_font_changed, [this] (QFont const&) {
-      setTextEditFont(ui->extFreeTextMsgEdit, m_config.tx_text_font());
+  connect (&m_config, &Configuration::compose_text_font_changed, [this] (QFont const&) {
+      setTextEditFont(ui->extFreeTextMsgEdit, m_config.compose_text_font());
   });
   connect (&m_config, &Configuration::colors_changed, [this](){
-     setTextEditBackground(ui->textEditRX, m_config.color_rx_background());
-     setTextEditBackground(ui->extFreeTextMsgEdit, m_config.color_tx_background());
+     setTextEditColors(ui->textEditRX, m_config.color_rx_foreground(), m_config.color_rx_background());
+     setTextEditColors(ui->extFreeTextMsgEdit, m_config.color_compose_foreground(), m_config.color_compose_background());
 
      // rehighlight
      auto d = ui->textEditRX->document();
@@ -1359,6 +1395,17 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   displayActivity(true);
 
+  /*
+  QTimer::singleShot(1000, this, [this](){
+      QPalette p;
+      p.setBrush(QPalette::Text, QColor(Qt::red));
+      p.setColor(QPalette::Text, QColor(Qt::red));
+      ui->extFreeTextMsgEdit->setPalette(p);
+      ui->extFreeTextMsgEdit->updateGeometry();
+      ui->extFreeTextMsgEdit->update();
+  });
+  */
+
   QTimer::singleShot(0, this, &MainWindow::initializeDummyData);
 
   // this must be the last statement of constructor
@@ -1789,7 +1836,10 @@ void MainWindow::readSettings()
   //ui->bandHorizontalWidget->setGeometry( m_settings->value("PanelWaterfallGeometry", ui->bandHorizontalWidget->geometry()).toRect());
   //qDebug() << m_settings->value("PanelTopGeometry") << ui->extFreeTextMsg;
 
-  ui->textEditRX->setStyleSheet(QString("QTextEdit { background: %1 }").arg(m_config.color_rx_background().name()));
+  setTextEditColors(ui->textEditRX, m_config.color_rx_foreground(), m_config.color_rx_background());
+  setTextEditColors(ui->extFreeTextMsgEdit, m_config.color_compose_foreground(), m_config.color_compose_background());
+
+
 
   {
     auto const& coeffs = m_settings->value ("PhaseEqualizationCoefficients"
@@ -6216,7 +6266,7 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
       QTextCursor c = ui->extFreeTextMsgEdit->textCursor();
       c.setPosition(pos < maxpos ? pos : maxpos, QTextCursor::MoveAnchor);
 
-      highlightBlock(c.block(), m_config.tx_text_font(), QColor(Qt::black), QColor(Qt::transparent));
+      highlightBlock(c.block(), m_config.compose_text_font(), m_config.color_compose_foreground(), QColor(Qt::transparent));
 
       ui->extFreeTextMsgEdit->setTextCursor(c);
     }

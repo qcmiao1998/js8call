@@ -106,6 +106,7 @@ public:
   QFont text_font () const;
   QFont rx_text_font () const;
   QFont tx_text_font () const;
+  QFont compose_text_font () const;
   qint32 id_interval () const;
   qint32 ntrials() const;
   qint32 aggressive() const;
@@ -184,8 +185,9 @@ public:
   QColor color_MyCall () const;
   QColor color_rx_background () const;
   QColor color_rx_foreground () const;
-  QColor color_tx_background () const;
   QColor color_tx_foreground () const;
+  QColor color_compose_background () const;
+  QColor color_compose_foreground () const;
   QColor color_DXCC () const;
   QColor color_NewCall () const;
   bool pwrBandTxMemory () const;
@@ -281,6 +283,7 @@ public:
   Q_SIGNAL void gui_text_font_changed (QFont);
   Q_SIGNAL void tx_text_font_changed (QFont);
   Q_SIGNAL void rx_text_font_changed (QFont);
+  Q_SIGNAL void compose_text_font_changed (QFont);
   Q_SIGNAL void colors_changed ();
 
   //

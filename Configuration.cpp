@@ -473,7 +473,9 @@ private:
   Q_SLOT void on_rxBackgroundButton_clicked();
   Q_SLOT void on_rxForegroundButton_clicked();
   Q_SLOT void on_rxFontButton_clicked();
-  Q_SLOT void on_txBackgroundButton_clicked();
+  Q_SLOT void on_composeBackgroundButton_clicked();
+  Q_SLOT void on_composeForegroundButton_clicked();
+  Q_SLOT void on_composeFontButton_clicked();
   Q_SLOT void on_txForegroundButton_clicked();
   Q_SLOT void on_txFontButton_clicked();
 
@@ -518,6 +520,9 @@ private:
 
   QFont tx_text_font_;
   QFont next_tx_text_font_;
+
+  QFont compose_text_font_;
+  QFont next_compose_text_font_;
 
   bool restart_sound_input_device_;
   bool restart_sound_output_device_;
@@ -582,8 +587,10 @@ private:
   QColor next_color_rx_background_;
   QColor color_rx_foreground_;
   QColor next_color_rx_foreground_;
-  QColor color_tx_background_;
-  QColor next_color_tx_background_;
+  QColor color_compose_background_;
+  QColor next_color_compose_background_;
+  QColor color_compose_foreground_;
+  QColor next_color_compose_foreground_;
   QColor color_tx_foreground_;
   QColor next_color_tx_foreground_;
   QColor color_DXCC_;
@@ -695,13 +702,15 @@ QColor Configuration::color_CQ () const {return m_->color_cq_;}
 QColor Configuration::color_MyCall () const {return m_->color_mycall_;}
 QColor Configuration::color_rx_background () const {return m_->color_rx_background_;}
 QColor Configuration::color_rx_foreground () const {return m_->color_rx_foreground_;}
-QColor Configuration::color_tx_background () const {return m_->color_tx_background_;}
 QColor Configuration::color_tx_foreground () const {return m_->color_tx_foreground_;}
+QColor Configuration::color_compose_background () const {return m_->color_compose_background_;}
+QColor Configuration::color_compose_foreground () const {return m_->color_compose_foreground_;}
 QColor Configuration::color_DXCC () const {return m_->color_DXCC_;}
 QColor Configuration::color_NewCall () const {return m_->color_NewCall_;}
 QFont Configuration::text_font () const {return m_->font_;}
 QFont Configuration::rx_text_font () const {return m_->rx_text_font_;}
 QFont Configuration::tx_text_font () const {return m_->tx_text_font_;}
+QFont Configuration::compose_text_font () const {return m_->compose_text_font_;}
 qint32 Configuration::id_interval () const {return m_->id_interval_;}
 qint32 Configuration::ntrials() const {return m_->ntrials_;}
 qint32 Configuration::aggressive() const {return m_->aggressive_;}
@@ -1275,9 +1284,9 @@ void Configuration::impl::initialize_models ()
   ui_->labMyCall->setStyleSheet(QString("background: %1").arg(color_mycall_.name()));
 
   ui_->rxLabel->setStyleSheet(QString("background: %1").arg(color_rx_background_.name()));
-  ui_->txLabel->setStyleSheet(QString("background: %1").arg(color_tx_background_.name()));
   ui_->rxForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_rx_background_.name()).arg(color_rx_foreground_.name()));
   ui_->txForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_rx_background_.name()).arg(color_tx_foreground_.name()));
+  ui_->composeLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_compose_background_.name()).arg(color_compose_foreground_.name()));
 
   ui_->CW_id_interval_spin_box->setValue (id_interval_);  
   ui_->sbNtrials->setValue (ntrials_);
@@ -1413,7 +1422,8 @@ void Configuration::impl::read_settings ()
   next_color_mycall_ = color_mycall_ = settings_->value("colorMyCall","#ff6666").toString();
   next_color_rx_background_ = color_rx_background_ = settings_->value("color_rx_background","#ffeaa7").toString();
   next_color_rx_foreground_ = color_rx_foreground_ = settings_->value("color_rx_foreground","#000000").toString();
-  next_color_tx_background_ = color_tx_background_ = settings_->value("color_tx_background","#ffffff").toString();
+  next_color_compose_background_ = color_compose_background_ = settings_->value("color_compose_background","#ffffff").toString();
+  next_color_compose_foreground_ = color_compose_foreground_ = settings_->value("color_compose_foreground","#000000").toString();
   next_color_tx_foreground_ = color_tx_foreground_ = settings_->value("color_tx_foreground","#ff0000").toString();
   next_color_DXCC_ = color_DXCC_ = settings_->value("colorDXCC","#ff00ff").toString();
   next_color_NewCall_ = color_NewCall_ = settings_->value("colorNewCall","#ffaaff").toString();
@@ -1455,6 +1465,19 @@ void Configuration::impl::read_settings ()
     }
 
   ui_->rxFontButton->setText(QString("Font (%1 %2)").arg(next_rx_text_font_.family()).arg(next_rx_text_font_.pointSize()));
+
+  if (next_compose_text_font_.fromString (settings_->value ("composeTextFont", QGuiApplication::font ().toString ()).toString ())
+      && next_compose_text_font_ != compose_text_font_)
+    {
+      compose_text_font_ = next_compose_text_font_;
+      Q_EMIT self_->compose_text_font_changed (compose_text_font_);
+    }
+  else
+    {
+      next_compose_text_font_ = compose_text_font_;
+    }
+
+  ui_->composeFontButton->setText(QString("Font (%1 %2)").arg(next_compose_text_font_.family()).arg(next_compose_text_font_.pointSize()));
 
   id_interval_ = settings_->value ("IDint", 0).toInt ();
   ntrials_ = settings_->value ("nTrials", 6).toInt ();
@@ -1638,7 +1661,8 @@ void Configuration::impl::write_settings ()
   settings_->setValue("colorMyCall",color_mycall_);
   settings_->setValue("color_rx_background",color_rx_background_);
   settings_->setValue("color_rx_foreground",color_rx_foreground_);
-  settings_->setValue("color_tx_background",color_tx_background_);
+  settings_->setValue("color_compose_background",color_compose_background_);
+  settings_->setValue("color_compose_foreground",color_compose_foreground_);
   settings_->setValue("color_tx_foreground",color_tx_foreground_);
   settings_->setValue("colorDXCC",color_DXCC_);
   settings_->setValue("colorNewCall",color_NewCall_);
@@ -2018,11 +2042,18 @@ void Configuration::impl::accept ()
       Q_EMIT self_->rx_text_font_changed (rx_text_font_);
     }
 
+  if (next_compose_text_font_ != compose_text_font_)
+    {
+      compose_text_font_ = next_compose_text_font_;
+      Q_EMIT self_->compose_text_font_changed (compose_text_font_);
+    }
+
   color_cq_ = next_color_cq_;
   color_mycall_ = next_color_mycall_;
   color_rx_background_ = next_color_rx_background_;
   color_rx_foreground_ = next_color_rx_foreground_;
-  color_tx_background_ = next_color_tx_background_;
+  color_compose_background_ = next_color_compose_background_;
+  color_compose_foreground_ = next_color_compose_foreground_;
   color_tx_foreground_ = next_color_tx_foreground_;
   color_DXCC_ = next_color_DXCC_;
   color_NewCall_ = next_color_NewCall_;
@@ -2331,15 +2362,23 @@ void Configuration::impl::on_rxFontButton_clicked ()
   ui_->rxFontButton->setText(QString("Font (%1 %2)").arg(next_rx_text_font_.family()).arg(next_rx_text_font_.pointSize()));
 }
 
-void Configuration::impl::on_txBackgroundButton_clicked()
+void Configuration::impl::on_composeBackgroundButton_clicked()
 {
-  auto new_color = getColor(next_color_tx_background_, this, "Transmitted Messages Background Color");
+  auto new_color = getColor(next_color_compose_background_, this, "Compose Messages Background Color");
   if (new_color.isValid ())
     {
-      next_color_tx_background_ = new_color;
-      ui_->txLabel->setStyleSheet(QString("background: %1").arg(next_color_tx_background_.name()));
-      ui_->rxForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_rx_foreground_.name()));
-      ui_->txForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_tx_foreground_.name()));
+      next_color_compose_background_ = new_color;
+      ui_->composeLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_compose_background_.name()).arg(next_color_compose_foreground_.name()));
+    }
+}
+
+void Configuration::impl::on_composeForegroundButton_clicked()
+{
+  auto new_color = getColor(next_color_compose_foreground_, this, "Compose Messages Foreground Color");
+  if (new_color.isValid ())
+    {
+      next_color_compose_foreground_ = new_color;
+      ui_->composeLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_compose_background_.name()).arg(next_color_compose_foreground_.name()));
     }
 }
 
@@ -2349,7 +2388,6 @@ void Configuration::impl::on_txForegroundButton_clicked()
   if (new_color.isValid ())
     {
       next_color_tx_foreground_ = new_color;
-      ui_->txLabel->setStyleSheet(QString("background: %1").arg(next_color_tx_background_.name()));
       ui_->rxForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_rx_foreground_.name()));
       ui_->txForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_tx_foreground_.name()));
     }
@@ -2365,6 +2403,17 @@ void Configuration::impl::on_txFontButton_clicked ()
                                                   );
 
   ui_->txFontButton->setText(QString("Font (%1 %2)").arg(next_tx_text_font_.family()).arg(next_tx_text_font_.pointSize()));
+}
+
+void Configuration::impl::on_composeFontButton_clicked ()
+{
+  next_compose_text_font_ = QFontDialog::getFont (0, next_compose_text_font_ , this
+                                                  , tr ("Font Chooser")
+#if QT_VERSION >= 0x050201
+                                                  , 0
+#endif
+                                                  );
+  ui_->composeFontButton->setText(QString("Font (%1 %2)").arg(next_compose_text_font_.family()).arg(next_compose_text_font_.pointSize()));
 }
 
 void Configuration::impl::on_PTT_port_combo_box_activated (int /* index */)
