@@ -255,21 +255,24 @@ void APRSISClient::processQueue(bool disconnect){
         return;
     }
 
+    QQueue<QPair<QString, QDateTime>> delayed;
+
     while(!m_frameQueue.isEmpty()){
         auto pair = m_frameQueue.head();
         auto frame = pair.first;
         auto timestamp = pair.second;
 
-        // random delay 50% of the time for throttling (a skip will add 60 seconds to the processing time)
-        if(qrand() % 100 <= 50){
-            qDebug() << "APRSISClient Throttle: Skipping Frame";
-            continue;
-        }
-
         // if the packet is older than the timeout, drop it.
         if(timestamp.secsTo(QDateTime::currentDateTimeUtc()) > PACKET_TIMEOUT_SECONDS){
             qDebug() << "APRSISClient Packet Timeout:" << frame;
             m_frameQueue.dequeue();
+            continue;
+        }
+
+        // random delay 25% of the time for throttling (a skip will add 60 seconds to the processing time)
+        if(qrand() % 100 <= 25){
+            qDebug() << "APRSISClient Throttle: Skipping Frame";
+            delayed.enqueue(m_frameQueue.dequeue());
             continue;
         }
 
@@ -279,13 +282,7 @@ void APRSISClient::processQueue(bool disconnect){
             return;
         }
 
-        if(!waitForBytesWritten(5000)){
-            qDebug() << "APRSISClient Cannot Write Error: Write Timeout";
-            return;
-        }
-
         qDebug() << "APRSISClient Write:" << data;
-
         if(waitForReadyRead(5000)){
             line = QString(readLine());
 
@@ -298,6 +295,11 @@ void APRSISClient::processQueue(bool disconnect){
         }
 
         m_frameQueue.dequeue();
+    }
+
+    // enqueue the delayed frames for later processing
+    while(!delayed.isEmpty()){
+        m_frameQueue.enqueue(delayed.dequeue());
     }
 
     if(disconnect){
