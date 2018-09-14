@@ -91,7 +91,7 @@ allocate ( rxdata(N), llr(N) )
 
   i1Msg8BitBytes(10:11)=0
   checksum = crc12 (c_loc (i1Msg8BitBytes), 11)
-  checksum = xor(checksum, 42)
+  checksum = xor(checksum, 41)
 ! For reference, the next 3 lines show how to check the CRC
   i1Msg8BitBytes(10)=checksum/256
   i1Msg8BitBytes(11)=iand (checksum,255)

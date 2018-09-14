@@ -73,7 +73,7 @@ subroutine foxgen()
         read(cb88,1003) i1Msg8BitBytes(1:11)
 1003    format(11b8)
         icrc12=crc12(c_loc(i1Msg8BitBytes),11)
-        icrc12=xor(icrc12, 42)
+        icrc12=xor(icrc12, 41)
 
         write(cbits,1001) msgbits(1:56),icrc10,nrpt,i3b,icrc12
         read(cbits,1002) msgbits

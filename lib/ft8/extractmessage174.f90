@@ -22,7 +22,7 @@ subroutine extractmessage174(decoded,msgreceived,ncrcflag)
   i1Dec8BitBytes(10)=iand(i1Dec8BitBytes(10),128+64+32)
   i1Dec8BitBytes(11)=0
   icrc12=crc12(c_loc(i1Dec8BitBytes),11)          !CRC12 computed from 75 msg bits
-  icrc12=xor(icrc12, 42)
+  icrc12=xor(icrc12, 41)
 
   if(ncrc12.eq.icrc12 .or. sum(decoded(57:87)).eq.0) then  !### Kludge ###
 ! CRC12 checks out --- unpack 72-bit message
