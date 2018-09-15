@@ -9456,12 +9456,8 @@ void MainWindow::processCommandActivity() {
 
         // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past beacon interval)
         // that way we never get spammed by allcalls at a high frequency than what we would beacon
-        if (isAllCall){
-            if(m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < m_config.beacon()) {
-                continue;
-            }
-
-            m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 25);
+        if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < m_config.beacon()) {
+            continue;
         }
 
         // display the command activity
@@ -9540,8 +9536,9 @@ void MainWindow::processCommandActivity() {
         if (d.cmd == "?") {
             // do not respond to allcall ? if:
             // 1. we recently responded to one
-            // 2. or, we are in a directed qso...(i.e., we have a callsign selected)
-            if(isAllCall && !callsignSelected().isEmpty()){
+            // 2. or, we are in a directed qso...(i.e., we have a callsign selected that isn't ALLCALL)
+            auto selectedCall = callsignSelected();
+            if(isAllCall && !selectedCall.isEmpty() && selectedCall != "ALLCALL" && selectedCall != d.from){
                 continue;
             }
 
@@ -9766,6 +9763,11 @@ void MainWindow::processCommandActivity() {
         // do not queue ALLCALL replies if auto-reply is not checked
         if(!ui->autoReplyButton->isChecked() && isAllCall){
             continue;
+        }
+
+        // add ALLCALLs to the ALLCALL cache
+        if(isAllCall){
+            m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 25);
         }
 
         // queue the reply here to be sent when a free interval is available on the frequency that was sent
