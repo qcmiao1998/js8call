@@ -304,8 +304,8 @@ namespace
     edit->updateGeometry();
   }
 
-  void setTextEditColors(QTextEdit *edit, QColor fg, QColor bg){
-    edit->setStyleSheet(QString("QTextEdit { color:%1; background: %2 }").arg(fg.name()).arg(bg.name()));
+  void setTextEditStyle(QTextEdit *edit, QColor fg, QColor bg, QFont font){
+    edit->setStyleSheet(QString("QTextEdit { color:%1; background: %2; %3; }").arg(fg.name()).arg(bg.name()).arg(font_as_stylesheet(font)));
 
     QTimer::singleShot(10, nullptr, [edit, fg, bg](){
           QPalette p = edit->palette();
@@ -728,6 +728,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (&m_config, &Configuration::gui_text_font_changed, [this] (QFont const& font) {
       set_application_font (font);
   });
+  connect (&m_config, &Configuration::table_font_changed, [this] (QFont const&) {
+      ui->tableWidgetRXAll->setFont(m_config.table_font());
+      ui->tableWidgetCalls->setFont(m_config.table_font());
+  });
   connect (&m_config, &Configuration::rx_text_font_changed, [this] (QFont const&) {
       setTextEditFont(ui->textEditRX, m_config.rx_text_font());
   });
@@ -735,8 +739,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       setTextEditFont(ui->extFreeTextMsgEdit, m_config.compose_text_font());
   });
   connect (&m_config, &Configuration::colors_changed, [this](){
-     setTextEditColors(ui->textEditRX, m_config.color_rx_foreground(), m_config.color_rx_background());
-     setTextEditColors(ui->extFreeTextMsgEdit, m_config.color_compose_foreground(), m_config.color_compose_background());
+     setTextEditStyle(ui->textEditRX, m_config.color_rx_foreground(), m_config.color_rx_background(), m_config.rx_text_font());
+     setTextEditStyle(ui->extFreeTextMsgEdit, m_config.color_compose_foreground(), m_config.color_compose_background(), m_config.compose_text_font());
 
      // rehighlight
      auto d = ui->textEditRX->document();
@@ -1476,10 +1480,13 @@ void MainWindow::initializeDummyData(){
         ad.utcTimestamp = dt;
         m_bandActivity[500+100*i] = { ad };
 
+        markOffsetDirected(500+100*i, false);
+
         i++;
     }
 
-
+    displayTextForFreq("KN4CRD: ALLCALL? \u2301 ", 42, QDateTime::currentDateTimeUtc().addSecs(-315), true, true, true);
+    displayTextForFreq("J1Y: KN4CRD SNR -05 \u2301 ", 42, QDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
 
     displayActivity(true);
 
@@ -1494,6 +1501,8 @@ void MainWindow::initialize_fonts ()
 
   setTextEditFont(ui->textEditRX, m_config.rx_text_font());
   setTextEditFont(ui->extFreeTextMsgEdit, m_config.tx_text_font());
+
+  displayActivity(true);
 }
 
 void MainWindow::splash_done ()
@@ -1836,10 +1845,8 @@ void MainWindow::readSettings()
   //ui->bandHorizontalWidget->setGeometry( m_settings->value("PanelWaterfallGeometry", ui->bandHorizontalWidget->geometry()).toRect());
   //qDebug() << m_settings->value("PanelTopGeometry") << ui->extFreeTextMsg;
 
-  setTextEditColors(ui->textEditRX, m_config.color_rx_foreground(), m_config.color_rx_background());
-  setTextEditColors(ui->extFreeTextMsgEdit, m_config.color_compose_foreground(), m_config.color_compose_background());
-
-
+  setTextEditStyle(ui->textEditRX, m_config.color_rx_foreground(), m_config.color_rx_background(), m_config.rx_text_font());
+  setTextEditStyle(ui->extFreeTextMsgEdit, m_config.color_compose_foreground(), m_config.color_compose_background(), m_config.compose_text_font());
 
   {
     auto const& coeffs = m_settings->value ("PhaseEqualizationCoefficients"
@@ -7993,6 +8000,8 @@ void MainWindow::on_tableWidgetRXAll_cellClicked(int /*row*/, int /*col*/){
     ui->tableWidgetCalls->selectionModel()->select(
         ui->tableWidgetCalls->selectionModel()->selection(),
         QItemSelectionModel::Deselect);
+
+    displayCallActivity();
 }
 
 void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
@@ -8045,6 +8054,8 @@ void MainWindow::on_tableWidgetCalls_cellClicked(int /*row*/, int /*col*/){
     ui->tableWidgetRXAll->selectionModel()->select(
         ui->tableWidgetRXAll->selectionModel()->selection(),
         QItemSelectionModel::Deselect);
+
+    displayBandActivity();
 }
 
 void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
@@ -9946,6 +9957,8 @@ void MainWindow::displayActivity(bool force) {
 void MainWindow::displayBandActivity() {
     auto now = QDateTime::currentDateTimeUtc();
 
+    ui->tableWidgetRXAll->setFont(m_config.table_font());
+
     // Selected Offset
     int selectedOffset = -1;
     auto selectedItems = ui->tableWidgetRXAll->selectedItems();
@@ -10102,6 +10115,7 @@ void MainWindow::displayBandActivity() {
                 }
 
                 bool isDirectedAllCall = false;
+                qDebug() << "style" << (text.last().contains(Radio::base_callsign(m_config.my_callsign()))) << text.last();
                 // TODO: jsherer - there's a potential here for a previous allcall o poison the highlight.
                 if (
                     (isDirectedOffset(offset, &isDirectedAllCall) && !isDirectedAllCall) ||
@@ -10119,6 +10133,23 @@ void MainWindow::displayBandActivity() {
                     for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
                         ui->tableWidgetRXAll->item(row, i)->setSelected(true);
                     }
+                }
+            }
+        }
+
+        // Set table color
+        auto style = QString("QTableWidget { background:%1; selection-background-color:%2; alternate-background-color:%1; color:%3; }");
+        style = style.arg(m_config.color_table_background().name());
+        style = style.arg(m_config.color_table_highlight().name());
+        style = style.arg(m_config.color_table_foreground().name());
+        ui->tableWidgetRXAll->setStyleSheet(style);
+
+        // Set item fonts
+        for(int row = 0; row < ui->tableWidgetRXAll->rowCount(); row++){
+            for(int col = 0; col < ui->tableWidgetRXAll->columnCount(); col++){
+                auto item = ui->tableWidgetRXAll->item(row, col);
+                if(item){
+                    item->setFont(m_config.table_font());
                 }
             }
         }
@@ -10263,6 +10294,23 @@ void MainWindow::displayCallActivity() {
             if (call == selectedCall) {
                 for(int i = 0; i < ui->tableWidgetCalls->columnCount(); i++){
                     ui->tableWidgetCalls->item(row, i)->setSelected(true);
+                }
+            }
+        }
+
+        // Set table color
+        auto style = QString("QTableWidget { background:%1; selection-background-color:%2; alternate-background-color:%1; color:%3; }");
+        style = style.arg(m_config.color_table_background().name());
+        style = style.arg(m_config.color_table_highlight().name());
+        style = style.arg(m_config.color_table_foreground().name());
+        ui->tableWidgetCalls->setStyleSheet(style);
+
+        // Set item fonts
+        for(int row = 0; row < ui->tableWidgetCalls->rowCount(); row++){
+            for(int col = 0; col < ui->tableWidgetCalls->columnCount(); col++){
+                auto item = ui->tableWidgetCalls->item(row, col);
+                if(item){
+                    item->setFont(m_config.table_font());
                 }
             }
         }
