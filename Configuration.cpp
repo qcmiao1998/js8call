@@ -156,6 +156,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QStandardPaths>
+#include <QSound>
 #include <QFont>
 #include <QFontDialog>
 #include <QColorDialog>
@@ -433,6 +434,7 @@ private:
   void insert_station ();
 
   Q_SLOT void on_font_push_button_clicked ();
+  Q_SLOT void on_tableFontButton_clicked();
   Q_SLOT void on_PTT_port_combo_box_activated (int);
   Q_SLOT void on_CAT_port_combo_box_activated (int);
   Q_SLOT void on_CAT_serial_baud_combo_box_currentIndexChanged (int);
@@ -461,8 +463,10 @@ private:
   Q_SLOT void on_save_path_select_push_button_clicked (bool);
   Q_SLOT void on_azel_path_select_push_button_clicked (bool);
   Q_SLOT void on_sound_dm_path_select_push_button_clicked();
+  Q_SLOT void on_sound_dm_path_test_push_button_clicked();
   Q_SLOT void on_sound_dm_path_reset_push_button_clicked();
   Q_SLOT void on_sound_am_path_select_push_button_clicked();
+  Q_SLOT void on_sound_am_path_test_push_button_clicked();
   Q_SLOT void on_sound_am_path_reset_push_button_clicked();
   Q_SLOT void on_calibration_intercept_spin_box_valueChanged (double);
   Q_SLOT void on_calibration_slope_ppm_spin_box_valueChanged (double);
@@ -470,6 +474,9 @@ private:
   Q_SLOT void handle_transceiver_failure (QString const& reason);
   Q_SLOT void on_pbCQmsg_clicked();
   Q_SLOT void on_pbMyCall_clicked();
+  Q_SLOT void on_tableBackgroundButton_clicked();
+  Q_SLOT void on_tableSelectedRowBackgroundButton_clicked();
+  Q_SLOT void on_tableForegroundButton_clicked();
   Q_SLOT void on_rxBackgroundButton_clicked();
   Q_SLOT void on_rxForegroundButton_clicked();
   Q_SLOT void on_rxFontButton_clicked();
@@ -514,6 +521,9 @@ private:
 
   QFont font_;
   QFont next_font_;
+
+  QFont table_font_;
+  QFont next_table_font_;
 
   QFont rx_text_font_;
   QFont next_rx_text_font_;
@@ -583,6 +593,14 @@ private:
   QColor next_color_cq_;
   QColor color_mycall_;
   QColor next_color_mycall_;
+
+  QColor color_table_background_;
+  QColor next_color_table_background_;
+  QColor color_table_highlight_;
+  QColor next_color_table_highlight_;
+  QColor color_table_foreground_;
+  QColor next_color_table_foreground_;
+
   QColor color_rx_background_;
   QColor next_color_rx_background_;
   QColor color_rx_foreground_;
@@ -698,6 +716,9 @@ bool Configuration::restart_audio_output () const {return m_->restart_sound_outp
 auto Configuration::type_2_msg_gen () const -> Type2MsgGen {return m_->type_2_msg_gen_;}
 bool Configuration::use_dynamic_grid() const {return m_->use_dynamic_info_; }
 QString Configuration::my_callsign () const {return m_->my_callsign_;}
+QColor Configuration::color_table_background() const { return m_->color_table_background_; }
+QColor Configuration::color_table_highlight() const  { return m_->color_table_highlight_; }
+QColor Configuration::color_table_foreground() const { return m_->color_table_foreground_; }
 QColor Configuration::color_CQ () const {return m_->color_cq_;}
 QColor Configuration::color_MyCall () const {return m_->color_mycall_;}
 QColor Configuration::color_rx_background () const {return m_->color_rx_background_;}
@@ -707,6 +728,7 @@ QColor Configuration::color_compose_background () const {return m_->color_compos
 QColor Configuration::color_compose_foreground () const {return m_->color_compose_foreground_;}
 QColor Configuration::color_DXCC () const {return m_->color_DXCC_;}
 QColor Configuration::color_NewCall () const {return m_->color_NewCall_;}
+QFont Configuration::table_font () const {return m_->table_font_;}
 QFont Configuration::text_font () const {return m_->font_;}
 QFont Configuration::rx_text_font () const {return m_->rx_text_font_;}
 QFont Configuration::tx_text_font () const {return m_->tx_text_font_;}
@@ -1280,10 +1302,13 @@ void Configuration::impl::initialize_models ()
   ui_->cq_message_line_edit->setText(cq_.toUpper());
   ui_->reply_message_line_edit->setText (reply_.toUpper());
   ui_->use_dynamic_grid->setChecked(use_dynamic_info_);
-  ui_->labCQ->setStyleSheet(QString("background: %1").arg(color_cq_.name()));
-  ui_->labMyCall->setStyleSheet(QString("background: %1").arg(color_mycall_.name()));
 
-  ui_->rxLabel->setStyleSheet(QString("background: %1").arg(color_rx_background_.name()));
+  ui_->tableBackgroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_background_.name()).arg(next_color_table_foreground_.name()));
+  ui_->tableSelectionBackgroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_highlight_.name()).arg(next_color_table_foreground_.name()));
+  ui_->labCQ->setStyleSheet(QString("background: %1; color: %2").arg(next_color_cq_.name()).arg(next_color_table_foreground_.name()));
+  ui_->labMyCall->setStyleSheet(QString("background: %1; color: %2").arg(next_color_mycall_.name()).arg(next_color_table_foreground_.name()));
+
+  ui_->rxLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_rx_background_.name()).arg(color_rx_foreground_.name()));
   ui_->rxForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_rx_background_.name()).arg(color_rx_foreground_.name()));
   ui_->txForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_rx_background_.name()).arg(color_tx_foreground_.name()));
   ui_->composeLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_compose_background_.name()).arg(color_compose_foreground_.name()));
@@ -1428,6 +1453,10 @@ void Configuration::impl::read_settings ()
   next_color_DXCC_ = color_DXCC_ = settings_->value("colorDXCC","#ff00ff").toString();
   next_color_NewCall_ = color_NewCall_ = settings_->value("colorNewCall","#ffaaff").toString();
 
+  next_color_table_background_ = color_table_background_ = settings_->value("colorTableBackground", "#ffffff").toString();
+  next_color_table_highlight_ = color_table_highlight_ = settings_->value("colorTableHighlight", "#3498db").toString();
+  next_color_table_foreground_ = color_table_foreground_ = settings_->value("colorTableForeground","#000000").toString();
+
   if (next_font_.fromString (settings_->value ("Font", QGuiApplication::font ().toString ()).toString ())
       && next_font_ != font_)
     {
@@ -1476,8 +1505,19 @@ void Configuration::impl::read_settings ()
     {
       next_compose_text_font_ = compose_text_font_;
     }
-
   ui_->composeFontButton->setText(QString("Font (%1 %2)").arg(next_compose_text_font_.family()).arg(next_compose_text_font_.pointSize()));
+
+  if (next_table_font_.fromString (settings_->value ("tableFont", QGuiApplication::font ().toString ()).toString ())
+      && next_table_font_ != table_font_)
+    {
+      table_font_ = next_table_font_;
+      Q_EMIT self_->table_font_changed (table_font_);
+    }
+  else
+    {
+      next_table_font_ = table_font_;
+    }
+  ui_->tableFontButton->setText(QString("Font (%1 %2)").arg(next_table_font_.family()).arg(next_table_font_.pointSize()));
 
   id_interval_ = settings_->value ("IDint", 0).toInt ();
   ntrials_ = settings_->value ("nTrials", 6).toInt ();
@@ -1666,9 +1706,18 @@ void Configuration::impl::write_settings ()
   settings_->setValue("color_tx_foreground",color_tx_foreground_);
   settings_->setValue("colorDXCC",color_DXCC_);
   settings_->setValue("colorNewCall",color_NewCall_);
+
+  settings_->setValue("colorTableBackground",color_table_background_);
+  settings_->setValue("colorTableHighlight",color_table_highlight_);
+  settings_->setValue("colorTableForeground",color_table_foreground_);
+
+
   settings_->setValue ("Font", font_.toString ());
   settings_->setValue ("RXTextFont", rx_text_font_.toString ());
   settings_->setValue ("TXTextFont", tx_text_font_.toString ());
+  settings_->setValue ("composeTextFont", compose_text_font_.toString ());
+  settings_->setValue ("tableFont", table_font_.toString());
+
   settings_->setValue ("IDint", id_interval_);
   settings_->setValue ("nTrials", ntrials_);
   settings_->setValue ("TxDelay", txDelay_);
@@ -2048,6 +2097,12 @@ void Configuration::impl::accept ()
       Q_EMIT self_->compose_text_font_changed (compose_text_font_);
     }
 
+  if (next_table_font_ != table_font_)
+    {
+      table_font_ = next_table_font_;
+      Q_EMIT self_->table_font_changed (table_font_);
+    }
+
   color_cq_ = next_color_cq_;
   color_mycall_ = next_color_mycall_;
   color_rx_background_ = next_color_rx_background_;
@@ -2057,6 +2112,9 @@ void Configuration::impl::accept ()
   color_tx_foreground_ = next_color_tx_foreground_;
   color_DXCC_ = next_color_DXCC_;
   color_NewCall_ = next_color_NewCall_;
+  color_table_background_ = next_color_table_background_;
+  color_table_highlight_ = next_color_table_highlight_;
+  color_table_foreground_ = next_color_table_foreground_;
 
   Q_EMIT self_->colors_changed();
 
@@ -2287,11 +2345,19 @@ void Configuration::impl::on_font_push_button_clicked ()
   ui_->font_push_button->setText(QString("Application Font (%1 %2)").arg(next_font_.family()).arg(next_font_.pointSize()));
 }
 
+void Configuration::impl::on_tableFontButton_clicked ()
+{
+  next_table_font_ = QFontDialog::getFont (0, next_table_font_, this);
+  ui_->tableFontButton->setText(QString("Table Font (%1 %2)").arg(next_table_font_.family()).arg(next_table_font_.pointSize()));
+}
+
+
 QColor getColor(QColor initial, QWidget *parent, QString title){
     QList<QColor> custom = {
         QColor("#66FF66"),
         QColor("#FF6666"),
-        QColor("#FFEAA7")
+        QColor("#FFEAA7"),
+        QColor("#3498DB")
     };
 
     auto d = new QColorDialog(initial, parent);
@@ -2313,7 +2379,7 @@ void Configuration::impl::on_pbCQmsg_clicked()
   if (new_color.isValid ())
     {
       next_color_cq_ = new_color;
-      ui_->labCQ->setStyleSheet(QString("background: %1").arg(next_color_cq_.name()));
+      ui_->labCQ->setStyleSheet(QString("background: %1; color: %2").arg(next_color_cq_.name()).arg(next_color_table_foreground_.name()));
     }
 }
 
@@ -2323,7 +2389,40 @@ void Configuration::impl::on_pbMyCall_clicked()
   if (new_color.isValid ())
     {
       next_color_mycall_ = new_color;
-      ui_->labMyCall->setStyleSheet(QString("background: %1").arg(next_color_mycall_.name()));
+      ui_->labMyCall->setStyleSheet(QString("background: %1; color: %2").arg(next_color_mycall_.name()).arg(next_color_table_foreground_.name()));
+    }
+}
+
+void Configuration::impl::on_tableBackgroundButton_clicked()
+{
+  auto new_color = getColor(next_color_table_background_, this, "Table Background Color");
+  if (new_color.isValid ())
+    {
+      next_color_table_background_ = new_color;
+      ui_->tableBackgroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_background_.name()).arg(next_color_table_foreground_.name()));
+    }
+}
+
+void Configuration::impl::on_tableSelectedRowBackgroundButton_clicked()
+{
+  auto new_color = getColor(next_color_table_highlight_, this, "Table Selected Row Background Color");
+  if (new_color.isValid ())
+    {
+      next_color_table_highlight_ = new_color;
+      ui_->tableSelectionBackgroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_highlight_.name()).arg(next_color_table_foreground_.name()));
+    }
+}
+
+void Configuration::impl::on_tableForegroundButton_clicked()
+{
+  auto new_color = getColor(next_color_table_foreground_, this, "Table Foreground Color");
+  if (new_color.isValid ())
+    {
+      next_color_table_foreground_ = new_color;
+      ui_->tableBackgroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_background_.name()).arg(next_color_table_foreground_.name()));
+      ui_->tableSelectionBackgroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_highlight_.name()).arg(next_color_table_foreground_.name()));
+      ui_->labCQ->setStyleSheet(QString("background: %1; color: %2").arg(next_color_cq_.name()).arg(next_color_table_foreground_.name()));
+      ui_->labMyCall->setStyleSheet(QString("background: %1; color: %2").arg(next_color_mycall_.name()).arg(next_color_table_foreground_.name()));
     }
 }
 
@@ -2333,7 +2432,7 @@ void Configuration::impl::on_rxBackgroundButton_clicked()
   if (new_color.isValid ())
     {
       next_color_rx_background_ = new_color;
-      ui_->rxLabel->setStyleSheet(QString("background: %1").arg(next_color_rx_background_.name()));
+      ui_->rxLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_rx_background_.name()).arg(color_rx_foreground_.name()));
       ui_->rxForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_rx_foreground_.name()));
       ui_->txForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_tx_foreground_.name()));
     }
@@ -2345,7 +2444,7 @@ void Configuration::impl::on_rxForegroundButton_clicked()
   if (new_color.isValid ())
     {
       next_color_rx_foreground_ = new_color;
-      ui_->rxLabel->setStyleSheet(QString("background: %1").arg(next_color_rx_background_.name()));
+      ui_->rxLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_rx_background_.name()).arg(color_rx_foreground_.name()));
       ui_->rxForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_rx_foreground_.name()));
       ui_->txForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_rx_background_.name()).arg(next_color_tx_foreground_.name()));
     }
@@ -2805,6 +2904,15 @@ void Configuration::impl::on_sound_dm_path_select_push_button_clicked(){
     }
 }
 
+void Configuration::impl::on_sound_dm_path_test_push_button_clicked(){
+    auto path = ui_->sound_dm_path_display_label->text();
+    if(path.isEmpty()){
+        return;
+    }
+
+    QSound::play(path);
+}
+
 void Configuration::impl::on_sound_dm_path_reset_push_button_clicked(){
     ui_->sound_dm_path_display_label->clear();
 }
@@ -2825,6 +2933,15 @@ void Configuration::impl::on_sound_am_path_select_push_button_clicked(){
         ui_->sound_am_path_display_label->setText(fd.selectedFiles().at(0));
       }
     }
+}
+
+void Configuration::impl::on_sound_am_path_test_push_button_clicked(){
+    auto path = ui_->sound_am_path_display_label->text();
+    if(path.isEmpty()){
+        return;
+    }
+
+    QSound::play(path);
 }
 
 void Configuration::impl::on_sound_am_path_reset_push_button_clicked(){

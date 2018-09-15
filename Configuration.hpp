@@ -103,6 +103,7 @@ public:
   QString my_qth () const;
   QString cq_message () const;
   QString reply_message () const;
+  QFont table_font() const;
   QFont text_font () const;
   QFont rx_text_font () const;
   QFont tx_text_font () const;
@@ -181,6 +182,9 @@ public:
   QString sound_am_path() const;
   QString rig_name () const;
   Type2MsgGen type_2_msg_gen () const;
+  QColor color_table_background() const;
+  QColor color_table_highlight() const;
+  QColor color_table_foreground() const;
   QColor color_CQ () const;
   QColor color_MyCall () const;
   QColor color_rx_background () const;
@@ -284,6 +288,7 @@ public:
   Q_SIGNAL void tx_text_font_changed (QFont);
   Q_SIGNAL void rx_text_font_changed (QFont);
   Q_SIGNAL void compose_text_font_changed (QFont);
+  Q_SIGNAL void table_font_changed (QFont);
   Q_SIGNAL void colors_changed ();
 
   //
