@@ -2586,55 +2586,66 @@ Radio::Frequency MainWindow::dialFrequency() {
         m_rigState.tx_frequency () : m_rigState.frequency ()};
 }
 
-void MainWindow::displayDialFrequency ()
-{
-  auto dial_frequency = dialFrequency();
+void MainWindow::displayDialFrequency (){
+#if 0
+    qDebug() << "rx nominal" << m_freqNominal;
+    qDebug() << "tx nominal" << m_freqTxNominal;
+    qDebug() << "offset set to" << ui->RxFreqSpinBox->value() << ui->TxFreqSpinBox->value();
+#endif
 
-  // lookup band
-  auto const& band_name = m_config.bands ()->find (dial_frequency);
-  if (m_lastBand != band_name){
-      cacheActivity(m_lastBand);
+    auto dial_frequency = dialFrequency();
+    auto audio_frequency = currentFreqOffset();
 
-      // only change this when necessary as we get called a lot and it
-      // would trash any user input to the band combo box line edit
-      ui->bandComboBox->setCurrentText (band_name);
-      m_wideGraph->setRxBand (band_name);
-      m_lastBand = band_name;
-      band_changed(dial_frequency);
+    // lookup band
+    auto const& band_name = m_config.bands ()->find (dial_frequency);
+    if (m_lastBand != band_name){
+        cacheActivity(m_lastBand);
 
-      clearActivity();
+        // only change this when necessary as we get called a lot and it
+        // would trash any user input to the band combo box line edit
+        ui->bandComboBox->setCurrentText (band_name);
+        m_wideGraph->setRxBand (band_name);
+        m_lastBand = band_name;
+        band_changed(dial_frequency);
 
-      restoreActivity(m_lastBand);
-  }
+        clearActivity();
 
-  // TODO: jsherer - this doesn't validate anything else right? we are disabling this because as long as you're in a band, it's valid.
-  /*
-  // search working frequencies for one we are within 10kHz of (1 Mhz
-  // of on VHF and up)
-  bool valid {false};
-  quint64 min_offset {99999999};
-  for (auto const& item : *m_config.frequencies ())
-    {
-      // we need to do specific checks for above and below here to
-      // ensure that we can use unsigned Radio::Frequency since we
-      // potentially use the full 64-bit unsigned range.
-      auto const& working_frequency = item.frequency_;
-      auto const& offset = dial_frequency > working_frequency ?
-        dial_frequency - working_frequency :
-        working_frequency - dial_frequency;
-      if (offset < min_offset) {
-        min_offset = offset;
-      }
+        restoreActivity(m_lastBand);
     }
-  if (min_offset < 10000u || (m_config.enable_VHF_features() && min_offset < 1000000u)) {
-    valid = true;
-  }
-  */
 
-  bool valid = !band_name.isEmpty();
+    // TODO: jsherer - this doesn't validate anything else right? we are disabling this because as long as you're in a band, it's valid.
+    /*
+    // search working frequencies for one we are within 10kHz of (1 Mhz
+    // of on VHF and up)
+    bool valid {false};
+    quint64 min_offset {99999999};
+    for (auto const& item : *m_config.frequencies ())
+      {
+        // we need to do specific checks for above and below here to
+        // ensure that we can use unsigned Radio::Frequency since we
+        // potentially use the full 64-bit unsigned range.
+        auto const& working_frequency = item.frequency_;
+        auto const& offset = dial_frequency > working_frequency ?
+          dial_frequency - working_frequency :
+          working_frequency - dial_frequency;
+        if (offset < min_offset) {
+          min_offset = offset;
+        }
+      }
+    if (min_offset < 10000u || (m_config.enable_VHF_features() && min_offset < 1000000u)) {
+      valid = true;
+    }
+    */
 
-  update_dynamic_property (ui->labDialFreq, "oob", !valid);
-  ui->labDialFreq->setText (Radio::pretty_frequency_MHz_string (dial_frequency));
+    bool valid = !band_name.isEmpty();
+
+    update_dynamic_property (ui->labDialFreq, "oob", !valid);
+    ui->labDialFreq->setText (Radio::pretty_frequency_MHz_string (dial_frequency));
+
+    if(m_splitMode && m_transmitting){
+        audio_frequency -= m_XIT;
+    }
+    ui->labDialFreqOffset->setText(QString("%1 Hz").arg(audio_frequency));
 }
 
 void MainWindow::statusChanged()
@@ -4234,6 +4245,9 @@ void MainWindow::guiUpdate()
 
 // Don't transmit another mode in the 30 m WSPR sub-band
     Frequency onAirFreq = m_freqNominal + ui->TxFreqSpinBox->value();
+
+    //qDebug() << "transmitting on" << onAirFreq;
+
     if ((onAirFreq > 10139900 and onAirFreq < 10140320) and
         !m_mode.startsWith ("WSPR")) {
       m_bTxTime=false;
@@ -4857,7 +4871,9 @@ void MainWindow::stopTx()
     tx_status_label.setText("");
   }
 
-  if(!m_tx_watchdog && prepareNextMessageFrame()){
+  bool shouldContinue = !m_tx_watchdog && prepareNextMessageFrame();
+
+  if(shouldContinue){
       continueTx();
   } else {
       // TODO: jsherer - split this up...
@@ -6217,6 +6233,7 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
   m_txFrameCount = frames.length();
 
   int freq = currentFreqOffset();
+  qDebug() << "creating message for freq" << freq;
 
   QStringList lines;
   foreach(auto frame, frames){
@@ -8291,12 +8308,10 @@ bool MainWindow::tryRestoreFreqOffset(){
     }
 
     setFreqOffsetForRestore(m_previousFreq, false);
-
     return true;
 }
 
-void MainWindow::setFreq4(int rxFreq, int txFreq)
-{
+void MainWindow::setFreq4(int rxFreq, int txFreq) {
   // don't allow QSY if we've already queued a transmission, unless we have that functionality enabled.
   if(isMessageQueuedForTransmit() && !m_config.tx_qsy_allowed()){
       return;
@@ -8310,9 +8325,12 @@ void MainWindow::setFreq4(int rxFreq, int txFreq)
   txFreq = max(500, txFreq);
 
   m_previousFreq = currentFreqOffset();
+  ui->RxFreqSpinBox->setValue(rxFreq);
+  ui->TxFreqSpinBox->setValue(txFreq);
 
-  if (ui->RxFreqSpinBox->isEnabled ()) ui->RxFreqSpinBox->setValue(rxFreq);
-  ui->labDialFreqOffset->setText(QString("%1 Hz").arg(rxFreq));
+  displayDialFrequency();
+
+#if 0
   if(m_mode.startsWith ("WSPR")) {
     ui->WSPRfreqSpinBox->setValue(txFreq);
   } else {
@@ -8329,13 +8347,12 @@ void MainWindow::setFreq4(int rxFreq, int txFreq)
       setXIT (ui->TxFreqSpinBox->value ());
     }
   }
-
-
+#endif
 }
 
 void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const& s)
 {
-  // qDebug () << "MainWindow::handle_transceiver_update:" << s;
+  //qDebug () << "MainWindow::handle_transceiver_update:" << s;
   Transceiver::TransceiverState old_state {m_rigState};
   //transmitDisplay (s.ptt ());
   if (s.ptt () && !m_rigState.ptt ()) // safe to start audio
@@ -10115,7 +10132,7 @@ void MainWindow::displayBandActivity() {
                 }
 
                 bool isDirectedAllCall = false;
-                qDebug() << "style" << (text.last().contains(Radio::base_callsign(m_config.my_callsign()))) << text.last();
+
                 // TODO: jsherer - there's a potential here for a previous allcall o poison the highlight.
                 if (
                     (isDirectedOffset(offset, &isDirectedAllCall) && !isDirectedAllCall) ||
