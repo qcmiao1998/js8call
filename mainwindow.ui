@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>WSJT-X   by K1JT</string>
+   <string>FT8Call</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -1725,124 +1725,127 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
           </layout>
          </widget>
         </item>
-       </layout>
-      </widget>
-      <widget class="QFrame" name="frame_7">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>36</height>
-        </size>
-       </property>
-       <property name="frameShape">
-        <enum>QFrame::StyledPanel</enum>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
-       </property>
-       <property name="lineWidth">
-        <number>0</number>
-       </property>
-       <layout class="QHBoxLayout" name="horizontalLayout_18">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
         <item>
-         <widget class="QSpinBox" name="driftSpinBox">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>100</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="wrapping">
-           <bool>false</bool>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-          <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::PlusMinus</enum>
-          </property>
-          <property name="suffix">
-           <string> ms</string>
-          </property>
-          <property name="prefix">
-           <string>Time Drift </string>
-          </property>
-          <property name="minimum">
-           <number>-15000</number>
-          </property>
-          <property name="maximum">
-           <number>15000</number>
-          </property>
-          <property name="singleStep">
-           <number>100</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="driftSyncButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Observe signals in the waterfall and click this to synchronize your time drift with the start of a TX cycle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Sync Time to TX Start</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="driftSyncEndButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Observe signals in the waterfall and click this to synchronize your time drift with the end of a TX cycle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Sync Time to TX End</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="driftSyncResetButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>Reset your time drift to zero.</string>
-          </property>
-          <property name="text">
-           <string>Reset Drift</string>
-          </property>
-         </widget>
+
+<widget class="QFrame" name="driftSyncFrame">
+ <property name="minimumSize">
+  <size>
+   <width>0</width>
+   <height>0</height>
+  </size>
+ </property>
+ <property name="frameShape">
+  <enum>QFrame::NoFrame</enum>
+ </property>
+ <property name="frameShadow">
+  <enum>QFrame::Plain</enum>
+ </property>
+ <property name="lineWidth">
+  <number>0</number>
+ </property>
+ <layout class="QHBoxLayout" name="horizontalLayout_18">
+  <property name="leftMargin">
+   <number>0</number>
+  </property>
+  <property name="topMargin">
+   <number>0</number>
+  </property>
+  <property name="rightMargin">
+   <number>0</number>
+  </property>
+  <property name="bottomMargin">
+   <number>0</number>
+  </property>
+  <item>
+   <widget class="QSpinBox" name="driftSpinBox">
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>100</width>
+      <height>30</height>
+     </size>
+    </property>
+    <property name="wrapping">
+     <bool>false</bool>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::PlusMinus</enum>
+    </property>
+    <property name="suffix">
+     <string> ms</string>
+    </property>
+    <property name="prefix">
+     <string>Time Drift </string>
+    </property>
+    <property name="minimum">
+     <number>-15000</number>
+    </property>
+    <property name="maximum">
+     <number>15000</number>
+    </property>
+    <property name="singleStep">
+     <number>100</number>
+    </property>
+   </widget>
+  </item>
+  <item>
+   <widget class="QPushButton" name="driftSyncButton">
+    <property name="minimumSize">
+     <size>
+      <width>0</width>
+      <height>30</height>
+     </size>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Observe signals in the waterfall and click this to synchronize your time drift with the start of a TX cycle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="text">
+     <string>Sync Time to TX Start</string>
+    </property>
+   </widget>
+  </item>
+  <item>
+   <widget class="QPushButton" name="driftSyncEndButton">
+    <property name="minimumSize">
+     <size>
+      <width>0</width>
+      <height>30</height>
+     </size>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Observe signals in the waterfall and click this to synchronize your time drift with the end of a TX cycle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="text">
+     <string>Sync Time to TX End</string>
+    </property>
+   </widget>
+  </item>
+  <item>
+   <widget class="QPushButton" name="driftSyncResetButton">
+    <property name="minimumSize">
+     <size>
+      <width>0</width>
+      <height>30</height>
+     </size>
+    </property>
+    <property name="toolTip">
+     <string>Reset your time drift to zero.</string>
+    </property>
+    <property name="text">
+     <string>Reset Drift</string>
+    </property>
+   </widget>
+  </item>
+ </layout>
+</widget>
         </item>
        </layout>
       </widget>
@@ -4505,6 +4508,7 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionShow_Call_Activity"/>
     <addaction name="actionShow_Waterfall"/>
     <addaction name="actionShow_Waterfall_Controls"/>
+    <addaction name="actionShow_Time_Drift_Controls"/>
     <addaction name="separator"/>
     <addaction name="actionReset_Window_Sizes"/>
    </widget>
@@ -5207,6 +5211,14 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Show Waterfall Controls</string>
+   </property>
+  </action>
+  <action name="actionShow_Time_Drift_Controls">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Time Drift Controls</string>
    </property>
   </action>
  </widget>

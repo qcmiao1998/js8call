@@ -1673,6 +1673,8 @@ void MainWindow::writeSettings()
   m_settings->setValue("MainSplitter", ui->mainSplitter->saveState());
   m_settings->setValue("TextHorizontalSplitter", ui->textHorizontalSplitter->saveState());
   m_settings->setValue("TextVerticalSplitter", ui->textVerticalSplitter->saveState());
+  m_settings->setValue("ShowTimeDrift", ui->actionShow_Time_Drift_Controls->isChecked());
+  m_settings->setValue("TimeDrift", ui->driftSpinBox->value());
 
   m_settings->endGroup();
 
@@ -1776,6 +1778,8 @@ void MainWindow::readSettings()
   if(!verticalState.isEmpty()){
     ui->textVerticalSplitter->restoreState(verticalState);
   }
+  ui->actionShow_Time_Drift_Controls->setChecked(m_settings->value("ShowTimeDrift", false).toBool());
+  ui->driftSpinBox->setValue(m_settings->value("TimeDrift", 0).toInt());
 
   m_settings->endGroup();
 
@@ -2317,6 +2321,8 @@ void MainWindow::on_menuWindow_aboutToShow(){
     ui->actionShow_Waterfall->setChecked(vsizes.last() > 0);
     ui->actionShow_Waterfall_Controls->setChecked(m_wideGraph->controlsVisible());
     ui->actionShow_Waterfall_Controls->setEnabled(ui->actionShow_Waterfall->isChecked());
+    ui->actionShow_Time_Drift_Controls->setChecked(ui->driftSyncFrame->isVisible());
+    ui->actionShow_Time_Drift_Controls->setEnabled(ui->actionShow_Waterfall->isChecked());
 
     QMenu * sortBandMenu = new QMenu(ui->menuWindow);
     buildBandActivitySortByMenu(sortBandMenu);
@@ -2331,12 +2337,14 @@ void MainWindow::on_actionShow_Band_Activity_triggered(bool checked){
     auto hsizes = ui->textHorizontalSplitter->sizes();
     hsizes[0] = checked ? ui->textHorizontalSplitter->width()/4 : 0;
     ui->textHorizontalSplitter->setSizes(hsizes);
+    ui->tableWidgetRXAll->setVisible(checked);
 }
 
 void MainWindow::on_actionShow_Call_Activity_triggered(bool checked){
     auto hsizes = ui->textHorizontalSplitter->sizes();
     hsizes[2] = checked ? ui->textHorizontalSplitter->width()/4 : 0;
     ui->textHorizontalSplitter->setSizes(hsizes);
+    ui->tableWidgetCalls->setVisible(checked);
 }
 
 void MainWindow::on_actionShow_Waterfall_triggered(bool checked){
@@ -2347,10 +2355,15 @@ void MainWindow::on_actionShow_Waterfall_triggered(bool checked){
     vsizes[1] += oldHeight - newHeight;
     vsizes[vsizes.length()-1] = newHeight;
     ui->mainSplitter->setSizes(vsizes);
+    ui->bandHorizontalWidget->setVisible(checked);
 }
 
 void MainWindow::on_actionShow_Waterfall_Controls_triggered(bool checked){
     m_wideGraph->setControlsVisible(checked);
+}
+
+void MainWindow::on_actionShow_Time_Drift_Controls_triggered(bool checked){
+    ui->driftSyncFrame->setVisible(checked);
 }
 
 void MainWindow::on_actionReset_Window_Sizes_triggered(){
