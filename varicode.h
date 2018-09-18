@@ -57,6 +57,7 @@ public:
     //Varicode();
 
     static QString cqString(int number);
+    static bool startsWithCQ(QString text);
     static QString formatSNR(int snr);
     static QString formatPWR(int dbm);
 

@@ -103,7 +103,7 @@ QRegularExpression directed_re("^"                    +
                                optional_cmd_pattern   +
                                optional_num_pattern);
 
-QRegularExpression beacon_re(R"(^\s*(?<type>CQCQCQ|CQ QRP|CQ DX|CQ TEST|BEACON)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
+QRegularExpression beacon_re(R"(^\s*(?<type>CQCQCQ|CQ QRP|CQ DX|CQ TEST|CQ( CQ){0,2}|BEACON)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
 QRegularExpression compound_re("^\\s*[<]"                  +
                                callsign_pattern        +
@@ -350,6 +350,9 @@ QMap<quint32, QString> cqs = {
     { 1, "CQ DX"  },
     { 2, "CQ QRP" },
     { 3, "CQ TEST" },
+    { 4, "CQ"},
+    { 5, "CQ CQ"},
+    { 6, "CQ CQ CQ"},
 };
 
 QMap<int, int> dbm2mw = {
@@ -440,6 +443,15 @@ QString Varicode::cqString(int number){
         return QString{};
     }
     return cqs[number];
+}
+
+bool Varicode::startsWithCQ(QString text){
+    foreach(auto cq, cqs.values()){
+        if(text.startsWith(cq)){
+            return true;
+        }
+    }
+    return false;
 }
 
 QString Varicode::formatSNR(int snr){

@@ -6355,9 +6355,8 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
 
             bool lineStartsWithBaseCall = (
                 line.startsWith("ALLCALL") ||
-                line.startsWith("CQCQCQ")  ||
-                line.startsWith("CQ ")     ||
-                line.startsWith("BEACON")
+                line.startsWith("BEACON")  ||
+                Varicode::startsWithCQ(line)
             );
 
             bool lineStartsWithStandardCall = !calls.isEmpty() && line.startsWith(calls.first());
@@ -10122,9 +10121,10 @@ void MainWindow::displayBandActivity() {
                 }
                 textItem->setTextAlignment(flag);
 
-                if (text.last().contains(QRegularExpression {
-                        "\\b(CQCQCQ|CQ)\\b"
-                    })) {
+                if (
+                    Varicode::startsWithCQ(text.last()) ||
+                    text.last().contains(QRegularExpression {"\\b(CQCQCQ|CQ)\\b"})
+                ){
                     offsetItem->setBackground(QBrush(m_config.color_CQ()));
                     ageItem->setBackground(QBrush(m_config.color_CQ()));
                     snrItem->setBackground(QBrush(m_config.color_CQ()));
@@ -10133,7 +10133,7 @@ void MainWindow::displayBandActivity() {
 
                 bool isDirectedAllCall = false;
 
-                // TODO: jsherer - there's a potential here for a previous allcall o poison the highlight.
+                // TODO: jsherer - there's a potential here for a previous allcall to poison the highlight.
                 if (
                     (isDirectedOffset(offset, &isDirectedAllCall) && !isDirectedAllCall) ||
                     (text.last().contains(Radio::base_callsign(m_config.my_callsign())))
