@@ -63,6 +63,7 @@
 #include "EqualizationToolsDialog.hpp"
 #include "SelfDestructMessageBox.h"
 #include "messagereplydialog.h"
+#include "DriftingDateTime.h"
 
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
@@ -187,14 +188,14 @@ namespace
 
   int ms_minute_error ()
   {
-    auto const& now = QDateTime::currentDateTime ();
+    auto const& now = DriftingDateTime::currentDateTime ();
     auto const& time = now.time ();
     auto second = time.second ();
     return now.msecsTo (now.addSecs (second > 30 ? 60 - second : -second)) - time.msec ();
   }
 
   QString since(QDateTime time){
-      int delta = time.toUTC().secsTo(QDateTime::currentDateTimeUtc());
+      int delta = time.toUTC().secsTo(DriftingDateTime::currentDateTimeUtc());
       if(delta < 30){
           return QString("now");
       }
@@ -1392,7 +1393,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
 
   // Don't block beacon's first run...
-  m_lastTxTime = QDateTime::currentDateTimeUtc().addSecs(-300);
+  m_lastTxTime = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
 
   pskSetLocal();
   aprsSetLocal();
@@ -1461,7 +1462,7 @@ void MainWindow::initializeDummyData(){
         "W0FW"
     };
 
-    auto dt = QDateTime::currentDateTimeUtc().addSecs(-300);
+    auto dt = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
 
     int i = 0;
     foreach(auto call, calls){
@@ -1485,8 +1486,8 @@ void MainWindow::initializeDummyData(){
         i++;
     }
 
-    displayTextForFreq("KN4CRD: ALLCALL? \u2301 ", 42, QDateTime::currentDateTimeUtc().addSecs(-315), true, true, true);
-    displayTextForFreq("J1Y: KN4CRD SNR -05 \u2301 ", 42, QDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
+    displayTextForFreq("KN4CRD: ALLCALL? \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-315), true, true, true);
+    displayTextForFreq("J1Y: KN4CRD SNR -05 \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
 
     displayActivity(true);
 
@@ -1563,7 +1564,7 @@ void MainWindow::tryBandHop(){
   });
 
   // we just set the date to a known y/m/d to make the comparisons easier
-  QDateTime d = QDateTime::currentDateTimeUtc();
+  QDateTime d = DriftingDateTime::currentDateTimeUtc();
   d.setDate(QDate(2000, 1, 1));
 
   QDateTime startOfDay = QDateTime(QDate(2000, 1, 1), QTime(0, 0));
@@ -1626,7 +1627,7 @@ void MainWindow::tryBandHop(){
               auto message = QString("Scheduled frequency switch from %1 MHz to %2 MHz");
               message = message.arg(Radio::frequency_MHz_string(dialFreq));
               message = message.arg(Radio::frequency_MHz_string(station.frequency_));
-              writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), message);
+              writeNoticeTextToUI(DriftingDateTime::currentDateTimeUtc(), message);
           });
           t->start();
 #endif
@@ -2024,7 +2025,7 @@ void MainWindow::dataSink(qint64 frames)
       QString t;
       t.sprintf("%3d %7.1f %7.1f %7.1f %7.1f %3d",echocom_.nsum,xlevel,sigdb,
                 dfreq,width,nqual);
-      t=QDateTime::currentDateTimeUtc().toString("hh:mm:ss  ") + t;
+      t=DriftingDateTime::currentDateTimeUtc().toString("hh:mm:ss  ") + t;
       if (ui) ui->decodedTextBrowser->appendText(t);
       if(m_echoGraph->isVisible()) m_echoGraph->plotSpec();
       m_nclearave=0;
@@ -2044,7 +2045,7 @@ void MainWindow::dataSink(qint64 frames)
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
     dec_data.params.nzhsym=m_hsymStop;
-    QDateTime now {QDateTime::currentDateTimeUtc ()};
+    QDateTime now {DriftingDateTime::currentDateTimeUtc ()};
     m_dateTime = now.toString ("yyyy-MMM-dd hh:mm");
     if(!m_mode.startsWith ("WSPR")) decode(); //Start decoder
 
@@ -2155,7 +2156,7 @@ QString MainWindow::save_wave_file (QString const& name, short const * data, int
   BWFFile::InfoDictionary list_info {
       {{{'I','S','R','C'}}, source.toLocal8Bit ()},
       {{{'I','S','F','T'}}, program_title (revision ()).simplified ().toLocal8Bit ()},
-      {{{'I','C','R','D'}}, QDateTime::currentDateTime ()
+      {{{'I','C','R','D'}}, DriftingDateTime::currentDateTime ()
                           .toString ("yyyy-MM-ddTHH:mm:ss.zzzZ").toLocal8Bit ()},
       {{{'I','C','M','T'}}, comment.toLocal8Bit ()},
         };
@@ -2186,7 +2187,7 @@ void MainWindow::fastSink(qint64 frames)
     m_bDecoded=false;
   }
 
-  QDateTime tnow=QDateTime::currentDateTimeUtc();
+  QDateTime tnow=DriftingDateTime::currentDateTimeUtc();
   int ihr=tnow.toString("hh").toInt();
   int imin=tnow.toString("mm").toInt();
   int isec=tnow.toString("ss").toInt();
@@ -2199,7 +2200,7 @@ void MainWindow::fastSink(qint64 frames)
 
   int RxFreq=ui->RxFreqSpinBox->value ();
   int nTRpDepth=m_TRperiod + 1000*(m_ndepth & 3);
-  qint64 ms0 = QDateTime::currentMSecsSinceEpoch();
+  qint64 ms0 = DriftingDateTime::currentMSecsSinceEpoch();
   strncpy(dec_data.params.mycall, (m_baseCall+"            ").toLatin1(),12);
   QString hisCall {ui->dxCallEntry->text ()};
   bool bshmsg=ui->cbShMsgs->isChecked();
@@ -2267,7 +2268,7 @@ void MainWindow::fastSink(qint64 frames)
 
   if(decodeNow or m_bFastDone) {
     if(!m_diskData) {
-      QDateTime now {QDateTime::currentDateTimeUtc()};
+      QDateTime now {DriftingDateTime::currentDateTimeUtc()};
       int n=now.time().second() % m_TRperiod;
       if(n<(m_TRperiod/2)) n=n+m_TRperiod;
       auto const& period_start = now.addSecs (-n);
@@ -2287,7 +2288,7 @@ void MainWindow::fastSink(qint64 frames)
     }
     m_bFastDone=false;
   }
-  float tsec=0.001*(QDateTime::currentMSecsSinceEpoch() - ms0);
+  float tsec=0.001*(DriftingDateTime::currentMSecsSinceEpoch() - ms0);
   m_fCPUmskrtd=0.9*m_fCPUmskrtd + 0.1*tsec;
 }
 
@@ -2534,7 +2535,7 @@ void MainWindow::on_autoButton_clicked (bool checked)
     }
     ui->sbTxPercent->setPalette(palette);
   }
-  m_tAutoOn=QDateTime::currentMSecsSinceEpoch()/1000;
+  m_tAutoOn=DriftingDateTime::currentMSecsSinceEpoch()/1000;
 
   // stop tx, reset the ui and message queue
   if(!checked){
@@ -3286,7 +3287,7 @@ void MainWindow::msgAvgDecode2()
 
 void MainWindow::decode()                                       //decode()
 {
-  QDateTime now = QDateTime::currentDateTime();
+  QDateTime now = DriftingDateTime::currentDateTime();
   if( m_dateTimeLastTX.isValid () ) {
     qint64 isecs_since_tx = m_dateTimeLastTX.secsTo(now);
     dec_data.params.lapcqonly= (isecs_since_tx > 600);
@@ -3299,21 +3300,21 @@ void MainWindow::decode()                                       //decode()
     dec_data.params.lapcqonly=false;
   }
 
-  m_msec0=QDateTime::currentMSecsSinceEpoch();
+  m_msec0=DriftingDateTime::currentMSecsSinceEpoch();
   if(!m_dataAvailable or m_TRperiod==0) return;
   ui->DecodeButton->setChecked (true);
   if(!dec_data.params.nagain && m_diskData && !m_bFastMode && m_mode!="FT8") {
     dec_data.params.nutc=dec_data.params.nutc/100;
   }
   if(dec_data.params.nagain==0 && dec_data.params.newdat==1 && (!m_diskData)) {
-    qint64 ms = QDateTime::currentMSecsSinceEpoch() % 86400000;
+    qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
     int imin=ms/60000;
     int ihr=imin/60;
     imin=imin % 60;
     if(m_TRperiod>=60) imin=imin - (imin % (m_TRperiod/60));
     dec_data.params.nutc=100*ihr + imin;
     if(m_mode=="ISCAT" or m_mode=="MSK144" or m_bFast9 or m_mode=="FT8") {
-      QDateTime t=QDateTime::currentDateTimeUtc().addSecs(2-m_TRperiod);
+      QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(2-m_TRperiod);
       ihr=t.toString("hh").toInt();
       imin=t.toString("mm").toInt();
       int isec=t.toString("ss").toInt();
@@ -3323,7 +3324,7 @@ void MainWindow::decode()                                       //decode()
   }
 
   if(m_nPick==1 and !m_diskData) {
-    QDateTime t=QDateTime::currentDateTimeUtc();
+    QDateTime t=DriftingDateTime::currentDateTimeUtc();
     int ihr=t.toString("hh").toInt();
     int imin=t.toString("mm").toInt();
     int isec=t.toString("ss").toInt();
@@ -3504,7 +3505,7 @@ void MainWindow::writeAllTxt(QString message)
       if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
         QTextStream out(&f);
         if(m_RxLog==1) {
-          out << QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
+          out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
               << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
               << m_mode << endl;
           m_RxLog=0;
@@ -3546,7 +3547,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         m_bWarnedHound=true;
       }
     }
-//    qint64 ms=QDateTime::currentMSecsSinceEpoch() - m_msec0;
+//    qint64 ms=DriftingDateTime::currentMSecsSinceEpoch() - m_msec0;
     bool bAvgMsg=false;
     int navg=0;
     if(t.indexOf("<DecodeFinished>") >= 0) {
@@ -3580,7 +3581,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
       if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
         QTextStream out(&f);
         if(m_RxLog==1) {
-          out << QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
+          out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
               << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
               << m_mode << endl;
           m_RxLog=0;
@@ -3597,7 +3598,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
       }
       if (m_config.insert_blank () && m_blankLine && !m_config.bFox()) {
         QString band;
-        if((QDateTime::currentMSecsSinceEpoch() / 1000 - m_secBandChanged) > 4*m_TRperiod/4) {
+        if((DriftingDateTime::currentMSecsSinceEpoch() / 1000 - m_secBandChanged) > 4*m_TRperiod/4) {
           band = ' ' + m_config.bands ()->find (m_freqNominal);
         }
         ui->decodedTextBrowser->insertLineSpacer (band.rightJustified  (40, '-'));
@@ -3661,7 +3662,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.bits = decodedtext.bits();
             d.freq = offset;
             d.text = decodedtext.message();
-            d.utcTimestamp = QDateTime::currentDateTimeUtc();
+            d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
             d.snr = decodedtext.snr();
             d.isBuffered = false;
 
@@ -3698,7 +3699,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             cd.grid = decodedtext.extra(); // compound calls via beacons may contain grid...
             cd.snr = decodedtext.snr();
             cd.freq = decodedtext.frequencyOffset();
-            cd.utcTimestamp = QDateTime::currentDateTimeUtc();
+            cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
             cd.bits = decodedtext.bits();
 
             if(decodedtext.isBeacon()){
@@ -3723,7 +3724,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
               d.cmd = parts.at(2);
               d.freq = decodedtext.frequencyOffset();
               d.snr = decodedtext.snr();
-              d.utcTimestamp = QDateTime::currentDateTimeUtc();
+              d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
               d.bits = decodedtext.bits();
               d.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
 
@@ -3788,7 +3789,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 d.grid = theirgrid;
                 d.snr = decodedtext.snr();
                 d.freq = decodedtext.frequencyOffset();
-                d.utcTimestamp = QDateTime::currentDateTimeUtc();
+                d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
                 m_callActivity[d.call] = d;
               }
           }
@@ -3826,7 +3827,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                           d.grid = !grids.empty() ? grids.first() : "";
                           d.snr = decodedtext.snr();
                           d.freq = decodedtext.frequencyOffset();
-                          d.utcTimestamp = QDateTime::currentDateTimeUtc();
+                          d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
                           m_callActivity[Radio::base_callsign(de_callsign)] = d;
                       }
                   }
@@ -3935,7 +3936,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
           if((t==deCall or t=="") and rpt!="") m_rptRcvd=rpt;
         }
         // extract details and send to PSKreporter
-        int nsec=QDateTime::currentMSecsSinceEpoch()/1000-m_secBandChanged;
+        int nsec=DriftingDateTime::currentMSecsSinceEpoch()/1000-m_secBandChanged;
         bool okToPost=(nsec>(4*m_TRperiod)/5);
 
         //if (stdMsg && okToPost) pskPost(decodedtext);
@@ -4068,7 +4069,7 @@ void MainWindow::pskPost (DecodedText const& decodedtext)
   if(grid.contains (grid_regexp)) {
 //    qDebug() << "To PSKreporter:" << deCall << grid << frequency << msgmode << snr;
 //    psk_Reporter->addRemoteStation(deCall,grid,QString::number(frequency),msgmode,
-//           QString::number(snr),QString::number(QDateTime::currentDateTime().toTime_t()));
+//           QString::number(snr),QString::number(DriftingDateTime::currentDateTime().toTime_t()));
       pskLogReport(msgmode, audioFrequency, snr, deCall, grid);
   }
 #endif
@@ -4085,7 +4086,7 @@ void MainWindow::pskLogReport(QString mode, int offset, int snr, QString callsig
        QString::number(frequency),
        mode,
        QString::number(snr),
-       QString::number(QDateTime::currentDateTime().toTime_t()));
+       QString::number(DriftingDateTime::currentDateTime().toTime_t()));
 }
 
 void MainWindow::aprsLogReport(int offset, int snr, QString callsign, QString grid){
@@ -4120,7 +4121,7 @@ void MainWindow::killFile ()
 
 void MainWindow::on_EraseButton_clicked ()
 {
-  qint64 ms=QDateTime::currentMSecsSinceEpoch();
+  qint64 ms=DriftingDateTime::currentMSecsSinceEpoch();
   ui->decodedTextBrowser2->erase ();
   if(m_mode.startsWith ("WSPR") or m_mode=="Echo" or m_mode=="ISCAT") {
     ui->decodedTextBrowser->erase ();
@@ -4191,7 +4192,7 @@ void MainWindow::guiUpdate()
     tx2 += m_TRperiod;
   }
 
-  qint64 ms = QDateTime::currentMSecsSinceEpoch() % 86400000;
+  qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
   int nsec=ms/1000;
   double tsec=0.001*ms;
   double t2p=fmod(tsec,2*m_TRperiod);
@@ -4236,7 +4237,7 @@ void MainWindow::guiUpdate()
   if(m_tune) m_bTxTime=true;                 //"Tune" takes precedence
 
   if(m_transmitting or m_auto or m_tune) {
-    m_dateTimeLastTX = QDateTime::currentDateTime ();
+    m_dateTimeLastTX = DriftingDateTime::currentDateTime ();
 
 // Check for "txboth" (testing purposes only)
     QFile f(m_appDir + "/txboth");
@@ -4508,7 +4509,7 @@ void MainWindow::guiUpdate()
         }
     }
 
-    auto t2 = QDateTime::currentDateTimeUtc ().toString ("hhmm");
+    auto t2 = DriftingDateTime::currentDateTimeUtc ().toString ("hhmm");
     icw[0] = 0;
     auto msg_parts = m_currentMessage.split (' ', QString::SkipEmptyParts);
     if (msg_parts.size () > 2) {
@@ -4623,7 +4624,7 @@ void MainWindow::guiUpdate()
         }
 
       // TODO: jsherer - perhaps an on_transmitting signal?
-      m_lastTxTime = QDateTime::currentDateTimeUtc();
+      m_lastTxTime = DriftingDateTime::currentDateTimeUtc();
 
       m_transmitting = true;
       transmitDisplay (true);
@@ -4665,7 +4666,7 @@ void MainWindow::guiUpdate()
 
     if(m_config.bHound()) {
       m_bWarnedHound=false;
-      qint32 tHound=QDateTime::currentMSecsSinceEpoch()/1000 - m_tAutoOn;
+      qint32 tHound=DriftingDateTime::currentMSecsSinceEpoch()/1000 - m_tAutoOn;
       //To keep calling Fox, Hound must reactivate Enable Tx at least once every 2 minutes
       if(tHound >= 120 and m_ntx==1) auto_tx_mode(false);
     }
@@ -4736,7 +4737,7 @@ void MainWindow::guiUpdate()
       tx_status_label.setText("");
     }
 
-    QDateTime t = QDateTime::currentDateTimeUtc();
+    QDateTime t = DriftingDateTime::currentDateTimeUtc();
     QString utc = t.date().toString("yyyy MMM dd") + "\n " +
       t.time().toString() + " ";
     ui->labUTC->setText(utc);
@@ -4809,7 +4810,7 @@ void MainWindow::startTx()
   if (m_transmitting) m_restart=true;
 
   // detect if we're currently in a possible transmit cycle...and if so, wait until the next one if we're more than 2 seconds in...
-  QDateTime now {QDateTime::currentDateTimeUtc()};
+  QDateTime now {DriftingDateTime::currentDateTimeUtc()};
   int s=now.addSecs(-2).time().second();
   int n=s % (2*m_TRperiod);
   if((n <= m_TRperiod && m_txFirst) || (n > m_TRperiod && !m_txFirst)){
@@ -4941,7 +4942,7 @@ void MainWindow::set_dateTimeQSO(int m_ntx)
         return;
     }
     else { // we also take of m_TRperiod/2 to allow for late clicks
-      auto now = QDateTime::currentDateTimeUtc();
+      auto now = DriftingDateTime::currentDateTimeUtc();
       m_dateTimeQSOOn = now.addSecs (-(m_ntx - 2) * m_TRperiod - (now.time ().second () % m_TRperiod));
     }
 }
@@ -6178,7 +6179,7 @@ void MainWindow::addMessageText(QString text, bool clear, bool selectFirstPlaceh
 void MainWindow::enqueueMessage(int priority, QString message, int freq, Callback c){
     m_txMessageQueue.enqueue(
         PrioritizedMessage{
-            QDateTime::currentDateTimeUtc(), priority, message, freq, c
+            DriftingDateTime::currentDateTimeUtc(), priority, message, freq, c
         }
     );
 }
@@ -6241,7 +6242,7 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
       lines.append(dt.message());
   }
 
-  displayTextForFreq(lines.join("") + " \u2301 ", freq, QDateTime::currentDateTimeUtc(), true, true, true);
+  displayTextForFreq(lines.join("") + " \u2301 ", freq, DriftingDateTime::currentDateTimeUtc(), true, true, true);
 
   // keep track of the last message text sent
   m_lastTxMessage = text;
@@ -6658,7 +6659,7 @@ bool MainWindow::isFreqOffsetFree(int f, int bw){
         }
 
         // if we last received on this more than 30 seconds ago, it's free
-        if(d.last().utcTimestamp.secsTo(QDateTime::currentDateTimeUtc()) >= 30){
+        if(d.last().utcTimestamp.secsTo(DriftingDateTime::currentDateTimeUtc()) >= 30){
             continue;
         }
 
@@ -6695,7 +6696,7 @@ int MainWindow::findFreeFreqOffset(int fmin, int fmax, int bw){
 
 // scheduleBeacon
 void MainWindow::scheduleBacon(bool first){
-    auto timestamp = QDateTime::currentDateTimeUtc();
+    auto timestamp = DriftingDateTime::currentDateTimeUtc();
     auto orig = timestamp;
 
     // remove milliseconds
@@ -6739,7 +6740,7 @@ void MainWindow::checkBacon(){
     if(!ui->beaconButton->isChecked()){
         return;
     }
-    if(QDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) > 5){
+    if(DriftingDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) > 5){
         return;
     }
     if(m_nextBeaconQueued){
@@ -6784,7 +6785,7 @@ QString MainWindow::calculateDistance(QString const& value, int *pDistance)
         return QString{};
     }
 
-    qint64 nsec = (QDateTime::currentMSecsSinceEpoch()/1000) % 86400;
+    qint64 nsec = (DriftingDateTime::currentMSecsSinceEpoch()/1000) % 86400;
     double utch=nsec/3600.0;
     int nAz,nEl,nDmiles,nDkm,nHotAz,nHotABetter;
     azdist_(const_cast <char *> ((m_config.my_grid () + "      ").left (6).toLatin1().constData()),
@@ -6845,7 +6846,7 @@ void MainWindow::on_dxGridEntry_textChanged (QString const& grid)
       m_hisGrid = grid;
       statusUpdate ();
     }
-    qint64 nsec = (QDateTime::currentMSecsSinceEpoch()/1000) % 86400;
+    qint64 nsec = (DriftingDateTime::currentMSecsSinceEpoch()/1000) % 86400;
     double utch=nsec/3600.0;
     int nAz,nEl,nDmiles,nDkm,nHotAz,nHotABetter;
     azdist_(const_cast <char *> ((m_config.my_grid () + "      ").left (6).toLatin1().constData()),
@@ -6886,9 +6887,9 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   */
   // m_dateTimeQSOOn should really already be set but we'll ensure it gets set to something just in case
   if (!m_dateTimeQSOOn.isValid ()) {
-    m_dateTimeQSOOn = QDateTime::currentDateTimeUtc();
+    m_dateTimeQSOOn = DriftingDateTime::currentDateTimeUtc();
   }
-  auto dateTimeQSOOff = QDateTime::currentDateTimeUtc();
+  auto dateTimeQSOOff = DriftingDateTime::currentDateTimeUtc();
   if (dateTimeQSOOff < m_dateTimeQSOOn) dateTimeQSOOff = m_dateTimeQSOOn;
   QString call=callsignSelected();
   if(call == "ALLCALL"){
@@ -7923,7 +7924,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
 }
 
 void MainWindow::buildRelayMenu(QMenu *menu){
-    auto now = QDateTime::currentDateTimeUtc();
+    auto now = DriftingDateTime::currentDateTimeUtc();
     int callsignAging = m_config.callsign_aging();
     foreach(auto cd, m_callActivity.values()){
         if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
@@ -8029,7 +8030,7 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
 
     // print the history in the main window...
     int activityAging = m_config.activity_aging();
-    QDateTime now = QDateTime::currentDateTimeUtc();
+    QDateTime now = DriftingDateTime::currentDateTimeUtc();
     QDateTime firstActivity = now;
     QString activityText;
     bool isLast = false;
@@ -8089,6 +8090,62 @@ void MainWindow::on_tableWidgetCalls_selectionChanged(const QItemSelection &sele
 void MainWindow::on_freeTextMsg_currentTextChanged (QString const& text)
 {
   msgtype(text, ui->freeTextMsg->lineEdit ());
+}
+
+void MainWindow::on_driftSpinBox_valueChanged(int n){
+    if(n == DriftingDateTime::drift()){
+        return;
+    }
+
+    setDrift(n);
+}
+
+void MainWindow::on_driftSyncButton_clicked(){
+    auto now = QDateTime::currentDateTimeUtc();
+
+    int n = 0;
+    int nPos = 15 - now.time().second() % m_TRperiod;
+    int nNeg = now.time().second() % m_TRperiod - 15;
+
+    if(abs(nNeg) < nPos){
+        n = nNeg;
+    } else {
+        n = nPos;
+    }
+
+    setDrift(n * 1000);
+}
+
+void MainWindow::on_driftSyncEndButton_clicked(){
+    auto now = QDateTime::currentDateTimeUtc();
+
+    int n = 0;
+    int nPos = 15 - now.time().second() % m_TRperiod;
+    int nNeg = now.time().second() % m_TRperiod - 15;
+
+    if(abs(nNeg) < nPos){
+        n = nNeg + 2;
+    } else {
+        n = nPos - 2;
+    }
+
+    setDrift(n * 1000);
+}
+
+void MainWindow::on_driftSyncResetButton_clicked(){
+    setDrift(0);
+}
+
+void MainWindow::setDrift(int n){
+    DriftingDateTime::setDrift(n);
+
+    qDebug() << qSetRealNumberPrecision(12) << "Drift milliseconds:" << n;
+    qDebug() << qSetRealNumberPrecision(12) << "Clock time:" << QDateTime::currentDateTimeUtc();
+    qDebug() << qSetRealNumberPrecision(12) << "Drifted time:" << DriftingDateTime::currentDateTimeUtc();
+
+    if(ui->driftSpinBox->value() != n){
+        ui->driftSpinBox->setValue(n);
+    }
 }
 
 void MainWindow::on_rptSpinBox_valueChanged(int n)
@@ -8399,7 +8456,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
                || !(ui->cbCQTx->isEnabled () && ui->cbCQTx->isVisible () && ui->cbCQTx->isChecked()))) {
 
             m_lastDialFreq = m_freqNominal;
-            m_secBandChanged=QDateTime::currentMSecsSinceEpoch()/1000;
+            m_secBandChanged=DriftingDateTime::currentMSecsSinceEpoch()/1000;
 
             if(m_freqNominal != m_bandHoppedFreq){
                 m_bandHopped = false;
@@ -8410,7 +8467,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
               QFile f2 {m_config.writeable_data_dir ().absoluteFilePath ("ALL.TXT")};
               if (f2.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
                 QTextStream out(&f2);
-                out << QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
+                out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
                     << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
                     << m_mode << endl;
                 f2.close();
@@ -9116,19 +9173,19 @@ bool MainWindow::isRecentOffset(int offset){
     }
     return (
         m_rxRecentCache.contains(offset/10*10) &&
-        m_rxRecentCache[offset/10*10]->secsTo(QDateTime::currentDateTimeUtc()) < 120
+        m_rxRecentCache[offset/10*10]->secsTo(DriftingDateTime::currentDateTimeUtc()) < 120
     );
 }
 
 void MainWindow::markOffsetRecent(int offset){
-    m_rxRecentCache.insert(offset/10*10, new QDateTime(QDateTime::currentDateTimeUtc()), 10);
-    m_rxRecentCache.insert(offset/10*10+10, new QDateTime(QDateTime::currentDateTimeUtc()), 10);
+    m_rxRecentCache.insert(offset/10*10, new QDateTime(DriftingDateTime::currentDateTimeUtc()), 10);
+    m_rxRecentCache.insert(offset/10*10+10, new QDateTime(DriftingDateTime::currentDateTimeUtc()), 10);
 }
 
 bool MainWindow::isDirectedOffset(int offset, bool *pIsAllCall){
     bool isDirected = (
         m_rxDirectedCache.contains(offset/10*10) &&
-        m_rxDirectedCache[offset/10*10]->date.secsTo(QDateTime::currentDateTimeUtc()) < 300
+        m_rxDirectedCache[offset/10*10]->date.secsTo(DriftingDateTime::currentDateTimeUtc()) < 300
     );
 
     if(isDirected){
@@ -9139,8 +9196,8 @@ bool MainWindow::isDirectedOffset(int offset, bool *pIsAllCall){
 }
 
 void MainWindow::markOffsetDirected(int offset, bool isAllCall){
-    CachedDirectedType *d1 = new CachedDirectedType{ isAllCall, QDateTime::currentDateTimeUtc() };
-    CachedDirectedType *d2 = new CachedDirectedType{ isAllCall, QDateTime::currentDateTimeUtc() };
+    CachedDirectedType *d1 = new CachedDirectedType{ isAllCall, DriftingDateTime::currentDateTimeUtc() };
+    CachedDirectedType *d2 = new CachedDirectedType{ isAllCall, DriftingDateTime::currentDateTimeUtc() };
     m_rxDirectedCache.insert(offset/10*10,    d1, 10);
     m_rxDirectedCache.insert(offset/10*10+10, d2, 10);
 }
@@ -9224,12 +9281,12 @@ void MainWindow::processRxActivity() {
         // TODO: jsherer - develop a better way to determine if we can display this band activity...
 #if 0
         if(isRecentOffset(freq) || isAllCallIncluded(d.text)){
-            m_rxRecentCache.insert(freq, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+            m_rxRecentCache.insert(freq, new QDateTime(DriftingDateTime::currentDateTimeUtc()), 25);
             shouldDisplay = true;
         }
 
         if(isDirectedOffset(freq) || isMyCallIncluded(d.text)){
-            m_rxDirectedCache.insert(freq, new QDateTime(QDateTime::currentDateTimeUtc()), 25);
+            m_rxDirectedCache.insert(freq, new QDateTime(DriftingDateTime::currentDateTimeUtc()), 25);
             shouldDisplay = true;
         }
 #endif
@@ -9361,7 +9418,7 @@ void MainWindow::processBufferedActivity() {
 
         // check to make sure we empty old buffers by getting the latest timestamp
         // and checking to see if it's older than one minute.
-        auto dt = QDateTime::currentDateTimeUtc().addDays(-1);
+        auto dt = DriftingDateTime::currentDateTimeUtc().addDays(-1);
         if(buffer.cmd.utcTimestamp.isValid()){
             dt = qMax(dt, buffer.cmd.utcTimestamp);
         }
@@ -9371,7 +9428,7 @@ void MainWindow::processBufferedActivity() {
         if(!buffer.msgs.isEmpty()){
             dt = qMax(dt, buffer.msgs.last().utcTimestamp);
         }
-        if(dt.secsTo(QDateTime::currentDateTimeUtc()) > 60){
+        if(dt.secsTo(DriftingDateTime::currentDateTimeUtc()) > 60){
             m_messageBuffer.remove(freq);
             continue;
         }
@@ -9446,7 +9503,7 @@ void MainWindow::processCommandActivity() {
     int f = currentFreq();
 #endif
 
-    auto now = QDateTime::currentDateTimeUtc();
+    auto now = DriftingDateTime::currentDateTimeUtc();
 
     while (!m_rxCommandQueue.isEmpty()) {
         auto d = m_rxCommandQueue.dequeue();
@@ -9680,7 +9737,7 @@ void MainWindow::processCommandActivity() {
                     cd.snr = -64;
                     cd.freq = d.freq;
                     cd.through = d.from;
-                    cd.utcTimestamp = QDateTime::currentDateTimeUtc();
+                    cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
                     logCallActivity(cd, false);
                 }
 
@@ -9878,7 +9935,7 @@ void MainWindow::processSpots() {
     }
 
     // Is it ok to post spots to PSKReporter?
-    int nsec = QDateTime::currentMSecsSinceEpoch() / 1000 - m_secBandChanged;
+    int nsec = DriftingDateTime::currentMSecsSinceEpoch() / 1000 - m_secBandChanged;
     bool okToPost = (nsec > (4 * m_TRperiod) / 5);
     if (!okToPost) {
         return;
@@ -9929,7 +9986,7 @@ void MainWindow::processTxQueue(){
     }
 
     // and if we are a low priority message, we need to have not transmitted in the past 30 seconds...
-    if(head.priority <= PriorityLow && m_lastTxTime.secsTo(QDateTime::currentDateTimeUtc()) <= 30){
+    if(head.priority <= PriorityLow && m_lastTxTime.secsTo(DriftingDateTime::currentDateTimeUtc()) <= 30){
         return;
     }
 
@@ -9971,7 +10028,7 @@ void MainWindow::displayActivity(bool force) {
 }
 
 void MainWindow::displayBandActivity() {
-    auto now = QDateTime::currentDateTimeUtc();
+    auto now = DriftingDateTime::currentDateTimeUtc();
 
     ui->tableWidgetRXAll->setFont(m_config.table_font());
 
@@ -10183,7 +10240,7 @@ void MainWindow::displayBandActivity() {
 }
 
 void MainWindow::displayCallActivity() {
-    auto now = QDateTime::currentDateTimeUtc();
+    auto now = DriftingDateTime::currentDateTimeUtc();
 
     // Selected callsign
     QString selectedCall = callsignSelected();
@@ -10654,7 +10711,7 @@ void MainWindow::p1ReadFromStdout()                        //p1readFromStdout
 
 QString MainWindow::WSPR_hhmm(int n)
 {
-  QDateTime t=QDateTime::currentDateTimeUtc().addSecs(n);
+  QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(n);
   int m=t.toString("hhmm").toInt()/2;
   QString t1;
   t1.sprintf("%04d",2*m);
@@ -10663,7 +10720,7 @@ QString MainWindow::WSPR_hhmm(int n)
 
 void MainWindow::WSPR_history(Frequency dialFreq, int ndecodes)
 {
-  QDateTime t=QDateTime::currentDateTimeUtc().addSecs(-60);
+  QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(-60);
   QString t1=t.toString("yyMMdd");
   QString t2=WSPR_hhmm(-60);
   QString t3;
@@ -10807,7 +10864,7 @@ void MainWindow::astroUpdate ()
       // no Doppler correction while CTRL pressed allows manual tuning
       if (Qt::ControlModifier & QApplication::queryKeyboardModifiers ()) return;
 
-      auto correction = m_astroWidget->astroUpdate(QDateTime::currentDateTimeUtc (),
+      auto correction = m_astroWidget->astroUpdate(DriftingDateTime::currentDateTimeUtc (),
                                                    m_config.my_grid(), m_hisGrid,
                                                    m_freqNominal,
                                                    "Echo" == m_mode, m_transmitting,
@@ -11095,7 +11152,7 @@ void MainWindow::write_transmit_entry (QString const& file_name)
   if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
     {
       QTextStream out(&f);
-      auto time = QDateTime::currentDateTimeUtc ();
+      auto time = DriftingDateTime::currentDateTimeUtc ();
       time = time.addSecs (-(time.time ().second () % m_TRperiod));
       auto dt = DecodedText(m_currentMessage);
       out << time.toString("yyyy-MM-dd hh:mm:ss")
@@ -11410,7 +11467,7 @@ void MainWindow::foxTxSequencer()
  * foxgen() to generate and accumulate the corresponding waveform.
 */
 
-  qint64 now=QDateTime::currentMSecsSinceEpoch()/1000;
+  qint64 now=DriftingDateTime::currentMSecsSinceEpoch()/1000;
   QStringList list1;                        //Up to NSlots Hound calls to be sent RR73
   QStringList list2;                        //Up to NSlots Hound calls to be sent a report
   QString fm;                               //Fox message to be transmitted
@@ -11526,7 +11583,7 @@ list2Done:
       m_hisGrid=m_foxQSO[hc1].grid;
       m_rptSent=m_foxQSO[hc1].sent;
       m_rptRcvd=m_foxQSO[hc1].rcvd;
-      QDateTime logTime {QDateTime::currentDateTimeUtc ()};
+      QDateTime logTime {DriftingDateTime::currentDateTimeUtc ()};
       QString thc1=(m_hisCall + "   ").mid(0,6);
       if(m_hisCall.contains("/")) thc1=m_hisCall;
       QString logLine=logTime.toString("yyyy-MM-dd hh:mm") + " " + thc1 + "  " +
@@ -11662,7 +11719,7 @@ void MainWindow::writeFoxQSO(QString msg)
   QFile f {m_config.writeable_data_dir ().absoluteFilePath ("FoxQSO.txt")};
   if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
     QTextStream out(&f);
-    out << QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
+    out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
         << "  " << fixed << qSetRealNumberPrecision (3) << (m_freqNominal/1.e6)
         << t << msg << endl;
     f.close();

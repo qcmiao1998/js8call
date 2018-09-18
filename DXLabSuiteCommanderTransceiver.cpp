@@ -6,6 +6,8 @@
 #include <QThread>
 #include <QDateTime>
 
+#include "DriftingDateTime.h"
+
 #include "NetworkServerLookup.hpp"
 
 #include "moc_DXLabSuiteCommanderTransceiver.cpp"
@@ -151,10 +153,10 @@ void DXLabSuiteCommanderTransceiver::do_ptt (bool on)
       simple_command (on  ? "<command:5>CmdTX<parameters:0>" : "<command:5>CmdRX<parameters:0>");
 
       bool tx {!on};
-      auto start = QDateTime::currentMSecsSinceEpoch ();
+      auto start = DriftingDateTime::currentMSecsSinceEpoch ();
       // we must now wait for Tx on the rig, we will wait a short while
       // before bailing out
-      while (tx != on && QDateTime::currentMSecsSinceEpoch () - start < 1000)
+      while (tx != on && DriftingDateTime::currentMSecsSinceEpoch () - start < 1000)
         {
           auto reply = command_with_reply ("<command:9>CmdSendTx<parameters:0>");
           if (0 == reply.indexOf ("<CmdTX:"))

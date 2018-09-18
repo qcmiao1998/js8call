@@ -299,6 +299,11 @@ private slots:
   void checkBacon();
   void prepareBacon();
   QString calculateDistance(QString const& grid, int *pDistance=nullptr);
+  void on_driftSpinBox_valueChanged(int n);
+  void on_driftSyncButton_clicked();
+  void on_driftSyncEndButton_clicked();
+  void on_driftSyncResetButton_clicked();
+  void setDrift(int n);
   void on_rptSpinBox_valueChanged(int n);
   void killFile();
   void on_tuneButton_clicked (bool);

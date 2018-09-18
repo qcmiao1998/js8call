@@ -74,7 +74,8 @@ SOURCES += \
     SelfDestructMessageBox.cpp \
     APRSISClient.cpp \
     messagereplydialog.cpp \
-    keyeater.cpp
+    keyeater.cpp \
+    DriftingDateTime.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -100,7 +101,8 @@ HEADERS  += qt_helpers.hpp \
     SelfDestructMessageBox.h \
     APRSISClient.h \
     messagereplydialog.h \
-    keyeater.h
+    keyeater.h \
+    DriftingDateTime.h
 
 
 INCLUDEPATH += qmake_only

@@ -4,6 +4,8 @@
 #include <QDebug>
 #include "commons.h"
 
+#include "DriftingDateTime.h"
+
 #include "moc_Detector.cpp"
 
 extern "C" {
@@ -42,7 +44,7 @@ bool Detector::reset ()
 void Detector::clear ()
 {
   // set index to roughly where we are in time (1ms resolution)
-  // qint64 now (QDateTime::currentMSecsSinceEpoch ());
+  // qint64 now (DriftingDateTime::currentMSecsSinceEpoch ());
   // unsigned msInPeriod ((now % 86400000LL) % (m_period * 1000));
   // dec_data.params.kin = qMin ((msInPeriod * m_frameRate) / 1000, static_cast<unsigned> (sizeof (dec_data.d2) / sizeof (dec_data.d2[0])));
   dec_data.params.kin = 0;
@@ -125,7 +127,7 @@ unsigned Detector::secondInPeriod () const
 {
   // we take the time of the data as the following assuming no latency
   // delivering it to us (not true but close enough for us)
-  qint64 now (QDateTime::currentMSecsSinceEpoch ());
+  qint64 now (DriftingDateTime::currentMSecsSinceEpoch ());
 
   unsigned secondInToday ((now % 86400000LL) / 1000);
   return secondInToday % m_period;

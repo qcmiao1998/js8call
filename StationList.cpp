@@ -16,6 +16,8 @@
 #include <QDebug>
 #include <QDebugStateSaver>
 
+#include "DriftingDateTime.h"
+
 #include "pimpl_impl.hpp"
 
 #include "Radio.hpp"
@@ -631,7 +633,7 @@ bool StationList::impl::dropMimeData (QMimeData const * data, Qt::DropAction act
                                                  , [&band] (Station const& s) {return s.band_name_ == band;}))
             {
               // not found so add it
-              add (Station {band, 0, QDateTime::currentDateTimeUtc(), QDateTime::currentDateTimeUtc(), QString {}});
+              add (Station {band, 0, DriftingDateTime::currentDateTimeUtc(), DriftingDateTime::currentDateTimeUtc(), QString {}});
             }
         }
       return true;

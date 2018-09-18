@@ -6,6 +6,8 @@
 #include <QSysInfo>
 #include <QDebug>
 
+#include "DriftingDateTime.h"
+
 #include "moc_soundin.cpp"
 
 bool SoundInput::audioError () const
@@ -102,7 +104,7 @@ void SoundInput::suspend ()
 
 void SoundInput::resume ()
 {
-//  qDebug() << "Resume" << fmod(0.001*QDateTime::currentMSecsSinceEpoch(),6.0);
+//  qDebug() << "Resume" << fmod(0.001*DriftingDateTime::currentMSecsSinceEpoch(),6.0);
   if (m_sink)
     {
       m_sink->reset ();

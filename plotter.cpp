@@ -6,6 +6,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "DriftingDateTime.h"
+
 #define MAX_SCREENSIZE 2048
 
 extern "C" {
@@ -236,9 +238,9 @@ void CPlotter::draw(float swide[], bool bScroll, bool bRed)
   if(m_line == painter1.fontMetrics ().height ()) {
     painter1.setPen(Qt::white);
     QString t;
-    qint64 ms = QDateTime::currentMSecsSinceEpoch() % 86400000;
+    qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
     int n=(ms/1000) % m_TRperiod;
-    QDateTime t1=QDateTime::currentDateTimeUtc().addSecs(-n);
+    QDateTime t1=DriftingDateTime::currentDateTimeUtc().addSecs(-n);
     if(m_TRperiod < 60) {
       t=t1.toString("hh:mm:ss") + "    " + m_rxBand;
     } else {

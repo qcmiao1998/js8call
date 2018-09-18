@@ -278,6 +278,7 @@ set (jt9_CXXSRCS
   )
 
 set (wsjtx_CXXSRCS
+  DriftingDateTime.cpp
   logbook/adif.cpp
   logbook/countrydat.cpp
   logbook/countriesworked.cpp
@@ -673,31 +674,31 @@ set (wsjtx_UISRCS
   messagereplydialog.ui
   )
 
-set (UDP_library_CXXSRCS
-  Radio.cpp
-  RadioMetaType.cpp
-  NetworkMessage.cpp
-  MessageServer.cpp
-  )
-
-set (UDP_library_HEADERS
-  Radio.hpp
-  MessageServer.hpp
-  ${PROJECT_BINARY_DIR}/udp_export.h
-  )
-
-set (message_aggregator_CXXSRCS
-  UDPExamples/MessageAggregator.cpp
-  UDPExamples/MessageAggregatorMainWindow.cpp
-  UDPExamples/DecodesModel.cpp
-  UDPExamples/BeaconsModel.cpp
-  UDPExamples/ClientWidget.cpp
-  MaidenheadLocatorValidator.cpp
-  )
-
-set (message_aggregator_STYLESHEETS
-  UDPExamples/qss/default.qss
-  )
+# set (UDP_library_CXXSRCS
+#   Radio.cpp
+#   RadioMetaType.cpp
+#   NetworkMessage.cpp
+#   MessageServer.cpp
+#   )
+# 
+# set (UDP_library_HEADERS
+#   Radio.hpp
+#   MessageServer.hpp
+#   ${PROJECT_BINARY_DIR}/udp_export.h
+#   )
+# 
+# set (message_aggregator_CXXSRCS
+#   UDPExamples/MessageAggregator.cpp
+#   UDPExamples/MessageAggregatorMainWindow.cpp
+#   UDPExamples/DecodesModel.cpp
+#   UDPExamples/BeaconsModel.cpp
+#   UDPExamples/ClientWidget.cpp
+#   MaidenheadLocatorValidator.cpp
+#   )
+# 
+# set (message_aggregator_STYLESHEETS
+#   UDPExamples/qss/default.qss
+#   )
 
 set (qcp_CXXSRCS
   qcustomplot-source/qcustomplot.cpp
@@ -1352,45 +1353,45 @@ else ()
 endif ()
 qt5_use_modules (ft8call SerialPort) # not sure why the interface link library syntax above doesn't work
 
-# make a library for WSJT-X UDP servers
-# add_library (wsjtx_udp SHARED ${UDP_library_CXXSRCS})
-add_library (wsjtx_udp-static STATIC ${UDP_library_CXXSRCS})
-#target_include_directories (wsjtx_udp
-#  INTERFACE
-#  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/wsjtx>
-#  )
-target_include_directories (wsjtx_udp-static
-  INTERFACE
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/wsjtx>
-  )
-#set_target_properties (wsjtx_udp PROPERTIES
-#  PUBLIC_HEADER "${UDP_library_HEADERS}"
-#  )
-set_target_properties (wsjtx_udp-static PROPERTIES
-  OUTPUT_NAME wsjtx_udp
-  )
-target_compile_definitions (wsjtx_udp-static PUBLIC UDP_STATIC_DEFINE)
-#qt5_use_modules (wsjtx_udp Network)
-qt5_use_modules (wsjtx_udp-static Network Gui)
-generate_export_header (wsjtx_udp-static BASE_NAME udp)
-
-add_executable (udp_daemon UDPExamples/UDPDaemon.cpp UDPExamples/udp_daemon.rc ${WSJTX_ICON_FILE})
-target_link_libraries (udp_daemon wsjtx_udp-static)
-
-add_resources (message_aggregator_RESOURCES /qss ${message_aggregator_STYLESHEETS})
-configure_file (UDPExamples/message_aggregator.qrc.in message_aggregator.qrc @ONLY)
-qt5_add_resources (message_aggregator_RESOURCES_RCC ${CMAKE_CURRENT_BINARY_DIR}/message_aggregator.qrc)
-add_executable (message_aggregator
-  ${message_aggregator_CXXSRCS}
-  ${WSJTX_ICON_FILE}
-  UDPExamples/message_aggregator.rc
-  ${message_aggregator_RESOURCES_RCC}
-  )
-target_link_libraries (message_aggregator Qt5::Widgets wsjtx_udp-static)
-
-if (WSJT_CREATE_WINMAIN)
-  set_target_properties (message_aggregator PROPERTIES WIN32_EXECUTABLE ON)
-endif (WSJT_CREATE_WINMAIN)
+### # make a library for WSJT-X UDP servers
+### # add_library (wsjtx_udp SHARED ${UDP_library_CXXSRCS})
+### add_library (wsjtx_udp-static STATIC ${UDP_library_CXXSRCS})
+### #target_include_directories (wsjtx_udp
+### #  INTERFACE
+### #  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/wsjtx>
+### #  )
+### target_include_directories (wsjtx_udp-static
+###   INTERFACE
+###   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/wsjtx>
+###   )
+### #set_target_properties (wsjtx_udp PROPERTIES
+### #  PUBLIC_HEADER "${UDP_library_HEADERS}"
+### #  )
+### set_target_properties (wsjtx_udp-static PROPERTIES
+###   OUTPUT_NAME wsjtx_udp
+###   )
+### target_compile_definitions (wsjtx_udp-static PUBLIC UDP_STATIC_DEFINE)
+### #qt5_use_modules (wsjtx_udp Network)
+### qt5_use_modules (wsjtx_udp-static Network Gui)
+### generate_export_header (wsjtx_udp-static BASE_NAME udp)
+### 
+### add_executable (udp_daemon UDPExamples/UDPDaemon.cpp UDPExamples/udp_daemon.rc ${WSJTX_ICON_FILE})
+### target_link_libraries (udp_daemon wsjtx_udp-static)
+### 
+### add_resources (message_aggregator_RESOURCES /qss ${message_aggregator_STYLESHEETS})
+### configure_file (UDPExamples/message_aggregator.qrc.in message_aggregator.qrc @ONLY)
+### qt5_add_resources (message_aggregator_RESOURCES_RCC ${CMAKE_CURRENT_BINARY_DIR}/message_aggregator.qrc)
+### add_executable (message_aggregator
+###   ${message_aggregator_CXXSRCS}
+###   ${WSJTX_ICON_FILE}
+###   UDPExamples/message_aggregator.rc
+###   ${message_aggregator_RESOURCES_RCC}
+###   )
+### target_link_libraries (message_aggregator Qt5::Widgets wsjtx_udp-static)
+### 
+### if (WSJT_CREATE_WINMAIN)
+###   set_target_properties (message_aggregator PROPERTIES WIN32_EXECUTABLE ON)
+### endif (WSJT_CREATE_WINMAIN)
 
 if (UNIX)
   if (NOT WSJT_SKIP_MANPAGES)
@@ -1429,10 +1430,10 @@ install (TARGETS ft8call
 #   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/wsjtx
 #   )
 
-install (TARGETS udp_daemon message_aggregator
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
-  BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
-  )
+### install (TARGETS udp_daemon message_aggregator
+###   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
+###   BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
+###   )
 
 install (TARGETS jt9 ft8code jt65code qra64code qra64sim jt9code jt4code
   msk144code wsprd wspr_fsk8d fmtave fcal fmeasure

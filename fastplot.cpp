@@ -2,6 +2,9 @@
 #include "commons.h"
 #include <math.h>
 #include <QDebug>
+
+#include "DriftingDateTime.h"
+
 #include "moc_fastplot.cpp"
 
 #define MAX_SCREENSIZE 2048
@@ -166,7 +169,7 @@ void FPlotter::draw()                                         //draw()
       int is=m_UTCdisk % 100;
       m_t.sprintf("%2.2d:%2.2d:%2.2d",ih,im,is);
     } else {
-      m_t=QDateTime::currentDateTimeUtc().toString("hh:mm:ss");
+      m_t=DriftingDateTime::currentDateTimeUtc().toString("hh:mm:ss");
     }
     if(fast_jh>0) painter1.drawText(10,95,m_t);
   }

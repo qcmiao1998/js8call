@@ -7,6 +7,8 @@
 #include "soundout.h"
 #include "commons.h"
 
+#include "DriftingDateTime.h"
+
 #include "moc_Modulator.cpp"
 
 extern float gran();		// Noise generator (for tests only)
@@ -49,7 +51,7 @@ void Modulator::start (unsigned symbolsLength, double framesPerSymbol,
 {
   Q_ASSERT (stream);
 // Time according to this computer which becomes our base time
-  qint64 ms0 = QDateTime::currentMSecsSinceEpoch() % 86400000;
+  qint64 ms0 = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
 
   if (m_state != Idle)
     {
@@ -176,7 +178,7 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
         if(m_TRperiod==3) slowCwId=false;
         bool fastCwId=false;
         static bool bCwId=false;
-        qint64 ms = QDateTime::currentMSecsSinceEpoch();
+        qint64 ms = DriftingDateTime::currentMSecsSinceEpoch();
         float tsec=0.001*(ms % (1000*m_TRperiod));
         if(m_bFastMode and (icw[0]>0) and (tsec>(m_TRperiod-5.0))) fastCwId=true;
         if(!m_bFastMode) m_nspd=2560;                 // 22.5 WPM

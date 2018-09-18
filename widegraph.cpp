@@ -8,6 +8,9 @@
 #include "Configuration.hpp"
 #include "MessageBox.hpp"
 #include "SettingsGroup.hpp"
+
+#include "DriftingDateTime.h"
+
 #include "moc_widegraph.cpp"
 
 namespace
@@ -191,7 +194,7 @@ void WideGraph::dataSink2(float s[], float df3, int ihsym, int ndiskdata)  //dat
     }
 
 // Time according to this computer
-    qint64 ms = QDateTime::currentMSecsSinceEpoch() % 86400000;
+    qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
     int ntr = (ms/1000) % m_TRperiod;
     if((ndiskdata && ihsym <= m_waterfallAvg) || (!ndiskdata && ntr<m_ntr0)) {
       float flagValue=1.0e30;

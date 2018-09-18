@@ -38,6 +38,8 @@
 #include "SplashScreen.hpp"
 #include "MessageBox.hpp"       // last to avoid nasty MS macro definitions
 
+#include "DriftingDateTime.h"
+
 extern "C" {
   // Fortran procedures we need
   void four2a_(_Complex float *, int * nfft, int * ndim, int * isign, int * iform, int len);
@@ -50,7 +52,7 @@ namespace
     RNGSetup ()
     {
       // one time seed of pseudo RNGs from current time
-      auto seed = QDateTime::currentMSecsSinceEpoch ();
+      auto seed = DriftingDateTime::currentMSecsSinceEpoch ();
       qsrand (seed);            // this is good for rand() as well
     }
   } seeding;
@@ -74,7 +76,7 @@ namespace
       if (handler)
         {
           handler (type, context,
-                   QDateTime::currentDateTimeUtc ().toString ("yy-MM-ddTHH:mm:ss.zzzZ: ") + msg);
+                   DriftingDateTime::currentDateTimeUtc ().toString ("yy-MM-ddTHH:mm:ss.zzzZ: ") + msg);
         }
     }
     static QStack<QtMessageHandler> prior_handlers_;

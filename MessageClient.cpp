@@ -13,6 +13,8 @@
 #include <QHostAddress>
 #include <QColor>
 
+#include "DriftingDateTime.h"
+
 #include "pimpl_impl.hpp"
 
 #include "moc_MessageClient.cpp"
@@ -232,7 +234,7 @@ void MessageClient::impl::heartbeat ()
       Message m("PING", "", QMap<QString, QVariant>{
         {"NAME", QVariant(QApplication::applicationName())},
         {"VERSION", QVariant(QApplication::applicationVersion())},
-        {"UTC", QVariant(QDateTime::currentDateTimeUtc().toMSecsSinceEpoch())}
+        {"UTC", QVariant(DriftingDateTime::currentDateTimeUtc().toMSecsSinceEpoch())}
       });
       writeDatagram (m.toJson(), server_, server_port_);
     }

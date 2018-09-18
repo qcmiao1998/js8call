@@ -8,6 +8,8 @@
 #include <QMenu>
 #include <QAction>
 
+#include "DriftingDateTime.h"
+
 #include "qt_helpers.hpp"
 
 #include "moc_displaytext.cpp"
@@ -288,13 +290,13 @@ void DisplayText::displayTransmittedText(QString text, QString modeTx, qint32 tx
     t2.sprintf("%4d",txFreq);
     QString t;
     if(bFastMode or modeTx=="FT8") {
-      t = QDateTime::currentDateTimeUtc().toString("hhmmss") + \
+      t = DriftingDateTime::currentDateTimeUtc().toString("hhmmss") + \
         "  Tx      " + t2 + t1 + text;
     } else if(modeTx.mid(0,6)=="FT8fox") {
-      t = QDateTime::currentDateTimeUtc().toString("hhmmss") + \
+      t = DriftingDateTime::currentDateTimeUtc().toString("hhmmss") + \
         " Tx" + modeTx.mid(7) + " " + text;
     } else {
-      t = QDateTime::currentDateTimeUtc().toString("hhmm") + \
+      t = DriftingDateTime::currentDateTimeUtc().toString("hhmm") + \
         "  Tx      " + t2 + t1 + text;
     }
     appendText (t, color_ReceivedMsg);
@@ -302,7 +304,7 @@ void DisplayText::displayTransmittedText(QString text, QString modeTx, qint32 tx
 
 void DisplayText::displayQSY(QString text)
 {
-  QString t = QDateTime::currentDateTimeUtc().toString("hhmmss") + "            " + text;
+  QString t = DriftingDateTime::currentDateTimeUtc().toString("hhmmss") + "            " + text;
   appendText (t, "hotpink");
 }
 

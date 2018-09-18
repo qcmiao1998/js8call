@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include "DriftingDateTime.h"
 #include "varicode.h"
 
 const int PACKET_TIMEOUT_SECONDS = 300;
@@ -209,7 +210,7 @@ void APRSISClient::enqueueThirdParty(QString theircall, QString payload){
 }
 
 void APRSISClient::enqueueRaw(QString aprsFrame){
-    m_frameQueue.enqueue({ aprsFrame, QDateTime::currentDateTimeUtc() });
+    m_frameQueue.enqueue({ aprsFrame, DriftingDateTime::currentDateTimeUtc() });
 }
 
 void APRSISClient::processQueue(bool disconnect){
@@ -263,7 +264,7 @@ void APRSISClient::processQueue(bool disconnect){
         auto timestamp = pair.second;
 
         // if the packet is older than the timeout, drop it.
-        if(timestamp.secsTo(QDateTime::currentDateTimeUtc()) > PACKET_TIMEOUT_SECONDS){
+        if(timestamp.secsTo(DriftingDateTime::currentDateTimeUtc()) > PACKET_TIMEOUT_SECONDS){
             qDebug() << "APRSISClient Packet Timeout:" << frame;
             m_frameQueue.dequeue();
             continue;
