@@ -1673,7 +1673,7 @@ void MainWindow::writeSettings()
   m_settings->setValue("MainSplitter", ui->mainSplitter->saveState());
   m_settings->setValue("TextHorizontalSplitter", ui->textHorizontalSplitter->saveState());
   m_settings->setValue("TextVerticalSplitter", ui->textVerticalSplitter->saveState());
-  m_settings->setValue("ShowTimeDrift", ui->actionShow_Time_Drift_Controls->isChecked());
+  m_settings->setValue("ShowTimeDrift", ui->driftSyncFrame->isVisible());
   m_settings->setValue("TimeDrift", ui->driftSpinBox->value());
 
   m_settings->endGroup();
@@ -1778,7 +1778,7 @@ void MainWindow::readSettings()
   if(!verticalState.isEmpty()){
     ui->textVerticalSplitter->restoreState(verticalState);
   }
-  ui->actionShow_Time_Drift_Controls->setChecked(m_settings->value("ShowTimeDrift", false).toBool());
+  ui->driftSyncFrame->setVisible(m_settings->value("ShowTimeDrift", false).toBool());
   ui->driftSpinBox->setValue(m_settings->value("TimeDrift", 0).toInt());
 
   m_settings->endGroup();
