@@ -10,7 +10,7 @@ subroutine sync8d(cd0,i0,ctwk,itwk,sync)
   complex z1,z2,z3
   logical first
   integer icos7(0:6)
-  data icos7/2,5,6,0,4,1,3/
+  data icos7/4,2,5,6,1,3,0/
   data first/.true./
   save first,twopi,fs2,dt2,taus,baud,csync
 

@@ -34,7 +34,7 @@ subroutine foxgen()
   common/foxcom/wave(NWAVE),nslots,nfreq,i3bit(5),cmsg(5),mycall(12)
   common/foxcom2/itone2(NN),msgbits2(KK)
   equivalence (x,cx),(y,cy)
-  data icos7/2,5,6,0,4,1,3/                   !Costas 7x7 tone pattern
+  data icos7/4,2,5,6,1,3,0/                   !Costas 7x7 tone pattern
 
   bcontest=.false.
   fstep=60.d0

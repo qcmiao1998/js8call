@@ -33,7 +33,7 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   complex csymb(32)
   logical first,newdat,lsubtract,lapon,lapcqonly,nagain
   equivalence (s1,s1sort)
-  data icos7/2,5,6,0,4,1,3/
+  data icos7/4,2,5,6,1,3,0/
   data mcq/1,1,1,1,1,0,1,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,1,1,0,0,1/
   data mrrr/0,1,1,1,1,1,1,0,1,1,0,0,1,1,1,1/
   data m73/0,1,1,1,1,1,1,0,1,1,0,1,0,0,0,0/
