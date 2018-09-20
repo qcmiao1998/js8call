@@ -267,12 +267,14 @@ private slots:
   void on_cqMacroButton_clicked();
   void on_replyMacroButton_clicked();
   void on_qthMacroButton_clicked();
+  void on_qtcMacroButton_clicked();
   void setSortBy(QString key, QString value);
   QString getSortBy(QString key, QString defaultValue);
   void buildSortByMenu(QMenu * menu, QString key, QString defaultValue, QList<QPair<QString, QString> > values);
   void buildBandActivitySortByMenu(QMenu * menu);
   void buildCallActivitySortByMenu(QMenu * menu);
   void buildQueryMenu(QMenu *, QString callsign);
+  void buildSavedMessagesMenu(QMenu *menu);
   void buildRelayMenu(QMenu *menu);
   QAction* buildRelayAction(QString call);
   void buildEditMenu(QMenu *, QTextEdit *);

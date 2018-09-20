@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>692</width>
+    <width>750</width>
     <height>735</height>
    </rect>
   </property>
@@ -1573,7 +1573,7 @@ radio interface behave as expected.</string>
      </widget>
      <widget class="QWidget" name="audio_tab">
       <attribute name="title">
-       <string>A&amp;udio</string>
+       <string>&amp;Audio</string>
       </attribute>
       <attribute name="toolTip">
        <string>Audio interface settings</string>
@@ -1841,88 +1841,6 @@ both here.</string>
           </size>
          </property>
         </spacer>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tx_macros_tab">
-      <attribute name="title">
-       <string>Tx &amp;Macros</string>
-      </attribute>
-      <attribute name="toolTip">
-       <string>Canned free text messages setup</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="1">
-        <widget class="QPushButton" name="add_macro_push_button">
-         <property name="text">
-          <string>&amp;Add</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLineEdit" name="add_macro_line_edit"/>
-       </item>
-       <item row="0" column="2">
-        <widget class="QPushButton" name="delete_macro_push_button">
-         <property name="text">
-          <string>&amp;Delete</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0" colspan="3">
-        <widget class="QListView" name="macros_list_view">
-         <property name="contextMenuPolicy">
-          <enum>Qt::ActionsContextMenu</enum>
-         </property>
-         <property name="toolTip">
-          <string>Drag and drop items to rearrange order
-Right click for item specific actions
-Click, SHIFT+Click and, CRTL+Click to select items</string>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">QListView {
-    show-decoration-selected: 1; /* make the selection span the entire width of the view */
-}
-
-QListView::item:alternate {
-    background: #EEEEEE;
-}
-
-QListView::item:selected {
-    border: 1px solid #6a6ea9;
-}
-
-QListView::item:selected:!active {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                stop: 0 #ABAFE5, stop: 1 #8588B2);
-}
-
-QListView::item:selected:active {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                stop: 0 #6a6ea9, stop: 1 #888dd9);
-}
-
-QListView::item:hover {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                stop: 0 #FAFBFE, stop: 1 #DCDEF1);
-}</string>
-         </property>
-         <property name="dragDropMode">
-          <enum>QAbstractItemView::InternalMove</enum>
-         </property>
-         <property name="defaultDropAction">
-          <enum>Qt::MoveAction</enum>
-         </property>
-         <property name="alternatingRowColors">
-          <bool>true</bool>
-         </property>
-         <property name="selectionMode">
-          <enum>QAbstractItemView::ExtendedSelection</enum>
-         </property>
-         <property name="uniformItemSizes">
-          <bool>true</bool>
-         </property>
-        </widget>
        </item>
       </layout>
      </widget>
@@ -2340,7 +2258,7 @@ for assessing propagation and system performance.</string>
      </widget>
      <widget class="QWidget" name="frequencies_tab">
       <attribute name="title">
-       <string>Frequencies</string>
+       <string>&amp;Frequencies</string>
       </attribute>
       <attribute name="toolTip">
        <string>Default frequencies and band specific station details setup</string>
@@ -2572,9 +2490,91 @@ Right click for insert and delete options.</string>
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tx_macros_tab">
+      <attribute name="title">
+       <string>Saved &amp;Messages</string>
+      </attribute>
+      <attribute name="toolTip">
+       <string>Canned free text messages setup</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="1">
+        <widget class="QPushButton" name="add_macro_push_button">
+         <property name="text">
+          <string>&amp;Add</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLineEdit" name="add_macro_line_edit"/>
+       </item>
+       <item row="0" column="2">
+        <widget class="QPushButton" name="delete_macro_push_button">
+         <property name="text">
+          <string>&amp;Delete</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="3">
+        <widget class="QListView" name="macros_list_view">
+         <property name="contextMenuPolicy">
+          <enum>Qt::ActionsContextMenu</enum>
+         </property>
+         <property name="toolTip">
+          <string>Drag and drop items to rearrange order
+Right click for item specific actions
+Click, SHIFT+Click and, CRTL+Click to select items</string>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QListView {
+    show-decoration-selected: 1; /* make the selection span the entire width of the view */
+}
+
+QListView::item:alternate {
+    background: #EEEEEE;
+}
+
+QListView::item:selected {
+    border: 1px solid #6a6ea9;
+}
+
+QListView::item:selected:!active {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #ABAFE5, stop: 1 #8588B2);
+}
+
+QListView::item:selected:active {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #6a6ea9, stop: 1 #888dd9);
+}
+
+QListView::item:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #FAFBFE, stop: 1 #DCDEF1);
+}</string>
+         </property>
+         <property name="dragDropMode">
+          <enum>QAbstractItemView::InternalMove</enum>
+         </property>
+         <property name="defaultDropAction">
+          <enum>Qt::MoveAction</enum>
+         </property>
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::ExtendedSelection</enum>
+         </property>
+         <property name="uniformItemSizes">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="tab">
       <attribute name="title">
-       <string>Notifications</string>
+       <string>&amp;Notifications</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_16">
        <item>
@@ -2724,7 +2724,7 @@ Right click for insert and delete options.</string>
      </widget>
      <widget class="QWidget" name="colors_tab">
       <attribute name="title">
-       <string>UI</string>
+       <string>&amp;UI</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_15">
        <item>
@@ -3690,11 +3690,11 @@ soundcard changes</string>
  </connections>
  <buttongroups>
   <buttongroup name="PTT_method_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="split_mode_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
  </buttongroups>
 </ui>

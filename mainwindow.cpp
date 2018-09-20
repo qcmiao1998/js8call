@@ -1205,6 +1205,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     restoreAction->setDisabled(m_lastTxMessage.isEmpty());
     menu->addAction(restoreAction);
 
+    auto savedMenu = menu->addMenu("Saved messages...");
+    buildSavedMessagesMenu(savedMenu);
+
     auto relayMenu = menu->addMenu("Relay via...");
     relayMenu->setDisabled(ui->extFreeTextMsgEdit->toPlainText().isEmpty() || m_callActivity.isEmpty());
     buildRelayMenu(relayMenu);
@@ -7544,6 +7547,14 @@ void MainWindow::on_qthMacroButton_clicked(){
     addMessageText(QString("QTH %1").arg(qth));
 }
 
+void MainWindow::on_qtcMacroButton_clicked(){
+    QString qtc = m_config.my_station();
+    if(qtc.isEmpty()){
+        return;
+    }
+    addMessageText(QString("QTC %1").arg(qtc));
+}
+
 void MainWindow::setSortBy(QString key, QString value){
     m_sortCache[key] = QVariant(value);
     displayBandActivity();
@@ -7981,6 +7992,33 @@ void MainWindow::buildEditMenu(QMenu *menu, QTextEdit *edit){
     connect(paste, &QAction::triggered, edit, &QTextEdit::paste);
 }
 
+void MainWindow::buildSavedMessagesMenu(QMenu *menu){
+    foreach(QString macro, m_config.macros()->stringList()){
+        QAction *action = menu->addAction(macro);
+        connect(action, &QAction::triggered, this, [this, macro](){ addMessageText(macro); });
+    }
+
+    menu->addSeparator();
+
+    auto editAction = new QAction(QIcon::fromTheme("edit-edit"), QString("&Edit Saved Messages"), menu);
+    menu->addAction(editAction);
+    connect(editAction, &QAction::triggered, this, [this](){
+        openSettings(5);
+    });
+
+    auto saveAction = new QAction(QString("&Save Current Message"), menu);
+    saveAction->setDisabled(ui->extFreeTextMsgEdit->toPlainText().isEmpty());
+    menu->addAction(saveAction);
+    connect(saveAction, &QAction::triggered, this, [this](){
+        auto macros = m_config.macros();
+        if(macros->insertRow(macros->rowCount())){
+            auto index = macros->index(macros->rowCount()-1);
+            macros->setData(index, ui->extFreeTextMsgEdit->toPlainText());
+            writeSettings();
+        }
+    });
+}
+
 void MainWindow::on_queryButton_pressed(){
     QMenu *menu = ui->queryButton->menu();
     if(!menu){
@@ -7995,28 +8033,13 @@ void MainWindow::on_queryButton_pressed(){
 }
 
 void MainWindow::on_macrosMacroButton_pressed(){
-    if(m_config.macros()->stringList().isEmpty()){
-        openSettings(3);
-        return;
-    }
-
     QMenu *menu = ui->macrosMacroButton->menu();
     if(!menu){
         menu = new QMenu(ui->macrosMacroButton);
     }
     menu->clear();
 
-    foreach(QString macro, m_config.macros()->stringList()){
-        QAction *action = menu->addAction(macro);
-        connect(action, &QAction::triggered, this, [this, macro](){ addMessageText(macro); });
-    }
-
-    menu->addSeparator();
-    auto action = new QAction(QIcon::fromTheme("edit-edit"), QString("Edit"), menu);
-    menu->addAction(action);
-    connect(action, &QAction::triggered, this, [this](){
-        openSettings(3);
-    });
+    buildSavedMessagesMenu(menu);
 
     ui->macrosMacroButton->setMenu(menu);
     ui->macrosMacroButton->showMenu();
@@ -9120,6 +9143,8 @@ void MainWindow::updateButtonDisplay(){
 
     ui->cqMacroButton->setDisabled(isTransmitting);
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
+    ui->qthMacroButton->setDisabled(isTransmitting || m_config.my_station().isEmpty());
+    ui->qtcMacroButton->setDisabled(isTransmitting || m_config.my_qth().isEmpty());
     ui->macrosMacroButton->setDisabled(isTransmitting);
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
     ui->deselectButton->setDisabled(isTransmitting || emptyCallsign);
