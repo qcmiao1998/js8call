@@ -56,6 +56,8 @@ public:
 
     //Varicode();
 
+    static QMap<QString, QString> defaultHuffTable();
+    static QMap<QString, QString> defaultHuffTableEscaped();
     static QString cqString(int number);
     static bool startsWithCQ(QString text);
     static QString formatSNR(int snr);

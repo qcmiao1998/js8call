@@ -103,7 +103,7 @@ QRegularExpression directed_re("^"                    +
                                optional_cmd_pattern   +
                                optional_num_pattern);
 
-QRegularExpression beacon_re(R"(^\s*(?<type>CQCQCQ|CQ QRP|CQ DX|CQ TEST|CQ( CQ){0,2}|BEACON)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
+QRegularExpression beacon_re(R"(^\s*(?<type>CQCQCQ|CQ QRPP?|CQ DX|CQ TEST|CQ( CQ){0,2}|BEACON)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
 QRegularExpression compound_re("^\\s*[<]"                  +
                                callsign_pattern        +
@@ -350,9 +350,10 @@ QMap<quint32, QString> cqs = {
     { 1, "CQ DX"  },
     { 2, "CQ QRP" },
     { 3, "CQ TEST" },
-    { 4, "CQ"},
-    { 5, "CQ CQ"},
-    { 6, "CQ CQ CQ"},
+    { 4, "CQ QRPP" },
+    { 5, "CQ"},
+    { 6, "CQ CQ"},
+    { 7, "CQ CQ CQ"},
 };
 
 QMap<int, int> dbm2mw = {
@@ -437,6 +438,13 @@ int dbmTomwatts(int dbm){
 /*
  * VARICODE
  */
+QMap<QString, QString> Varicode::defaultHuffTable(){
+    return hufftable;
+}
+
+QMap<QString, QString> Varicode::defaultHuffTableEscaped(){
+    return hufftableescaped;
+}
 
 QString Varicode::cqString(int number){
     if(!cqs.contains(number)){
