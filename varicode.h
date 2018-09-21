@@ -123,6 +123,7 @@ public:
     static quint8 packCmd(quint8 cmd, quint8 num, bool *pPackedNum);
     static quint8 unpackCmd(quint8 value, quint8 *pNum);
 
+    static bool isSNRCommand(const QString &cmd);
     static bool isCommandAllowed(const QString &cmd);
     static bool isCommandBuffered(const QString &cmd);
     static int isCommandChecksumed(const QString &cmd);

@@ -530,10 +530,10 @@
                <string/>
               </property>
               <property name="minimum">
-               <number>15</number>
+               <number>10</number>
               </property>
               <property name="maximum">
-               <number>60</number>
+               <number>1440</number>
               </property>
               <property name="singleStep">
                <number>1</number>

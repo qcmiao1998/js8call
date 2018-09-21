@@ -52,16 +52,18 @@ QMap<QString, int> directed_cmds = {
 
     // {"=",      9  }, // unused
     // {"/",     10  }, // unused
-    // {"/",     11  }, // unused
-    // {"/",     12  }, // unused
-    // {"/",     13  }, // unused
 
     // directed responses
-    {" QSO",     13  }, // can you communicate with? i can communicate with
+    {" BEACON",     -1 }, // this is my beacon (unused except for faux processing of beacons as directed commands)
+    {" BEACON ACK", 12 }, // i received your beacon at this snr
+    {" BEACON REQ", 13 }, // can you transmit a beacon to callsign?
+
     {" APRS:",   14  }, // send an aprs packet
+
     {" GRID",    15  }, // this is my current grid locator
     {" QTC",     16  }, // this is my qtc message
     {" QTH",     17  }, // this is my qth message
+
     {" FB",      18  }, // fine business
     {" HW CPY?", 19  }, // how do you copy?
     {" HEARING", 20  }, // i am hearing the following stations
@@ -78,14 +80,14 @@ QMap<QString, int> directed_cmds = {
     {" ",        31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {0, 1, 2, 3, 4, 5, /*6,*/ /*7,*/ 8, /*...*/ 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, /*24,*/ 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {-1, 0, 1, 2, 3, 4, 5, /*6,*/ /*7,*/ 8, /*...*/ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, /*24,*/ 25, 26, 27, 28, 29, 30, 31};
 
-QSet<int> buffered_cmds = {5, /*6,*/ /*7,*/ 8, 13, 14, 15};
+QSet<int> buffered_cmds = {3, 5, /*6,*/ /*7,*/ 8, 13, 14, 15};
+
+QSet<int> snr_cmds = {12, 25};
 
 QMap<int, int> checksum_cmds = {
     {  5, 16 },
-    /*{  6, 16 },*/
-    /*{  7, 16 },*/
     {  8, 32 },
     { 13, 16 },
     { 14, 16 },
@@ -93,10 +95,10 @@ QMap<int, int> checksum_cmds = {
 };
 
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|QSL[?]?|RR|HEARING|HW CPY[?]|FB|QTH|QTC|GRID|APRS[:]|QSO|[?@&$%#^> ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|QSL[?]?|RR|HEARING|HW CPY[?]|FB|QTH|QTC|GRID|APRS[:]|BEACON (ACK|REQ)|[?@&$%#^> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
-QString optional_num_pattern = QString("(?<num>(?<=SNR|HEARING)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
+QString optional_num_pattern = QString("(?<num>(?<=SNR|HEARING|BEACON ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
 
 QRegularExpression directed_re("^"                    +
                                callsign_pattern       +
@@ -1084,11 +1086,13 @@ quint8 Varicode::packCmd(quint8 cmd, quint8 num, bool *pPackedNum){
 
     // if cmd == snr
     quint8 value = 0;
-    if(cmd == directed_cmds[" SNR"]){
+    auto cmdStr = directed_cmds.key(cmd);
+    if(Varicode::isSNRCommand(cmdStr)){
         // 8 bits - 1 bit flag + 1 bit type + 6 bit number
         // [1][X][6]
         // X = 0 == SNR
-        value = (1 << 1) << 6;
+        // X = 1 == BEACON ACK
+        value = ((1 << 1) | (int)(cmdStr == " BEACON ACK")) << 6;
         value = value + (num & ((1<<6)-1));
         if(pPackedNum) *pPackedNum = true;
     } else {
@@ -1103,11 +1107,20 @@ quint8 Varicode::unpackCmd(quint8 value, quint8 *pNum){
     // if the first bit is 1, this is an SNR with a number encoded in the lower 6 bits
     if(value & (1<<7)){
         if(pNum) *pNum = value & ((1<<6)-1);
-        return directed_cmds[" SNR"];
+
+        auto cmd = directed_cmds[" SNR"];
+        if(value & (1<<6)){
+            cmd = directed_cmds[" BEACON ACK"];
+        }
+        return cmd;
     } else {
         if(pNum) *pNum = 0;
         return value & ((1<<7)-1);
     }
+}
+
+bool Varicode::isSNRCommand(const QString &cmd){
+    return directed_cmds.contains(cmd) && snr_cmds.contains(directed_cmds[cmd]);
 }
 
 bool Varicode::isCommandAllowed(const QString &cmd){
@@ -1288,10 +1301,11 @@ QStringList Varicode::unpackCompoundMessage(const QString &text, quint8 *pType, 
     } else if (nusergrid <= extra && extra < nmaxgrid) {
         quint8 num = 0;
         auto cmd = Varicode::unpackCmd(extra - nusergrid, &num);
+        auto cmdStr = directed_cmds.key(cmd);
 
-        unpacked.append(directed_cmds.key(cmd));
+        unpacked.append(cmdStr);
 
-        if(cmd == directed_cmds[" SNR"]){
+        if(Varicode::isSNRCommand(cmdStr)){
             unpacked.append(Varicode::formatSNR(num - 31));
         }
     }
@@ -1498,8 +1512,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
     unpacked.append(cmd);
 
     if(extra != 0){
-        // TODO: jsherer - should we decide which format to use on the command, or something else?
-        if(packed_cmd == directed_cmds[" SNR"]) {
+        if(Varicode::isSNRCommand(cmd)){
             unpacked.append(Varicode::formatSNR((int)extra-31));
         } else {
             unpacked.append(QString("%1").arg(extra-31));

@@ -145,6 +145,7 @@ public slots:
   void prependMessageText(QString text);
   void addMessageText(QString text, bool clear=false, bool selectFirstPlaceholder=false);
   void enqueueMessage(int priority, QString message, int freq, Callback c);
+  void enqueueBeacon(QString message);
   void resetMessage();
   void resetMessageUI();
   void restoreMessage();
@@ -297,10 +298,10 @@ private slots:
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);
   int findFreeFreqOffset(int fmin, int fmax, int bw);
-  void scheduleBacon(bool first=false);
-  void pauseBacon();
-  void checkBacon();
-  void prepareBacon();
+  void scheduleBeacon(bool first=false);
+  void pauseBeacon();
+  void checkBeacon();
+  void prepareBeacon();
   QString calculateDistance(QString const& grid, int *pDistance=nullptr);
   void on_driftSpinBox_valueChanged(int n);
   void on_driftSyncButton_clicked();
@@ -772,6 +773,7 @@ private:
   QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
   QMap<int, MessageBuffer> m_messageBuffer; // freq -> (cmd, [frames, ...])
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
+  QQueue<QString> m_txBeaconQueue; // beacon frames to be sent
 
   QMap<QString, QMap<QString, CallDetail>> m_callActivityCache; // band -> call activity
   QMap<QString, QMap<int, QList<ActivityDetail>>> m_bandActivityCache; // band -> band activity

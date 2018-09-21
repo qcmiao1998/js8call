@@ -904,7 +904,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(&TxAgainTimer, SIGNAL(timeout()), this, SLOT(TxAgain()));
 
   beaconTimer.setSingleShot(false);
-  connect(&beaconTimer, &QTimer::timeout, this, &MainWindow::checkBacon);
+  connect(&beaconTimer, &QTimer::timeout, this, &MainWindow::checkBeacon);
 
   connect(m_wideGraph.data (), SIGNAL(setFreq3(int,int)),this,
           SLOT(setFreq4(int,int)));
@@ -3719,7 +3719,18 @@ void MainWindow::readFromStdout()                             //readFromStdout
             cd.bits = decodedtext.bits();
 
             if(decodedtext.isBeacon()){
-                logCallActivity(cd, true);
+                // convert BEACON to a directed command and process...
+                CommandDetail d = {};
+                d.from = cd.call;
+                d.to = "ALLCALL";
+                d.cmd = " BEACON";
+                d.snr = cd.snr;
+                d.bits = cd.bits;
+                d.extra = cd.grid;
+                d.freq = cd.freq;
+                d.utcTimestamp = cd.utcTimestamp;
+                m_rxCommandQueue.append(d);
+
             } else {
                 qDebug() << "buffering compound call" << cd.call << cd.bits;
                 m_messageBuffer[cd.freq/10*10].compound.append(cd);
@@ -6200,6 +6211,11 @@ void MainWindow::enqueueMessage(int priority, QString message, int freq, Callbac
     );
 }
 
+void MainWindow::enqueueBeacon(QString message){
+    m_txBeaconQueue.enqueue(message);
+    scheduleBeacon(true);
+}
+
 void MainWindow::resetMessage(){
     resetMessageUI();
     resetMessageTransmitQueue();
@@ -6356,11 +6372,17 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
         bool hasData = false;
 
         // remove our callsign from the start of the line...
-        if(line.startsWith(mycall + ":")){
+        if(line.startsWith(mycall + ":") || line.startsWith(mycall + " ")){
             line = lstrip(line.mid(mycall.length() + 1));
         }
-        if(line.startsWith(basecall + ":")){
+        if(line.startsWith(basecall + ":") || line.startsWith(basecall + " ")){
             line = lstrip(line.mid(basecall.length() + 1));
+        }
+
+        // remove trailing whitespace as long as there are characters left afterwards
+        auto rline = rstrip(line);
+        if(!rline.isEmpty()){
+            line = rline;
         }
 
 #if AUTO_PREPEND_DIRECTED
@@ -6650,7 +6672,7 @@ bool MainWindow::prepareNextMessageFrame()
 
     if(ui->beaconButton->isChecked()){
         // bump beacon
-        scheduleBacon(false);
+        scheduleBeacon(false);
     }
 
     return true;
@@ -6711,7 +6733,7 @@ int MainWindow::findFreeFreqOffset(int fmin, int fmax, int bw){
 }
 
 // scheduleBeacon
-void MainWindow::scheduleBacon(bool first){
+void MainWindow::scheduleBeacon(bool first){
     auto timestamp = DriftingDateTime::currentDateTimeUtc();
     auto orig = timestamp;
 
@@ -6742,7 +6764,7 @@ void MainWindow::scheduleBacon(bool first){
 }
 
 // pauseBeacon
-void MainWindow::pauseBacon(){
+void MainWindow::pauseBeacon(){
     ui->beaconButton->setChecked(false);
     m_nextBeaconPaused = true;
 
@@ -6752,40 +6774,52 @@ void MainWindow::pauseBacon(){
 }
 
 // checkBeacon
-void MainWindow::checkBacon(){
+void MainWindow::checkBeacon(){
     if(!ui->beaconButton->isChecked()){
         return;
     }
-    if(DriftingDateTime::currentDateTimeUtc().secsTo(m_nextBeacon) > 5){
+    auto secondsUntilBeacon = DriftingDateTime::currentDateTimeUtc().secsTo(m_nextBeacon);
+    if(secondsUntilBeacon > 5 && m_txBeaconQueue.isEmpty()){
         return;
     }
     if(m_nextBeaconQueued){
         return;
     }
 
-    prepareBacon();
+    prepareBeacon();
 }
 
 // prepareBeacon
-void MainWindow::prepareBacon(){
+void MainWindow::prepareBeacon(){
     QStringList lines;
 
     QString mycall = m_config.my_callsign();
     QString mygrid = m_config.my_grid().left(4);
 
     // FT8Call Style
-    lines.append(QString("%1: BEACON %2").arg(mycall).arg(mygrid));
-
-    bool shouldTransmitTwoBeacons = true;
-    if(shouldTransmitTwoBeacons){
+    if(m_txBeaconQueue.isEmpty()){
         lines.append(QString("%1: BEACON %2").arg(mycall).arg(mygrid));
+
+        bool shouldTransmitTwoBeacons = true;
+        if(shouldTransmitTwoBeacons){
+            lines.append(QString("%1: BEACON %2").arg(mycall).arg(mygrid));
+        }
+    } else {
+        while(!m_txBeaconQueue.isEmpty() && lines.length() < 2){
+            lines.append(m_txBeaconQueue.dequeue());
+        }
     }
 
     // Choose a beacon frequency
     auto f = findFreeFreqOffset(500, 1000, 50);
 
+    auto text = lines.join(QChar('\n'));
+    if(text.isEmpty()){
+        return;
+    }
+
     // Queue the beacon
-    enqueueMessage(PriorityLow, lines.join(QChar('\n')), f, [this](){
+    enqueueMessage(PriorityLow, text, f, [this](){
         m_nextBeaconQueued = false;
     });
 
@@ -7616,6 +7650,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
     // for now, we're going to omit displaying the call...delete this if we want the other functionality
     call = "";
 
+    auto grid = m_config.my_grid();
+
     auto callAction = menu->addAction(QString("Send a directed message to selected callsign"));
     connect(callAction, &QAction::triggered, this, [this](){
 
@@ -7729,17 +7765,6 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto qsoQueryAction = menu->addAction(QString("%1 QSO [CALLSIGN]? - Can you communicate directly with [CALLSIGN]?").arg(call).trimmed());
-    connect(qsoQueryAction, &QAction::triggered, this, [this](){
-
-        QString selectedCall = callsignSelected();
-        if(selectedCall.isEmpty()){
-            return;
-        }
-
-        addMessageText(QString("%1 QSO [CALLSIGN]?").arg(selectedCall), true, true);
-    });
-
     auto hashAction = menu->addAction(QString("%1#[MESSAGE] - Please ACK if you receive this message in its entirety").arg(call).trimmed());
     hashAction->setDisabled(isAllCall);
     connect(hashAction, &QAction::triggered, this, [this](){
@@ -7778,10 +7803,22 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1>[MESSAGE]").arg(selectedCall), true, true);
     });
 
+    auto qsoQueryAction = menu->addAction(QString("%1 BEACON REQ [CALLSIGN]? - Please acknowledge you can communicate directly with [CALLSIGN]").arg(call).trimmed());
+    connect(qsoQueryAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 BEACON REQ [CALLSIGN]?").arg(selectedCall), true, true);
+    });
+
     menu->addSeparator();
 
     bool emptyQTC = m_config.my_station().isEmpty();
-    bool emptyQTH = m_config.my_qth().isEmpty() && m_config.my_grid().isEmpty();
+    bool emptyQTH = m_config.my_qth().isEmpty();
+    bool emptyGrid = m_config.my_grid().isEmpty();
 
     auto qtcAction = menu->addAction(QString("%1 QTC - Send my station message").arg(call).trimmed());
     qtcAction->setDisabled(emptyQTC);
@@ -7811,8 +7848,9 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto grid = m_config.my_grid();
+
     auto gridAction = menu->addAction(QString("%1 GRID %2 - Send my current station Maidenhead grid locator").arg(call).arg(grid).trimmed());
+    gridAction->setDisabled(emptyGrid);
     connect(gridAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -8294,9 +8332,9 @@ void MainWindow::on_pbT2R_clicked()
 void MainWindow::on_beaconButton_clicked()
 {
     if(ui->beaconButton->isChecked()){
-        scheduleBacon(true);
+        scheduleBeacon(true);
     } else {
-        pauseBacon();
+        pauseBeacon();
     }
 }
 
@@ -9653,17 +9691,11 @@ void MainWindow::processCommandActivity() {
 
         // construct a reply, if needed
         QString reply;
+        int priority = PriorityNormal;
+        int freq = -1;
 
         // QUERIED SNR
-        if (d.cmd == "?") {
-            // do not respond to allcall ? if:
-            // 1. we recently responded to one
-            // 2. or, we are in a directed qso...(i.e., we have a callsign selected that isn't ALLCALL)
-            auto selectedCall = callsignSelected();
-            if(isAllCall && !selectedCall.isEmpty() && selectedCall != "ALLCALL" && selectedCall != d.from){
-                continue;
-            }
-
+        if (d.cmd == "?" && !isAllCall) {
             reply = QString("%1 SNR %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
         }
 
@@ -9810,8 +9842,22 @@ void MainWindow::processCommandActivity() {
             reply = m_lastTxMessage;
         }
 
-        // PROCESS BUFFERED QSO QUERY
-        else if (d.cmd == " QSO"){
+        // PROCESS BEACON
+        else if (d.cmd == " BEACON" && ui->beaconButton->isChecked()){
+            reply = QString("%1 BEACON ACK %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
+
+            enqueueBeacon(reply);
+
+            if(isAllCall){
+                // since all beacons are technically ALLCALL, let's bump the allcall cache here...
+                m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 25);
+            }
+
+            continue;
+        }
+
+        // PROCESS BUFFERED BEACON REQ QUERY
+        else if (d.cmd == " BEACON REQ" && ui->beaconButton->isChecked()){
             auto who = d.text;
             if(who.isEmpty()){
                 continue;
@@ -9831,11 +9877,22 @@ void MainWindow::processCommandActivity() {
                 }
 
                 if(baseCall == cd.call || baseCall == Radio::base_callsign(cd.call)){
-                    auto r = QString("%1 ACK %2 %3 (%4)").arg(d.from).arg(cd.call).arg(Varicode::formatSNR(cd.snr)).arg(since(cd.utcTimestamp));
+                    auto r = QString("%1 BEACON ACK %2").arg(cd.call).arg(Varicode::formatSNR(cd.snr));
                     replies.append(r);
                 }
             }
             reply = replies.join("\n");
+
+            if(!reply.isEmpty()){
+                enqueueBeacon(reply);
+
+                if(isAllCall){
+                    // since all beacons are technically ALLCALL, let's bump the allcall cache here...
+                    m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 25);
+                }
+            }
+
+            continue;
         }
 
         // PROCESS BUFFERED APRS:
@@ -9882,8 +9939,8 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-        // do not queue ALLCALL replies if auto-reply is not checked
-        if(!ui->autoReplyButton->isChecked() && isAllCall){
+        // do not queue ALLCALL replies if auto-reply is not checked or it's a beacon reply
+        if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains("BEACON")){
             continue;
         }
 
@@ -9896,7 +9953,7 @@ void MainWindow::processCommandActivity() {
         // unless, this is an allcall, to which we should be responding on a clear frequency offset
         // we always want to make sure that the directed cache has been updated at this point so we have the
         // most information available to make a frequency selection.
-        enqueueMessage(PriorityNormal, reply, -1, nullptr);
+        enqueueMessage(priority, reply, freq, nullptr);
     }
 }
 
