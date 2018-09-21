@@ -8,10 +8,10 @@
 const int PACKET_TIMEOUT_SECONDS = 300;
 
 APRSISClient::APRSISClient(QString host, quint16 port, QObject *parent):
-    QTcpSocket(parent),
-    m_host(host),
-    m_port(port)
+    QTcpSocket(parent)
 {
+    setServer(host, port);
+
     connect(&m_timer, &QTimer::timeout, this, &APRSISClient::sendReports);
     m_timer.setInterval(60*1000); // every 60 seconds
     m_timer.start();
@@ -184,13 +184,31 @@ QPair<QString, QString> APRSISClient::grid2aprs(QString grid){
     };
 }
 
+QString APRSISClient::replaceCallsignSuffixWithSSID(QString call, QString base){
+    if(call != base){
+        QRegularExpression re("[/](?<ssid>(P|\\d+))");
+        auto matcher = re.globalMatch(call);
+        if(matcher.hasNext()){
+            auto match = matcher.next();
+            auto ssid = match.captured("ssid");
+            if(ssid == "P"){
+                ssid = "16";
+            }
+            call = base + "-" + ssid;
+        } else {
+            call = base;
+        }
+    }
+    return call;
+}
+
+
 void APRSISClient::enqueueSpot(QString theircall, QString grid, QString comment){
     if(m_localCall.isEmpty()) return;
 
     auto geo = APRSISClient::grid2aprs(grid);
-    auto spotFrame = QString("%1>%2,APRS,TCPIP*:=%3/%4nFT8CALL %5\n");
+    auto spotFrame = QString("%1>APRS,TCPIP*:=%2/%3nFT8CALL %4\n");
     spotFrame = spotFrame.arg(theircall);
-    spotFrame = spotFrame.arg(m_localCall);
     spotFrame = spotFrame.arg(geo.first);
     spotFrame = spotFrame.arg(geo.second);
     spotFrame = spotFrame.arg(comment.left(43));
@@ -202,9 +220,8 @@ void APRSISClient::enqueueThirdParty(QString theircall, QString payload){
         return;
     }
 
-    auto frame = QString("%1>%2,APRS,TCPIP*:%3\n");
+    auto frame = QString("%1>APRS,TCPIP*:%2\n");
     frame = frame.arg(theircall);
-    frame = frame.arg(m_localCall);
     frame = frame.arg(payload);
     enqueueRaw(frame);
 }
@@ -226,6 +243,7 @@ void APRSISClient::processQueue(bool disconnect){
     // 4. disconnect
 
     if(state() != QTcpSocket::ConnectedState){
+        qDebug() << "APRSISClient Connecting:" << m_host << m_port;
         connectToHost(m_host, m_port);
         if(!waitForConnected(5000)){
             qDebug() << "APRSISClient Connection Error:" << errorString();

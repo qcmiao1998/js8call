@@ -30,7 +30,8 @@ print "Connected..."
 data = s.recv(1024)
 print data
 
-call = 'KN4CRD'
+print "Callsign: "
+call = raw_input().strip()
 pw = do_hash(call)
 ver = "FT8Call"
 
@@ -43,7 +44,7 @@ data = s.recv(1024)
 print data
 
 if 0:
-    message = "KN4CRD>OH8STN,APRS,TCPIP*::EMAIL-2  :KN4CRD@GMAIL.COM TESTING!{04}\n"
+    message = "KN4CRD>APRS,TCPIP*::EMAIL-2  :KN4CRD@GMAIL.COM TESTING!{04}\n"
     s.send(message)
 
 if 0:
@@ -59,7 +60,7 @@ if 1:
     position = "=3352.45N/08422.71Wn"
     status = "FT8CALL VIA XX9XXX/XXXX 14.082500MHz -20dB"
     payload = "".join((position, status))
-    message = "{}>OH8STN,APRS,TCPIP*:{}\n".format(call, payload)
+    message = "{}-16>APRS,TCPIP*:{}\n".format(call, payload)
     s.send(message)
 
 print "Spot sent...", message

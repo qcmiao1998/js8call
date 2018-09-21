@@ -4130,7 +4130,11 @@ void MainWindow::aprsLogReport(int offset, int snr, QString callsign, QString gr
     if(callsign.contains("/")){
         comment = QString("%1 %2").arg(callsign).arg(comment);
     }
-    m_aprsClient->enqueueSpot(Radio::base_callsign(callsign), grid, comment);
+
+    auto base = Radio::base_callsign(callsign);
+    callsign = APRSISClient::replaceCallsignSuffixWithSSID(callsign, base);
+
+    m_aprsClient->enqueueSpot(callsign, grid, comment);
 }
 
 void MainWindow::killFile ()
@@ -8819,21 +8823,10 @@ void MainWindow::aprsSetLocal ()
     auto grid = m_config.my_grid();
     auto passcode = m_config.aprs_passcode();
 
-#if SPOT_SSID_SUFFIX
-    if(call != base){
-        QRegularExpression re("[/](?<ssid>\\d+)");
-        auto matcher = re.globalMatch(call);
-        if(matcher.hasNext()){
-            auto match = matcher.next();
-            call = base + "-" + match.captured("ssid");
-        } else {
-            call = base;
-        }
-    }
-#endif
+    call = APRSISClient::replaceCallsignSuffixWithSSID(call, base);
 
-    qDebug() << "APRSISClient Set Local Station:" << base << grid << passcode;
-    m_aprsClient->setLocalStation(base, grid, passcode);
+    qDebug() << "APRSISClient Set Local Station:" << call << grid << passcode;
+    m_aprsClient->setLocalStation(call, grid, passcode);
 }
 
 void MainWindow::transmitDisplay (bool transmitting)

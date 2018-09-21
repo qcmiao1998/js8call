@@ -17,6 +17,7 @@ public:
     static QString loginFrame(QString callsign);
     static QPair<float, float> grid2deg(QString grid);
     static QPair<QString, QString> grid2aprs(QString grid);
+    static QString replaceCallsignSuffixWithSSID(QString call, QString base);
 
     void setServer(QString host, quint16 port){
         if(state() == QTcpSocket::ConnectedState){
@@ -25,6 +26,8 @@ public:
 
         m_host = host;
         m_port = port;
+
+        qDebug() << "APRSISClient Server Change:" << m_host << m_port;
     }
 
     void setPaused(bool paused){
