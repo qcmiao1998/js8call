@@ -1678,6 +1678,7 @@ void MainWindow::writeSettings()
   m_settings->setValue("TextVerticalSplitter", ui->textVerticalSplitter->saveState());
   m_settings->setValue("ShowTimeDrift", ui->driftSyncFrame->isVisible());
   m_settings->setValue("TimeDrift", ui->driftSpinBox->value());
+  m_settings->setValue("SelCal", ui->selcalButton->isChecked());
 
   m_settings->endGroup();
 
@@ -1783,6 +1784,7 @@ void MainWindow::readSettings()
   }
   ui->driftSyncFrame->setVisible(m_settings->value("ShowTimeDrift", false).toBool());
   ui->driftSpinBox->setValue(m_settings->value("TimeDrift", 0).toInt());
+  ui->selcalButton->setChecked(m_settings->value("SelCal", false).toBool());
 
   m_settings->endGroup();
 
@@ -3694,6 +3696,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 d.isBuffered = true;
                 m_messageBuffer[d.freq/10*10].msgs.append(d);
             }
+
 
             m_rxActivityQueue.append(d);
             m_bandActivity[offset].append(d);
@@ -9183,7 +9186,7 @@ void MainWindow::updateButtonDisplay(){
     if(isTransmitting){
         int count = m_txFrameCount;
         int sent = count - m_txFrameQueue.count();
-        ui->startTxButton->setText(QString("Sending (%1/%2)").arg(sent).arg(count));
+        ui->startTxButton->setText(m_tune ? "Tuning" : QString("Sending (%1/%2)").arg(sent).arg(count));
     }
 }
 
@@ -9254,7 +9257,7 @@ void MainWindow::markOffsetRecent(int offset){
 bool MainWindow::isDirectedOffset(int offset, bool *pIsAllCall){
     bool isDirected = (
         m_rxDirectedCache.contains(offset/10*10) &&
-        m_rxDirectedCache[offset/10*10]->date.secsTo(DriftingDateTime::currentDateTimeUtc()) < 300
+        m_rxDirectedCache[offset/10*10]->date.secsTo(DriftingDateTime::currentDateTimeUtc()) < 120
     );
 
     if(isDirected){
@@ -9269,6 +9272,11 @@ void MainWindow::markOffsetDirected(int offset, bool isAllCall){
     CachedDirectedType *d2 = new CachedDirectedType{ isAllCall, DriftingDateTime::currentDateTimeUtc() };
     m_rxDirectedCache.insert(offset/10*10,    d1, 10);
     m_rxDirectedCache.insert(offset/10*10+10, d2, 10);
+}
+
+void MainWindow::clearOffsetDirected(int offset){
+    m_rxDirectedCache.remove(offset/10*10);
+    m_rxDirectedCache.remove(offset/10*10+10);
 }
 
 bool MainWindow::isMyCallIncluded(const QString &text){
@@ -9316,12 +9324,6 @@ void MainWindow::processRxActivity() {
     while (!m_rxActivityQueue.isEmpty()) {
         ActivityDetail d = m_rxActivityQueue.dequeue();
 
-        // if this is a compound message or it's a directed message needing a compound call, skip.
-        // these messages will be displayed when the compound calls come through
-#if 0
-        if(d.isCompound || (d.isDirected && d.text.contains("<....>"))){
-#endif
-
         // if this is a _partial_ directed message, skip until the complete call comes through.
         if(d.isDirected && d.text.contains("<....>")){
             continue;
@@ -9347,19 +9349,6 @@ void MainWindow::processRxActivity() {
             shouldDisplay = shouldDisplay || !isDirectedAllCall;
         }
 
-        // TODO: jsherer - develop a better way to determine if we can display this band activity...
-#if 0
-        if(isRecentOffset(freq) || isAllCallIncluded(d.text)){
-            m_rxRecentCache.insert(freq, new QDateTime(DriftingDateTime::currentDateTimeUtc()), 25);
-            shouldDisplay = true;
-        }
-
-        if(isDirectedOffset(freq) || isMyCallIncluded(d.text)){
-            m_rxDirectedCache.insert(freq, new QDateTime(DriftingDateTime::currentDateTimeUtc()), 25);
-            shouldDisplay = true;
-        }
-#endif
-
         if(!shouldDisplay){
             continue;
         }
@@ -9378,6 +9367,10 @@ void MainWindow::processRxActivity() {
 
         // log it to the display!
         displayTextForFreq(d.text, d.freq, d.utcTimestamp, false, isFirst, isLast);
+
+        if(isLast){
+            clearOffsetDirected(d.freq);
+        }
 
         if(isLast && !d.isBuffered){
             // buffered commands need the rxFrameBlockNumbers cache so it can fixup its display
@@ -9601,9 +9594,14 @@ void MainWindow::processCommandActivity() {
         cd.utcTimestamp = d.utcTimestamp;
         logCallActivity(cd, true);
 
+        bool toMe = d.to == m_config.my_callsign().trimmed() || d.to == Radio::base_callsign(m_config.my_callsign()).trimmed();
 
         // we're only responding to allcall and our callsign at this point, so we'll end after logging the callsigns we've heard
-        if (!isAllCall && d.to != m_config.my_callsign().trimmed() && d.to != Radio::base_callsign(m_config.my_callsign()).trimmed()) {
+        if (!isAllCall && !toMe) {
+            continue;
+        }
+
+        if (isAllCall && ui->selcalButton->isChecked()) {
             continue;
         }
 

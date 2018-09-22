@@ -883,6 +883,7 @@ private:
   void markOffsetRecent(int offset);
   bool isDirectedOffset(int offset, bool *pIsAllCall);
   void markOffsetDirected(int offset, bool isAllCall);
+  void clearOffsetDirected(int offset);
   void processActivity(bool force=false);
   void processRxActivity();
   void processCompoundActivity();
