@@ -101,7 +101,9 @@ subroutine sync8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   candidate0=0.
   k=0
   do i=1,200
-     n=ia + indx(iz+1-i) - 1
+     ji=iz+1-1
+     if(ji.eq.0) exit
+     n=ia + indx(ji) - 1
      if(red(n).lt.syncmin) exit
      if(k.lt.200) k=k+1
      candidate0(1,k)=n*df
