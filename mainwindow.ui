@@ -4942,7 +4942,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Runaway Tx watchdog</string>
+    <string>Idle watchdog</string>
    </property>
   </action>
   <action name="actionAllow_multiple_instances">

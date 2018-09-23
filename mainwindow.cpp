@@ -6552,6 +6552,9 @@ void MainWindow::checkBeacon(){
     if(m_nextBeaconQueued){
         return;
     }
+    if(m_tx_watchdog){
+        return;
+    }
 
     prepareBeacon();
 }
@@ -9784,6 +9787,10 @@ void MainWindow::processSpots() {
 }
 
 void MainWindow::processTxQueue(){
+    if(m_tx_watchdog){
+        return;
+    }
+
     if(m_txMessageQueue.isEmpty()){
         return;
     }
@@ -10915,7 +10922,7 @@ void MainWindow::tx_watchdog (bool triggered)
       if (m_auto) auto_tx_mode (false);
       stopTx();
       tx_status_label.setStyleSheet ("QLabel{background-color: #ff0000}");
-      tx_status_label.setText ("Runaway Tx watchdog");
+      tx_status_label.setText ("Idle watchdog");
       QApplication::alert (this);
     }
   else
