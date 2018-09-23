@@ -4666,17 +4666,6 @@ void MainWindow::startTx2()
     if(snr>0.0 or snr < -50.0) snr=99.0;
     transmit (snr);
     ui->signal_meter_widget->setValue(0,0);
-    if(m_mode=="Echo" and !m_tune) m_bTransmittedEcho=true;
-
-    if(m_mode.startsWith ("WSPR") and !m_tune) {
-      if (m_config.TX_messages ()) {
-        t = " Transmitting " + m_mode + " ----------------------- " +
-          m_config.bands ()->find (m_freqNominal);
-        t=WSPR_hhmm(0) + ' ' + t.rightJustified (66, '-');
-        ui->decodedTextBrowser->appendText(t);
-      }
-      write_transmit_entry ("ALL_WSPR.TXT");
-    }
   }
 }
 
@@ -4688,6 +4677,9 @@ void MainWindow::continueTx()
 void MainWindow::stopTx()
 {
   Q_EMIT endTransmitMessage ();
+  auto dt = DecodedText(m_currentMessage.trimmed());
+  last_tx_label.setText("Last Tx: " + dt.message()); //m_currentMessage.trimmed());
+
   m_btxok = false;
   m_transmitting = false;
   g_iptt=0;
@@ -4697,7 +4689,6 @@ void MainWindow::stopTx()
   }
 
   bool shouldContinue = !m_tx_watchdog && prepareNextMessageFrame();
-
   if(shouldContinue){
       continueTx();
   } else {
@@ -4716,20 +4707,6 @@ void MainWindow::stopTx()
 void MainWindow::stopTx2()
 {
   Q_EMIT m_config.transceiver_ptt (false);      //Lower PTT
-  if (m_mode == "JT9" && m_bFast9
-      && ui->cbAutoSeq->isVisible () && ui->cbAutoSeq->isChecked()
-      && m_ntx == 5 && m_nTx73 >= 5) {
-    on_stopTxButton_clicked ();
-    m_nTx73 = 0;
-  }
-  if(m_mode.startsWith ("WSPR") and m_ntr==-1 and !m_tuneup) {
-    m_wideGraph->setWSPRtransmitted();
-    WSPR_scheduling ();
-    m_ntr=0;
-  }
-  auto dt = DecodedText(m_currentMessage.trimmed());
-  last_tx_label.setText("Last Tx: " + dt.message()); //m_currentMessage.trimmed());
-//###  if(m_mode=="FT8" and m_config.bHound()) auto_tx_mode(false); ###
 }
 
 void MainWindow::ba2msg(QByteArray ba, char message[])             //ba2msg()
