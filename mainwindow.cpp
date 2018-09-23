@@ -718,7 +718,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(txMsgButtonGroup,SIGNAL(buttonClicked(int)),SLOT(set_ntx(int)));
   connect (ui->decodedTextBrowser, &DisplayText::selectCallsign, this, &MainWindow::doubleClickOnCall2);
   connect (ui->decodedTextBrowser2, &DisplayText::selectCallsign, this, &MainWindow::doubleClickOnCall);
-  connect (ui->textBrowser4, &DisplayText::selectCallsign, this, &MainWindow::doubleClickOnFoxQueue);
   connect (ui->decodedTextBrowser, &DisplayText::erased, this, &MainWindow::band_activity_cleared);
   connect (ui->decodedTextBrowser2, &DisplayText::erased, this, &MainWindow::rx_frequency_activity_cleared);
 
@@ -1668,10 +1667,6 @@ void MainWindow::writeSettings()
   m_settings->setValue ("FreeText", ui->freeTextMsg->currentText ());
   m_settings->setValue("ShowMenus",ui->cbMenus->isChecked());
   m_settings->setValue("CallFirst",ui->cbFirst->isChecked());
-  m_settings->setValue("HoundSort",ui->comboBoxHoundSort->currentIndex());
-  m_settings->setValue("FoxNlist",ui->sbNlist->value());
-  m_settings->setValue("FoxNslots",ui->sbNslots->value());
-  m_settings->setValue("FoxMaxDB",ui->sbMax_dB->value());
 
   m_settings->setValue("MainSplitter", ui->mainSplitter->saveState());
   m_settings->setValue("TextHorizontalSplitter", ui->textHorizontalSplitter->saveState());
@@ -1765,10 +1760,6 @@ void MainWindow::readSettings()
         m_settings->value ("FreeText").toString ());
   ui->cbMenus->setChecked(m_settings->value("ShowMenus",true).toBool());
   ui->cbFirst->setChecked(m_settings->value("CallFirst",true).toBool());
-  ui->comboBoxHoundSort->setCurrentIndex(m_settings->value("HoundSort",3).toInt());
-  ui->sbNlist->setValue(m_settings->value("FoxNlist",12).toInt());
-  ui->sbNslots->setValue(m_settings->value("FoxNslots",5).toInt());
-  ui->sbMax_dB->setValue(m_settings->value("FoxMaxDB",30).toInt());
 
   auto mainSplitterState = m_settings->value("MainSplitter").toByteArray();
   if(!mainSplitterState.isEmpty()){
@@ -3368,8 +3359,10 @@ void MainWindow::decode()                                       //decode()
   dec_data.params.nfa=m_wideGraph->nStartFreq();
   dec_data.params.nfSplit=m_wideGraph->Fmin();
   dec_data.params.nfb=m_wideGraph->Fmax();
-  if(m_mode=="FT8" and m_config.bHound() and !ui->cbRxAll->isChecked()) dec_data.params.nfb=1000;
-  if(m_mode=="FT8" and m_config.bFox()) dec_data.params.nfqso=200;
+
+  //if(m_mode=="FT8" and m_config.bHound() and !ui->cbRxAll->isChecked()) dec_data.params.nfb=1000;
+  //if(m_mode=="FT8" and m_config.bFox()) dec_data.params.nfqso=200;
+
   dec_data.params.ntol=ui->sbFtol->value ();
   if(m_mode=="JT9+JT65" or !m_config.enable_VHF_features()) {
     dec_data.params.ntol=20;
@@ -3548,7 +3541,6 @@ void MainWindow::decodeDone ()
   decodeBusy(false);
   m_RxLog=0;
   m_blankLine=true;
-  if(m_config.bFox()) houndCallers();
 }
 
 void MainWindow::readFromStdout()                             //readFromStdout
@@ -3625,19 +3617,6 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
       DecodedText decodedtext {QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"}), "FT8" == m_mode &&
             ui->cbVHFcontest->isChecked(), m_config.my_grid ()};
-
-      if(m_mode=="FT8" and m_config.bFox() and
-         (decodedtext.string().contains("R+") or decodedtext.string().contains("R-"))) {
-        auto for_us  = decodedtext.string().contains(" " + m_config.my_callsign() + " ") or
-            decodedtext.string().contains(" "+m_baseCall) or
-            decodedtext.string().contains(m_baseCall+" ");
-        if(decodedtext.string().contains(" DE ")) for_us=true;   //Hound with compound callsign
-        if(for_us) {
-          QString houndCall,houndGrid;
-          decodedtext.deCallAndGrid(/*out*/houndCall,houndGrid);
-          foxRxSequencer(decodedtext.string(),houndCall,houndGrid);
-        }
-      }
 
       // only display frames that are FT8Call frames (should decrease false decodes by at least 12%)
       int bits = decodedtext.bits();
@@ -3908,47 +3887,6 @@ void MainWindow::readFromStdout()                             //readFromStdout
         m_QSOText = decodedtext.string ().trimmed ();
       }
 
-      if(m_mode=="FT8" and m_config.bHound()) {
-        if(decodedtext.string().contains(";")) {
-          QStringList w=decodedtext.string().mid(24).split(" ",QString::SkipEmptyParts);
-          QString foxCall=w.at(3);
-          foxCall=foxCall.remove("<").remove(">");
-          if(w.at(0)==m_config.my_callsign() or w.at(0)==Radio::base_callsign(m_config.my_callsign())) {
-            //### Check for ui->dxCallEntry->text()==foxCall before logging! ###
-            ui->stopTxButton->click ();
-            on_logQSOButton_clicked();
-          }
-          if((w.at(2)==m_config.my_callsign() or w.at(2)==Radio::base_callsign(m_config.my_callsign()))
-             and ui->tx3->text().length()>0) {
-            m_rptRcvd=w.at(4);
-            m_rptSent=decodedtext.string().mid(7,3);
-            m_nFoxFreq=decodedtext.string().mid(16,4).toInt();
-            hound_reply ();
-          }
-        } else {
-          QStringList w=decodedtext.string().mid(24).split(" ",QString::SkipEmptyParts);
-          if(decodedtext.string().contains("/")) w.append(" +00");  //Add a dummy report
-          if(w.size()>=3) {
-            QString foxCall=w.at(1);
-            if((w.at(0)==m_config.my_callsign() or w.at(0)==Radio::base_callsign(m_config.my_callsign())) and
-               ui->tx3->text().length()>0) {
-              if(w.at(2)=="RR73") {
-                ui->stopTxButton->click ();
-                on_logQSOButton_clicked();
-              } else {
-                if(w.at(1)==Radio::base_callsign(ui->dxCallEntry->text()) and
-                   (w.at(2).mid(0,1)=="+" or w.at(2).mid(0,1)=="-")) {
-                  m_rptRcvd=w.at(2);
-                  m_rptSent=decodedtext.string().mid(7,3);
-                  m_nFoxFreq=decodedtext.string().mid(16,4).toInt();
-                  hound_reply ();
-                }
-              }
-            }
-          }
-        }
-      }
-
       if(m_mode!="FT8" or !m_config.bHound()) {
         if(m_mode=="FT8" or m_mode=="QRA64" or m_mode=="JT4" or m_mode=="JT65" or
            m_mode=="JT9") auto_sequence (decodedtext, 25, 50);
@@ -4204,20 +4142,13 @@ void MainWindow::guiUpdate()
 
   if(m_TRperiod==0) m_TRperiod=60;
   txDuration=0.0;
-  if(m_modeTx=="FT8")  txDuration=1.0 + 79*1920/12000.0;      // FT8
-  if(m_modeTx=="JT4")  txDuration=1.0 + 207.0*2520/11025.0;   // JT4
-  if(m_modeTx=="JT9")  txDuration=1.0 + 85.0*m_nsps/12000.0;  // JT9
-  if(m_modeTx=="JT65") txDuration=1.0 + 126*4096/11025.0;     // JT65
-  if(m_modeTx=="QRA64")  txDuration=1.0 + 84*6912/12000.0;      // QRA64
-  if(m_modeTx=="WSPR") txDuration=2.0 + 162*8192/12000.0;       // WSPR
-  if(m_modeTx=="WSPR-LF") txDuration=2.0 + 114*24576/12000.0;   // WSPR-LF
-  if(m_modeTx=="ISCAT" or m_mode=="MSK144" or m_bFast9) {
-    txDuration=m_TRperiod-0.25; // ISCAT, JT9-fast, MSK144
-  }
+  if(m_modeTx=="FT8")  txDuration=1.0 + NUM_FT8_SYMBOLS*1920/12000.0;      // FT8
 
   double tx1=0.0;
   double tx2=txDuration;
+
   if(m_mode=="FT8") icw[0]=0;                                   //No CW ID in FT8 mode
+
   if((icw[0]>0) and (!m_bFast9)) tx2 += icw[0]*2560.0/48000.0;  //Full length including CW ID
   if(tx2>m_TRperiod) tx2=m_TRperiod;
 
@@ -4234,40 +4165,9 @@ void MainWindow::guiUpdate()
   m_nseq = nsec % m_TRperiod;
   m_tRemaining=m_TRperiod - fmod(tsec,double(m_TRperiod));
 
-  if(m_mode=="Echo") {
-    txDuration=2.4;
-    tx1=0.0;
-    tx2=txDuration;
-    if(m_auto and m_s6>4.0) m_bEchoTxOK=true;
-    if(m_transmitting) m_bEchoTxed=true;
-  }
+  // how long is the tx?
+  m_bTxTime = (t2p >= tx1) and (t2p < tx2);
 
-  if(m_mode.startsWith ("WSPR")) {
-    if(m_nseq==0 and m_ntr==0) {                   //Decide whether to Tx or Rx
-      m_tuneup=false;                              //This is not an ATU tuneup
-      if(m_pctx==0) m_WSPR_tx_next = false;        //Don't transmit if m_pctx=0
-      bool btx = m_auto && m_WSPR_tx_next;         // To Tx, we need m_auto and
-                                                   // scheduled transmit
-      if(m_auto and m_txNext) btx=true;            //TxNext button overrides
-      if(m_auto and m_pctx==100) btx=true;         //Always transmit
-
-      if(btx) {
-        m_ntr=-1;                                  //This says we will have transmitted
-        m_txNext=false;
-        ui->pbTxNext->setChecked(false);
-        m_bTxTime=true;                            //Start a WSPR Tx sequence
-      } else {
-// This will be a WSPR Rx sequence.
-        m_ntr=1;                                   //This says we will have received
-        m_bTxTime=false;                           //Start a WSPR Rx sequence
-      }
-    }
-
-  } else {
-// For all modes other than WSPR
-    m_bTxTime = (t2p >= tx1) and (t2p < tx2);
-    if(m_mode=="Echo") m_bTxTime = m_bTxTime and m_bEchoTxOK;
-  }
   if(m_tune) m_bTxTime=true;                 //"Tune" takes precedence
 
   if(m_transmitting or m_auto or m_tune) {
@@ -4343,6 +4243,8 @@ void MainWindow::guiUpdate()
     if(m_ntx == 8) txMsg=ui->freeTextMsg->currentText();
     if(m_ntx == 9) txMsg=ui->nextFreeTextMsg->text();
     int msgLength=txMsg.trimmed().length();
+
+    // TODO: stop
     if(msgLength==0 and !m_tune) on_stopTxButton_clicked();
 
     if(g_iptt==0 and ((m_bTxTime and fTR<0.75 and msgLength>0) or m_tune)) {
@@ -4350,62 +4252,14 @@ void MainWindow::guiUpdate()
       icw[0]=m_ncw;
       g_iptt = 1;
       setRig ();
-      if(m_mode=="FT8") {
-        if (m_config.bFox()) {
-          if (ui->TxFreqSpinBox->value() > 900) {
-            ui->TxFreqSpinBox->setValue(300);
-          }
-        }
-        else if (m_config.bHound ()) {
-          if(m_auto && !m_tune) {
-            if (ui->TxFreqSpinBox->value() < 999 && m_ntx != 3) {
-              int nf = (qrand() % 2000) + 1000;      // Hound randomized range: 1000-3000 Hz
-              ui->TxFreqSpinBox->setValue(nf);
-            }
-          }
-          if (m_nSentFoxRrpt==2 and m_ntx==3) {
-            // move off the original Fox frequency on subsequent tries of Tx3
-            int nfreq=m_nFoxFreq + 300;
-            if(m_nFoxFreq>600) nfreq=m_nFoxFreq - 300;  //keep nfreq below 900 Hz
-            ui->TxFreqSpinBox->setValue(nfreq);
-          }
-          if (m_nSentFoxRrpt == 1) {
-            ++m_nSentFoxRrpt;
-          }
-        }
-      }
-
-
-// If HoldTxFreq is not checked, randomize Fox's Tx Freq
-// NB: Maybe this should be done no more than once every 5 minutes or so ?
-      if(m_mode=="FT8" and m_config.bFox() and !ui->cbHoldTxFreq->isChecked()) {
-        int fTx = 300.0 + 300.0*double(qrand())/RAND_MAX;
-        ui->TxFreqSpinBox->setValue(fTx);
-      }
-
       setXIT (ui->TxFreqSpinBox->value ());
       Q_EMIT m_config.transceiver_ptt (true);            //Assert the PTT
       m_tx_when_ready = true;
     }
+
+    // TODO: stop
     if(!m_bTxTime and !m_tune) m_btxok=false;       //Time to stop transmitting
   }
-
-  if(m_mode.startsWith ("WSPR") and
-     ((m_ntr==1 and m_rxDone) or (m_ntr==-1 and m_nseq>tx2))) {
-    if(m_monitoring) {
-      m_rxDone=false;
-    }
-    if(m_transmitting) {
-      WSPR_history(m_freqNominal,-1);
-      m_bTxTime=false;                        //Time to stop a WSPR transmission
-      m_btxok=false;
-    }
-    else if (m_ntr != -1) {
-      WSPR_scheduling ();
-      m_ntr=0;                                //This WSPR Rx sequence is complete
-    }
-  }
-
 
   // Calculate Tx tones when needed
   if((g_iptt==1 && m_iptt0==0) || m_restart) {
@@ -4413,111 +4267,46 @@ void MainWindow::guiUpdate()
     QByteArray ba;
     QByteArray ba0;
 
-    if(m_mode.startsWith ("WSPR")) {
-      QString sdBm,msg0,msg1,msg2;
-      sdBm.sprintf(" %d",m_dBm);
-      m_tx=1-m_tx;
-      int i2=m_config.my_callsign().indexOf("/");
-      if(i2>0
-         || (6 == m_config.my_grid ().size ()
-             && !ui->WSPR_prefer_type_1_check_box->isChecked ())) {
-        if(i2<0) {                                                 // "Type 2" WSPR message
-          msg1=m_config.my_callsign() + " " + m_config.my_grid().mid(0,4) + sdBm;
-        } else {
-          msg1=m_config.my_callsign() + sdBm;
-        }
-        msg0="<" + m_config.my_callsign() + "> " + m_config.my_grid()+ sdBm;
-        if(m_tx==0) msg2=msg0;
-        if(m_tx==1) msg2=msg1;
-      } else {
-        msg2=m_config.my_callsign() + " " + m_config.my_grid().mid(0,4) + sdBm; // Normal WSPR message
-      }
-      ba=msg2.toLatin1();
-    } else {
-      if(m_config.bHound() and m_ntx!=3) {   //Hound transmits only Tx1 or Tx3
-        m_ntx=1;
-        ui->txrb1->setChecked(true);
-      }
-      if(m_ntx == 1) ba=ui->tx1->text().toLocal8Bit();
-      if(m_ntx == 2) ba=ui->tx2->text().toLocal8Bit();
-      if(m_ntx == 3) ba=ui->tx3->text().toLocal8Bit();
-      if(m_ntx == 4) ba=ui->tx4->text().toLocal8Bit();
-      if(m_ntx == 5) ba=ui->tx5->currentText().toLocal8Bit();
-      if(m_ntx == 6) ba=ui->tx6->text().toLocal8Bit();
-      if(m_ntx == 7) ba=ui->genMsg->text().toLocal8Bit();
-      if(m_ntx == 8) ba=ui->freeTextMsg->currentText().toLocal8Bit();
-      if(m_ntx == 9) ba=ui->nextFreeTextMsg->text().toLocal8Bit();
-    }
+    if(m_ntx == 1) ba=ui->tx1->text().toLocal8Bit();
+    if(m_ntx == 2) ba=ui->tx2->text().toLocal8Bit();
+    if(m_ntx == 3) ba=ui->tx3->text().toLocal8Bit();
+    if(m_ntx == 4) ba=ui->tx4->text().toLocal8Bit();
+    if(m_ntx == 5) ba=ui->tx5->currentText().toLocal8Bit();
+    if(m_ntx == 6) ba=ui->tx6->text().toLocal8Bit();
+    if(m_ntx == 7) ba=ui->genMsg->text().toLocal8Bit();
+    if(m_ntx == 8) ba=ui->freeTextMsg->currentText().toLocal8Bit();
+    if(m_ntx == 9) ba=ui->nextFreeTextMsg->text().toLocal8Bit();
 
     ba2msg(ba,message);
     int ichk=0;
+
     if (m_lastMessageSent != m_currentMessage
         || m_lastMessageType != m_currentMessageType)
       {
         m_lastMessageSent = m_currentMessage;
         m_lastMessageType = m_currentMessageType;
       }
+
     m_currentMessageType = 0;
-    if(m_tune or m_mode=="Echo") {
+
+    if(m_tune) {
       itone[0]=0;
-    } else {
-      if(m_mode=="ISCAT") {
-        geniscat_(message, msgsent, const_cast<int *> (itone), 28, 28);
-        msgsent[28]=0;
-      } else {
-        if(m_modeTx=="JT4") gen4_(message, &ichk , msgsent, const_cast<int *> (itone),
-                                  &m_currentMessageType, 22, 22);
-        if(m_modeTx=="JT9") gen9_(message, &ichk, msgsent, const_cast<int *> (itone),
-                                  &m_currentMessageType, 22, 22);
-        if(m_modeTx=="JT65") gen65_(message, &ichk, msgsent, const_cast<int *> (itone),
-                                    &m_currentMessageType, 22, 22);
-        if(m_modeTx=="QRA64") genqra64_(message, &ichk, msgsent, const_cast<int *> (itone),
-                                    &m_currentMessageType, 22, 22);
-        if(m_modeTx=="WSPR") genwspr_(message, msgsent, const_cast<int *> (itone),
-                                    22, 22);
-        if(m_modeTx=="WSPR-LF") genwspr_fsk8_(message, msgsent, const_cast<int *> (itone),
-                                    22, 22);
-        if(m_modeTx=="MSK144" or m_modeTx=="FT8") {
-          bool bcontest=false; //ui->cbVHFcontest->isChecked();
-          char MyCall[6];
-          char MyGrid[6];
-          strncpy(MyCall, (m_config.my_callsign()+"      ").toLatin1(),6);
-          strncpy(MyGrid, (m_config.my_grid()+"      ").toLatin1(),6);
-          if(m_modeTx=="MSK144") {
-            genmsk144_(message, MyGrid, &ichk, &bcontest, msgsent, const_cast<int *> (itone),
-                       &m_currentMessageType, 22, 6, 22);
-            if(m_restart) {
-              int nsym=144;
-              if(itone[40]==-40) nsym=40;
-              m_modulator->set_nsym(nsym);
-            }
-          }
-          if(m_modeTx=="FT8") {
-            if(m_config.bFox() and ui->tabWidget->currentIndex()==2) {
-              foxTxSequencer();
-            } else {
-              // 0:   [000] <- this is standard set
-              // 1:   [001] <- this is fox/hound
-              //m_i3bit=0;
-              qDebug() << "genft8" << message;
-              char ft8msgbits[75 + 12]; //packed 75 bit ft8 message plus 12-bit CRC
-              genft8_(message, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
-                      const_cast<int *> (itone), 22, 6, 22);
-              if(m_config.bFox()) {
-                QString fm = QString::fromStdString(message).trimmed();
-                foxGenWaveform(0,fm);
-                foxcom_.nslots=1;
-                foxcom_.nfreq=ui->TxFreqSpinBox->value();
-                if(m_config.split_mode()) foxcom_.nfreq = foxcom_.nfreq - m_XIT;  //Fox Tx freq
-                QString foxCall=m_config.my_callsign() + "         ";
-                strncpy(&foxcom_.mycall[0], foxCall.toLatin1(),12);   //Copy Fox callsign into foxcom_
-                foxgen_();
-              }
-            }
-          }
-        }
-        msgsent[22]=0;
-      }
+    } else if(m_modeTx=="FT8") {
+      bool bcontest=false;
+      char MyCall[6];
+      char MyGrid[6];
+      strncpy(MyCall, (m_config.my_callsign()+"      ").toLatin1(),6);
+      strncpy(MyGrid, (m_config.my_grid()+"      ").toLatin1(),6);
+
+      // 0:   [000] <- this is standard set
+      // 1:   [001] <- this is fox/hound
+      //m_i3bit=0;
+      qDebug() << "genft8" << message;
+      char ft8msgbits[75 + 12]; //packed 75 bit ft8 message plus 12-bit CRC
+      genft8_(message, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
+              const_cast<int *> (itone), 22, 6, 22);
+
+      msgsent[22]=0;
     }
 
     m_currentMessage = QString::fromLatin1(msgsent);
@@ -4665,6 +4454,7 @@ void MainWindow::guiUpdate()
       statusUpdate ();
     }
 
+  // TODO: stop
   if(!m_btxok && m_btxok0 && g_iptt==1) stopTx();
 
   if(m_startAnother) {
@@ -4918,7 +4708,7 @@ void MainWindow::stopTx()
       tryRestoreFreqOffset();
   }
 
-  ptt0Timer.start(200);                       //end-of-transmission sequencer delay
+  ptt0Timer.start(200);                       //end-of-transmission sequencer delay stopTx2
   monitor (true);
   statusUpdate ();
 }
@@ -5170,13 +4960,6 @@ void MainWindow::doubleClickOnCall(Qt::KeyboardModifiers modifiers)
     cursor.setPosition(cursor.selectionStart());
   }
 
-  if(m_config.bFox() and m_decodedText2) {
-    if(m_houndQueue.count()<10 and m_nSortedHounds>0) {
-      QString t=cursor.block().text();
-      selectHound(t);
-    }
-    return;
-  }
   DecodedText message {cursor.block().text(), ("MSK144" == m_mode || "FT8" == m_mode) &&
         ui->cbVHFcontest->isChecked(), m_config.my_grid ()};
   m_bDoubleClicked = true;
@@ -8466,25 +8249,6 @@ void MainWindow::setFreq4(int rxFreq, int txFreq) {
   ui->TxFreqSpinBox->setValue(txFreq);
 
   displayDialFrequency();
-
-#if 0
-  if(m_mode.startsWith ("WSPR")) {
-    ui->WSPRfreqSpinBox->setValue(txFreq);
-  } else {
-    if (ui->TxFreqSpinBox->isEnabled ()) {
-      ui->TxFreqSpinBox->setValue(txFreq);
-    }
-    else if (m_config.enable_VHF_features ()
-             && (Qt::ControlModifier & QApplication::keyboardModifiers ())) {
-      // for VHF & up we adjust Tx dial frequency to equalize Tx to Rx
-      // when user CTRL+clicks on waterfall
-      auto temp = ui->TxFreqSpinBox->value ();
-      ui->RxFreqSpinBox->setValue (temp);
-      setRig (m_freqNominal + txFreq - temp);
-      setXIT (ui->TxFreqSpinBox->value ());
-    }
-  }
-#endif
 }
 
 void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const& s)
@@ -11259,628 +11023,4 @@ void MainWindow::write_transmit_entry (QString const& file_name)
       MessageBox::warning_message (this, tr ("Log File Error"), message);
 #endif
     }
-}
-
-// -------------------------- Code for FT8 DXpedition Mode ---------------------------
-
-void MainWindow::hound_reply ()
-{
-  if (!m_tune) {
-    //Select TX3, set TxFreq to FoxFreq, and Force Auto ON.
-    ui->txrb3->setChecked (true);
-    m_nSentFoxRrpt = 1;
-    ui->rptSpinBox->setValue(m_rptSent.toInt());
-    if (!m_auto) auto_tx_mode(true);
-    ui->TxFreqSpinBox->setValue (m_nFoxFreq);
-  }
-}
-
-void MainWindow::on_sbNlist_valueChanged(int n)
-{
-  m_Nlist=n;
-}
-
-void MainWindow::on_sbNslots_valueChanged(int n)
-{
-  m_Nslots=n;
-  QString t;
-  t.sprintf(" NSlots %d",m_Nslots);
-  writeFoxQSO(t);
-}
-
-void MainWindow::on_sbMax_dB_valueChanged(int n)
-{
-  m_max_dB=n;
-  QString t;
-  t.sprintf(" Max_dB %d",m_max_dB);
-  writeFoxQSO(t);
-}
-
-void MainWindow::on_pbFoxReset_clicked()
-{
-  auto button = MessageBox::query_message (this, tr ("Confirm Reset"),
-      tr ("Are you sure you want to clear the QSO queues?"));
-  if(button == MessageBox::Yes) {
-    QFile f(m_config.temp_dir().absoluteFilePath("houndcallers.txt"));
-    f.remove();
-    ui->decodedTextBrowser->setText("");
-    ui->textBrowser4->setText("");
-    m_houndQueue.clear();
-    m_foxQSO.clear();
-    m_foxQSOinProgress.clear();
-    writeFoxQSO(" Reset");
-  }
-}
-
-void MainWindow::on_comboBoxHoundSort_activated(int index)
-{
-  if(index!=-99) houndCallers();            //Silence compiler warning
-}
-
-//------------------------------------------------------------------------------
-QString MainWindow::sortHoundCalls(QString t, int isort, int max_dB)
-{
-/* Called from "houndCallers()" to sort the list of calling stations by
- * specified criteria.
- *
- * QString "t" contains a list of Hound callers read from file "houndcallers.txt".
- *    isort=0: random    (shuffled order)
- *          1: Call
- *          2: Grid
- *          3: SNR       (reverse order)
- *          4: Distance  (reverse order)
-*/
-
-  QMap<QString,QString> map;
-  QStringList lines,lines2;
-  QString msg,houndCall,t1;
-  QString ABC{"ABCDEFGHIJKLMNOPQRSTUVWXYZ _"};
-  QList<int> list;
-  int i,j,k,m,n,nlines;
-  bool bReverse=(isort >= 3);
-
-  isort=qAbs(isort);
-// Save only the most recent transmission from each caller.
-  lines = t.split("\n");
-  nlines=lines.length()-1;
-  for(i=0; i<nlines; i++) {
-    msg=lines.at(i);                        //key = callsign
-    if(msg.mid(13,1)==" ") msg=msg.mid(0,13) + "...." + msg.mid(17);
-    houndCall=msg.split(" ").at(0);         //value = "call grid snr freq dist age"
-    map[houndCall]=msg;
-  }
-
-  j=0;
-  t="";
-  for(auto a: map.keys()) {
-    t1=map[a].split(" ",QString::SkipEmptyParts).at(2);
-    int nsnr=t1.toInt();                         // get snr
-    if(nsnr <= max_dB) {                         // keep only if snr in specified range
-      if(isort==1) t += map[a] + "\n";
-      if(isort==3 or isort==4) {
-        i=2;                                           // sort Hound calls by snr
-        if(isort==4) i=4;                              // sort Hound calls by distance
-        t1=map[a].split(" ",QString::SkipEmptyParts).at(i);
-        n=1000*(t1.toInt()+100) + j;                   // pack (snr or dist) and index j into n
-      }
-
-      if(isort==2) {                                   // sort Hound calls by grid
-        t1=map[a].split(" ",QString::SkipEmptyParts).at(1);
-        if(t1=="....") t1="ZZ99";
-        int i1=ABC.indexOf(t1.mid(0,1));
-        int i2=ABC.indexOf(t1.mid(1,1));
-        n=100*(26*i1+i2)+t1.mid(2,2).toInt();
-        n=1000*n + j;                                 // pack ngrid and index j into n
-      }
-
-      list.insert(j,n);                               // add n to list at [j]
-      lines2.insert(j,map[a]);                        // add map[a] to lines2 at [j]
-      j++;
-    }
-  }
-
-  if(isort>1) {
-    if(bReverse) {
-      qStableSort(list.begin(),list.end(),qGreater<int>());
-    } else {
-      qStableSort(list.begin(),list.end());
-    }
-  }
-
-  if(isort>1) {
-    for(i=0; i<j; i++) {
-      k=list[i]%1000;
-      n=list[i]/1000 - 100;
-      t += lines2.at(k) + "\n";
-    }
-  }
-
-  int nn=lines2.length();
-  if(isort==0) {                                      // shuffle Hound calls to random order
-    int a[nn];
-    for(i=0; i<nn; i++) {
-      a[i]=i;
-    }
-    for(i=nn-1; i>-1; i--) {
-      j=(i+1)*double(qrand())/RAND_MAX;
-      m=a[j];
-      a[j]=a[i];
-      a[i]=m;
-      t += lines2.at(m) + "\n";
-    }
-  }
-
-  int i0=t.indexOf("\n") + 1;
-  m_nSortedHounds=0;
-  if(i0 > 0) {
-    m_nSortedHounds=qMin(t.length(),m_Nlist*i0)/i0; // Number of sorted & displayed Hounds
-  }
-  m_houndCallers=t.mid(0,m_Nlist*i0);
-
-  return m_houndCallers;
-}
-
-//------------------------------------------------------------------------------
-void MainWindow::selectHound(QString line)
-{
-/* Called from doubleClickOnCall() in DXpedition Fox mode.
- * QString "line" is a user-selected line from left text window.
- * The line may be selected by double-clicking; alternatively, hitting
- * <Enter> is equivalent to double-clicking on the top-most line.
-*/
-
-  if(line.length()==0) return;
-  QString houndCall=line.split(" ",QString::SkipEmptyParts).at(0);
-
-// Don't add a call already enqueued or in QSO
-  if(ui->textBrowser4->toPlainText().indexOf(houndCall) >= 0) return;
-
-  QString houndGrid=line.split(" ",QString::SkipEmptyParts).at(1);  // Hound caller's grid
-  QString rpt=line.split(" ",QString::SkipEmptyParts).at(2);        // Hound SNR
-
-  m_houndCallers=m_houndCallers.remove(line+"\n");      // Remove t from sorted Hound list
-  m_nSortedHounds--;
-  ui->decodedTextBrowser->setText(m_houndCallers);   // Populate left window with Hound callers
-  QString t1=houndCall + "          ";
-  QString t2=rpt;
-  if(rpt.mid(0,1) != "-" and rpt.mid(0,1) != "+") t2="+" + rpt;
-  if(t2.length()==2) t2=t2.mid(0,1) + "0" + t2.mid(1,1);
-  t1=t1.mid(0,12) + t2;
-  ui->textBrowser4->displayFoxToBeCalled(t1,"#ffffff");  // Add hound call and rpt to tb4
-  t1=t1 + " " + houndGrid;                               // Append the grid
-  m_houndQueue.enqueue(t1);                              // Put this hound into the queue
-  writeFoxQSO(" Sel:  " + t1);
-  QTextCursor cursor = ui->textBrowser4->textCursor();
-  cursor.setPosition(0);                                 // Scroll to top of list
-  ui->textBrowser4->setTextCursor(cursor);
-}
-
-//------------------------------------------------------------------------------
-void MainWindow::houndCallers()
-{
-/* Called from decodeDone(), in DXpedition Fox mode.  Reads decodes from file
- * "houndcallers.txt", ignoring any that are not addressed to MyCall, are already
- * in the stack, or with whom a QSO has been started.  Others are considered to
- * be Hounds eager for a QSO.  We add caller information (Call, Grid, SNR, Freq,
- * Distance, Age, and Continent) to a list, sort the list by specified criteria,
- * and display the top N_Hounds entries in the left text window.
-*/
-  QFile f(m_config.temp_dir().absoluteFilePath("houndcallers.txt"));
-  if(f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-    QTextStream s(&f);
-    QString t="";
-    QString line,houndCall,paddedHoundCall;
-    m_nHoundsCalling=0;
-    int nTotal=0;  //Total number of decoded Hounds calling Fox in 4 most recent Rx sequences
-
-// Read and process the file of Hound callers.
-    while(!s.atEnd()) {
-      line=s.readLine();
-      nTotal++;
-      int i0=line.indexOf(" ");
-      houndCall=line.mid(0,i0);
-      paddedHoundCall=houndCall + " ";
-      //Don't list a hound already in the queue
-      if(!ui->textBrowser4->toPlainText().contains(paddedHoundCall)) {
-        if(m_loggedByFox[houndCall].contains(m_lastBand))   continue;   //already logged on this band
-        if(m_foxQSO.contains(houndCall)) continue;   //still in the QSO map
-        QString countryName,continent;
-        bool callWorkedBefore,countryWorkedBefore;
-        m_logBook.match(/*in*/houndCall,/*out*/countryName,callWorkedBefore,countryWorkedBefore);
-        int i1=countryName.lastIndexOf(";");
-        continent=countryName.mid(i1+2,-1);
-
-//If we are using a directed CQ, ignore Hound calls that do not comply.
-        QString CQtext=ui->comboBoxCQ->currentText();
-        if(CQtext.length()==5 and (continent!=CQtext.mid(3,2))) continue;
-        int nCallArea=-1;
-        if(CQtext.length()==4) {
-          for(int i=houndCall.length()-1; i>0; i--) {
-            if(houndCall.mid(i,1).toInt() > 0) nCallArea=houndCall.mid(i,1).toInt();
-            if(houndCall.mid(i,1)=="0") nCallArea=0;
-            if(nCallArea>=0) break;
-          }
-          if(nCallArea!=CQtext.mid(3,1).toInt()) continue;
-        }
-//This houndCall passes all tests, add it to the list.
-        t = t + line + "  " + continent + "\n";
-        m_nHoundsCalling++;                // Number of accepted Hounds to be sorted
-      }
-    }
-    if(m_msgAvgWidget != NULL and m_msgAvgWidget->isVisible()) {
-      m_msgAvgWidget->foxLabCallers(nTotal);
-    }
-
-// Sort and display accumulated list of Hound callers
-    if(t.length()>30) {
-      m_isort=ui->comboBoxHoundSort->currentIndex();
-      QString t1=sortHoundCalls(t,m_isort,m_max_dB);
-      ui->decodedTextBrowser->setText(t1);
-    }
-    f.close();
-  }
-}
-
-void MainWindow::foxRxSequencer(QString msg, QString houndCall, QString rptRcvd)
-{
-/* Called from "readFromStdOut()" to process decoded messages of the form
- * "myCall houndCall R+rpt".
- *
- * If houndCall matches a callsign in one of our active QSO slots, we
- * prepare to send "houndCall RR73" to that caller.
-*/
-  if(m_foxQSO.contains(houndCall)) {
-    m_foxQSO[houndCall].rcvd=rptRcvd.mid(1);  //Save report Rcvd, for the log
-    m_foxQSO[houndCall].tFoxRrpt=m_tFoxTx;    //Save time R+rpt was received
-    writeFoxQSO(" Rx:   " + msg.trimmed());
-  } else {
-    for(QString hc: m_foxQSO.keys()) {        //Check for a matching compound call
-      if(hc.contains("/"+houndCall) or hc.contains(houndCall+"/")) {
-        m_foxQSO[hc].rcvd=rptRcvd.mid(1);  //Save report Rcvd, for the log
-        m_foxQSO[hc].tFoxRrpt=m_tFoxTx;    //Save time R+rpt was received
-        writeFoxQSO(" Rx:   " + msg.trimmed());
-      }
-    }
-  }
-}
-
-void MainWindow::foxTxSequencer()
-{
-/* Called from guiUpdate at the point where an FT8 Fox-mode transmission
- * is to be started.
- *
- * Determine what the Tx message(s) will be for each active slot, call
- * foxgen() to generate and accumulate the corresponding waveform.
-*/
-
-  qint64 now=DriftingDateTime::currentMSecsSinceEpoch()/1000;
-  QStringList list1;                        //Up to NSlots Hound calls to be sent RR73
-  QStringList list2;                        //Up to NSlots Hound calls to be sent a report
-  QString fm;                               //Fox message to be transmitted
-  QString hc,hc1,hc2;                       //Hound calls
-  QString t,rpt;
-  qint32  islot=0;
-  qint32  n1,n2,n3;
-
-  m_tFoxTx++;                               //Increment Fox Tx cycle counter
-
-  //Is it time for a stand-alone CQ?
-  if(m_tFoxTxSinceCQ >= m_foxCQtime and ui->cbMoreCQs->isChecked()) {
-    fm=ui->comboBoxCQ->currentText() + " " + m_config.my_callsign();
-    if(!fm.contains("/")) {
-      //If Fox is not a compound callsign, add grid to the CQ message.
-      fm += " " + m_config.my_grid().mid(0,4);
-      m_fullFoxCallTime=now;
-    }
-    m_tFoxTx0=m_tFoxTx;                     //Remember when we sent a CQ
-    islot++;
-    foxGenWaveform(islot-1,fm);
-    goto Transmit;
-  }
-//Compile list1: up to NSLots Hound calls to be sent RR73
-  for(QString hc: m_foxQSO.keys()) {           //Check all Hound calls: First priority
-    if(m_foxQSO[hc].tFoxRrpt<0) continue;
-    if(m_foxQSO[hc].tFoxRrpt - m_foxQSO[hc].tFoxTxRR73 > 3) {
-      //Has been a long time since we sent RR73
-      list1 << hc;                          //Add to list1
-      m_foxQSO[hc].tFoxTxRR73 = m_tFoxTx;   //Time RR73 is sent
-      m_foxQSO[hc].nRR73++;                 //Increment RR73 counter
-      if(list1.size()==m_Nslots) goto list1Done;
-    }
-  }
-
-  for(QString hc: m_foxQSO.keys()) {           //Check all Hound calls: Second priority
-    if(m_foxQSO[hc].tFoxRrpt<0) continue;
-    if(m_foxQSO[hc].tFoxTxRR73 < 0) {
-      //Have not yet sent RR73
-      list1 << hc;                          //Add to list1
-      m_foxQSO[hc].tFoxTxRR73 = m_tFoxTx;   //Time RR73 is sent
-      m_foxQSO[hc].nRR73++;                 //Increment RR73 counter
-      if(list1.size()==m_Nslots) goto list1Done;
-    }
-  }
-
-  for(QString hc: m_foxQSO.keys()) {           //Check all Hound calls: Third priority
-    if(m_foxQSO[hc].tFoxRrpt<0) continue;
-    if(m_foxQSO[hc].tFoxTxRR73 <= m_foxQSO[hc].tFoxRrpt) {
-      //We received R+rpt more recently than we sent RR73
-      list1 << hc;                          //Add to list1
-      m_foxQSO[hc].tFoxTxRR73 = m_tFoxTx;   //Time RR73 is sent
-      m_foxQSO[hc].nRR73++;                 //Increment RR73 counter
-      if(list1.size()==m_Nslots) goto list1Done;
-    }
-  }
-
-list1Done:
-//Compile list2: Up to Nslots Hound calls to be sent a report.
-  for(int i=0; i<m_foxQSOinProgress.count(); i++) {
-    //First do those for QSOs in progress
-    hc=m_foxQSOinProgress.at(i);
-    if((m_foxQSO[hc].tFoxRrpt < 0) and (m_foxQSO[hc].ncall < m_maxStrikes)) {
-      //Sent him a report and have not received R+rpt: call him again
-      list2 << hc;                          //Add to list2
-      if(list2.size()==m_Nslots) goto list2Done;
-    }
-  }
-
-  while(!m_houndQueue.isEmpty()) {
-    //Start QSO with a new Hound
-    t=m_houndQueue.dequeue();             //Fetch new hound from queue
-    int i0=t.indexOf(" ");
-    hc=t.mid(0,i0);                       //hound call
-    list2 << hc;                          //Add new Hound to list2
-    m_foxQSOinProgress.enqueue(hc);       //Put him in the QSO queue
-    m_foxQSO[hc].grid=t.mid(16,4);        //Hound grid
-    rpt=t.mid(12,3);                      //report to send Hound
-    m_foxQSO[hc].sent=rpt;                //Report to send him
-    m_foxQSO[hc].ncall=0;                 //Start a new Hound
-    m_foxQSO[hc].nRR73 = 0;               //Have not sent RR73
-    m_foxQSO[hc].rcvd = -99;              //Have not received R+rpt
-    m_foxQSO[hc].tFoxRrpt = -1;           //Have not received R+rpt
-    m_foxQSO[hc].tFoxTxRR73 = -1;         //Have not sent RR73
-    rm_tb4(hc);                           //Remove this Hound from tb4
-    if(list2.size()==m_Nslots) goto list2Done;
-    if(m_foxQSO.count()>=2*m_Nslots) goto list2Done;
-  }
-
-list2Done:
-  n1=list1.size();
-  n2=list2.size();
-  n3=qMax(n1,n2);
-  if(n3>m_Nslots) n3=m_Nslots;
-  for(int i=0; i<n3; i++) {
-    hc1="";
-    fm="";
-    if(i<n1 and i<n2) {
-      hc1=list1.at(i);
-      hc2=list2.at(i);
-      m_foxQSO[hc2].ncall++;
-      fm = Radio::base_callsign(hc1) + " RR73; " + Radio::base_callsign(hc2) +
-          " <" + m_config.my_callsign() + "> " + m_foxQSO[hc2].sent;
-    }
-    if(i<n1 and i>=n2) {
-      hc1=list1.at(i);
-      fm = Radio::base_callsign(hc1) + " " + m_baseCall + " RR73";                 //Standard FT8 message
-    }
-
-    if(hc1!="") {
-      // Log this QSO!
-      m_hisCall=hc1;
-      m_hisGrid=m_foxQSO[hc1].grid;
-      m_rptSent=m_foxQSO[hc1].sent;
-      m_rptRcvd=m_foxQSO[hc1].rcvd;
-      QDateTime logTime {DriftingDateTime::currentDateTimeUtc ()};
-      QString thc1=(m_hisCall + "   ").mid(0,6);
-      if(m_hisCall.contains("/")) thc1=m_hisCall;
-      QString logLine=logTime.toString("yyyy-MM-dd hh:mm") + " " + thc1 + "  " +
-          m_hisGrid + "  " + m_rptSent + "  " + m_rptRcvd + " " + m_lastBand;
-      if(m_msgAvgWidget != NULL and m_msgAvgWidget->isVisible()) {
-        m_msgAvgWidget->foxAddLog(logLine);
-      }
-      on_logQSOButton_clicked();
-      writeFoxQSO(" Log:  " + logLine.mid(17));
-      m_foxRateQueue.enqueue(now);             //Add present time in seconds to Rate queue.
-      m_loggedByFox[hc1] += (m_lastBand + " ");
-    }
-
-    if(i<n2 and fm=="") {
-      hc2=list2.at(i);
-      m_foxQSO[hc2].ncall++;
-      fm = Radio::base_callsign(hc2) + " " + m_baseCall + " " + m_foxQSO[hc2].sent; //Standard FT8 message
-    }
-    islot++;
-    foxGenWaveform(islot-1,fm);                             //Generate tx waveform
-  }
-
-  if(islot < m_Nslots) {
-    //At least one slot is still open
-    if(islot==0 or ((m_tFoxTx-m_tFoxTx0>=4) and ui->cbMoreCQs->isChecked())) {
-      //Roughly every 4th Tx sequence, put a CQ message in an otherwise empty slot
-      fm=ui->comboBoxCQ->currentText() + " " + m_config.my_callsign();
-      if(!fm.contains("/")) {
-        fm += " " + m_config.my_grid().mid(0,4);
-        m_tFoxTx0=m_tFoxTx;                                //Remember when we send a CQ
-        m_fullFoxCallTime=now;
-      }
-      islot++;
-      foxGenWaveform(islot-1,fm);
-    }
-  }
-
-Transmit:
-  foxcom_.nslots=islot;
-  foxcom_.nfreq=ui->TxFreqSpinBox->value();
-  if(m_config.split_mode()) foxcom_.nfreq = foxcom_.nfreq - m_XIT;  //Fox Tx freq
-  QString foxCall=m_config.my_callsign() + "         ";
-  strncpy(&foxcom_.mycall[0], foxCall.toLatin1(),12);   //Copy Fox callsign into foxcom_
-  foxgen_();
-  m_tFoxTxSinceCQ++;
-
-  for(QString hc: m_foxQSO.keys()) {               //Check for strikeout or timeout
-    if(m_foxQSO[hc].ncall>=m_maxStrikes) m_foxQSO[hc].ncall++;
-    bool b1=((m_tFoxTx - m_foxQSO[hc].tFoxRrpt) > 2*m_maxFoxWait) and
-        (m_foxQSO[hc].tFoxRrpt > 0);
-    bool b2=((m_tFoxTx - m_foxQSO[hc].tFoxTxRR73) > m_maxFoxWait) and
-        (m_foxQSO[hc].tFoxTxRR73>0);
-    bool b3=(m_foxQSO[hc].ncall >= m_maxStrikes+m_maxFoxWait);
-    bool b4=(m_foxQSO[hc].nRR73 >= m_maxStrikes);
-    if(b1 or b2 or b3 or b4) {
-      m_foxQSO.remove(hc);
-      m_foxQSOinProgress.removeOne(hc);
-    }
-  }
-
-  while(!m_foxRateQueue.isEmpty()) {
-    qint64 age = now - m_foxRateQueue.head();
-    if(age < 3600) break;
-    m_foxRateQueue.dequeue();
-  }
-  if(m_msgAvgWidget != NULL and m_msgAvgWidget->isVisible()) {
-    m_msgAvgWidget->foxLabRate(m_foxRateQueue.size());
-    m_msgAvgWidget->foxLabQueued(m_foxQSOinProgress.count());
-  }
-}
-
-void MainWindow::rm_tb4(QString houndCall)
-{
-  if(houndCall=="") return;
-  QString t="";
-  QString tb4=ui->textBrowser4->toPlainText();
-  QStringList list=tb4.split("\n");
-  int n=list.size();
-  int j=0;
-  for (int i=0; i<n; i++) {
-    if(j>0) t += "\n";
-    QString line=list.at(i);
-    if(!line.contains(houndCall + " ")) {
-      j++;
-      t += line;
-    }
-  }
-  t.replace("\n\n","\n");
-  ui->textBrowser4->setText(t);
-}
-
-void MainWindow::doubleClickOnFoxQueue(Qt::KeyboardModifiers modifiers)
-{
-  if(modifiers==9999) return;                               //Silence compiler warning
-  QTextCursor cursor=ui->textBrowser4->textCursor();
-  cursor.setPosition(cursor.selectionStart());
-  QString houndCall=cursor.block().text().mid(0,12).trimmed();
-  rm_tb4(houndCall);
-  writeFoxQSO(" Del:  " + houndCall);
-  QQueue<QString> tmpQueue;
-  while(!m_houndQueue.isEmpty()) {
-    QString t=m_houndQueue.dequeue();
-    QString hc=t.mid(0,12).trimmed();
-    if(hc != houndCall) tmpQueue.enqueue(t);
-  }
-  m_houndQueue.swap(tmpQueue);
-}
-
-void MainWindow::foxGenWaveform(int i,QString fm)
-{
-//Generate and accumulate the Tx waveform
-  fm += "                                        ";
-  fm=fm.mid(0,40);
-  if(fm.mid(0,3)=="CQ ") m_tFoxTxSinceCQ=-1;
-
-  QString txModeArg;
-  txModeArg.sprintf("FT8fox %d",i+1);
-  ui->decodedTextBrowser2->displayTransmittedText(fm.trimmed(), txModeArg,
-        ui->TxFreqSpinBox->value()+60*i,m_config.color_rx_background(),m_bFastMode);
-  foxcom_.i3bit[i]=0;
-  if(fm.indexOf("<")>0) foxcom_.i3bit[i]=1;
-  strncpy(&foxcom_.cmsg[i][0],fm.toLatin1(),40);   //Copy this message into cmsg[i]
-  if(i==0) m_fm1=fm;
-  QString t;
-  t.sprintf(" Tx%d:  ",i+1);
-  writeFoxQSO(t + fm.trimmed());
-}
-
-void MainWindow::writeFoxQSO(QString msg)
-{
-  QString t;
-  t.sprintf("%3d%3d%3d",m_houndQueue.count(),m_foxQSOinProgress.count(),m_foxQSO.count());
-  QFile f {m_config.writeable_data_dir ().absoluteFilePath ("FoxQSO.txt")};
-  if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
-    QTextStream out(&f);
-    out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
-        << "  " << fixed << qSetRealNumberPrecision (3) << (m_freqNominal/1.e6)
-        << t << msg << endl;
-    f.close();
-  } else {
-    MessageBox::warning_message (this, tr("File Open Error"),
-      tr("Cannot open \"%1\" for append: %2").arg(f.fileName()).arg(f.errorString()));
-  }
-}
-
-/*################################################################################### */
-void MainWindow::foxTest()
-{
-  QFile f("steps.txt");
-  if(!f.open(QIODevice::ReadOnly | QIODevice::Text)) return;
-
-  QFile fdiag("diag.txt");
-  if(!fdiag.open(QIODevice::WriteOnly | QIODevice::Text)) return;
-
-  QTextStream s(&f);
-  QTextStream sdiag(&fdiag);
-  QString line;
-  QString t;
-  QString msg;
-  QString hc1;
-  QString rptRcvd;
-  qint32 n=0;
-
-  while(!s.atEnd()) {
-    line=s.readLine();
-    if(line.length()==0) continue;
-    if(line.mid(0,4).toInt()==0) line="                                     " + line;
-    if(line.contains("NSlots")) {
-      n=line.mid(44,1).toInt();
-      ui->sbNslots->setValue(n);
-    }
-    if(line.contains("Sel:")) {
-      t=line.mid(43,6) + "       " + line.mid(54,4) + "   " + line.mid(50,3);
-      selectHound(t);
-    }
-
-    if(line.contains("Del:")) {
-      int i0=line.indexOf("Del:");
-      hc1=line.mid(i0+6);
-      int i1=hc1.indexOf(" ");
-      hc1=hc1.mid(0,i1);
-      rm_tb4(hc1);
-      writeFoxQSO(" Del:  " + hc1);
-      QQueue<QString> tmpQueue;
-      while(!m_houndQueue.isEmpty()) {
-        t=m_houndQueue.dequeue();
-        QString hc=t.mid(0,6).trimmed();
-        if(hc != hc1) tmpQueue.enqueue(t);
-      }
-      m_houndQueue.swap(tmpQueue);
-    }
-    if(line.contains("Rx:"))  {
-      msg=line.mid(43);
-      t=msg.mid(24);
-      int i0=t.indexOf(" ");
-      hc1=t.mid(i0+1);
-      int i1=hc1.indexOf(" ");
-      hc1=hc1.mid(0,i1);
-      int i2=qMax(msg.indexOf("R+"),msg.indexOf("R-"));
-      if(i2>20) {
-        rptRcvd=msg.mid(i2,4);
-        foxRxSequencer(msg,hc1,rptRcvd);
-      }
-    }
-    if(line.contains("Tx1:")) {
-      foxTxSequencer();
-    } else {
-      t.sprintf("%3d %3d %3d %3d %5d   ",m_houndQueue.count(),
-                m_foxQSOinProgress.count(),m_foxQSO.count(),
-                m_loggedByFox.count(),m_tFoxTx);
-      sdiag << t << line.mid(37).trimmed() << "\n";
-    }
-  }
 }

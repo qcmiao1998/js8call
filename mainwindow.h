@@ -55,7 +55,7 @@
 #define NUM_ISCAT_SYMBOLS 1291             //30*11025/256
 #define NUM_MSK144_SYMBOLS 144             //s8 + d48 + s8 + d80
 #define NUM_QRA64_SYMBOLS 84               //63 data + 21 sync
-#define NUM_FT8_SYMBOLS 79
+#define NUM_FT8_SYMBOLS 79                 // 12.6 seconds, 15 seconds would be 93.75 symbols
 #define NUM_CW_SYMBOLS 250
 #define TX_SAMPLE_RATE 48000
 #define N_WIDGETS 33
@@ -122,7 +122,6 @@ public slots:
   void guiUpdate();
   void doubleClickOnCall (Qt::KeyboardModifiers);
   void doubleClickOnCall2(Qt::KeyboardModifiers);
-  void doubleClickOnFoxQueue(Qt::KeyboardModifiers);
   void readFromStdout();
   void p1ReadFromStdout();
   void setXIT(int n, Frequency base = 0u);
@@ -378,11 +377,6 @@ private slots:
   void on_cbCQTx_toggled(bool b);
   void splash_done (); 
   void on_measure_check_box_stateChanged (int);
-  void on_sbNlist_valueChanged(int n);
-  void on_sbNslots_valueChanged(int n);
-  void on_sbMax_dB_valueChanged(int n);
-  void on_pbFoxReset_clicked();
-  void on_comboBoxHoundSort_activated (int index);
   void expiry_warning_message ();
   void not_GA_warning_message ();
 
@@ -415,7 +409,6 @@ private:
   void writeAllTxt(QString message);
   void auto_sequence (DecodedText const& message, unsigned start_tolerance, unsigned stop_tolerance);
   void hideMenus(bool b);
-  void foxTest();
 
   NetworkAccessManager m_network_manager;
   bool m_valid;
@@ -915,9 +908,6 @@ private:
                           , Frequency frequency
                           , QString const& his_call
                           , QString const& his_grid) const;
-  void hound_reply ();
-  QString sortHoundCalls(QString t, int isort, int max_dB);
-  void rm_tb4(QString houndCall);
   void read_wav_file (QString const& fname);
   void decodeDone ();
   void subProcessFailed (QProcess *, int exit_code, QProcess::ExitStatus);
@@ -936,12 +926,6 @@ private:
   QChar current_submode () const; // returns QChar {0} if sub mode is
                                   // not appropriate
   void write_transmit_entry (QString const& file_name);
-  void selectHound(QString t);
-  void houndCallers();
-  void foxRxSequencer(QString msg, QString houndCall, QString rptRcvd);
-  void foxTxSequencer();
-  void foxGenWaveform(int i,QString fm);
-  void writeFoxQSO(QString msg);
 };
 
 extern int killbyname(const char* progName);
