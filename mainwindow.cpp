@@ -4561,9 +4561,10 @@ void MainWindow::guiUpdate()
       tx_status_label.setText("");
     }
 
+    auto drift = DriftingDateTime::drift();
     QDateTime t = DriftingDateTime::currentDateTimeUtc();
     QString utc = t.date().toString("yyyy MMM dd") + "\n " +
-      t.time().toString() + " ";
+      t.time().toString() + (!drift ? " " : QString(" (%1%2ms)").arg(drift > 0 ? "+" : "").arg(drift));
     ui->labUTC->setText(utc);
 
     auto delta = t.secsTo(m_nextBeacon);
