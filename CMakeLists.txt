@@ -674,32 +674,6 @@ set (wsjtx_UISRCS
   messagereplydialog.ui
   )
 
-# set (UDP_library_CXXSRCS
-#   Radio.cpp
-#   RadioMetaType.cpp
-#   NetworkMessage.cpp
-#   MessageServer.cpp
-#   )
-# 
-# set (UDP_library_HEADERS
-#   Radio.hpp
-#   MessageServer.hpp
-#   ${PROJECT_BINARY_DIR}/udp_export.h
-#   )
-# 
-# set (message_aggregator_CXXSRCS
-#   UDPExamples/MessageAggregator.cpp
-#   UDPExamples/MessageAggregatorMainWindow.cpp
-#   UDPExamples/DecodesModel.cpp
-#   UDPExamples/BeaconsModel.cpp
-#   UDPExamples/ClientWidget.cpp
-#   MaidenheadLocatorValidator.cpp
-#   )
-# 
-# set (message_aggregator_STYLESHEETS
-#   UDPExamples/qss/default.qss
-#   )
-
 set (qcp_CXXSRCS
   qcustomplot-source/qcustomplot.cpp
   )
@@ -1173,99 +1147,8 @@ endif (WIN32)
 add_library (wsjt_qtmm STATIC ${wsjt_qtmm_CXXSRCS} ${wsjt_qtmm_GENUISRCS})
 target_link_libraries (wsjt_qtmm Qt5::Multimedia)
 
-add_executable (jt4sim lib/jt4sim.f90 wsjtx.rc)
-target_link_libraries (jt4sim wsjt_fort wsjt_cxx)
-
-add_executable (jt65sim lib/jt65sim.f90 wsjtx.rc)
-target_link_libraries (jt65sim wsjt_fort wsjt_cxx)
-
-add_executable (qra64sim lib/qra/qra64/qra64sim.f90 wsjtx.rc)
-target_link_libraries (qra64sim wsjt_fort wsjt_cxx)
-
-add_executable (jt49sim lib/jt49sim.f90 wsjtx.rc)
-target_link_libraries (jt49sim wsjt_fort wsjt_cxx)
-
-add_executable (allsim lib/allsim.f90 wsjtx.rc)
-target_link_libraries (allsim wsjt_fort wsjt_cxx)
-
-add_executable (jt65code lib/jt65code.f90 wsjtx.rc)
-target_link_libraries (jt65code wsjt_fort wsjt_cxx)
-
-add_executable (qra64code lib/qra64code.f90 wsjtx.rc)
-target_link_libraries (qra64code wsjt_fort wsjt_cxx)
-
-add_executable (jt9code lib/jt9code.f90 wsjtx.rc)
-target_link_libraries (jt9code wsjt_fort wsjt_cxx)
-
-add_executable (wsprcode lib/wsprcode/wsprcode.f90 lib/wsprcode/nhash.c
-	       wsjtx.rc)
-target_link_libraries (wsprcode wsjt_fort wsjt_cxx)
-
-add_executable (wsprd ${wsprd_CSRCS})
-target_include_directories (wsprd PRIVATE ${FFTW3_INCLUDE_DIRS})
-target_link_libraries (wsprd ${FFTW3_LIBRARIES})
-
-add_executable (wsprsim ${wsprsim_CSRCS})
-
-add_executable (jt4code lib/jt4code.f90 wsjtx.rc)
-target_link_libraries (jt4code wsjt_fort wsjt_cxx)
-
-add_executable (msk144code lib/msk144code.f90 wsjtx.rc)
-target_link_libraries (msk144code wsjt_fort wsjt_cxx)
-
-add_executable (jt65 lib/jt65.f90 lib/jt65_test.f90 wsjtx.rc)
-target_link_libraries (jt65 wsjt_fort wsjt_cxx)
-
-add_executable (ldpcsim40 lib/ldpcsim40.f90 wsjtx.rc)
-target_link_libraries (ldpcsim40 wsjt_fort wsjt_cxx)
-
-add_executable (ldpcsim120 lib/fsk4hf/ldpcsim120.f90 wsjtx.rc)
-target_link_libraries (ldpcsim120 wsjt_fort wsjt_cxx)
-
 add_executable (ldpcsim174 lib/ft8/ldpcsim174.f90 wsjtx.rc)
 target_link_libraries (ldpcsim174 wsjt_fort wsjt_cxx)
-
-add_executable (ldpcsim144 lib/ldpcsim144.f90 wsjtx.rc)
-target_link_libraries (ldpcsim144 wsjt_fort wsjt_cxx)
-
-add_executable (ldpcsim168 lib/fsk4hf/ldpcsim168.f90 wsjtx.rc)
-target_link_libraries (ldpcsim168 wsjt_fort wsjt_cxx)
-
-add_executable (fsk4hf lib/fsk4hf/fsk4hf.f90 wsjtx.rc)
-target_link_libraries (fsk4hf wsjt_fort wsjt_cxx)
-
-add_executable (ft8code lib/ft8/ft8code.f90 wsjtx.rc)
-target_link_libraries (ft8code wsjt_fort wsjt_cxx)
-
-add_executable (ft8sim lib/ft8/ft8sim.f90 wsjtx.rc)
-target_link_libraries (ft8sim wsjt_fort wsjt_cxx)
-
-add_executable (wsprlfsim lib/fsk4hf/wsprlfsim.f90 wsjtx.rc)
-target_link_libraries (wsprlfsim wsjt_fort wsjt_cxx)
-
-add_executable (wspr_fsk8d lib/fsk4hf/wspr_fsk8d.f90 wsjtx.rc)
-target_link_libraries (wspr_fsk8d wsjt_fort wsjt_cxx)
-
-add_executable (wspr_fsk8_sim lib/fsk4hf/wspr_fsk8_sim.f90 wsjtx.rc)
-target_link_libraries (wspr_fsk8_sim wsjt_fort wsjt_cxx)
-
-add_executable (mskhfsim lib/fsk4hf/mskhfsim.f90 wsjtx.rc)
-target_link_libraries (mskhfsim wsjt_fort wsjt_cxx)
-
-add_executable (msk144sd lib/msk144sd.f90 wsjtx.rc)
-target_link_libraries (msk144sd wsjt_fort wsjt_cxx)
-
-add_executable (msk144sim lib/msk144sim.f90 wsjtx.rc)
-target_link_libraries (msk144sim wsjt_fort wsjt_cxx)
-
-add_executable (msk144d2 lib/msk144d2.f90 wsjtx.rc)
-target_link_libraries (msk144d2 wsjt_fort wsjt_cxx)
-
-add_executable (fmtave lib/fmtave.f90 wsjtx.rc)
-
-add_executable (fcal lib/fcal.f90 wsjtx.rc)
-
-add_executable (fmeasure lib/fmeasure.f90 wsjtx.rc)
 
 add_executable (jt9 ${jt9_FSRCS} ${jt9_CXXSRCS} wsjtx.rc)
 if (${OPENMP_FOUND} OR APPLE)
@@ -1353,46 +1236,6 @@ else ()
 endif ()
 qt5_use_modules (ft8call SerialPort) # not sure why the interface link library syntax above doesn't work
 
-### # make a library for WSJT-X UDP servers
-### # add_library (wsjtx_udp SHARED ${UDP_library_CXXSRCS})
-### add_library (wsjtx_udp-static STATIC ${UDP_library_CXXSRCS})
-### #target_include_directories (wsjtx_udp
-### #  INTERFACE
-### #  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/wsjtx>
-### #  )
-### target_include_directories (wsjtx_udp-static
-###   INTERFACE
-###   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/wsjtx>
-###   )
-### #set_target_properties (wsjtx_udp PROPERTIES
-### #  PUBLIC_HEADER "${UDP_library_HEADERS}"
-### #  )
-### set_target_properties (wsjtx_udp-static PROPERTIES
-###   OUTPUT_NAME wsjtx_udp
-###   )
-### target_compile_definitions (wsjtx_udp-static PUBLIC UDP_STATIC_DEFINE)
-### #qt5_use_modules (wsjtx_udp Network)
-### qt5_use_modules (wsjtx_udp-static Network Gui)
-### generate_export_header (wsjtx_udp-static BASE_NAME udp)
-### 
-### add_executable (udp_daemon UDPExamples/UDPDaemon.cpp UDPExamples/udp_daemon.rc ${WSJTX_ICON_FILE})
-### target_link_libraries (udp_daemon wsjtx_udp-static)
-### 
-### add_resources (message_aggregator_RESOURCES /qss ${message_aggregator_STYLESHEETS})
-### configure_file (UDPExamples/message_aggregator.qrc.in message_aggregator.qrc @ONLY)
-### qt5_add_resources (message_aggregator_RESOURCES_RCC ${CMAKE_CURRENT_BINARY_DIR}/message_aggregator.qrc)
-### add_executable (message_aggregator
-###   ${message_aggregator_CXXSRCS}
-###   ${WSJTX_ICON_FILE}
-###   UDPExamples/message_aggregator.rc
-###   ${message_aggregator_RESOURCES_RCC}
-###   )
-### target_link_libraries (message_aggregator Qt5::Widgets wsjtx_udp-static)
-### 
-### if (WSJT_CREATE_WINMAIN)
-###   set_target_properties (message_aggregator PROPERTIES WIN32_EXECUTABLE ON)
-### endif (WSJT_CREATE_WINMAIN)
-
 if (UNIX)
   if (NOT WSJT_SKIP_MANPAGES)
     add_subdirectory (manpages)
@@ -1413,31 +1256,7 @@ install (TARGETS ft8call
   BUNDLE DESTINATION . COMPONENT runtime
   )
 
-# install (TARGETS wsjtx_udp EXPORT udp
-#   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-#   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wsjtx
-#   )
-# install (TARGETS wsjtx_udp-static EXPORT udp-static
-#   DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#   )
-
-# install (EXPORT udp NAMESPACE wsjtx::
-#   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/wsjtx
-#   )
-# install (EXPORT udp-static NAMESPACE wsjtx::
-#   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/wsjtx
-#   )
-
-### install (TARGETS udp_daemon message_aggregator
-###   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
-###   BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
-###   )
-
-install (TARGETS jt9 ft8code jt65code qra64code qra64sim jt9code jt4code
-  msk144code wsprd wspr_fsk8d fmtave fcal fmeasure
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
+install (TARGETS jt9 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
   BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
   )
 
@@ -1445,14 +1264,14 @@ install (PROGRAMS
   ${RIGCTL_EXE}
   DESTINATION ${CMAKE_INSTALL_BINDIR}
   #COMPONENT runtime
-  RENAME rigctl-wsjtx${CMAKE_EXECUTABLE_SUFFIX}
+  RENAME rigctl-local${CMAKE_EXECUTABLE_SUFFIX}
   )
 
 install (PROGRAMS
   ${RIGCTLD_EXE}
   DESTINATION ${CMAKE_INSTALL_BINDIR}
   #COMPONENT runtime
-  RENAME rigctld-wsjtx${CMAKE_EXECUTABLE_SUFFIX}
+  RENAME rigctld-local${CMAKE_EXECUTABLE_SUFFIX}
   )
 
 install (FILES
