@@ -486,9 +486,6 @@ color : white;
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
-                <property name="visible">
-                 <bool>false</bool>
-                </property>
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -506,6 +503,9 @@ color : white;
                   <width>0</width>
                   <height>30</height>
                  </size>
+                </property>
+                <property name="visible">
+                 <bool>false</bool>
                 </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable selective calling (i.e., only directed messages to you will be displayed)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -866,9 +866,6 @@ background-color: #6699ff;
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
-                <property name="visible">
-                 <bool>false</bool>
-                </property>
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -886,6 +883,9 @@ background-color: #6699ff;
                   <width>0</width>
                   <height>30</height>
                  </size>
+                </property>
+                <property name="visible">
+                 <bool>false</bool>
                 </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable automatic station replies to directed queries&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -4708,15 +4708,17 @@ list. The list can be maintained in Settings (F2).</string>
     <property name="title">
      <string>Window</string>
     </property>
+    <addaction name="actionShow_Band_Activity"/>
+    <addaction name="actionShow_Band_Activity_Columns"/>
     <addaction name="actionSort_Band_Activity"/>
+    <addaction name="separator"/>
+    <addaction name="actionShow_Call_Activity"/>
+    <addaction name="actionShow_Call_Activity_Columns"/>
     <addaction name="actionSort_Call_Activity"/>
     <addaction name="separator"/>
-    <addaction name="actionShow_Band_Activity"/>
-    <addaction name="actionShow_Call_Activity"/>
     <addaction name="actionShow_Waterfall"/>
     <addaction name="actionShow_Waterfall_Controls"/>
     <addaction name="actionShow_Time_Drift_Controls"/>
-    <addaction name="separator"/>
     <addaction name="actionReset_Window_Sizes"/>
    </widget>
    <addaction name="menuFile"/>
@@ -5401,12 +5403,12 @@ list. The list can be maintained in Settings (F2).</string>
   </action>
   <action name="actionSort_Band_Activity">
    <property name="text">
-    <string>Sort Band Activity...</string>
+    <string>Sort Band Activity By...</string>
    </property>
   </action>
   <action name="actionSort_Call_Activity">
    <property name="text">
-    <string>Sort Call Activity...</string>
+    <string>Sort Call Activity By...</string>
    </property>
   </action>
   <action name="actionShow_Waterfall_Controls">
@@ -5426,6 +5428,16 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Show Time Drift Controls</string>
+   </property>
+  </action>
+  <action name="actionShow_Band_Activity_Columns">
+   <property name="text">
+    <string>Show Band Activity Columns...</string>
+   </property>
+  </action>
+  <action name="actionShow_Call_Activity_Columns">
+   <property name="text">
+    <string>Show Call Activity Columns...</string>
    </property>
   </action>
  </widget>

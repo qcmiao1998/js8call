@@ -268,6 +268,9 @@ private slots:
   void on_replyMacroButton_clicked();
   void on_qthMacroButton_clicked();
   void on_qtcMacroButton_clicked();
+  void setShowColumn(QString tableKey, QString columnKey, bool value);
+  bool showColumn(QString tableKey, QString columnKey);
+  void buildShowColumnsMenu(QMenu *menu, QString tableKey);
   void setSortBy(QString key, QString value);
   QString getSortBy(QString key, QString defaultValue);
   void buildSortByMenu(QMenu * menu, QString key, QString defaultValue, QList<QPair<QString, QString> > values);
@@ -751,6 +754,7 @@ private:
       QDateTime date;
   };
 
+  QMap<QString, QVariant> m_showColumnsCache; // table column:key -> show boolean
   QMap<QString, QVariant> m_sortCache; // table key -> sort by
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent
   QQueue<QString> m_txFrameQueue; // frames to be sent

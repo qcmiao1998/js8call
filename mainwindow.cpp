@@ -1297,6 +1297,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
     menu->addSeparator();
 
+    auto showMenu = menu->addMenu(QString("Show columns..."));
+    buildShowColumnsMenu(showMenu, "band");
+
     auto sortMenu = menu->addMenu(QString("Sort by..."));
     buildBandActivitySortByMenu(sortMenu);
 
@@ -1369,6 +1372,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     menu->addAction(removeStation);
 
     menu->addSeparator();
+
+    auto showMenu = menu->addMenu(QString("Show columns..."));
+    buildShowColumnsMenu(showMenu, "call");
 
     auto sortMenu = menu->addMenu(QString("Sort by..."));
     buildCallActivitySortByMenu(sortMenu);
@@ -1716,6 +1722,7 @@ void MainWindow::writeSettings()
   m_settings->setValue ("FT8AP", ui->actionEnable_AP_FT8->isChecked ());
   m_settings->setValue ("JT65AP", ui->actionEnable_AP_JT65->isChecked ());
   m_settings->setValue("SortBy", QVariant(m_sortCache));
+  m_settings->setValue("ShowColumns", QVariant(m_showColumnsCache));
 
 
 
@@ -1768,6 +1775,9 @@ void MainWindow::readSettings()
   auto horizontalState = m_settings->value("TextHorizontalSplitter").toByteArray();
   if(!horizontalState.isEmpty()){
     ui->textHorizontalSplitter->restoreState(horizontalState);
+    auto hsizes = ui->textHorizontalSplitter->sizes();
+    ui->tableWidgetRXAll->setVisible(hsizes.at(0) > 0);
+    ui->tableWidgetCalls->setVisible(hsizes.at(2) > 0);
   }
   auto verticalState = m_settings->value("TextVerticalSplitter").toByteArray();
   if(!verticalState.isEmpty()){
@@ -1836,6 +1846,7 @@ void MainWindow::readSettings()
   ui->actionEnable_AP_JT65->setChecked (m_settings->value ("JT65AP", false).toBool());
 
   m_sortCache = m_settings->value("SortBy").toMap();
+  m_showColumnsCache = m_settings->value("ShowColumns").toMap();
 
   // TODO: jsherer - any other customizations?
   //ui->mainSplitter->setSizes(m_settings->value("MainSplitter", QVariant::fromValue(ui->mainSplitter->sizes())).value<QList<int> >());
@@ -2323,10 +2334,22 @@ void MainWindow::on_menuWindow_aboutToShow(){
     QMenu * sortBandMenu = new QMenu(ui->menuWindow);
     buildBandActivitySortByMenu(sortBandMenu);
     ui->actionSort_Band_Activity->setMenu(sortBandMenu);
+    ui->actionSort_Band_Activity->setEnabled(ui->actionShow_Band_Activity->isChecked());
 
     QMenu * sortCallMenu = new QMenu(ui->menuWindow);
     buildCallActivitySortByMenu(sortCallMenu);
     ui->actionSort_Call_Activity->setMenu(sortCallMenu);
+    ui->actionSort_Call_Activity->setEnabled(ui->actionShow_Call_Activity->isChecked());
+
+    QMenu * showBandMenu = new QMenu(ui->menuWindow);
+    buildShowColumnsMenu(showBandMenu, "band");
+    ui->actionShow_Band_Activity_Columns->setMenu(showBandMenu);
+    ui->actionShow_Band_Activity_Columns->setEnabled(ui->actionShow_Band_Activity->isChecked());
+
+    QMenu * showCallMenu = new QMenu(ui->menuWindow);
+    buildShowColumnsMenu(showCallMenu, "call");
+    ui->actionShow_Call_Activity_Columns->setMenu(showCallMenu);
+    ui->actionShow_Call_Activity_Columns->setEnabled(ui->actionShow_Call_Activity->isChecked());
 }
 
 void MainWindow::on_actionShow_Band_Activity_triggered(bool checked){
@@ -7360,6 +7383,45 @@ void MainWindow::on_qtcMacroButton_clicked(){
     addMessageText(QString("QTC %1").arg(qtc));
 }
 
+void MainWindow::setShowColumn(QString tableKey, QString columnKey, bool value){
+    m_showColumnsCache[tableKey + columnKey] = QVariant(value);
+    displayBandActivity();
+    displayCallActivity();
+}
+
+bool MainWindow::showColumn(QString tableKey, QString columnKey){
+    return m_showColumnsCache.value(tableKey + columnKey, QVariant(true)).toBool();
+}
+
+void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
+    QList<QPair<QString, QString>> columnKeys = {
+        {"Frequency Offset", "offset"},
+        {"Last heard timestamp", "timestamp"},
+        {"SNR", "snr"},
+    };
+
+    if(tableKey == "call"){
+        columnKeys.prepend({"Callsign", "callsign"});
+        columnKeys.append({
+          {"Grid Locator", "grid"},
+          {"Distance", "distance"}
+        });
+    }
+
+    foreach(auto p, columnKeys){
+        auto columnLabel = p.first;
+        auto columnKey = p.second;
+
+        auto a = menu->addAction(columnLabel);
+        a->setCheckable(true);
+        a->setChecked(showColumn(tableKey, columnKey));
+
+        connect(a, &QAction::triggered, this, [this, a, tableKey, columnKey](){
+            setShowColumn(tableKey, columnKey, a->isChecked());
+        });
+    }
+}
+
 void MainWindow::setSortBy(QString key, QString value){
     m_sortCache[key] = QVariant(value);
     displayBandActivity();
@@ -7394,7 +7456,7 @@ void MainWindow::buildSortByMenu(QMenu * menu, QString key, QString defaultValue
 
 void MainWindow::buildBandActivitySortByMenu(QMenu * menu){
     buildSortByMenu(menu, "bandActivity", "offset", {
-        {"Frequency Offset", "offset"},
+        {"Frequency offset", "offset"},
         {"Last heard timestamp (oldest first)", "timestamp"},
         {"Last heard timestamp (recent first)", "-timestamp"},
         {"SNR (weakest first)", "snr"},
@@ -7405,7 +7467,7 @@ void MainWindow::buildBandActivitySortByMenu(QMenu * menu){
 void MainWindow::buildCallActivitySortByMenu(QMenu * menu){
     buildSortByMenu(menu, "callActivity", "callsign", {
         {"Callsign", "callsign"},
-        {"Frequency Offset", "offset"},
+        {"Frequency offset", "offset"},
         {"Distance (closest first)", "distance"},
         {"Distance (farthest first)", "-distance"},
         {"Last heard timestamp (oldest first)", "timestamp"},
@@ -10065,6 +10127,11 @@ void MainWindow::displayBandActivity() {
             }
         }
 
+        // Hide columns
+        ui->tableWidgetRXAll->setColumnHidden(0, !showColumn("band", "offset"));
+        ui->tableWidgetRXAll->setColumnHidden(1, !showColumn("band", "timestamp"));
+        ui->tableWidgetRXAll->setColumnHidden(2, !showColumn("band", "snr"));
+
         // Resize the table columns
         ui->tableWidgetRXAll->resizeColumnToContents(0);
         ui->tableWidgetRXAll->resizeColumnToContents(1);
@@ -10225,6 +10292,14 @@ void MainWindow::displayCallActivity() {
                 }
             }
         }
+
+        // Hide columns
+        ui->tableWidgetCalls->setColumnHidden(0, !showColumn("call", "callsign"));
+        ui->tableWidgetCalls->setColumnHidden(1, !showColumn("call", "timestamp"));
+        ui->tableWidgetCalls->setColumnHidden(2, !showColumn("call", "offset"));
+        ui->tableWidgetCalls->setColumnHidden(3, !showColumn("call", "snr"));
+        ui->tableWidgetCalls->setColumnHidden(4, !showColumn("call", "grid"));
+        ui->tableWidgetCalls->setColumnHidden(5, !showColumn("call", "distance"));
 
         // Resize the table columns
         ui->tableWidgetCalls->resizeColumnToContents(0);
