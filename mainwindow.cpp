@@ -9346,9 +9346,11 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
+#if ENABLE_SELCAL
         if (isAllCall && ui->selcalButton->isChecked()) {
             continue;
         }
+#endif
 
         // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past beacon interval)
         // that way we never get spammed by allcalls at a high frequency than what we would beacon
