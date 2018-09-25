@@ -7530,6 +7530,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
     menu->addSeparator();
 
     auto snrQueryAction = menu->addAction(QString("%1? - What is my signal report?").arg(call));
+    snrQueryAction->setDisabled(isAllCall);
     connect(snrQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
