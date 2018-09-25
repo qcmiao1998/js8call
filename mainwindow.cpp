@@ -8981,7 +8981,8 @@ void MainWindow::updateButtonDisplay(){
     update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
 
     bool isTransmitting = m_transmitting || m_txFrameCount > 0;
-    bool emptyCallsign = callsignSelected().isEmpty();
+    auto selectedCallsign = callsignSelected();
+    bool emptyCallsign = selectedCallsign.isEmpty();
 
     ui->cqMacroButton->setDisabled(isTransmitting);
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
@@ -8990,6 +8991,7 @@ void MainWindow::updateButtonDisplay(){
     ui->macrosMacroButton->setDisabled(isTransmitting);
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
     ui->deselectButton->setDisabled(isTransmitting || emptyCallsign);
+    ui->queryButton->setText(emptyCallsign ? "Directed" : QString("Directed to %1").arg(selectedCallsign));
 
     if(isTransmitting){
         int count = m_txFrameCount;
