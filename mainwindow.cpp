@@ -1460,6 +1460,7 @@ void MainWindow::initializeDummyData(){
         "KN4CRD/P",
         "KC9QNE",
         "KI6SSI",
+        "K0OG",
         "LB9YH",
         "VE7/LB9YH",
         "M0IAX",

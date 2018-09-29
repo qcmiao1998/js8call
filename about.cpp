@@ -34,6 +34,7 @@ CAboutDlg::CAboutDlg(QWidget *parent) :
                          "A special thanks goes out to the FT8Call development team:<br/><br/><strong>"
                          "KC9QNE, "
                          "KI6SSI, "
+                         "K0OG, "
                          "LB9YH, "
                          "M0IAX, "
                          "N0JDS, "
