@@ -7467,6 +7467,7 @@ void MainWindow::buildBandActivitySortByMenu(QMenu * menu){
 void MainWindow::buildCallActivitySortByMenu(QMenu * menu){
     buildSortByMenu(menu, "callActivity", "callsign", {
         {"Callsign", "callsign"},
+        {"Callsigns Replied (recent first)", "ackTimestamp"},
         {"Frequency offset", "offset"},
         {"Distance (closest first)", "distance"},
         {"Distance (farthest first)", "-distance"},
@@ -10228,6 +10229,20 @@ void MainWindow::displayCallActivity() {
             return leftActivity.utcTimestamp < rightActivity.utcTimestamp;
         };
 
+        auto compareAckTimestamp = [this, reverse](const QString left, QString right) {
+            auto leftActivity = m_callActivity[left];
+            auto rightActivity = m_callActivity[right];
+
+            if(!leftActivity.ackTimestamp.isNull()){
+
+            }
+            if(!rightActivity.ackTimestamp.isNull()){
+
+            }
+
+            return rightActivity.ackTimestamp < leftActivity.ackTimestamp;
+        };
+
         auto compareSNR = [this, reverse](const QString left, QString right) {
             auto leftActivity = m_callActivity[left];
             auto rightActivity = m_callActivity[right];
@@ -10252,6 +10267,8 @@ void MainWindow::displayCallActivity() {
             qStableSort(keys.begin(), keys.end(), compareDistance);
         } else if(sortBy == "timestamp"){
             qStableSort(keys.begin(), keys.end(), compareTimestamp);
+        } else if(sortBy == "ackTimestamp"){
+            qStableSort(keys.begin(), keys.end(), compareAckTimestamp);
         } else if(sortBy == "snr"){
             qStableSort(keys.begin(), keys.end(), compareSNR);
         }
@@ -10274,7 +10291,7 @@ void MainWindow::displayCallActivity() {
 #if SHOW_THROUGH_CALLS
             QString displayCall = d.through.isEmpty() ? d.call : QString("%1>%2").arg(d.through).arg(d.call);
 #else
-            QString displayCall = d.ackTimestamp.isValid() ? QString("%1 *").arg(d.call) : d.call;
+            QString displayCall = d.ackTimestamp.isValid() ? QString("%1 \u2605").arg(d.call) : d.call;
 #endif
             auto displayItem = new QTableWidgetItem(displayCall);
             displayItem->setData(Qt::UserRole, QVariant((d.call)));
