@@ -680,6 +680,7 @@ private:
     QString through;
     QString grid;
     int freq;
+    QDateTime ackTimestamp;
     QDateTime utcTimestamp;
     int snr;
     int bits;

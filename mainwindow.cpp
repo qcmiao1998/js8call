@@ -1479,6 +1479,7 @@ void MainWindow::initializeDummyData(){
         cd.call = call;
         cd.freq = 500 + 100*i;
         cd.snr = i == 3 ? -100 : i;
+        cd.ackTimestamp = i == 1 ? dt.addSecs(-900) : QDateTime{};
         cd.utcTimestamp = dt;
         cd.grid = i == 5 ? "J042" : i == 6 ? "FN42FN42FN" : "";
         logCallActivity(cd, false);
@@ -3957,6 +3958,9 @@ void MainWindow::logCallActivity(CallDetail d, bool spot){
         CallDetail old = m_callActivity[d.call];
         if(d.grid.isEmpty() && !old.grid.isEmpty()){
             d.grid = old.grid;
+        }
+        if(!d.ackTimestamp.isValid() && old.ackTimestamp.isValid()){
+            d.ackTimestamp = old.ackTimestamp;
         }
         m_callActivity[d.call] = d;
     } else {
@@ -6594,11 +6598,6 @@ void MainWindow::prepareBeacon(){
     // FT8Call Style
     if(m_txBeaconQueue.isEmpty()){
         lines.append(QString("%1: BEACON %2").arg(mycall).arg(mygrid));
-
-        bool shouldTransmitTwoBeacons = true;
-        if(shouldTransmitTwoBeacons){
-            lines.append(QString("%1: BEACON %2").arg(mycall).arg(mygrid));
-        }
     } else {
         while(!m_txBeaconQueue.isEmpty() && lines.length() < 2){
             lines.append(m_txBeaconQueue.dequeue());
@@ -9140,6 +9139,10 @@ void MainWindow::processRxActivity() {
             continue;
         }
 
+        if(d.isDirected && d.text.contains("BEACON")){
+            continue;
+        }
+
         // use the actual frequency and check its delta from our current frequency
         // meaning, if our current offset is 1502 and the d.freq is 1492, the delta is <= 10;
         bool shouldDisplay = abs(d.freq - currentFreqOffset()) <= 10;
@@ -9152,6 +9155,7 @@ void MainWindow::processRxActivity() {
         }
 #endif
 
+#if 0
         // if this is a (recent) directed offset, bump the cache, and display...
         // this will allow a directed free text command followed by non-buffered data frames.
         bool isDirectedAllCall = false;
@@ -9159,13 +9163,16 @@ void MainWindow::processRxActivity() {
             markOffsetDirected(d.freq, isDirectedAllCall);
             shouldDisplay = shouldDisplay || !isDirectedAllCall;
         }
+#endif
 
         if(!shouldDisplay){
             continue;
         }
 
+#if 0
         // ok, we're good to display...let's cache that fact and then display!
         markOffsetRecent(d.freq);
+#endif
 
         bool isFirst = (d.bits & Varicode::FT8CallFirst) == Varicode::FT8CallFirst;
         bool isLast = (d.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast;
@@ -9395,6 +9402,9 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
+        // is this to me?
+        bool toMe = d.to == m_config.my_callsign().trimmed() || d.to == Radio::base_callsign(m_config.my_callsign()).trimmed();
+
         // log call activity...
         CallDetail cd = {};
         cd.call = d.from;
@@ -9402,10 +9412,9 @@ void MainWindow::processCommandActivity() {
         cd.snr = d.snr;
         cd.freq = d.freq;
         cd.bits = d.bits;
+        cd.ackTimestamp = d.text.contains("BEACON ACK") || toMe ? d.utcTimestamp : QDateTime{};
         cd.utcTimestamp = d.utcTimestamp;
         logCallActivity(cd, true);
-
-        bool toMe = d.to == m_config.my_callsign().trimmed() || d.to == Radio::base_callsign(m_config.my_callsign()).trimmed();
 
         // we're only responding to allcall and our callsign at this point, so we'll end after logging the callsigns we've heard
         if (!isAllCall && !toMe) {
@@ -9419,7 +9428,7 @@ void MainWindow::processCommandActivity() {
 #endif
 
         // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past beacon interval)
-        // that way we never get spammed by allcalls at a high frequency than what we would beacon
+        // that way we never get spammed by allcalls at a higher frequency than what we would normally beacon
         if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < m_config.beacon()) {
             continue;
         }
@@ -9449,6 +9458,12 @@ void MainWindow::processCommandActivity() {
 
         // we'd be double printing here if were on frequency, so let's be "smart" about this...
         bool shouldDisplay = true;
+
+        // don't display beacon allcalls
+        if(isAllCall && ad.text.contains("BEACON")){
+            shouldDisplay = false;
+        }
+
         if(shouldDisplay){
             auto c = ui->textEditRX->textCursor();
             c.movePosition(QTextCursor::End);
@@ -9491,7 +9506,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // and mark the offset as a directed offset so future free text is displayed
-        markOffsetDirected(ad.freq, isAllCall);
+        // markOffsetDirected(ad.freq, isAllCall);
 
         // construct a reply, if needed
         QString reply;
@@ -9930,6 +9945,7 @@ void MainWindow::displayActivity(bool force) {
     m_rxDisplayDirty = false;
 }
 
+// updateBandActivity
 void MainWindow::displayBandActivity() {
     auto now = DriftingDateTime::currentDateTimeUtc();
 
@@ -10147,6 +10163,7 @@ void MainWindow::displayBandActivity() {
     ui->tableWidgetRXAll->setUpdatesEnabled(true);
 }
 
+// updateCallActivity
 void MainWindow::displayCallActivity() {
     auto now = DriftingDateTime::currentDateTimeUtc();
 
@@ -10257,7 +10274,7 @@ void MainWindow::displayCallActivity() {
 #if SHOW_THROUGH_CALLS
             QString displayCall = d.through.isEmpty() ? d.call : QString("%1>%2").arg(d.through).arg(d.call);
 #else
-            QString displayCall = d.call;
+            QString displayCall = d.ackTimestamp.isValid() ? QString("%1 *").arg(d.call) : d.call;
 #endif
             auto displayItem = new QTableWidgetItem(displayCall);
             displayItem->setData(Qt::UserRole, QVariant((d.call)));
