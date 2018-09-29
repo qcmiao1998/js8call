@@ -10233,13 +10233,6 @@ void MainWindow::displayCallActivity() {
             auto leftActivity = m_callActivity[left];
             auto rightActivity = m_callActivity[right];
 
-            if(!leftActivity.ackTimestamp.isNull()){
-
-            }
-            if(!rightActivity.ackTimestamp.isNull()){
-
-            }
-
             return rightActivity.ackTimestamp < leftActivity.ackTimestamp;
         };
 
