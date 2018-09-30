@@ -75,7 +75,8 @@ SOURCES += \
     APRSISClient.cpp \
     messagereplydialog.cpp \
     keyeater.cpp \
-    DriftingDateTime.cpp
+    DriftingDateTime.cpp \
+    jsc.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -102,7 +103,8 @@ HEADERS  += qt_helpers.hpp \
     APRSISClient.h \
     messagereplydialog.h \
     keyeater.h \
-    DriftingDateTime.h
+    DriftingDateTime.h \
+    jsc.h
 
 
 INCLUDEPATH += qmake_only

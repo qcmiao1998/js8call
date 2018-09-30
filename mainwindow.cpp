@@ -1,4 +1,4 @@
-﻿//---------------------------------------------------------- MainWindow
+//---------------------------------------------------------- MainWindow
 #include "mainwindow.h"
 #include <cmath>
 #include <cinttypes>
@@ -64,6 +64,7 @@
 #include "SelfDestructMessageBox.h"
 #include "messagereplydialog.h"
 #include "DriftingDateTime.h"
+#include "jsc.h"
 
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
@@ -905,10 +906,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   beaconTimer.setSingleShot(false);
   connect(&beaconTimer, &QTimer::timeout, this, &MainWindow::checkBeacon);
 
-  selectedCallTimer.setSingleShot(true);
-  selectedCallTimer.setInterval(1000*60*60);
-  connect(&selectedCallTimer, &QTimer::timeout, this, &MainWindow::clearCallsignSelected);
-
   connect(m_wideGraph.data (), SIGNAL(setFreq3(int,int)),this,
           SLOT(setFreq4(int,int)));
 
@@ -1205,18 +1202,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->extFreeTextMsgEdit, &QTableWidget::customContextMenuRequested, this, [this, clearAction2, clearActionAll, restoreAction](QPoint const &point){
     QMenu * menu = new QMenu(ui->extFreeTextMsgEdit);
 
-    QString selectedCall = callsignSelected();
-    bool missingCallsign = selectedCall.isEmpty();
-
     restoreAction->setDisabled(m_lastTxMessage.isEmpty());
     menu->addAction(restoreAction);
 
     auto savedMenu = menu->addMenu("Saved messages...");
     buildSavedMessagesMenu(savedMenu);
-
-    auto directedMenu = menu->addMenu(QString("Directed to %1...").arg(selectedCall));
-    directedMenu->setDisabled(missingCallsign);
-    buildQueryMenu(directedMenu, selectedCall);
 
     auto relayMenu = menu->addMenu("Relay via...");
     relayMenu->setDisabled(ui->extFreeTextMsgEdit->toPlainText().isEmpty() || m_callActivity.isEmpty());
@@ -1408,9 +1398,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   p.setColor(QPalette::Inactive, QPalette::Highlight, p.color(QPalette::Active, QPalette::Highlight));
   ui->tableWidgetCalls->setPalette(p);
 
-
-
-
   // Don't block beacon's first run...
   m_lastTxTime = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
 
@@ -1463,6 +1450,26 @@ void MainWindow::not_GA_warning_message ()
 }
 
 void MainWindow::initializeDummyData(){
+
+    QFile file("jsc.dat");
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)){
+        QTextStream s(&file);
+
+        auto table = JSC::loadCompressionTable(s);
+
+        Codeword bits;
+        auto compressed = JSC::compress(table, "E A T EAT TEA ATE EATTET");
+        foreach(auto pair, compressed){
+            qDebug() << "compressed" << Varicode::bitsToStr(pair.first);
+            bits.append(pair.first);
+        }
+
+        qDebug() << "decomressed" << JSC::decompress(table, bits);
+    }
+
+
+
+
     if(!QApplication::applicationName().contains("dummy")){
         return;
     }
@@ -7976,15 +7983,12 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
 }
 
 void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/){
-    selectedCallTimer.stop();
-
     on_extFreeTextMsgEdit_currentTextChanged(ui->extFreeTextMsgEdit->toPlainText());
 
     auto placeholderText = QString("Type your outgoing messages here.");
     auto selectedCall = callsignSelected();
     if(!selectedCall.isEmpty()){
         placeholderText = QString("Type your outgoing directed message to %1 here.").arg(selectedCall);
-        selectedCallTimer.start();
     }
     ui->extFreeTextMsgEdit->setPlaceholderText(placeholderText);
 
@@ -8110,7 +8114,6 @@ void MainWindow::on_tuneButton_clicked (bool checked)
   }
   else { // we're turning off so remember our Tune pwr setting and reset to Tx pwr
     if (m_config.pwrBandTuneMemory() || m_config.pwrBandTxMemory()) {
-      stopTx();
       m_pwrBandTuneMemory[curBand] = ui->outAttenuation->value(); // remember our Tune pwr
       m_PwrBandSetOK = false;
       ui->outAttenuation->setValue(m_pwrBandTxMemory[curBand].toInt()); // set to Tx pwr
