@@ -728,6 +728,7 @@ private:
   bool m_rxDirty;
   bool m_rxDisplayDirty;
   int m_txFrameCount;
+  bool m_txTextDirty;
   QString m_lastTxMessage;
   QDateTime m_lastTxTime;
 

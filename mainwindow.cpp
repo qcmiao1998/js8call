@@ -2762,7 +2762,7 @@ void MainWindow::createStatusBar()                           //createStatusBar
   progressBar.setFormat ("%v/%m");
 
   statusBar()->addPermanentWidget(&wpm_label);
-  wpm_label.setMinimumSize (QSize {90, 18});
+  wpm_label.setMinimumSize (QSize {120, 18});
   wpm_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
   wpm_label.setAlignment(Qt::AlignHCenter);
 
@@ -6127,6 +6127,8 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 
       ui->extFreeTextMsgEdit->setTextCursor(c);
     }
+
+    m_txTextDirty = true;
 }
 
 int MainWindow::currentFreqOffset(){
@@ -8993,7 +8995,7 @@ void MainWindow::updateButtonDisplay(){
         int count = m_txFrameCount;
         int sent = count - m_txFrameQueue.count();
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("Sending (%1/%2)").arg(sent).arg(count));
-    } else {
+    } else if(m_txTextDirty) {
 
         // TODO: only if text changed
 
@@ -9004,14 +9006,16 @@ void MainWindow::updateButtonDisplay(){
             ui->startTxButton->setEnabled(true);
 
             auto words = text.split(" ", QString::SkipEmptyParts).length();
-            auto wpm = QString::number(words/(count/4.0), 'g', 2);
-            wpm_label.setText(QString("%1 wpm").arg(wpm));
+            auto wpm = QString::number(words/(count/4.0), 'f', 1);
+            auto cpm = QString::number(text.length()/(count/4.0), 'f', 0);
+            wpm_label.setText(QString("%1wpm / %2cpm").arg(wpm).arg(cpm));
         } else {
             ui->startTxButton->setText("Send");
             ui->startTxButton->setEnabled(false);
             wpm_label.clear();
         }
 
+        m_txTextDirty = false;
     }
 }
 
