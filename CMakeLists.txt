@@ -306,6 +306,8 @@ set (wsjtx_CXXSRCS
   WsprTxScheduler.cpp
   varicode.cpp
   jsc.cpp
+  jsc_list.cpp
+  jsc_map.cpp
   SelfDestructMessageBox.cpp
   messagereplydialog.cpp
   keyeater.cpp

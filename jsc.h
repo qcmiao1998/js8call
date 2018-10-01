@@ -7,6 +7,7 @@
 
 #include <QTextStream>
 #include <QList>
+#include <QStringList>
 #include <QMap>
 #include <QPair>
 #include <QVector>
@@ -20,9 +21,14 @@ typedef QVector<bool> Codeword;
 class JSC
 {
 public:
+    static CompressionTable loadCompressionTable();
     static CompressionTable loadCompressionTable(QTextStream &stream);
     static QList<CodewordPair> compress(CompressionTable table, QString text);
     static QString decompress(CompressionTable table, Codeword const& bits);
+
+    static const int size = 233638;
+    static char const* map[];
+    static char const* list[];
 };
 
 #endif // JSC_H

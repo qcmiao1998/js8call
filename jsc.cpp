@@ -45,6 +45,22 @@ Codeword codeword(quint32 index, bool separate, quint32 bytesize, quint32 s, qui
     return word;
 }
 
+QPair<CompressionMap, CompressionList> JSC::loadCompressionTable(){
+    CompressionMap out;
+    CompressionList words;
+
+    for(int i = 0; i < JSC::size; i++){
+        out[JSC::map[i]] = i;
+    }
+
+    words.reserve(JSC::size);
+    for(int i = 0; i < JSC::size; i++){
+        words.append(JSC::list[i]);
+    }
+
+    return {out, words};
+}
+
 QPair<CompressionMap, CompressionList> JSC::loadCompressionTable(QTextStream &stream){
     CompressionMap out;
     CompressionList words;

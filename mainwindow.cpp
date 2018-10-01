@@ -1451,24 +1451,16 @@ void MainWindow::not_GA_warning_message ()
 
 void MainWindow::initializeDummyData(){
 
-    QFile file("jsc.dat");
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)){
-        QTextStream s(&file);
+    auto table = JSC::loadCompressionTable();
 
-        auto table = JSC::loadCompressionTable(s);
-
-        Codeword bits;
-        auto compressed = JSC::compress(table, "E A T EAT TEA ATE EATTET");
-        foreach(auto pair, compressed){
-            qDebug() << "compressed" << Varicode::bitsToStr(pair.first);
-            bits.append(pair.first);
-        }
-
-        qDebug() << "decomressed" << JSC::decompress(table, bits);
+    Codeword bits;
+    auto compressed = JSC::compress(table, "E A T EAT TEA ATE EATTET");
+    foreach(auto pair, compressed){
+        qDebug() << "compressed" << Varicode::bitsToStr(pair.first);
+        bits.append(pair.first);
     }
 
-
-
+    qDebug() << "decomressed" << JSC::decompress(table, bits);
 
     if(!QApplication::applicationName().contains("dummy")){
         return;
