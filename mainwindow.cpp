@@ -1450,18 +1450,6 @@ void MainWindow::not_GA_warning_message ()
 }
 
 void MainWindow::initializeDummyData(){
-
-    auto table = JSC::loadCompressionTable();
-
-    Codeword bits;
-    auto compressed = JSC::compress(table, "E A T EAT TEA ATE EATTET");
-    foreach(auto pair, compressed){
-        qDebug() << "compressed" << Varicode::bitsToStr(pair.first);
-        bits.append(pair.first);
-    }
-
-    qDebug() << "decomressed" << JSC::decompress(table, bits);
-
     if(!QApplication::applicationName().contains("dummy")){
         return;
     }
@@ -2772,6 +2760,11 @@ void MainWindow::createStatusBar()                           //createStatusBar
   statusBar()->addPermanentWidget(&progressBar, 1);
   progressBar.setMinimumSize (QSize {100, 18});
   progressBar.setFormat ("%v/%m");
+
+  statusBar()->addPermanentWidget(&wpm_label);
+  wpm_label.setMinimumSize (QSize {90, 18});
+  wpm_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
+  wpm_label.setAlignment(Qt::AlignHCenter);
 
   statusBar ()->addPermanentWidget (&watchdog_label);
   update_watchdog_label ();
@@ -6134,15 +6127,6 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 
       ui->extFreeTextMsgEdit->setTextCursor(c);
     }
-
-    int count = countFT8MessageFrames(x);
-    if(count > 0){
-        ui->startTxButton->setText(QString("Send (%1)").arg(count));
-        ui->startTxButton->setEnabled(true);
-    } else {
-        ui->startTxButton->setText("Send");
-        ui->startTxButton->setEnabled(false);
-    }
 }
 
 int MainWindow::currentFreqOffset(){
@@ -9009,6 +8993,25 @@ void MainWindow::updateButtonDisplay(){
         int count = m_txFrameCount;
         int sent = count - m_txFrameQueue.count();
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("Sending (%1/%2)").arg(sent).arg(count));
+    } else {
+
+        // TODO: only if text changed
+
+        auto text = ui->extFreeTextMsgEdit->toPlainText();
+        int count = countFT8MessageFrames(text);
+        if(count > 0){
+            ui->startTxButton->setText(QString("Send (%1)").arg(count));
+            ui->startTxButton->setEnabled(true);
+
+            auto words = text.split(" ", QString::SkipEmptyParts).length();
+            auto wpm = QString::number(words/(count/4.0), 'g', 2);
+            wpm_label.setText(QString("%1 wpm").arg(wpm));
+        } else {
+            ui->startTxButton->setText("Send");
+            ui->startTxButton->setEnabled(false);
+            wpm_label.clear();
+        }
+
     }
 }
 

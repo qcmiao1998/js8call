@@ -26,6 +26,7 @@
 #include "crc.h"
 
 #include "varicode.h"
+#include "jsc.h"
 
 const int nalphabet = 41;
 QString alphabet = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-./?"}; // alphabet to encode _into_ for FT8 freetext transmission
@@ -1527,7 +1528,42 @@ QString Varicode::packDataMessage(const QString &input, int *n){
     static const int frameSize = 72;
 
     QString frame;
+    QVector<bool> frameBits;
 
+    frameBits.append(Varicode::intToBits(FrameDataPadded, 3));
+
+    int i = 0;
+    foreach(auto pair, JSC::compress(input)){
+        auto bits = pair.first;
+        auto chars = pair.second;
+
+        if(frameBits.length() + bits.length() < frameSize){
+            frameBits.append(bits);
+            i += chars;
+            continue;
+        }
+
+        break;
+    }
+
+    int pad = frameSize - frameBits.length();
+    if(pad){
+        // the way we will pad is this...
+        // set the bit after the frame to 0 and every bit after that a 1
+        // to unpad, seek from the end of the bits until you hit a zero... the rest is the actual frame.
+        for(int i = 0; i < pad; i++){
+            frameBits.append(i == 0 ? (bool)0 : (bool)1);
+        }
+    }
+
+    quint64 value = Varicode::bitsToInt(frameBits.constBegin(), 64);
+    quint8 rem = (quint8)Varicode::bitsToInt(frameBits.constBegin() + 64, 8);
+    frame = Varicode::pack72bits(value, rem);
+
+    *n = i;
+
+
+#if 0
     // [3][69] = 72
     QVector<bool> frameDataBits;
 
@@ -1568,6 +1604,7 @@ QString Varicode::packDataMessage(const QString &input, int *n){
     frame = Varicode::pack72bits(value, rem);
 
     *n = i;
+#endif
 
     return frame;
 }
@@ -1583,6 +1620,7 @@ QString Varicode::unpackDataMessage(const QString &text, quint8 *pType){
     quint64 value = Varicode::unpack72bits(text, &rem);
     auto bits = Varicode::intToBits(value, 64) + Varicode::intToBits(rem, 8);
 
+#if 0
     quint8 type = Varicode::bitsToInt(bits.mid(0, 3));
     if(type == FrameDataUnpadded){
         bits = bits.mid(3);
@@ -1600,6 +1638,7 @@ QString Varicode::unpackDataMessage(const QString &text, quint8 *pType){
     unpacked = Varicode::huffUnescape(unpacked);
 
     if(pType) *pType = type;
+#endif
 
     return unpacked;
 }

@@ -24,10 +24,10 @@
 #include <cmath>
 
 
-Codeword codeword(quint32 index, bool separate, quint32 bytesize, quint32 s, quint32 c){
+Codeword JSC::codeword(quint32 index, bool separate, quint32 bytesize, quint32 s, quint32 c){
     QList<Codeword> out;
 
-    quint32 v = ((index % s) << 1) + (int)separate;
+    quint32 v = ((index % s) << 1) + (quint32)separate;
     out.prepend(Varicode::intToBits(v, bytesize + 1));
 
     quint32 x = index / s;
@@ -45,78 +45,41 @@ Codeword codeword(quint32 index, bool separate, quint32 bytesize, quint32 s, qui
     return word;
 }
 
-QPair<CompressionMap, CompressionList> JSC::loadCompressionTable(){
-    CompressionMap out;
-    CompressionList words;
-
-    for(int i = 0; i < JSC::size; i++){
-        out[JSC::map[i]] = i;
-    }
-
-    words.reserve(JSC::size);
-    for(int i = 0; i < JSC::size; i++){
-        words.append(JSC::list[i]);
-    }
-
-    return {out, words};
-}
-
-QPair<CompressionMap, CompressionList> JSC::loadCompressionTable(QTextStream &stream){
-    CompressionMap out;
-    CompressionList words;
-
-    int index = 0;
-
-    while(!stream.atEnd()){
-        // assume that this is in sorted order, that each word is already upper case.
-        auto word = stream.readLine().trimmed();
-        if(out.contains(word)){
-            continue;
-        }
-        out[word] = index;
-        words.append(word);
-        index++;
-    }
-
-#if 1
-    qStableSort(words.begin(), words.end(), [out](QString const &left, QString const &right){
-        return out[left] < out[right];
-    });
-    qStableSort(words.begin(), words.end(), [](QString const &left, QString const &right){
-        if(left.length() == right.length()){
-            return left < right;
-        }
-        return left.length() < right.length();
-    });
-#endif
-
-    return {out, words};
-}
-
-QList<CodewordPair> JSC::compress(CompressionTable table, QString text){
+QList<CodewordPair> JSC::compress(QString text){
     QList<CodewordPair> out;
 
     const quint32 b = 4;
     const quint32 s = 7;
     const quint32 c = pow(2, 4) - s;
 
-    auto map = table.first;
-    auto list = table.second;
-
     foreach(QString w, text.split(" ", QString::SkipEmptyParts)){
-        if(map.contains(w)){
-            auto index = map[w];
-            out.append({ codeword(index, true, b, s, c), w.length() });
+        bool ok = false;
+        auto index = lookup(w, &ok);
+        if(ok){
+            // cool, we found the word...
+            out.append({ codeword(index, true, b, s, c), (quint32)w.length() + 1 /* for the space that follows */ });
         } else {
-            // prefix match?
+            // hmm. no dice. let's go for a prefix match
             while(!w.isEmpty()){
                 bool hasPrefix = false;
+                auto d = w.toLatin1().data();
+                for(quint32 i = 0; i < JSC::size; i++){
 
-                foreach(QString word, list){
-                    if(w.startsWith(word)){
-                        w = QString(w.mid(word.length()));
-                        out.append({ codeword(map[word], w.isEmpty(), b, s, c), word.length()});
-                        hasPrefix = true;
+                    // TODO: we could probably precompute these sizes
+                    quint32 len = strlen(JSC::list[i]);
+
+                    if(strncmp(d, JSC::list[i], len) == 0){
+                        w = QString(w.mid(len));
+
+                        auto word = JSC::list[i];
+                        auto index = lookup(word, &ok);
+                        if(ok){
+                            bool isLast = w.isEmpty();
+                            out.append({ codeword(index, isLast, b, s, c), len + (isLast ? 1 : 0) /* for the space that follows */});
+                            hasPrefix = true;
+                            break;
+                        }
+
                         break;
                     }
                 }
@@ -132,7 +95,7 @@ QList<CodewordPair> JSC::compress(CompressionTable table, QString text){
     return out;
 }
 
-QString JSC::decompress(CompressionTable table, Codeword const& bitvec){
+QString JSC::decompress(Codeword const& bitvec){
     const quint32 b = 4;
     const quint32 s = 7;
     const quint32 c = pow(2, b) - s;
@@ -177,7 +140,7 @@ QString JSC::decompress(CompressionTable table, Codeword const& bitvec){
 
         j = j*s + bytes[start + k] + base[k];
 
-        out.append(table.first.key(j));
+        out.append(QString(JSC::map[j])); // table.first.key(j));
         if(separators.first() == start + k){
             out.append(" ");
             separators.removeFirst();
@@ -187,4 +150,20 @@ QString JSC::decompress(CompressionTable table, Codeword const& bitvec){
     }
 
     return out.join("");
+}
+
+quint32 JSC::lookup(QString w, bool * ok){
+    return lookup(w.toLatin1().data(), ok);
+}
+
+quint32 JSC::lookup(char const* b, bool *ok){
+    for(quint32 i = 0; i < JSC::size; i++){
+        if(strcmp(b, JSC::map[i]) == 0){
+            if(ok) *ok = true;
+            return i;
+        }
+    }
+
+    if(ok) *ok = false;
+    return 0;
 }

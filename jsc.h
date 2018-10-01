@@ -12,21 +12,25 @@
 #include <QPair>
 #include <QVector>
 
-typedef QMap<QString, int> CompressionMap;             // Map(Word, I) where I is the word index sorted by frequency
-typedef QList<QString> CompressionList;                // List(Word) where list is sorted
-typedef QPair<CompressionMap, CompressionList> CompressionTable; // Tuple(Map, List)
-typedef QPair<QVector<bool>, int> CodewordPair;        // Tuple(Codeword, N) where N = number of characters
-typedef QVector<bool> Codeword;
+typedef QPair<QVector<bool>, quint32> CodewordPair;        // Tuple(Codeword, N) where N = number of characters
+typedef QVector<bool> Codeword;                        // Codeword bit vector
+
 
 class JSC
 {
 public:
+#if 0
     static CompressionTable loadCompressionTable();
     static CompressionTable loadCompressionTable(QTextStream &stream);
-    static QList<CodewordPair> compress(CompressionTable table, QString text);
-    static QString decompress(CompressionTable table, Codeword const& bits);
+#endif
+    static Codeword codeword(quint32 index, bool separate, quint32 bytesize, quint32 s, quint32 c);
+    static QList<CodewordPair> compress(QString text);
+    static QString decompress(Codeword const& bits);
 
-    static const int size = 233638;
+    static quint32 lookup(QString w, bool *ok);
+    static quint32 lookup(char const* b, bool *ok);
+
+    static const quint32 size = 233638;
     static char const* map[];
     static char const* list[];
 };

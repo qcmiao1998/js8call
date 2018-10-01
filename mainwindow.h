@@ -620,6 +620,7 @@ private:
   QLabel band_hopping_label;
   QProgressBar progressBar;
   QLabel watchdog_label;
+  QLabel wpm_label;
 
   QFuture<void> m_wav_future;
   QFutureWatcher<void> m_wav_future_watcher;
@@ -933,6 +934,7 @@ private:
                                   // not appropriate
   void write_transmit_entry (QString const& file_name);
 };
+
 
 extern int killbyname(const char* progName);
 extern void getDev(int* numDevices,char hostAPI_DeviceName[][50],
