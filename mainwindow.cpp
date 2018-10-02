@@ -1432,11 +1432,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
 
-QDate eol(2018, 10, 30);
+QDate eol(2018, 10, 29);
 
 void MainWindow::expiry_warning_message()
 {
-    if(QDate::currentDate() >= eol){
+    if(QDateTime::currentDateTimeUtc().date() > eol){
         MessageBox::critical_message (this, QString("This pre-release development build of FT8Call has expired. Please upgrade to the latest version."));
         close();
         return;
@@ -1449,7 +1449,8 @@ void MainWindow::not_GA_warning_message ()
 
   MessageBox::critical_message (this,
                                 QString("This version of %1 is a pre-release development\n"
-                                "build and will expire on %2. \n\n"
+                                "build and will expire after %2 (UTC), upon which you\n"
+                                "will need to upgrade to the latest version. \n\n"
                                 "Use of development versions of FT8Call are at your own risk \n"
                                 "and carry a responsiblity to report any problems to:\n"
                                 "Jordan Sherer (KN4CRD) kn4crd@gmail.com\n\n").arg(QApplication::applicationName()).arg(eol.toString()));
