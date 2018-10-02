@@ -10,6 +10,7 @@
 #include <QRegExp>
 #include <QString>
 #include <QVector>
+#include <QThread>
 
 class Varicode
 {
@@ -55,6 +56,9 @@ public:
     }
 
     //Varicode();
+
+    static QString rstrip(const QString& str);
+    static QString lstrip(const QString& str);
 
     static QMap<QString, QString> defaultHuffTable();
     static QMap<QString, QString> defaultHuffTableEscaped();
@@ -142,6 +146,40 @@ public:
 
     static QString packDataMessage(QString const& text, int *n);
     static QString unpackDataMessage(QString const& text, quint8 *pType);
+
+    static QStringList buildMessageFrames(
+        QString const& mycall,
+        QString const& basecall,
+        QString const& mygrid,
+        bool compound,
+        QString const& selectedCall,
+        QString const& text
+    );
+};
+
+
+class BuildMessageFramesThread : public QThread
+{
+    Q_OBJECT
+public:
+    BuildMessageFramesThread(QString const& mycall,
+                             QString const& basecall,
+                             QString const& mygrid,
+                             bool compound,
+                             QString const& selectedCall,
+                             QString const& text,
+                             QObject *parent=nullptr);
+    void run() override;
+signals:
+    void resultReady(const QStringList s);
+
+private:
+    QString m_mycall;
+    QString m_basecall;
+    QString m_mygrid;
+    bool m_compound;
+    QString m_selectedCall;
+    QString m_text;
 };
 
 #endif // VARICODE_H

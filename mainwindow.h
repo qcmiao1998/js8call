@@ -95,6 +95,7 @@ class DecodedText;
 using namespace std;
 typedef std::function<void()> Callback;
 
+
 class MainWindow : public QMainWindow
 {
   Q_OBJECT;
@@ -294,9 +295,8 @@ private slots:
   void on_nextFreeTextMsg_currentTextChanged (QString const&);
   void on_extFreeTextMsgEdit_currentTextChanged (QString const&);
   int currentFreqOffset();
-  int countFT8MessageFrames(QString const& text);
-  QStringList buildFT8MessageFrames(QString const& text);
-  QString parseFT8Message(QString input, bool *isFree);
+  int countMessageFrames(QString const& text);
+  QStringList buildMessageFrames(QString const& text);
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);
   int findFreeFreqOffset(int fmin, int fmax, int bw);
@@ -383,6 +383,7 @@ private slots:
   void expiry_warning_message ();
   void not_GA_warning_message ();
   void clearCallsignSelected();
+  void buildMessageFramesAndUpdateCountDisplay();
 
 private:
   Q_SIGNAL void initializeAudioOutputStream (QAudioDeviceInfo,
@@ -646,7 +647,6 @@ private:
   QTimer splashTimer;
   QTimer p1Timer;
   QTimer beaconTimer;
-  QTimer selectedCallTimer;
 
   QString m_path;
   QString m_baseCall;
@@ -728,6 +728,7 @@ private:
   bool m_rxDirty;
   bool m_rxDisplayDirty;
   int m_txFrameCount;
+  QTimer m_txTextDirtyDebounce;
   bool m_txTextDirty;
   QString m_lastTxMessage;
   QDateTime m_lastTxTime;
@@ -877,9 +878,11 @@ private:
   void postDecode (bool is_new, QString const& message);
   void displayTransmit();
   void updateButtonDisplay();
+  void updateFrameCountDisplay(QString text, int count);
   bool isMyCallIncluded(QString const &text);
   bool isAllCallIncluded(QString const &text);
   QString callsignSelected();
+  void clearCallsignSelected();
   bool isRecentOffset(int offset);
   void markOffsetRecent(int offset);
   bool isDirectedOffset(int offset, bool *pIsAllCall);
@@ -935,7 +938,6 @@ private:
                                   // not appropriate
   void write_transmit_entry (QString const& file_name);
 };
-
 
 extern int killbyname(const char* progName);
 extern void getDev(int* numDevices,char hostAPI_DeviceName[][50],

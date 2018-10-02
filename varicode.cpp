@@ -438,6 +438,28 @@ int dbmTomwatts(int dbm){
     return iter.value();
 }
 
+QString Varicode::rstrip(const QString& str) {
+  int n = str.size() - 1;
+  for (; n >= 0; --n) {
+    if (str.at(n).isSpace()) {
+        continue;
+    }
+    return str.left(n + 1);
+  }
+  return "";
+}
+
+QString Varicode::lstrip(const QString& str) {
+  int len = str.size();
+  for (int n = 0; n < len; n++) {
+      if(str.at(n).isSpace()){
+          continue;
+      }
+      return str.mid(n);
+  }
+  return "";
+}
+
 /*
  * VARICODE
  */
@@ -1641,4 +1663,243 @@ QString Varicode::unpackDataMessage(const QString &text, quint8 *pType){
 #endif
 
     return unpacked;
+}
+
+// TODO: remove the dependence on providing all this data?
+QStringList Varicode::buildMessageFrames(
+    QString const& mycall,
+    QString const& basecall,
+    QString const& mygrid,
+    bool compound,
+    QString const& selectedCall,
+    QString const& text
+){
+    #define ALLOW_SEND_COMPOUND 1
+    #define AUTO_PREPEND_DIRECTED 1
+
+    QStringList frames;
+
+    foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
+        // once we find a directed call, data encode the rest of the line.
+        bool hasDirected = false;
+
+        // do the same for when we have sent data...
+        bool hasData = false;
+
+        // remove our callsign from the start of the line...
+        if(line.startsWith(mycall + ":") || line.startsWith(mycall + " ")){
+            line = lstrip(line.mid(mycall.length() + 1));
+        }
+        if(line.startsWith(basecall + ":") || line.startsWith(basecall + " ")){
+            line = lstrip(line.mid(basecall.length() + 1));
+        }
+
+        // remove trailing whitespace as long as there are characters left afterwards
+        auto rline = rstrip(line);
+        if(!rline.isEmpty()){
+            line = rline;
+        }
+
+#if AUTO_PREPEND_DIRECTED
+        // see if we need to prepend the directed call to the line...
+        // if we have a selected call and the text doesn't start with that call...
+        // and if this isn't a raw message (starting with "<")... then...
+        if(!selectedCall.isEmpty() && !line.startsWith(selectedCall) && !line.startsWith("<")){
+            auto calls = Varicode::parseCallsigns(line);
+
+            bool lineStartsWithBaseCall = (
+                line.startsWith("ALLCALL") ||
+                line.startsWith("BEACON")  ||
+                Varicode::startsWithCQ(line)
+            );
+
+            bool lineStartsWithStandardCall = !calls.isEmpty() && line.startsWith(calls.first());
+
+            if(lineStartsWithBaseCall || lineStartsWithStandardCall){
+                // pass
+            } else {
+                // if the message doesn't start with a base call
+                // and if there are no other callsigns in this message
+                // or if the first callsign in the message isn't at the beginning...
+                // then we should be auto-prefixing this line with the selected call
+
+                line = QString("%1 %2").arg(selectedCall).arg(line);
+            }
+        }
+#endif
+
+        while(line.size() > 0){
+          QString frame;
+
+          bool useBcn = false;
+#if ALLOW_SEND_COMPOUND
+          bool useCmp = false;
+#endif
+          bool useDir = false;
+          bool useDat = false;
+
+          int l = 0;
+          QString bcnFrame = Varicode::packBeaconMessage(line, mycall, &l);
+
+#if ALLOW_SEND_COMPOUND
+          int o = 0;
+          QString cmpFrame = Varicode::packCompoundMessage(line, &o);
+#endif
+
+          int n = 0;
+          QString dirCmd;
+          QString dirTo;
+          QString dirNum;
+          QString dirFrame = Varicode::packDirectedMessage(line, basecall, &dirTo, &dirCmd, &dirNum, &n);
+          bool dirToCompound = dirTo.contains("/");
+
+          int m = 0;
+          QString datFrame = Varicode::packDataMessage(line.left(24) + "\x04", &m); //  66 / 3 + 2 = 22 (maximum number of 3bit chars we could possibly stuff in here plus 2 for good measure :P)
+
+          // if this parses to a standard FT8 free text message
+          // but it can be parsed as a directed message, then we
+          // should send the directed version. if we've already sent
+          // a directed message or a data frame, we will only follow it
+          // with more data frames.
+
+          if(!hasDirected && !hasData && l > 0){
+              useBcn = true;
+              hasDirected = false;
+              frame = bcnFrame;
+          }
+#if ALLOW_SEND_COMPOUND
+          else if(!hasDirected && !hasData && o > 0){
+              useCmp = true;
+              hasDirected = false;
+              frame = cmpFrame;
+          }
+#endif
+          else if(!hasDirected && !hasData && n > 0){
+              useDir = true;
+              hasDirected = true;
+              frame = dirFrame;
+          }
+          else if (m > 0) {
+              useDat = true;
+              hasData = true;
+              frame = datFrame;
+          }
+
+          if(useBcn){
+              frames.append(frame);
+              line = line.mid(l);
+          }
+
+#if ALLOW_SEND_COMPOUND
+          if(useCmp){
+              frames.append(frame);
+              line = line.mid(o);
+          }
+#endif
+
+          if(useDir){
+              /**
+               * We have a few special cases when we are sending to a compound call, or our call is a compound call, or both.
+               * CASE 0: Non-compound:       KN4CRD: J1Y ACK
+               * -> One standard directed message frame
+               *
+               * CASE 1: Compound From:      KN4CRD/P: J1Y ACK
+               * -> One standard compound frame, followed by a standard directed message frame with placeholder
+               * -> The second standard directed frame _could_ be replaced with a compound directed frame
+               * -> <KN4CRD/P EM73> then <....>: J1Y ACK
+               * -> <KN4CRD/P EM73> then <J1Y ACK>
+               *
+               * CASE 2: Compound To:        KN4CRD: J1Y/P ACK
+               * -> One standard compound frame, followed by a compound directed frame
+               * -> <KN4CRD EM73> then <J1Y/P ACK>
+               *
+               * CASE 3: Compound From & To: KN4CRD/P: J1Y/P ACK
+               * -> One standard compound frame, followed by a compound directed frame
+               * -> <KN4CRD/P EM73> then <J1Y/P ACK>
+               **/
+              bool shouldUseStandardFrame = true;
+              if(compound || dirToCompound){
+                  // Cases 1, 2, 3 all send a standard compound frame first...
+                  QString deCompoundMessage = QString("<%1 %2>").arg(mycall).arg(mygrid);
+                  QString deCompoundFrame = Varicode::packCompoundMessage(deCompoundMessage, nullptr);
+                  if(!deCompoundFrame.isEmpty()){
+                      frames.append(deCompoundFrame);
+                  }
+
+                  // Followed, by a standard OR compound directed message...
+                  QString dirCompoundMessage = QString("<%1%2%3>").arg(dirTo).arg(dirCmd).arg(dirNum);
+                  QString dirCompoundFrame = Varicode::packCompoundMessage(dirCompoundMessage, nullptr);
+                  if(!dirCompoundFrame.isEmpty()){
+                      frames.append(dirCompoundFrame);
+                  }
+                  shouldUseStandardFrame = false;
+              }
+
+              if(shouldUseStandardFrame) {
+                  // otherwise, just send the standard directed frame
+                  frames.append(frame);
+              }
+
+              line = line.mid(n);
+
+              // generate a checksum for buffered commands with line data
+              if(Varicode::isCommandBuffered(dirCmd) && !line.isEmpty()){
+                  qDebug() << "generating checksum for line" << line << line.mid(1);
+
+                  // strip leading whitespace after a buffered directed command
+                  line = lstrip(line);
+
+                  qDebug() << "before:" << line;
+                  int checksumSize = Varicode::isCommandChecksumed(dirCmd);
+
+                  if(checksumSize == 32){
+                      line = line + " " + Varicode::checksum32(line);
+                  } else if (checksumSize == 16) {
+                      line = line + " " + Varicode::checksum16(line);
+                  } else if (checksumSize == 0) {
+                      // pass
+                  }
+                  qDebug() << "after:" << line;
+              }
+
+#if 0
+              // APRS:
+              if(dirCmd.trimmed() == "APRS:" && !m_aprsClient->isPasscodeValid()){
+                  MessageBox::warning_message(this, tr ("Please enter a valid APRS passcode in the settings to send an APRS packet."));
+              }
+#endif
+          }
+
+          if(useDat){
+              frames.append(frame);
+              line = line.mid(m);
+          }
+        }
+    }
+
+    return frames;
+}
+
+BuildMessageFramesThread::BuildMessageFramesThread(const QString &mycall, const QString &basecall, const QString &mygrid, bool compound, const QString &selectedCall, const QString &text, QObject *parent):
+    QThread(parent),
+    m_mycall{mycall},
+    m_basecall{basecall},
+    m_mygrid{mygrid},
+    m_compound{compound},
+    m_selectedCall{selectedCall},
+    m_text{text}
+{
+}
+
+void BuildMessageFramesThread::run(){
+    auto results = Varicode::buildMessageFrames(
+        m_mycall,
+        m_basecall,
+        m_mygrid,
+        m_compound,
+        m_selectedCall,
+        m_text
+    );
+
+    emit resultReady(results);
 }

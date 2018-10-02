@@ -263,28 +263,6 @@ namespace
    return roundDown + multiple;
   }
 
-  QString rstrip(const QString& str) {
-    int n = str.size() - 1;
-    for (; n >= 0; --n) {
-      if (str.at(n).isSpace()) {
-          continue;
-      }
-      return str.left(n + 1);
-    }
-    return "";
-  }
-
-  QString lstrip(const QString& str) {
-    int len = str.size();
-    for (int n = 0; n < len; n++) {
-        if(str.at(n).isSpace()){
-            continue;
-        }
-        return str.mid(n);
-    }
-    return "";
-  }
-
   void setTextEditFont(QTextEdit *edit, QFont font){
     edit->setFont(font);
     edit->setFontFamily(font.family());
@@ -1416,6 +1394,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       ui->extFreeTextMsgEdit->update();
   });
   */
+
+  m_txTextDirtyDebounce.setSingleShot(true);
+  m_txTextDirtyDebounce.setInterval(100);
+  connect(&m_txTextDirtyDebounce, &QTimer::timeout, this, &MainWindow::buildMessageFramesAndUpdateCountDisplay);
 
   QTimer::singleShot(0, this, &MainWindow::initializeDummyData);
 
@@ -6060,7 +6042,7 @@ void MainWindow::createMessage(QString const& text){
 }
 
 void MainWindow::createMessageTransmitQueue(QString const& text){
-  auto frames = buildFT8MessageFrames(text);
+  auto frames = buildMessageFrames(text);
 
   m_txFrameQueue.append(frames);
   m_txFrameCount = frames.length();
@@ -6135,16 +6117,11 @@ int MainWindow::currentFreqOffset(){
     return ui->RxFreqSpinBox->value();
 }
 
-int MainWindow::countFT8MessageFrames(QString const& text){
-    return buildFT8MessageFrames(text).length();
+int MainWindow::countMessageFrames(QString const& text){
+    return buildMessageFrames(text).length();
 }
 
-QStringList MainWindow::buildFT8MessageFrames(QString const& text){
-    #define ALLOW_SEND_COMPOUND 1
-    #define AUTO_PREPEND_DIRECTED 1
-
-    QStringList frames;
-
+QStringList MainWindow::buildMessageFrames(const QString &text){
     // prepare selected callsign for directed message
     QString selectedCall = callsignSelected();
 
@@ -6157,226 +6134,10 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
         basecall = "<....>";
     }
 
-    foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
-        // once we find a directed call, data encode the rest of the line.
-        bool hasDirected = false;
-
-        // do the same for when we have sent data...
-        bool hasData = false;
-
-        // remove our callsign from the start of the line...
-        if(line.startsWith(mycall + ":") || line.startsWith(mycall + " ")){
-            line = lstrip(line.mid(mycall.length() + 1));
-        }
-        if(line.startsWith(basecall + ":") || line.startsWith(basecall + " ")){
-            line = lstrip(line.mid(basecall.length() + 1));
-        }
-
-        // remove trailing whitespace as long as there are characters left afterwards
-        auto rline = rstrip(line);
-        if(!rline.isEmpty()){
-            line = rline;
-        }
-
-#if AUTO_PREPEND_DIRECTED
-        // see if we need to prepend the directed call to the line...
-        // if we have a selected call and the text doesn't start with that call...
-        // and if this isn't a raw message (starting with "<")... then...
-        if(!selectedCall.isEmpty() && !line.startsWith(selectedCall) && !line.startsWith("<")){
-            auto calls = Varicode::parseCallsigns(line);
-
-            bool lineStartsWithBaseCall = (
-                line.startsWith("ALLCALL") ||
-                line.startsWith("BEACON")  ||
-                Varicode::startsWithCQ(line)
-            );
-
-            bool lineStartsWithStandardCall = !calls.isEmpty() && line.startsWith(calls.first());
-
-            if(lineStartsWithBaseCall || lineStartsWithStandardCall){
-                // pass
-            } else {
-                // if the message doesn't start with a base call
-                // and if there are no other callsigns in this message
-                // or if the first callsign in the message isn't at the beginning...
-                // then we should be auto-prefixing this line with the selected call
-
-                line = QString("%1 %2").arg(selectedCall).arg(line);
-            }
-        }
-#endif
-
-        while(line.size() > 0){
-          QString frame;
-
-          bool useStd = false;
-          bool useBcn = false;
-#if ALLOW_SEND_COMPOUND
-          bool useCmp = false;
-#endif
-          bool useDir = false;
-          bool useDat = false;
-          bool isFree = false;
-          QString stdFrame = parseFT8Message(line, &isFree);
-
-          int l = 0;
-          QString bcnFrame = Varicode::packBeaconMessage(line, mycall, &l);
-
-#if ALLOW_SEND_COMPOUND
-          int o = 0;
-          QString cmpFrame = Varicode::packCompoundMessage(line, &o);
-#endif
-
-          int n = 0;
-          QString dirCmd;
-          QString dirTo;
-          QString dirNum;
-          QString dirFrame = Varicode::packDirectedMessage(line, basecall, &dirTo, &dirCmd, &dirNum, &n);
-          bool dirToCompound = dirTo.contains("/");
-
-          int m = 0;
-          QString datFrame = Varicode::packDataMessage(line.left(24) + "\x04", &m); //  66 / 3 + 2 = 22 (maximum number of 3bit chars we could possibly stuff in here plus 2 for good measure :P)
-
-          // if this parses to a standard FT8 free text message
-          // but it can be parsed as a directed message, then we
-          // should send the directed version. if we've already sent
-          // a directed message or a data frame, we will only follow it
-          // with more data frames.
-
-          if(isFree && !hasDirected && !hasData && l > 0){
-              useBcn = true;
-              hasDirected = false;
-              frame = bcnFrame;
-          }
-#if ALLOW_SEND_COMPOUND
-          else if(isFree && !hasDirected && !hasData && o > 0){
-              useCmp = true;
-              hasDirected = false;
-              frame = cmpFrame;
-          }
-#endif
-          else if(isFree && !hasDirected && !hasData && n > 0){
-              useDir = true;
-              hasDirected = true;
-              frame = dirFrame;
-          }
-          else if ((isFree || hasDirected) && m > 0) {
-              useDat = true;
-              hasData = true;
-              frame = datFrame;
-          } else {
-              useStd = true;
-              frame = stdFrame;
-          }
-
-          if(useStd){
-              if(frame.isEmpty()){
-                break;
-              }
-              frames.append(frame);
-
-              if(!line.startsWith(frame)){
-                  line = (
-                    line.left(frame.length()).replace(':', ' ') + // is this the only case where we could have a mismatch?
-                    line.mid(frame.length())
-                  ).trimmed();
-              }
-
-              line = line.mid(frame.length()).trimmed();
-          }
-
-          if(useBcn){
-              frames.append(frame);
-              line = line.mid(l);
-          }
-
-#if ALLOW_SEND_COMPOUND
-          if(useCmp){
-              frames.append(frame);
-              line = line.mid(o);
-          }
-#endif
-
-          if(useDir){
-              /**
-               * We have a few special cases when we are sending to a compound call, or our call is a compound call, or both.
-               * CASE 0: Non-compound:       KN4CRD: J1Y ACK
-               * -> One standard directed message frame
-               *
-               * CASE 1: Compound From:      KN4CRD/P: J1Y ACK
-               * -> One standard compound frame, followed by a standard directed message frame with placeholder
-               * -> The second standard directed frame _could_ be replaced with a compound directed frame
-               * -> <KN4CRD/P EM73> then <....>: J1Y ACK
-               * -> <KN4CRD/P EM73> then <J1Y ACK>
-               *
-               * CASE 2: Compound To:        KN4CRD: J1Y/P ACK
-               * -> One standard compound frame, followed by a compound directed frame
-               * -> <KN4CRD EM73> then <J1Y/P ACK>
-               *
-               * CASE 3: Compound From & To: KN4CRD/P: J1Y/P ACK
-               * -> One standard compound frame, followed by a compound directed frame
-               * -> <KN4CRD/P EM73> then <J1Y/P ACK>
-               **/
-              bool shouldUseStandardFrame = true;
-              if(compound || dirToCompound){
-                  // Cases 1, 2, 3 all send a standard compound frame first...
-                  QString deCompoundMessage = QString("<%1 %2>").arg(mycall).arg(mygrid);
-                  QString deCompoundFrame = Varicode::packCompoundMessage(deCompoundMessage, nullptr);
-                  if(!deCompoundFrame.isEmpty()){
-                      frames.append(deCompoundFrame);
-                  }
-
-                  // Followed, by a standard OR compound directed message...
-                  QString dirCompoundMessage = QString("<%1%2%3>").arg(dirTo).arg(dirCmd).arg(dirNum);
-                  QString dirCompoundFrame = Varicode::packCompoundMessage(dirCompoundMessage, nullptr);
-                  if(!dirCompoundFrame.isEmpty()){
-                      frames.append(dirCompoundFrame);
-                  }
-                  shouldUseStandardFrame = false;
-              }
-
-              if(shouldUseStandardFrame) {
-                  // otherwise, just send the standard directed frame
-                  frames.append(frame);
-              }
-
-              line = line.mid(n);
-
-              // generate a checksum for buffered commands with line data
-              if(Varicode::isCommandBuffered(dirCmd) && !line.isEmpty()){
-                  qDebug() << "generating checksum for line" << line << line.mid(1);
-
-                  // strip leading whitespace after a buffered directed command
-                  line = lstrip(line);
-
-                  qDebug() << "before:" << line;
-                  int checksumSize = Varicode::isCommandChecksumed(dirCmd);
-
-                  if(checksumSize == 32){
-                      line = line + " " + Varicode::checksum32(line);
-                  } else if (checksumSize == 16) {
-                      line = line + " " + Varicode::checksum16(line);
-                  } else if (checksumSize == 0) {
-                      // pass
-                  }
-                  qDebug() << "after:" << line;
-              }
-
-              // APRS:
-              if(dirCmd.trimmed() == "APRS:" && !m_aprsClient->isPasscodeValid()){
-                  MessageBox::warning_message(this, tr ("Please enter a valid APRS passcode in the settings to send an APRS packet."));
-              }
-          }
-
-          if(useDat){
-              frames.append(frame);
-              line = line.mid(m);
-          }
-        }
-    }
+    auto frames = Varicode::buildMessageFrames(mycall, basecall, mygrid, compound, selectedCall, text);
 
 #if 1
-    qDebug() << "parsed frames:";
+    qDebug() << "frames:";
     foreach(auto frame, frames){
         auto dt = DecodedText(frame);
         qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType());
@@ -6384,60 +6145,6 @@ QStringList MainWindow::buildFT8MessageFrames(QString const& text){
 #endif
 
     return frames;
-}
-
-
-QString MainWindow::parseFT8Message(QString input, bool *isFree){
-  if(isFree) *isFree = true;
-  return input;
-
-#if 0
-  char message[29];
-  char msgsent[29];
-  char volatile ft8msgbits[75 + 12];
-  int volatile itone[NUM_ISCAT_SYMBOLS];
-
-  QByteArray ba = input.toLocal8Bit();
-  ba2msg(ba,message);
-
-  qint32  i3bit = 0;
-  bool bcontest = false;
-  char MyGrid[6];
-  strncpy(MyGrid, (m_config.my_grid()+"      ").toLatin1(),6);
-  genft8_(message, MyGrid, &bcontest, &i3bit, msgsent, const_cast<char *> (ft8msgbits),
-        const_cast<int *> (itone), 22, 6, 22);
-  msgsent[22]=0;
-
-  // decode the msg bits into 6-bit bytes so we can check to see if its a free text message or not...
-  // see extractmessage1764.f90 for the original implementation. we could technically add a boolean output
-  // from the fortran code, but this avoids having to modify that so we can easily apply updates to the
-  // signal functions in the future without incurring too much cognitive overhead of merge conflicts.
-  char msgbytes[12];
-  for(int ibyte = 1; ibyte <= 12; ibyte++){
-      int itmp = 0;
-      for(int ibit = 1; ibit <= 6; ibit++){
-          itmp = (itmp << 1) + (1 & (ft8msgbits[((ibyte-1) * 6 + ibit)-1]));
-      }
-      msgbytes[ibyte-1] = itmp;
-  }
-
-  int a = msgbytes[9];
-  int b = msgbytes[10];
-  int c = msgbytes[11];
-  int d = ((a & 15) << 12) + (b << 6) + c;
-
-  QString output = QString::fromLatin1(msgsent);
-
-  if(isFree){
-      // TODO: jsherer - lets figure out a better way to detect this for the case:
-      //    KN4CRD 16
-      // this gets encoded as a standard message, but doesn't seem to make sense as to why...
-      // see decodedtext.cpp for the alternate decoding side of this...
-      *isFree = (d >= 32768) || !QRegularExpression("^(CQ|DE|QRZ)\\s").match(output).hasMatch();
-  }
-
-  return output.trimmed();
-#endif
 }
 
 bool MainWindow::prepareNextMessageFrame()
@@ -8997,25 +8704,64 @@ void MainWindow::updateButtonDisplay(){
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("Sending (%1/%2)").arg(sent).arg(count));
     } else if(m_txTextDirty) {
 
-        // TODO: only if text changed
-
-        auto text = ui->extFreeTextMsgEdit->toPlainText();
-        int count = countFT8MessageFrames(text);
-        if(count > 0){
-            ui->startTxButton->setText(QString("Send (%1)").arg(count));
-            ui->startTxButton->setEnabled(true);
-
-            auto words = text.split(" ", QString::SkipEmptyParts).length();
-            auto wpm = QString::number(words/(count/4.0), 'f', 1);
-            auto cpm = QString::number(text.length()/(count/4.0), 'f', 0);
-            wpm_label.setText(QString("%1wpm / %2cpm").arg(wpm).arg(cpm));
-        } else {
-            ui->startTxButton->setText("Send");
-            ui->startTxButton->setEnabled(false);
-            wpm_label.clear();
+        // TODO: maybe add debounce?
+        if(m_txTextDirtyDebounce.isActive()){
+            m_txTextDirtyDebounce.stop();
         }
-
+        m_txTextDirtyDebounce.start(100);
         m_txTextDirty = false;
+
+    }
+}
+
+void MainWindow::buildMessageFramesAndUpdateCountDisplay(){
+    qDebug() << "buildMessageFramesAndUpdateCountDisplay";
+
+    auto text = ui->extFreeTextMsgEdit->toPlainText();
+
+#if USE_SYNC_FRAME_COUNT
+    int count = countMessageFrames(text);
+    updateFrameCountDisplay(text, count);
+#else
+    // prepare selected callsign for directed message
+    QString selectedCall = callsignSelected();
+
+    // prepare compound
+    bool compound = Radio::is_compound_callsign(m_config.my_callsign());
+    QString mygrid = m_config.my_grid().left(4);
+    QString mycall = m_config.my_callsign();
+    QString basecall = Radio::base_callsign(m_config.my_callsign());
+    if(basecall != mycall){
+        basecall = "<....>";
+    }
+
+    BuildMessageFramesThread *t = new BuildMessageFramesThread(
+        mycall, basecall, mygrid, compound, selectedCall, text
+    );
+
+    connect(t, &BuildMessageFramesThread::finished, t, &QObject::deleteLater);
+    connect(t, &BuildMessageFramesThread::resultReady, this, [this, text](const QStringList frames){
+        updateFrameCountDisplay(text, frames.length());
+    });
+    t->start();
+#endif
+}
+
+void MainWindow::updateFrameCountDisplay(QString text, int count){
+    if(count > 0){
+        ui->startTxButton->setText(QString("Send (%1)").arg(count));
+        ui->startTxButton->setEnabled(true);
+
+        auto words = text.split(" ", QString::SkipEmptyParts).length();
+        auto wpm = QString::number(words/(count/4.0), 'f', 1);
+        auto cpm = QString::number(text.length()/(count/4.0), 'f', 0);
+        wpm_label.setText(QString("%1wpm / %2cpm").arg(wpm).arg(cpm));
+        wpm_label.setVisible(true);
+    } else {
+        ui->startTxButton->setText("Send");
+        ui->startTxButton->setEnabled(false);
+        wpm_label.setVisible(false);
+        wpm_label.clear();
     }
 }
 
@@ -9344,7 +9090,7 @@ void MainWindow::processBufferedActivity() {
         foreach(auto part, buffer.msgs) {
             message.append(part.text);
         }
-        message = rstrip(message);
+        message = Varicode::rstrip(message);
 
         QString checksum;
 
