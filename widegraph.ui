@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>942</width>
+    <width>1083</width>
     <height>337</height>
    </rect>
   </property>
@@ -532,6 +532,9 @@
           <property name="text">
            <string>Adjust...</string>
           </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
          </widget>
         </item>
        </layout>
@@ -540,6 +543,9 @@
        <widget class="QPushButton" name="qsyPushButton">
         <property name="text">
          <string>QSY</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -575,6 +581,9 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>offsetSpinBox</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

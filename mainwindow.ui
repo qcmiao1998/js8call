@@ -5481,6 +5481,7 @@ list. The list can be maintained in Settings (F2).</string>
   </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>extFreeTextMsgEdit</tabstop>
   <tabstop>stopButton</tabstop>
   <tabstop>EraseButton</tabstop>
   <tabstop>ClrAvgButton</tabstop>
