@@ -64,21 +64,14 @@ QList<CodewordPair> JSC::compress(QString text){
                 bool hasPrefix = false;
                 auto d = w.toLatin1().data();
                 for(quint32 i = 0; i < JSC::size; i++){
-
-                    // TODO: we could probably precompute these sizes
-                    quint32 len = strlen(JSC::list[i]);
-
-                    if(strncmp(d, JSC::list[i], len) == 0){
+                    quint32 len = JSC::list[i].size;
+                    if(strncmp(d, JSC::list[i].str, len) == 0){
                         w = QString(w.mid(len));
 
-                        auto word = JSC::list[i];
-                        auto index = lookup(word, &ok);
-                        if(ok){
-                            bool isLast = w.isEmpty();
-                            out.append({ codeword(index, isLast, b, s, c), len + (isLast ? 1 : 0) /* for the space that follows */});
-                            hasPrefix = true;
-                            break;
-                        }
+                        auto index = JSC::list[i].index;
+                        bool isLast = w.isEmpty();
+                        out.append({ codeword(index, isLast, b, s, c), len + (isLast ? 1 : 0) /* for the space that follows */});
+                        hasPrefix = true;
 
                         break;
                     }
@@ -140,8 +133,8 @@ QString JSC::decompress(Codeword const& bitvec){
 
         j = j*s + bytes[start + k] + base[k];
 
-        out.append(QString(JSC::map[j])); // table.first.key(j));
-        if(separators.first() == start + k){
+        out.append(QString(JSC::map[j].str));
+        if(!separators.isEmpty() && separators.first() == start + k){
             out.append(" ");
             separators.removeFirst();
         }
@@ -158,7 +151,7 @@ quint32 JSC::lookup(QString w, bool * ok){
 
 quint32 JSC::lookup(char const* b, bool *ok){
     for(quint32 i = 0; i < JSC::size; i++){
-        if(strcmp(b, JSC::map[i]) == 0){
+        if(strcmp(b, JSC::map[i].str) == 0){
             if(ok) *ok = true;
             return i;
         }

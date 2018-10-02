@@ -6136,7 +6136,7 @@ QStringList MainWindow::buildMessageFrames(const QString &text){
 
     auto frames = Varicode::buildMessageFrames(mycall, basecall, mygrid, compound, selectedCall, text);
 
-#if 1
+#if 0
     qDebug() << "frames:";
     foreach(auto frame, frames){
         auto dt = DecodedText(frame);
@@ -8740,8 +8740,18 @@ void MainWindow::buildMessageFramesAndUpdateCountDisplay(){
     );
 
     connect(t, &BuildMessageFramesThread::finished, t, &QObject::deleteLater);
-    connect(t, &BuildMessageFramesThread::resultReady, this, [this, text](const QStringList frames){
-        updateFrameCountDisplay(text, frames.length());
+    connect(t, &BuildMessageFramesThread::resultReady, this, [this](const QStringList frames){
+
+        QStringList text;
+        qDebug() << "frames:";
+        foreach(auto frame, frames){
+            auto dt = DecodedText(frame);
+            qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType());
+            text.append(dt.message());
+        }
+
+        updateFrameCountDisplay(text.join(""), frames.length());
+
     });
     t->start();
 #endif

@@ -15,6 +15,11 @@
 typedef QPair<QVector<bool>, quint32> CodewordPair;        // Tuple(Codeword, N) where N = number of characters
 typedef QVector<bool> Codeword;                        // Codeword bit vector
 
+typedef struct Tuple{
+    char const * str;
+    int size;
+    int index;
+} Tuple;
 
 class JSC
 {
@@ -30,9 +35,9 @@ public:
     static quint32 lookup(QString w, bool *ok);
     static quint32 lookup(char const* b, bool *ok);
 
-    static const quint32 size = 233638;
-    static char const* map[];
-    static char const* list[];
+    static const quint32 size = 114712;
+    static const Tuple map[114712];
+    static const Tuple list[114712];
 };
 
 #endif // JSC_H
