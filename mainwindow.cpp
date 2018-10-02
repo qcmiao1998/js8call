@@ -905,6 +905,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   beaconTimer.setSingleShot(false);
   connect(&beaconTimer, &QTimer::timeout, this, &MainWindow::checkBeacon);
 
+  selectedCallTimer.setSingleShot(true);
+  selectedCallTimer.setInterval(1000*60*60);
+  connect(&selectedCallTimer, &QTimer::timeout, this, &MainWindow::clearCallsignSelected);
+
   connect(m_wideGraph.data (), SIGNAL(setFreq3(int,int)),this,
           SLOT(setFreq4(int,int)));
 
@@ -7972,12 +7976,15 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
 }
 
 void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/){
+    selectedCallTimer.stop();
+
     on_extFreeTextMsgEdit_currentTextChanged(ui->extFreeTextMsgEdit->toPlainText());
 
     auto placeholderText = QString("Type your outgoing messages here.");
     auto selectedCall = callsignSelected();
     if(!selectedCall.isEmpty()){
         placeholderText = QString("Type your outgoing directed message to %1 here.").arg(selectedCall);
+        selectedCallTimer.start();
     }
     ui->extFreeTextMsgEdit->setPlaceholderText(placeholderText);
 

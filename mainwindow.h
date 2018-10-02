@@ -382,6 +382,7 @@ private slots:
   void on_measure_check_box_stateChanged (int);
   void expiry_warning_message ();
   void not_GA_warning_message ();
+  void clearCallsignSelected();
 
 private:
   Q_SIGNAL void initializeAudioOutputStream (QAudioDeviceInfo,
@@ -644,6 +645,7 @@ private:
   QTimer splashTimer;
   QTimer p1Timer;
   QTimer beaconTimer;
+  QTimer selectedCallTimer;
 
   QString m_path;
   QString m_baseCall;
@@ -876,7 +878,6 @@ private:
   bool isMyCallIncluded(QString const &text);
   bool isAllCallIncluded(QString const &text);
   QString callsignSelected();
-  void clearCallsignSelected();
   bool isRecentOffset(int offset);
   void markOffsetRecent(int offset);
   bool isDirectedOffset(int offset, bool *pIsAllCall);
