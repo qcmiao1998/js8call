@@ -17,6 +17,7 @@ public:
     static QString loginFrame(QString callsign);
     static QPair<float, float> grid2deg(QString grid);
     static QPair<QString, QString> grid2aprs(QString grid);
+    static QString APRSISClient::stripSSID(QString call);
     static QString replaceCallsignSuffixWithSSID(QString call, QString base);
 
     void setServer(QString host, quint16 port){

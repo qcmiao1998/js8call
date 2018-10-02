@@ -184,6 +184,10 @@ QPair<QString, QString> APRSISClient::grid2aprs(QString grid){
     };
 }
 
+QString APRSISClient::stripSSID(QString call){
+    return QString(call.split("-").first().toUpper());
+}
+
 QString APRSISClient::replaceCallsignSuffixWithSSID(QString call, QString base){
     if(call != base){
         QRegularExpression re("[/](?<ssid>(P|\\d+))");
@@ -202,13 +206,13 @@ QString APRSISClient::replaceCallsignSuffixWithSSID(QString call, QString base){
     return call;
 }
 
-
 void APRSISClient::enqueueSpot(QString theircall, QString grid, QString comment){
     if(m_localCall.isEmpty()) return;
 
     auto geo = APRSISClient::grid2aprs(grid);
-    auto spotFrame = QString("%1>APRS,TCPIP*:=%2/%3nFT8CALL %4\n");
+    auto spotFrame = QString("%1>APRS,%2,TCPIP*:=%3/%4nFT8CALL %5\n");
     spotFrame = spotFrame.arg(theircall);
+    spotFrame = spotFrame.arg(stripSSID(m_localCall));
     spotFrame = spotFrame.arg(geo.first);
     spotFrame = spotFrame.arg(geo.second);
     spotFrame = spotFrame.arg(comment.left(43));
@@ -220,8 +224,9 @@ void APRSISClient::enqueueThirdParty(QString theircall, QString payload){
         return;
     }
 
-    auto frame = QString("%1>APRS,TCPIP*:%2\n");
+    auto frame = QString("%1>APRS,%2,TCPIP*:%3\n");
     frame = frame.arg(theircall);
+    frame = frame.arg(stripSSID(m_localCall));
     frame = frame.arg(payload);
     enqueueRaw(frame);
 }
