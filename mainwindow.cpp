@@ -1201,11 +1201,18 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->extFreeTextMsgEdit, &QTableWidget::customContextMenuRequested, this, [this, clearAction2, clearActionAll, restoreAction](QPoint const &point){
     QMenu * menu = new QMenu(ui->extFreeTextMsgEdit);
 
+    QString selectedCall = callsignSelected();
+    bool missingCallsign = selectedCall.isEmpty();
+
     restoreAction->setDisabled(m_lastTxMessage.isEmpty());
     menu->addAction(restoreAction);
 
     auto savedMenu = menu->addMenu("Saved messages...");
     buildSavedMessagesMenu(savedMenu);
+
+    auto directedMenu = menu->addMenu(QString("Directed to %1...").arg(selectedCall));
+    directedMenu->setDisabled(missingCallsign);
+    buildQueryMenu(directedMenu, selectedCall);
 
     auto relayMenu = menu->addMenu("Relay via...");
     relayMenu->setDisabled(ui->extFreeTextMsgEdit->toPlainText().isEmpty() || m_callActivity.isEmpty());
@@ -1425,7 +1432,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
 
-QDate eol(2018, 9, 30);
+QDate eol(2018, 10, 30);
 
 void MainWindow::expiry_warning_message()
 {
