@@ -918,7 +918,7 @@ bool Varicode::isCommandAllowed(const QString &cmd){
 }
 
 bool Varicode::isCommandBuffered(const QString &cmd){
-    return directed_cmds.contains(cmd) && buffered_cmds.contains(directed_cmds[cmd]);
+    return directed_cmds.contains(cmd) && (cmd.contains(" ") || buffered_cmds.contains(directed_cmds[cmd]));
 }
 
 int Varicode::isCommandChecksumed(const QString &cmd){
@@ -1655,6 +1655,7 @@ QStringList Varicode::buildMessageFrames(
                       line = line + " " + Varicode::checksum16(line);
                   } else if (checksumSize == 0) {
                       // pass
+                      qDebug() << "no checksum required for cmd" << dirCmd;
                   }
                   qDebug() << "after:" << line;
               }

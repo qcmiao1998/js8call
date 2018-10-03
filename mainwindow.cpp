@@ -3748,6 +3748,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
               d.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
 
               // if the command is a buffered command OR we have from or to in a separate message (compound)
+
               if(Varicode::isCommandBuffered(d.cmd) || d.from == "<....>" || d.to == "<....>"){
                 qDebug() << "buffering cmd" << d.cmd << d.from << d.to;
                 m_messageBuffer[d.freq/10*10].cmd = d;
