@@ -779,6 +779,7 @@ private:
   QMap<int, MessageBuffer> m_messageBuffer; // freq -> (cmd, [frames, ...])
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
   QQueue<QString> m_txBeaconQueue; // beacon frames to be sent
+  QMap<QString, QDateTime> m_aprsCallCache;
 
   QMap<QString, QMap<QString, CallDetail>> m_callActivityCache; // band -> call activity
   QMap<QString, QMap<int, QList<ActivityDetail>>> m_bandActivityCache; // band -> band activity

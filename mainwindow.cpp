@@ -4088,7 +4088,13 @@ void MainWindow::aprsLogReport(int offset, int snr, QString callsign, QString gr
     auto base = Radio::base_callsign(callsign);
     callsign = APRSISClient::replaceCallsignSuffixWithSSID(callsign, base);
 
+    if(m_aprsCallCache.contains(callsign)){
+        qDebug() << "APRSISClient Spot Skipped For Cache:" << callsign << grid;
+        return;
+    }
+
     m_aprsClient->enqueueSpot(callsign, grid, comment);
+    m_aprsCallCache.insert(callsign, DriftingDateTime::currentDateTimeUtc());
 }
 
 void MainWindow::killFile ()
@@ -9510,6 +9516,10 @@ void MainWindow::processCommandActivity() {
                cd.grid = grid;
                cd.snr = d.snr;
                cd.utcTimestamp = d.utcTimestamp;
+
+               m_aprsCallCache.remove(cd.call);
+               m_aprsCallCache.remove(APRSISClient::replaceCallsignSuffixWithSSID(cd.call, Radio::base_callsign(cd.call)));
+
                logCallActivity(cd, true);
            }
 
