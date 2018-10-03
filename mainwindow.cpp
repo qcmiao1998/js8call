@@ -3765,9 +3765,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
               d.bits = decodedtext.bits();
               d.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
 
-              // if the command is a buffered command OR we have from or to in a separate message (compound)
-
-              if(Varicode::isCommandBuffered(d.cmd) || d.from == "<....>" || d.to == "<....>"){
+              // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
+              if((Varicode::isCommandBuffered(d.cmd) && (d.bits & Varicode::FT8CallLast) != Varicode::FT8CallLast) || d.from == "<....>" || d.to == "<....>"){
                 qDebug() << "buffering cmd" << d.cmd << d.from << d.to;
                 m_messageBuffer[d.freq/10*10].cmd = d;
                 m_messageBuffer[d.freq/10*10].msgs.clear();
@@ -5876,7 +5875,8 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
 
     // never cache tx or last lines
     if(isTx || isLast) {
-        // pass
+        // reset the cache so we're always progressing forward
+        m_rxFrameBlockNumbers.clear();
     } else {
         m_rxFrameBlockNumbers.insert(freq, block);
         m_rxFrameBlockNumbers.insert(lowFreq, block);
@@ -10099,7 +10099,7 @@ void MainWindow::displayCallActivity() {
 #if SHOW_THROUGH_CALLS
             QString displayCall = d.through.isEmpty() ? d.call : QString("%1>%2").arg(d.through).arg(d.call);
 #else
-            QString displayCall = d.ackTimestamp.isValid() ? QString("%1 \u2605").arg(d.call) : d.call;
+            QString displayCall = d.ackTimestamp.isValid() ? QString("\u2605 %1").arg(d.call) : d.call;
 #endif
             auto displayItem = new QTableWidgetItem(displayCall);
             displayItem->setData(Qt::UserRole, QVariant((d.call)));
