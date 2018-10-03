@@ -40,7 +40,6 @@ QString alphanumeric = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "}; // callsign an
 QMap<QString, int> directed_cmds = {
     // any changes here need to be made also in the directed regular xpression for parsing
 
-    // directed queries
     {"?",     0  }, // query snr
     {"@",     1  }, // query qth
     {"&",     2  }, // query station message
@@ -54,7 +53,8 @@ QMap<QString, int> directed_cmds = {
     // {"=",      9  }, // unused
     // {"/",     10  }, // unused
 
-    // directed responses
+
+
     {" BEACON",     -1 }, // this is my beacon (unused except for faux processing of beacons as directed commands)
     {" BEACON ACK", 12 }, // i received your beacon at this snr
     {" BEACON REQ", 13 }, // can you transmit a beacon to callsign?
@@ -71,7 +71,7 @@ QMap<QString, int> directed_cmds = {
     {" RR",      21  }, // roger roger
     {" QSL?",    22  }, // do you copy?
     {" QSL",     23  }, // i copy
-    // {"",     24  },  // unused
+    {" QRZ?",    24  }, // who is calling me
     {" SNR",     25  }, // seen a station at the provided snr
     {" NO",      26  }, // negative confirm
     {" YES",     27  }, // confirm
@@ -81,7 +81,7 @@ QMap<QString, int> directed_cmds = {
     {" ",        31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {-1, 0, 1, 2, 3, 4, 5, /*6,*/ /*7,*/ 8, /*...*/ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, /*24,*/ 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {-1, 0, 1, 2, 3, 4, 5, /*6,*/ /*7,*/ 8, /*...*/ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 QSet<int> buffered_cmds = {3, 5, /*6,*/ /*7,*/ 8, 13, 14, 15};
 
@@ -96,7 +96,7 @@ QMap<int, int> checksum_cmds = {
 };
 
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|QSL[?]?|RR|HEARING|HW CPY[?]|FB|QTH|QTC|GRID|APRS[:]|BEACON (ACK|REQ)|[?@&$%#^> ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|ACK|73|YES|NO|SNR|QSL[?]?|RR|HEARING|HW CPY[?]|FB|QTH|QTC|GRID|APRS[:]|BEACON (ACK|REQ)|QRZ[?]|[?@&$%#^> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR|HEARING|BEACON ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
