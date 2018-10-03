@@ -251,31 +251,12 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="display_group_box">
+        <widget class="QGroupBox" name="behaviour_group_box">
          <property name="title">
-          <string>Display</string>
+          <string>Behavior</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_4">
-          <item row="4" column="0">
-           <widget class="QCheckBox" name="DXCC_check_box">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="visible">
-             <bool>false</bool>
-            </property>
-            <property name="toolTip">
-             <string>Show if decoded stations are new DXCC entities or worked before.</string>
-            </property>
-            <property name="text">
-             <string>Show &amp;DXCC entity and worked before status</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
+         <layout class="QVBoxLayout" name="verticalLayout_8">
+          <item>
            <widget class="QCheckBox" name="miles_check_box">
             <property name="enabled">
              <bool>true</bool>
@@ -288,67 +269,6 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QCheckBox" name="TX_messages_check_box">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="visible">
-             <bool>false</bool>
-            </property>
-            <property name="toolTip">
-             <string>Show outgoing transmitted messages in the Rx frequency window.</string>
-            </property>
-            <property name="text">
-             <string>&amp;Tx messages to Rx frequency window</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QCheckBox" name="ppfx_check_box">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="visible">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>Show principal prefix instead of country name</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QCheckBox" name="insert_blank_check_box">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="visible">
-             <bool>false</bool>
-            </property>
-            <property name="toolTip">
-             <string>Include a separator line between periods in the band activity window.</string>
-            </property>
-            <property name="text">
-             <string>&amp;Blank line between decoding periods</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="Line" name="line_7">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="behaviour_group_box">
-         <property name="title">
-          <string>Behavior</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_8">
           <item>
            <widget class="QCheckBox" name="autoreply_off_check_box">
             <property name="text">
@@ -419,6 +339,13 @@
             </property>
             <property name="text">
              <string>Single decode</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="beacon_anywhere_check_box">
+            <property name="text">
+             <string>Allow transmitting beacons outside of beacon sub-channel (500Hz - 1000Hz)</string>
             </property>
            </widget>
           </item>
@@ -3552,10 +3479,6 @@ soundcard changes</string>
   <tabstop>use_dynamic_grid</tabstop>
   <tabstop>region_combo_box</tabstop>
   <tabstop>type_2_msg_gen_combo_box</tabstop>
-  <tabstop>insert_blank_check_box</tabstop>
-  <tabstop>miles_check_box</tabstop>
-  <tabstop>TX_messages_check_box</tabstop>
-  <tabstop>DXCC_check_box</tabstop>
   <tabstop>monitor_off_check_box</tabstop>
   <tabstop>monitor_last_used_check_box</tabstop>
   <tabstop>quick_call_check_box</tabstop>
@@ -3692,12 +3615,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="PTT_method_button_group"/>
-  <buttongroup name="TX_mode_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
+  <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
  </buttongroups>
 </ui>

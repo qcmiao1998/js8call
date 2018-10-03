@@ -120,6 +120,7 @@ public:
   void set_spot_to_reporting_networks (bool);
   bool transmit_directed() const;
   bool autoreply_off_at_startup () const;
+  bool beacon_anywhere() const;
   bool relay_off() const;
   bool monitor_off_at_startup () const;
   bool monitor_last_used () const;

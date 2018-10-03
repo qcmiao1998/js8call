@@ -6364,7 +6364,7 @@ void MainWindow::prepareBeacon(){
     }
 
     // Choose a beacon frequency
-    auto f = findFreeFreqOffset(750, 1250, 50);
+    auto f = m_config.beacon_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
 
     auto text = lines.join(QChar('\n'));
     if(text.isEmpty()){
@@ -8071,6 +8071,7 @@ void MainWindow::setFreq4(int rxFreq, int txFreq) {
       txFreq = rxFreq;
   }
 
+  // TODO: jsherer - here's where we'd set minimum frequency again (later?)
   rxFreq = max(0, rxFreq);
   txFreq = max(0, txFreq);
 

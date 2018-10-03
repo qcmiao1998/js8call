@@ -626,6 +626,7 @@ private:
   bool spot_to_reporting_networks_;
   bool transmit_directed_;
   bool autoreply_off_at_startup_;
+  bool beacon_anywhere_;
   bool relay_disabled_;
   bool monitor_off_at_startup_;
   bool monitor_last_used_;
@@ -756,6 +757,7 @@ void Configuration::set_spot_to_reporting_networks (bool spot)
 
 bool Configuration::transmit_directed() const { return m_->transmit_directed_; }
 bool Configuration::autoreply_off_at_startup () const {return m_->autoreply_off_at_startup_;}
+bool Configuration::beacon_anywhere() const { return m_->beacon_anywhere_;}
 bool Configuration::relay_off() const { return m_->relay_disabled_; }
 bool Configuration::monitor_off_at_startup () const {return m_->monitor_off_at_startup_;}
 bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->monitor_last_used_;}
@@ -1329,6 +1331,7 @@ void Configuration::impl::initialize_models ()
   ui_->psk_reporter_check_box->setChecked (spot_to_reporting_networks_);
   ui_->transmit_directed_check_box->setChecked(transmit_directed_);
   ui_->autoreply_off_check_box->setChecked (autoreply_off_at_startup_);
+  ui_->beacon_anywhere_check_box->setChecked(beacon_anywhere_);
   ui_->relay_disabled_check_box->setChecked(relay_disabled_);
   ui_->monitor_off_check_box->setChecked (monitor_off_at_startup_);
   ui_->monitor_last_used_check_box->setChecked (monitor_last_used_);
@@ -1336,16 +1339,12 @@ void Configuration::impl::initialize_models ()
   ui_->stations_table_view->setEnabled(ui_->auto_switch_bands_check_box->isChecked());
   ui_->report_in_comments_check_box->setChecked (report_in_comments_);
   ui_->prompt_to_log_check_box->setChecked (prompt_to_log_);
-  ui_->insert_blank_check_box->setChecked (insert_blank_);
-  ui_->DXCC_check_box->setChecked (DXCC_);
-  ui_->ppfx_check_box->setChecked (ppfx_);
   ui_->clear_DX_check_box->setChecked (clear_DX_);
   ui_->miles_check_box->setChecked (miles_);
   ui_->quick_call_check_box->setChecked (quick_call_);
   ui_->disable_TX_on_73_check_box->setChecked (disable_TX_on_73_);
   ui_->beacon_spin_box->setValue (beacon_);
   ui_->tx_watchdog_spin_box->setValue (watchdog_);
-  ui_->TX_messages_check_box->setChecked (TX_messages_);
   ui_->enable_VHF_features_check_box->setChecked(enable_VHF_features_);
   ui_->decode_at_52s_check_box->setChecked(decode_at_52s_);
   ui_->single_decode_check_box->setChecked(single_decode_);
@@ -1589,6 +1588,7 @@ void Configuration::impl::read_settings ()
 
   transmit_directed_ = settings_->value ("TransmitDirected", true).toBool();
   autoreply_off_at_startup_ = settings_->value ("AutoreplyOFF", false).toBool ();
+  beacon_anywhere_ = settings_->value("BeaconAnywhere", false).toBool();
   relay_disabled_ = settings_->value ("RelayOFF", false).toBool ();
   monitor_off_at_startup_ = settings_->value ("MonitorOFF", false).toBool ();
   monitor_last_used_ = settings_->value ("MonitorLastUsed", false).toBool ();
@@ -1753,6 +1753,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("Type2MsgGen", QVariant::fromValue (type_2_msg_gen_));
   settings_->setValue ("TransmitDirected", transmit_directed_);
   settings_->setValue ("AutoreplyOFF", autoreply_off_at_startup_);
+  settings_->setValue ("BeaconAnywhere", beacon_anywhere_);
   settings_->setValue ("RelayOFF", relay_disabled_);
   settings_->setValue ("MonitorOFF", monitor_off_at_startup_);
   settings_->setValue ("MonitorLastUsed", monitor_last_used_);
@@ -2216,6 +2217,7 @@ void Configuration::impl::accept ()
   tx_qsy_allowed_ = ui_->tx_qsy_check_box->isChecked ();
   transmit_directed_ = ui_->transmit_directed_check_box->isChecked();
   autoreply_off_at_startup_ = ui_->autoreply_off_check_box->isChecked ();
+  beacon_anywhere_ = ui_->beacon_anywhere_check_box->isChecked();
   relay_disabled_ = ui_->relay_disabled_check_box->isChecked();
   monitor_off_at_startup_ = ui_->monitor_off_check_box->isChecked ();
   monitor_last_used_ = ui_->monitor_last_used_check_box->isChecked ();
@@ -2223,16 +2225,12 @@ void Configuration::impl::accept ()
   log_as_DATA_ = ui_->log_as_RTTY_check_box->isChecked ();
   report_in_comments_ = ui_->report_in_comments_check_box->isChecked ();
   prompt_to_log_ = ui_->prompt_to_log_check_box->isChecked ();
-  insert_blank_ = ui_->insert_blank_check_box->isChecked ();
-  DXCC_ = ui_->DXCC_check_box->isChecked ();
-  ppfx_ = ui_->ppfx_check_box->isChecked ();
   clear_DX_ = ui_->clear_DX_check_box->isChecked ();
   miles_ = ui_->miles_check_box->isChecked ();
   quick_call_ = ui_->quick_call_check_box->isChecked ();
   disable_TX_on_73_ = ui_->disable_TX_on_73_check_box->isChecked ();
   beacon_ = ui_->beacon_spin_box->value ();
   watchdog_ = ui_->tx_watchdog_spin_box->value ();
-  TX_messages_ = ui_->TX_messages_check_box->isChecked ();
   data_mode_ = static_cast<DataMode> (ui_->TX_mode_button_group->checkedId ());
   save_directory_ = ui_->save_path_display_label->text ();
   azel_directory_ = ui_->azel_path_display_label->text ();
