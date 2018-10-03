@@ -8071,8 +8071,8 @@ void MainWindow::setFreq4(int rxFreq, int txFreq) {
       txFreq = rxFreq;
   }
 
-  rxFreq = max(500, rxFreq);
-  txFreq = max(500, txFreq);
+  rxFreq = max(0, rxFreq);
+  txFreq = max(0, txFreq);
 
   m_previousFreq = currentFreqOffset();
   ui->RxFreqSpinBox->setValue(rxFreq);
