@@ -8704,7 +8704,6 @@ void MainWindow::updateButtonDisplay(){
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("Sending (%1/%2)").arg(sent).arg(count));
     } else if(m_txTextDirty) {
 
-        // TODO: maybe add debounce?
         if(m_txTextDirtyDebounce.isActive()){
             m_txTextDirtyDebounce.stop();
         }
