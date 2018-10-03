@@ -730,6 +730,8 @@ private:
   int m_txFrameCount;
   QTimer m_txTextDirtyDebounce;
   bool m_txTextDirty;
+  QString m_txTextDirtyLastText;
+  QString m_txTextDirtyLastSelectedCall;
   QString m_lastTxMessage;
   QDateTime m_lastTxTime;
 

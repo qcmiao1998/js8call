@@ -1396,7 +1396,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   */
 
   m_txTextDirtyDebounce.setSingleShot(true);
-  m_txTextDirtyDebounce.setInterval(100);
   connect(&m_txTextDirtyDebounce, &QTimer::timeout, this, &MainWindow::buildMessageFramesAndUpdateCountDisplay);
 
   QTimer::singleShot(0, this, &MainWindow::initializeDummyData);
@@ -8702,7 +8701,7 @@ void MainWindow::updateButtonDisplay(){
         int count = m_txFrameCount;
         int sent = count - m_txFrameQueue.count();
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("Sending (%1/%2)").arg(sent).arg(count));
-    } else if(m_txTextDirty) {
+    } else if(m_txTextDirty && (m_txTextDirtyLastText != ui->extFreeTextMsgEdit->toPlainText() || m_txTextDirtyLastSelectedCall != selectedCallsign)){
 
         if(m_txTextDirtyDebounce.isActive()){
             m_txTextDirtyDebounce.stop();
@@ -8717,6 +8716,7 @@ void MainWindow::buildMessageFramesAndUpdateCountDisplay(){
     qDebug() << "buildMessageFramesAndUpdateCountDisplay";
 
     auto text = ui->extFreeTextMsgEdit->toPlainText();
+    m_txTextDirtyLastText = text;
 
 #if USE_SYNC_FRAME_COUNT
     int count = countMessageFrames(text);
@@ -8724,6 +8724,7 @@ void MainWindow::buildMessageFramesAndUpdateCountDisplay(){
 #else
     // prepare selected callsign for directed message
     QString selectedCall = callsignSelected();
+    m_txTextDirtyLastSelectedCall = selectedCall;
 
     // prepare compound
     bool compound = Radio::is_compound_callsign(m_config.my_callsign());
