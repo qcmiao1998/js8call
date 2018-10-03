@@ -566,6 +566,16 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     painter0.drawLine(x1+1,28,x2-2,28);
   }
 
+  x1=XfromFreq(2500);
+  x2=XfromFreq(5000);
+  if(x1<=m_w and x2>0) {
+    painter0.setPen(penYellow);               //Mark top of sub-band
+    painter0.drawLine(x1+1,26,x2-2,26);
+    painter0.drawLine(x1+1,28,x2-2,28);
+  }
+
+
+
   if(m_mode=="FT8"){
       int fwidth=XfromFreq(m_rxFreq+bw)-XfromFreq(m_rxFreq);
       QPainter overPainter(&m_DialOverlayPixmap);

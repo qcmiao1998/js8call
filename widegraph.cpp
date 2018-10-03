@@ -227,7 +227,8 @@ void WideGraph::on_offsetSpinBox_valueChanged(int n){
       return;
   }
 
-  n = qMax(500, n);
+  // TODO: jsherer - here's where we'd set minimum frequency again (later?)
+  n = qMax(0, n);
 
   setRxFreq(n);
   setTxFreq(n);
