@@ -35,9 +35,9 @@ public:
     static quint32 lookup(QString w, bool *ok);
     static quint32 lookup(char const* b, bool *ok);
 
-    static const quint32 size = 114712;
-    static const Tuple map[114712];
-    static const Tuple list[114712];
+    static const quint32 size = 524288;
+    static const Tuple map[524288];
+    static const Tuple list[524288];
 };
 
 #endif // JSC_H
