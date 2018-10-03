@@ -15,7 +15,7 @@ subroutine genft8(msg,mygrid,bcontest,i3bit,msgsent,msgbits,itone)
   integer*1, target:: i1Msg8BitBytes(11)
   integer itone(NN)
   integer icos7(0:6)
-  data icos7/2,5,6,0,4,1,3/                   !Costas 7x7 tone pattern
+  data icos7/4,2,5,6,1,3,0/                   !Costas 7x7 tone pattern
 
   alphabet='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+/?.'
   

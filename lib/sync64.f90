@@ -20,7 +20,7 @@ subroutine sync64(c0,nf1,nf2,nfqso,ntol,mode64,emedelay,dtx,f0,jpk,sync,  &
   complex c1(0:NSPC-1)                       !Complex spectrum of Costas 1
   complex c2(0:NSPC-1)                       !Complex spectrum of Costas 2
   complex c3(0:NSPC-1)                       !Complex spectrum of Costas 3
-  data icos7/2,5,6,0,4,1,3/                  !Costas 7x7 tone pattern
+  data icos7/4,2,5,6,1,3,0/                  !Costas 7x7 tone pattern
   data mode64z/-1/
   save
 
