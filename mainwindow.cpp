@@ -1118,7 +1118,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   }
   ui->dxCallEntry->clear();
   ui->dxGridEntry->clear();
-  auto f = findFreeFreqOffset(500, 2000, 50);
+  auto f = findFreeFreqOffset(1000, 2000, 50);
   setFreqOffsetForRestore(f, false);
   ui->cbVHFcontest->setChecked(false); // this needs to always be false
 
