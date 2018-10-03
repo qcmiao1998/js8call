@@ -2592,6 +2592,9 @@ void MainWindow::keyPressEvent (QKeyEvent * e)
             on_stopTxButton_clicked();
             stopTx();
             return;
+        case Qt::Key_F5:
+            on_logQSOButton_clicked();
+            return;
     }
 
     QMainWindow::keyPressEvent (e);
@@ -2906,6 +2909,10 @@ void MainWindow::on_stopButton_clicked()                       //stopButton
     MessageBox::information_message (this, tr ("Reference spectrum saved"));
     m_bRefSpec=false;
   }
+}
+
+void MainWindow::on_actionAdd_Log_Entry_triggered(){
+  on_logQSOButton_clicked();
 }
 
 void MainWindow::on_actionRelease_Notes_triggered ()

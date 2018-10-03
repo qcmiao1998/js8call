@@ -1076,6 +1076,9 @@ background-color: #00ff00;
                   <height>30</height>
                  </size>
                 </property>
+                <property name="visible">
+                 <bool>false</bool>
+                </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Insert a new entry into the log&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
@@ -4595,12 +4598,7 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionOpen"/>
     <addaction name="actionOpen_next_in_directory"/>
     <addaction name="actionDecode_remaining_files_in_directory"/>
-    <addaction name="separator"/>
-    <addaction name="actionDelete_all_wav_files_in_SaveDir"/>
-    <addaction name="actionErase_ALL_TXT"/>
     <addaction name="actionErase_FoxQSO_txt"/>
-    <addaction name="actionErase_ft8call_log_adi"/>
-    <addaction name="actionOpen_log_directory"/>
     <addaction name="separator"/>
     <addaction name="actionSettings"/>
     <addaction name="separator"/>
@@ -4645,6 +4643,8 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionNone"/>
     <addaction name="actionSave_decoded"/>
     <addaction name="actionSave_all"/>
+    <addaction name="separator"/>
+    <addaction name="actionDelete_all_wav_files_in_SaveDir"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -4721,7 +4721,19 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionShow_Waterfall"/>
     <addaction name="actionShow_Waterfall_Controls"/>
     <addaction name="actionShow_Time_Drift_Controls"/>
+    <addaction name="separator"/>
     <addaction name="actionReset_Window_Sizes"/>
+   </widget>
+   <widget class="QMenu" name="menu_Log">
+    <property name="title">
+     <string>Log</string>
+    </property>
+    <addaction name="actionAdd_Log_Entry"/>
+    <addaction name="separator"/>
+    <addaction name="actionOpen_log_directory"/>
+    <addaction name="separator"/>
+    <addaction name="actionErase_ALL_TXT"/>
+    <addaction name="actionErase_ft8call_log_adi"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
@@ -4729,6 +4741,7 @@ list. The list can be maintained in Settings (F2).</string>
    <addaction name="menuMode"/>
    <addaction name="menuDecode"/>
    <addaction name="menuSave"/>
+   <addaction name="menu_Log"/>
    <addaction name="menuTools"/>
    <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
@@ -5440,6 +5453,17 @@ list. The list can be maintained in Settings (F2).</string>
   <action name="actionShow_Call_Activity_Columns">
    <property name="text">
     <string>Show Call Activity Columns...</string>
+   </property>
+  </action>
+  <action name="actionAdd_Log_Entry">
+   <property name="text">
+    <string>Add Log Entry...</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WindowShortcut</enum>
    </property>
   </action>
  </widget>
