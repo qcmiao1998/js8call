@@ -6364,7 +6364,7 @@ void MainWindow::prepareBeacon(){
     }
 
     // Choose a beacon frequency
-    auto f = findFreeFreqOffset(500, 1000, 50);
+    auto f = findFreeFreqOffset(750, 1250, 50);
 
     auto text = lines.join(QChar('\n'));
     if(text.isEmpty()){
