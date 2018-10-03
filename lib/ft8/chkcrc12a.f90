@@ -16,7 +16,7 @@ subroutine chkcrc12a(decoded,nbadcrc)
   i1Dec8BitBytes(10)=iand(i1Dec8BitBytes(10),128+64+32)
   i1Dec8BitBytes(11)=0
   icrc12=crc12(c_loc(i1Dec8BitBytes),11)          !CRC12 computed from 75 msg bits
-  icrc12=xor(icrc12, 41)
+  ! icrc12=xor(icrc12, 41) ! TODO: jsherer - could change the crc here
 
   nbadcrc=1
   if(ncrc12.eq.icrc12) nbadcrc=0
