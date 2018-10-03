@@ -46,10 +46,10 @@ void MessageReplyDialog::on_textEdit_textChanged(){
 
     QString x;
     QString::const_iterator i;
-    QSet<QString> validChars = Varicode::huffValidChars();
     for(i = text.constBegin(); i != text.constEnd(); i++){
-        auto ch = (*i).toUpper();
-        if(validChars.contains(ch)){
+        auto ch = (*i).toUpper().toLatin1();
+        if(ch == 10 || (32 <= ch && ch <= 126)){
+            // newline or printable 7-bit ascii
             x += ch;
         }
     }

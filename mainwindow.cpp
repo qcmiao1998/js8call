@@ -6096,10 +6096,10 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 {
     QString x;
     QString::const_iterator i;
-    QSet<QString> validChars = Varicode::huffValidChars();
     for(i = text.constBegin(); i != text.constEnd(); i++){
-        auto ch = (*i).toUpper();
-        if(validChars.contains(ch) || ch == '\n'){
+        auto ch = (*i).toUpper().toLatin1();
+        if(ch == 10 || (32 <= ch && ch <= 126)){
+            // newline or printable 7-bit ascii
             x += ch;
         }
     }
@@ -8770,7 +8770,7 @@ void MainWindow::updateFrameCountDisplay(QString text, int count){
 
         auto words = text.split(" ", QString::SkipEmptyParts).length();
         auto wpm = QString::number(words/(count/4.0), 'f', 1);
-        auto cpm = QString::number(text.length()/(count/4.0), 'f', 0);
+        auto cpm = QString::number(text.length()/(count/4.0), 'f', 1);
         wpm_label.setText(QString("%1wpm / %2cpm").arg(wpm).arg(cpm));
         wpm_label.setVisible(true);
     } else {

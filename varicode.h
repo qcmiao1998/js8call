@@ -30,8 +30,8 @@ public:
         FrameCompoundDirected = 2,   // [010]
         FrameDirected         = 3,   // [011]
         FrameReservedA        = 4,   // [100] <- Reserved for future use, likely an extension of one of these formats.
-        FrameDataUnpadded     = 5,   // [101]
-        FrameDataPadded       = 6,   // [110]
+        FrameDataUncompressed = 5,   // [101]
+        FrameDataCompressed   = 6,   // [110]
         FrameReservedB        = 7,   // [111] <- Reserved for future use, likely binary data / other formats.
     };
 
@@ -44,8 +44,8 @@ public:
             "FrameCompoundDirected",
             "FrameDirected",
             "FrameReservedA",
-            "FrameDataUnpadded",
-            "FrameDataPadded",
+            "FrameDataUncompressed",
+            "FrameDataCompressed",
             "FrameReservedB"
         };
 
@@ -61,7 +61,6 @@ public:
     static QString lstrip(const QString& str);
 
     static QMap<QString, QString> defaultHuffTable();
-    static QMap<QString, QString> defaultHuffTableEscaped();
     static QString cqString(int number);
     static bool startsWithCQ(QString text);
     static QString formatSNR(int snr);
@@ -78,11 +77,7 @@ public:
 
     static QList<QPair<int, QVector<bool>>> huffEncode(const QMap<QString, QString> &huff, QString const& text);
     static QString huffDecode(const QMap<QString, QString> &huff, QVector<bool> const& bitvec);
-
-    static QString huffUnescape(QString const &input);
-    static QString huffEscape(QString const &input);
-    static QSet<QString> huffValidChars();
-    static bool huffShouldEscape(QString const &input);
+    static QSet<QString> huffValidChars(const QMap<QString, QString> &huff);
 
     static QVector<bool> bytesToBits(char * bitvec, int n);
     static QVector<bool> strToBits(QString const& bitvec);
