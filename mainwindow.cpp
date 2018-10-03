@@ -1141,6 +1141,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
           return;
       }
 
+      if(!ensureCallsignSet(true) || !ensureSelcalCallsignSelected(true)){
+          return;
+      }
+
       toggleTx(true);
   });
   ui->extFreeTextMsgEdit->installEventFilter(enterFilter);
@@ -6057,8 +6061,26 @@ bool MainWindow::ensureCallsignSet(bool alert){
     return true;
 }
 
+bool MainWindow::ensureSelcalCallsignSelected(bool alert){
+    auto selectedCallsign = callsignSelected(true);
+    bool isAllCall = isAllCallIncluded(selectedCallsign);
+    bool missingCall = selectedCallsign.isEmpty();
+    bool blockTransmit = ui->selcalButton->isChecked() && (isAllCall || missingCall);
+
+    if(blockTransmit && alert){
+        MessageBox::warning_message(this, tr ("Please select or enter a callsign to direct this message while SELCAL is enabled."));
+    }
+
+    return !blockTransmit;
+}
+
 void MainWindow::createMessage(QString const& text){
     if(!ensureCallsignSet()){
+        on_stopTxButton_clicked();
+        return;
+    }
+
+    if(!ensureSelcalCallsignSelected()){
         on_stopTxButton_clicked();
         return;
     }
@@ -8738,7 +8760,7 @@ void MainWindow::updateButtonDisplay(){
     update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
 
     bool isTransmitting = m_transmitting || m_txFrameCount > 0;
-    auto selectedCallsign = callsignSelected();
+    auto selectedCallsign = callsignSelected(true);
     bool emptyCallsign = selectedCallsign.isEmpty();
 
     ui->cqMacroButton->setDisabled(isTransmitting);
@@ -8749,6 +8771,7 @@ void MainWindow::updateButtonDisplay(){
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
     ui->deselectButton->setDisabled(isTransmitting || emptyCallsign);
     ui->queryButton->setText(emptyCallsign ? "Directed" : QString("Directed to %1").arg(selectedCallsign));
+    ui->startTxButton->setDisabled(ui->selcalButton->isChecked() && emptyCallsign);
 
     if(isTransmitting){
         int count = m_txFrameCount;
@@ -8813,7 +8836,7 @@ void MainWindow::buildMessageFramesAndUpdateCountDisplay(){
 void MainWindow::updateFrameCountDisplay(QString text, int count){
     if(count > 0){
         ui->startTxButton->setText(QString("Send (%1)").arg(count));
-        ui->startTxButton->setEnabled(true);
+        ui->startTxButton->setEnabled(ensureSelcalCallsignSelected(false));
 
         auto words = text.split(" ", QString::SkipEmptyParts).length();
         auto wpm = QString::number(words/(count/4.0), 'f', 1);
@@ -8828,7 +8851,7 @@ void MainWindow::updateFrameCountDisplay(QString text, int count){
     }
 }
 
-QString MainWindow::callsignSelected(){
+QString MainWindow::callsignSelected(bool useInputText){
     if(!ui->tableWidgetCalls->selectedItems().isEmpty()){
         auto selectedCalls = ui->tableWidgetCalls->selectedItems();
         if(!selectedCalls.isEmpty()){
@@ -8861,13 +8884,13 @@ QString MainWindow::callsignSelected(){
         }
     }
 
-#if SELECT_CALLSIGN_FOR_INPUT_TEXT
-    auto text = ui->extFreeTextMsgEdit->toPlainText().left(11); // Maximum callsign is 6 + / + 4 = 11 characters
-    auto calls = Varicode::parseCallsigns(text);
-    if(!calls.isEmpty() && text.startsWith(calls.first()) && calls.first() != m_config.my_callsign()){
-        return calls.first();
+    if(useInputText){
+        auto text = ui->extFreeTextMsgEdit->toPlainText().left(11); // Maximum callsign is 6 + / + 4 = 11 characters
+        auto calls = Varicode::parseCallsigns(text);
+        if(!calls.isEmpty() && text.startsWith(calls.first()) && calls.first() != m_config.my_callsign()){
+            return calls.first();
+        }
     }
-#endif
 
     return QString();
 }

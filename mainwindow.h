@@ -151,6 +151,7 @@ public slots:
   void restoreMessage();
   void initializeDummyData();
   bool ensureCallsignSet(bool alert=true);
+  bool ensureSelcalCallsignSelected(bool alert=true);
   void createMessage(QString const& text);
   void createMessageTransmitQueue(QString const& text);
   void resetMessageTransmitQueue();
@@ -885,7 +886,7 @@ private:
   void updateFrameCountDisplay(QString text, int count);
   bool isMyCallIncluded(QString const &text);
   bool isAllCallIncluded(QString const &text);
-  QString callsignSelected();
+  QString callsignSelected(bool useInputText=false);
   bool isRecentOffset(int offset);
   void markOffsetRecent(int offset);
   bool isDirectedOffset(int offset, bool *pIsAllCall);
