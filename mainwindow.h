@@ -316,6 +316,7 @@ private slots:
   void on_pbR2T_clicked();
   void on_pbT2R_clicked();
   void on_beaconButton_clicked();
+  void on_selcalButton_clicked();
   void acceptQSO (QDateTime const&, QString const& call, QString const& grid
                   , Frequency dial_freq, QString const& mode
                   , QString const& rpt_sent, QString const& rpt_received

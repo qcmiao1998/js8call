@@ -5830,11 +5830,13 @@ void MainWindow::clearActivity(){
     clearTableWidget(ui->tableWidgetCalls);
 
     // this is now duplicated in three places :(
-    ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
-    auto item = new QTableWidgetItem("ALLCALL");
-    item->setData(Qt::UserRole, QVariant("ALLCALL"));
-    ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, item);
-    ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
+    if(!ui->selcalButton->isChecked()){
+        ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+        auto item = new QTableWidgetItem("ALLCALL");
+        item->setData(Qt::UserRole, QVariant("ALLCALL"));
+        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, item);
+        ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
+    }
 
     clearTableWidget(ui->tableWidgetRXAll);
 
@@ -7057,11 +7059,13 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
         m_callActivity.clear();
         clearTableWidget((ui->tableWidgetCalls));
 
-        auto item = new QTableWidgetItem("ALLCALL");
-        item->setData(Qt::UserRole, QVariant("ALLCALL"));
-        ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
-        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, item);
-        ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
+        if(!ui->selcalButton->isChecked()){
+            auto item = new QTableWidgetItem("ALLCALL");
+            item->setData(Qt::UserRole, QVariant("ALLCALL"));
+            ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, item);
+            ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
+        }
     }
 
     if(sender == ui->extFreeTextMsgEdit){
@@ -7911,6 +7915,18 @@ void MainWindow::on_beaconButton_clicked()
     } else {
         pauseBeacon();
     }
+}
+
+void MainWindow::on_selcalButton_clicked(){
+    if(ui->selcalButton->isChecked()){
+        if(callsignSelected() == "ALLCALL"){
+            clearCallsignSelected();
+        }
+        if(ui->tableWidgetRXAll->isVisible()){
+            ui->tableWidgetRXAll->setVisible(false);
+        }
+    }
+    displayCallActivity();
 }
 
 void MainWindow::on_readFreq_clicked()
@@ -8955,6 +8971,10 @@ void MainWindow::processRxActivity() {
             continue;
         }
 
+        if(ui->selcalButton->isChecked()){
+            continue;
+        }
+
         // use the actual frequency and check its delta from our current frequency
         // meaning, if our current offset is 1502 and the d.freq is 1492, the delta is <= 10;
         bool shouldDisplay = abs(d.freq - currentFreqOffset()) <= 10;
@@ -9233,11 +9253,10 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-#if ENABLE_SELCAL
+        // if selcal is enabled and this isnt directed to us, take no action.
         if (isAllCall && ui->selcalButton->isChecked()) {
             continue;
         }
-#endif
 
         // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past beacon interval)
         // that way we never get spammed by allcalls at a higher frequency than what we would normally beacon
@@ -9994,15 +10013,16 @@ void MainWindow::displayCallActivity() {
         clearTableWidget(ui->tableWidgetCalls);
 
         // Create the ALLCALL item
-        auto item = new QTableWidgetItem("ALLCALL");
-        ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
-        item->setData(Qt::UserRole, QVariant("ALLCALL"));
-        ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, item);
-        ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
-        if (isAllCallIncluded(selectedCall)) {
-            ui->tableWidgetCalls->item(0, 0)->setSelected(true);
+        if(!ui->selcalButton->isChecked()){
+            auto item = new QTableWidgetItem("ALLCALL");
+            ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
+            item->setData(Qt::UserRole, QVariant("ALLCALL"));
+            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 0, item);
+            ui->tableWidgetCalls->setSpan(ui->tableWidgetCalls->rowCount() - 1, 0, 1, ui->tableWidgetCalls->columnCount());
+            if (isAllCallIncluded(selectedCall)) {
+                ui->tableWidgetCalls->item(0, 0)->setSelected(true);
+            }
         }
-
 
         // Build the table
         QList < QString > keys = m_callActivity.keys();
