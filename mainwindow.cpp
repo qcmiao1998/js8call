@@ -2786,7 +2786,7 @@ void MainWindow::setup_status_bar (bool vhf)
   else
     {
       if(m_mode == "FT8"){
-        mode_label.setText("FT8CALL");
+        mode_label.setText("JS8");
       } else {
         mode_label.setText (m_mode);
       }
@@ -6502,7 +6502,7 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   if(m_callActivity.contains(call)){
       grid = m_callActivity[call].grid;
   }
-  m_logDlg->initLogQSO (call, grid, m_modeTx == "FT8" ? "FT8CALL" : m_modeTx, m_rptSent, m_rptRcvd,
+  m_logDlg->initLogQSO (call, grid, m_modeTx == "FT8" ? "JS8" : m_modeTx, m_rptSent, m_rptRcvd,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),
                         m_config.my_callsign(), m_config.my_grid(),
                         m_config.log_as_DATA(), m_config.report_in_comments(),
@@ -9735,7 +9735,7 @@ void MainWindow::processSpots() {
             continue;
         }
         qDebug() << "spotting call to reporting networks" << d.call << d.snr << d.freq;
-        pskLogReport("FT8CALL", d.freq, d.snr, d.call, d.grid);
+        pskLogReport("JS8", d.freq, d.snr, d.call, d.grid);
         aprsLogReport(d.freq, d.snr, d.call, d.grid);
     }
 }
