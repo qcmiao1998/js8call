@@ -40,7 +40,7 @@ public:
   enum Mode
   {
     ALL,                        // matches with all modes
-    FT8CALL,
+    JS8,
     MODES_END_SENTINAL_AND_COUNT // this must be last
   };
   Q_ENUM (Mode)

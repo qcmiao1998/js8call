@@ -6578,7 +6578,7 @@ void MainWindow::on_actionFT8_triggered()
   m_bFast9=false;
   m_bFastMode=false;
   WSPR_config(false);
-  switch_mode (Modes::FT8CALL);
+  switch_mode (Modes::JS8);
   m_modeTx="FT8";
   m_nsps=6912;
   m_FFTSize = m_nsps / 2;
