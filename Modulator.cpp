@@ -291,7 +291,7 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
           if (m_ic > i1) m_amp = 0.0;
 
           sample=qRound(m_amp*qSin(m_phi));
-          if(m_toneSpacing < 0) sample=qRound(m_amp*foxcom_.wave[m_ic]);
+//          if(m_toneSpacing < 0) sample=qRound(m_amp*foxcom_.wave[m_ic]);
 
 //          if(m_ic < 100) qDebug() << "Mod C" << m_ic << m_amp << foxcom_.wave[m_ic] << sample;
 
