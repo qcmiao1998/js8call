@@ -1246,7 +1246,7 @@ add_custom_target (uninstall
 # explicitly say that the wsjt_qt depends on custom target, this is
 # done indirectly so that the revisiontag target gets built exactly
 # once per build
-add_dependencies(wsjt_qt revisiontag)
+# add_dependencies(wsjt_qt)
 
 
 #
