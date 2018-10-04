@@ -7,7 +7,6 @@
 #include <QHostAddress>
 #include <QColor>
 
-#include "udp_export.h"
 #include "Radio.hpp"
 
 #include "pimpl_h.hpp"
@@ -23,7 +22,7 @@ class QString;
 // applications that use the Qt framework. Other applications should
 // use this classes' implementation as a reference implementation.
 //
-class UDP_EXPORT MessageServer
+class MessageServer
   : public QObject
 {
   Q_OBJECT;
