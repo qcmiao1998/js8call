@@ -9365,6 +9365,8 @@ void MainWindow::processCommandActivity() {
                     QSound::play(wav);
                 }
             }
+
+            writeDirectedCommandToFile(d);
         }
 
         // and mark the offset as a directed offset so future free text is displayed
@@ -9500,21 +9502,6 @@ void MainWindow::processCommandActivity() {
 
         // PROCESS BUFFERED MESSAGE
         else if (d.cmd == "#" && !isAllCall) {
-            // open file /save/messages/[callsign].txt and append a message log entry...
-            QFile f(QDir::toNativeSeparators(m_config.writeable_data_dir ().absolutePath()) + QString("/save/messages/%1.txt").arg(Radio::base_callsign(d.from)));
-            if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
-              QTextStream out(&f);
-              auto df = dialFrequency();
-              auto text = QString("%1\t%2MHz\t%3Hz\t%4dB\t%5");
-              text = text.arg(d.utcTimestamp.toString("yyyy-MM-dd hh:mm:ss"));
-              text = text.arg(Radio::frequency_MHz_string(df));
-              text = text.arg(d.freq);
-              text = text.arg(Varicode::formatSNR(d.snr));
-              text = text.arg(d.text);
-              out << text << endl;
-              f.close();
-            }
-
             reply = QString("%1 ACK").arg(d.from);
         }
 
@@ -9639,6 +9626,23 @@ void MainWindow::processCommandActivity() {
         // we always want to make sure that the directed cache has been updated at this point so we have the
         // most information available to make a frequency selection.
         enqueueMessage(priority, reply, freq, nullptr);
+    }
+}
+
+void MainWindow::writeDirectedCommandToFile(CommandDetail d){
+    // open file /save/messages/[callsign].txt and append a message log entry...
+    QFile f(QDir::toNativeSeparators(m_config.writeable_data_dir ().absolutePath()) + QString("/save/messages/%1.txt").arg(Radio::base_callsign(d.from)));
+    if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
+      QTextStream out(&f);
+      auto df = dialFrequency();
+      auto text = QString("%1\t%2MHz\t%3Hz\t%4dB\t%5");
+      text = text.arg(d.utcTimestamp.toString("yyyy-MM-dd hh:mm:ss"));
+      text = text.arg(Radio::frequency_MHz_string(df));
+      text = text.arg(d.freq);
+      text = text.arg(Varicode::formatSNR(d.snr));
+      text = text.arg(d.text.isEmpty() ? QString("%1 %2").arg(d.cmd).arg(d.extra).trimmed() : d.text);
+      out << text << endl;
+      f.close();
     }
 }
 

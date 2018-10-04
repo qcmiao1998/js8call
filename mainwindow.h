@@ -898,6 +898,7 @@ private:
   void processCompoundActivity();
   void processBufferedActivity();
   void processCommandActivity();
+  void writeDirectedCommandToFile(CommandDetail d);
   void processAlertReplyForCommand(CommandDetail d, QString from, QString cmd);
   void processSpots();
   void processTxQueue();
