@@ -95,7 +95,7 @@ public:
   Q_SIGNAL void error (QString const&) const;
 
 private:
-  class UDP_NO_EXPORT impl;
+  class impl;
   pimpl<impl> m_;
 };
 

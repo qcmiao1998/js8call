@@ -24,7 +24,7 @@ namespace Radio
   //
   // Qt type registration
   //
-  void UDP_NO_EXPORT register_types ();
+  void register_types ();
 
   //
   // Frequency type conversion.
