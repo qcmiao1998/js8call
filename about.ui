@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>About FT8Call</string>
+   <string>About JS8Call</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>

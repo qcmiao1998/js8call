@@ -1,3 +1,3 @@
 echo make
-echo cp wsjtx ft8call
-echo linuxdeployqt ./ft8call -appimage -bundle-non-qt-libs -no-strip -no-translations
+echo cp wsjtx js8call
+echo linuxdeployqt ./js8call -appimage -bundle-non-qt-libs -no-strip -no-translations

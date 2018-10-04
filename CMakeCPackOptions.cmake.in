@@ -9,8 +9,8 @@ set (CPACK_PACKAGE_CONTACT "@PROJECT_CONTACT@")
 set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "@PROJECT_SUMMARY_DESCRIPTION@")
 set (CPACK_RESOURCE_FILE_LICENSE "@PROJECT_SOURCE_DIR@/COPYING")
 set (CPACK_PACKAGE_INSTALL_DIRECTORY ${CPACK_PACKAGE_NAME})
-set (CPACK_PACKAGE_EXECUTABLES ft8call "@PROJECT_NAME@")
-set (CPACK_CREATE_DESKTOP_LINKS ft8call)
+set (CPACK_PACKAGE_EXECUTABLES js8call "@PROJECT_NAME@")
+set (CPACK_CREATE_DESKTOP_LINKS js8call)
 set (CPACK_STRIP_FILES TRUE)
 
 #
@@ -24,7 +24,7 @@ if (CPACK_GENERATOR MATCHES "NSIS")
   set (CPACK_SET_DESTDIR FALSE)
   set (CPACK_STRIP_FILES FALSE)	# breaks Qt packaging on Windows
 
-  # set (CPACK_NSIS_INSTALL_ROOT "C:\\FT8Call")
+  # set (CPACK_NSIS_INSTALL_ROOT "C:\\JS8Call")
 
   if(CMAKE_CL_64) 
     set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64") 
@@ -38,8 +38,8 @@ if (CPACK_GENERATOR MATCHES "NSIS")
 
   # set the install/unistall icon used for the installer itself
   # There is a bug in NSI that does not handle full unix paths properly.
-  set (CPACK_NSIS_MUI_ICON "@PROJECT_SOURCE_DIR@/icons/windows-icons\\ft8call.ico")
-  set (CPACK_NSIS_MUI_UNIICON "@PROJECT_SOURCE_DIR@/icons/windows-icons\\ft8call.ico")
+  set (CPACK_NSIS_MUI_ICON "@PROJECT_SOURCE_DIR@/icons/windows-icons\\js8call.ico")
+  set (CPACK_NSIS_MUI_UNIICON "@PROJECT_SOURCE_DIR@/icons/windows-icons\\js8call.ico")
   # set the package header icon for MUI
   set (CPACK_PACKAGE_ICON "@PROJECT_SOURCE_DIR@/icons/windows-icons\\installer_logo.bmp")
   # tell cpack to create links to the doc files
@@ -47,13 +47,13 @@ if (CPACK_GENERATOR MATCHES "NSIS")
     "@PROJECT_HOMEPAGE@" "@PROJECT_NAME@ Web Site"
     )
   # Use the icon from wsjtx for add-remove programs
-  set (CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\ft8call.exe")
+  set (CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\js8call.exe")
 
   set (CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_DESCRIPTION_SUMMARY}")
   set (CPACK_NSIS_HELP_LINK "@PROJECT_HOMEPAGE@")
   set (CPACK_NSIS_URL_INFO_ABOUT "@PROJECT_HOMEPAGE@")
   set (CPACK_NSIS_CONTACT "${CPACK_PACKAGE_CONTACT}")
-  set (CPACK_NSIS_MUI_FINISHPAGE_RUN "ft8call.exe")
+  set (CPACK_NSIS_MUI_FINISHPAGE_RUN "js8call.exe")
   set (CPACK_NSIS_MODIFY_PATH ON)
 endif ()
 
@@ -66,11 +66,11 @@ endif ()
 if ("${CPACK_GENERATOR}" STREQUAL "DragNDrop")
   set (CPACK_DMG_VOLUME_NAME "@PROJECT_NAME@")
   set (CPACK_DMG_BACKGROUND_IMAGE "@PROJECT_SOURCE_DIR@/icons/Darwin/DragNDrop Background.png")
-  set (CPACK_DMG_DS_STORE "@PROJECT_SOURCE_DIR@/Darwin/ft8call_DMG.DS_Store")
+  set (CPACK_DMG_DS_STORE "@PROJECT_SOURCE_DIR@/Darwin/js8call_DMG.DS_Store")
   set (CPACK_BUNDLE_NAME "@WSJTX_BUNDLE_NAME@")
-  set (CPACK_PACKAGE_ICON "@PROJECT_BINARY_DIR@/ft8call.icns")
-  set (CPACK_BUNDLE_ICON "@PROJECT_BINARY_DIR@/ft8call.icns")
-  set (CPACK_BUNDLE_STARTUP_COMMAND "@PROJECT_SOURCE_DIR@/Mac-ft8call-startup.sh")
+  set (CPACK_PACKAGE_ICON "@PROJECT_BINARY_DIR@/js8call.icns")
+  set (CPACK_BUNDLE_ICON "@PROJECT_BINARY_DIR@/js8call.icns")
+  set (CPACK_BUNDLE_STARTUP_COMMAND "@PROJECT_SOURCE_DIR@/Mac-js8call-startup.sh")
   set (CPACK_PACKAGING_INSTALL_PREFIX "/")
 endif ()
 
@@ -78,9 +78,9 @@ if ("${CPACK_GENERATOR}" STREQUAL "WIX")
   # Reset CPACK_PACKAGE_VERSION to deal with WiX restriction.
   # But the file names still use the full CMake_VERSION value:
   set (CPACK_PACKAGE_FILE_NAME
-    "${CPACK_PACKAGE_NAME}-@ft8call_VERSION@-${CPACK_SYSTEM_NAME}")
+    "${CPACK_PACKAGE_NAME}-@js8call_VERSION@-${CPACK_SYSTEM_NAME}")
   set (CPACK_SOURCE_PACKAGE_FILE_NAME
-    "${CPACK_PACKAGE_NAME}-@ft8call_VERSION@-Source")
+    "${CPACK_PACKAGE_NAME}-@js8call_VERSION@-Source")
 
   if (NOT CPACK_WIX_SIZEOF_VOID_P)
     set (CPACK_WIX_SIZEOF_VOID_P "@CMAKE_SIZEOF_VOID_P@")

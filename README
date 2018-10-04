@@ -1,19 +1,19 @@
-# FT8Call
+# JS8Call
 
 FT8 has taken over the airwaves as the digital communication mode for making QSOs over HF/VHF/UHF. The mode has been widely popular as the latest offering in K1JT’s WSJT-X application. FT8 is based on the same foundation as JT65, JT9, and WSPR modes for weak signal communication, but transmits faster with only slightly reduced sensitivity.
 
 While FT8 is an incredibly robust weak signal mode, it is designed heavily to take advantage of short band openings on HF/VHF/UHF and only offers a minimal QSO framework. However, many operators are using these weak signal qualities to make successful QSOs on the HF bands where other modes fail.
 
-FT8Call is an experiment to test the feasibility of a digital mode with the robustness of FT8, combined with a messaging and network protocol layer for weak signal communication on HF, using keyboard-to-keyboard style interface. FT8Call is heavily inspired by WSJT-X, Fldigi, and FSQCall and would not exist without the hard work and dedication of the many developers in the amateur radio community.
+JS8Call is an experiment to test the feasibility of a digital mode with the robustness of FT8, combined with a messaging and network protocol layer for weak signal communication on HF, using keyboard-to-keyboard style interface. JS8Call is heavily inspired by WSJT-X, Fldigi, and FSQCall and would not exist without the hard work and dedication of the many developers in the amateur radio community.
 
-* Read more on the original design inspiration here: https://github.com/jsherer/ft8call
+* Read more on the original design inspiration here: https://github.com/jsherer/js8call
 
-* For release announcements and discussion, join the FT8Call mailing list here: https://groups.io/g/ft8call
+* For release announcements and discussion, join the JS8Call mailing list here: https://groups.io/g/js8call
 
 
 # Notice
 
-FT8Call is a derivative of the WSJT-X application, restructured and redesigned for message passing using FT8 modulation. It is not supported by nor endorsed by the WSJT-X development group. While the WSJT-X group maintains copyright over the original work and code, FT8Call is a derivative work licensed under and in accordance with the terms of the GPLv3 license. The source code modifications are public and can be found in this repository: https://bitbucket.org/widefido/wsjtx/
+JS8Call is a derivative of the WSJT-X application, restructured and redesigned for message passing using FT8 modulation. It is not supported by nor endorsed by the WSJT-X development group. While the WSJT-X group maintains copyright over the original work and code, JS8Call is a derivative work licensed under and in accordance with the terms of the GPLv3 license. The source code modifications are public and can be found in this repository: https://bitbucket.org/widefido/wsjtx/
 
 
 # History
@@ -22,11 +22,11 @@ FT8Call is a derivative of the WSJT-X application, restructured and redesigned f
 * August 31, 2017 - Jordan, KN4CRD, did a little development and modified WSJT-X to support long-form QSOs using the existing FT8 protocol: https://sourceforge.net/p/wsjt/mailman/message/36020051/  He sent a video example to the WSJT-X group: https://widefido.wistia.com/medias/7bb1uq62ga
 * January 8, 2018 - Jordan, KN4CRD, started working on the design of a long-form QSO application built on top of FT8 with a redesigned interface.
 * February 9, 2018 - Jordan, KN4CRD, submitted question to the WSJT-X group to see if there was any interest in pursuing the idea: https://sourceforge.net/p/wsjt/mailman/message/36221549/
-* February 10, 2018 - Jordan KN4CRD, Julian OH8STN, John N0JDS, and the Portable Digital QRP group did an experiment using FSQ. The idea of FT8Call, combining FT8, long-form QSOs, and FSQCall like features was born.
+* February 10, 2018 - Jordan KN4CRD, Julian OH8STN, John N0JDS, and the Portable Digital QRP group did an experiment using FSQ. The idea of JS8Call, combining FT8, long-form QSOs, and FSQCall like features was born.
 * February 11, 2018 - Jordan, KN4CRD, inquired about the idea of integrating long-form messages into WSJT-X: https://sourceforge.net/p/wsjt/mailman/message/36223372/
 * February 12, 2018 - Joe Taylor, K1JT, wrote back: https://sourceforge.net/p/wsjt/mailman/message/36224507/ saying that “Please don't let my comment discourage you from proceeding as you wish, toward something new.”
-* March 4, 2018 - Jordan, KN4CRD, published a design document for FT8Call: https://github.com/jsherer/ft8call
-* July 6, 2018 - Version 0.0.1 of FT8Call released to the development group
+* March 4, 2018 - Jordan, KN4CRD, published a design document for JS8Call: https://github.com/jsherer/js8call
+* July 6, 2018 - Version 0.0.1 of JS8Call released to the development group
 * July 15, 2018 - Version 0.1 released - a dozen testers
 * July 21, 2018 - Version 0.2 released - 75 testers
 * July 27, 2018 - Version 0.3 released - 150 testers

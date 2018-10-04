@@ -17,10 +17,10 @@ class Varicode
 public:
     // frame type transmitted via itype and decoded by the ft8 decoded
     enum TransmissionType {
-        FT8Call          = 0, // [000] <- any other frame of the message
-        FT8CallFirst     = 1, // [001] <- the first frame of a message
-        FT8CallLast      = 2, // [010] <- the last frame of a message
-        FT8CallReserved  = 4, // [100] <- a reserved flag for future use...
+        JS8Call          = 0, // [000] <- any other frame of the message
+        JS8CallFirst     = 1, // [001] <- the first frame of a message
+        JS8CallLast      = 2, // [010] <- the last frame of a message
+        JS8CallReserved  = 4, // [100] <- a reserved flag for future use...
     };
 
     enum FrameType {

@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 
       // Override programs executable basename as application name.
       //a.setApplicationName ("WSJT-X");
-      a.setApplicationName("FT8Call");
+      a.setApplicationName("JS8Call");
       a.setApplicationVersion (version ());
 
 #if QT_VERSION >= 0x050200

@@ -22,7 +22,7 @@ Change this to the newest SDK available that you can install on your system (10.
 Do not override this if you intend to build an official deployable installer.")
 endif (APPLE)
 
-project (ft8call C CXX Fortran)
+project (js8call C CXX Fortran)
 
 #
 # CMake policies
@@ -45,11 +45,11 @@ message (STATUS "Building ${CMAKE_PROJECT_NAME}-${wsjtx_VERSION}")
 #
 # project information
 #
-set (PROJECT_NAME "FT8Call")
+set (PROJECT_NAME "JS8Call")
 set (PROJECT_VENDOR "Jordan Sherer, KN4CRD")
 set (PROJECT_CONTACT "Jordan Sherer <kn4crd@gmail.com>")
 set (PROJECT_COPYRIGHT "Copyright (C) 2001-2018 by Joe Taylor, K1JT, (C) 2018 by Jordan Sherer, KN4CRD")
-set (PROJECT_HOMEPAGE https://groups.io/g/ft8call)
+set (PROJECT_HOMEPAGE https://groups.io/g/js8call)
 set (PROJECT_SUMMARY_DESCRIPTION "${PROJECT_NAME} - Digital Modes for Weak Signal Communicaitons in Amateur Radio.")
 set (PROJECT_DESCRIPTION "${PROJECT_SUMMARY_DESCRIPTION}
  ${PROJECT_NAME} is a computer program designed to facilitate amateur
@@ -628,7 +628,7 @@ set (all_C_and_CXXSRCS
 
 set (TOP_LEVEL_RESOURCES
   cty.dat
-  icons/Darwin/FT8Call.iconset/icon_128x128.png
+  icons/Darwin/JS8Call.iconset/icon_128x128.png
   contrib/gpl-v3-logo.svg
   artwork/splash.png
   )
@@ -1110,7 +1110,7 @@ else (${OPENMP_FOUND} OR APPLE)
 endif (${OPENMP_FOUND} OR APPLE)
 
 # build the main application
-add_executable (ft8call MACOSX_BUNDLE
+add_executable (js8call MACOSX_BUNDLE
   ${wsjtx_CXXSRCS}
   ${wsjtx_GENUISRCS}
   wsjtx.rc
@@ -1119,10 +1119,10 @@ add_executable (ft8call MACOSX_BUNDLE
   )
 
 if (WSJT_CREATE_WINMAIN)
-  set_target_properties (ft8call PROPERTIES WIN32_EXECUTABLE ON)
+  set_target_properties (js8call PROPERTIES WIN32_EXECUTABLE ON)
 endif (WSJT_CREATE_WINMAIN)
 
-set_target_properties (ft8call PROPERTIES
+set_target_properties (js8call PROPERTIES
   MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Darwin/Info.plist.in"
   MACOSX_BUNDLE_INFO_STRING "${WSJTX_DESCRIPTION_SUMMARY}"
   MACOSX_BUNDLE_ICON_FILE "${WSJTX_ICON_FILE}"
@@ -1135,36 +1135,36 @@ set_target_properties (ft8call PROPERTIES
   MACOSX_BUNDLE_GUI_IDENTIFIER "org.k1jt.wsjtx"
   )
 
-target_include_directories (ft8call PRIVATE ${FFTW3_INCLUDE_DIRS})
+target_include_directories (js8call PRIVATE ${FFTW3_INCLUDE_DIRS})
 if (APPLE)
-  target_link_libraries (ft8call wsjt_fort wsjt_cxx wsjt_qt wsjt_qtmm ${hamlib_LIBRARIES} ${FFTW3_LIBRARIES})
+  target_link_libraries (js8call wsjt_fort wsjt_cxx wsjt_qt wsjt_qtmm ${hamlib_LIBRARIES} ${FFTW3_LIBRARIES})
 else ()
-  target_link_libraries (ft8call wsjt_fort_omp wsjt_cxx wsjt_qt wsjt_qtmm ${hamlib_LIBRARIES} ${FFTW3_LIBRARIES})
+  target_link_libraries (js8call wsjt_fort_omp wsjt_cxx wsjt_qt wsjt_qtmm ${hamlib_LIBRARIES} ${FFTW3_LIBRARIES})
   if (OpenMP_C_FLAGS)
-    set_target_properties (ft8call PROPERTIES
+    set_target_properties (js8call PROPERTIES
       COMPILE_FLAGS "${OpenMP_C_FLAGS}"
       LINK_FLAGS "${OpenMP_C_FLAGS}"
       )
   endif ()
-  set_target_properties (ft8call PROPERTIES
+  set_target_properties (js8call PROPERTIES
     Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/fortran_modules_omp
     )
   if (WIN32)
-    set_target_properties (ft8call PROPERTIES
+    set_target_properties (js8call PROPERTIES
       LINK_FLAGS -Wl,--stack,16777216
       )
   endif ()
 endif ()
-qt5_use_modules (ft8call SerialPort) # not sure why the interface link library syntax above doesn't work
+qt5_use_modules (js8call SerialPort) # not sure why the interface link library syntax above doesn't work
 
 # if (UNIX)
 #   if (NOT WSJT_SKIP_MANPAGES)
 #     add_subdirectory (manpages)
-#     add_dependencies (ft8call manpages)
+#     add_dependencies (js8call manpages)
 #   endif (NOT WSJT_SKIP_MANPAGES)
 #   if (NOT APPLE)
 #     add_subdirectory (debian)
-#     add_dependencies (ft8call debian)
+#     add_dependencies (js8call debian)
 #   endif (NOT APPLE)
 # endif (UNIX)
 
@@ -1172,7 +1172,7 @@ qt5_use_modules (ft8call SerialPort) # not sure why the interface link library s
 #
 # installation
 #
-install (TARGETS ft8call
+install (TARGETS js8call
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
   BUNDLE DESTINATION . COMPONENT runtime
   )
@@ -1259,23 +1259,23 @@ configure_file (
 
 
 if (NOT WIN32 AND NOT APPLE)
-  # install a desktop file so ft8call appears in the application start
+  # install a desktop file so js8call appears in the application start
   # menu with an icon
   install (
-    FILES ft8call.desktop
+    FILES js8call.desktop
     DESTINATION /usr/share/applications
     #COMPONENT runtime
     )
   install (
-    FILES icons/Unix/ft8call_icon.png
+    FILES icons/Unix/js8call_icon.png
     DESTINATION /usr/share/pixmaps
     #COMPONENT runtime
     )
 
-    execute_process(COMMAND ln -s /opt/ft8call/bin/ft8call lft8call)
+    execute_process(COMMAND ln -s /opt/js8call/bin/js8call ljs8call)
 
     install(FILES
-        ${CMAKE_BINARY_DIR}/lft8call DESTINATION /usr/bin/ RENAME ft8call
+        ${CMAKE_BINARY_DIR}/ljs8call DESTINATION /usr/bin/ RENAME js8call
         #COMPONENT runtime
     )
 endif (NOT WIN32 AND NOT APPLE)

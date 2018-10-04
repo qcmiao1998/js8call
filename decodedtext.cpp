@@ -61,9 +61,9 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
     tryUnpack();
 }
 
-DecodedText::DecodedText (QString const& ft8callmessage):
+DecodedText::DecodedText (QString const& js8callmessage):
     frameType_(Varicode::FrameUnknown),
-    message_(ft8callmessage),
+    message_(js8callmessage),
     isBeacon_(false),
     isAlt_(false)
 {

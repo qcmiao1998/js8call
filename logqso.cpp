@@ -112,10 +112,10 @@ void LogQSO::accept()
   m_comments=comments;
   QString strDialFreq(QString::number(m_dialFreq / 1.e6,'f',6));
   operator_call = ui->loggedOperator->text();
-  //Log this QSO to ADIF file "ft8call_log.adi"
-  QString filename = "ft8call_log.adi";  // TODO allow user to set
+  //Log this QSO to ADIF file "js8call_log.adi"
+  QString filename = "js8call_log.adi";  // TODO allow user to set
   ADIF adifile;
-  auto adifilePath = QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath ("ft8call_log.adi");
+  auto adifilePath = QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath ("js8call_log.adi");
   adifile.init(adifilePath);
 
   QByteArray ADIF {adifile.QSOToADIF (hisCall, hisGrid, mode, rptSent, rptRcvd, m_dateTimeOn, m_dateTimeOff, band
@@ -137,8 +137,8 @@ void LogQSO::accept()
     }
   }
 
-//Log this QSO to file "ft8call.log"
-  static QFile f {QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath ("ft8call.log")};
+//Log this QSO to file "js8call.log"
+  static QFile f {QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath ("js8call.log")};
   if(!f.open(QIODevice::Text | QIODevice::Append)) {
     MessageBox::warning_message (this, tr ("Log file error"),
                                  tr ("Cannot open \"%1\" for append").arg (f.fileName ()),

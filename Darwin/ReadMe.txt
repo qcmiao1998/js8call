@@ -1,6 +1,6 @@
 
-                    Notes on FT8Call Installation for Mac OS X
-                  (replace all instances of WSJT-X with FT8Call)
+                    Notes on JS8Call Installation for Mac OS X
+                  (replace all instances of WSJT-X with JS8Call)
 
                     Notes on WSJT-X Installation for Mac OS X
                     -----------------------------------------

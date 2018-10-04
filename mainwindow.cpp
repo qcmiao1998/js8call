@@ -173,7 +173,7 @@ namespace
 {
   Radio::Frequency constexpr default_frequency {14078000};
 
-  QRegExp message_alphabet {"[^\\x00-\\x1F]*"}; // base alphabet supported by FT8CALL
+  QRegExp message_alphabet {"[^\\x00-\\x1F]*"}; // base alphabet supported by JS8CALL
 
   // grid exact match excluding RR73
   QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
@@ -1422,7 +1422,7 @@ QDate eol(2018, 10, 29);
 void MainWindow::expiry_warning_message()
 {
     if(QDateTime::currentDateTimeUtc().date() > eol){
-        MessageBox::critical_message (this, QString("This pre-release development build of FT8Call has expired. Please upgrade to the latest version."));
+        MessageBox::critical_message (this, QString("This pre-release development build of JS8Call has expired. Please upgrade to the latest version."));
         close();
         return;
     }
@@ -1436,7 +1436,7 @@ void MainWindow::not_GA_warning_message ()
                                 QString("This version of %1 is a pre-release development\n"
                                 "build and will expire after %2 (UTC), upon which you\n"
                                 "will need to upgrade to the latest version. \n\n"
-                                "Use of development versions of FT8Call are at your own risk \n"
+                                "Use of development versions of JS8Call are at your own risk \n"
                                 "and carry a responsiblity to report any problems to:\n"
                                 "Jordan Sherer (KN4CRD) kn4crd@gmail.com\n\n").arg(QApplication::applicationName()).arg(eol.toString()));
 
@@ -2996,7 +2996,7 @@ void MainWindow::on_actionCopyright_Notice_triggered()
                            "K1JT; Bill Somerville, G4WJS; Steven Franke, K9AN; Nico Palermo, "
                            "IV3NWV; Greg Beam, KI7MT; Michael Black, W9MDB; Edson Pereira, PY2SDR; "
                            "Philip Karn, KA9Q; and other members of the WSJT Development Group.\n\n"
-                           "Further, the source code of FT8Call contains material Copyright (C) "
+                           "Further, the source code of JS8Call contains material Copyright (C) "
                            "2018 by Jordan Sherer, KN4CRD.\"");
   MessageBox::warning_message(this, message);
 }
@@ -3614,15 +3614,15 @@ void MainWindow::readFromStdout()                             //readFromStdout
       DecodedText decodedtext {QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"}), "FT8" == m_mode &&
             ui->cbVHFcontest->isChecked(), m_config.my_grid ()};
 
-      // only display frames that are FT8Call frames (should decrease false decodes by at least 12%)
+      // only display frames that are JS8Call frames (should decrease false decodes by at least 12%)
       int bits = decodedtext.bits();
 
       bool bValidFrame = (
         decodedtext.snr() > -24                                              &&
-        (bits == Varicode::FT8Call                                           ||
-        ((bits & Varicode::FT8CallFirst)    == Varicode::FT8CallFirst)       ||
-        ((bits & Varicode::FT8CallLast)     == Varicode::FT8CallLast)        ||
-        ((bits & Varicode::FT8CallReserved) == 0 /*Varicode::FT8CallReserved*/)) // This is unused...so is invalid at this time...
+        (bits == Varicode::JS8Call                                           ||
+        ((bits & Varicode::JS8CallFirst)    == Varicode::JS8CallFirst)       ||
+        ((bits & Varicode::JS8CallLast)     == Varicode::JS8CallLast)        ||
+        ((bits & Varicode::JS8CallReserved) == 0 /*Varicode::JS8CallReserved*/)) // This is unused...so is invalid at this time...
       );
 
       qDebug() << "valid" << bValidFrame << "decoded text" << decodedtext.message();
@@ -3661,7 +3661,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.isBuffered = false;
 
             // if we have any "first" frame, and a buffer is already established, clear it...
-            if(((d.bits & Varicode::FT8CallFirst) == Varicode::FT8CallFirst) && m_messageBuffer.contains(d.freq/10*10)){
+            if(((d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst) && m_messageBuffer.contains(d.freq/10*10)){
                 qDebug() << "first message encountered, clearing existing buffer" << (d.freq/10*10);
                 m_messageBuffer.remove(d.freq/10*10);
             }
@@ -3735,7 +3735,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
               d.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
 
               // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
-              if((Varicode::isCommandBuffered(d.cmd) && (d.bits & Varicode::FT8CallLast) != Varicode::FT8CallLast) || d.from == "<....>" || d.to == "<....>"){
+              if((Varicode::isCommandBuffered(d.cmd) && (d.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) || d.from == "<....>" || d.to == "<....>"){
                 qDebug() << "buffering cmd" << d.cmd << d.from << d.to;
                 m_messageBuffer[d.freq/10*10].cmd = d;
                 m_messageBuffer[d.freq/10*10].msgs.clear();
@@ -6162,7 +6162,7 @@ QStringList MainWindow::buildMessageFrames(const QString &text){
 
 bool MainWindow::prepareNextMessageFrame()
 {
-  m_i3bit = Varicode::FT8Call;
+  m_i3bit = Varicode::JS8Call;
 
   QString frame = popMessageFrame();
   if(frame.isEmpty()){  
@@ -6175,10 +6175,10 @@ bool MainWindow::prepareNextMessageFrame()
     int sent = count - m_txFrameQueue.count();
 
     if(sent == 1){
-        m_i3bit |= Varicode::FT8CallFirst;
+        m_i3bit |= Varicode::JS8CallFirst;
     }
     if(count == sent){
-        m_i3bit |= Varicode::FT8CallLast;
+        m_i3bit |= Varicode::JS8CallLast;
     }
 
     ui->startTxButton->setText(QString("Sending (%1/%2)").arg(sent).arg(count));
@@ -6312,7 +6312,7 @@ void MainWindow::prepareBeacon(){
     QString mycall = m_config.my_callsign();
     QString mygrid = m_config.my_grid().left(4);
 
-    // FT8Call Style
+    // JS8Call Style
     if(m_txBeaconQueue.isEmpty()){
         lines.append(QString("%1: BEACON %2").arg(mycall).arg(mygrid));
     } else {
@@ -6814,12 +6814,12 @@ void MainWindow::on_actionErase_FoxQSO_txt_triggered()
   }
 }
 
-void MainWindow::on_actionErase_ft8call_log_adi_triggered()
+void MainWindow::on_actionErase_js8call_log_adi_triggered()
 {
   int ret = MessageBox::query_message (this, tr ("Confirm Erase"),
-                                       tr ("Are you sure you want to erase file ft8call_log.adi?"));
+                                       tr ("Are you sure you want to erase file js8call_log.adi?"));
   if(ret==MessageBox::Yes) {
-    QFile f {m_config.writeable_data_dir ().absoluteFilePath ("ft8call_log.adi")};
+    QFile f {m_config.writeable_data_dir ().absoluteFilePath ("js8call_log.adi")};
     f.remove();
   }
 }
@@ -7683,7 +7683,7 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
         }
         activityText.append(d.text);
 
-        isLast = (d.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast;
+        isLast = (d.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast;
         if(isLast){
             // can also use \u0004 \u2666 \u2404
             activityText.append(" \u2301 ");
@@ -8364,7 +8364,7 @@ bool MainWindow::shortList(QString callsign)
 void MainWindow::pskSetLocal ()
 {
   psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (),
-        m_config.my_station(), QString {"FT8Call v" + version() }.simplified ());
+        m_config.my_station(), QString {"JS8Call v" + version() }.simplified ());
 }
 
 void MainWindow::aprsSetLocal ()
@@ -8990,8 +8990,8 @@ void MainWindow::processRxActivity() {
         markOffsetRecent(d.freq);
 #endif
 
-        bool isFirst = (d.bits & Varicode::FT8CallFirst) == Varicode::FT8CallFirst;
-        bool isLast = (d.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast;
+        bool isFirst = (d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst;
+        bool isLast = (d.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast;
 
         // if we're the last message, let's display our EOT character
         if (isLast) {
@@ -9035,10 +9035,10 @@ void MainWindow::processCompoundActivity() {
         // if we don't have an initialized command, skip...
         int bits = buffer.cmd.bits;
         bool validBits = (
-            bits == Varicode::FT8Call                                         ||
-            ((bits & Varicode::FT8CallFirst)    == Varicode::FT8CallFirst)    ||
-            ((bits & Varicode::FT8CallLast)     == Varicode::FT8CallLast)     ||
-            ((bits & Varicode::FT8CallReserved) == Varicode::FT8CallReserved)
+            bits == Varicode::JS8Call                                         ||
+            ((bits & Varicode::JS8CallFirst)    == Varicode::JS8CallFirst)    ||
+            ((bits & Varicode::JS8CallLast)     == Varicode::JS8CallLast)     ||
+            ((bits & Varicode::JS8CallReserved) == Varicode::JS8CallReserved)
         );
         if (!validBits) {
             qDebug() << "-> buffer.cmd bits is invalid...skip";
@@ -9064,7 +9064,7 @@ void MainWindow::processCompoundActivity() {
             buffer.cmd.isCompound = true;
             buffer.cmd.utcTimestamp = qMin(buffer.cmd.utcTimestamp, d.utcTimestamp);
 
-            if ((d.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast) {
+            if ((d.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast) {
                 buffer.cmd.bits = d.bits;
             }
         }
@@ -9075,12 +9075,12 @@ void MainWindow::processCompoundActivity() {
             buffer.cmd.isCompound = true;
             buffer.cmd.utcTimestamp = qMin(buffer.cmd.utcTimestamp, d.utcTimestamp);
 
-            if ((d.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast) {
+            if ((d.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast) {
                 buffer.cmd.bits = d.bits;
             }
         }
 
-        if ((buffer.cmd.bits & Varicode::FT8CallLast) != Varicode::FT8CallLast) {
+        if ((buffer.cmd.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) {
             qDebug() << "-> still not last message...skip";
             continue;
         }
@@ -9133,7 +9133,7 @@ void MainWindow::processBufferedActivity() {
             continue;
         }
 
-        if ((buffer.msgs.last().bits & Varicode::FT8CallLast) != Varicode::FT8CallLast) {
+        if ((buffer.msgs.last().bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) {
             continue;
         }
 
@@ -9167,7 +9167,7 @@ void MainWindow::processBufferedActivity() {
 
 
         if (valid) {
-            buffer.cmd.bits |= Varicode::FT8CallLast;
+            buffer.cmd.bits |= Varicode::JS8CallLast;
             buffer.cmd.text = message;
             buffer.cmd.isBuffered = true;
             m_rxCommandQueue.append(buffer.cmd);
@@ -9263,7 +9263,7 @@ void MainWindow::processCommandActivity() {
         if(!d.text.isEmpty()){
             ad.text += d.text;
         }
-        bool isLast = (ad.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast;
+        bool isLast = (ad.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast;
         if (isLast) {
             // can also use \u0004 \u2666 \u2404
             ad.text += QString(" \u2301 ");
@@ -9879,7 +9879,7 @@ void MainWindow::displayBandActivity() {
                     if (item.isLowConfidence) {
                         item.text = QString("[%1]").arg(item.text);
                     }
-                    if ((item.bits & Varicode::FT8CallLast) == Varicode::FT8CallLast) {
+                    if ((item.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast) {
                         // can also use \u0004 \u2666 \u2404
                         item.text = QString("%1 \u2301 ").arg(item.text);
                     }

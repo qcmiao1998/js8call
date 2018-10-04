@@ -250,7 +250,7 @@ private slots:
   void bumpFqso(int n);
   void on_actionErase_ALL_TXT_triggered();
   void on_actionErase_FoxQSO_txt_triggered();
-  void on_actionErase_ft8call_log_adi_triggered();
+  void on_actionErase_js8call_log_adi_triggered();
   void startTx();
   void startTx2();
   void startP1();

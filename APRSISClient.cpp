@@ -38,7 +38,7 @@ QString APRSISClient::loginFrame(QString callsign){
     auto loginFrame = QString("user %1 pass %2 ver %3\n");
     loginFrame = loginFrame.arg(callsign);
     loginFrame = loginFrame.arg(hashCallsign(callsign));
-    loginFrame = loginFrame.arg("FT8Call");
+    loginFrame = loginFrame.arg("JS8Call");
     return loginFrame;
 }
 
@@ -210,7 +210,7 @@ void APRSISClient::enqueueSpot(QString theircall, QString grid, QString comment)
     if(m_localCall.isEmpty()) return;
 
     auto geo = APRSISClient::grid2aprs(grid);
-    auto spotFrame = QString("%1>APRS,%2,TCPIP*:=%3/%4nFT8CALL %5\n");
+    auto spotFrame = QString("%1>APRS,%2,TCPIP*:=%3/%4nJS8 %5\n");
     spotFrame = spotFrame.arg(theircall);
     spotFrame = spotFrame.arg(stripSSID(m_localCall));
     spotFrame = spotFrame.arg(geo.first);
