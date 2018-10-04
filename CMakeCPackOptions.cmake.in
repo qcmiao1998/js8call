@@ -44,14 +44,13 @@ if (CPACK_GENERATOR MATCHES "NSIS")
   set (CPACK_PACKAGE_ICON "@PROJECT_SOURCE_DIR@/icons/windows-icons\\installer_logo.bmp")
   # tell cpack to create links to the doc files
   set (CPACK_NSIS_MENU_LINKS
-    "@PROJECT_MANUAL_DIRECTORY_URL@/@PROJECT_MANUAL@" "@PROJECT_NAME@ Documentation"
     "@PROJECT_HOMEPAGE@" "@PROJECT_NAME@ Web Site"
     )
   # Use the icon from wsjtx for add-remove programs
   set (CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\ft8call.exe")
 
   set (CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_DESCRIPTION_SUMMARY}")
-  set (CPACK_NSIS_HELP_LINK "@PROJECT_MANUAL_DIRECTORY_URL@/@PROJECT_MANUAL@")
+  set (CPACK_NSIS_HELP_LINK "@PROJECT_HOMEPAGE@")
   set (CPACK_NSIS_URL_INFO_ABOUT "@PROJECT_HOMEPAGE@")
   set (CPACK_NSIS_CONTACT "${CPACK_PACKAGE_CONTACT}")
   set (CPACK_NSIS_MUI_FINISHPAGE_RUN "ft8call.exe")

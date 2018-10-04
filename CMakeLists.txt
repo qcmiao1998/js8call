@@ -49,76 +49,11 @@ set (PROJECT_NAME "FT8Call")
 set (PROJECT_VENDOR "Jordan Sherer, KN4CRD")
 set (PROJECT_CONTACT "Jordan Sherer <kn4crd@gmail.com>")
 set (PROJECT_COPYRIGHT "Copyright (C) 2001-2018 by Joe Taylor, K1JT, (C) 2018 by Jordan Sherer, KN4CRD")
-set (PROJECT_HOMEPAGE http://www.physics.princeton.edu/pulsar/K1JT/wsjtx.html)
-set (PROJECT_MANUAL wsjtx-main)
-set (PROJECT_MANUAL_DIRECTORY_URL http://www.physics.princeton.edu/pulsar/K1JT/wsjtx-doc/)
-set (PROJECT_SAMPLES_URL http://downloads.sourceforge.net/project/wsjt/)
-set (PROJECT_SAMPLES_UPLOAD_DEST frs.sourceforge.net:/home/frs/project/wsjt/)
+set (PROJECT_HOMEPAGE https://groups.io/g/ft8call)
 set (PROJECT_SUMMARY_DESCRIPTION "${PROJECT_NAME} - Digital Modes for Weak Signal Communicaitons in Amateur Radio.")
 set (PROJECT_DESCRIPTION "${PROJECT_SUMMARY_DESCRIPTION}
- ${PROJECT_NAME} is a computer program designed to facilitate basic amateur
- radio communication using very weak signals. The first four letters in
- the program name stand for `(W)eak (S)ignal communication by
- K1(JT),` while the suffix `-X` indicates that ${PROJECT_NAME} started as
- an extended and experimental branch of the program
- WSJT.
- .
- ${PROJECT_NAME} Version 1.8 offers nine different protocols or modes: FT8,
- JT4, JT9, JT65, QRA64, ISCAT, MSK144, WSPR, and Echo.
- The first five are designed for making reliable QSOs under extreme
- weak-signal conditions. They use nearly identical message structure
- and source encoding.  JT65 and QRA64 were designed for EME
- (`moonbounce`) on the VHF/UHF bands and have also proven very
- effective for worldwide QRP communication on the HF bands.  QRA64 has
- a number of advantages over JT65, including better performance on the
- very weakest signals.  We imagine that over time it may replace JT65
- for EME use.  JT9 was originally designed for the LF, MF, and lower HF
- bands.  Its submode JT9A is 2 dB more sensitive than JT65 while using
- less than 10% of the bandwidth.  JT4 offers a wide variety of tone
- spacings and has proven highly effective for EME on microwave bands up
- to 24 GHz.  These four `slow` modes use one-minute timed sequences
- of alternating transmission and reception, so a minimal QSO takes four
- to six minutes — two or three transmissions by each station, one
- sending in odd UTC minutes and the other even.  FT8 is operationally
- similar but four times faster (15-second T/R sequences) and less
- sensitive by a few dB.  On the HF bands, world-wide QSOs are possible
- with any of these modes using power levels of a few watts (or even
- milliwatts) and compromise antennas.  On VHF bands and higher, QSOs
- are possible (by EME and other propagation types) at signal levels 10
- to 15 dB below those required for CW.
- .
- ISCAT, MSK144, and optionally submodes JT9E-H are `fast`
- protocols designed to take advantage of brief signal enhancements from
- ionized meteor trails, aircraft scatter, and other types of scatter
- propagation. These modes use timed sequences of 5, 10, 15, or 30 s
- duration.  User messages are transmitted repeatedly at high rate (up
- to 250 characters per second, for MSK144) to make good use of the
- shortest meteor-trail reflections or `pings`.  ISCAT uses free-form
- messages up to 28 characters long, while MSK144 uses the same
- structured messages as the slow modes and optionally an abbreviated
- format with hashed callsigns.
- .
- WSPR (pronounced `whisper`) stands for (W)eak (S)ignal
- (P)ropagation (R)eporter.  The WSPR protocol was designed for probing
- potential propagation paths using low-power transmissions. WSPR
- messages normally carry the transmitting station’s callsign, grid
- locator, and transmitter power in dBm, and they can be decoded at
- signal-to-noise ratios as low as -28 dB in a 2500 Hz bandwidth.  WSPR
- users with internet access can automatically upload reception
- reports to a central database called wsprnet that provides a mapping
- facility, archival storage, and many other features.
- .
- Echo mode allows you to detect and measure your own station's echoes
- from the moon, even if they are far below the audible threshold.
- .
- ${PROJECT_NAME} provides spectral displays for receiver passbands as wide as
- 5 kHz, flexible rig control for nearly all modern radios used by
- amateurs, and a wide variety of special aids such as automatic Doppler
- tracking for EME QSOs and Echo testing.  The program runs equally well
- on Windows, Macintosh, and Linux systems, and installation packages
- are available for all three platforms.
- .
- Be sure to read the online ${PROJECT_NAME} User's Guide.")
+ ${PROJECT_NAME} is a computer program designed to facilitate amateur
+ radio communication using very weak signals.")
 
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake/Modules ${CMAKE_MODULE_PATH})
 
@@ -159,8 +94,7 @@ option (WSJT_TRACE_CAT "Debugging option that turns on CAT diagnostics.")
 option (WSJT_TRACE_CAT_POLLS "Debugging option that turns on CAT diagnostics during polling.")
 option (WSJT_HAMLIB_TRACE "Debugging option that turns on minimal Hamlib internal diagnostics.")
 option (WSJT_SOFT_KEYING "Apply a ramp to CW keying envelope to reduce transients." ON)
-option (WSJT_SKIP_MANPAGES "Skip *nix manpage generation.")
-option (WSJT_GENERATE_DOCS "Generate documentation files." ON)
+option (WSJT_SKIP_MANPAGES "Skip *nix manpage generation." ON)
 option (WSJT_RIG_NONE_CAN_SPLIT "Allow split operation with \"None\" as rig.")
 
 CMAKE_DEPENDENT_OPTION (WSJT_HAMLIB_VERBOSE_TRACE "Debugging option that turns on full Hamlib internal diagnostics." OFF WSJT_HAMLIB_TRACE OFF)
@@ -169,7 +103,7 @@ CMAKE_DEPENDENT_OPTION (WSJT_QDEBUG_IN_RELEASE "Leave Qt debugging statements in
 CMAKE_DEPENDENT_OPTION (WSJT_ENABLE_EXPERIMENTAL_FEATURES "Enable features not fully ready for public releases." ON
   is_debug_build OFF)
 CMAKE_DEPENDENT_OPTION (WSJT_CREATE_WINMAIN
-  "The wsjtx target is normally built as GUI executable with a WinMain entry point on Windows,
+  "The target is normally built as GUI executable with a WinMain entry point on Windows,
 if you want a console application instead then set this option to OFF.
 
 If you just want to see the debug output from the application then the easiest way is to
@@ -249,11 +183,6 @@ set (wsjt_qt_CXXSRCS
   HintedSpinBox.cpp
   RestrictedSpinBox.cpp
   HelpTextWindow.cpp
-  SampleDownloader.cpp
-  SampleDownloader/DirectoryDelegate.cpp
-  SampleDownloader/Directory.cpp
-  SampleDownloader/FileNode.cpp
-  SampleDownloader/RemoteFile.cpp
   DisplayManual.cpp
   MultiSettings.cpp
   MaidenheadLocatorValidator.cpp
@@ -268,12 +197,12 @@ set (wsjt_qtmm_CXXSRCS
   Audio/BWFFile.cpp
   )
 
-set (jt9_FSRCS
+set (js8_FSRCS
   lib/jt9.f90
   lib/jt9a.f90
   )
 
-set (jt9_CXXSRCS
+set (js8_CXXSRCS
   lib/ipcomm.cpp
   )
 
@@ -685,7 +614,7 @@ set (all_CXXSRCS
   ${wsjt_CXXSRCS}
   ${wsjt_qt_CXXSRCS}
   ${wsjt_qtmm_CXXSRCS}
-  ${jt9_CXXSRCS}
+  ${js8_CXXSRCS}
   ${wsjtx_CXXSRCS}
   ${qcp_CXXSRCS}
   )
@@ -698,9 +627,6 @@ set (all_C_and_CXXSRCS
   )
 
 set (TOP_LEVEL_RESOURCES
-  shortcuts.txt
-  mouse_commands.txt
-  prefixes.txt
   cty.dat
   icons/Darwin/FT8Call.iconset/icon_128x128.png
   contrib/gpl-v3-logo.svg
@@ -868,14 +794,6 @@ if (WIN32)
   add_definitions (-DQT_NEEDS_QTMAIN)
   find_package (Qt5AxContainer REQUIRED)
 endif (WIN32)
-
-#
-# sub-directories
-#
-add_subdirectory (samples)
-if (WSJT_GENERATE_DOCS)
-  add_subdirectory (doc)
-endif (WSJT_GENERATE_DOCS)
 
 
 #
@@ -1124,7 +1042,7 @@ if (${OPENMP_FOUND} OR APPLE)
   if (APPLE)
     # On  Mac  we don't  have  working  OpenMP  support in  the  C/C++
     # compilers so  we have to manually  set the correct flags  to get
-    # OpenMP support in jt9.
+    # OpenMP support in js8.
     target_compile_options (wsjt_fort_omp
       PRIVATE
       $<$<COMPILE_LANGUAGE:Fortran>:-fopenmp>   # assumes GNU style Fortran compiler
@@ -1153,42 +1071,42 @@ target_link_libraries (wsjt_qtmm Qt5::Multimedia)
 add_executable (ldpcsim174 lib/ft8/ldpcsim174.f90 wsjtx.rc)
 target_link_libraries (ldpcsim174 wsjt_fort wsjt_cxx)
 
-add_executable (jt9 ${jt9_FSRCS} ${jt9_CXXSRCS} wsjtx.rc)
+add_executable (js8 ${js8_FSRCS} ${js8_CXXSRCS} wsjtx.rc)
 if (${OPENMP_FOUND} OR APPLE)
   if (APPLE)
     # On  Mac  we don't  have  working  OpenMP  support in  the  C/C++
     # compilers so we  have to manually set the  correct linking flags
-    # and libraries to get OpenMP support in jt9.
-    set_target_properties (jt9
+    # and libraries to get OpenMP support in js8.
+    set_target_properties (js8
       PROPERTIES
       Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/fortran_modules_omp
       LINK_LIBRARIES "gomp;gcc_s.1" # assume GNU libgcc OpenMP
       )
-    target_compile_options (jt9
+    target_compile_options (js8
       PRIVATE
       $<$<COMPILE_LANGUAGE:Fortran>:-fopenmp>   # assumes GNU style Fortran compiler
       )
   else (APPLE)
     if (OpenMP_C_FLAGS)
-      set_target_properties (jt9
+      set_target_properties (js8
         PROPERTIES
         COMPILE_FLAGS "${OpenMP_C_FLAGS}"
         LINK_FLAGS "${OpenMP_C_FLAGS}"
         )
     endif ()
-    set_target_properties (jt9
+    set_target_properties (js8
       PROPERTIES
       Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/fortran_modules_omp
       )
   endif (APPLE)
   if (WIN32)
-    # set_target_properties (jt9 PROPERTIES
+    # set_target_properties (js8 PROPERTIES
     #   LINK_FLAGS -Wl,--stack,16777216
     #   )
   endif ()
-  target_link_libraries (jt9 wsjt_fort_omp wsjt_cxx Qt5::Core)
+  target_link_libraries (js8 wsjt_fort_omp wsjt_cxx Qt5::Core)
 else (${OPENMP_FOUND} OR APPLE)
-  target_link_libraries (jt9 wsjt_fort wsjt_cxx Qt5::Core)
+  target_link_libraries (js8 wsjt_fort wsjt_cxx Qt5::Core)
 endif (${OPENMP_FOUND} OR APPLE)
 
 # build the main application
@@ -1239,16 +1157,16 @@ else ()
 endif ()
 qt5_use_modules (ft8call SerialPort) # not sure why the interface link library syntax above doesn't work
 
-if (UNIX)
-  if (NOT WSJT_SKIP_MANPAGES)
-    add_subdirectory (manpages)
-    add_dependencies (ft8call manpages)
-  endif (NOT WSJT_SKIP_MANPAGES)
-  if (NOT APPLE)
-    add_subdirectory (debian)
-    add_dependencies (ft8call debian)
-  endif (NOT APPLE)
-endif (UNIX)
+# if (UNIX)
+#   if (NOT WSJT_SKIP_MANPAGES)
+#     add_subdirectory (manpages)
+#     add_dependencies (ft8call manpages)
+#   endif (NOT WSJT_SKIP_MANPAGES)
+#   if (NOT APPLE)
+#     add_subdirectory (debian)
+#     add_dependencies (ft8call debian)
+#   endif (NOT APPLE)
+# endif (UNIX)
 
 
 #
@@ -1259,7 +1177,7 @@ install (TARGETS ft8call
   BUNDLE DESTINATION . COMPONENT runtime
   )
 
-install (TARGETS jt9 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
+install (TARGETS js8 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
   BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
   )
 

@@ -87,7 +87,6 @@ class SoundOutput;
 class Modulator;
 class SoundInput;
 class Detector;
-class SampleDownloader;
 class MultiSettings;
 class EqualizationToolsDialog;
 class DecodedText;
@@ -433,7 +432,6 @@ private:
   WSPRBandHopping m_WSPR_band_hopping;
   bool m_WSPR_tx_next;
   MessageBox m_rigErrorMessageBox;
-  QScopedPointer<SampleDownloader> m_sampleDownloader;
   QScopedPointer<EqualizationToolsDialog> m_equalizationToolsDialog;
 
   QScopedPointer<WideGraph> m_wideGraph;
@@ -631,7 +629,7 @@ private:
   QFutureWatcher<void> watcher3;
   QFutureWatcher<QString> m_saveWAVWatcher;
 
-  QProcess proc_jt9;
+  QProcess proc_js8;
   QProcess p1;
   QProcess p3;
 
@@ -818,7 +816,7 @@ private:
   QDateTime m_dateTimeQSOOn;
   QDateTime m_dateTimeLastTX;
 
-  QSharedMemory *mem_jt9;
+  QSharedMemory *mem_js8;
   LogBook m_logBook;
   QString m_QSOText;
   unsigned m_msAudioOutputBuffered;

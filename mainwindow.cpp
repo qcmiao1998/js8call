@@ -55,7 +55,6 @@
 #include "wsprnet.h"
 #include "signalmeter.h"
 #include "HelpTextWindow.hpp"
-#include "SampleDownloader.hpp"
 #include "Audio/BWFFile.hpp"
 #include "MultiSettings.hpp"
 #include "MaidenheadLocatorValidator.hpp"
@@ -521,7 +520,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       "ZK1S", "ZK2", "ZK3", "ZL", "ZL7", "ZL8", "ZL9", "ZP", "ZS", "ZS8"
       },
   m_sfx {"P",  "0",  "1",  "2",  "3",  "4",  "5",  "6",  "7",  "8",  "9",  "A"},
-  mem_jt9 {shdmem},
+  mem_js8 {shdmem},
   m_msAudioOutputBuffered (0u),
   m_framesAudioInputBuffered (RX_SAMPLE_RATE / 10),
   m_downSampleFactor (downSampleFactor),
@@ -666,14 +665,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->actionMediumDecode->setActionGroup(DepthGroup);
   ui->actionDeepestDecode->setActionGroup(DepthGroup);
 
-  connect (ui->download_samples_action, &QAction::triggered, [this] () {
-      if (!m_sampleDownloader)
-        {
-          m_sampleDownloader.reset (new SampleDownloader {m_settings, &m_config, &m_network_manager, this});
-        }
-      m_sampleDownloader->show ();
-    });
-
   connect (ui->view_phase_response_action, &QAction::triggered, [this] () {
       if (!m_equalizationToolsDialog)
         {
@@ -743,14 +734,14 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   setWindowTitle (program_title ());
 
-  connect(&proc_jt9, &QProcess::readyReadStandardOutput, this, &MainWindow::readFromStdout);
-  connect(&proc_jt9, static_cast<void (QProcess::*) (QProcess::ProcessError)> (&QProcess::error),
+  connect(&proc_js8, &QProcess::readyReadStandardOutput, this, &MainWindow::readFromStdout);
+  connect(&proc_js8, static_cast<void (QProcess::*) (QProcess::ProcessError)> (&QProcess::error),
           [this] (QProcess::ProcessError error) {
-            subProcessError (&proc_jt9, error);
+            subProcessError (&proc_js8, error);
           });
-  connect(&proc_jt9, static_cast<void (QProcess::*) (int, QProcess::ExitStatus)> (&QProcess::finished),
+  connect(&proc_js8, static_cast<void (QProcess::*) (int, QProcess::ExitStatus)> (&QProcess::finished),
           [this] (int exitCode, QProcess::ExitStatus status) {
-            subProcessFailed (&proc_jt9, exitCode, status);
+            subProcessFailed (&proc_js8, exitCode, status);
           });
 
   connect(&p1, &QProcess::readyReadStandardOutput, this, &MainWindow::p1ReadFromStdout);
@@ -923,10 +914,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     {
       while(true)
         {
-          int iret=killbyname("jt9.exe");
+          int iret=killbyname("js8.exe");
           if(iret == 603) break;
           if(iret != 0)
-            MessageBox::warning_message (this, tr ("Error Killing jt9.exe Process")
+            MessageBox::warning_message (this, tr ("Error Killing js8.exe Process")
                                          , tr ("KillByName return code: %1")
                                          .arg (iret));
         }
@@ -951,7 +942,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   //Create .lock so jt9 will wait
   QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.open(QIODevice::ReadWrite);
 
-  QStringList jt9_args {
+  QStringList js8_args {
     "-s", QApplication::applicationName () // shared memory key,
                                            // includes rig
 #ifdef NDEBUG
@@ -973,9 +964,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       };
   QProcessEnvironment env {QProcessEnvironment::systemEnvironment ()};
   env.insert ("OMP_STACKSIZE", "4M");
-  proc_jt9.setProcessEnvironment (env);
-  proc_jt9.start(QDir::toNativeSeparators (m_appDir) + QDir::separator () +
-          "jt9", jt9_args, QIODevice::ReadWrite | QIODevice::Unbuffered);
+  proc_js8.setProcessEnvironment (env);
+  proc_js8.start(QDir::toNativeSeparators (m_appDir) + QDir::separator () +
+          "js8", js8_args, QIODevice::ReadWrite | QIODevice::Unbuffered);
 
   QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("wsjtx_wisdom.dat"))};
   QByteArray cfname=fname.toLocal8Bit();
@@ -2883,12 +2874,12 @@ void MainWindow::closeEvent(QCloseEvent * e)
   int nh=100;
   int irow=-99;
   plotsave_(&sw,&nw,&nh,&irow);
-  mem_jt9->detach();
+  mem_js8->detach();
   QFile quitFile {m_config.temp_dir ().absoluteFilePath (".quit")};
   quitFile.open(QIODevice::ReadWrite);
   QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove(); // Allow jt9 to terminate
-  bool b=proc_jt9.waitForFinished(1000);
-  if(!b) proc_jt9.close();
+  bool b=proc_js8.waitForFinished(1000);
+  if(!b) proc_js8.close();
   quitFile.remove();
 
   Q_EMIT finished ();
@@ -2926,17 +2917,11 @@ void MainWindow::on_actionFT8_DXpedition_Mode_User_Guide_triggered()
 }
 void MainWindow::on_actionOnline_User_Guide_triggered()      //Display manual
 {
-#if defined (CMAKE_BUILD)
-  m_manual.display_html_url (QUrl {PROJECT_MANUAL_DIRECTORY_URL}, PROJECT_MANUAL);
-#endif
 }
 
 //Display local copy of manual
 void MainWindow::on_actionLocal_User_Guide_triggered()
 {
-#if defined (CMAKE_BUILD)
-  m_manual.display_html_file (m_config.doc_dir (), PROJECT_MANUAL);
-#endif
 }
 
 void MainWindow::on_actionWide_Waterfall_triggered()      //Display Waterfalls
@@ -3277,28 +3262,10 @@ void MainWindow::on_actionSave_all_triggered()                //Save All
 
 void MainWindow::on_actionKeyboard_shortcuts_triggered()
 {
-  if (!m_shortcuts)
-    {
-      QFont font;
-      font.setPointSize (10);
-      m_shortcuts.reset (new HelpTextWindow {tr ("Keyboard Shortcuts")
-            , ":/shortcuts.txt", font});
-    }
-  m_shortcuts->showNormal ();
-  m_shortcuts->raise ();
 }
 
 void MainWindow::on_actionSpecial_mouse_commands_triggered()
 {
-  if (!m_mouseCmnds)
-    {
-      QFont font;
-      font.setPointSize (10);
-      m_mouseCmnds.reset (new HelpTextWindow {tr ("Special Mouse Commands")
-            , ":/mouse_commands.txt", font});
-    }
-  m_mouseCmnds->showNormal ();
-  m_mouseCmnds->raise ();
 }
 
 void MainWindow::on_DecodeButton_clicked (bool /* checked */) //Decode request
@@ -3453,7 +3420,7 @@ void MainWindow::decode()                                       //decode()
   //newdat=1  ==> this is new data, must do the big FFT
   //nagain=1  ==> decode only at fQSO +/- Tol
 
-  char *to = (char*)mem_jt9->data();
+  char *to = (char*)mem_js8->data();
   char *from = (char*) dec_data.ss;
   int size=sizeof(struct dec_data);
   if(dec_data.params.newdat==0) {
@@ -3497,7 +3464,7 @@ void MainWindow::decode()                                       //decode()
         &narg[0],&m_TRperiod,&m_msg[0][0],
         dec_data.params.mycall,dec_data.params.hiscall,8000,12,12)));
   } else {
-    memcpy(to, from, qMin(mem_jt9->size(), size));
+    memcpy(to, from, qMin(mem_js8->size(), size));
     QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove (); // Allow jt9 to start
     decodeBusy(true);
   }
@@ -3584,19 +3551,9 @@ void MainWindow::decodeDone ()
 
 void MainWindow::readFromStdout()                             //readFromStdout
 {
-  while(proc_jt9.canReadLine()) {
-    QByteArray t=proc_jt9.readLine();
-    qDebug() << "JT9: " << QString(t);
-    if(m_mode=="FT8" and !m_config.bHound() and t.contains(";")) {
-      if(t.contains("<...>")) continue;
-      if(!m_bWarnedHound) {
-        QString errorMsg;
-        MessageBox::critical_message (this,
-           tr("Should you be in \"FT8 DXpedition Hound\" mode?"), errorMsg);
-        m_bWarnedHound=true;
-      }
-    }
-//    qint64 ms=DriftingDateTime::currentMSecsSinceEpoch() - m_msec0;
+  while(proc_js8.canReadLine()) {
+    QByteArray t=proc_js8.readLine();
+    qDebug() << "JS8: " << QString(t);
     bool bAvgMsg=false;
     int navg=0;
     if(t.indexOf("<DecodeFinished>") >= 0) {
@@ -3661,10 +3618,11 @@ void MainWindow::readFromStdout()                             //readFromStdout
       int bits = decodedtext.bits();
 
       bool bValidFrame = (
-        bits == Varicode::FT8Call                                            ||
+        decodedtext.snr() > -24                                              &&
+        (bits == Varicode::FT8Call                                           ||
         ((bits & Varicode::FT8CallFirst)    == Varicode::FT8CallFirst)       ||
         ((bits & Varicode::FT8CallLast)     == Varicode::FT8CallLast)        ||
-        ((bits & Varicode::FT8CallReserved) == 0 /*Varicode::FT8CallReserved*/) // This is unused...so is invalid at this time...
+        ((bits & Varicode::FT8CallReserved) == 0 /*Varicode::FT8CallReserved*/)) // This is unused...so is invalid at this time...
       );
 
       qDebug() << "valid" << bValidFrame << "decoded text" << decodedtext.message();
@@ -8390,11 +8348,6 @@ void MainWindow::on_outAttenuation_valueChanged (int a)
 
 void MainWindow::on_actionShort_list_of_add_on_prefixes_and_suffixes_triggered()
 {
-  if (!m_prefixes) {
-    m_prefixes.reset (new HelpTextWindow {tr ("Prefixes"), ":/prefixes.txt", {"Courier", 10}});
-  }
-  m_prefixes->showNormal();
-  m_prefixes->raise ();
 }
 
 bool MainWindow::shortList(QString callsign)

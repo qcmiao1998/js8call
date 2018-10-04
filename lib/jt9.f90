@@ -23,7 +23,7 @@ program jt9
   integer :: arglen,stat,offset,remain,mode=0,flow=200,fsplit=2700,          &
        fhigh=4000,nrxfreq=1500,ntrperiod=1,ndepth=1,nexp_decode=0
   logical :: read_files = .true., tx9 = .false., display_help = .false.
-  type (option) :: long_options(25) = [ &
+  type (option) :: long_options(21) = [ &
     option ('help', .false., 'h', 'Display this help message', ''),          &
     option ('shmem',.true.,'s','Use shared memory for sample data','KEY'),   &
     option ('tr-period', .true., 'p', 'Tx/Rx period, default MINUTES=1',     &
@@ -48,14 +48,14 @@ program jt9
     option ('fft-threads', .true., 'm',                                      &
         'Number of threads to process large FFTs, default THREADS=1',        &
         'THREADS'),                                                          &
-    option ('jt65', .false., '6', 'JT65 mode', ''),                          &
-    option ('jt9', .false., '9', 'JT9 mode', ''),                            &
-    option ('ft8', .false., '8', 'FT8 mode', ''),                            &
-    option ('jt4', .false., '4', 'JT4 mode', ''),                            &
-    option ('qra64', .false., 'q', 'QRA64 mode', ''),                        &
+    !option ('jt65', .false., '6', 'JT65 mode', ''),                          &
+    !option ('jt9', .false., '9', 'JT9 mode', ''),                            &
+    option ('js8', .false., '8', 'JS8 mode', ''),                            &
+    !option ('jt4', .false., '4', 'JT4 mode', ''),                            &
+    !option ('qra64', .false., 'q', 'QRA64 mode', ''),                        &
     option ('sub-mode', .true., 'b', 'Sub mode, default SUBMODE=A', 'A'),    &
     option ('depth', .true., 'd',                                            &
-        'JT9 decoding depth (1-3), default DEPTH=1', 'DEPTH'),               &
+        'Decoding depth (1-3), default DEPTH=1', 'DEPTH'),               &
     option ('tx-jt9', .false., 'T', 'Tx mode is JT9', ''),                   &
     option ('my-call', .true., 'c', 'my callsign', 'CALL'),                  &
     option ('my-grid', .true., 'G', 'my grid locator', 'GRID'),              &
@@ -109,14 +109,14 @@ program jt9
            read (optarg(:arglen), *) fsplit
         case ('H')
            read (optarg(:arglen), *) fhigh
-        case ('q')
-           mode = 164
-        case ('4')
-           mode = 4
-        case ('6')
-           if (mode.lt.65) mode = mode + 65
-        case ('9')
-           if (mode.lt.9.or.mode.eq.65) mode = mode + 9
+        !case ('q')
+        !   mode = 164
+        !case ('4')
+        !   mode = 4
+        !case ('6')
+        !   if (mode.lt.65) mode = mode + 65
+        !case ('9')
+        !   if (mode.lt.9.or.mode.eq.65) mode = mode + 9
         case ('8')
            mode = 8
         case ('T')
@@ -140,10 +140,10 @@ program jt9
        .or. (.not. read_files .and. remain .gt. 0)       &
        .or. (read_files .and. remain .lt. 1)) then
 
-     print *, 'Usage: jt9 [OPTIONS] file1 [file2 ...]'
+     print *, 'Usage: js8 [OPTIONS] file1 [file2 ...]'
      print *, '       Reads data from *.wav files.'
      print *, ''
-     print *, '       jt9 -s <key> [-w patience] [-m threads] [-e path] [-a path] [-t path]'
+     print *, '       js8 -s <key> [-w patience] [-m threads] [-e path] [-a path] [-t path]'
      print *, '       Gets data from shared memory region with key==<key>'
      print *, ''
      print *, 'OPTIONS:'

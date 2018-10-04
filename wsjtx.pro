@@ -14,7 +14,6 @@ VERSION = "Not for Release"
 TEMPLATE = app
 DEFINES = QT5
 QMAKE_CXXFLAGS += -std=c++11
-DEFINES += PROJECT_MANUAL="'\"http://www.physics.princeton.edu/pulsar/K1JT/wsjtx-doc/wsjtx-main.html\"'"
 
 isEmpty (DESTDIR) {
 DESTDIR = ../wsjtx_exp_install
@@ -65,7 +64,7 @@ SOURCES += \
   WFPalette.cpp plotter.cpp widegraph.cpp about.cpp WsprTxScheduler.cpp mainwindow.cpp \
   main.cpp decodedtext.cpp wsprnet.cpp messageaveraging.cpp \
   echoplot.cpp echograph.cpp fastgraph.cpp fastplot.cpp Modes.cpp \
-  WSPRBandHopping.cpp MessageAggregator.cpp SampleDownloader.cpp qt_helpers.cpp\
+  WSPRBandHopping.cpp MessageAggregator.cpp qt_helpers.cpp\
   MultiSettings.cpp PhaseEqualizationDialog.cpp IARURegions.cpp MessageBox.cpp \
   EqualizationToolsDialog.cpp \
     varicode.cpp \
@@ -91,7 +90,7 @@ HEADERS  += qt_helpers.hpp \
   Configuration.hpp wsprnet.h signalmeter.h meterwidget.h \
   logbook/logbook.h logbook/countrydat.h logbook/countriesworked.h logbook/adif.h \
   messageaveraging.h echoplot.h echograph.h fastgraph.h fastplot.h Modes.hpp WSPRBandHopping.hpp \
-  WsprTxScheduler.h SampleDownloader.hpp MultiSettings.hpp PhaseEqualizationDialog.hpp \
+  WsprTxScheduler.h MultiSettings.hpp PhaseEqualizationDialog.hpp \
   IARURegions.hpp MessageBox.hpp EqualizationToolsDialog.hpp \
     qorderedmap.h \
     varicode.h \
