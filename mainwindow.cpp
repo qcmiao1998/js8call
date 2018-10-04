@@ -4520,12 +4520,8 @@ void MainWindow::guiUpdate()
 
     if(m_transmitting) {
       char s[41];
-      if(m_config.bFox() and ui->tabWidget->currentIndex()==2) {
-        sprintf(s,"Tx:  %d Slots",foxcom_.nslots);
-      } else {
-        auto dt = DecodedText(msgsent);
-        sprintf(s,"Tx: %s", dt.message().toLocal8Bit().mid(0, 41).data());
-      }
+      auto dt = DecodedText(msgsent);
+      sprintf(s,"Tx: %s", dt.message().toLocal8Bit().mid(0, 41).data());
       m_nsendingsh=0;
       if(s[4]==64) m_nsendingsh=1;
       if(m_nsendingsh==1 or m_currentMessageType==7) {
@@ -4543,9 +4539,6 @@ void MainWindow::guiUpdate()
         } else {
           s[40]=0;
           QString t{QString::fromLatin1(s)};
-          if(m_config.bFox() and ui->tabWidget->currentIndex()==2 and foxcom_.nslots==1) {
-              t=m_fm1.trimmed();
-          }
           tx_status_label.setText(t.trimmed());
         }
       }
