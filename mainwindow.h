@@ -385,7 +385,7 @@ private slots:
   void expiry_warning_message ();
   void not_GA_warning_message ();
   void clearCallsignSelected();
-  void buildMessageFramesAndUpdateCountDisplay();
+  void refreshTextDisplay();
 
 private:
   Q_SIGNAL void initializeAudioOutputStream (QAudioDeviceInfo,

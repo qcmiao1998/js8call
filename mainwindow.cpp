@@ -1409,7 +1409,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   */
 
   m_txTextDirtyDebounce.setSingleShot(true);
-  connect(&m_txTextDirtyDebounce, &QTimer::timeout, this, &MainWindow::buildMessageFramesAndUpdateCountDisplay);
+  connect(&m_txTextDirtyDebounce, &QTimer::timeout, this, &MainWindow::refreshTextDisplay);
 
   QTimer::singleShot(0, this, &MainWindow::initializeDummyData);
 
@@ -6160,6 +6160,10 @@ bool MainWindow::prepareNextMessageFrame()
   QString frame = popMessageFrame();
   if(frame.isEmpty()){  
     ui->nextFreeTextMsg->clear();
+
+    // TODO: jsherer - this button thing is duplicated in two places :(
+    ui->startTxButton->setText(QString("Send"));
+
     return false;
   } else {
     ui->nextFreeTextMsg->setText(frame);
@@ -6174,6 +6178,7 @@ bool MainWindow::prepareNextMessageFrame()
         m_i3bit |= Varicode::JS8CallLast;
     }
 
+    // TODO: jsherer - this button thing is duplicated in two places :(
     ui->startTxButton->setText(QString("Sending (%1/%2)").arg(sent).arg(count));
 
     if(ui->beaconButton->isChecked()){
@@ -8710,18 +8715,15 @@ void MainWindow::displayTransmit(){
 }
 
 void MainWindow::updateButtonDisplay(){
-    // Transmit Activity
-    update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
-
     bool isTransmitting = m_transmitting || m_txFrameCount > 0;
+
+    // Transmit Activity
+    update_dynamic_property (ui->startTxButton, "transmitting", isTransmitting);
+
     auto selectedCallsign = callsignSelected(true);
     bool emptyCallsign = selectedCallsign.isEmpty();
-    bool hasText = !ui->extFreeTextMsgEdit->toPlainText().isEmpty();
-
-    // update the estimate immediately if we know that the text box is empty...
-    if(!hasText){
-        updateFrameCountEstimate(0);
-    }
+    bool emptyText = ui->extFreeTextMsgEdit->toPlainText().isEmpty();
+    bool invalidSelcal = !ensureSelcalCallsignSelected(false);
 
     ui->cqMacroButton->setDisabled(isTransmitting);
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
@@ -8731,19 +8733,44 @@ void MainWindow::updateButtonDisplay(){
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
     ui->deselectButton->setDisabled(isTransmitting || emptyCallsign);
     ui->queryButton->setText(emptyCallsign ? "Directed" : QString("Directed to %1").arg(selectedCallsign));
-    ui->startTxButton->setDisabled(ui->selcalButton->isChecked() && emptyCallsign);
+    ui->startTxButton->setDisabled(isTransmitting || emptyText || invalidSelcal);
 
+#if 0
+    // update transmit button
     if(isTransmitting){
         int count = m_txFrameCount;
         int sent = count - m_txFrameQueue.count();
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("Sending (%1/%2)").arg(sent).arg(count));
+        ui->startTxButton->setEnabled(false);
     } else {
+        if(ui->extFreeTextMsgEdit->toPlainText().isEmpty()){
+            m_txFrameCountEstimate = 0;
+        }
         ui->startTxButton->setText(m_txFrameCountEstimate <= 0 ? QString("Send") : QString("Send (%1)").arg(m_txFrameCountEstimate));
         ui->startTxButton->setEnabled(m_txFrameCountEstimate > 0 && ensureSelcalCallsignSelected(false));
     }
 
+    // debounce frame and word count
+    if(m_txTextDirtyDebounce.isActive()){
+        m_txTextDirtyDebounce.stop();
+    }
+    m_txTextDirtyDebounce.start(150);
+#endif
 
-    // schedule count update
+#if 0
+    auto text = ui->extFreeTextMsgEdit->toPlainText();
+    bool hasText = !text.isEmpty();
+
+    // update the estimate immediately if we know that the text box is empty...
+    if(hasText){
+        countMessageFrames(text);
+    } else {
+        updateFrameCountEstimate(0);
+    }
+#endif
+
+#if 0
+    // schedule word count update
     if(hasText && m_txTextDirty && (m_txTextDirtyLastText != ui->extFreeTextMsgEdit->toPlainText() || m_txTextDirtyLastSelectedCall != selectedCallsign)){
 
         if(m_txTextDirtyDebounce.isActive()){
@@ -8752,15 +8779,28 @@ void MainWindow::updateButtonDisplay(){
         m_txTextDirtyDebounce.start(100);
         m_txTextDirty = false;
     }
+#endif
 }
 
-void MainWindow::buildMessageFramesAndUpdateCountDisplay(){
+#define USE_SYNC_FRAME_COUNT 1
+void MainWindow::refreshTextDisplay(){
     auto text = ui->extFreeTextMsgEdit->toPlainText();
     m_txTextDirtyLastText = text;
 
 #if USE_SYNC_FRAME_COUNT
-    int count = countMessageFrames(text);
-    updateFrameCountDisplay(text, count);
+    auto frames = buildMessageFrames(text);
+
+    QStringList textList;
+    qDebug() << "frames:";
+    foreach(auto frame, frames){
+        auto dt = DecodedText(frame);
+        qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType());
+        textList.append(dt.message());
+    }
+
+    updateTextStatsDisplay(textList.join(""), m_txFrameCountEstimate);
+
+    m_txFrameCountEstimate = frames.length();
 #else
     // prepare selected callsign for directed message
     QString selectedCall = callsignSelected();
@@ -8782,24 +8822,20 @@ void MainWindow::buildMessageFramesAndUpdateCountDisplay(){
     connect(t, &BuildMessageFramesThread::finished, t, &QObject::deleteLater);
     connect(t, &BuildMessageFramesThread::resultReady, this, [this](const QStringList frames){
 
-        QStringList text;
+        QStringList textList;
         qDebug() << "frames:";
         foreach(auto frame, frames){
             auto dt = DecodedText(frame);
             qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType());
-            text.append(dt.message());
+            textList.append(dt.message());
         }
 
         updateFrameCountEstimate(frames.length());
-        updateTextStatsDisplay(text.join(""), frames.length());
+        updateTextStatsDisplay(textList.join(""), frames.length());
 
     });
     t->start();
 #endif
-}
-
-void MainWindow::updateFrameCountEstimate(int count){
-    m_txFrameCountEstimate = count;
 }
 
 void MainWindow::updateTextStatsDisplay(QString text, int count){
