@@ -728,6 +728,7 @@ private:
 
   bool m_rxDirty;
   bool m_rxDisplayDirty;
+  int m_txFrameCountEstimate;
   int m_txFrameCount;
   QTimer m_txTextDirtyDebounce;
   bool m_txTextDirty;
@@ -882,7 +883,8 @@ private:
   void postDecode (bool is_new, QString const& message);
   void displayTransmit();
   void updateButtonDisplay();
-  void updateFrameCountDisplay(QString text, int count);
+  void updateFrameCountEstimate(int count);
+  void updateTextStatsDisplay(QString text, int count);
   bool isMyCallIncluded(QString const &text);
   bool isAllCallIncluded(QString const &text);
   QString callsignSelected(bool useInputText=false);

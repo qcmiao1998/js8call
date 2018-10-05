@@ -8716,6 +8716,12 @@ void MainWindow::updateButtonDisplay(){
     bool isTransmitting = m_transmitting || m_txFrameCount > 0;
     auto selectedCallsign = callsignSelected(true);
     bool emptyCallsign = selectedCallsign.isEmpty();
+    bool hasText = !ui->extFreeTextMsgEdit->toPlainText().isEmpty();
+
+    // update the estimate immediately if we know that the text box is empty...
+    if(!hasText){
+        updateFrameCountEstimate(0);
+    }
 
     ui->cqMacroButton->setDisabled(isTransmitting);
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
@@ -8731,20 +8737,24 @@ void MainWindow::updateButtonDisplay(){
         int count = m_txFrameCount;
         int sent = count - m_txFrameQueue.count();
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("Sending (%1/%2)").arg(sent).arg(count));
-    } else if(m_txTextDirty && (m_txTextDirtyLastText != ui->extFreeTextMsgEdit->toPlainText() || m_txTextDirtyLastSelectedCall != selectedCallsign)){
+    } else {
+        ui->startTxButton->setText(m_txFrameCountEstimate <= 0 ? QString("Send") : QString("Send (%1)").arg(m_txFrameCountEstimate));
+        ui->startTxButton->setEnabled(m_txFrameCountEstimate > 0 && ensureSelcalCallsignSelected(false));
+    }
+
+
+    // schedule count update
+    if(hasText && m_txTextDirty && (m_txTextDirtyLastText != ui->extFreeTextMsgEdit->toPlainText() || m_txTextDirtyLastSelectedCall != selectedCallsign)){
 
         if(m_txTextDirtyDebounce.isActive()){
             m_txTextDirtyDebounce.stop();
         }
         m_txTextDirtyDebounce.start(100);
         m_txTextDirty = false;
-
     }
 }
 
 void MainWindow::buildMessageFramesAndUpdateCountDisplay(){
-    qDebug() << "buildMessageFramesAndUpdateCountDisplay";
-
     auto text = ui->extFreeTextMsgEdit->toPlainText();
     m_txTextDirtyLastText = text;
 
@@ -8780,26 +8790,26 @@ void MainWindow::buildMessageFramesAndUpdateCountDisplay(){
             text.append(dt.message());
         }
 
-        updateFrameCountDisplay(text.join(""), frames.length());
+        updateFrameCountEstimate(frames.length());
+        updateTextStatsDisplay(text.join(""), frames.length());
 
     });
     t->start();
 #endif
 }
 
-void MainWindow::updateFrameCountDisplay(QString text, int count){
-    if(count > 0){
-        ui->startTxButton->setText(QString("Send (%1)").arg(count));
-        ui->startTxButton->setEnabled(ensureSelcalCallsignSelected(false));
+void MainWindow::updateFrameCountEstimate(int count){
+    m_txFrameCountEstimate = count;
+}
 
+void MainWindow::updateTextStatsDisplay(QString text, int count){
+    if(count > 0){
         auto words = text.split(" ", QString::SkipEmptyParts).length();
         auto wpm = QString::number(words/(count/4.0), 'f', 1);
         auto cpm = QString::number(text.length()/(count/4.0), 'f', 1);
         wpm_label.setText(QString("%1wpm / %2cpm").arg(wpm).arg(cpm));
         wpm_label.setVisible(true);
     } else {
-        ui->startTxButton->setText("Send");
-        ui->startTxButton->setEnabled(false);
         wpm_label.setVisible(false);
         wpm_label.clear();
     }
