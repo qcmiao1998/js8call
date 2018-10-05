@@ -84,7 +84,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     if(ui->widePlot->cumulative()) ui->spec2dComboBox->setCurrentIndex(1);
     if(ui->widePlot->linearAvg()) ui->spec2dComboBox->setCurrentIndex(2);
     if(ui->widePlot->Reference()) ui->spec2dComboBox->setCurrentIndex(3);
-    int nbpp=m_settings->value("BinsPerPixel", 4).toInt();
+    int nbpp=m_settings->value("BinsPerPixel", 2).toInt();
     ui->widePlot->setBinsPerPixel(nbpp);
     ui->sbPercent2dPlot->setValue(m_Percent2DScreen);
     ui->widePlot->SetPercent2DScreen(m_Percent2DScreen);
