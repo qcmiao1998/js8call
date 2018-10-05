@@ -12,7 +12,7 @@ subroutine genqra64(msg0,ichk,msgsent,itone,itype)
   integer dgen(13)
   integer sent(63)
   integer icos7(0:6)
-  data icos7/2,5,6,0,4,1,3/     !Defines a 7x7 Costas array
+  data icos7/4,2,5,6,1,3,0/                   !Costas 7x7 tone pattern
   save
 
   if(msg0(1:1).eq.'@') then

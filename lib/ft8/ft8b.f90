@@ -146,7 +146,9 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
 ! hard sync sum - max is 21
   nsync=is1+is2+is3
   if(nsync .le. 6) then ! bail out
+    call timer('badnsync', 0)
     nbadcrc=1
+    call timer('badnsync', 1)
     return
   endif
 
