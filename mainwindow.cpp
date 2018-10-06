@@ -8719,7 +8719,7 @@ void MainWindow::updateButtonDisplay(){
     bool isTransmitting = m_transmitting || m_txFrameCount > 0;
 
     // Transmit Activity
-    update_dynamic_property (ui->startTxButton, "transmitting", isTransmitting);
+    update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
 
     auto selectedCallsign = callsignSelected(true);
     bool emptyCallsign = selectedCallsign.isEmpty();
