@@ -6159,11 +6159,9 @@ bool MainWindow::prepareNextMessageFrame()
   m_i3bit = Varicode::JS8Call;
 
   QString frame = popMessageFrame();
-  if(frame.isEmpty()){  
+  if(frame.isEmpty()){
     ui->nextFreeTextMsg->clear();
-
-    // TODO: jsherer - this button thing is duplicated in two places :(
-    //ui->startTxButton->setText(QString("Send"));
+    updateTxButtonDisplay();
 
     return false;
   } else {
@@ -6179,8 +6177,7 @@ bool MainWindow::prepareNextMessageFrame()
         m_i3bit |= Varicode::JS8CallLast;
     }
 
-    // TODO: jsherer - this button thing is duplicated in two places :(
-    //ui->startTxButton->setText(QString("Sending (%1/%2)").arg(sent).arg(count));
+    updateTxButtonDisplay();
 
     if(ui->beaconButton->isChecked()){
         // bump beacon
@@ -6364,7 +6361,7 @@ QString MainWindow::calculateDistance(QString const& value, int *pDistance)
 // this function is called by auto_tx_mode, which is called by autoButton.clicked
 void MainWindow::on_startTxButton_toggled(bool checked)
 {
-    if(checked){       
+    if(checked){
         createMessage(ui->extFreeTextMsgEdit->toPlainText());
         startTx();
     } else {
@@ -8741,7 +8738,7 @@ void MainWindow::updateButtonDisplay(){
         if(m_txTextDirtyDebounce.isActive()){
             m_txTextDirtyDebounce.stop();
         }
-        m_txTextDirtyDebounce.start(150);
+        m_txTextDirtyDebounce.start(100);
         m_txTextDirty = false;
     }
 }
