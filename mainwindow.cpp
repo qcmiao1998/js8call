@@ -1672,6 +1672,7 @@ void MainWindow::writeSettings()
 
   m_settings->setValue("MainSplitter", ui->mainSplitter->saveState());
   m_settings->setValue("TextHorizontalSplitter", ui->textHorizontalSplitter->saveState());
+  m_settings->setValue("BandActivityVisible", ui->tableWidgetRXAll->isVisible());
   m_settings->setValue("TextVerticalSplitter", ui->textVerticalSplitter->saveState());
   m_settings->setValue("ShowTimeDrift", ui->driftSyncFrame->isVisible());
   m_settings->setValue("TimeDrift", ui->driftSpinBox->value());
@@ -1772,9 +1773,14 @@ void MainWindow::readSettings()
   if(!horizontalState.isEmpty()){
     ui->textHorizontalSplitter->restoreState(horizontalState);
     auto hsizes = ui->textHorizontalSplitter->sizes();
+
     ui->tableWidgetRXAll->setVisible(hsizes.at(0) > 0);
     ui->tableWidgetCalls->setVisible(hsizes.at(2) > 0);
   }
+
+  m_bandActivityWasVisible = m_settings->value("BandActivityVisible", true).toBool();
+  ui->tableWidgetRXAll->setVisible(m_bandActivityWasVisible);
+
   auto verticalState = m_settings->value("TextVerticalSplitter").toByteArray();
   if(!verticalState.isEmpty()){
     ui->textVerticalSplitter->restoreState(verticalState);
@@ -2353,6 +2359,7 @@ void MainWindow::on_actionShow_Band_Activity_triggered(bool checked){
     hsizes[0] = checked ? ui->textHorizontalSplitter->width()/4 : 0;
     ui->textHorizontalSplitter->setSizes(hsizes);
     ui->tableWidgetRXAll->setVisible(checked);
+    m_bandActivityWasVisible = checked;
 }
 
 void MainWindow::on_actionShow_Call_Activity_triggered(bool checked){
@@ -7938,6 +7945,8 @@ void MainWindow::on_selcalButton_clicked(){
         if(ui->tableWidgetRXAll->isVisible()){
             ui->tableWidgetRXAll->setVisible(false);
             m_bandActivityWasVisible = true;
+        } else {
+            m_bandActivityWasVisible = false;
         }
     } else {
         ui->tableWidgetRXAll->setVisible(m_bandActivityWasVisible);
