@@ -798,69 +798,6 @@ background-color: #6699ff;
                 </property>
                </spacer>
               </item>
-              <item row="4" column="3">
-               <widget class="QPushButton" name="beaconButton">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>75</width>
-                  <height>30</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>0</width>
-                  <height>30</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable the automatic beacon&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QPushButton {
-font-family: helvetica;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-radius:2px;
-border-width:0px;
-border-color: gray;
-font-size:90%;
-min-width:75px;
-min-height:30px;
-/*max-width:60px;*/
-max-height:30px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}
-QPushButton:checked {
-background-color: #6699ff;
-}</string>
-                </property>
-                <property name="text">
-                 <string>BEACON</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
               <item row="4" column="2">
                <widget class="QPushButton" name="autoReplyButton">
                 <property name="enabled">
@@ -918,72 +855,6 @@ background-color: #6699ff;
                 </property>
                 <property name="text">
                  <string>AUTO</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="1">
-               <widget class="QPushButton" name="selcalButton">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>75</width>
-                  <height>30</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>0</width>
-                  <height>30</height>
-                 </size>
-                </property>
-                <property name="visible">
-                 <bool>true</bool>
-                </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable selective calling (i.e., only directed messages to you will be displayed in the RX area)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QPushButton {
-font-family: helvetica;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-radius:2px;
-border-width:0px;
-border-color: gray;
-font-size:90%;
-min-width:75px;
-min-height:30px;
-/*max-width:60px;*/
-max-height:30px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}
-QPushButton:checked {
-background-color: #6699ff;
-}</string>
-                </property>
-                <property name="text">
-                 <string>SELCAL</string>
                 </property>
                 <property name="checkable">
                  <bool>true</bool>
@@ -1110,6 +981,135 @@ background-color: #00ff00;
                 </property>
                 <property name="text">
                  <string>LOG</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1">
+               <widget class="QPushButton" name="beaconButton">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>75</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>0</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable the automatic beacon&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+font-family: helvetica;
+font-weight: bold;
+background-color: lightgray;
+color: black;
+border-style: solid;
+border-radius:2px;
+border-width:0px;
+border-color: gray;
+font-size:90%;
+min-width:75px;
+min-height:30px;
+/*max-width:60px;*/
+max-height:30px;
+}
+QPushButton[state=&quot;error&quot;] {
+background-color: red;
+}
+QPushButton[state=&quot;warning&quot;] {
+background-color: orange;
+}
+QPushButton[state=&quot;ok&quot;] {
+background-color: #00ff00;
+}
+QPushButton:checked {
+background-color: #6699ff;
+}</string>
+                </property>
+                <property name="text">
+                 <string>BEACON</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="3">
+               <widget class="QPushButton" name="selcalButton">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>75</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>0</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="visible">
+                 <bool>true</bool>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable selective calling (i.e., only directed messages to you will be displayed in the RX area)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+font-family: helvetica;
+font-weight: bold;
+background-color: lightgray;
+color: black;
+border-style: solid;
+border-radius:2px;
+border-width:0px;
+border-color: gray;
+font-size:90%;
+min-width:75px;
+min-height:30px;
+/*max-width:60px;*/
+max-height:30px;
+}
+QPushButton[state=&quot;error&quot;] {
+background-color: red;
+}
+QPushButton[state=&quot;warning&quot;] {
+background-color: orange;
+}
+QPushButton[state=&quot;ok&quot;] {
+background-color: #00ff00;
+}
+QPushButton:checked {
+background-color: #6699ff;
+}</string>
+                </property>
+                <property name="text">
+                 <string>SELCAL</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -4644,6 +4644,8 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionSave_decoded"/>
     <addaction name="actionSave_all"/>
     <addaction name="separator"/>
+    <addaction name="actionOpen_Save_Directory"/>
+    <addaction name="separator"/>
     <addaction name="actionDelete_all_wav_files_in_SaveDir"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -4820,7 +4822,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Delete all *.wav files in SaveDir</string>
+    <string>Delete all *.wav files in Save Directory</string>
    </property>
   </action>
   <action name="actionQuickDecode">
@@ -5125,7 +5127,7 @@ list. The list can be maintained in Settings (F2).</string>
   </action>
   <action name="actionOpen_log_directory">
    <property name="text">
-    <string>Open log directory</string>
+    <string>Open Log Directory...</string>
    </property>
   </action>
   <action name="actionJT4">
@@ -5464,6 +5466,11 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="shortcutContext">
     <enum>Qt::WindowShortcut</enum>
+   </property>
+  </action>
+  <action name="actionOpen_Save_Directory">
+   <property name="text">
+    <string>Open Save Directory...</string>
    </property>
   </action>
  </widget>

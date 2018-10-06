@@ -6875,6 +6875,10 @@ void MainWindow::on_actionOpen_log_directory_triggered ()
   QDesktopServices::openUrl (QUrl::fromLocalFile (m_config.writeable_data_dir ().absolutePath ()));
 }
 
+void MainWindow::on_actionOpen_Save_Directory_triggered(){
+    QDesktopServices::openUrl (QUrl::fromLocalFile (m_config.save_directory().absolutePath ()));
+}
+
 void MainWindow::on_bandComboBox_currentIndexChanged (int index)
 {
   auto const& frequencies = m_config.frequencies ();
@@ -9280,8 +9284,8 @@ void MainWindow::processCommandActivity() {
         auto d = m_rxCommandQueue.dequeue();
 
         bool isAllCall = isAllCallIncluded(d.to);
-        bool isGroupCall = isGroupCallIncluded(d.to);
-        bool isNear = abs(d.freq - currentFreqOffset()) <= 150;
+        bool isNear = abs(d.freq - currentFreqOffset()) <= 110; // 100Hz + a 10Hz buffer
+        bool isGroupCall = isGroupCallIncluded(d.to) && isNear;
 
         qDebug() << "try processing command" << d.from << d.to << d.cmd << d.freq << d.grid << d.extra;
 
@@ -9310,11 +9314,11 @@ void MainWindow::processCommandActivity() {
         logCallActivity(cd, true);
 
         // we're only responding to allcall, groupcalls near us, and our callsign at this point, so we'll end after logging the callsigns we've heard
-        if (!isAllCall && !toMe && !(isGroupCall && isNear)) {
+        if (!isAllCall && !toMe && !isGroupCall) {
             continue;
         }
 
-        // if selcal is enabled and this isnt directed to us, take no action.
+        // if selcal is enabled and this is an allcall, take no action.
         if (isAllCall && ui->selcalButton->isChecked()) {
             continue;
         }
@@ -9483,7 +9487,7 @@ void MainWindow::processCommandActivity() {
 #endif
 
         // PROCESS RELAY
-        else if (d.cmd == ">" && !isAllCall) {
+        else if (d.cmd == ">" && !isAllCall && !isGroupCall) {
 
             // 1. see if there are any more hops to process
             // 2. if so, forward
@@ -9536,7 +9540,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS AGN
-        else if (d.cmd == " AGN?" && !isAllCall && !m_lastTxMessage.isEmpty()) {
+        else if (d.cmd == " AGN?" && !isAllCall && !isGroupCall && !m_lastTxMessage.isEmpty()) {
             reply = m_lastTxMessage;
         }
 
