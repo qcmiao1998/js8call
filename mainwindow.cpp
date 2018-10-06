@@ -3662,16 +3662,17 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.isBuffered = false;
 
             // if we have any "first" frame, and a buffer is already established, clear it...
-            if(((d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst) && m_messageBuffer.contains(d.freq/10*10)){
-                qDebug() << "first message encountered, clearing existing buffer" << (d.freq/10*10);
-                m_messageBuffer.remove(d.freq/10*10);
+            int prevBufferOffset = -1;
+            if(((d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst) && hasExistingMessageBuffer(d.freq, true, &prevBufferOffset)){
+                qDebug() << "first message encountered, clearing existing buffer" << prevBufferOffset;
+                m_messageBuffer.remove(d.freq);
             }
 
             // if we have a data frame, and a message buffer has been established, buffer it...
-            if(m_messageBuffer.contains(d.freq/10*10) && !decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
-                qDebug() << "buffering data" << (d.freq/10*10) << d.text;
+            if(hasExistingMessageBuffer(d.freq, true, &prevBufferOffset) && !decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
+                qDebug() << "buffering data" << d.freq << d.text;
                 d.isBuffered = true;
-                m_messageBuffer[d.freq/10*10].msgs.append(d);
+                m_messageBuffer[d.freq].msgs.append(d);
             }
 
 
@@ -3712,8 +3713,10 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 m_rxCommandQueue.append(d);
 
             } else {
-                qDebug() << "buffering compound call" << cd.call << cd.bits;
-                m_messageBuffer[cd.freq/10*10].compound.append(cd);
+                qDebug() << "buffering compound call" << cd.freq << cd.call << cd.bits;
+
+                hasExistingMessageBuffer(cd.freq, true, nullptr);
+                m_messageBuffer[cd.freq].compound.append(cd);
             }
           }
 #endif
@@ -3737,9 +3740,11 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
               // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
               if((Varicode::isCommandBuffered(d.cmd) && (d.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) || d.from == "<....>" || d.to == "<....>"){
-                qDebug() << "buffering cmd" << d.cmd << d.from << d.to;
-                m_messageBuffer[d.freq/10*10].cmd = d;
-                m_messageBuffer[d.freq/10*10].msgs.clear();
+                qDebug() << "buffering cmd" << d.freq << d.cmd << d.from << d.to;
+
+                hasExistingMessageBuffer(d.freq, true, nullptr);
+                m_messageBuffer[d.freq].cmd = d;
+                m_messageBuffer[d.freq].msgs.clear();
               } else {
                 m_rxCommandQueue.append(d);
               }
@@ -3924,6 +3929,31 @@ void MainWindow::readFromStdout()                             //readFromStdout
   // See MainWindow::postDecode for displaying the latest decodes
 }
 
+
+bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffset){
+    if(m_messageBuffer.contains(offset)){
+        if(pPrevOffset) *pPrevOffset = offset;
+        return true;
+    }
+
+    QList<int> offsets = {
+        offset - 1, offset - 2, offset - 3, offset - 4, offset - 5, offset - 6, offset - 7, offset - 8, offset - 9, offset - 10,
+        offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 7, offset + 8, offset + 9, offset + 10
+    };
+    foreach(int prevOffset, offsets){
+        if(!m_messageBuffer.contains(prevOffset)){ continue; }
+
+        if(drift){
+            m_messageBuffer[offset] = m_messageBuffer[prevOffset];
+            m_messageBuffer.remove(prevOffset);
+        }
+
+        if(pPrevOffset) *pPrevOffset = prevOffset;
+        return true;
+    }
+
+    return false;
+}
 
 void MainWindow::logCallActivity(CallDetail d, bool spot){
     if(m_callActivity.contains(d.call)){

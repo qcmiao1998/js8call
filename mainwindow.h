@@ -132,6 +132,7 @@ public slots:
   void msgAvgDecode2();
   void fastPick(int x0, int x1, int y);
 
+  bool hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffset);
   void logCallActivity(CallDetail d, bool spot=true);
   QString lookupCallInCompoundCache(QString const &call);
   void cacheActivity(QString key);
