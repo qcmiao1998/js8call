@@ -327,6 +327,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   double df = m_binsPerPixel*m_fftBinWidth;
   QRect rect;
   QPen penOrange(QColor(255,165,0),3);
+  QPen penBlue(QColor(149, 165, 166), 3);                 //Mark Tol range with green line
   QPen penGreen(Qt::green, 3);                 //Mark Tol range with green line
   QPen penRed(Qt::red, 3);                     //Mark Tx freq with red
   QPen penYellow(QColor(243, 156, 18), 3);     //Mark band block freq with this pen
@@ -566,10 +567,18 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     painter0.drawLine(x1+1,28,x2-2,28);
   }
 
-  x1=XfromFreq(2500);
-  x2=XfromFreq(5000);
+  x1=XfromFreq(3500);
+  x2=m_w;
   if(x1<=m_w and x2>0) {
     painter0.setPen(penYellow);               //Mark top of sub-band
+    painter0.drawLine(x1+1,26,x2-2,26);
+    painter0.drawLine(x1+1,28,x2-2,28);
+  }
+
+  x1=XfromFreq(500);
+  x2=XfromFreq(1000);
+  if(x1<=m_w and x2>0) {
+    painter0.setPen(penBlue);               //Mark beacon range
     painter0.drawLine(x1+1,26,x2-2,26);
     painter0.drawLine(x1+1,28,x2-2,28);
   }
