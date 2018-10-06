@@ -3706,7 +3706,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 d.cmd = " BEACON";
                 d.snr = cd.snr;
                 d.bits = cd.bits;
-                d.extra = cd.grid;
+                d.grid = cd.grid;
                 d.freq = cd.freq;
                 d.utcTimestamp = cd.utcTimestamp;
                 m_rxCommandQueue.append(d);
@@ -9232,7 +9232,7 @@ void MainWindow::processCommandActivity() {
 
         bool isAllCall = isAllCallIncluded(d.to);
 
-        qDebug() << "try processing command" << d.from << d.to << d.cmd << d.freq;
+        qDebug() << "try processing command" << d.from << d.to << d.cmd << d.freq << d.grid << d.extra;
 
         // if we need a compound callsign but never got one...skip
         if (d.from == "<....>" || d.to == "<....>") {
@@ -9497,7 +9497,7 @@ void MainWindow::processCommandActivity() {
 
             if(isAllCall){
                 // since all beacons are technically ALLCALL, let's bump the allcall cache here...
-                m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 25);
+                m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 5);
             }
 
             continue;
