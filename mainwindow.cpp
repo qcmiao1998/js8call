@@ -7907,7 +7907,10 @@ void MainWindow::on_selcalButton_clicked(){
         }
         if(ui->tableWidgetRXAll->isVisible()){
             ui->tableWidgetRXAll->setVisible(false);
+            m_bandActivityWasVisible = true;
         }
+    } else {
+        ui->tableWidgetRXAll->setVisible(m_bandActivityWasVisible);
     }
     displayCallActivity();
 }

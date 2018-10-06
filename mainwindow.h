@@ -726,6 +726,7 @@ private:
     QList<ActivityDetail> msgs;
   };
 
+  bool m_bandActivityWasVisible;
   bool m_rxDirty;
   bool m_rxDisplayDirty;
   int m_txFrameCountEstimate;
