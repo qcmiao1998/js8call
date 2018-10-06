@@ -885,6 +885,7 @@ private:
   void updateButtonDisplay();
   void updateFrameCountEstimate(int count);
   void updateTextStatsDisplay(QString text, int count);
+  void updateTxButtonDisplay();
   bool isMyCallIncluded(QString const &text);
   bool isAllCallIncluded(QString const &text);
   QString callsignSelected(bool useInputText=false);

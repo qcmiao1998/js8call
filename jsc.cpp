@@ -54,34 +54,19 @@ QList<CodewordPair> JSC::compress(QString text){
 
     foreach(QString w, text.split(" ", QString::SkipEmptyParts)){
         bool ok = false;
-        auto index = lookup(w, &ok);
-        if(ok){
-            // cool, we found the word...
-            out.append({ codeword(index, true, b, s, c), (quint32)w.length() + 1 /* for the space that follows */ });
-        } else {
-            // hmm. no dice. let's go for a prefix match
-            while(!w.isEmpty()){
-                bool hasPrefix = false;
-                auto d = w.toLatin1().data();
-                for(quint32 i = 0; i < JSC::size; i++){
-                    quint32 len = JSC::list[i].size;
-                    if(strncmp(d, JSC::list[i].str, len) == 0){
-                        w = QString(w.mid(len));
 
-                        auto index = JSC::list[i].index;
-                        bool isLast = w.isEmpty();
-                        out.append({ codeword(index, isLast, b, s, c), len + (isLast ? 1 : 0) /* for the space that follows */});
-                        hasPrefix = true;
-
-                        break;
-                    }
-                }
-
-                if(!hasPrefix){
-                    // no match...SOL
-                    break;
-                }
+        while(!w.isEmpty()){
+            // this does both prefix and full match lookup
+            auto index = lookup(w, &ok);
+            if(!ok){
+                break;
             }
+
+            auto t = JSC::map[index];
+            w = QString(w.mid(t.size));
+
+            bool isLast = w.isEmpty();
+            out.append({ codeword(index, isLast, b, s, c), (quint32)t.size + (isLast ? 1 : 0) /* for the space that follows */});
         }
     }
 
@@ -150,10 +135,47 @@ quint32 JSC::lookup(QString w, bool * ok){
 }
 
 quint32 JSC::lookup(char const* b, bool *ok){
-    for(quint32 i = 0; i < JSC::size; i++){
-        if(strcmp(b, JSC::map[i].str) == 0){
+    quint32 index = 0;
+    quint32 count = 0;
+    bool found = false;
+
+    // first find prefix match to jump into the list faster
+    for(quint32 i = 0; i < JSC::prefixSize; i++){
+        // skip obvious non-prefixes...
+        if(b[0] != JSC::prefix[i].str[0]){
+            continue;
+        }
+
+        // ok, we found one... let's end early for single char strings.
+        if(JSC::prefix[i].size == 1){
             if(ok) *ok = true;
-            return i;
+            return JSC::list[JSC::prefix[i].index].index;
+        }
+
+        // otherwise, keep track of the first index in the list and the number of elements
+        index = JSC::prefix[i].index;
+        count = JSC::prefix[i].size;
+        found = true;
+        break;
+    }
+
+    // no prefix found... no lookup
+    if(!found){
+        if(ok) *ok = false;
+        return 0;
+    }
+
+    // now that we have the first index in the list, let's just iterate through the list, comparing words along the way
+    for(quint32 i = index; i < index + count; i++){
+        // if we're no longer a prefix match, end.
+        if(b[0] != JSC::list[i].str[0]){
+            break;
+        }
+
+        quint32 len = JSC::list[i].size;
+        if(strncmp(b, JSC::list[i].str, len) == 0){
+            if(ok) *ok = true;
+            return JSC::list[i].index;
         }
     }
 

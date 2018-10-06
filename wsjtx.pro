@@ -75,7 +75,9 @@ SOURCES += \
     messagereplydialog.cpp \
     keyeater.cpp \
     DriftingDateTime.cpp \
-    jsc.cpp
+    jsc.cpp \
+    jsc_list.cpp \
+    jsc_map.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
