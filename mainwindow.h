@@ -890,6 +890,7 @@ private:
   void updateTxButtonDisplay();
   bool isMyCallIncluded(QString const &text);
   bool isAllCallIncluded(QString const &text);
+  bool isGroupCallIncluded(const QString &text);
   QString callsignSelected(bool useInputText=false);
   bool isRecentOffset(int offset);
   void markOffsetRecent(int offset);

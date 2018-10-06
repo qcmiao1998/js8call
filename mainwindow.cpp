@@ -8971,6 +8971,10 @@ bool MainWindow::isAllCallIncluded(const QString &text){
     return text.contains("ALLCALL");
 }
 
+bool MainWindow::isGroupCallIncluded(const QString &text){
+    return text.contains("GROUPCALL");
+}
+
 void MainWindow::processActivity(bool force) {
     if (!m_rxDirty && !force) {
         return;
@@ -9261,6 +9265,8 @@ void MainWindow::processCommandActivity() {
         auto d = m_rxCommandQueue.dequeue();
 
         bool isAllCall = isAllCallIncluded(d.to);
+        bool isGroupCall = isGroupCallIncluded(d.to);
+        bool isNear = abs(d.freq - currentFreqOffset()) <= 150;
 
         qDebug() << "try processing command" << d.from << d.to << d.cmd << d.freq << d.grid << d.extra;
 
@@ -9288,19 +9294,13 @@ void MainWindow::processCommandActivity() {
         cd.utcTimestamp = d.utcTimestamp;
         logCallActivity(cd, true);
 
-        // we're only responding to allcall and our callsign at this point, so we'll end after logging the callsigns we've heard
-        if (!isAllCall && !toMe) {
+        // we're only responding to allcall, groupcalls near us, and our callsign at this point, so we'll end after logging the callsigns we've heard
+        if (!isAllCall && !toMe && !(isGroupCall && isNear)) {
             continue;
         }
 
         // if selcal is enabled and this isnt directed to us, take no action.
         if (isAllCall && ui->selcalButton->isChecked()) {
-            continue;
-        }
-
-        // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past beacon interval)
-        // that way we never get spammed by allcalls at a higher frequency than what we would normally beacon
-        if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < m_config.beacon()) {
             continue;
         }
 
@@ -9376,6 +9376,12 @@ void MainWindow::processCommandActivity() {
             }
 
             writeDirectedCommandToFile(d);
+        }
+
+        // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past beacon interval)
+        // that way we never get spammed by allcalls at a higher frequency than what we would normally beacon
+        if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < m_config.beacon()) {
+            continue;
         }
 
         // and mark the offset as a directed offset so future free text is displayed
