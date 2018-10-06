@@ -1106,7 +1106,7 @@ background-color: #6699ff;
 }</string>
                 </property>
                 <property name="text">
-                 <string>SELCAL</string>
+                 <string>SELCALL</string>
                 </property>
                 <property name="checkable">
                  <bool>true</bool>
