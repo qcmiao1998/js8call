@@ -10141,7 +10141,7 @@ void MainWindow::displayCallActivity() {
             ui->tableWidgetCalls->setItem(row, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
             ui->tableWidgetCalls->setItem(row, 2, new QTableWidgetItem(QString("%1").arg(d.freq)));
             ui->tableWidgetCalls->setItem(row, 3, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
-            auto gridItem = new QTableWidgetItem(QString("%1").arg(d.grid.left(4)));
+            auto gridItem = new QTableWidgetItem(QString("%1 ").arg(d.grid.left(4)));
             gridItem->setToolTip(d.grid);
             ui->tableWidgetCalls->setItem(row, 4, gridItem);
 
