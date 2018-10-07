@@ -309,7 +309,7 @@ QPushButton[oob=&quot;true&quot;] {
               <string notr="true">QFrame, QLabel { background-color : black; }</string>
              </property>
              <property name="frameShape">
-              <enum>QFrame::StyledPanel</enum>
+              <enum>QFrame::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Plain</enum>
@@ -4588,7 +4588,7 @@ list. The list can be maintained in Settings (F2).</string>
      <x>0</x>
      <y>0</y>
      <width>872</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
