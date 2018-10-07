@@ -6362,7 +6362,7 @@ void MainWindow::prepareBeacon(){
     if(m_txBeaconQueue.isEmpty()){
         lines.append(QString("%1: BEACON %2").arg(mycall).arg(mygrid));
     } else {
-        while(!m_txBeaconQueue.isEmpty() && lines.length() < 2){
+        while(!m_txBeaconQueue.isEmpty() && lines.length() < 1){
             lines.append(m_txBeaconQueue.dequeue());
         }
     }
