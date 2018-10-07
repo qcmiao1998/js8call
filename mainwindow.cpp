@@ -9284,7 +9284,7 @@ void MainWindow::processCommandActivity() {
         auto d = m_rxCommandQueue.dequeue();
 
         bool isAllCall = isAllCallIncluded(d.to);
-        bool isNear = abs(d.freq - currentFreqOffset()) <= 110; // 100Hz + a 10Hz buffer
+        bool isNear = abs(d.freq - currentFreqOffset()) <= 125; // 100Hz + a 25Hz buffer
         bool isGroupCall = isGroupCallIncluded(d.to) && isNear;
 
         qDebug() << "try processing command" << d.from << d.to << d.cmd << d.freq << d.grid << d.extra;
