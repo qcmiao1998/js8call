@@ -1475,7 +1475,7 @@ void MainWindow::initializeDummyData(){
         cd.snr = i == 3 ? -100 : i;
         cd.ackTimestamp = i == 1 ? dt.addSecs(-900) : QDateTime{};
         cd.utcTimestamp = dt;
-        cd.grid = i == 5 ? "J042" : i == 6 ? "FN42FN42FN" : "";
+        cd.grid = i == 5 ? "J042" : i == 6 ? " FN42FN42FN" : "";
         logCallActivity(cd, false);
 
         ActivityDetail ad = {};
@@ -10185,8 +10185,8 @@ void MainWindow::displayCallActivity() {
             ui->tableWidgetCalls->setItem(row, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
             ui->tableWidgetCalls->setItem(row, 2, new QTableWidgetItem(QString("%1").arg(d.freq)));
             ui->tableWidgetCalls->setItem(row, 3, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
-            auto gridItem = new QTableWidgetItem(QString("%1 ").arg(d.grid.left(4)));
-            gridItem->setToolTip(d.grid);
+            auto gridItem = new QTableWidgetItem(QString("%1").arg(d.grid.trimmed().left(4)));
+            gridItem->setToolTip(d.grid.trimmed());
             ui->tableWidgetCalls->setItem(row, 4, gridItem);
 
             auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
