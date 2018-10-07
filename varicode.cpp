@@ -1507,6 +1507,7 @@ QStringList Varicode::buildMessageFrames(
 
             bool lineStartsWithBaseCall = (
                 line.startsWith("ALLCALL") ||
+                line.startsWith("GROUPCALL") ||
                 line.startsWith("BEACON")  ||
                 Varicode::startsWithCQ(line)
             );
@@ -1550,6 +1551,9 @@ QStringList Varicode::buildMessageFrames(
           QString dirNum;
           QString dirFrame = Varicode::packDirectedMessage(line, basecall, &dirTo, &dirCmd, &dirNum, &n);
           bool dirToCompound = dirTo.contains("/");
+          if(dirToCompound){
+              qDebug() << "directed message to field is compound" << dirTo;
+          }
 
           int m = 0;
           QString datFrame = Varicode::packDataMessage(line, &m);
