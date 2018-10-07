@@ -385,8 +385,8 @@ private slots:
   void on_cbCQTx_toggled(bool b);
   void splash_done (); 
   void on_measure_check_box_stateChanged (int);
-  void expiry_warning_message ();
-  void not_GA_warning_message ();
+  void checkExpiryWarningMessage ();
+  void checkStartupWarnings ();
   void clearCallsignSelected();
   void refreshTextDisplay();
 

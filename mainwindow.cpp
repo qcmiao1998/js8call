@@ -1087,7 +1087,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   */
 
   // TODO: jsherer - need to remove this eventually...
-  QTimer::singleShot (0, this, SLOT (not_GA_warning_message ()));
+  QTimer::singleShot (0, this, SLOT (checkStartupWarnings ()));
 
   if(!ui->cbMenus->isChecked()) {
     ui->cbMenus->setChecked(true);
@@ -1420,19 +1420,16 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
 QDate eol(2018, 10, 31);
 
-void MainWindow::expiry_warning_message()
+void MainWindow::checkExpiryWarningMessage()
 {
     if(QDateTime::currentDateTimeUtc().date() > eol){
         MessageBox::critical_message (this, QString("This pre-release development build of JS8Call has expired. Please upgrade to the latest version."));
-        close();
         return;
     }
 }
 
-void MainWindow::not_GA_warning_message ()
+void MainWindow::checkStartupWarnings ()
 {
-  expiry_warning_message();
-
   MessageBox::critical_message (this,
                                 QString("This version of %1 is a pre-release development\n"
                                 "build and will expire after %2 (UTC), upon which you\n"
@@ -1440,6 +1437,8 @@ void MainWindow::not_GA_warning_message ()
                                 "Use of development versions of JS8Call are at your own risk \n"
                                 "and carry a responsiblity to report any problems to:\n"
                                 "Jordan Sherer (KN4CRD) kn4crd@gmail.com\n\n").arg(QApplication::applicationName()).arg(eol.toString()));
+
+  checkExpiryWarningMessage();
 
   ensureCallsignSet(false);
 }
@@ -6412,6 +6411,7 @@ QString MainWindow::calculateDistance(QString const& value, int *pDistance)
 void MainWindow::on_startTxButton_toggled(bool checked)
 {
     if(checked){
+        checkExpiryWarningMessage();
         createMessage(ui->extFreeTextMsgEdit->toPlainText());
         startTx();
     } else {
