@@ -3705,7 +3705,9 @@ void MainWindow::readFromStdout()                             //readFromStdout
             cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
             cd.bits = decodedtext.bits();
 
-            if(decodedtext.isBeacon()){
+            // Only respond to BEACONS...remember that CQ messages are "Alt" beacons
+            if(decodedtext.isBeacon() && !decodedtext.isAlt()){
+
                 // convert BEACON to a directed command and process...
                 CommandDetail d = {};
                 d.from = cd.call;
