@@ -922,7 +922,7 @@ QString Configuration::my_grid() const
   if (m_->use_dynamic_info_ && m_->dynamic_grid_.size () >= 4) {
     grid = m_->dynamic_grid_;
   }
-  return grid;
+  return grid.trimmed();
 }
 
 QString Configuration::my_station() const
@@ -931,22 +931,22 @@ QString Configuration::my_station() const
     if(m_->use_dynamic_info_ && !m_->dynamic_qtc_.isEmpty()){
         station = m_->dynamic_qtc_;
     }
-    return station;
+    return station.trimmed();
 }
 
 QString Configuration::my_qth() const
 {
-    return m_->my_qth_;
+    return m_->my_qth_.trimmed();
 }
 
 QString Configuration::cq_message() const
 {
-    return m_->cq_;
+    return m_->cq_.trimmed();
 }
 
 QString Configuration::reply_message() const
 {
-    return m_->reply_;
+    return m_->reply_.trimmed();
 }
 
 int Configuration::callsign_aging() const
