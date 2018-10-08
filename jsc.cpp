@@ -23,6 +23,7 @@
 
 #include <cmath>
 
+#include <QDebug>
 
 Codeword JSC::codeword(quint32 index, bool separate, quint32 bytesize, quint32 s, quint32 c){
     QList<Codeword> out;
@@ -52,8 +53,18 @@ QList<CodewordPair> JSC::compress(QString text){
     const quint32 s = 7;
     const quint32 c = pow(2, 4) - s;
 
-    foreach(QString w, text.split(" ", QString::SkipEmptyParts)){
+    QString space(" ");
+
+    foreach(QString w, text.split(" ", QString::KeepEmptyParts)){
         bool ok = false;
+
+        bool isSpaceCharacter = false;
+
+        // if this is an empty part, it should be a space.
+        if(w.isEmpty()){
+            w = space;
+            isSpaceCharacter = true;
+        }
 
         while(!w.isEmpty()){
             // this does both prefix and full match lookup
@@ -66,7 +77,8 @@ QList<CodewordPair> JSC::compress(QString text){
             w = QString(w.mid(t.size));
 
             bool isLast = w.isEmpty();
-            out.append({ codeword(index, isLast, b, s, c), (quint32)t.size + (isLast ? 1 : 0) /* for the space that follows */});
+            bool shouldAppendSpace = isLast && !isSpaceCharacter;
+            out.append({ codeword(index, shouldAppendSpace, b, s, c), (quint32)t.size + (shouldAppendSpace ? 1 : 0) /* for the space that follows */});
         }
     }
 

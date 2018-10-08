@@ -39,8 +39,8 @@ public:
     static const Tuple map[262144];
     static const Tuple list[262144];
 
-    static const quint32 prefixSize = 68;
-    static const Tuple prefix[68];
+    static const quint32 prefixSize = 69;
+    static const Tuple prefix[69];
 };
 
 #endif // JSC_H
