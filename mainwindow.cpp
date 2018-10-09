@@ -7942,10 +7942,12 @@ void MainWindow::on_pbT2R_clicked()
 
 void MainWindow::on_beaconButton_clicked()
 {
+    // clear the beacon queue when you toggle the button
+    m_txBeaconQueue.clear();
+    displayBandActivity();
+
+    // then process the action
     if(ui->beaconButton->isChecked()){
-        // clear the beacon queue when you turn it on.
-        m_txBeaconQueue.clear();
-        // then schedule the next beacon
         scheduleBeacon(true);
     } else {
         pauseBeacon();
@@ -9867,6 +9869,8 @@ void MainWindow::displayBandActivity() {
         selectedOffset = selectedItems.first()->text().toInt();
     }
 
+    bool beaconEnabled = ui->beaconButton->isChecked();
+
     ui->tableWidgetRXAll->setUpdatesEnabled(false);
     {
         // Scroll Position
@@ -9951,6 +9955,10 @@ void MainWindow::displayBandActivity() {
                 int activityAging = m_config.activity_aging();
                 foreach(ActivityDetail item, items) {
                     if (activityAging && item.utcTimestamp.secsTo(now) / 60 >= activityAging) {
+                        continue;
+                    }
+                    if (!beaconEnabled && (item.text.contains(": BEACON") || item.text.contains("BEACON ACK"))){
+                        // hide beacons if we're not beaconing.
                         continue;
                     }
                     if (item.text.isEmpty()) {
