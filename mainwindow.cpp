@@ -993,7 +993,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_config.transceiver_online ();
   bool vhf {m_config.enable_VHF_features ()};
 
-  ui->txFirstCheckBox->setChecked(m_txFirst);
   morse_(const_cast<char *> (m_config.my_callsign ().toLatin1().constData()),
          const_cast<int *> (icw), &m_ncw, m_config.my_callsign ().length());
   on_actionWide_Waterfall_triggered();
@@ -4087,7 +4086,6 @@ void MainWindow::guiUpdate()
     tx1 += m_TRperiod;
     tx2 += m_TRperiod;
   }
-  tx2 += m_TRperiod;
 
   qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
   int nsec=ms/1000;
@@ -4564,7 +4562,7 @@ void MainWindow::startTx()
   int s=now.addSecs(-2).time().second();
   int n=s % (2*m_TRperiod);
   if((n <= m_TRperiod && m_txFirst) || (n > m_TRperiod && !m_txFirst)){
-    ui->txFirstCheckBox->setChecked(!m_txFirst);
+    m_txFirst = !m_txFirst;
   }
 
   // hack the auto button to kick off the transmit
@@ -4597,7 +4595,7 @@ void MainWindow::startTx2()
 
 void MainWindow::continueTx()
 {
-    ui->txFirstCheckBox->setChecked(!m_txFirst);
+    m_txFirst = !m_txFirst;
 }
 
 void MainWindow::stopTx()
@@ -4646,11 +4644,6 @@ void MainWindow::ba2msg(QByteArray ba, char message[])             //ba2msg()
     }
   }
   message[28]=0;
-}
-
-void MainWindow::on_txFirstCheckBox_stateChanged(int nstate)        //TxFirst
-{
-  m_txFirst = (nstate==2);
 }
 
 void MainWindow::set_dateTimeQSO(int m_ntx)
@@ -5938,44 +5931,7 @@ void MainWindow::on_actionFT8_triggered()
   ui->txb6->setEnabled(true);
   ui->txFirstCheckBox->setEnabled(true);
   ui->cbAutoSeq->setEnabled(true);
-  if(m_config.bFox()) {
-    ui->txFirstCheckBox->setChecked(true);
-    ui->txFirstCheckBox->setEnabled(false);
-    ui->cbHoldTxFreq->setChecked(true);
-    ui->cbAutoSeq->setEnabled(false);
-    ui->tabWidget->setCurrentIndex(2);
-    ui->TxFreqSpinBox->setValue(300);
-    displayWidgets(nWidgets("111010000100111000010000000000100"));
-    ui->labDXped->setText("DXpedition: Fox");
-    on_actionFox_Log_triggered();
-  }
-  if(m_config.bHound()) {
-    ui->txFirstCheckBox->setChecked(false);
-    ui->txFirstCheckBox->setEnabled(false);
-    ui->cbAutoSeq->setEnabled(false);
-    ui->tabWidget->setCurrentIndex(0);
-    ui->cbHoldTxFreq->setChecked(true);
-    displayWidgets(nWidgets("111010000100110000010000000000110"));
-    ui->labDXped->setText("DXpedition: Hound");
-    ui->txrb1->setChecked(true);
-    ui->txrb2->setEnabled(false);
-    ui->txrb4->setEnabled(false);
-    ui->txrb5->setEnabled(false);
-    ui->txrb6->setEnabled(false);
-    ui->txb2->setEnabled(false);
-    ui->txb4->setEnabled(false);
-    ui->txb5->setEnabled(false);
-    ui->txb6->setEnabled(false);
-  }
 
-  if((m_config.bFox() or m_config.bHound()) and !m_config.split_mode() and !m_bWarnedSplit) {
-    QString errorMsg;
-    MessageBox::critical_message (this,
-       "Operation in FT8 DXpedition mode normally requires\n"
-       " *Split* rig control (either *Rig* or *Fake It* on\n"
-       "the *Settings | Radio* tab.)", errorMsg);
-    m_bWarnedSplit=true;
-  }
   statusChanged();
 }
 

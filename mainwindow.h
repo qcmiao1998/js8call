@@ -211,7 +211,6 @@ private slots:
   void on_EraseButton_clicked();
   void band_activity_cleared ();
   void rx_frequency_activity_cleared ();
-  void on_txFirstCheckBox_stateChanged(int arg1);
   void set_dateTimeQSO(int m_ntx);
   void set_ntx(int n);
   void on_txrb1_toggled(bool status);
