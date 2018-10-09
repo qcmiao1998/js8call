@@ -65,7 +65,7 @@ write(*,*) "niter= ",max_iterations," s= ",s
 allocate ( codeword(N), decoded(K), message(K) )
 allocate ( rxdata(N), llr(N) )
 
-  msg="K1JT K9AN EN50"
+  msg="0123456789012"
 !  msg="G4WJS K9AN EN50"
   call packmsg(msg,i4Msg6BitWords,itype,.false.) !Pack into 12 6-bit bytes
   call unpackmsg(i4Msg6BitWords,msgsent,.false.,grid) !Unpack to get msgsent
