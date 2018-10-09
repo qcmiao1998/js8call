@@ -120,8 +120,6 @@ public slots:
   void diskDat();
   void freezeDecode(int n);
   void guiUpdate();
-  void doubleClickOnCall (Qt::KeyboardModifiers);
-  void doubleClickOnCall2(Qt::KeyboardModifiers);
   void readFromStdout();
   void p1ReadFromStdout();
   void setXIT(int n, Frequency base = 0u);
@@ -417,7 +415,6 @@ private:
 private:
   void astroUpdate ();
   void writeAllTxt(QString message);
-  void auto_sequence (DecodedText const& message, unsigned start_tolerance, unsigned stop_tolerance);
   void hideMenus(bool b);
 
   NetworkAccessManager m_network_manager;
@@ -860,8 +857,6 @@ private:
   void writeSettings();
   void createStatusBar();
   void updateStatusBar();
-  void genStdMsgs(QString rpt, bool unconditional = false);
-  void genCQMsg();
   void clearDX ();
   void lookup();
   void ba2msg(QByteArray ba, char* message);
@@ -874,14 +869,11 @@ private:
   void rigFailure (QString const& reason);
   void pskSetLocal ();
   void aprsSetLocal ();
-  void pskPost(DecodedText const& decodedtext);
   void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
   void aprsLogReport(int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
   void displayDialFrequency ();
   void transmitDisplay (bool);
-  void processMessage(DecodedText const&, Qt::KeyboardModifiers = 0);
-  void replyToCQ (QTime, qint32 snr, float delta_time, quint32 delta_frequency, QString const& mode, QString const& message_text, bool low_confidence, quint8 modifiers);
   void locationChange(QString const& location);
   void replayDecodes ();
   void postDecode (bool is_new, QString const& message);
