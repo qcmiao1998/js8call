@@ -7943,6 +7943,9 @@ void MainWindow::on_pbT2R_clicked()
 void MainWindow::on_beaconButton_clicked()
 {
     if(ui->beaconButton->isChecked()){
+        // clear the beacon queue when you turn it on.
+        m_txBeaconQueue.clear();
+        // then schedule the next beacon
         scheduleBeacon(true);
     } else {
         pauseBeacon();
