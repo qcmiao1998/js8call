@@ -74,7 +74,7 @@ QList<CodewordPair> JSC::compress(QString text){
             }
 
             auto t = JSC::map[index];
-            w = QString(w.mid(t.size));
+            w = QString(w).mid(t.size);
 
             bool isLast = w.isEmpty();
             bool shouldAppendSpace = isLast && !isSpaceCharacter;
@@ -130,7 +130,9 @@ QString JSC::decompress(Codeword const& bitvec){
 
         j = j*s + bytes[start + k] + base[k];
 
-        out.append(QString(JSC::map[j].str));
+        auto word = QString(JSC::map[j].str);
+
+        out.append(word);
         if(!separators.isEmpty() && separators.first() == start + k){
             out.append(" ");
             separators.removeFirst();
@@ -179,11 +181,6 @@ quint32 JSC::lookup(char const* b, bool *ok){
 
     // now that we have the first index in the list, let's just iterate through the list, comparing words along the way
     for(quint32 i = index; i < index + count; i++){
-        // if we're no longer a prefix match, end.
-        if(b[0] != JSC::list[i].str[0]){
-            break;
-        }
-
         quint32 len = JSC::list[i].size;
         if(strncmp(b, JSC::list[i].str, len) == 0){
             if(ok) *ok = true;
