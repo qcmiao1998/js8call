@@ -4538,6 +4538,8 @@ void MainWindow::guiUpdate()
 
     // once processed, lets update the display...
     displayActivity(forceDirty);
+    updateButtonDisplay();
+    updateTextDisplay();
   }
 
   // once per 100ms
@@ -5438,6 +5440,10 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
     }
 
     m_txTextDirty = true;
+
+    // immediately update the display
+    updateButtonDisplay();
+    updateTextDisplay();
 }
 
 int MainWindow::currentFreqOffset(){
@@ -6973,7 +6979,9 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
     }
     ui->extFreeTextMsgEdit->setPlaceholderText(placeholderText);
 
+    // immediately update the display);
     updateButtonDisplay();
+    updateTextDisplay();
 }
 
 void MainWindow::on_tableWidgetCalls_cellClicked(int /*row*/, int /*col*/){
@@ -7922,19 +7930,15 @@ void MainWindow::postDecode (bool is_new, QString const& message)
 }
 
 void MainWindow::displayTransmit(){
-    updateButtonDisplay();
+    // Transmit Activity
+    update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
 }
 
 void MainWindow::updateButtonDisplay(){
     bool isTransmitting = m_transmitting || m_txFrameCount > 0;
 
-    // Transmit Activity
-    update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
-
     auto selectedCallsign = callsignSelected(true);
     bool emptyCallsign = selectedCallsign.isEmpty();
-    bool emptyText = ui->extFreeTextMsgEdit->toPlainText().isEmpty();
-    bool invalidSelcal = !ensureSelcalCallsignSelected(false);
 
     ui->cqMacroButton->setDisabled(isTransmitting);
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
@@ -7944,6 +7948,13 @@ void MainWindow::updateButtonDisplay(){
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
     ui->deselectButton->setDisabled(isTransmitting || emptyCallsign);
     ui->queryButton->setText(emptyCallsign ? "Directed" : QString("Directed to %1").arg(selectedCallsign));
+}
+
+void MainWindow::updateTextDisplay(){
+    bool isTransmitting = m_transmitting || m_txFrameCount > 0;
+    bool emptyText = ui->extFreeTextMsgEdit->toPlainText().isEmpty();
+    bool invalidSelcal = !ensureSelcalCallsignSelected(false);
+
     ui->startTxButton->setDisabled(isTransmitting || emptyText || invalidSelcal);
 
     if(m_txTextDirty){
@@ -7951,6 +7962,7 @@ void MainWindow::updateButtonDisplay(){
         if(m_txTextDirtyDebounce.isActive()){
             m_txTextDirtyDebounce.stop();
         }
+        m_txTextDirtyDebounce.setSingleShot(true);
         m_txTextDirtyDebounce.start(100);
         m_txTextDirty = false;
     }
@@ -10107,7 +10119,6 @@ void MainWindow::tx_watchdog (bool triggered)
       tx_status_label.setStyleSheet ("QLabel{background-color: #ff0000}");
       tx_status_label.setText ("Idle watchdog");
 
-      //QApplication::alert (this);
       MessageBox::warning_message(this, QString("You have been idle for more than %1 minutes.").arg(m_config.watchdog()));
 
     }

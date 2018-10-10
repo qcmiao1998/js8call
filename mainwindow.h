@@ -879,6 +879,7 @@ private:
   void postDecode (bool is_new, QString const& message);
   void displayTransmit();
   void updateButtonDisplay();
+  void updateTextDisplay();
   void updateFrameCountEstimate(int count);
   void updateTextStatsDisplay(QString text, int count);
   void updateTxButtonDisplay();
