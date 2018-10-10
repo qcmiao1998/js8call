@@ -717,6 +717,7 @@ private:
     QString text;
     QDateTime utcTimestamp;
     int snr;
+    bool shouldDisplay;
   };
 
   struct MessageBuffer {

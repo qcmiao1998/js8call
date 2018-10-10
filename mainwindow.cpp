@@ -3629,6 +3629,12 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
       qDebug() << "valid" << bValidFrame << "decoded text" << decodedtext.message();
 
+      ActivityDetail d = {};
+      CallDetail cd = {};
+      CommandDetail cmd = {};
+      CallDetail td = {};
+
+
       //Left (Band activity) window
       if(bValidFrame) {
           // Parse General Activity
@@ -3650,7 +3656,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 }
             }
 
-            ActivityDetail d = {};
+            //ActivityDetail d = {};
             d.isLowConfidence = decodedtext.isLowConfidence();
             d.isFree = !decodedtext.isStandardMessage();
             d.isCompound = decodedtext.isCompound();
@@ -3674,6 +3680,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 qDebug() << "buffering data" << d.freq << d.text;
                 d.isBuffered = true;
                 m_messageBuffer[d.freq].msgs.append(d);
+                // TODO: incremental display if it's "to" me.
             }
 
             m_rxActivityQueue.append(d);
@@ -3682,16 +3689,13 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 m_bandActivity[offset].removeFirst();
             }
           }
-
 #endif
-
 
           // Process compound callsign commands (put them in cache)"
 #if 1
           qDebug() << "decoded" << decodedtext.frameType() << decodedtext.isCompound() << decodedtext.isDirectedMessage() << decodedtext.isBeacon();
           bool shouldProcessCompound = true;
           if(shouldProcessCompound && decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
-            CallDetail cd = {};
             cd.call = decodedtext.compoundCall();
             cd.grid = decodedtext.extra(); // compound calls via beacons may contain grid...
             cd.snr = decodedtext.snr();
@@ -3701,18 +3705,23 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
             // Only respond to BEACONS...remember that CQ messages are "Alt" beacons
             if(decodedtext.isBeacon()){
-                if(!decodedtext.isAlt()){
+                if(decodedtext.isAlt()){
+
+                    // this is a cq with a compound call, ala "KN4CRD/P: CQCQCQ"
+                    // it is not processed elsewhere, so we need to just log it here.
+                    logCallActivity(cd, true);
+
+                } else {
                     // convert BEACON to a directed command and process...
-                    CommandDetail d = {};
-                    d.from = cd.call;
-                    d.to = "ALLCALL";
-                    d.cmd = " BEACON";
-                    d.snr = cd.snr;
-                    d.bits = cd.bits;
-                    d.grid = cd.grid;
-                    d.freq = cd.freq;
-                    d.utcTimestamp = cd.utcTimestamp;
-                    m_rxCommandQueue.append(d);
+                    cmd.from = cd.call;
+                    cmd.to = "ALLCALL";
+                    cmd.cmd = " BEACON";
+                    cmd.snr = cd.snr;
+                    cmd.bits = cd.bits;
+                    cmd.grid = cd.grid;
+                    cmd.freq = cd.freq;
+                    cmd.utcTimestamp = cd.utcTimestamp;
+                    m_rxCommandQueue.append(cmd);
                 }
 
             } else {
@@ -3731,60 +3740,54 @@ void MainWindow::readFromStdout()                             //readFromStdout
           if(shouldProcessDirected && decodedtext.isDirectedMessage()){
               auto parts = decodedtext.directedMessage();
 
-              CommandDetail d = {};
-              d.from = parts.at(0);
-              d.to = parts.at(1);
-              d.cmd = parts.at(2);
-              d.freq = decodedtext.frequencyOffset();
-              d.snr = decodedtext.snr();
-              d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-              d.bits = decodedtext.bits();
-              d.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
+              cmd.from = parts.at(0);
+              cmd.to = parts.at(1);
+              cmd.cmd = parts.at(2);
+              cmd.freq = decodedtext.frequencyOffset();
+              cmd.snr = decodedtext.snr();
+              cmd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+              cmd.bits = decodedtext.bits();
+              cmd.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
 
               // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
-              if((Varicode::isCommandBuffered(d.cmd) && (d.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) || d.from == "<....>" || d.to == "<....>"){
-                qDebug() << "buffering cmd" << d.freq << d.cmd << d.from << d.to;
+              if((Varicode::isCommandBuffered(cmd.cmd) && (cmd.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) || cmd.from == "<....>" || cmd.to == "<....>"){
+                qDebug() << "buffering cmd" << cmd.freq << cmd.cmd << cmd.from << cmd.to;
 
-                hasExistingMessageBuffer(d.freq, true, nullptr);
-                m_messageBuffer[d.freq].cmd = d;
-                m_messageBuffer[d.freq].msgs.clear();
+                hasExistingMessageBuffer(cmd.freq, true, nullptr);
+
+                if(cmd.to == m_config.my_callsign()){
+                    d.shouldDisplay = true;
+                }
+
+                m_messageBuffer[cmd.freq].cmd = cmd;
+                m_messageBuffer[cmd.freq].msgs.clear();
               } else {
-                m_rxCommandQueue.append(d);
+                m_rxCommandQueue.append(cmd);
               }
 
-              /*
-              // DISABLED FOR NOW...
-              CallDetail cd;
-              cd.bits = d.bits;
-              cd.call = d.from;
-              cd.grid = "";
-              cd.snr = d.snr;
-              cd.freq = d.freq;
-              cd.utcTimestamp = d.utcTimestamp;
-              logCallActivity(cd);
-              */
-
-#if 0
-              bool shouldCaptureThirdPartyCallsigns = false;
               // check to see if this is a station we've heard 3rd party
-              if(shouldCaptureThirdPartyCallsigns && Radio::base_callsign(d.to) != Radio::base_callsign(m_config.my_callsign())){
-                  QString relayCall = QString("%1|%2").arg(Radio::base_callsign(d.from)).arg(Radio::base_callsign(d.to));
+              bool shouldCaptureThirdPartyCallsigns = false;
+              if(shouldCaptureThirdPartyCallsigns && Radio::base_callsign(cmd.to) != Radio::base_callsign(m_config.my_callsign())){
+                  QString relayCall = QString("%1|%2").arg(Radio::base_callsign(cmd.from)).arg(Radio::base_callsign(cmd.to));
                   int snr = -100;
                   if(parts.length() == 4){
                       snr = QString(parts.at(3)).toInt();
                   }
-                  CallDetail td;
-                  td.through = d.from;
-                  td.call = d.to;
+
+                  //CallDetail td = {};
+                  td.through = cmd.from;
+                  td.call = cmd.to;
                   td.grid = "";
                   td.snr = snr;
-                  td.freq = d.freq;
-                  td.utcTimestamp = d.utcTimestamp;
+                  td.freq = cmd.freq;
+                  td.utcTimestamp = cmd.utcTimestamp;
                   m_callActivity[relayCall] = td;
               }
-#endif
           }
 #endif
+
+
+
 
           // Parse CQs
 #if 0
@@ -3851,6 +3854,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
 #endif
       }
 
+#if 0
       //Right (Rx Frequency) window
       bool bDisplayRight=bAvgMsg;
       int audioFreq=decodedtext.frequencyOffset();
@@ -3905,8 +3909,11 @@ void MainWindow::readFromStdout()                             //readFromStdout
           }
         }
       }
+#endif
+
     }
   }
+
 
   // See MainWindow::postDecode for displaying the latest decodes
 }
@@ -8179,22 +8186,28 @@ void MainWindow::processRxActivity() {
     while (!m_rxActivityQueue.isEmpty()) {
         ActivityDetail d = m_rxActivityQueue.dequeue();
 
-        // if this is a _partial_ directed message, skip until the complete call comes through.
-        if(d.isDirected && d.text.contains("<....>")){
-            continue;
-        }
-
-        if(d.isDirected && d.text.contains("BEACON")){
-            continue;
-        }
-
-        if(ui->selcalButton->isChecked()){
-            continue;
-        }
-
         // use the actual frequency and check its delta from our current frequency
         // meaning, if our current offset is 1502 and the d.freq is 1492, the delta is <= 10;
         bool shouldDisplay = abs(d.freq - currentFreqOffset()) <= 10;
+
+        int prevOffset = d.freq;
+        if(hasExistingMessageBuffer(d.freq, false, &prevOffset) && m_messageBuffer[prevOffset].cmd.to == m_config.my_callsign()){
+            d.isBuffered = true;
+            shouldDisplay = true;
+        } else {
+            // if this is a _partial_ directed message, skip until the complete call comes through.
+            if(d.isDirected && d.text.contains("<....>")){
+                continue;
+            }
+
+            if(d.isDirected && d.text.contains("BEACON")){
+                continue;
+            }
+
+            if(ui->selcalButton->isChecked()){
+                continue;
+            }
+        }
 
 #if 0
         // if this is a recent non-directed offset, bump the cache and display...
@@ -8518,7 +8531,7 @@ void MainWindow::processCommandActivity() {
             c.movePosition(QTextCursor::End);
             ui->textEditRX->setTextCursor(c);
 
-            if(isRecentOffset(d.freq) && ui->textEditRX->find(d.utcTimestamp.time().toString(), QTextDocument::FindBackward)){
+            if(/*isRecentOffset(d.freq) &&*/ ui->textEditRX->find(d.utcTimestamp.time().toString(), QTextDocument::FindBackward)){
                 // ... maybe we could delete the last line that had this message on this frequency...
                 c = ui->textEditRX->textCursor();
                 c.movePosition(QTextCursor::StartOfBlock);
