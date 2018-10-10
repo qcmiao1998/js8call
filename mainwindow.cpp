@@ -3676,7 +3676,6 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 m_messageBuffer[d.freq].msgs.append(d);
             }
 
-
             m_rxActivityQueue.append(d);
             m_bandActivity[offset].append(d);
             while(m_bandActivity[offset].count() > 10){
@@ -3701,19 +3700,20 @@ void MainWindow::readFromStdout()                             //readFromStdout
             cd.bits = decodedtext.bits();
 
             // Only respond to BEACONS...remember that CQ messages are "Alt" beacons
-            if(decodedtext.isBeacon() && !decodedtext.isAlt()){
-
-                // convert BEACON to a directed command and process...
-                CommandDetail d = {};
-                d.from = cd.call;
-                d.to = "ALLCALL";
-                d.cmd = " BEACON";
-                d.snr = cd.snr;
-                d.bits = cd.bits;
-                d.grid = cd.grid;
-                d.freq = cd.freq;
-                d.utcTimestamp = cd.utcTimestamp;
-                m_rxCommandQueue.append(d);
+            if(decodedtext.isBeacon()){
+                if(!decodedtext.isAlt()){
+                    // convert BEACON to a directed command and process...
+                    CommandDetail d = {};
+                    d.from = cd.call;
+                    d.to = "ALLCALL";
+                    d.cmd = " BEACON";
+                    d.snr = cd.snr;
+                    d.bits = cd.bits;
+                    d.grid = cd.grid;
+                    d.freq = cd.freq;
+                    d.utcTimestamp = cd.utcTimestamp;
+                    m_rxCommandQueue.append(d);
+                }
 
             } else {
                 qDebug() << "buffering compound call" << cd.freq << cd.call << cd.bits;
@@ -3787,7 +3787,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
 #endif
 
           // Parse CQs
-#if 1
+#if 0
           bool shouldParseCQs = true;
           if(shouldParseCQs && decodedtext.isStandardMessage()){
             QString theircall;
@@ -8213,6 +8213,11 @@ void MainWindow::processRxActivity() {
             shouldDisplay = shouldDisplay || !isDirectedAllCall;
         }
 #endif
+
+        // TODO: incremental printing of directed messages
+        // Display if:
+        // 1) this is a directed message header "to" us and should be buffered...
+        // 2) or, this is a buffered message frame for a buffer with us as the recipient.
 
         if(!shouldDisplay){
             continue;
