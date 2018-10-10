@@ -96,7 +96,7 @@ QMap<int, int> checksum_cmds = {
 };
 
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:BEACON (ACK|REQ)|AGN[?]|ACK\\b|73\\b|YES\\b|NO\\b|SNR\\b|QSL[?]|QSL\\b|RR\\b|HEARING\\b|HW CPY[?]|FB\\b|QTH\\b|QTC\\b|GRID\\b|APRS[:]|QRZ[?]|[?@&$%#^> ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:BEACON (ACK|REQ)|AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|(?:ACK|73|YES|NO|SNR|QSL|RR|HEARING|FB|QTH|QTC|GRID)(?= |$)|[?@&$%#^> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR|HEARING|BEACON ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
