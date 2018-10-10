@@ -8191,7 +8191,12 @@ void MainWindow::processRxActivity() {
         bool shouldDisplay = abs(d.freq - currentFreqOffset()) <= 10;
 
         int prevOffset = d.freq;
-        if(hasExistingMessageBuffer(d.freq, false, &prevOffset) && m_messageBuffer[prevOffset].cmd.to == m_config.my_callsign()){
+        if(hasExistingMessageBuffer(d.freq, false, &prevOffset) && (
+                (m_messageBuffer[prevOffset].cmd.to == m_config.my_callsign()) ||
+                (isAllCallIncluded(m_messageBuffer[prevOffset].cmd.to) && !ui->selcalButton->isChecked()) ||
+                (isGroupCallIncluded(m_messageBuffer[prevOffset].cmd.to) && abs(prevOffset - currentFreqOffset()) <= 125)
+            )
+        ){
             d.isBuffered = true;
             shouldDisplay = true;
         } else {
