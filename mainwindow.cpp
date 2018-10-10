@@ -10118,6 +10118,9 @@ void MainWindow::tx_watchdog (bool triggered)
 
 void MainWindow::update_watchdog_label ()
 {
+    watchdog_label.setVisible (false);
+
+#if 0
   if (m_config.watchdog () && !m_mode.startsWith ("WSPR"))
     {
       watchdog_label.setText (QString {"WD:%1m"}.arg (m_config.watchdog () - m_idleMinutes));
@@ -10128,6 +10131,7 @@ void MainWindow::update_watchdog_label ()
       watchdog_label.setText (QString {});
       watchdog_label.setVisible (false);
     }
+#endif
 }
 
 void MainWindow::on_cbMenus_toggled(bool b)

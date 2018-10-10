@@ -1650,7 +1650,7 @@ void Configuration::impl::read_settings ()
   quick_call_ = settings_->value ("QuickCall", false).toBool ();
   disable_TX_on_73_ = settings_->value ("73TxDisable", false).toBool ();
   beacon_ = settings_->value ("TxBeacon", 30).toInt ();
-  watchdog_ = settings_->value ("TxWatchdog", 0).toInt ();
+  watchdog_ = settings_->value ("TxIdleWatchdog", 60).toInt ();
   if(watchdog_){
       watchdog_ = qMax(5, watchdog_);
   }
@@ -1783,7 +1783,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("QuickCall", quick_call_);
   settings_->setValue ("73TxDisable", disable_TX_on_73_);
   settings_->setValue ("TxBeacon", beacon_);
-  settings_->setValue ("TxWatchdog", watchdog_);
+  settings_->setValue ("TxIdleWatchdog", watchdog_);
   settings_->setValue ("Tx2QSO", TX_messages_);
   settings_->setValue ("CATForceDTR", rig_params_.force_dtr);
   settings_->setValue ("DTR", rig_params_.dtr_high);
