@@ -10106,7 +10106,10 @@ void MainWindow::tx_watchdog (bool triggered)
       stopTx();
       tx_status_label.setStyleSheet ("QLabel{background-color: #ff0000}");
       tx_status_label.setText ("Idle watchdog");
-      QApplication::alert (this);
+
+      //QApplication::alert (this);
+      MessageBox::warning_message(this, QString("You have been idle for more than %1 minutes.").arg(m_config.watchdog()));
+
     }
   else
     {
