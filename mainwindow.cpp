@@ -1391,6 +1391,20 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // Don't block beacon's first run...
   m_lastTxTime = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
 
+
+  auto beaconNow = new QAction(QString("Beacon Now"), ui->beaconButton);
+  connect(beaconNow, &QAction::triggered, this, [this](){
+    if(m_transmitting){
+        return;
+    }
+    if(!ui->beaconButton->isChecked()){
+        ui->beaconButton->setChecked(true);
+    }
+    scheduleBeacon(true);
+  });
+  ui->beaconButton->setContextMenuPolicy(Qt::ActionsContextMenu);
+  ui->beaconButton->addAction(beaconNow);
+
   pskSetLocal();
   aprsSetLocal();
 
@@ -7180,7 +7194,7 @@ void MainWindow::on_beaconButton_clicked()
 
     // then process the action
     if(ui->beaconButton->isChecked()){
-        scheduleBeacon(true);
+        scheduleBeacon(false);
     } else {
         pauseBeacon();
     }
