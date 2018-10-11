@@ -1178,6 +1178,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
     restoreAction->setDisabled(m_lastTxMessage.isEmpty());
     menu->addAction(restoreAction);
+    menu->addSeparator();
 
     auto savedMenu = menu->addMenu("Saved messages...");
     buildSavedMessagesMenu(savedMenu);
