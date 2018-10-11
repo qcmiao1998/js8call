@@ -8212,6 +8212,18 @@ void MainWindow::processRxActivity() {
         ){
             d.isBuffered = true;
             shouldDisplay = true;
+
+            if(!m_messageBuffer[prevOffset].compound.isEmpty()){
+                //qDebug() << "should display compound too because at this point it hasn't been displayed" << m_messageBuffer[prevOffset].compound.last().call;
+
+                auto lastCompound = m_messageBuffer[prevOffset].compound.last();
+
+                // fixup compound call incremental text
+                d.text = QString("%1: %2").arg(lastCompound.call).arg(d.text);
+                d.utcTimestamp = qMin(d.utcTimestamp, lastCompound.utcTimestamp);
+            }
+
+
         } else {
             // if this is a _partial_ directed message, skip until the complete call comes through.
             if(d.isDirected && d.text.contains("<....>")){
