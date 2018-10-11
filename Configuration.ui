@@ -2565,7 +2565,7 @@ QListView::item:hover {
              <item row="1" column="0">
               <widget class="QLabel" name="sound_am_path_label">
                <property name="text">
-                <string>Reply Message Received:</string>
+                <string>Reply Dialog Message Received:</string>
                </property>
                <property name="buddy">
                 <cstring>azel_path_select_push_button</cstring>
