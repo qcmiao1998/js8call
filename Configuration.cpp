@@ -2338,14 +2338,23 @@ void Configuration::impl::reject ()
 
 void Configuration::impl::on_font_push_button_clicked ()
 {
-  next_font_ = QFontDialog::getFont (0, next_font_, this);
-
+  next_font_ = QFontDialog::getFont (0, next_font_, this
+                                   , tr ("Font Chooser")
+#if QT_VERSION >= 0x050201
+                                   , QFontDialog::DontUseNativeDialog
+#endif
+                                   );
   ui_->font_push_button->setText(QString("Application Font (%1 %2)").arg(next_font_.family()).arg(next_font_.pointSize()));
 }
 
 void Configuration::impl::on_tableFontButton_clicked ()
 {
-  next_table_font_ = QFontDialog::getFont (0, next_table_font_, this);
+  next_table_font_ = QFontDialog::getFont (0, next_table_font_, this
+                                           , tr ("Font Chooser")
+#if QT_VERSION >= 0x050201
+                                           , QFontDialog::DontUseNativeDialog
+#endif
+                                           );
   ui_->tableFontButton->setText(QString("Table Font (%1 %2)").arg(next_table_font_.family()).arg(next_table_font_.pointSize()));
 }
 
@@ -2453,7 +2462,7 @@ void Configuration::impl::on_rxFontButton_clicked ()
   next_rx_text_font_ = QFontDialog::getFont (0, next_rx_text_font_ , this
                                                   , tr ("Font Chooser")
 #if QT_VERSION >= 0x050201
-                                                  , 0
+                                                  , QFontDialog::DontUseNativeDialog
 #endif
                                                   );
   ui_->rxFontButton->setText(QString("Font (%1 %2)").arg(next_rx_text_font_.family()).arg(next_rx_text_font_.pointSize()));
@@ -2495,7 +2504,7 @@ void Configuration::impl::on_txFontButton_clicked ()
   next_tx_text_font_ = QFontDialog::getFont (0, next_tx_text_font_ , this
                                                   , tr ("Font Chooser")
 #if QT_VERSION >= 0x050201
-                                                  , 0
+                                                  , QFontDialog::DontUseNativeDialog
 #endif
                                                   );
 
@@ -2507,7 +2516,7 @@ void Configuration::impl::on_composeFontButton_clicked ()
   next_compose_text_font_ = QFontDialog::getFont (0, next_compose_text_font_ , this
                                                   , tr ("Font Chooser")
 #if QT_VERSION >= 0x050201
-                                                  , 0
+                                                  , QFontDialog::DontUseNativeDialog
 #endif
                                                   );
   ui_->composeFontButton->setText(QString("Font (%1 %2)").arg(next_compose_text_font_.family()).arg(next_compose_text_font_.pointSize()));
