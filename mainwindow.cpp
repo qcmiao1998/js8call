@@ -4137,11 +4137,6 @@ void MainWindow::guiUpdate()
   if(m_transmitting or m_auto or m_tune) {
     m_dateTimeLastTX = DriftingDateTime::currentDateTime ();
 
-// Check for "txboth" (testing purposes only)
-    QFile f(m_appDir + "/txboth");
-    if(f.exists() and
-       fmod(tsec,m_TRperiod)<(1.0 + 85.0*m_nsps/12000.0)) m_bTxTime=true;
-
 // Don't transmit another mode in the 30 m WSPR sub-band
     Frequency onAirFreq = m_freqNominal + ui->TxFreqSpinBox->value();
 
@@ -4166,29 +4161,7 @@ void MainWindow::guiUpdate()
       }
     }
 
-    if(m_mode=="FT8" and m_config.bFox()) {
-// Don't allow Fox mode in any of the default FT8 sub-bands.
-      qint32 ft8Freq[]={1840,3573,7074,10136,14074,18100,21074,24915,28074,50313,70100};
-      for(int i=0; i<11; i++) {
-        int kHzdiff=m_freqNominal/1000 - ft8Freq[i];
-        if(qAbs(kHzdiff) < 4) {
-          m_bTxTime=false;
-          if (m_auto) auto_tx_mode (false);
-          auto const& message = tr ("Please choose another dial frequency."
-                                    " WSJT-X will not operate in Fox mode"
-                                    " in the standard FT8 sub-bands.");
-#if QT_VERSION >= 0x050400
-          QTimer::singleShot (0, [=] {               // don't block guiUpdate
-            MessageBox::warning_message (this, tr ("Fox Mode warning"), message);
-          });
-#else
-          MessageBox::warning_message (this, tr ("Fox Mode warning"), message);
-#endif
-          break;
-        }
-      }
-    }
-
+    // watchdog!
     if (m_config.watchdog() && !m_mode.startsWith ("WSPR")
         && m_idleMinutes >= m_config.watchdog ()) {
       tx_watchdog (true);       // disable transmit
@@ -4363,22 +4336,6 @@ void MainWindow::guiUpdate()
     }
     m_restart=false;
 //----------------------------------------------------------------------
-  } else {
-    if (!m_auto && m_sentFirst73)
-    {
-      m_sentFirst73 = false;
-      if (1 == ui->tabWidget->currentIndex())
-      {
-        ui->genMsg->setText(ui->tx6->text());
-        m_ntx=7;
-        m_QSOProgress = CALLING;
-        m_gen_message_is_cq = true;
-        ui->rbGenMsg->setChecked(true);
-      } else {
-//JHT 11/29/2015        m_ntx=6;
-//        ui->txrb6->setChecked(true);
-      }
-    }
   }
 
   if (g_iptt == 1 && m_iptt0 == 0)
@@ -4393,22 +4350,6 @@ void MainWindow::guiUpdate()
       if(!m_tune) {
         write_transmit_entry ("ALL.TXT");
       }
-
-      if (m_config.TX_messages () && !m_tune && !m_config.bFox()) {
-        ui->decodedTextBrowser2->displayTransmittedText(current_message, m_modeTx,
-              ui->TxFreqSpinBox->value(),m_config.color_rx_background(),m_bFastMode);
-      }
-
-      switch (m_ntx)
-        {
-        case 1: m_QSOProgress = REPLYING; break;
-        case 2: m_QSOProgress = REPORT; break;
-        case 3: m_QSOProgress = ROGER_REPORT; break;
-        case 4: m_QSOProgress = ROGERS; break;
-        case 5: m_QSOProgress = SIGNOFF; break;
-        case 6: m_QSOProgress = CALLING; break;
-        default: break;             // determined elsewhere
-        }
 
       // TODO: jsherer - perhaps an on_transmitting signal?
       m_lastTxTime = DriftingDateTime::currentDateTimeUtc();
@@ -4439,39 +4380,13 @@ void MainWindow::guiUpdate()
     } else {
       m_bVHFwarned=false;
     }
-    // if(m_config.bFox()) {
-    //   if(m_config.my_callsign()=="K1JT" or m_config.my_callsign()=="K9AN" or
-    //      m_config.my_callsign()=="G4WJS" or m_config.my_callsign().contains("KH7Z")) {
-    //     ui->sbNslots->setMaximum(5);
-    //     m_Nslots=ui->sbNslots->value();
-    //     ui->sbNslots->setEnabled(true);
-    //   } else {
-    //     ui->sbNslots->setMaximum(1);
-    //     m_Nslots=1;
-    //     ui->sbNslots->setEnabled(false);
-    //   }
-    // }
 
-    if(m_config.bHound()) {
-      m_bWarnedHound=false;
-      qint32 tHound=DriftingDateTime::currentMSecsSinceEpoch()/1000 - m_tAutoOn;
-      //To keep calling Fox, Hound must reactivate Enable Tx at least once every 2 minutes
-      if(tHound >= 120 and m_ntx==1) auto_tx_mode(false);
-    }
-
-    if(m_auto and m_mode=="Echo" and m_bEchoTxOK) {
-      progressBar.setMaximum(6);
-      progressBar.setValue(int(m_s6));
-    }
-
-    if(m_mode!="Echo") {
-      if(m_monitoring or m_transmitting) {
+    if(m_monitoring or m_transmitting) {
         progressBar.setMaximum(m_TRperiod);
         int isec=int(fmod(tsec,m_TRperiod));
         progressBar.setValue(isec);
-      } else {
+    } else {
         progressBar.setValue(0);
-      }
     }
 
     astroUpdate ();
