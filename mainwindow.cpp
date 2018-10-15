@@ -7898,8 +7898,8 @@ void MainWindow::updateButtonDisplay(){
 
     ui->cqMacroButton->setDisabled(isTransmitting);
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
-    ui->qthMacroButton->setDisabled(isTransmitting || m_config.my_station().isEmpty());
-    ui->qtcMacroButton->setDisabled(isTransmitting || m_config.my_qth().isEmpty());
+    ui->qtcMacroButton->setDisabled(isTransmitting || m_config.my_station().isEmpty());
+    ui->qthMacroButton->setDisabled(isTransmitting || m_config.my_qth().isEmpty());
     ui->macrosMacroButton->setDisabled(isTransmitting);
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
     ui->deselectButton->setDisabled(isTransmitting || emptyCallsign);
