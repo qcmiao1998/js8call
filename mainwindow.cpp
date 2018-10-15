@@ -8532,7 +8532,11 @@ void MainWindow::processCommandActivity() {
             c.movePosition(QTextCursor::End);
             ui->textEditRX->setTextCursor(c);
 
-            if(/*isRecentOffset(d.freq) &&*/ ui->textEditRX->find(d.utcTimestamp.time().toString(), QTextDocument::FindBackward)){
+            // BEACON ACKs are the most likely source of items to be overwritten (multiple responses at once)...
+            // so don't overwrite those (i.e., print each on a new line)
+            bool shouldOverwrite = (d.cmd != "BEACON ACK"); /* && isRecentOffset(d.freq);*/
+
+            if(shouldOverwrite && ui->textEditRX->find(d.utcTimestamp.time().toString(), QTextDocument::FindBackward)){
                 // ... maybe we could delete the last line that had this message on this frequency...
                 c = ui->textEditRX->textCursor();
                 c.movePosition(QTextCursor::StartOfBlock);
