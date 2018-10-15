@@ -6306,6 +6306,7 @@ void MainWindow::on_cqMacroButton_clicked(){
         message = QString("CQCQCQ %1").arg(mygrid).trimmed();
     }
 
+    clearCallsignSelected();
     addMessageText(message);
 }
 
