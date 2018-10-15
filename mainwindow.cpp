@@ -4474,18 +4474,16 @@ void MainWindow::guiUpdate()
 
     // once per second...but not when we're transmitting
     if(!m_transmitting){
-        QTimer::singleShot(0, this, [this, forceDirty](){
-            // process all received activity...
-            processActivity(forceDirty);
+        // process all received activity...
+        processActivity(forceDirty);
 
-            // process outgoing tx queue...
-            processTxQueue();
+        // process outgoing tx queue...
+        processTxQueue();
 
-            // once processed, lets update the display...
-            displayActivity(forceDirty);
-            updateButtonDisplay();
-            updateTextDisplay();
-        });
+        // once processed, lets update the display...
+        displayActivity(forceDirty);
+        updateButtonDisplay();
+        updateTextDisplay();
     }
   }
 
