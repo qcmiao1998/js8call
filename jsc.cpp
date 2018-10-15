@@ -24,6 +24,9 @@
 #include <cmath>
 
 #include <QDebug>
+#include <QCache>
+
+QMap<QString, quint32> LOOKUP_CACHE;
 
 Codeword JSC::codeword(quint32 index, bool separate, quint32 bytesize, quint32 s, quint32 c){
     QList<Codeword> out;
@@ -145,7 +148,19 @@ QString JSC::decompress(Codeword const& bitvec){
 }
 
 quint32 JSC::lookup(QString w, bool * ok){
-    return lookup(w.toLatin1().data(), ok);
+    if(LOOKUP_CACHE.contains(w)){
+        if(ok) *ok = true;
+        return LOOKUP_CACHE[w];
+    }
+
+    bool found = false;
+    quint32 result = lookup(w.toLatin1().data(), &found);
+    if(found){
+        LOOKUP_CACHE[w] = result;
+    }
+
+    if(ok) *ok = found;
+    return result;
 }
 
 quint32 JSC::lookup(char const* b, bool *ok){
