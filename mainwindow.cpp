@@ -6536,7 +6536,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto heardQueryAction = menu->addAction(QString("%1$ - What are the stations are you hearing? (Top 4 ranked by strongest SNR)").arg(call).trimmed());
+    auto heardQueryAction = menu->addAction(QString("%1$ - What are the stations are you hearing? (Top 4 ranked by most recently heard)").arg(call).trimmed());
     heardQueryAction->setDisabled(isAllCall);
     connect(heardQueryAction, &QAction::triggered, this, [this](){
 
@@ -8608,7 +8608,7 @@ void MainWindow::processCommandActivity() {
                 const & b) {
                 auto left = m_callActivity[a];
                 auto right = m_callActivity[b];
-                return right.snr < left.snr;
+                return right.utcTimestamp < left.utcTimestamp;
             });
 
             QStringList lines;
@@ -8625,12 +8625,12 @@ void MainWindow::processCommandActivity() {
                     continue;
                 }
 
-                lines.append(QString("<%1 SNR %2>").arg(d.call).arg(Varicode::formatSNR(d.snr)));
+                lines.append(QString("%1 SNR %2 (%3)").arg(d.call).arg(Varicode::formatSNR(d.snr)).arg(since(d.utcTimestamp)));
 
                 i++;
             }
 
-            lines.prepend(QString("<%1 HEARING>").arg(m_config.my_callsign()));
+            lines.prepend(QString("%1 HEARING").arg(d.from));
             reply = lines.join('\n');
         }
 
