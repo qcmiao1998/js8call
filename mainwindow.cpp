@@ -842,6 +842,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
            , &QTextEdit::textChanged
            , [this] () {on_extFreeTextMsgEdit_currentTextChanged (ui->extFreeTextMsgEdit->toPlainText ());});
 
+  m_guiTimer.setSingleShot(true);
   connect(&m_guiTimer, &QTimer::timeout, this, &MainWindow::guiUpdate);
   m_guiTimer.start(100);   //### Don't change the 100 ms! ###
 
@@ -4087,10 +4088,21 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
 //------------------------------------------------------------- //guiUpdate()
 void MainWindow::guiUpdate()
 {
+  static quint64 lastLoop;
   static char message[29];
   static char msgsent[29];
   double txDuration;
   QString rt;
+
+  quint64 thisLoop = QDateTime::currentMSecsSinceEpoch();
+  if(lastLoop == 0){
+      lastLoop = thisLoop;
+  }
+  quint64 delta = thisLoop - lastLoop;
+  if(delta > (100 + 10)){
+    qDebug() << "guiupdate overrun" << (delta-100);
+  }
+  lastLoop = thisLoop;
 
   if(m_TRperiod==0) m_TRperiod=60;
   txDuration=0.0;
@@ -4533,28 +4545,33 @@ void MainWindow::guiUpdate()
         tryBandHop();
     }
 
-    // once per period/3
+    // once at the end of the period
     bool forceDirty = false;
-    if(m_sec0 % (m_TRperiod/3) == 0){
-        // force rx dirty three times per period
+    if(m_sec0 % (m_TRperiod-2) == 0 ||
+       m_sec0 % (m_TRperiod-1) == 0 ||
+       m_sec0 % (m_TRperiod) == 0){
+        // force rx dirty once times per period
         forceDirty = true;
     }
-
-    // once per second...
 
     // update the dial frequency once per second..
     displayDialFrequency();
 
-    // process all received activity...
-    processActivity(forceDirty);
+    // once per second...but not when we're transmitting
+    if(!m_transmitting){
+        QTimer::singleShot(0, this, [this, forceDirty](){
+            // process all received activity...
+            processActivity(forceDirty);
 
-    // process outgoing tx queue...
-    processTxQueue();
+            // process outgoing tx queue...
+            processTxQueue();
 
-    // once processed, lets update the display...
-    displayActivity(forceDirty);
-    updateButtonDisplay();
-    updateTextDisplay();
+            // once processed, lets update the display...
+            displayActivity(forceDirty);
+            updateButtonDisplay();
+            updateTextDisplay();
+        });
+    }
   }
 
   // once per 100ms
@@ -4562,6 +4579,16 @@ void MainWindow::guiUpdate()
 
   m_iptt0=g_iptt;
   m_btxok0=m_btxok;
+
+  // compute the processing time and adjust loop to hit the next 100ms
+  auto endLoop = QDateTime::currentMSecsSinceEpoch();
+  auto processingTime = endLoop - thisLoop;
+  auto nextLoopMs = 0;
+  if(processingTime < 100){
+      nextLoopMs = 100 - processingTime;
+  }
+
+  m_guiTimer.start(nextLoopMs);
 }               //End of guiUpdate
 
 
@@ -5454,7 +5481,8 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
       ui->extFreeTextMsgEdit->setTextCursor(c);
     }
 
-    m_txTextDirty = true;
+    m_txTextDirty = x != m_txTextDirtyLastText;
+    m_txTextDirtyLastText = x;
 
     // immediately update the display
     updateButtonDisplay();
