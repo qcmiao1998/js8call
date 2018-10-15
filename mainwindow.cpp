@@ -4460,12 +4460,12 @@ void MainWindow::guiUpdate()
         tryBandHop();
     }
 
-    // once at the end of the period
+    // at the end of the period
     bool forceDirty = false;
     if(m_sec0 % (m_TRperiod-2) == 0 ||
        m_sec0 % (m_TRperiod-1) == 0 ||
        m_sec0 % (m_TRperiod) == 0){
-        // force rx dirty once times per period
+        // force rx dirty at the end of the period
         forceDirty = true;
     }
 
