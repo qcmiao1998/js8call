@@ -5073,13 +5073,21 @@ void MainWindow::createAllcallTableRow(QTableWidget *table, bool selected){
     table->insertRow(table->rowCount());
 
     if(ui->selcalButton->isChecked()){
-        auto item = new QTableWidgetItem("GROUPCALL");
+        int freq = currentFreqOffset();
+        int count = 0;
+        foreach(auto cd, m_callActivity.values()){
+            if(abs(freq - cd.freq) < 125){
+                count++;
+            }
+        }
+        auto item = new QTableWidgetItem(count == 0 ? QString("GROUPCALL") : QString("GROUPCALL (%1)").arg(count));
         item->setData(Qt::UserRole, QVariant("GROUPCALL"));
         table->setItem(table->rowCount() - 1, 0, item);
         table->setSpan(table->rowCount() - 1, 0, 1, table->columnCount());
 
     } else {
-        auto item = new QTableWidgetItem("ALLCALL");
+        int count = m_callActivity.count();
+        auto item = new QTableWidgetItem(count == 0 ? QString("ALLCALL") : QString("ALLCALL (%1)").arg(count));
         item->setData(Qt::UserRole, QVariant("ALLCALL"));
         table->setItem(table->rowCount() - 1, 0, item);
         table->setSpan(table->rowCount() - 1, 0, 1, table->columnCount());
