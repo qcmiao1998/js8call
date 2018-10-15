@@ -197,6 +197,8 @@ bool DecodedText::tryUnpackDirected(){
       message_ = QString(parts.join(""));
     }
 
+    message_ = message_.replace("APRS: ", "APRS:");
+
     directed_ = parts;
     frameType_ = type;
     return true;
