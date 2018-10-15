@@ -151,6 +151,9 @@ extern "C" {
   void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
+const int NEAR_THRESHOLD_RX = 10;
+const int NEAR_THRESHOLD_GROUPCALL = 125;
+
 int volatile itone[NUM_ISCAT_SYMBOLS];  //Audio tones for all Tx symbols
 int volatile icw[NUM_CW_SYMBOLS];       //Dits for CW ID
 struct dec_data dec_data;               // for sharing with Fortran
@@ -5076,7 +5079,7 @@ void MainWindow::createAllcallTableRow(QTableWidget *table, bool selected){
         int freq = currentFreqOffset();
         int count = 0;
         foreach(auto cd, m_callActivity.values()){
-            if(abs(freq - cd.freq) < 125){
+            if(abs(freq - cd.freq) <= NEAR_THRESHOLD_GROUPCALL){
                 count++;
             }
         }
@@ -8075,7 +8078,7 @@ void MainWindow::clearCallsignSelected(){
 }
 
 bool MainWindow::isRecentOffset(int offset){
-    if(abs(offset - currentFreqOffset()) <= 10){
+    if(abs(offset - currentFreqOffset()) <= NEAR_THRESHOLD_RX){
         return true;
     }
     return (
@@ -8160,18 +8163,20 @@ void MainWindow::processRxActivity() {
         return;
     }
 
+    int freqOffset = currentFreqOffset();
+
     while (!m_rxActivityQueue.isEmpty()) {
         ActivityDetail d = m_rxActivityQueue.dequeue();
 
         // use the actual frequency and check its delta from our current frequency
         // meaning, if our current offset is 1502 and the d.freq is 1492, the delta is <= 10;
-        bool shouldDisplay = abs(d.freq - currentFreqOffset()) <= 10;
+        bool shouldDisplay = abs(d.freq - freqOffset) <= NEAR_THRESHOLD_RX;
 
         int prevOffset = d.freq;
         if(hasExistingMessageBuffer(d.freq, false, &prevOffset) && (
                 (m_messageBuffer[prevOffset].cmd.to == m_config.my_callsign()) ||
                 (isAllCallIncluded(m_messageBuffer[prevOffset].cmd.to) && !ui->selcalButton->isChecked()) ||
-                (isGroupCallIncluded(m_messageBuffer[prevOffset].cmd.to) && abs(prevOffset - currentFreqOffset()) <= 125)
+                (isGroupCallIncluded(m_messageBuffer[prevOffset].cmd.to) && abs(prevOffset - freqOffset) <= NEAR_THRESHOLD_GROUPCALL)
             )
         ){
             d.isBuffered = true;
@@ -8446,11 +8451,13 @@ void MainWindow::processCommandActivity() {
 
     auto now = DriftingDateTime::currentDateTimeUtc();
 
+    int freqOffset = currentFreqOffset();
+
     while (!m_rxCommandQueue.isEmpty()) {
         auto d = m_rxCommandQueue.dequeue();
 
         bool isAllCall = isAllCallIncluded(d.to);
-        bool isNear = abs(d.freq - currentFreqOffset()) <= 125; // 100Hz + a 25Hz buffer
+        bool isNear = abs(d.freq - freqOffset) <= NEAR_THRESHOLD_GROUPCALL; // 100Hz + a 25Hz buffer
         bool isGroupCall = isGroupCallIncluded(d.to) && isNear;
 
         qDebug() << "try processing command" << d.from << d.to << d.cmd << d.freq << d.grid << d.extra;
