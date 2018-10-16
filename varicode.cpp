@@ -96,10 +96,10 @@ QMap<int, int> checksum_cmds = {
 };
 
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:BEACON (ACK|REQ)|AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|(?:ACK|73|YES|NO|SNR|QSL|RR|HEARING|FB|QTH|QTC|GRID)(?= |$)|[?@&$%#^> ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:BEACON (ACK|REQ)|AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|(?:(?:ACK|73|YES|NO|SNR|QSL|RR|HEARING|FB|QTH|QTC|GRID)(?=[ ]|$))|[?@&$%#^> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
-QString optional_num_pattern = QString("(?<num>(?<=SNR|HEARING|BEACON ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
+QString optional_num_pattern = QString("(?<num>(?<=SNR|BEACON ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
 
 QRegularExpression directed_re("^"                    +
                                callsign_pattern       +
@@ -108,13 +108,13 @@ QRegularExpression directed_re("^"                    +
 
 QRegularExpression beacon_re(R"(^\s*(?<type>CQCQCQ|CQ QRPP?|CQ DX|CQ TEST|CQ( CQ){0,2}|BEACON)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
-QRegularExpression compound_re("^\\s*[<]"                  +
+QRegularExpression compound_re("^\\s*[`]"              +
                                callsign_pattern        +
                                "(?<extra>"             +
-                                 optional_grid_pattern +
+                                 optional_grid_pattern + // there's a reason this is first (see: buildMessageFrames)
                                  optional_cmd_pattern  +
                                  optional_num_pattern  +
-                               ")[>]");
+                               ")");
 
 QMap<QString, QString> hufftable = {
     // char   code                 weight
@@ -333,7 +333,7 @@ QStringList Varicode::parseCallsigns(QString const &input){
         if(!match.hasMatch()){
             continue;
         }
-        QString callsign = match.captured("callsign");
+        QString callsign = match.captured("callsign").trimmed();
         QRegularExpression m(grid_pattern);
         if(m.match(callsign).hasMatch()){
             continue;
@@ -1021,6 +1021,7 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
     qDebug() << "trying to pack compound message" << text;
     auto parsedText = compound_re.match(text);
     if(!parsedText.hasMatch()){
+        qDebug() << "no match for compound message";
         if(n) *n = 0;
         return frame;
     }
@@ -1060,6 +1061,8 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
 
     quint8 type = FrameCompound;
     quint16 extra = nmaxgrid;
+
+    qDebug() << "try pack cmd" << cmd << directed_cmds.contains(cmd) << Varicode::isCommandAllowed(cmd);
 
     if (!cmd.isEmpty() && directed_cmds.contains(cmd) && Varicode::isCommandAllowed(cmd)){
         bool packedNum = false;
@@ -1206,7 +1209,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
     QString from = callsign;
     QString to = match.captured("callsign");
     QString cmd = match.captured("cmd");
-    QString num = match.captured("num").trimmed();
+    QString num = match.captured("num");
 
     // ensure we have a directed command
     if(cmd.isEmpty()){
@@ -1240,8 +1243,11 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
     }
 
     // packing general number...
-    quint8 inum = Varicode::packNum(num, nullptr);
-    if(pNum) *pNum = num;
+    bool numOK = false;
+    quint8 inum = Varicode::packNum(num.trimmed(), &numOK);
+    if(numOK){
+        if(pNum) *pNum = num;
+    }
 
     quint32 packed_from = Varicode::packCallsign(from);
     quint32 packed_to = Varicode::packCallsign(to);
@@ -1251,12 +1257,15 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         return frame;
     }
 
+    QString cmdOut;
     quint8 packed_cmd = 0;
     if(directed_cmds.contains(cmd)){
-        packed_cmd = directed_cmds[cmd];
+        cmdOut = cmd;
+        packed_cmd = directed_cmds[cmdOut];
     }
     if(directed_cmds.contains(cmd.trimmed())){
-        packed_cmd = directed_cmds[cmd.trimmed()];
+        cmdOut = cmd.trimmed();
+        packed_cmd = directed_cmds[cmdOut];
     }
     quint8 packed_flag = FrameDirected;
     quint8 packed_extra = inum;
@@ -1269,7 +1278,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         Varicode::intToBits(packed_cmd % 32,  5)
     );
 
-    if(pCmd) *pCmd = cmd;
+    if(pCmd) *pCmd = cmdOut;
     if(n) *n = match.captured(0).length();
     return Varicode::pack72bits(Varicode::bitsToInt(bits), packed_extra % 64);
 }
@@ -1501,8 +1510,8 @@ QStringList Varicode::buildMessageFrames(
 #if AUTO_PREPEND_DIRECTED
         // see if we need to prepend the directed call to the line...
         // if we have a selected call and the text doesn't start with that call...
-        // and if this isn't a raw message (starting with "<")... then...
-        if(!selectedCall.isEmpty() && !line.startsWith(selectedCall) && !line.startsWith("<")){
+        // and if this isn't a raw message (starting with "`")... then...
+        if(!selectedCall.isEmpty() && !line.startsWith(selectedCall) && !line.startsWith("`")){
             auto calls = Varicode::parseCallsigns(line);
 
             bool lineStartsWithBaseCall = (
@@ -1512,7 +1521,7 @@ QStringList Varicode::buildMessageFrames(
                 Varicode::startsWithCQ(line)
             );
 
-            bool lineStartsWithStandardCall = !calls.isEmpty() && line.startsWith(calls.first());
+            bool lineStartsWithStandardCall = !calls.isEmpty() && line.startsWith(calls.first()) && calls.first().length() > 2;
 
             if(lineStartsWithBaseCall || lineStartsWithStandardCall){
                 // pass
@@ -1622,14 +1631,14 @@ QStringList Varicode::buildMessageFrames(
               bool shouldUseStandardFrame = true;
               if(compound || dirToCompound){
                   // Cases 1, 2, 3 all send a standard compound frame first...
-                  QString deCompoundMessage = QString("<%1 %2>").arg(mycall).arg(mygrid);
+                  QString deCompoundMessage = QString("`%1 %2").arg(mycall).arg(mygrid);
                   QString deCompoundFrame = Varicode::packCompoundMessage(deCompoundMessage, nullptr);
                   if(!deCompoundFrame.isEmpty()){
                       frames.append(deCompoundFrame);
                   }
 
                   // Followed, by a standard OR compound directed message...
-                  QString dirCompoundMessage = QString("<%1%2%3>").arg(dirTo).arg(dirCmd).arg(dirNum);
+                  QString dirCompoundMessage = QString("`%1%2%3").arg(dirTo).arg(dirCmd).arg(dirNum); //.replace("  ", " ");
                   QString dirCompoundFrame = Varicode::packCompoundMessage(dirCompoundMessage, nullptr);
                   if(!dirCompoundFrame.isEmpty()){
                       frames.append(dirCompoundFrame);
