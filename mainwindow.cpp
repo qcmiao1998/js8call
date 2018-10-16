@@ -7936,7 +7936,7 @@ void MainWindow::updateTextDisplay(){
     }
 }
 
-#define USE_SYNC_FRAME_COUNT 1
+#define USE_SYNC_FRAME_COUNT 0
 
 void MainWindow::refreshTextDisplay(){
     auto text = ui->extFreeTextMsgEdit->toPlainText();
@@ -7967,7 +7967,6 @@ void MainWindow::refreshTextDisplay(){
 #else
     // prepare selected callsign for directed message
     QString selectedCall = callsignSelected();
-    m_txTextDirtyLastSelectedCall = selectedCall;
 
     // prepare compound
     bool compound = Radio::is_compound_callsign(m_config.my_callsign());
@@ -7983,7 +7982,7 @@ void MainWindow::refreshTextDisplay(){
     );
 
     connect(t, &BuildMessageFramesThread::finished, t, &QObject::deleteLater);
-    connect(t, &BuildMessageFramesThread::resultReady, this, [this](const QStringList frames){
+    connect(t, &BuildMessageFramesThread::resultReady, this, [this, text](const QStringList frames){
 
         QStringList textList;
         qDebug() << "frames:";
@@ -7993,9 +7992,17 @@ void MainWindow::refreshTextDisplay(){
             textList.append(dt.message());
         }
 
-        updateFrameCountEstimate(frames.length());
-        updateTextStatsDisplay(textList.join(""), frames.length());
+        auto transmitText = textList.join("");
+        auto count = frames.length();
+
+        // ugh...i hate these globals
+        m_txTextDirtyLastSelectedCall = callsignSelected(true);
+        m_txTextDirtyLastText = text;
+        m_txFrameCountEstimate = count;
         m_txTextDirty = false;
+
+        updateTextStatsDisplay(transmitText, count);
+        updateTxButtonDisplay();
 
     });
     t->start();
