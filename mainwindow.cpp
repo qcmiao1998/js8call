@@ -4466,8 +4466,8 @@ void MainWindow::guiUpdate()
     // at the end of the period
     bool forceDirty = false;
     if(m_sec0 % (m_TRperiod-2) == 0 ||
-       m_sec0 % (m_TRperiod-1) == 0 ||
-       m_sec0 % (m_TRperiod) == 0){
+       m_sec0 % (m_TRperiod) == 0   ||
+       m_sec0 % (m_TRperiod+2) == 0 ){
         // force rx dirty at the end of the period
         forceDirty = true;
     }
