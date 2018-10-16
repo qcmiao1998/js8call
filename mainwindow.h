@@ -296,7 +296,6 @@ private slots:
   void on_nextFreeTextMsg_currentTextChanged (QString const&);
   void on_extFreeTextMsgEdit_currentTextChanged (QString const&);
   int currentFreqOffset();
-  int countMessageFrames(QString const& text);
   QStringList buildMessageFrames(QString const& text);
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);

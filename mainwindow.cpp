@@ -5417,10 +5417,6 @@ int MainWindow::currentFreqOffset(){
     return ui->RxFreqSpinBox->value();
 }
 
-int MainWindow::countMessageFrames(QString const& text){
-    return buildMessageFrames(text).length();
-}
-
 QStringList MainWindow::buildMessageFrames(const QString &text){
     // prepare selected callsign for directed message
     QString selectedCall = callsignSelected();
@@ -7939,6 +7935,7 @@ void MainWindow::updateTextDisplay(){
 #define USE_SYNC_FRAME_COUNT 0
 
 void MainWindow::refreshTextDisplay(){
+    qDebug() << "refreshing text display...";
     auto text = ui->extFreeTextMsgEdit->toPlainText();
 
 #if USE_SYNC_FRAME_COUNT
