@@ -4625,7 +4625,7 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>&amp;File</string>
     </property>
     <addaction name="actionOpen"/>
     <addaction name="actionOpen_next_in_directory"/>
@@ -4670,7 +4670,7 @@ list. The list can be maintained in Settings (F2).</string>
    </widget>
    <widget class="QMenu" name="menuSave">
     <property name="title">
-     <string>Save</string>
+     <string>&amp;Save</string>
     </property>
     <addaction name="actionNone"/>
     <addaction name="actionSave_decoded"/>
@@ -4682,18 +4682,16 @@ list. The list can be maintained in Settings (F2).</string>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Help</string>
+     <string>&amp;Help</string>
     </property>
     <addaction name="actionRelease_Notes"/>
     <addaction name="actionOnline_User_Guide"/>
     <addaction name="actionLocal_User_Guide"/>
     <addaction name="actionFT8_DXpedition_Mode_User_Guide"/>
     <addaction name="download_samples_action"/>
-    <addaction name="separator"/>
     <addaction name="actionKeyboard_shortcuts"/>
     <addaction name="actionSpecial_mouse_commands"/>
     <addaction name="actionShort_list_of_add_on_prefixes_and_suffixes"/>
-    <addaction name="separator"/>
     <addaction name="actionCopyright_Notice"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
@@ -4724,7 +4722,7 @@ list. The list can be maintained in Settings (F2).</string>
    </widget>
    <widget class="QMenu" name="menuConfig">
     <property name="title">
-     <string>Configurations</string>
+     <string>&amp;Configurations</string>
     </property>
    </widget>
    <widget class="QMenu" name="menuTools">
@@ -4742,7 +4740,7 @@ list. The list can be maintained in Settings (F2).</string>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
-     <string>Window</string>
+     <string>&amp;Window</string>
     </property>
     <addaction name="actionShow_Band_Activity"/>
     <addaction name="actionShow_Band_Activity_Columns"/>
@@ -4760,7 +4758,7 @@ list. The list can be maintained in Settings (F2).</string>
    </widget>
    <widget class="QMenu" name="menu_Log">
     <property name="title">
-     <string>Log</string>
+     <string>&amp;Log</string>
     </property>
     <addaction name="actionAdd_Log_Entry"/>
     <addaction name="separator"/>
@@ -4905,6 +4903,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionKeyboard_shortcuts">
+  <property name="visible">
+   <bool>false</bool>
+  </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -4916,6 +4917,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionSpecial_mouse_commands">
+  <property name="visible">
+   <bool>false</bool>
+  </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -5238,6 +5242,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="download_samples_action">
+  <property name="visible">
+   <bool>false</bool>
+  </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -5265,6 +5272,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionRelease_Notes">
+  <property name="visible">
+   <bool>false</bool>
+  </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
