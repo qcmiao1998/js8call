@@ -5310,6 +5310,11 @@ void MainWindow::createMessage(QString const& text){
         return;
     }
 
+    if(text.contains(" APRS:") && !m_aprsClient->isPasscodeValid()){
+        MessageBox::warning_message(this, tr ("Please ensure a valid APRS passcode is set in the settings when sending an APRS packet."));
+        return;
+    }
+
     resetMessageTransmitQueue();
     createMessageTransmitQueue(text);
 }

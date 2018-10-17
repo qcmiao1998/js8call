@@ -1673,13 +1673,6 @@ QStringList Varicode::buildMessageFrames(
                   }
                   qDebug() << "after:" << line;
               }
-
-#if 0
-              // APRS:
-              if(dirCmd.trimmed() == "APRS:" && !m_aprsClient->isPasscodeValid()){
-                  MessageBox::warning_message(this, tr ("Please enter a valid APRS passcode in the settings to send an APRS packet."));
-              }
-#endif
           }
 
           if(useDat){
