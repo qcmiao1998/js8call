@@ -4524,9 +4524,9 @@ void MainWindow::startTx()
   ui->rbNextFreeTextMsg->setChecked(true);
   if (m_transmitting) m_restart=true;
 
-  // detect if we're currently in a possible transmit cycle...and if so, wait until the next one if we're more than 2 seconds in...
+  // detect if we're currently in a possible transmit cycle...and if so, wait until the next one if we're more than 4 seconds in...
   QDateTime now {DriftingDateTime::currentDateTimeUtc()};
-  int s=now.addSecs(-2).time().second();
+  int s=now.addSecs(-4).time().second();
   int n=s % (2*m_TRperiod);
   if((n <= m_TRperiod && m_txFirst) || (n > m_TRperiod && !m_txFirst)){
     m_txFirst = !m_txFirst;
