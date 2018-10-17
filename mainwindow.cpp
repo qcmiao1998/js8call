@@ -8418,10 +8418,12 @@ void MainWindow::processBufferedActivity() {
             int checksumSize = Varicode::isCommandChecksumed(buffer.cmd.cmd);
 
             if(checksumSize == 32) {
+                message = Varicode::lstrip(message);
                 checksum = message.right(6);
                 message = message.left(message.length() - 7);
                 valid = Varicode::checksum32Valid(checksum, message);
             } else if(checksumSize == 16) {
+                message = Varicode::lstrip(message);
                 checksum = message.right(3);
                 message = message.left(message.length() - 4);
                 valid = Varicode::checksum16Valid(checksum, message);
