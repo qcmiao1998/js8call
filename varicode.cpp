@@ -46,14 +46,14 @@ QMap<QString, int> directed_cmds = {
     {"$",     3  }, // query station(s) heard
     {"^",     4  }, // query grid
     {">",     5  }, // relay message
-    //{"|",     6  }, // retransmit message
+    {"*",     6  }, // query idle message
     //{"!",     7  }, // alert message
     {"#",     8  }, // all or nothing message
 
     // {"=",      9  }, // unused
-    // {"/",     10  }, // unused
 
-
+    {" ACTIVE",     10 }, // i have been active in the past 10 minutes
+    {" IDLE",       11 }, // i have not been active in the past 10 minutes
 
     {" BEACON",     -1 }, // this is my beacon (unused except for faux processing of beacons as directed commands)
     {" BEACON ACK", 12 }, // i received your beacon at this snr
@@ -81,7 +81,7 @@ QMap<QString, int> directed_cmds = {
     {" ",        31 },  // send freetext
 };
 
-QSet<int> allowed_cmds = {-1, 0, 1, 2, 3, 4, 5, /*6,*/ /*7,*/ 8, /*...*/ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {-1, 0, 1, 2, 3, 4, 5, 6, /*7,*/ 8, /*9,*/ 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 QSet<int> buffered_cmds = {3, 5, /*6,*/ /*7,*/ 8, 13, 14, 15};
 
@@ -96,7 +96,7 @@ QMap<int, int> checksum_cmds = {
 };
 
 QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:BEACON (ACK|REQ)|AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|(?:(?:ACK|73|YES|NO|SNR|QSL|RR|HEARING|FB|QTH|QTC|GRID)(?=[ ]|$))|[?@&$%#^> ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:BEACON (ACK|REQ)|AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|(?:(?:ACK|73|YES|NO|SNR|QSL|RR|HEARING|FB|QTH|QTC|GRID|ACTIVE|IDLE)(?=[ ]|$))|[?@&$%#^>* ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR|BEACON ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");

@@ -6315,6 +6315,8 @@ void MainWindow::on_cqMacroButton_clicked(){
 
     clearCallsignSelected();
     addMessageText(message);
+
+    if(m_config.transmit_directed()) toggleTx(true);
 }
 
 void MainWindow::on_replyMacroButton_clicked(){
@@ -6322,7 +6324,10 @@ void MainWindow::on_replyMacroButton_clicked(){
     if(call.isEmpty()){
         return;
     }
+
     addMessageText(QString("%1 %2").arg(call).arg(m_config.reply_message()));
+
+    if(m_config.transmit_directed()) toggleTx(true);
 }
 
 void MainWindow::on_qthMacroButton_clicked(){
@@ -6540,6 +6545,20 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1&").arg(selectedCall), true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
+    });
+
+    auto stationIdleQueryAction = menu->addAction(QString("%1* - Is your station active or idle?").arg(call).trimmed());
+    stationIdleQueryAction->setDisabled(isAllCall);
+    connect(stationIdleQueryAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1*").arg(selectedCall), true);
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
@@ -8605,6 +8624,15 @@ void MainWindow::processCommandActivity() {
             }
 
             reply = QString("%1 QTH %2").arg(d.from).arg(qth);
+        }
+
+        // QUERIED ACTIVE
+        else if (d.cmd == "*" && !isAllCall) {
+            if(m_idleMinutes < 10){
+                reply = QString("%1 ACTIVE").arg(d.from);
+            } else {
+                reply = QString("%1 IDLE").arg(d.from);
+            }
         }
 
         // QUERIED GRID
