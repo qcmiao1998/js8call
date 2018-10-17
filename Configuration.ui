@@ -195,7 +195,7 @@
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
-                <string>QTH Message:</string>
+                <string>Station Location (QTH) Message:</string>
                </property>
               </widget>
              </item>
@@ -212,7 +212,7 @@
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station Description Message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
-                <string>QTC Message:</string>
+                <string>Station Detail (QTC) Message:</string>
                </property>
               </widget>
              </item>
@@ -312,7 +312,7 @@
           <item>
            <widget class="QCheckBox" name="transmit_directed_check_box">
             <property name="text">
-             <string>Immediately transmit directed responses from the menu</string>
+             <string>Immediately transmit CQ, Reply, and Directed messages from the menu</string>
             </property>
            </widget>
           </item>
@@ -3618,12 +3618,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
+  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
   <buttongroup name="split_mode_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="TX_mode_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
  </buttongroups>
 </ui>
