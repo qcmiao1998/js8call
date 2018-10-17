@@ -270,6 +270,19 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="monitor_off_check_box">
+            <property name="toolTip">
+             <string>Don't start decoding until the monitor button is clicked.</string>
+            </property>
+            <property name="text">
+             <string>Mon&amp;itor (RX) off at startup</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="autoreply_off_check_box">
             <property name="text">
              <string>Autoreply (AUTO) off at startup</string>
@@ -284,19 +297,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="monitor_off_check_box">
-            <property name="toolTip">
-             <string>Don't start decoding until the monitor button is clicked.</string>
-            </property>
-            <property name="text">
-             <string>Mon&amp;itor (RX) off at startup</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QCheckBox" name="monitor_last_used_check_box">
             <property name="visible">
              <bool>false</bool>
@@ -306,13 +306,6 @@
             </property>
             <property name="text">
              <string>Monitor returns to last used frequency</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="transmit_directed_check_box">
-            <property name="text">
-             <string>Immediately transmit CQ, Reply, and Directed messages from the menu</string>
             </property>
            </widget>
           </item>
@@ -346,6 +339,13 @@
            <widget class="QCheckBox" name="beacon_anywhere_check_box">
             <property name="text">
              <string>Allow transmitting beacons outside of beacon sub-channel (500Hz - 1000Hz)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="transmit_directed_check_box">
+            <property name="text">
+             <string>Immediately transmit CQ, Reply, QTC, QTH, Saved, and Directed messages from the menu</string>
             </property>
            </widget>
           </item>
@@ -3482,7 +3482,6 @@ soundcard changes</string>
   <tabstop>use_dynamic_grid</tabstop>
   <tabstop>region_combo_box</tabstop>
   <tabstop>type_2_msg_gen_combo_box</tabstop>
-  <tabstop>monitor_off_check_box</tabstop>
   <tabstop>monitor_last_used_check_box</tabstop>
   <tabstop>quick_call_check_box</tabstop>
   <tabstop>tx_watchdog_spin_box</tabstop>

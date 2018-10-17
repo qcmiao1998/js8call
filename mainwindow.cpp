@@ -6292,6 +6292,7 @@ void MainWindow::on_cqMacroButton_clicked(){
     }
 
     clearCallsignSelected();
+
     addMessageText(message);
 
     if(m_config.transmit_directed()) toggleTx(true);
@@ -6313,7 +6314,10 @@ void MainWindow::on_qthMacroButton_clicked(){
     if(qth.isEmpty()){
         return;
     }
+
     addMessageText(QString("QTH %1").arg(qth));
+
+    if(m_config.transmit_directed()) toggleTx(true);
 }
 
 void MainWindow::on_qtcMacroButton_clicked(){
@@ -6321,7 +6325,10 @@ void MainWindow::on_qtcMacroButton_clicked(){
     if(qtc.isEmpty()){
         return;
     }
+
     addMessageText(QString("QTC %1").arg(qtc));
+
+    if(m_config.transmit_directed()) toggleTx(true);
 }
 
 void MainWindow::setShowColumn(QString tableKey, QString columnKey, bool value){
@@ -6835,7 +6842,11 @@ void MainWindow::buildEditMenu(QMenu *menu, QTextEdit *edit){
 void MainWindow::buildSavedMessagesMenu(QMenu *menu){
     foreach(QString macro, m_config.macros()->stringList()){
         QAction *action = menu->addAction(macro);
-        connect(action, &QAction::triggered, this, [this, macro](){ addMessageText(macro); });
+        connect(action, &QAction::triggered, this, [this, macro](){
+            addMessageText(macro);
+
+            if(m_config.transmit_directed()) toggleTx(true);
+        });
     }
 
     menu->addSeparator();
