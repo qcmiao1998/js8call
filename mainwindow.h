@@ -254,7 +254,6 @@ private slots:
   void startTx();
   void startTx2();
   void startP1();
-  void continueTx();
   void stopTx();
   void stopTx2();
   void on_pbCallCQ_clicked();
@@ -534,7 +533,6 @@ private:
   bool    m_diskData;
   bool    m_loopall;
   bool    m_decoderBusy;
-  bool    m_txFirst;
   bool    m_auto;
   bool    m_restart;
   bool    m_startAnother;

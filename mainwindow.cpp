@@ -423,7 +423,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_btxok {false},
   m_diskData {false},
   m_loopall {false},
-  m_txFirst {false},
   m_auto {false},
   m_restart {false},
   m_startAnother {false},
@@ -1676,7 +1675,6 @@ void MainWindow::writeSettings()
   m_settings->setValue ("geometryNoControls", m_geometryNoControls);
   m_settings->setValue ("state", saveState ());
   m_settings->setValue("MRUdir", m_path);
-  m_settings->setValue("TxFirst",m_txFirst);
   m_settings->setValue("DXcall",ui->dxCallEntry->text());
   m_settings->setValue("DXgrid",ui->dxGridEntry->text());
   m_settings->setValue ("AstroDisplayed", m_astroWidget && m_astroWidget->isVisible());
@@ -1772,7 +1770,6 @@ void MainWindow::readSettings()
   ui->dxCallEntry->setText (m_settings->value ("DXcall", QString {}).toString ());
   ui->dxGridEntry->setText (m_settings->value ("DXgrid", QString {}).toString ());
   m_path = m_settings->value("MRUdir", m_config.save_directory ().absolutePath ()).toString ();
-  m_txFirst = m_settings->value("TxFirst",false).toBool();
   auto displayAstro = m_settings->value ("AstroDisplayed", false).toBool ();
   auto displayMsgAvg = m_settings->value ("MsgAvgDisplayed", false).toBool ();
   if (m_settings->contains ("FreeText")) ui->freeTextMsg->setCurrentText (
@@ -4119,15 +4116,10 @@ void MainWindow::guiUpdate()
   if((icw[0]>0) and (!m_bFast9)) tx2 += icw[0]*2560.0/48000.0;  //Full length including CW ID
   if(tx2>m_TRperiod) tx2=m_TRperiod;
 
-  if(!m_txFirst and !m_mode.startsWith ("WSPR")) {
-    tx1 += m_TRperiod;
-    tx2 += m_TRperiod;
-  }
-
   qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
   int nsec=ms/1000;
   double tsec=0.001*ms;
-  double t2p=fmod(tsec,2*m_TRperiod);
+  double t2p=fmod(tsec, m_TRperiod);
   m_s6=fmod(tsec,6.0);
   m_nseq = nsec % m_TRperiod;
   m_tRemaining=m_TRperiod - fmod(tsec,double(m_TRperiod));
@@ -4187,7 +4179,8 @@ void MainWindow::guiUpdate()
     // TODO: stop
     if(msgLength==0 and !m_tune) on_stopTxButton_clicked();
 
-    if(g_iptt==0 and ((m_bTxTime and fTR<0.75 and msgLength>0) or m_tune)) {
+    float lateThreshold=(12.6/3.0)/15.0; //0.75;
+    if(g_iptt==0 and ((m_bTxTime and fTR<lateThreshold and msgLength>0) or m_tune)) {
       //### Allow late starts
       icw[0]=m_ncw;
       g_iptt = 1;
@@ -4524,14 +4517,6 @@ void MainWindow::startTx()
   ui->rbNextFreeTextMsg->setChecked(true);
   if (m_transmitting) m_restart=true;
 
-  // detect if we're currently in a possible transmit cycle...and if so, wait until the next one if we're more than 4 seconds in...
-  QDateTime now {DriftingDateTime::currentDateTimeUtc()};
-  int s=now.addSecs(-4).time().second();
-  int n=s % (2*m_TRperiod);
-  if((n <= m_TRperiod && m_txFirst) || (n > m_TRperiod && !m_txFirst)){
-    m_txFirst = !m_txFirst;
-  }
-
   // hack the auto button to kick off the transmit
   if(!ui->autoButton->isChecked()){
     ui->autoButton->setEnabled(true);
@@ -4560,11 +4545,6 @@ void MainWindow::startTx2()
   }
 }
 
-void MainWindow::continueTx()
-{
-    m_txFirst = !m_txFirst;
-}
-
 void MainWindow::stopTx()
 {
   Q_EMIT endTransmitMessage ();
@@ -4580,9 +4560,7 @@ void MainWindow::stopTx()
   }
 
   bool shouldContinue = !m_tx_watchdog && prepareNextMessageFrame();
-  if(shouldContinue){
-      continueTx();
-  } else {
+  if(!shouldContinue){
       // TODO: jsherer - split this up...
       ui->extFreeTextMsgEdit->setReadOnly(false);
       update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", false);
@@ -5542,7 +5520,7 @@ void MainWindow::scheduleBeacon(bool first){
 
     // round to 15 second increment
     int secondsSinceEpoch = (timestamp.toMSecsSinceEpoch()/1000);
-    int delta = roundUp(secondsSinceEpoch, 15) + 1 + (first ? /*m_txFirst ? 15 : 30*/ 0 : qMax(1, m_config.beacon()) * 60) - secondsSinceEpoch;
+    int delta = roundUp(secondsSinceEpoch, 15) + 1 + (first ? 0 : qMax(1, m_config.beacon()) * 60) - secondsSinceEpoch;
     timestamp = timestamp.addSecs(delta);
 
     // 25% of the time, switch intervals
