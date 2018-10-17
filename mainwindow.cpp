@@ -10190,7 +10190,7 @@ void MainWindow::write_transmit_entry (QString const& file_name)
       auto dt = DecodedText(m_currentMessage);
       out << time.toString("yyyy-MM-dd hh:mm:ss")
           << "  Transmitting " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6)
-          << " MHz  " << m_modeTx
+          << " MHz  " << QString(m_modeTx).replace("FT8", "JS8")
           << ":  " << dt.message() << endl;
       f.close();
     }
