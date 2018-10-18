@@ -5053,10 +5053,15 @@ void MainWindow::clearActivity(){
 void MainWindow::createAllcallTableRow(QTableWidget *table, bool selected){
     table->insertRow(table->rowCount());
 
+    int count = 0;
+    auto now = DriftingDateTime::currentDateTimeUtc();
+    int callsignAging = m_config.callsign_aging();
     if(ui->selcalButton->isChecked()){
         int freq = currentFreqOffset();
-        int count = 0;
         foreach(auto cd, m_callActivity.values()){
+            if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+                continue;
+            }
             if(abs(freq - cd.freq) <= NEAR_THRESHOLD_GROUPCALL){
                 count++;
             }
@@ -5067,7 +5072,12 @@ void MainWindow::createAllcallTableRow(QTableWidget *table, bool selected){
         table->setSpan(table->rowCount() - 1, 0, 1, table->columnCount());
 
     } else {
-        int count = m_callActivity.count();
+        foreach(auto cd, m_callActivity.values()){
+            if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+                continue;
+            }
+            count++;
+        }
         auto item = new QTableWidgetItem(count == 0 ? QString("ALLCALL") : QString("ALLCALL (%1)").arg(count));
         item->setData(Qt::UserRole, QVariant("ALLCALL"));
         table->setItem(table->rowCount() - 1, 0, item);
@@ -9549,8 +9559,13 @@ void MainWindow::networkMessage(Message const &message)
     // RX.GET_TEXT
 
     if(type == "RX.GET_CALL_ACTIVITY"){
+        auto now = DriftingDateTime::currentDateTimeUtc();
+        int callsignAging = m_config.callsign_aging();
         QMap<QString, QVariant> calls;
         foreach(auto cd, m_callActivity.values()){
+            if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+                continue;
+            }
             QMap<QString, QVariant> detail;
             detail["SNR"] = QVariant(cd.snr);
             detail["GRID"] = QVariant(cd.grid);
