@@ -6563,7 +6563,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto heardQueryAction = menu->addAction(QString("%1$ - What are the stations are you hearing? (Top 4 ranked by most recently heard)").arg(call).trimmed());
+#if ALLOW_STATIONS_HEARD
+    auto heardQueryAction = menu->addAction(QString("%1$ - What are the stations are you hearing? (Top 2 ranked by most recently heard)").arg(call).trimmed());
     heardQueryAction->setDisabled(isAllCall);
     connect(heardQueryAction, &QAction::triggered, this, [this](){
 
@@ -6576,6 +6577,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
+#endif
 
     auto hashAction = menu->addAction(QString("%1#[MESSAGE] - Please ACK if you receive this message in its entirety").arg(call).trimmed());
     hashAction->setDisabled(isAllCall);
@@ -8656,10 +8658,11 @@ void MainWindow::processCommandActivity() {
             reply = QString("%1 QTC %2").arg(d.from).arg(m_config.my_station());
         }
 
+#if ALLOW_STATIONS_HEARD
         // QUERIED STATIONS HEARD
         else if (d.cmd == "$" && !isAllCall) {
             int i = 0;
-            int maxStations = 4;
+            int maxStations = 2;
             auto calls = m_callActivity.keys();
             qStableSort(calls.begin(), calls.end(), [this](QString
                 const & a, QString
@@ -8678,19 +8681,24 @@ void MainWindow::processCommandActivity() {
                     break;
                 }
 
-                auto d = m_callActivity[call];
-                if (callsignAging && d.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+                if(call == d.from){
                     continue;
                 }
 
-                lines.append(QString("%1 SNR %2 (%3)").arg(d.call).arg(Varicode::formatSNR(d.snr)).arg(since(d.utcTimestamp)));
+                auto cd = m_callActivity[call];
+                if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+                    continue;
+                }
+
+                lines.append(QString("%1 %2 (%3)").arg(cd.call).arg(Varicode::formatSNR(cd.snr)).arg(since(cd.utcTimestamp)));
 
                 i++;
             }
 
             lines.prepend(QString("%1 HEARING").arg(d.from));
-            reply = lines.join('\n');
+            reply = lines.join(' ');
         }
+#endif
 
 #if 0
         // PROCESS RETRANSMIT
