@@ -209,8 +209,6 @@ private slots:
   void decode();
   void decodeBusy(bool b);
   void on_EraseButton_clicked();
-  void band_activity_cleared ();
-  void rx_frequency_activity_cleared ();
   void set_dateTimeQSO(int m_ntx);
   void set_ntx(int n);
   void on_txrb1_toggled(bool status);

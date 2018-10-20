@@ -60,25 +60,15 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   if(mod(params%nranera,2).eq.1) ntrials=3*10**(params%nranera/2)
   if(params%nranera.eq.0) ntrials=0
   
-  nfail=0
-10 if (params%nagain) then
-     open(13,file=trim(temp_dir)//'/decoded.txt',status='unknown',            &
-          position='append',iostat=ios)
-  else
-     open(13,file=trim(temp_dir)//'/decoded.txt',status='unknown',iostat=ios)
-  endif
+10  nfail=0
   if(params%nmode.eq.8) then
-     inquire(file=trim(temp_dir)//'/houndcallers.txt',exist=ex)
-     if(.not.ex) then
-        c2fox='            '
-        g2fox='    '
-        nsnrfox=-99
-        nfreqfox=-99
-        n30z=0
-        nwrap=0
-        nfox=0
-     endif
-     open(19,file=trim(temp_dir)//'/houndcallers.txt',status='unknown')
+    c2fox='            '
+    g2fox='    '
+    nsnrfox=-99
+    nfreqfox=-99
+    n30z=0
+    nwrap=0
+    nfox=0
   endif
 
   if(ios.ne.0) then
@@ -125,12 +115,9 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
               else
                  nDkm=9999
               endif
-              write(19,1004) c2fox(j),g2fox(j),nsnrfox(j),nfreqfox(j),nDkm,m
-1004          format(a12,1x,a4,i5,i6,i7,i3)
            endif
         enddo
         nfox=j
-        flush(19)
      endif
      go to 800
   endif
@@ -255,8 +242,6 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   write(*,1010) nsynced,ndecoded
 1010 format('<DecodeFinished>',2i4)
   call flush(6)
-  close(13)
-  close(19)
   if(params%nmode.eq.4 .or. params%nmode.eq.65) close(14)
 
   return
@@ -369,9 +354,6 @@ contains
           write(*,1009) params%nutc,snr,dt,freq,csync,decoded,nft
 1009      format(i4.4,i4,f5.1,i5,1x,a2,1x,a22,i2)
        endif
-       write(13,1011) params%nutc,nint(sync),snr,dt,float(freq),drift,    &
-            decoded,nft
-1011   format(i4.4,i4,i5,f6.2,f8.0,i4,3x,a22,' QRA64',i3)
        go to 100
     endif
     
@@ -415,9 +397,6 @@ contains
        write(*,1010) params%nutc,snr,dt,freq,csync,decoded,cflags
 1010   format(i4.4,i4,f5.1,i5,1x,a2,1x,a22,1x,a3)
     endif
-    write(13,1012) params%nutc,nint(sync),snr,dt,float(freq),drift,    &
-         decoded,ft,nsum,nsmo
-1012 format(i4.4,i4,i5,f6.2,f8.0,i4,3x,a22,' JT65',3i3)
 
 100 call flush(6)
 
@@ -443,8 +422,6 @@ contains
     !$omp critical(decode_results)
     write(*,1000) params%nutc,snr,dt,nint(freq),decoded
 1000 format(i4.4,i4,f5.1,i5,1x,'@ ',1x,a22)
-    write(13,1002) params%nutc,nint(sync),snr,dt,freq,drift,decoded
-1002 format(i4.4,i4,i5,f6.1,f8.0,i4,3x,a22,' JT9')
     call flush(6)
     !$omp end critical(decode_results)
     select type(this)
@@ -503,8 +480,6 @@ contains
 1000 format(i6.6,i4,f5.1,i5,' ~ ',1x,a22,1x,a2)
     if(i0.gt.0) write(*,1001) params%nutc,snr,dt,nint(freq),decoded0
 1001 format(i6.6,i4,f5.1,i5,' ~ ',1x,a37)
-    write(13,1002) params%nutc,nint(sync),snr,dt,freq,0,decoded0
-1002 format(i6.6,i4,i5,f6.1,f8.0,i4,3x,a37,' FT8')
 
     i1=index(decoded0,' ')
     i2=i1 + index(decoded0(i1+1:),' ')
@@ -538,8 +513,7 @@ contains
     endif
     
     call flush(6)
-    call flush(13)
-    
+
     select type(this)
     type is (counting_ft8_decoder)
        this%decoded = this%decoded + 1
