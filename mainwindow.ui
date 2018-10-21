@@ -4656,10 +4656,11 @@ list. The list can be maintained in Settings (F2).</string>
      <bool>false</bool>
     </property>
     <property name="title">
-     <string>Decode</string>
+     <string>&amp;Decode</string>
     </property>
     <addaction name="actionQuickDecode"/>
     <addaction name="actionMediumDecode"/>
+    <addaction name="actionDeepDecode"/>
     <addaction name="actionDeepestDecode"/>
     <addaction name="separator"/>
     <addaction name="actionInclude_averaging"/>
@@ -4863,10 +4864,10 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Fast</string>
+    <string>Fast (1x)</string>
    </property>
    <property name="visible">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
   </action>
   <action name="actionNone">
@@ -4903,9 +4904,6 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionKeyboard_shortcuts">
-  <property name="visible">
-   <bool>false</bool>
-  </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -4915,11 +4913,11 @@ list. The list can be maintained in Settings (F2).</string>
    <property name="shortcut">
     <string>F3</string>
    </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="actionSpecial_mouse_commands">
-  <property name="visible">
-   <bool>false</bool>
-  </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -4928,6 +4926,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="shortcut">
     <string>F5</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionJT9">
@@ -4960,7 +4961,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Normal</string>
+    <string>Normal (2x)</string>
    </property>
   </action>
   <action name="actionDeepestDecode">
@@ -4968,10 +4969,10 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="checked">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="text">
-    <string>Deep</string>
+    <string>Deepest (4x)</string>
    </property>
   </action>
   <action name="actionMonitor_OFF_at_startup">
@@ -5189,6 +5190,9 @@ list. The list can be maintained in Settings (F2).</string>
    <property name="text">
     <string>Enable averaging</string>
    </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="actionInclude_correlation">
    <property name="checkable">
@@ -5196,6 +5200,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Enable deep search</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionWSPR">
@@ -5242,9 +5249,6 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="download_samples_action">
-  <property name="visible">
-   <bool>false</bool>
-  </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -5253,6 +5257,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="whatsThis">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Download sample audio files demonstrating the various modes.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionMSK144">
@@ -5272,14 +5279,14 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
   </action>
   <action name="actionRelease_Notes">
-  <property name="visible">
-   <bool>false</bool>
-  </property>
    <property name="enabled">
     <bool>false</bool>
    </property>
    <property name="text">
     <string>Release Notes</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionEnable_AP_DXcall">
@@ -5288,6 +5295,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Enable AP for DX Call</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionFreqCal">
@@ -5367,6 +5377,9 @@ list. The list can be maintained in Settings (F2).</string>
    <property name="text">
     <string>Enable AP</string>
    </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="actionEnable_AP_JT65">
    <property name="checkable">
@@ -5374,6 +5387,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Enable AP</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionSolve_FreqCal">
@@ -5513,6 +5529,17 @@ list. The list can be maintained in Settings (F2).</string>
   <action name="actionOpen_Save_Directory">
    <property name="text">
     <string>Open Save Directory...</string>
+   </property>
+  </action>
+  <action name="actionDeepDecode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Deep (3x)</string>
    </property>
   </action>
  </widget>

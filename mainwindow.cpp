@@ -666,6 +666,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   QActionGroup* DepthGroup = new QActionGroup(this);
   ui->actionQuickDecode->setActionGroup(DepthGroup);
   ui->actionMediumDecode->setActionGroup(DepthGroup);
+  ui->actionDeepDecode->setActionGroup(DepthGroup);
   ui->actionDeepestDecode->setActionGroup(DepthGroup);
 
   connect (ui->view_phase_response_action, &QAction::triggered, [this] () {
@@ -1016,7 +1017,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->cbUploadWSPR_Spots->setChecked(m_uploadSpots);
   if((m_ndepth&7)==1) ui->actionQuickDecode->setChecked(true);
   if((m_ndepth&7)==2) ui->actionMediumDecode->setChecked(true);
-  if((m_ndepth&7)==3) ui->actionDeepestDecode->setChecked(true);
+  if((m_ndepth&7)==3) ui->actionDeepDecode->setChecked(true);
+  if((m_ndepth&7)==4) ui->actionDeepestDecode->setChecked(true);
   ui->actionInclude_averaging->setChecked(m_ndepth&16);
   ui->actionInclude_correlation->setChecked(m_ndepth&32);
   ui->actionEnable_AP_DXcall->setChecked(m_ndepth&64);
@@ -1094,7 +1096,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   //UI Customizations
   m_wideGraph.data()->installEventFilter(new EscapeKeyPressEater());
   ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized();
-  ui->menuDecode->setEnabled(false);
+  //ui->menuDecode->setEnabled(true);
   ui->menuMode->setVisible(false);
   ui->menuSave->setEnabled(true);
   ui->menuTools->setEnabled(false);
@@ -1102,7 +1104,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   foreach(auto action, ui->menuBar->actions()){
       if(action->text() == "View") ui->menuBar->removeAction(action);
       if(action->text() == "Mode") ui->menuBar->removeAction(action);
-      if(action->text() == "Decode") ui->menuBar->removeAction(action);
+      //if(action->text() == "Decode") ui->menuBar->removeAction(action);
       if(action->text() == "Tools") ui->menuBar->removeAction(action);
   }
   ui->dxCallEntry->clear();
@@ -2092,55 +2094,8 @@ void MainWindow::dataSink(qint64 frames)
                 this, m_fnameWE, &dec_data.d2[0], m_TRperiod, m_config.my_callsign(),
                 m_config.my_grid(), m_mode, m_nSubMode, m_freqNominal, m_hisCall, m_hisGrid)));
       }
-
-      if (m_mode=="WSPR") {
-        QString c2name_string {m_fnameWE + ".c2"};
-        int len1=c2name_string.length();
-        char c2name[80];
-        strcpy(c2name,c2name_string.toLatin1 ().constData ());
-        int nsec=120;
-        int nbfo=1500;
-        double f0m1500=m_freqNominal/1000000.0 + nbfo - 1500;
-        int err = savec2_(c2name,&nsec,&f0m1500,len1);
-        if (err!=0) MessageBox::warning_message (this, tr ("Error saving c2 file"), c2name);
-      }
     }
 
-    if(m_mode.startsWith ("WSPR")) {
-      QString t2,cmnd,depth_string;
-      double f0m1500=m_dialFreqRxWSPR/1000000.0;   // + 0.000001*(m_BFO - 1500);
-      t2.sprintf(" -f %.6f ",f0m1500);
-      if((m_ndepth&7)==1) depth_string=" -qB "; //2 pass w subtract, no Block detection, no shift jittering
-      if((m_ndepth&7)==2) depth_string=" -B ";  //2 pass w subtract, no Block detection
-      if((m_ndepth&7)==3) depth_string=" ";     //2 pass w subtract, Block detection
-      QString degrade;
-      degrade.sprintf("-d %4.1f ",m_config.degrade());
-
-      if(m_diskData) {
-        cmnd='"' + m_appDir + '"' + "/wsprd " + depth_string + " -a \"" +
-          QDir::toNativeSeparators(m_config.writeable_data_dir ().absolutePath()) + "\" \"" + m_path + "\"";
-      } else {
-        if(m_mode=="WSPR-LF") {
-          cmnd='"' + m_appDir + '"' + "/wspr_fsk8d " + degrade + t2 +" -a \"" +
-            QDir::toNativeSeparators(m_config.writeable_data_dir ().absolutePath()) + "\" " +
-              '"' + m_fnameWE + ".wav\"";
-        } else {
-          cmnd='"' + m_appDir + '"' + "/wsprd " + depth_string + " -a \"" +
-            QDir::toNativeSeparators(m_config.writeable_data_dir ().absolutePath()) + "\" " +
-              t2 + '"' + m_fnameWE + ".wav\"";
-        }
-      }
-      QString t3=cmnd;
-      int i1=cmnd.indexOf("/wsprd ");
-      cmnd=t3.mid(0,i1+7) + t3.mid(i1+7);
-
-      if(m_mode=="WSPR-LF") cmnd=cmnd.replace("/wsprd ","/wspr_fsk8d "+degrade+t2);
-      if (ui) ui->DecodeButton->setChecked (true);
-      m_cmndP1=QDir::toNativeSeparators(cmnd);
-      p1Timer.start(1000);
-      m_decoderBusy = true;
-      statusUpdate ();
-    }
     m_rxDone=true;
   }
 }
@@ -5808,6 +5763,7 @@ void MainWindow::displayWidgets(qint64 n)
     //if(i==18) ui->ClrAvgButton->setVisible(b);
     if(i==19) ui->actionQuickDecode->setEnabled(b);
     if(i==19) ui->actionMediumDecode->setEnabled(b);
+    if(i==19) ui->actionDeepDecode->setEnabled(b);
     if(i==19) ui->actionDeepestDecode->setEnabled(b);
     if(i==20) ui->actionInclude_averaging->setVisible (b);
     if(i==21) ui->actionInclude_correlation->setVisible (b);
@@ -5815,9 +5771,9 @@ void MainWindow::displayWidgets(qint64 n)
       if(!b && m_echoGraph->isVisible())  m_echoGraph->hide();
     }
     if(i==23) ui->cbSWL->setVisible(b);
-    if(i==24) ui->actionEnable_AP_FT8->setVisible (b);
-    if(i==25) ui->actionEnable_AP_JT65->setVisible (b);
-    if(i==26) ui->actionEnable_AP_DXcall->setVisible (b);
+    //if(i==24) ui->actionEnable_AP_FT8->setVisible (b);
+    //if(i==25) ui->actionEnable_AP_JT65->setVisible (b);
+    //if(i==26) ui->actionEnable_AP_DXcall->setVisible (b);
     if(i==27) ui->cbFirst->setVisible(b);
     if(i==28) ui->cbVHFcontest->setVisible(b);
     if(i==29) ui->measure_check_box->setVisible(b);
@@ -5995,9 +5951,14 @@ void MainWindow::on_actionMediumDecode_toggled (bool checked)
   m_ndepth ^= (-checked ^ m_ndepth) & 0x00000002;
 }
 
-void MainWindow::on_actionDeepestDecode_toggled (bool checked)
+void MainWindow::on_actionDeepDecode_toggled (bool checked)
 {
   m_ndepth ^= (-checked ^ m_ndepth) & 0x00000003;
+}
+
+void MainWindow::on_actionDeepestDecode_toggled (bool checked)
+{
+  m_ndepth ^= (-checked ^ m_ndepth) & 0x00000004;
 }
 
 void MainWindow::on_actionInclude_averaging_toggled (bool checked)
