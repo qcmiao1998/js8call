@@ -2393,7 +2393,6 @@ void MainWindow::openSettings(int tab){
             statusUpdate ();
         }
 
-        on_dxGridEntry_textChanged (m_hisGrid); // recalculate distances in case of units change
         enable_DXCC_entity (m_config.DXCC ());  // sets text window proportions and (re)inits the logbook
 
         prepareSpotting();
@@ -2653,22 +2652,6 @@ void MainWindow::displayDialFrequency (){
 void MainWindow::statusChanged()
 {
   statusUpdate ();
-  QFile f {m_config.temp_dir ().absoluteFilePath ("wsjtx_status.txt")};
-  if(f.open(QFile::WriteOnly | QIODevice::Text)) {
-    QTextStream out(&f);
-    QString tmpGrid = m_hisGrid;
-    if (!tmpGrid.size ()) tmpGrid="n/a"; // Not Available
-    out << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6)
-        << ";" << m_mode << ";" << m_hisCall << ";"
-        << ui->rptSpinBox->value() << ";" << m_modeTx << ";" << tmpGrid << endl;
-    f.close();
-  } else {
-    if (m_splash && m_splash->isVisible ()) m_splash->hide ();
-    MessageBox::warning_message (this, tr ("Status File Error")
-                                 , tr ("Cannot open \"%1\" for writing: %2")
-                                 .arg (f.fileName ()).arg (f.errorString ()));
-  }
-  on_dxGridEntry_textChanged(m_hisGrid);
 }
 
 bool MainWindow::eventFilter (QObject * object, QEvent * event)
@@ -5618,51 +5601,17 @@ void MainWindow::on_rbNextFreeTextMsg_toggled (bool status)
 
 void MainWindow::on_dxCallEntry_textChanged (QString const& call)
 {
-  m_hisCall = call;
-  statusChanged();
-  statusUpdate ();
 }
 
 void MainWindow::on_dxCallEntry_returnPressed ()
 {
-  on_lookupButton_clicked();
 }
 
 void MainWindow::on_dxGridEntry_textChanged (QString const& grid)
 {
-  if (ui->dxGridEntry->hasAcceptableInput ()) {
-    if (grid != m_hisGrid) {
-      m_hisGrid = grid;
-      statusUpdate ();
-    }
-    qint64 nsec = (DriftingDateTime::currentMSecsSinceEpoch()/1000) % 86400;
-    double utch=nsec/3600.0;
-    int nAz,nEl,nDmiles,nDkm,nHotAz,nHotABetter;
-    azdist_(const_cast <char *> ((m_config.my_grid () + "      ").left (6).toLatin1().constData()),
-            const_cast <char *> ((m_hisGrid + "      ").left (6).toLatin1().constData()),&utch,
-            &nAz,&nEl,&nDmiles,&nDkm,&nHotAz,&nHotABetter,6,6);
-    QString t;
-    int nd=nDkm;
-    if(m_config.miles()) nd=nDmiles;
-    if(m_mode=="MSK144") {
-      if(nHotABetter==0)t.sprintf("Az: %d   B: %d   El: %d   %d",nAz,nHotAz,nEl,nd);
-      if(nHotABetter!=0)t.sprintf("Az: %d   A: %d   El: %d   %d",nAz,nHotAz,nEl,nd);
-    } else {
-      t.sprintf("Az: %d        %d",nAz,nd);
-    }
-    if(m_config.miles()) t += " mi";
-    if(!m_config.miles()) t += " km";
-    ui->labAz->setText (t);
-  } else {
-    if (m_hisGrid.size ()) {
-      m_hisGrid.clear ();
-      ui->labAz->clear ();
-      statusUpdate ();
-    }
-  }
 }
 
-void MainWindow::on_genStdMsgsPushButton_clicked()         //genStdMsgs button
+void MainWindow::on_genStdMsgsPushButton_clicked()
 {
 }
 
