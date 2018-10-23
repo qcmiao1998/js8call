@@ -8887,6 +8887,7 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
         }
 
         if(btn == rb){
+#if USE_RELAY_REPLY_DIALOG
             auto diag = new MessageReplyDialog(this);
             diag->setWindowTitle("Message Reply");
             diag->setLabel(QString("Message to send to %1:").arg(fromLabel));
@@ -8896,6 +8897,9 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
             });
 
             diag->show();
+#else
+            addMessageText(QString("%1%2[MESSAGE]").arg(from).arg(cmd), true, true);
+#endif
         }
     });
 
