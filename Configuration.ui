@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -687,7 +687,7 @@ text message.</string>
        <string>Radio interface configuration settings.</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="1" column="0" rowspan="11">
+       <item row="1" column="0" rowspan="13">
         <widget class="QGroupBox" name="CAT_control_group_box">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -1085,10 +1085,246 @@ a few, particularly some Kenwood rigs, require it).</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="1" rowspan="12">
-        <widget class="Line" name="line">
+       <item row="12" column="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_11">
+         <item>
+          <widget class="QPushButton" name="test_CAT_push_button">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Attempt to connect to the radio with these settings.&lt;/p&gt;&lt;p&gt;The button will turn green if the connection is successful or red if there is a problem.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Test CAT</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Preferred</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="test_PTT_push_button">
+           <property name="toolTip">
+            <string>Attempt to activate the transmitter.
+Click again to deactivate. Normally no power should be
+output since there is no audio being generated at this time.
+Check that any Tx indication on your radio and/or your
+radio interface behave as expected.</string>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton:checked {
+	background-color: red;
+	border-style	: outset;
+	border-width: 1px;
+	border-radius: 5px;
+	border-color: black;
+	min-width: 5em;
+	padding: 3px;
+}</string>
+           </property>
+           <property name="text">
+            <string>Test PTT</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="2">
+        <widget class="Line" name="line_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="13" column="2">
+        <spacer name="verticalSpacer_7">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="5" column="2">
+        <widget class="QGroupBox" name="mode_group_box">
+         <property name="toolTip">
+          <string>Modulation mode selected on radio.</string>
+         </property>
+         <property name="title">
+          <string>Mode</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_10">
+          <item row="0" column="1">
+           <widget class="QRadioButton" name="mode_USB_radio_button">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;USB is usually the correct modulation mode,&lt;/p&gt;&lt;p&gt;unless the radio has a special data or packet mode setting&lt;/p&gt;&lt;p&gt;for AFSK operation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>US&amp;B</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">TX_mode_button_group</string>
+            </attribute>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QRadioButton" name="mode_none_radio_button">
+            <property name="toolTip">
+             <string>Don't allow the program to set the radio mode
+(not recommended but use if the wrong mode
+or bandwidth is selected).</string>
+            </property>
+            <property name="text">
+             <string>None</string>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">TX_mode_button_group</string>
+            </attribute>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QRadioButton" name="mode_data_radio_button">
+            <property name="toolTip">
+             <string>If this is availabe then it is usually the correct mode for this program.</string>
+            </property>
+            <property name="text">
+             <string>Data/P&amp;kt</string>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">TX_mode_button_group</string>
+            </attribute>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="8" column="2">
+        <widget class="QGroupBox" name="split_operation_group_box">
+         <property name="title">
+          <string>Split Operation</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_12">
+          <item row="0" column="2">
+           <widget class="QRadioButton" name="split_emulate_radio_button">
+            <property name="text">
+             <string>Fake It</string>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">split_mode_button_group</string>
+            </attribute>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QRadioButton" name="split_rig_radio_button">
+            <property name="text">
+             <string>Rig</string>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">split_mode_button_group</string>
+            </attribute>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QRadioButton" name="split_none_radio_button">
+            <property name="text">
+             <string>None</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">split_mode_button_group</string>
+            </attribute>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="14" column="0">
+        <spacer name="verticalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="0" colspan="3">
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <item>
+          <widget class="QLabel" name="rig_label">
+           <property name="text">
+            <string>Rig:</string>
+           </property>
+           <property name="buddy">
+            <cstring>rig_combo_box</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="rig_combo_box">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>1</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="CAT_poll_interval_label">
+           <property name="text">
+            <string>Poll Interval:</string>
+           </property>
+           <property name="buddy">
+            <cstring>CAT_poll_interval_spin_box</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="CAT_poll_interval_spin_box">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Interval to poll rig for status. Longer intervals will mean that changes to the rig will take longer to be detected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="suffix">
+            <string> s</string>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="4" column="2">
+        <widget class="Line" name="line_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
@@ -1209,62 +1445,6 @@ other hardware interface for PTT.</string>
          </layout>
         </widget>
        </item>
-       <item row="5" column="2">
-        <widget class="QGroupBox" name="mode_group_box">
-         <property name="toolTip">
-          <string>Modulation mode selected on radio.</string>
-         </property>
-         <property name="title">
-          <string>Mode</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_10">
-          <item row="0" column="1">
-           <widget class="QRadioButton" name="mode_USB_radio_button">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;USB is usually the correct modulation mode,&lt;/p&gt;&lt;p&gt;unless the radio has a special data or packet mode setting&lt;/p&gt;&lt;p&gt;for AFSK operation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>US&amp;B</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">TX_mode_button_group</string>
-            </attribute>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QRadioButton" name="mode_none_radio_button">
-            <property name="toolTip">
-             <string>Don't allow the program to set the radio mode
-(not recommended but use if the wrong mode
-or bandwidth is selected).</string>
-            </property>
-            <property name="text">
-             <string>None</string>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">TX_mode_button_group</string>
-            </attribute>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QRadioButton" name="mode_data_radio_button">
-            <property name="toolTip">
-             <string>If this is availabe then it is usually the correct mode for this program.</string>
-            </property>
-            <property name="text">
-             <string>Data/P&amp;kt</string>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">TX_mode_button_group</string>
-            </attribute>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
        <item row="3" column="2">
         <widget class="QGroupBox" name="TX_audio_source_group_box">
          <property name="toolTip">
@@ -1302,7 +1482,7 @@ this setting allows you to select which audio input will be used
          </layout>
         </widget>
        </item>
-       <item row="9" column="2">
+       <item row="11" column="2">
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -1315,192 +1495,60 @@ this setting allows you to select which audio input will be used
          </property>
         </spacer>
        </item>
-       <item row="2" column="2">
-        <widget class="Line" name="line_3">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="11" column="2">
-        <spacer name="verticalSpacer_7">
+       <item row="1" column="1" rowspan="14">
+        <widget class="Line" name="line">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="0" column="0" colspan="3">
-        <layout class="QHBoxLayout" name="horizontalLayout_7">
-         <item>
-          <widget class="QLabel" name="rig_label">
-           <property name="text">
-            <string>Rig:</string>
-           </property>
-           <property name="buddy">
-            <cstring>rig_combo_box</cstring>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="rig_combo_box">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>1</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="CAT_poll_interval_label">
-           <property name="text">
-            <string>Poll Interval:</string>
-           </property>
-           <property name="buddy">
-            <cstring>CAT_poll_interval_spin_box</cstring>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QSpinBox" name="CAT_poll_interval_spin_box">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Interval to poll rig for status. Longer intervals will mean that changes to the rig will take longer to be detected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="suffix">
-            <string> s</string>
-           </property>
-           <property name="minimum">
-            <number>1</number>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="4" column="2">
-        <widget class="Line" name="line_4">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
        <item row="10" column="2">
-        <layout class="QHBoxLayout" name="horizontalLayout_11">
-         <item>
-          <widget class="QPushButton" name="test_CAT_push_button">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Attempt to connect to the radio with these settings.&lt;/p&gt;&lt;p&gt;The button will turn green if the connection is successful or red if there is a problem.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Test CAT</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QPushButton" name="test_PTT_push_button">
-           <property name="toolTip">
-            <string>Attempt to activate the transmitter.
-Click again to deactivate. Normally no power should be
-output since there is no audio being generated at this time.
-Check that any Tx indication on your radio and/or your
-radio interface behave as expected.</string>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QPushButton:checked {
-	background-color: red;
-	border-style	: outset;
-	border-width: 1px;
-	border-radius: 5px;
-	border-color: black;
-	min-width: 5em;
-	padding: 3px;
-}</string>
-           </property>
-           <property name="text">
-            <string>Test PTT</string>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="8" column="2">
-        <widget class="QGroupBox" name="split_operation_group_box">
+        <widget class="QGroupBox" name="groupBox_11">
          <property name="title">
-          <string>Split Operation</string>
+          <string>Advanced</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_12">
-          <item row="0" column="2">
-           <widget class="QRadioButton" name="split_emulate_radio_button">
+         <layout class="QFormLayout" name="formLayout_18">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_11">
             <property name="text">
-             <string>Fake It</string>
+             <string>Tx delay:</string>
             </property>
-            <attribute name="buttonGroup">
-             <string notr="true">split_mode_button_group</string>
-            </attribute>
+            <property name="buddy">
+             <cstring>sbTxDelay</cstring>
+            </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QRadioButton" name="split_rig_radio_button">
-            <property name="text">
-             <string>Rig</string>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="sbTxDelay">
+            <property name="toolTip">
+             <string>Minimum delay between assertion of PTT and start of Tx audio.</string>
             </property>
-            <attribute name="buttonGroup">
-             <string notr="true">split_mode_button_group</string>
-            </attribute>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QRadioButton" name="split_none_radio_button">
-            <property name="text">
-             <string>None</string>
+            <property name="suffix">
+             <string>  s</string>
             </property>
-            <property name="checked">
-             <bool>true</bool>
+            <property name="decimals">
+             <number>1</number>
             </property>
-            <attribute name="buttonGroup">
-             <string notr="true">split_mode_button_group</string>
-            </attribute>
+            <property name="minimum">
+             <double>0.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>0.500000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
            </widget>
           </item>
          </layout>
         </widget>
        </item>
-       <item row="12" column="0">
-        <spacer name="verticalSpacer_5">
+       <item row="9" column="2">
+        <widget class="Line" name="line_2">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Horizontal</enum>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-        </spacer>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -3260,38 +3308,6 @@ QListView::item:hover {
                 </property>
                </widget>
               </item>
-              <item row="4" column="0">
-               <widget class="QLabel" name="label_11">
-                <property name="text">
-                 <string>Tx delay:</string>
-                </property>
-                <property name="buddy">
-                 <cstring>sbTxDelay</cstring>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="1">
-               <widget class="QDoubleSpinBox" name="sbTxDelay">
-                <property name="toolTip">
-                 <string>Minimum delay between assertion of PTT and start of Tx audio.</string>
-                </property>
-                <property name="suffix">
-                 <string>  s</string>
-                </property>
-                <property name="decimals">
-                 <number>1</number>
-                </property>
-                <property name="minimum">
-                 <double>0.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>0.500000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
               <item row="7" column="0">
                <widget class="QCheckBox" name="cbx2ToneSpacing">
                 <property name="toolTip">
@@ -3545,7 +3561,6 @@ soundcard changes</string>
   <tabstop>cbTwoPass</tabstop>
   <tabstop>sbDegrade</tabstop>
   <tabstop>sbBandwidth</tabstop>
-  <tabstop>sbTxDelay</tabstop>
   <tabstop>cbx2ToneSpacing</tabstop>
   <tabstop>cbx4ToneSpacing</tabstop>
  </tabstops>
@@ -3617,12 +3632,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="TX_mode_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="TX_mode_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
  </buttongroups>
 </ui>
