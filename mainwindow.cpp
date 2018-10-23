@@ -3721,6 +3721,18 @@ void MainWindow::readFromStdout()                             //readFromStdout
               if((Varicode::isCommandBuffered(cmd.cmd) && (cmd.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) || cmd.from == "<....>" || cmd.to == "<....>"){
                 qDebug() << "buffering cmd" << cmd.freq << cmd.cmd << cmd.from << cmd.to;
 
+                // log complete buffered callsigns immediately
+                if(cmd.from != "<....>" && cmd.to != "<....>"){
+                    CallDetail cmdcd = {};
+                    cmdcd.call = cmd.from;
+                    cmdcd.bits = cmd.bits;
+                    cmdcd.snr = cmd.snr;
+                    cmdcd.freq = cmd.freq;
+                    cmdcd.utcTimestamp = cmd.utcTimestamp;
+                    cmdcd.ackTimestamp = cmd.to == m_config.my_callsign() ? cmd.utcTimestamp : QDateTime{};
+                    logCallActivity(cmdcd, false);
+                }
+
                 hasExistingMessageBuffer(cmd.freq, true, nullptr);
 
                 if(cmd.to == m_config.my_callsign()){
