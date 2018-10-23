@@ -4128,7 +4128,7 @@ void MainWindow::guiUpdate()
     // TODO: stop
     if(msgLength==0 and !m_tune) on_stopTxButton_clicked();
 
-    float lateThreshold=(12.6/3.0)/15.0; //0.75;
+    float lateThreshold=(12.6/4.0)/15.0; //0.75;
     if(g_iptt==0 and ((m_bTxTime and fTR<lateThreshold and msgLength>0) or m_tune)) {
       //### Allow late starts
       icw[0]=m_ncw;
