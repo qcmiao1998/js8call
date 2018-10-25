@@ -1950,6 +1950,11 @@ void Configuration::impl::set_rig_invariants ()
 
 bool Configuration::impl::validate ()
 {
+  if(!Varicode::isValidCallsign(ui_->callsign_line_edit->text())){
+      MessageBox::critical_message (this, tr ("The callsign format you provided is not supported"));
+      return false;
+  }
+
   if (ui_->sound_input_combo_box->currentIndex () < 0
       && !QAudioDeviceInfo::availableDevices (QAudio::AudioInput).empty ())
     {
