@@ -109,6 +109,9 @@ public:
     static quint32 packAlphaNumeric22(QString const& value, bool isFlag);
     static QString unpackAlphaNumeric22(quint32 packed, bool *isFlag);
 
+    static quint64 packAlphaNumeric50(QString const& value);
+    static QString unpackAlphaNumeric50(quint64 packed);
+
     static quint32 packCallsign(QString const& value);
     static QString unpackCallsign(quint32 value);
 
@@ -126,7 +129,7 @@ public:
     static bool isCommandAllowed(const QString &cmd);
     static bool isCommandBuffered(const QString &cmd);
     static int isCommandChecksumed(const QString &cmd);
-    static QPair<QString, QString> parseCompoundCallsign(const QString &callsign, bool *pIsPrefix);
+    static bool isValidCallsign(const QString &callsign);
     static bool isCompoundCallsign(const QString &callsign);
 
     static QString packBeaconMessage(QString const &text, QString const&callsign, int *n);
@@ -135,7 +138,7 @@ public:
     static QString packCompoundMessage(QString const &text, int *n);
     static QStringList unpackCompoundMessage(const QString &text, quint8 *pType, quint8 *pBits3);
 
-    static QString packCompoundFrame(const QString &baseCallsign, const QString &fix, bool isPrefix, quint8 type, quint16 num, quint8 bits3);
+    static QString packCompoundFrame(const QString &callsign, quint8 type, quint16 num, quint8 bits3);
     static QStringList unpackCompoundFrame(const QString &text, quint8 *pType, quint16 *pNum, quint8 *pBits3);
 
     static QString packDirectedMessage(QString const& text, QString const& callsign, QString *pTo, QString * pCmd, QString *pNum, int *n);

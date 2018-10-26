@@ -1462,8 +1462,16 @@ void MainWindow::initializeDummyData(){
         return;
     }
 
+    qDebug() << Varicode::isValidCallsign("VE7/KN4CRD");
+    qDebug() << Varicode::packAlphaNumeric50("VE7/KN4CRD");
+    qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("VE7/KN4CRD"));
+    qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("@GROUP/42"));
+    qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("SP1ATOM"));
+
     QList<QString> calls = {
+        "@GROUP/42",
         "KN4CRD",
+        "VE7/KN4CRD",
         "KN4CRD/P",
         "KC9QNE",
         "KI6SSI",
@@ -5347,7 +5355,7 @@ QStringList MainWindow::buildMessageFrames(const QString &text){
     QString selectedCall = callsignSelected();
 
     // prepare compound
-    bool compound = Radio::is_compound_callsign(m_config.my_callsign());
+    bool compound = Varicode::isCompoundCallsign(/*Radio::is_compound_callsign(*/m_config.my_callsign());
     QString mygrid = m_config.my_grid().left(4);
     QString mycall = m_config.my_callsign();
     QString basecall = Radio::base_callsign(m_config.my_callsign());
@@ -7893,9 +7901,10 @@ void MainWindow::refreshTextDisplay(){
 #else
     // prepare selected callsign for directed message
     QString selectedCall = callsignSelected();
+    qDebug() << "selected callsign for directed" << selectedCall;
 
     // prepare compound
-    bool compound = Radio::is_compound_callsign(m_config.my_callsign());
+    bool compound = Varicode::isCompoundCallsign(/*Radio::is_compound_callsign(*/m_config.my_callsign());
     QString mygrid = m_config.my_grid().left(4);
     QString mycall = m_config.my_callsign();
     QString basecall = Radio::base_callsign(m_config.my_callsign());
@@ -7994,6 +8003,7 @@ QString MainWindow::callsignSelected(bool useInputText){
         }
     }
 
+#if ALLOW_USE_INPUT_TEXT_CALLSIGN
     if(useInputText){
         auto text = ui->extFreeTextMsgEdit->toPlainText().left(11); // Maximum callsign is 6 + / + 4 = 11 characters
         auto calls = Varicode::parseCallsigns(text);
@@ -8001,6 +8011,7 @@ QString MainWindow::callsignSelected(bool useInputText){
             return calls.first();
         }
     }
+#endif
 
     return QString();
 }
