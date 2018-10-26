@@ -1950,7 +1950,7 @@ void Configuration::impl::set_rig_invariants ()
 
 bool Configuration::impl::validate ()
 {
-  if(!Varicode::isValidCallsign(ui_->callsign_line_edit->text())){
+  if(!Varicode::isValidCallsign(ui_->callsign_line_edit->text(), nullptr)){
       MessageBox::critical_message (this, tr ("The callsign format you provided is not supported"));
       return false;
   }

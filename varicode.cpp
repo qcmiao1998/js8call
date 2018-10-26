@@ -37,7 +37,7 @@ QString grid_pattern = {R"((?<grid>[A-X]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*)+)
 QString orig_compound_callsign_pattern = {R"((?<callsign>(\d|[A-Z])+\/?((\d|[A-Z]){2,})(\/(\d|[A-Z])+)?(\/(\d|[A-Z])+)?))"};
 QString base_callsign_pattern = {R"((?<callsign>\b(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)\b))"};
 //QString compound_callsign_pattern = {R"((?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
-QString compound_callsign_pattern = {R"((?<callsign>\b(?<extended>[A-Z0-9\/@][A-Z0-9\/]{0,2}[\/]?[A-Z0-9\/]{0,3}[\/]?[A-Z0-9/]{0,3})\b))"}; //     (?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
+QString compound_callsign_pattern = {R"((?<callsign>(?:[@]?|\b)(?<extended>[A-Z0-9\/@][A-Z0-9\/]{0,2}[\/]?[A-Z0-9\/]{0,3}[\/]?[A-Z0-9\/]{0,3})\b))"};
 QString pack_callsign_pattern = {R"(([0-9A-Z ])([0-9A-Z])([0-9])([A-Z ])([A-Z ])([A-Z ]))"};
 QString alphanumeric = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ /@"}; // callsign and grid alphabet
 
@@ -99,7 +99,7 @@ QMap<int, int> checksum_cmds = {
     { 15,  0 }
 };
 
-QString callsign_pattern = QString("(?<callsign>[A-Z0-9/]+)");
+QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
 QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:BEACON (ACK|REQ)|AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|(?:(?:ACK|73|YES|NO|SNR|QSL|RR|HEARING|FB|QTH|QTC|GRID|ACTIVE|IDLE)(?=[ ]|$))|[?@&$%#^>* ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
@@ -338,7 +338,7 @@ QStringList Varicode::parseCallsigns(QString const &input){
             continue;
         }
         QString callsign = match.captured("callsign").trimmed();
-        if(!Varicode::isValidCallsign(callsign)){
+        if(!Varicode::isValidCallsign(callsign, nullptr)){
             continue;
         }
         QRegularExpression m(grid_pattern);
@@ -1031,27 +1031,50 @@ int Varicode::isCommandChecksumed(const QString &cmd){
 bool isValidCompoundCallsign(QStringRef callsign){
     // compound is valid when it is:
     // 1) a group call (starting with @)
-    // 2) an actual compound call (containing /)
+    // 2) an actual compound call (containing /) that is not a base call
+    // 3) has a number in it
     //
     // this is so arbitrary words < 10 characters in length don't end up coded as callsigns
-    return callsign.startsWith("@") || callsign.contains("/") || QRegularExpression("\\d").match(callsign).hasMatch();
+    if(callsign.contains("/")){
+        auto base = callsign.toString().left(callsign.indexOf("/"));
+        return !basecalls.contains(base);
+    }
+
+    if(callsign.startsWith("@")){
+        return true;
+    }
+
+    if(QRegularExpression("\\d").match(callsign).hasMatch()){
+        return true;
+    }
+
+    return false;
 }
 
-bool Varicode::isValidCallsign(const QString &callsign){
+bool Varicode::isValidCallsign(const QString &callsign, bool *pIsCompound){
     if(basecalls.contains(callsign)){
+        if(pIsCompound) *pIsCompound = false;
         return true;
     }
 
     auto match = QRegularExpression(base_callsign_pattern).match(callsign);
-    if(match.hasMatch()){
+    if(match.hasMatch() && (match.capturedLength() == callsign.length())){
+        if(pIsCompound) *pIsCompound = false;
         return true;
     }
 
-    match = QRegularExpression(compound_callsign_pattern).match(callsign);
-    if(match.hasMatch()){
-        return isValidCompoundCallsign(match.capturedRef(0));
+    match = QRegularExpression("^" + compound_callsign_pattern).match(callsign);
+
+    if(match.hasMatch() && (match.capturedLength() == callsign.length())){
+        bool isValid = isValidCompoundCallsign(match.capturedRef(0));
+
+        qDebug() << "is valid compound??" << match.capturedRef(0) << isValid;
+
+        if(pIsCompound) *pIsCompound = isValid;
+        return isValid;
     }
 
+    if(pIsCompound) *pIsCompound = false;
     return false;
 }
 
@@ -1061,16 +1084,20 @@ bool Varicode::isCompoundCallsign(const QString &callsign){
     }
 
     auto match = QRegularExpression(base_callsign_pattern).match(callsign);
-    if(match.hasMatch()){
+    if(match.hasMatch() && (match.capturedLength() == callsign.length())){
         return false;
     }
 
-    match = QRegularExpression(compound_callsign_pattern).match(callsign);
-    if(!match.hasMatch()){
+    match = QRegularExpression("^" + compound_callsign_pattern).match(callsign);
+    if(!match.hasMatch() || (match.capturedLength() != callsign.length())){
         return false;
     }
 
-    return isValidCompoundCallsign(match.capturedRef(0));
+    bool isValid = isValidCompoundCallsign(match.capturedRef(0));
+
+    qDebug() << "is valid compound?" << match.capturedRef(0) << isValid;
+
+    return isValid;
 }
 
 // CQCQCQ EM73
@@ -1095,11 +1122,6 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
 
     auto type = parsedText.captured("type");
     auto isAlt = type.startsWith("CQ");
-
-    //bool isPrefix = false;
-    //auto pair = Varicode::parseCompoundCallsign(callsign, &isPrefix);
-    //auto base = pair.first;
-    //auto fix = pair.second;
 
     if(callsign.isEmpty()){
         if(n) *n = 0;
@@ -1156,7 +1178,7 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
     qDebug() << "trying to pack compound message" << text;
     auto parsedText = compound_re.match(text);
     if(!parsedText.hasMatch()){
-        qDebug() << "no match for compound message";
+        qDebug() << "no match for compound message" << text;
         if(n) *n = 0;
         return frame;
     }
@@ -1167,25 +1189,6 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
     QString grid = parsedText.captured("grid");
     QString cmd = parsedText.captured("cmd");
     QString num = parsedText.captured("num").trimmed();
-
-    // QString base;
-    // QString fix;
-    // bool isPrefix = false;
-    // if(basecalls.contains(callsign)){
-    //     // if it's a basecall, use it verbatim with no prefix/suffix
-    //     base = callsign;
-    //     fix = "";
-    // } else {
-    //     // otherwise, parse the callsign for prefix/suffix
-    //     auto pair = Varicode::parseCompoundCallsign(callsign, &isPrefix);
-    //     base = pair.first;
-    //     fix = pair.second;
-    //
-    //     if(base.isEmpty()){
-    //         if(n) *n = 0;
-    //         return frame;
-    //     }
-    // }
 
     if(callsign.isEmpty()){
         if(n) *n = 0;
@@ -1316,7 +1319,7 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, quint8 *pType, qu
 // J1Y?
 // KN4CRD: J1Y$
 // KN4CRD: J1Y! HELLO WORLD
-QString Varicode::packDirectedMessage(const QString &text, const QString &callsign, QString *pTo, QString * pCmd, QString *pNum, int *n){
+QString Varicode::packDirectedMessage(const QString &text, const QString &mycall, QString *pTo, bool *pToCompound, QString * pCmd, QString *pNum, int *n){
     QString frame;
 
     auto match = directed_re.match(text);
@@ -1325,7 +1328,11 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         return frame;
     }
 
-    QString from = callsign;
+    QString from = mycall;
+    bool isFromCompound = Varicode::isCompoundCallsign(from);
+    if(isFromCompound){
+        from = "<....>";
+    }
     QString to = match.captured("callsign");
     QString cmd = match.captured("cmd");
     QString num = match.captured("num");
@@ -1336,24 +1343,26 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &callsi
         return frame;
     }
 
-    // validate "to" callsign
-    auto parsedTo = QRegularExpression(compound_callsign_pattern).match(to);
-    bool validToCallsign = (to != callsign) && (basecalls.contains(to) || parsedTo.hasMatch());
+    // ensure we have a valid callsign
+    bool isToCompound = false;
+    bool validToCallsign = (to != mycall) && Varicode::isValidCallsign(to, &isToCompound);
     if(!validToCallsign){
+        qDebug() << "to" << to << "is not a valid callsign";
         if(n) *n = 0;
         return frame;
     }
 
-    if(basecalls.contains(to)){
-        if(pTo) *pTo = to;
-    } else if(parsedTo.hasMatch()){
-        if(pTo) *pTo = parsedTo.captured(0);
+    // return back the parsed "to" field
+    if(pTo) *pTo = to;
+    if(pToCompound) *pToCompound = isToCompound;
 
-        auto parsedBase = parsedTo.captured("base");
-        if(parsedBase.length() != to.length()){
-            to = "<....>"; // parsedBase;
-        }
+    // then replace the current processing with a placeholder that we _can_ pack into a directed command,
+    // because later we'll send the "to" field in a compound frame using the results of this directed pack
+    if(isToCompound){
+        to = "<....>";
     }
+
+    qDebug() << "directed" << validToCallsign << isToCompound << to;
 
     // validate command
     if(!Varicode::isCommandAllowed(cmd) && !Varicode::isCommandAllowed(cmd.trimmed())){
@@ -1594,15 +1603,18 @@ QString Varicode::unpackDataMessage(const QString &text, quint8 *pType){
 // TODO: remove the dependence on providing all this data?
 QStringList Varicode::buildMessageFrames(
     QString const& mycall,
-    QString const& basecall,
+    //QString const& basecall,
     QString const& mygrid,
-    bool compound,
-    QString const& selectedCall,
+    //bool compound,
+    //QString const& selectedCall,
     QString const& text
 ){
     #define ALLOW_SEND_COMPOUND 1
+    #define ALLOW_SEND_COMPOUND_DIRECTED 1
     #define AUTO_PREPEND_DIRECTED 0
     #define AUTO_REMOVE_MYCALL 0
+
+    bool mycallCompound = Varicode::isCompoundCallsign(mycall);
 
     QStringList frames;
 
@@ -1680,8 +1692,8 @@ QStringList Varicode::buildMessageFrames(
           QString dirCmd;
           QString dirTo;
           QString dirNum;
-          QString dirFrame = Varicode::packDirectedMessage(line, basecall, &dirTo, &dirCmd, &dirNum, &n);
-          bool dirToCompound = Varicode::isCompoundCallsign(dirTo);
+          bool dirToCompound = false;
+          QString dirFrame = Varicode::packDirectedMessage(line, mycall, &dirTo, &dirToCompound, &dirCmd, &dirNum, &n);
           if(dirToCompound){
               qDebug() << "directed message to field is compound" << dirTo;
           }
@@ -1731,6 +1743,9 @@ QStringList Varicode::buildMessageFrames(
 #endif
 
           if(useDir){
+              bool shouldUseStandardFrame = true;
+
+#if ALLOW_SEND_COMPOUND_DIRECTED
               /**
                * We have a few special cases when we are sending to a compound call, or our call is a compound call, or both.
                * CASE 0: Non-compound:       KN4CRD: J1Y ACK
@@ -1750,8 +1765,8 @@ QStringList Varicode::buildMessageFrames(
                * -> One standard compound frame, followed by a compound directed frame
                * -> <KN4CRD/P EM73> then <J1Y/P ACK>
                **/
-              bool shouldUseStandardFrame = true;
-              if(compound || dirToCompound){
+              if(mycallCompound || dirToCompound){
+                  qDebug() << "compound?" << mycallCompound << dirToCompound;
                   // Cases 1, 2, 3 all send a standard compound frame first...
                   QString deCompoundMessage = QString("`%1 %2").arg(mycall).arg(mygrid);
                   QString deCompoundFrame = Varicode::packCompoundMessage(deCompoundMessage, nullptr);
@@ -1760,13 +1775,14 @@ QStringList Varicode::buildMessageFrames(
                   }
 
                   // Followed, by a standard OR compound directed message...
-                  QString dirCompoundMessage = QString("`%1%2%3").arg(dirTo).arg(dirCmd).arg(dirNum); //.replace("  ", " ");
+                  QString dirCompoundMessage = QString("`%1%2%3").arg(dirTo).arg(dirCmd).arg(dirNum);
                   QString dirCompoundFrame = Varicode::packCompoundMessage(dirCompoundMessage, nullptr);
                   if(!dirCompoundFrame.isEmpty()){
                       frames.append(dirCompoundFrame);
                   }
                   shouldUseStandardFrame = false;
               }
+#endif
 
               if(shouldUseStandardFrame) {
                   // otherwise, just send the standard directed frame
@@ -1807,13 +1823,19 @@ QStringList Varicode::buildMessageFrames(
     return frames;
 }
 
-BuildMessageFramesThread::BuildMessageFramesThread(const QString &mycall, const QString &basecall, const QString &mygrid, bool compound, const QString &selectedCall, const QString &text, QObject *parent):
+BuildMessageFramesThread::BuildMessageFramesThread(
+    const QString &mycall,
+    //const QString &basecall,
+    const QString &mygrid,
+    //bool compound,
+    //const QString &selectedCall,
+    const QString &text, QObject *parent):
     QThread(parent),
     m_mycall{mycall},
-    m_basecall{basecall},
+    //m_basecall{basecall},
     m_mygrid{mygrid},
-    m_compound{compound},
-    m_selectedCall{selectedCall},
+    //m_compound{compound},
+    //m_selectedCall{selectedCall},
     m_text{text}
 {
 }
@@ -1821,10 +1843,10 @@ BuildMessageFramesThread::BuildMessageFramesThread(const QString &mycall, const 
 void BuildMessageFramesThread::run(){
     auto results = Varicode::buildMessageFrames(
         m_mycall,
-        m_basecall,
+        //m_basecall,
         m_mygrid,
-        m_compound,
-        m_selectedCall,
+        //m_compound,
+        //m_selectedCall,
         m_text
     );
 

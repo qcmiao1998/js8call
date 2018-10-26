@@ -129,7 +129,7 @@ public:
     static bool isCommandAllowed(const QString &cmd);
     static bool isCommandBuffered(const QString &cmd);
     static int isCommandChecksumed(const QString &cmd);
-    static bool isValidCallsign(const QString &callsign);
+    static bool isValidCallsign(const QString &callsign, bool *pIsCompound);
     static bool isCompoundCallsign(const QString &callsign);
 
     static QString packBeaconMessage(QString const &text, QString const&callsign, int *n);
@@ -141,7 +141,7 @@ public:
     static QString packCompoundFrame(const QString &callsign, quint8 type, quint16 num, quint8 bits3);
     static QStringList unpackCompoundFrame(const QString &text, quint8 *pType, quint16 *pNum, quint8 *pBits3);
 
-    static QString packDirectedMessage(QString const& text, QString const& callsign, QString *pTo, QString * pCmd, QString *pNum, int *n);
+    static QString packDirectedMessage(QString const& text, QString const& mycall, QString *pTo, bool *pToCompound, QString * pCmd, QString *pNum, int *n);
     static QStringList unpackDirectedMessage(QString const& text, quint8 *pType);
 
     static QString packDataMessage(QString const& text, int *n);
@@ -149,10 +149,10 @@ public:
 
     static QStringList buildMessageFrames(
         QString const& mycall,
-        QString const& basecall,
+        //QString const& basecall,
         QString const& mygrid,
-        bool compound,
-        QString const& selectedCall,
+        //bool compound,
+        //QString const& selectedCall,
         QString const& text
     );
 };
@@ -163,10 +163,10 @@ class BuildMessageFramesThread : public QThread
     Q_OBJECT
 public:
     BuildMessageFramesThread(QString const& mycall,
-                             QString const& basecall,
+                             //QString const& basecall,
                              QString const& mygrid,
-                             bool compound,
-                             QString const& selectedCall,
+                             //bool compound,
+                             //QString const& selectedCall,
                              QString const& text,
                              QObject *parent=nullptr);
     void run() override;
@@ -175,10 +175,10 @@ signals:
 
 private:
     QString m_mycall;
-    QString m_basecall;
+    //QString m_basecall;
     QString m_mygrid;
-    bool m_compound;
-    QString m_selectedCall;
+    //bool m_compound;
+    //QString m_selectedCall;
     QString m_text;
 };
 

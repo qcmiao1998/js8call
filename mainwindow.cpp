@@ -1462,11 +1462,11 @@ void MainWindow::initializeDummyData(){
         return;
     }
 
-    qDebug() << Varicode::isValidCallsign("VE7/KN4CRD");
-    qDebug() << Varicode::packAlphaNumeric50("VE7/KN4CRD");
-    qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("VE7/KN4CRD"));
-    qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("@GROUP/42"));
-    qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("SP1ATOM"));
+    // qDebug() << Varicode::isValidCallsign("@GROUP1", nullptr);
+    // qDebug() << Varicode::packAlphaNumeric50("VE7/KN4CRD");
+    // qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("VE7/KN4CRD"));
+    // qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("@GROUP/42"));
+    // qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("SP1ATOM"));
 
     QList<QString> calls = {
         "@GROUP/42",
@@ -5352,18 +5352,24 @@ int MainWindow::currentFreqOffset(){
 
 QStringList MainWindow::buildMessageFrames(const QString &text){
     // prepare selected callsign for directed message
-    QString selectedCall = callsignSelected();
+    //QString selectedCall = callsignSelected();
 
     // prepare compound
-    bool compound = Varicode::isCompoundCallsign(/*Radio::is_compound_callsign(*/m_config.my_callsign());
-    QString mygrid = m_config.my_grid().left(4);
+    //bool compound = Varicode::isCompoundCallsign(/*Radio::is_compound_callsign(*/m_config.my_callsign());
     QString mycall = m_config.my_callsign();
-    QString basecall = Radio::base_callsign(m_config.my_callsign());
-    if(basecall != mycall){
-        basecall = "<....>";
-    }
+    QString mygrid = m_config.my_grid().left(4);
+    // QString basecall = Radio::base_callsign(m_config.my_callsign());
+    // if(basecall != mycall){
+    //     basecall = "<....>";
+    // }
 
-    auto frames = Varicode::buildMessageFrames(mycall, basecall, mygrid, compound, selectedCall, text);
+    auto frames = Varicode::buildMessageFrames(
+        mycall,
+        //basecall,
+        mygrid,
+        //compound,
+        //selectedCall,
+        text);
 
 #if 0
     qDebug() << "frames:";
@@ -7900,20 +7906,25 @@ void MainWindow::refreshTextDisplay(){
 
 #else
     // prepare selected callsign for directed message
-    QString selectedCall = callsignSelected();
-    qDebug() << "selected callsign for directed" << selectedCall;
+    //QString selectedCall = callsignSelected();
+    //qDebug() << "selected callsign for directed" << selectedCall;
 
     // prepare compound
-    bool compound = Varicode::isCompoundCallsign(/*Radio::is_compound_callsign(*/m_config.my_callsign());
-    QString mygrid = m_config.my_grid().left(4);
+    //bool compound = Varicode::isCompoundCallsign(/*Radio::is_compound_callsign(*/m_config.my_callsign());
     QString mycall = m_config.my_callsign();
-    QString basecall = Radio::base_callsign(m_config.my_callsign());
-    if(basecall != mycall){
-        basecall = "<....>";
-    }
+    QString mygrid = m_config.my_grid().left(4);
+    //QString basecall = Radio::base_callsign(m_config.my_callsign());
+    //if(basecall != mycall){
+    //    basecall = "<....>";
+    //}
 
     BuildMessageFramesThread *t = new BuildMessageFramesThread(
-        mycall, basecall, mygrid, compound, selectedCall, text
+        mycall,
+        //basecall,
+        mygrid,
+        //compound,
+        //selectedCall,
+        text
     );
 
     connect(t, &BuildMessageFramesThread::finished, t, &QObject::deleteLater);
