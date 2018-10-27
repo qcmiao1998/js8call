@@ -1029,6 +1029,11 @@ int Varicode::isCommandChecksumed(const QString &cmd){
 }
 
 bool isValidCompoundCallsign(QStringRef callsign){
+    // compound calls cannot be > 9 characters after removing the /
+    if(callsign.toString().replace("/", "").length() > 9){
+        return false;
+    }
+
     // compound is valid when it is:
     // 1) a group call (starting with @)
     // 2) an actual compound call (containing /) that is not a base call
