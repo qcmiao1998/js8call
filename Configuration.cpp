@@ -1448,7 +1448,7 @@ void Configuration::impl::read_settings ()
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
   my_qth_ = settings_->value("MyQTH", QString {}).toString();
-  cq_ = settings_->value("CQMessage", QString {"CQCQCQ"}).toString();
+  cq_ = settings_->value("CQMessage", QString {"CQCQCQ <MYGRID4>"}).toString();
   reply_ = settings_->value("Reply", QString {"HW CPY?"}).toString();
   next_color_cq_ = color_cq_ = settings_->value("colorCQ","#66ff66").toString();
   next_color_mycall_ = color_mycall_ = settings_->value("colorMyCall","#ff6666").toString();
