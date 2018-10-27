@@ -1977,7 +1977,8 @@ QStringList splitGroups(QString groupsString, bool filter){
 
 bool Configuration::impl::validate ()
 {
-  if(!Varicode::isValidCallsign(ui_->callsign_line_edit->text(), nullptr)){
+  auto callsign = ui_->callsign_line_edit->text().trimmed();
+  if(!Varicode::isValidCallsign(callsign, nullptr) || callsign.startsWith("@")){
       MessageBox::critical_message (this, tr ("The callsign format you provided is not supported"));
       return false;
   }

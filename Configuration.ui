@@ -240,17 +240,20 @@
              <item row="5" column="0">
               <widget class="QLabel" name="label_23">
                <property name="text">
-                <string>Groups (comma separated):</string>
+                <string>Callsign Groups (comma separated):</string>
                </property>
               </widget>
              </item>
              <item row="5" column="1">
               <widget class="QLineEdit" name="groups_line_edit">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter a comma separated list of callsign groups (e.g., @GROUP/1, @ARES, @RACES, etc). &lt;br/&gt;&lt;br/&gt;Each group behaves similarly to @ALLCALL. Messages that are directed to the group are printed at all participating stations.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="text">
                 <string/>
                </property>
                <property name="placeholderText">
-                <string/>
+                <string>@ALLCALL, ...</string>
                </property>
               </widget>
              </item>
