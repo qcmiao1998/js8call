@@ -93,7 +93,7 @@ QSet<int> snr_cmds = {12, 25};
 
 QMap<int, int> checksum_cmds = {
     {  5, 16 },
-    {  8, 32 },
+    {  8, 16 },
     { 13, 16 },
     { 14, 16 },
     { 15,  0 }
