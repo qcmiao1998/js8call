@@ -6756,11 +6756,53 @@ void MainWindow::buildEditMenu(QMenu *menu, QTextEdit *edit){
     connect(paste, &QAction::triggered, edit, &QTextEdit::paste);
 }
 
+QMap<QString, QString> MainWindow::buildMacroValues(){
+    QMap<QString, QString> values = {
+        {"<MYCALL>", m_config.my_callsign()},
+        {"<MYGRID4>", m_config.my_grid().left(4)},
+        {"<MYGRID12>", m_config.my_grid().left(12)},
+        {"<MYQTC>", m_config.my_station()},
+        {"<MYQTH>", m_config.my_qth()},
+        {"<MYCQ>", m_config.cq_message()},
+        {"<MYREPLY>", m_config.reply_message()},
+    };
+
+    auto selectedCall = callsignSelected();
+    if(m_callActivity.contains(selectedCall)){
+        auto cd = m_callActivity[selectedCall];
+
+        values["<CALL>"] = selectedCall;
+
+        if(cd.snr > -31){
+            values["<SNR>"] = Varicode::formatSNR(cd.snr);
+        }
+    }
+
+    return values;
+}
+
+QString MainWindow::replaceMacros(QString const &text, QMap<QString, QString> values, bool prune){
+    QString output = QString(text);
+
+    foreach(auto key, values.keys()){
+        output = output.replace(key, values[key]);
+    }
+
+    if(prune){
+        output = output.replace(QRegularExpression("[<](?:[^>]+)[>]"), "");
+    }
+
+    return output;
+}
+
 void MainWindow::buildSavedMessagesMenu(QMenu *menu){
+    auto values = buildMacroValues();
+
     foreach(QString macro, m_config.macros()->stringList()){
-        QAction *action = menu->addAction(macro);
+        QAction *action = menu->addAction(replaceMacros(macro, values, false));
         connect(action, &QAction::triggered, this, [this, macro](){
-            addMessageText(macro);
+            auto values = buildMacroValues();
+            addMessageText(replaceMacros(macro, values, true));
 
             if(m_config.transmit_directed()) toggleTx(true);
         });

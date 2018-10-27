@@ -277,6 +277,8 @@ private slots:
   void buildBandActivitySortByMenu(QMenu * menu);
   void buildCallActivitySortByMenu(QMenu * menu);
   void buildQueryMenu(QMenu *, QString callsign);
+  QMap<QString, QString> buildMacroValues();
+  QString replaceMacros(QString const &text, QMap<QString, QString> values, bool prune);
   void buildSavedMessagesMenu(QMenu *menu);
   void buildRelayMenu(QMenu *menu);
   QAction* buildRelayAction(QString call);
