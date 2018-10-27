@@ -179,7 +179,6 @@ quint16 nmaxgrid  = (1<<15)-1;
 QMap<QString, quint32> basecalls = {
     { "<....>",    nbasecall + 1 }, // incomplete callsign
     { "ALLCALL",   nbasecall + 2 },
-    { "GROUPCALL", nbasecall + 3 },
 };
 
 QMap<quint32, QString> cqs = {
@@ -1652,7 +1651,6 @@ QStringList Varicode::buildMessageFrames(
 
             bool lineStartsWithBaseCall = (
                 line.startsWith("ALLCALL") ||
-                line.startsWith("GROUPCALL") ||
                 line.startsWith("BEACON")  ||
                 Varicode::startsWithCQ(line)
             );

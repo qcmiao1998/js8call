@@ -936,8 +936,8 @@ QString Configuration::my_station() const
     return station.trimmed();
 }
 
-QStringList Configuration::my_groups() const {
-    return m_->my_groups_;
+QSet<QString> Configuration::my_groups() const {
+    return QSet<QString>::fromList(m_->my_groups_);
 }
 
 QString Configuration::my_qth() const

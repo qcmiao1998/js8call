@@ -152,7 +152,6 @@ extern "C" {
 }
 
 const int NEAR_THRESHOLD_RX = 10;
-const int NEAR_THRESHOLD_GROUPCALL = 125;
 
 int volatile itone[NUM_ISCAT_SYMBOLS];  //Audio tones for all Tx symbols
 int volatile icw[NUM_CW_SYMBOLS];       //Dits for CW ID
@@ -4976,7 +4975,7 @@ void MainWindow::clearActivity(){
     m_lastTxMessage.clear();
 
     clearTableWidget(ui->tableWidgetCalls);
-    createAllcallTableRow(ui->tableWidgetCalls, false);
+    createAllcallTableRows(ui->tableWidgetCalls, "");
 
     clearTableWidget(ui->tableWidgetRXAll);
 
@@ -4990,28 +4989,14 @@ void MainWindow::clearActivity(){
     update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", false);
 }
 
-void MainWindow::createAllcallTableRow(QTableWidget *table, bool selected){
-    table->insertRow(table->rowCount());
-
+void MainWindow::createAllcallTableRows(QTableWidget *table, QString const &selectedCall){
     int count = 0;
     auto now = DriftingDateTime::currentDateTimeUtc();
     int callsignAging = m_config.callsign_aging();
-    if(ui->selcalButton->isChecked()){
-        int freq = currentFreqOffset();
-        foreach(auto cd, m_callActivity.values()){
-            if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
-                continue;
-            }
-            if(abs(freq - cd.freq) <= NEAR_THRESHOLD_GROUPCALL){
-                count++;
-            }
-        }
-        auto item = new QTableWidgetItem(count == 0 ? QString("GROUPCALL") : QString("GROUPCALL (%1)").arg(count));
-        item->setData(Qt::UserRole, QVariant("GROUPCALL"));
-        table->setItem(table->rowCount() - 1, 0, item);
-        table->setSpan(table->rowCount() - 1, 0, 1, table->columnCount());
 
-    } else {
+    if(!ui->selcalButton->isChecked()){
+        table->insertRow(table->rowCount());
+
         foreach(auto cd, m_callActivity.values()){
             if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
                 continue;
@@ -5022,10 +5007,24 @@ void MainWindow::createAllcallTableRow(QTableWidget *table, bool selected){
         item->setData(Qt::UserRole, QVariant("ALLCALL"));
         table->setItem(table->rowCount() - 1, 0, item);
         table->setSpan(table->rowCount() - 1, 0, 1, table->columnCount());
+        if(selectedCall == "ALLCALL"){
+            table->item(table->rowCount()-1, 0)->setSelected(true);
+        }
     }
 
-    if (selected) {
-        table->item(table->rowCount()-1, 0)->setSelected(true);
+    auto groups = m_config.my_groups().toList();
+    qSort(groups);
+    foreach(auto group, groups){
+        table->insertRow(table->rowCount());
+
+        auto item = new QTableWidgetItem(group);
+        item->setData(Qt::UserRole, QVariant(group));
+        table->setItem(table->rowCount() - 1, 0, item);
+        table->setSpan(table->rowCount() - 1, 0, 1, table->columnCount());
+
+        if(selectedCall == group){
+            table->item(table->rowCount()-1, 0)->setSelected(true);
+        }
     }
 }
 
@@ -6201,7 +6200,7 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
     if(sender == ui->tableWidgetCalls){
         m_callActivity.clear();
         clearTableWidget((ui->tableWidgetCalls));
-        createAllcallTableRow(ui->tableWidgetCalls, false);
+        createAllcallTableRows(ui->tableWidgetCalls, "");
     }
 
     if(sender == ui->extFreeTextMsgEdit){
@@ -8087,7 +8086,7 @@ bool MainWindow::isAllCallIncluded(const QString &text){
 }
 
 bool MainWindow::isGroupCallIncluded(const QString &text){
-    return text.contains("GROUPCALL");
+    return m_config.my_groups().contains(text);
 }
 
 void MainWindow::processActivity(bool force) {
@@ -8131,7 +8130,7 @@ void MainWindow::processRxActivity() {
         if(hasExistingMessageBuffer(d.freq, false, &prevOffset) && (
                 (m_messageBuffer[prevOffset].cmd.to == m_config.my_callsign()) ||
                 (isAllCallIncluded(m_messageBuffer[prevOffset].cmd.to) && !ui->selcalButton->isChecked()) ||
-                (isGroupCallIncluded(m_messageBuffer[prevOffset].cmd.to) && abs(prevOffset - freqOffset) <= NEAR_THRESHOLD_GROUPCALL)
+                (isGroupCallIncluded(m_messageBuffer[prevOffset].cmd.to))
             )
         ){
             d.isBuffered = true;
@@ -8414,8 +8413,7 @@ void MainWindow::processCommandActivity() {
         auto d = m_rxCommandQueue.dequeue();
 
         bool isAllCall = isAllCallIncluded(d.to);
-        bool isNear = abs(d.freq - freqOffset) <= NEAR_THRESHOLD_GROUPCALL; // 100Hz + a 25Hz buffer
-        bool isGroupCall = isGroupCallIncluded(d.to) && isNear;
+        bool isGroupCall = isGroupCallIncluded(d.to);
 
         qDebug() << "try processing command" << d.from << d.to << d.cmd << d.freq << d.grid << d.extra;
 
@@ -8443,7 +8441,7 @@ void MainWindow::processCommandActivity() {
         cd.utcTimestamp = d.utcTimestamp;
         logCallActivity(cd, true);
 
-        // we're only responding to allcall, groupcalls near us, and our callsign at this point, so we'll end after logging the callsigns we've heard
+        // we're only responding to allcall, groupcalls, and our callsign at this point, so we'll end after logging the callsigns we've heard
         if (!isAllCall && !toMe && !isGroupCall) {
             continue;
         }
@@ -9242,7 +9240,7 @@ void MainWindow::displayCallActivity() {
     {
         // Clear the table
         clearTableWidget(ui->tableWidgetCalls);
-        createAllcallTableRow(ui->tableWidgetCalls, isAllCallIncluded(selectedCall) || isGroupCallIncluded(selectedCall));
+        createAllcallTableRows(ui->tableWidgetCalls, selectedCall); // isAllCallIncluded(selectedCall)); // || isGroupCallIncluded(selectedCall));
 
         // Build the table
         QList < QString > keys = m_callActivity.keys();
