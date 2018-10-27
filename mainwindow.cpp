@@ -6225,7 +6225,7 @@ void MainWindow::on_cqMacroButton_clicked(){
 
     clearCallsignSelected();
 
-    addMessageText(message);
+    addMessageText(replaceMacros(message, buildMacroValues(), true));
 
     if(m_config.transmit_directed()) toggleTx(true);
 }
@@ -6236,7 +6236,9 @@ void MainWindow::on_replyMacroButton_clicked(){
         return;
     }
 
-    addMessageText(QString("%1 %2").arg(call).arg(m_config.reply_message()));
+    auto message = m_config.reply_message();
+    message = replaceMacros(message, buildMacroValues(), true);
+    addMessageText(QString("%1 %2").arg(call).arg(message));
 
     if(m_config.transmit_directed()) toggleTx(true);
 }
@@ -6247,7 +6249,7 @@ void MainWindow::on_qthMacroButton_clicked(){
         return;
     }
 
-    addMessageText(QString("QTH %1").arg(qth));
+    addMessageText(QString("QTH %1").arg(replaceMacros(qth, buildMacroValues(), true)));
 
     if(m_config.transmit_directed()) toggleTx(true);
 }
@@ -6258,7 +6260,7 @@ void MainWindow::on_qtcMacroButton_clicked(){
         return;
     }
 
-    addMessageText(QString("QTC %1").arg(qtc));
+    addMessageText(QString("QTC %1").arg(replaceMacros(qtc, buildMacroValues(), true)));
 
     if(m_config.transmit_directed()) toggleTx(true);
 }
@@ -6386,7 +6388,9 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1 %2").arg(selectedCall).arg(m_config.reply_message()), true);
+        auto message = m_config.reply_message();
+        message = replaceMacros(message, buildMacroValues(), true);
+        addMessageText(QString("%1 %2").arg(selectedCall).arg(message), true);
     });
 
     auto sendSNRAction = menu->addAction(QString("%1 SNR - Send a signal report to the selected callsign").arg(call).trimmed());
