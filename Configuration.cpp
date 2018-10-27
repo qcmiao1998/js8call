@@ -454,6 +454,7 @@ private:
   Q_SLOT void on_delete_macro_push_button_clicked (bool = false);
   Q_SLOT void on_PTT_method_button_group_buttonClicked (int);
   Q_SLOT void on_station_message_line_edit_textChanged(QString const&);
+  Q_SLOT void on_groups_line_edit_textChanged(QString const&);
   Q_SLOT void on_qth_message_line_edit_textChanged(QString const&);
   Q_SLOT void on_cq_message_line_edit_textChanged(QString const&);
   Q_SLOT void on_reply_message_line_edit_textChanged(QString const&);
@@ -584,6 +585,7 @@ private:
   QString my_callsign_;
   QString my_grid_;
   QString my_station_;
+  QStringList my_groups_;
   QString my_qth_;
   QString cq_;
   QString reply_;
@@ -932,6 +934,10 @@ QString Configuration::my_station() const
         station = m_->dynamic_qtc_;
     }
     return station.trimmed();
+}
+
+QStringList Configuration::my_groups() const {
+    return m_->my_groups_;
 }
 
 QString Configuration::my_qth() const
@@ -1300,6 +1306,7 @@ void Configuration::impl::initialize_models ()
   ui_->callsign_aging_spin_box->setValue(callsign_aging_);
   ui_->activity_aging_spin_box->setValue(activity_aging_);
   ui_->station_message_line_edit->setText (my_station_.toUpper());
+  ui_->groups_line_edit->setText(my_groups_.join(", "));
   ui_->qth_message_line_edit->setText (my_qth_.toUpper());
   ui_->cq_message_line_edit->setText(cq_.toUpper());
   ui_->reply_message_line_edit->setText (reply_.toUpper());
@@ -1437,6 +1444,7 @@ void Configuration::impl::read_settings ()
   my_callsign_ = settings_->value ("MyCall", QString {}).toString ();
   my_grid_ = settings_->value ("MyGrid", QString {}).toString ();
   my_station_ = settings_->value("MyStation", QString {}).toString();
+  my_groups_ = settings_->value("MyGroups", QStringList{}).toStringList();
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
   my_qth_ = settings_->value("MyQTH", QString {}).toString();
@@ -1692,6 +1700,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MyCall", my_callsign_);
   settings_->setValue ("MyGrid", my_grid_);
   settings_->setValue ("MyStation", my_station_);
+  settings_->setValue ("MyGroups", my_groups_);
   settings_->setValue ("MyQTH", my_qth_);
   settings_->setValue ("CQMessage", cq_);
   settings_->setValue ("Reply", reply_);
@@ -1948,11 +1957,36 @@ void Configuration::impl::set_rig_invariants ()
                                               || TransceiverFactory::basic_transceiver_name_ != rig);
 }
 
+
+QStringList splitGroups(QString groupsString, bool filter){
+    QStringList groups;
+    if(groupsString.isEmpty()){
+        return groups;
+    }
+
+    foreach(QString group, groupsString.split(",")){
+        auto g = group.trimmed();
+        if(filter && !g.startsWith("@")){
+            continue;
+        }
+        groups.append(group.trimmed());
+    }
+
+    return groups;
+}
+
 bool Configuration::impl::validate ()
 {
   if(!Varicode::isValidCallsign(ui_->callsign_line_edit->text(), nullptr)){
       MessageBox::critical_message (this, tr ("The callsign format you provided is not supported"));
       return false;
+  }
+
+  foreach(auto group, splitGroups(ui_->groups_line_edit->text(), false)){
+      if(!Varicode::isCompoundCallsign(group)){
+          MessageBox::critical_message (this, QString("%1 is not a valid group").arg(group));
+          return false;
+      }
   }
 
   if (ui_->sound_input_combo_box->currentIndex () < 0
@@ -2206,6 +2240,9 @@ void Configuration::impl::accept ()
   my_callsign_ = ui_->callsign_line_edit->text ();
   my_grid_ = ui_->grid_line_edit->text ();
   my_station_ = ui_->station_message_line_edit->text().toUpper();
+
+  my_groups_ = splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), true);
+
   cq_ = ui_->cq_message_line_edit->text().toUpper();
   reply_ = ui_->reply_message_line_edit->text().toUpper();
   my_qth_ = ui_->qth_message_line_edit->text().toUpper();
@@ -2633,6 +2670,15 @@ void Configuration::impl::on_station_message_line_edit_textChanged(QString const
   QString upper = text.toUpper();
   if(text != upper){
     ui_->station_message_line_edit->setText (upper);
+  }
+}
+
+
+void Configuration::impl::on_groups_line_edit_textChanged(QString const &text)
+{
+  QString upper = text.toUpper();
+  if(text != upper){
+    ui_->groups_line_edit->setText (upper);
   }
 }
 
