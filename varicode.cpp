@@ -1036,7 +1036,7 @@ bool isValidCompoundCallsign(QStringRef callsign){
     // compound is valid when it is:
     // 1) a group call (starting with @)
     // 2) an actual compound call (containing /) that is not a base call
-    // 3) has a number in it
+    // 3) is greater than two characters and has an alphanumeric character sequence
     //
     // this is so arbitrary words < 10 characters in length don't end up coded as callsigns
     if(callsign.contains("/")){
@@ -1048,7 +1048,7 @@ bool isValidCompoundCallsign(QStringRef callsign){
         return true;
     }
 
-    if(QRegularExpression("\\d").match(callsign).hasMatch()){
+    if(callsign.length() > 2 && QRegularExpression("[0-9][A-Z]|[A-Z][0-9]").match(callsign).hasMatch()){
         return true;
     }
 
@@ -1064,7 +1064,7 @@ bool Varicode::isValidCallsign(const QString &callsign, bool *pIsCompound){
     auto match = QRegularExpression(base_callsign_pattern).match(callsign);
     if(match.hasMatch() && (match.capturedLength() == callsign.length())){
         if(pIsCompound) *pIsCompound = false;
-        return true;
+        return callsign.length() > 2 && QRegularExpression("[0-9][A-Z]|[A-Z][0-9]").match(callsign).hasMatch();
     }
 
     match = QRegularExpression("^" + compound_callsign_pattern).match(callsign);
@@ -1647,15 +1647,18 @@ QStringList Varicode::buildMessageFrames(
         // if we have a selected call and the text doesn't start with that call...
         // and if this isn't a raw message (starting with "`")... then...
         if(!selectedCall.isEmpty() && !line.startsWith(selectedCall) && !line.startsWith("`")){
-            auto calls = Varicode::parseCallsigns(line);
-
             bool lineStartsWithBaseCall = (
                 line.startsWith("@ALLCALL") ||
                 line.startsWith("BEACON")  ||
                 Varicode::startsWithCQ(line)
             );
 
+#if AUTO_PREPEND_DIRECTED_ALLOW_TEXT_CALLSIGNS
+            auto calls = Varicode::parseCallsigns(line);
             bool lineStartsWithStandardCall = !calls.isEmpty() && line.startsWith(calls.first()) && calls.first().length() > 2;
+#else
+            bool lineStartsWithStandardCall = false;
+#endif
 
             if(lineStartsWithBaseCall || lineStartsWithStandardCall){
                 // pass
