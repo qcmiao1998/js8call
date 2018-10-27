@@ -9071,6 +9071,8 @@ void MainWindow::displayBandActivity() {
 
         // Build the table
         foreach(int offset, keys) {
+            bool isOffsetSelected = (offset == selectedOffset);
+
             QList < ActivityDetail > items = m_bandActivity[offset];
             if (items.length() > 0) {
                 QStringList text;
@@ -9078,7 +9080,8 @@ void MainWindow::displayBandActivity() {
                 int snr = 0;
                 int activityAging = m_config.activity_aging();
                 foreach(ActivityDetail item, items) {
-                    if (activityAging && item.utcTimestamp.secsTo(now) / 60 >= activityAging) {
+
+                    if (!isOffsetSelected && activityAging && item.utcTimestamp.secsTo(now) / 60 >= activityAging) {
                         continue;
                     }
                     if (!beaconEnabled && (item.text.contains(": BEACON") || item.text.contains("BEACON ACK"))){
@@ -9163,7 +9166,7 @@ void MainWindow::displayBandActivity() {
 
                 ui->tableWidgetRXAll->setItem(row, 3, textItem);
 
-                if (offset == selectedOffset) {
+                if (isOffsetSelected) {
                     for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
                         ui->tableWidgetRXAll->item(row, i)->setSelected(true);
                     }
@@ -9304,7 +9307,9 @@ void MainWindow::displayCallActivity() {
         foreach(QString call, keys) {
             CallDetail d = m_callActivity[call];
 
-            if (callsignAging && d.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+            bool isCallSelected = (call == selectedCall);
+
+            if (!isCallSelected && callsignAging && d.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
                 continue;
             }
 
@@ -9330,7 +9335,7 @@ void MainWindow::displayCallActivity() {
             distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
             ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 5, distanceItem);
 
-            if (call == selectedCall) {
+            if (isCallSelected) {
                 for(int i = 0; i < ui->tableWidgetCalls->columnCount(); i++){
                     ui->tableWidgetCalls->item(row, i)->setSelected(true);
                 }
