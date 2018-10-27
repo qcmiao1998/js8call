@@ -1537,7 +1537,7 @@ void MainWindow::on_the_minute ()
 
   if (m_config.watchdog () && !m_mode.startsWith ("WSPR"))
     {
-      if (m_idleMinutes < m_config.watchdog ()) ++m_idleMinutes;
+      ++m_idleMinutes;
       update_watchdog_label ();
     }
   else
