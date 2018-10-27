@@ -152,7 +152,7 @@ public:
         //QString const& basecall,
         QString const& mygrid,
         //bool compound,
-        //QString const& selectedCall,
+        QString const& selectedCall,
         QString const& text
     );
 };
@@ -166,7 +166,7 @@ public:
                              //QString const& basecall,
                              QString const& mygrid,
                              //bool compound,
-                             //QString const& selectedCall,
+                             QString const& selectedCall,
                              QString const& text,
                              QObject *parent=nullptr);
     void run() override;
@@ -178,7 +178,7 @@ private:
     //QString m_basecall;
     QString m_mygrid;
     //bool m_compound;
-    //QString m_selectedCall;
+    QString m_selectedCall;
     QString m_text;
 };
 

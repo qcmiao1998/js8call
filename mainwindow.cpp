@@ -5352,7 +5352,7 @@ int MainWindow::currentFreqOffset(){
 
 QStringList MainWindow::buildMessageFrames(const QString &text){
     // prepare selected callsign for directed message
-    //QString selectedCall = callsignSelected();
+    QString selectedCall = callsignSelected();
 
     // prepare compound
     //bool compound = Varicode::isCompoundCallsign(/*Radio::is_compound_callsign(*/m_config.my_callsign());
@@ -5368,7 +5368,7 @@ QStringList MainWindow::buildMessageFrames(const QString &text){
         //basecall,
         mygrid,
         //compound,
-        //selectedCall,
+        selectedCall,
         text);
 
 #if 0
@@ -7906,7 +7906,7 @@ void MainWindow::refreshTextDisplay(){
 
 #else
     // prepare selected callsign for directed message
-    //QString selectedCall = callsignSelected();
+    QString selectedCall = callsignSelected();
     //qDebug() << "selected callsign for directed" << selectedCall;
 
     // prepare compound
@@ -7923,7 +7923,7 @@ void MainWindow::refreshTextDisplay(){
         //basecall,
         mygrid,
         //compound,
-        //selectedCall,
+        selectedCall,
         text
     );
 

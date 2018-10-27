@@ -1606,13 +1606,13 @@ QStringList Varicode::buildMessageFrames(
     //QString const& basecall,
     QString const& mygrid,
     //bool compound,
-    //QString const& selectedCall,
+    QString const& selectedCall,
     QString const& text
 ){
     #define ALLOW_SEND_COMPOUND 1
     #define ALLOW_SEND_COMPOUND_DIRECTED 1
-    #define AUTO_PREPEND_DIRECTED 0
-    #define AUTO_REMOVE_MYCALL 0
+    #define AUTO_PREPEND_DIRECTED 1
+    #define AUTO_REMOVE_MYCALL 1
 
     bool mycallCompound = Varicode::isCompoundCallsign(mycall);
 
@@ -1629,9 +1629,6 @@ QStringList Varicode::buildMessageFrames(
         // remove our callsign from the start of the line...
         if(line.startsWith(mycall + ":") || line.startsWith(mycall + " ")){
             line = lstrip(line.mid(mycall.length() + 1));
-        }
-        if(line.startsWith(basecall + ":") || line.startsWith(basecall + " ")){
-            line = lstrip(line.mid(basecall.length() + 1));
         }
 
         // remove trailing whitespace as long as there are characters left afterwards
@@ -1828,14 +1825,14 @@ BuildMessageFramesThread::BuildMessageFramesThread(
     //const QString &basecall,
     const QString &mygrid,
     //bool compound,
-    //const QString &selectedCall,
+    const QString &selectedCall,
     const QString &text, QObject *parent):
     QThread(parent),
     m_mycall{mycall},
     //m_basecall{basecall},
     m_mygrid{mygrid},
     //m_compound{compound},
-    //m_selectedCall{selectedCall},
+    m_selectedCall{selectedCall},
     m_text{text}
 {
 }
@@ -1846,7 +1843,7 @@ void BuildMessageFramesThread::run(){
         //m_basecall,
         m_mygrid,
         //m_compound,
-        //m_selectedCall,
+        m_selectedCall,
         m_text
     );
 
