@@ -177,8 +177,8 @@ quint16 nusergrid = nbasegrid + 10;
 quint16 nmaxgrid  = (1<<15)-1;
 
 QMap<QString, quint32> basecalls = {
-    { "<....>",    nbasecall + 1 }, // incomplete callsign
-    { "ALLCALL",   nbasecall + 2 },
+    { "<....>",    nbasecall + 1 },  // incomplete callsign
+    { "@ALLCALL",   nbasecall + 2 }, // ALLCALL group
 };
 
 QMap<quint32, QString> cqs = {
@@ -1650,7 +1650,7 @@ QStringList Varicode::buildMessageFrames(
             auto calls = Varicode::parseCallsigns(line);
 
             bool lineStartsWithBaseCall = (
-                line.startsWith("ALLCALL") ||
+                line.startsWith("@ALLCALL") ||
                 line.startsWith("BEACON")  ||
                 Varicode::startsWithCQ(line)
             );

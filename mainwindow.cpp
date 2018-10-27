@@ -1510,7 +1510,7 @@ void MainWindow::initializeDummyData(){
         i++;
     }
 
-    displayTextForFreq("KN4CRD: ALLCALL? \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-315), true, true, true);
+    displayTextForFreq("KN4CRD: @ALLCALL? \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-315), true, true, true);
     displayTextForFreq("J1Y: KN4CRD SNR -05 \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
 
     displayActivity(true);
@@ -3672,7 +3672,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 } else {
                     // convert BEACON to a directed command and process...
                     cmd.from = cd.call;
-                    cmd.to = "ALLCALL";
+                    cmd.to = "@ALLCALL";
                     cmd.cmd = " BEACON";
                     cmd.snr = cd.snr;
                     cmd.bits = cd.bits;
@@ -5003,11 +5003,11 @@ void MainWindow::createAllcallTableRows(QTableWidget *table, QString const &sele
             }
             count++;
         }
-        auto item = new QTableWidgetItem(count == 0 ? QString("ALLCALL") : QString("ALLCALL (%1)").arg(count));
-        item->setData(Qt::UserRole, QVariant("ALLCALL"));
+        auto item = new QTableWidgetItem(count == 0 ? QString("@ALLCALL") : QString("@ALLCALL (%1)").arg(count));
+        item->setData(Qt::UserRole, QVariant("@ALLCALL"));
         table->setItem(table->rowCount() - 1, 0, item);
         table->setSpan(table->rowCount() - 1, 0, 1, table->columnCount());
-        if(selectedCall == "ALLCALL"){
+        if(selectedCall == "@ALLCALL"){
             table->item(table->rowCount()-1, 0)->setSelected(true);
         }
     }
@@ -5642,7 +5642,7 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   auto dateTimeQSOOff = DriftingDateTime::currentDateTimeUtc();
   if (dateTimeQSOOff < m_dateTimeQSOOn) dateTimeQSOOff = m_dateTimeQSOOn;
   QString call=callsignSelected();
-  if(call == "ALLCALL"){
+  if(call == "@ALLCALL"){
       call = "";
   }
   QString grid="";
@@ -7093,7 +7093,7 @@ void MainWindow::on_beaconButton_clicked()
 
 void MainWindow::on_selcalButton_clicked(){
     if(ui->selcalButton->isChecked()){
-        if(callsignSelected() == "ALLCALL"){
+        if(callsignSelected() == "@ALLCALL"){
             clearCallsignSelected();
         }
         if(ui->tableWidgetRXAll->isVisible()){
@@ -8082,7 +8082,7 @@ bool MainWindow::isMyCallIncluded(const QString &text){
 }
 
 bool MainWindow::isAllCallIncluded(const QString &text){
-    return text.contains("ALLCALL");
+    return text.contains("@ALLCALL");
 }
 
 bool MainWindow::isGroupCallIncluded(const QString &text){
@@ -8698,7 +8698,7 @@ void MainWindow::processCommandActivity() {
             enqueueBeacon(reply);
 
             if(isAllCall){
-                // since all beacons are technically ALLCALL, let's bump the allcall cache here...
+                // since all beacons are technically @ALLCALL, let's bump the allcall cache here...
                 m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 5);
             }
 
@@ -8736,7 +8736,7 @@ void MainWindow::processCommandActivity() {
                 enqueueBeacon(reply);
 
                 if(isAllCall){
-                    // since all beacons are technically ALLCALL, let's bump the allcall cache here...
+                    // since all beacons are technically @ALLCALL, let's bump the allcall cache here...
                     m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 25);
                 }
             }
@@ -8792,12 +8792,12 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-        // do not queue ALLCALL replies if auto-reply is not checked or it's a beacon reply
+        // do not queue @ALLCALL replies if auto-reply is not checked or it's a beacon reply
         if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains("BEACON")){
             continue;
         }
 
-        // add ALLCALLs to the ALLCALL cache
+        // add @ALLCALLs to the @ALLCALL cache
         if(isAllCall){
             m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 25);
         }
