@@ -5225,10 +5225,22 @@ bool MainWindow::ensureSelcalCallsignSelected(bool alert){
     bool blockTransmit = ui->selcalButton->isChecked() && (isAllCall || missingCall);
 
     if(blockTransmit && alert){
-        MessageBox::warning_message(this, tr ("Please select or enter a callsign to direct this message while SELCAL is enabled."));
+        MessageBox::warning_message(this, tr ("Please select or enter a callsign to direct this message while SELCALL is enabled."));
     }
 
     return !blockTransmit;
+}
+
+bool MainWindow::ensureKeyNotStuck(QString const& text){
+    // be annoying and drop messages with all the same character to reduce spam...
+    if(text.length() > 10 && QString(text).replace(text.at(0), "").isEmpty()){
+
+        MessageBox::warning_message(this, tr ("Please enter a message before trying to transmit"));
+
+        return false;
+    }
+
+    return true;
 }
 
 void MainWindow::createMessage(QString const& text){
@@ -5238,6 +5250,11 @@ void MainWindow::createMessage(QString const& text){
     }
 
     if(!ensureSelcalCallsignSelected()){
+        on_stopTxButton_clicked();
+        return;
+    }
+
+    if(!ensureKeyNotStuck(text)){
         on_stopTxButton_clicked();
         return;
     }
@@ -6697,7 +6714,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto sevenThreeAction = menu->addAction(QString("%1 73 - I send my best regards / end of contact").arg(call).trimmed());
+    auto sevenThreeAction = menu->addAction(QString("%1 73 - I send my best regards").arg(call).trimmed());
     connect(sevenThreeAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -6706,6 +6723,19 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 73").arg(selectedCall), true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
+    });
+
+    auto skAction = menu->addAction(QString("%1 SK - End of contact").arg(call).trimmed());
+    connect(skAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 SK").arg(selectedCall), true);
 
         if(m_config.transmit_directed()) toggleTx(true);
     });

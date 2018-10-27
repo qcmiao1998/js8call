@@ -151,6 +151,7 @@ public slots:
   void initializeDummyData();
   bool ensureCallsignSet(bool alert=true);
   bool ensureSelcalCallsignSelected(bool alert=true);
+  bool ensureKeyNotStuck(QString const& text);
   void createMessage(QString const& text);
   void createMessageTransmitQueue(QString const& text);
   void resetMessageTransmitQueue();
