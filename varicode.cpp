@@ -71,7 +71,7 @@ QMap<QString, int> directed_cmds = {
 
     {" FB",      18  }, // fine business
     {" HW CPY?", 19  }, // how do you copy?
-    {" HEARING", 20  }, // i am hearing the following stations
+    {" SK",      20  }, // end of contact
     {" RR",      21  }, // roger roger
     {" QSL?",    22  }, // do you copy?
     {" QSL",     23  }, // i copy
@@ -100,7 +100,7 @@ QMap<int, int> checksum_cmds = {
 };
 
 QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:BEACON (ACK|REQ)|AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|(?:(?:ACK|73|YES|NO|SNR|QSL|RR|HEARING|FB|QTH|QTC|GRID|ACTIVE|IDLE)(?=[ ]|$))|[?@&$%#^>* ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:BEACON (ACK|REQ)|AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|(?:(?:ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|QTC|GRID|ACTIVE|IDLE)(?=[ ]|$))|[?@&$%#^>* ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR|BEACON ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
