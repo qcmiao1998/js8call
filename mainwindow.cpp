@@ -1281,15 +1281,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     removeActivity->setDisabled(selectedOffset == -1);
     menu->addAction(removeActivity);
 
-
-    menu->addSeparator();
-
-    auto showMenu = menu->addMenu(QString("Show columns..."));
-    buildShowColumnsMenu(showMenu, "band");
-
-    auto sortMenu = menu->addMenu(QString("Sort by..."));
-    buildBandActivitySortByMenu(sortMenu);
-
     menu->addSeparator();
     menu->addAction(clearAction3);
     menu->addAction(clearActionAll);
@@ -1362,14 +1353,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
     removeStation->setDisabled(missingCallsign || isAllCall);
     menu->addAction(removeStation);
-
-    menu->addSeparator();
-
-    auto showMenu = menu->addMenu(QString("Show columns..."));
-    buildShowColumnsMenu(showMenu, "call");
-
-    auto sortMenu = menu->addMenu(QString("Sort by..."));
-    buildCallActivitySortByMenu(sortMenu);
 
     menu->addSeparator();
     menu->addAction(clearAction4);
