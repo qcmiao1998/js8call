@@ -2654,7 +2654,6 @@ bool MainWindow::eventFilter (QObject * object, QEvent * event)
       // fall through
     case QEvent::MouseButtonPress:
       // reset the Tx watchdog
-      qDebug() << event;
       resetIdleTimer();
       tx_watchdog (false);
       break;
@@ -6269,6 +6268,30 @@ void MainWindow::on_replyMacroButton_clicked(){
     if(m_config.transmit_directed()) toggleTx(true);
 }
 
+void MainWindow::on_snrMacroButton_clicked(){
+    QString call = callsignSelected();
+    if(call.isEmpty()){
+        return;
+    }
+
+    auto now = DriftingDateTime::currentDateTimeUtc();
+    int callsignAging = m_config.callsign_aging();
+    if(!m_callActivity.contains(call)){
+        return;
+    }
+
+    auto cd = m_callActivity[call];
+    if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+        return;
+    }
+
+    auto snr = Varicode::formatSNR(cd.snr);
+
+    addMessageText(QString("%1 SNR %2").arg(call).arg(snr));
+
+    if(m_config.transmit_directed()) toggleTx(true);
+}
+
 void MainWindow::on_qthMacroButton_clicked(){
     QString qth = m_config.my_qth();
     if(qth.isEmpty()){
@@ -6394,6 +6417,10 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
 
     auto grid = m_config.my_grid();
 
+    bool emptyQTC = m_config.my_station().isEmpty();
+    bool emptyQTH = m_config.my_qth().isEmpty();
+    bool emptyGrid = m_config.my_grid().isEmpty();
+
     auto callAction = menu->addAction(QString("Send a directed message to selected callsign"));
     connect(callAction, &QAction::triggered, this, [this](){
 
@@ -6438,9 +6465,52 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
+    auto qtcAction = menu->addAction(QString("%1 QTC - Send my station message").arg(call).trimmed());
+    qtcAction->setDisabled(emptyQTC);
+    connect(qtcAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 QTC %2").arg(selectedCall).arg(m_config.my_station()), true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
+    });
+
+    auto qthAction = menu->addAction(QString("%1 QTH - Send my station location message").arg(call).trimmed());
+    qthAction->setDisabled(emptyQTH);
+    connect(qthAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 QTH %2").arg(selectedCall).arg(m_config.my_qth()), true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
+    });
+
+
+    auto gridAction = menu->addAction(QString("%1 GRID %2 - Send my current station Maidenhead grid locator").arg(call).arg(grid).trimmed());
+    gridAction->setDisabled(emptyGrid);
+    connect(gridAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 GRID %2").arg(selectedCall).arg(m_config.my_grid()), true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
+    });
+
     menu->addSeparator();
 
-    auto snrQueryAction = menu->addAction(QString("%1? - What is my signal report?").arg(call));
+    auto snrQueryAction = menu->addAction(QString("%1 SNR? - What is my signal report?").arg(call));
     snrQueryAction->setDisabled(isAllCall);
     connect(snrQueryAction, &QAction::triggered, this, [this](){
 
@@ -6449,12 +6519,12 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1?").arg(selectedCall), true);
+        addMessageText(QString("%1 SNR?").arg(selectedCall), true);
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto qthQueryAction = menu->addAction(QString("%1@ - What is your QTH message?").arg(call));
+    auto qthQueryAction = menu->addAction(QString("%1 QTH? - What is your QTH message?").arg(call));
     qthQueryAction->setDisabled(isAllCall);
     connect(qthQueryAction, &QAction::triggered, this, [this](){
 
@@ -6463,12 +6533,12 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1@").arg(selectedCall), true);
+        addMessageText(QString("%1 QTH?").arg(selectedCall), true);
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto gridQueryAction = menu->addAction(QString("%1^ - What is your current grid locator?").arg(call));
+    auto gridQueryAction = menu->addAction(QString("%1 GRID? - What is your current grid locator?").arg(call));
     gridQueryAction->setDisabled(isAllCall);
     connect(gridQueryAction, &QAction::triggered, this, [this](){
 
@@ -6477,12 +6547,12 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1^").arg(selectedCall), true);
+        addMessageText(QString("%1 GRID?").arg(selectedCall), true);
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto stationMessageQueryAction = menu->addAction(QString("%1&& - What is your station message?").arg(call).trimmed());
+    auto stationMessageQueryAction = menu->addAction(QString("%1 QTC? - What is your station message?").arg(call).trimmed());
     stationMessageQueryAction->setDisabled(isAllCall);
     connect(stationMessageQueryAction, &QAction::triggered, this, [this](){
 
@@ -6491,12 +6561,12 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1&").arg(selectedCall), true);
+        addMessageText(QString("%1 QTC?").arg(selectedCall), true);
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto stationIdleQueryAction = menu->addAction(QString("%1* - Is your station active or idle?").arg(call).trimmed());
+    auto stationIdleQueryAction = menu->addAction(QString("%1 STATUS? - Is your station active or idle?").arg(call).trimmed());
     stationIdleQueryAction->setDisabled(isAllCall);
     connect(stationIdleQueryAction, &QAction::triggered, this, [this](){
 
@@ -6505,7 +6575,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1*").arg(selectedCall), true);
+        addMessageText(QString("%1 STATUS?").arg(selectedCall), true);
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
@@ -6574,56 +6644,6 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
 
         addMessageText(QString("%1 HEARTBEAT REQ [CALLSIGN]?").arg(selectedCall), true, true);
     });
-
-    menu->addSeparator();
-
-    bool emptyQTC = m_config.my_station().isEmpty();
-    bool emptyQTH = m_config.my_qth().isEmpty();
-    bool emptyGrid = m_config.my_grid().isEmpty();
-
-    auto qtcAction = menu->addAction(QString("%1 QTC - Send my station message").arg(call).trimmed());
-    qtcAction->setDisabled(emptyQTC);
-    connect(qtcAction, &QAction::triggered, this, [this](){
-
-        QString selectedCall = callsignSelected();
-        if(selectedCall.isEmpty()){
-            return;
-        }
-
-        addMessageText(QString("%1 QTC %2").arg(selectedCall).arg(m_config.my_station()), true);
-
-        if(m_config.transmit_directed()) toggleTx(true);
-    });
-
-    auto qthAction = menu->addAction(QString("%1 QTH - Send my station location message").arg(call).trimmed());
-    qthAction->setDisabled(emptyQTH);
-    connect(qthAction, &QAction::triggered, this, [this](){
-
-        QString selectedCall = callsignSelected();
-        if(selectedCall.isEmpty()){
-            return;
-        }
-
-        addMessageText(QString("%1 QTH %2").arg(selectedCall).arg(m_config.my_qth()), true);
-
-        if(m_config.transmit_directed()) toggleTx(true);
-    });
-
-
-    auto gridAction = menu->addAction(QString("%1 GRID %2 - Send my current station Maidenhead grid locator").arg(call).arg(grid).trimmed());
-    gridAction->setDisabled(emptyGrid);
-    connect(gridAction, &QAction::triggered, this, [this](){
-
-        QString selectedCall = callsignSelected();
-        if(selectedCall.isEmpty()){
-            return;
-        }
-
-        addMessageText(QString("%1 GRID %2").arg(selectedCall).arg(m_config.my_grid()), true);
-
-        if(m_config.transmit_directed()) toggleTx(true);
-    });
-
 
     menu->addSeparator();
 
@@ -7933,6 +7953,7 @@ void MainWindow::updateButtonDisplay(){
 
     ui->cqMacroButton->setDisabled(isTransmitting);
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
+    ui->snrMacroButton->setDisabled(isTransmitting || emptyCallsign);
     ui->qtcMacroButton->setDisabled(isTransmitting || m_config.my_station().isEmpty());
     ui->qthMacroButton->setDisabled(isTransmitting || m_config.my_qth().isEmpty());
     ui->macrosMacroButton->setDisabled(isTransmitting);
@@ -8627,12 +8648,12 @@ void MainWindow::processCommandActivity() {
         int freq = -1;
 
         // QUERIED SNR
-        if (d.cmd == "?" && !isAllCall) {
+        if (d.cmd == " SNR?" && !isAllCall) {
             reply = QString("%1 SNR %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
         }
 
         // QUERIED QTH
-        else if (d.cmd == "@" && !isAllCall) {
+        else if (d.cmd == " QTH?" && !isAllCall) {
             QString qth = m_config.my_qth();
             if (qth.isEmpty()) {
                 continue;
@@ -8642,7 +8663,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // QUERIED ACTIVE
-        else if (d.cmd == "*" && !isAllCall) {
+        else if (d.cmd == " STATUS?" && !isAllCall) {
             if(m_idleMinutes < 10){
                 reply = QString("%1 ACTIVE").arg(d.from);
             } else {
@@ -8651,7 +8672,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // QUERIED GRID
-        else if (d.cmd == "^" && !isAllCall) {
+        else if (d.cmd == " GRID?" && !isAllCall) {
             QString grid = m_config.my_grid();
             if (grid.isEmpty()) {
                 continue;
@@ -8661,7 +8682,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // QUERIED STATION MESSAGE
-        else if (d.cmd == "&" && !isAllCall) {
+        else if (d.cmd == " QTC?" && !isAllCall) {
             reply = QString("%1 QTC %2").arg(d.from).arg(m_config.my_station());
         }
 

@@ -44,17 +44,18 @@ QString alphanumeric = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ /@"}; // callsign 
 QMap<QString, int> directed_cmds = {
     // any changes here need to be made also in the directed regular xpression for parsing
 
-    {"?",     0  }, // query snr
-    {"@",     1  }, // query qth
-    {"&",     2  }, // query station message
-    //{"$",     3  }, // query station(s) heard
-    {"^",     4  }, // query grid
+    {" SNR?",     0  }, // query snr
+    {" QTH?",     1  }, // query qth
+    {" QTC?",     2  }, // query station message
+    {" GRID?",    4  }, // query grid
+    {" STATUS?",  6  }, // query idle message
+
     {">",     5  }, // relay message
-    {"*",     6  }, // query idle message
-    //{"!",     7  }, // alert message
     {"#",     8  }, // all or nothing message
 
-    // {"=",      9  }, // unused
+    //{"!",     7  }, // alert message
+    //{"$",     3  }, // query station(s) heard
+    //{"=",     9  }, // unused
 
     {" ACTIVE",     10 }, // i have been active in the past 10 minutes
     {" IDLE",       11 }, // i have not been active in the past 10 minutes
@@ -100,7 +101,7 @@ QMap<int, int> checksum_cmds = {
 };
 
 QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:HEARTBEAT (ACK|REQ)|AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|(?:(?:ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|QTC|GRID|ACTIVE|IDLE)(?=[ ]|$))|[?@&$%#^>* ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:HEARTBEAT (ACK|REQ)|AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|SNR[?]|QTC[?]|QTH[?]|GRID[?]|STATUS[?]|(?:(?:ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|QTC|GRID|ACTIVE|IDLE)(?=[ ]|$))|[#> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR|ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");

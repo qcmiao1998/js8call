@@ -1500,6 +1500,22 @@ QTextEdit[transmitting=&quot;true&quot;] {
           </property>
          </spacer>
         </item>
+        <item row="1" column="13">
+         <spacer name="horizontalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
         <item row="1" column="11">
          <widget class="QPushButton" name="queryButton">
           <property name="minimumSize">
@@ -1644,6 +1660,22 @@ color:#555;
           </property>
           <property name="text">
            <string>Saved</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QPushButton" name="snrMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send an SNR message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>SNR</string>
           </property>
          </widget>
         </item>

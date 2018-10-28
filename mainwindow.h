@@ -267,6 +267,7 @@ private slots:
   void on_clearAction_triggered(QObject * sender);
   void on_cqMacroButton_clicked();
   void on_replyMacroButton_clicked();
+  void on_snrMacroButton_clicked();
   void on_qthMacroButton_clicked();
   void on_qtcMacroButton_clicked();
   void setShowColumn(QString tableKey, QString columnKey, bool value);
