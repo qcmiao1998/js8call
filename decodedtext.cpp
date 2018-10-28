@@ -22,7 +22,7 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
   , message_ {string_.mid (column_qsoText + padding_).trimmed ()}
   , is_standard_ {false}
   , frameType_(Varicode::FrameUnknown)
-  , isBeacon_(false)
+  , isHeartbeat_(false)
   , isAlt_(false)
 {
     if(message_.length() >= 1) {
@@ -51,7 +51,7 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
         grid_c_string += QByteArray {6 - grid_c_string.size (), ' '};
         is_standard_ = stdmsg_ (message_c_string.constData (), contest_mode_, grid_c_string.constData (), 22, 6);
 
-        // We're only going to unpack standard messages for CQs && beacons...
+        // We're only going to unpack standard messages for CQs && pings...
         // TODO: jsherer - this is a hack for now...
         if(is_standard_){
             is_standard_ = QRegularExpression("^(CQ|DE|QRZ)\\s").match(message_).hasMatch();
@@ -64,7 +64,7 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
 DecodedText::DecodedText (QString const& js8callmessage):
     frameType_(Varicode::FrameUnknown),
     message_(js8callmessage),
-    isBeacon_(false),
+    isHeartbeat_(false),
     isAlt_(false)
 {
     is_standard_ = QRegularExpression("^(CQ|DE|QRZ)\\s").match(message_).hasMatch();
@@ -80,7 +80,7 @@ bool DecodedText::tryUnpack(){
 
     bool unpacked = false;
     if(!unpacked){
-        unpacked = tryUnpackBeacon();
+        unpacked = tryUnpackHeartbeat();
     }
 
     if(!unpacked){
@@ -98,7 +98,7 @@ bool DecodedText::tryUnpack(){
     return unpacked;
 }
 
-bool DecodedText::tryUnpackBeacon(){
+bool DecodedText::tryUnpackHeartbeat(){
     QString m = message().trimmed();
 
     // directed calls will always be 12+ chars and contain no spaces.
@@ -109,17 +109,17 @@ bool DecodedText::tryUnpackBeacon(){
     bool isAlt = false;
     quint8 type = Varicode::FrameUnknown;
     quint8 bits3 = 0;
-    QStringList parts = Varicode::unpackBeaconMessage(m, &type, &isAlt, &bits3);
+    QStringList parts = Varicode::unpackHeartbeatMessage(m, &type, &isAlt, &bits3);
 
     if(parts.isEmpty() || parts.length() < 2){
         return false;
     }
 
-    // Beacon Alt Type
+    // Heartbeat Alt Type
     // ---------------
     // 1      0   BCN
     // 1      1   CQ
-    isBeacon_ = true;
+    isHeartbeat_ = true;
     isAlt_ = isAlt;
     extra_ = parts.length() < 3 ? "" : parts.at(2);
 
@@ -131,7 +131,7 @@ bool DecodedText::tryUnpackBeacon(){
         cmp.append(parts.at(1));
     }
     compound_ = cmp.join("/");
-    message_ = QString("%1: %2 %3 ").arg(compound_).arg(isAlt ? Varicode::cqString(bits3) : "BEACON").arg(extra_);
+    message_ = QString("%1: %2 %3 ").arg(compound_).arg(isAlt ? Varicode::cqString(bits3) : "PING").arg(extra_);
     frameType_ = type;
     return true;
 }

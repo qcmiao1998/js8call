@@ -25,7 +25,7 @@ public:
 
     enum FrameType {
         FrameUnknown          = 255, // [11111111] <- only used as a sentinel
-        FrameBeacon           = 0,   // [000]
+        FrameHeartbeat           = 0,   // [000]
         FrameCompound         = 1,   // [001]
         FrameCompoundDirected = 2,   // [010]
         FrameDirected         = 3,   // [011]
@@ -39,7 +39,7 @@ public:
 
     static QString frameTypeString(quint8 type) {
         const char* FrameTypeStrings[] = {
-            "FrameBeacon",
+            "FrameHeartbeat",
             "FrameCompound",
             "FrameCompoundDirected",
             "FrameDirected",
@@ -132,8 +132,8 @@ public:
     static bool isValidCallsign(const QString &callsign, bool *pIsCompound);
     static bool isCompoundCallsign(const QString &callsign);
 
-    static QString packBeaconMessage(QString const &text, QString const&callsign, int *n);
-    static QStringList unpackBeaconMessage(const QString &text, quint8 *pType, bool *isAlt, quint8 *pBits3);
+    static QString packHeartbeatMessage(QString const &text, QString const&callsign, int *n);
+    static QStringList unpackHeartbeatMessage(const QString &text, quint8 *pType, bool *isAlt, quint8 *pBits3);
 
     static QString packCompoundMessage(QString const &text, int *n);
     static QStringList unpackCompoundMessage(const QString &text, quint8 *pType, quint8 *pBits3);

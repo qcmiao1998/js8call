@@ -144,7 +144,7 @@ public slots:
   void prependMessageText(QString text);
   void addMessageText(QString text, bool clear=false, bool selectFirstPlaceholder=false);
   void enqueueMessage(int priority, QString message, int freq, Callback c);
-  void enqueueBeacon(QString message);
+  void enqueueHeartbeat(QString message);
   void resetMessage();
   void resetMessageUI();
   void restoreMessage();
@@ -301,10 +301,10 @@ private slots:
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);
   int findFreeFreqOffset(int fmin, int fmax, int bw);
-  void scheduleBeacon(bool first=false);
-  void pauseBeacon();
-  void checkBeacon();
-  void prepareBeacon();
+  void scheduleHeartbeat(bool first=false);
+  void pauseHeartbeat();
+  void checkHeartbeat();
+  void prepareHeartbeat();
   QString calculateDistance(QString const& grid, int *pDistance=nullptr);
   void on_driftSpinBox_valueChanged(int n);
   void on_driftSyncButton_clicked();
@@ -316,7 +316,7 @@ private slots:
   void on_tuneButton_clicked (bool);
   void on_pbR2T_clicked();
   void on_pbT2R_clicked();
-  void on_beaconButton_clicked();
+  void on_heartbeatButton_clicked();
   void on_selcalButton_clicked();
   void acceptQSO (QDateTime const&, QString const& call, QString const& grid
                   , Frequency dial_freq, QString const& mode
@@ -645,7 +645,7 @@ private:
   QTimer minuteTimer;
   QTimer splashTimer;
   QTimer p1Timer;
-  QTimer beaconTimer;
+  QTimer heartbeatTimer;
 
   QString m_path;
   QString m_baseCall;
@@ -780,14 +780,14 @@ private:
   QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
   QMap<int, MessageBuffer> m_messageBuffer; // freq -> (cmd, [frames, ...])
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
-  QQueue<QString> m_txBeaconQueue; // beacon frames to be sent
+  QQueue<QString> m_txHeartbeatQueue; // ping frames to be sent
   QMap<QString, QDateTime> m_aprsCallCache;
 
   QMap<QString, QMap<QString, CallDetail>> m_callActivityCache; // band -> call activity
   QMap<QString, QMap<int, QList<ActivityDetail>>> m_bandActivityCache; // band -> band activity
   QMap<QString, QString> m_rxTextCache; // band -> rx text
 
-  QSet<QString> m_callSeenBeacon; // call
+  QSet<QString> m_callSeenHeartbeat; // call
   int m_previousFreq;
   bool m_shouldRestoreFreq;
   bool m_bandHopped;
@@ -811,9 +811,9 @@ private:
   QQueue<QString> m_foxQSOinProgress;  //QSOs in progress: Fox has sent a report
   QQueue<qint64>  m_foxRateQueue;
 
-  bool m_nextBeaconQueued = false;
-  bool m_nextBeaconPaused = false;
-  QDateTime m_nextBeacon;
+  bool m_nextHeartbeatQueued = false;
+  bool m_nextHeartPaused = false;
+  QDateTime m_nextHeartbeat;
   QDateTime m_dateTimeQSOOn;
   QDateTime m_dateTimeLastTX;
 

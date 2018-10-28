@@ -47,7 +47,7 @@ QMap<QString, int> directed_cmds = {
     {"?",     0  }, // query snr
     {"@",     1  }, // query qth
     {"&",     2  }, // query station message
-    {"$",     3  }, // query station(s) heard
+    //{"$",     3  }, // query station(s) heard
     {"^",     4  }, // query grid
     {">",     5  }, // relay message
     {"*",     6  }, // query idle message
@@ -59,9 +59,9 @@ QMap<QString, int> directed_cmds = {
     {" ACTIVE",     10 }, // i have been active in the past 10 minutes
     {" IDLE",       11 }, // i have not been active in the past 10 minutes
 
-    {" BEACON",     -1 }, // this is my beacon (unused except for faux processing of beacons as directed commands)
-    {" BEACON ACK", 12 }, // i received your beacon at this snr
-    {" BEACON REQ", 13 }, // can you transmit a beacon to callsign?
+    {" PING",     -1 }, // this is my ping (unused except for faux processing of pings as directed commands)
+    {" PING ACK", 12 }, // i acknowledge your ping at this SNR
+    {" PING REQ", 13 }, // can you transmit a ping to callsign?
 
     {" APRS:",   14  }, // send an aprs packet
 
@@ -100,17 +100,17 @@ QMap<int, int> checksum_cmds = {
 };
 
 QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:BEACON (ACK|REQ)|AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|(?:(?:ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|QTC|GRID|ACTIVE|IDLE)(?=[ ]|$))|[?@&$%#^>* ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:PING (ACK|REQ)|AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|(?:(?:ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|QTC|GRID|ACTIVE|IDLE)(?=[ ]|$))|[?@&$%#^>* ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
-QString optional_num_pattern = QString("(?<num>(?<=SNR|BEACON ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
+QString optional_num_pattern = QString("(?<num>(?<=SNR|ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
 
 QRegularExpression directed_re("^"                    +
                                callsign_pattern       +
                                optional_cmd_pattern   +
                                optional_num_pattern);
 
-QRegularExpression beacon_re(R"(^\s*(?<type>CQCQCQ|CQ QRPP?|CQ DX|CQ TEST|CQ( CQ){0,2}|BEACON)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
+QRegularExpression heartbeat_re(R"(^\s*(?<type>CQCQCQ|CQ QRPP?|CQ DX|CQ TEST|CQ( CQ){0,2}|PING)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
 QRegularExpression compound_re("^\\s*[`]"              +
                                callsign_pattern        +
@@ -979,8 +979,8 @@ quint8 Varicode::packCmd(quint8 cmd, quint8 num, bool *pPackedNum){
         // 8 bits - 1 bit flag + 1 bit type + 6 bit number
         // [1][X][6]
         // X = 0 == SNR
-        // X = 1 == BEACON ACK
-        value = ((1 << 1) | (int)(cmdStr == " BEACON ACK")) << 6;
+        // X = 1 == ACK
+        value = ((1 << 1) | (int)(cmdStr == " ACK")) << 6;
         value = value + (num & ((1<<6)-1));
         if(pPackedNum) *pPackedNum = true;
     } else {
@@ -998,7 +998,7 @@ quint8 Varicode::unpackCmd(quint8 value, quint8 *pNum){
 
         auto cmd = directed_cmds[" SNR"];
         if(value & (1<<6)){
-            cmd = directed_cmds[" BEACON ACK"];
+            cmd = directed_cmds[" ACK"];
         }
         return cmd;
     } else {
@@ -1107,11 +1107,11 @@ bool Varicode::isCompoundCallsign(const QString &callsign){
 // CQCQCQ EM73
 // CQ DX EM73
 // CQ QRP EM73
-// BEACON EM73
-QString Varicode::packBeaconMessage(QString const &text, const QString &callsign, int *n){
+// PING EM73
+QString Varicode::packHeartbeatMessage(QString const &text, const QString &callsign, int *n){
     QString frame;
 
-    auto parsedText = beacon_re.match(text);
+    auto parsedText = heartbeat_re.match(text);
     if(!parsedText.hasMatch()){
         if(n) *n = 0;
         return frame;
@@ -1119,9 +1119,9 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
 
     auto extra = parsedText.captured("grid");
 
-    // Beacon Alt Type
+    // Heartbeat Alt Type
     // ---------------
-    // 1      0   BEACON
+    // 1      0   PING
     // 1      1   CQCQCQ
 
     auto type = parsedText.captured("type");
@@ -1143,7 +1143,7 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
 
     quint8 cqNumber = cqs.key(type, 0);
 
-    frame = packCompoundFrame(callsign, FrameBeacon, packed_extra, cqNumber);
+    frame = packCompoundFrame(callsign, FrameHeartbeat, packed_extra, cqNumber);
     if(frame.isEmpty()){
         if(n) *n = 0;
         return frame;
@@ -1153,13 +1153,13 @@ QString Varicode::packBeaconMessage(QString const &text, const QString &callsign
     return frame;
 }
 
-QStringList Varicode::unpackBeaconMessage(const QString &text, quint8 *pType, bool * isAlt, quint8 * pBits3){
-    quint8 type = FrameBeacon;
+QStringList Varicode::unpackHeartbeatMessage(const QString &text, quint8 *pType, bool * isAlt, quint8 * pBits3){
+    quint8 type = FrameHeartbeat;
     quint16 num = nmaxgrid;
     quint8 bits3 = 0;
 
     QStringList unpacked = unpackCompoundFrame(text, &type, &num, &bits3);
-    if(unpacked.isEmpty() || type != FrameBeacon){
+    if(unpacked.isEmpty() || type != FrameHeartbeat){
         return QStringList{};
     }
 
@@ -1297,7 +1297,7 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, quint8 *pType, qu
 
     quint8 packed_flag = Varicode::bitsToInt(bits.mid(0, 3));
 
-    // needs to be a beacon type...
+    // needs to be a ping type...
     if(packed_flag == FrameDataCompressed || packed_flag == FrameDataUncompressed || packed_flag == FrameDirected){
         return unpacked;
     }
@@ -1649,7 +1649,7 @@ QStringList Varicode::buildMessageFrames(
         if(!selectedCall.isEmpty() && !line.startsWith(selectedCall) && !line.startsWith("`")){
             bool lineStartsWithBaseCall = (
                 line.startsWith("@ALLCALL") ||
-                line.startsWith("BEACON")  ||
+                line.startsWith("PING")  ||
                 Varicode::startsWithCQ(line)
             );
 
@@ -1684,7 +1684,7 @@ QStringList Varicode::buildMessageFrames(
           bool useDat = false;
 
           int l = 0;
-          QString bcnFrame = Varicode::packBeaconMessage(line, mycall, &l);
+          QString bcnFrame = Varicode::packHeartbeatMessage(line, mycall, &l);
 
 #if ALLOW_SEND_COMPOUND
           int o = 0;

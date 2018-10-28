@@ -34,22 +34,28 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <widget class="QGroupBox" name="station_group_box">
-         <property name="title">
-          <string>Station Details</string>
+        <widget class="QTabWidget" name="tabWidget_2">
+         <property name="currentIndex">
+          <number>0</number>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_12">
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_14">
-            <item>
-             <layout class="QFormLayout" name="formLayout_3">
-              <item row="0" column="0">
-               <widget class="QLabel" name="callsign_label">
+         <widget class="QWidget" name="stationTab">
+          <attribute name="title">
+           <string>Station</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_23">
+           <item>
+            <widget class="QGroupBox" name="groupBox_17">
+             <property name="title">
+              <string>Station Details</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_13">
+              <item row="1" column="0">
+               <widget class="QLabel" name="grid_label">
                 <property name="text">
-                 <string>My C&amp;all:</string>
+                 <string>My Maidenhead Grid Locator:</string>
                 </property>
                 <property name="buddy">
-                 <cstring>callsign_line_edit</cstring>
+                 <cstring>grid_line_edit</cstring>
                 </property>
                </widget>
               </item>
@@ -60,35 +66,14 @@
                 </property>
                </widget>
               </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QFormLayout" name="formLayout_12">
-              <item row="0" column="0">
-               <widget class="QLabel" name="grid_label">
-                <property name="text">
-                 <string>M&amp;y Grid:</string>
-                </property>
-                <property name="buddy">
-                 <cstring>grid_line_edit</cstring>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="grid_line_edit">
+              <item row="2" column="1">
+               <widget class="QComboBox" name="region_combo_box">
                 <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;4 to 12-digit Maidenhead Locator&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="maxLength">
-                 <number>12</number>
+                 <string>IARU Region</string>
                 </property>
                </widget>
               </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QFormLayout" name="formLayout_2">
-              <item row="0" column="0">
+              <item row="2" column="0">
                <widget class="QLabel" name="label_12">
                 <property name="text">
                  <string>IARU Region:</string>
@@ -98,589 +83,624 @@
                 </property>
                </widget>
               </item>
-              <item row="0" column="1">
-               <widget class="QComboBox" name="region_combo_box">
+              <item row="1" column="1">
+               <widget class="QLineEdit" name="grid_line_edit">
                 <property name="toolTip">
-                 <string>IARU Region</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;4 to 12-digit Maidenhead Locator&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="maxLength">
+                 <number>12</number>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="callsign_label">
+                <property name="text">
+                 <string>My Callsign:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>callsign_line_edit</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_23">
+                <property name="text">
+                 <string>Callsign Groups (comma separated):</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QLineEdit" name="groups_line_edit">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter a comma separated list of callsign groups (e.g., @GROUP/1, @ARES, @RACES, etc). &lt;br/&gt;&lt;br/&gt;Each group behaves similarly to @ALLCALL. Messages that are directed to the group are printed at all participating stations.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="placeholderText">
+                 <string>@ALLCALL, ...</string>
                 </property>
                </widget>
               </item>
              </layout>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QFormLayout" name="formLayout_13">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_5">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="visible">
-               <bool>false</bool>
-              </property>
-              <property name="text">
-               <string>Message generation for type 2 compound callsign holders:</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="buddy">
-               <cstring>type_2_msg_gen_combo_box</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QComboBox" name="type_2_msg_gen_combo_box">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="visible">
-               <bool>false</bool>
-              </property>
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Type 2 compound callsigns are those with prefixes or suffixes not included in the allowed shortlist (See Help-&amp;gt;Add-on prefixes and suffixes).&lt;/p&gt;&lt;p&gt;This option determines which generated messages should contain your full type 2 compound call sign rather than your base callsign. It only applies if you have a type 2 compound callsign.&lt;/p&gt;&lt;p&gt;This option controls the way the messages that are used to answer CQ calls are generated. Generated messages 6 (CQ) and 5 (73) will always contain your full callsign. The JT65 and JT9 protocols allow for some standard messages with your full call at the expense of another piece of information such as the DX call or your locator.&lt;/p&gt;&lt;p&gt;Choosing message 1 omits the DX callsign which may be an issue when replying to CQ calls. Choosing message 3 also omits the DX callsign and many versions of this and other software will not extract the report. Choosing neither means that your full callsign only goes in your message 5 (73) so your QSO partner may log the wrong callsign.&lt;/p&gt;&lt;p&gt;None of these options are perfect, message 3 is usually best but be aware your QSO partner may not log the report you send them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="currentIndex">
-               <number>1</number>
-              </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="groupBox_16">
+             <property name="title">
+              <string>Station Messages</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_4">
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_15">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station Description Message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="text">
+                 <string>Station Detail (QTC) Message:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLineEdit" name="cq_message_line_edit">
+                <property name="text">
+                 <string>CQCQCQ &lt;MYGRID4&gt;</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLineEdit" name="reply_message_line_edit">
+                <property name="text">
+                 <string>HW CPY?</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QLineEdit" name="qth_message_line_edit">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message that is transmitted in response to &amp;quot;@&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_17">
+                <property name="text">
+                 <string>Reply Message:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_14">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="text">
+                 <string>Station Location (QTH) Message:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QLineEdit" name="station_message_line_edit">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station message that is transmitted in response to &amp;quot;&amp;amp;&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1">
+               <layout class="QFormLayout" name="formLayout_13">
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_5">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="visible">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Message generation for type 2 compound callsign holders:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="buddy">
+                   <cstring>type_2_msg_gen_combo_box</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QComboBox" name="type_2_msg_gen_combo_box">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="visible">
+                   <bool>false</bool>
+                  </property>
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Type 2 compound callsigns are those with prefixes or suffixes not included in the allowed shortlist (See Help-&amp;gt;Add-on prefixes and suffixes).&lt;/p&gt;&lt;p&gt;This option determines which generated messages should contain your full type 2 compound call sign rather than your base callsign. It only applies if you have a type 2 compound callsign.&lt;/p&gt;&lt;p&gt;This option controls the way the messages that are used to answer CQ calls are generated. Generated messages 6 (CQ) and 5 (73) will always contain your full callsign. The JT65 and JT9 protocols allow for some standard messages with your full call at the expense of another piece of information such as the DX call or your locator.&lt;/p&gt;&lt;p&gt;Choosing message 1 omits the DX callsign which may be an issue when replying to CQ calls. Choosing message 3 also omits the DX callsign and many versions of this and other software will not extract the report. Choosing neither means that your full callsign only goes in your message 5 (73) so your QSO partner may log the wrong callsign.&lt;/p&gt;&lt;p&gt;None of these options are perfect, message 3 is usually best but be aware your QSO partner may not log the report you send them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <property name="currentIndex">
+                   <number>1</number>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>Full call in Tx1</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Full call in Tx3</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Full call in Tx5 only</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_19">
+                <property name="text">
+                 <string>CQ Message:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="1">
+               <spacer name="verticalSpacer_14">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="behaviorTab">
+          <attribute name="title">
+           <string>Behavior</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_24">
+           <item>
+            <widget class="QGroupBox" name="behaviour_group_box">
+             <property name="title">
+              <string>Behavior</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_8">
               <item>
-               <property name="text">
-                <string>Full call in Tx1</string>
-               </property>
+               <widget class="QCheckBox" name="miles_check_box">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="toolTip">
+                 <string>Show distance to DX station in miles rather than kilometers.</string>
+                </property>
+                <property name="text">
+                 <string>Display dista&amp;nce in miles</string>
+                </property>
+               </widget>
               </item>
               <item>
-               <property name="text">
-                <string>Full call in Tx3</string>
-               </property>
+               <widget class="QCheckBox" name="monitor_off_check_box">
+                <property name="toolTip">
+                 <string>Don't start decoding until the monitor button is clicked.</string>
+                </property>
+                <property name="text">
+                 <string>Mon&amp;itor (RX) off at startup</string>
+                </property>
+                <property name="checked">
+                 <bool>false</bool>
+                </property>
+               </widget>
               </item>
               <item>
-               <property name="text">
-                <string>Full call in Tx5 only</string>
-               </property>
+               <widget class="QCheckBox" name="autoreply_off_check_box">
+                <property name="text">
+                 <string>Autoreply (AUTO) off at startup</string>
+                </property>
+               </widget>
               </item>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QWidget" name="widget" native="true">
-            <layout class="QFormLayout" name="formLayout_16">
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_17">
-               <property name="text">
-                <string>Reply Message:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLineEdit" name="reply_message_line_edit">
-               <property name="text">
-                <string>HW CPY?</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_14">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string>Station Location (QTH) Message:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QLineEdit" name="qth_message_line_edit">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message that is transmitted in response to &amp;quot;@&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="0">
-              <widget class="QLabel" name="label_15">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station Description Message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string>Station Detail (QTC) Message:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="1">
-              <widget class="QLineEdit" name="station_message_line_edit">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station message that is transmitted in response to &amp;quot;&amp;amp;&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_19">
-               <property name="text">
-                <string>CQ Message:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLineEdit" name="cq_message_line_edit">
-               <property name="text">
-                <string>CQCQCQ &lt;MYGRID4&gt;</string>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="0">
-              <widget class="QLabel" name="label_23">
-               <property name="text">
-                <string>Callsign Groups (comma separated):</string>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="1">
-              <widget class="QLineEdit" name="groups_line_edit">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter a comma separated list of callsign groups (e.g., @GROUP/1, @ARES, @RACES, etc). &lt;br/&gt;&lt;br/&gt;Each group behaves similarly to @ALLCALL. Messages that are directed to the group are printed at all participating stations.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="placeholderText">
-                <string>@ALLCALL, ...</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="Line" name="line_5">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="behaviour_group_box">
-         <property name="title">
-          <string>Behavior</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_8">
-          <item>
-           <widget class="QCheckBox" name="miles_check_box">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="toolTip">
-             <string>Show distance to DX station in miles rather than kilometers.</string>
-            </property>
-            <property name="text">
-             <string>Display dista&amp;nce in miles</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="monitor_off_check_box">
-            <property name="toolTip">
-             <string>Don't start decoding until the monitor button is clicked.</string>
-            </property>
-            <property name="text">
-             <string>Mon&amp;itor (RX) off at startup</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="autoreply_off_check_box">
-            <property name="text">
-             <string>Autoreply (AUTO) off at startup</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="relay_disabled_check_box">
-            <property name="text">
-             <string>Disable message relay (&gt;) when AUTO is enabled</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="monitor_last_used_check_box">
-            <property name="visible">
-             <bool>false</bool>
-            </property>
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check this if you wish to automatically return to the last monitored frequency when monitor is enabled, leave it unchecked if you wish to have the current rig frequency maintained.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>Monitor returns to last used frequency</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="tx_qsy_check_box">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Some rigs are not able to process CAT commands while transmitting. This means that if you are operating in split mode you may have to uncheck this option.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>Allow Tx frequency changes while transmitting</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="single_decode_check_box">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="visible">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>Single decode</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="beacon_anywhere_check_box">
-            <property name="text">
-             <string>Allow transmitting beacons outside of beacon sub-channel (500Hz - 1000Hz)</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="transmit_directed_check_box">
-            <property name="text">
-             <string>Immediately transmit CQ, Reply, QTC, QTH, Saved, and Directed messages from the menu</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_155">
-            <item>
-             <widget class="QLabel" name="beacon_label_10">
-              <property name="text">
-               <string>Remove callsigns from heard list after:</string>
-              </property>
-              <property name="buddy">
-               <cstring>callsign_aging_spin_box</cstring>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="callsign_aging_spin_box">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended beacons&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="specialValueText">
-               <string>Disabled</string>
-              </property>
-              <property name="suffix">
-               <string> minutes</string>
-              </property>
-              <property name="prefix">
-               <string/>
-              </property>
-              <property name="minimum">
-               <number>0</number>
-              </property>
-              <property name="maximum">
-               <number>1440</number>
-              </property>
-              <property name="singleStep">
-               <number>1</number>
-              </property>
-              <property name="value">
-               <number>0</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_156">
-            <item>
-             <widget class="QLabel" name="beacon_label_10">
-              <property name="text">
-               <string>Remove messages from band activity after:</string>
-              </property>
-              <property name="buddy">
-               <cstring>callsign_aging_spin_box</cstring>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="activity_aging_spin_box">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended beacons&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="specialValueText">
-               <string>Disabled</string>
-              </property>
-              <property name="suffix">
-               <string> minutes</string>
-              </property>
-              <property name="prefix">
-               <string/>
-              </property>
-              <property name="minimum">
-               <number>0</number>
-              </property>
-              <property name="maximum">
-               <number>1440</number>
-              </property>
-              <property name="singleStep">
-               <number>1</number>
-              </property>
-              <property name="value">
-               <number>2</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_15">
-            <item>
-             <widget class="QLabel" name="beacon_label_10">
-              <property name="text">
-               <string>Beacon interval:</string>
-              </property>
-              <property name="buddy">
-               <cstring>callsign_aging_spin_box</cstring>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="beacon_spin_box">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended beacons&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="suffix">
-               <string> minutes</string>
-              </property>
-              <property name="prefix">
-               <string/>
-              </property>
-              <property name="minimum">
-               <number>5</number>
-              </property>
-              <property name="maximum">
-               <number>1440</number>
-              </property>
-              <property name="singleStep">
-               <number>1</number>
-              </property>
-              <property name="value">
-               <number>15</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_12">
-            <item>
-             <widget class="QLabel" name="label_10">
-              <property name="text">
-               <string>Idle watchdog timer:</string>
-              </property>
-              <property name="buddy">
-               <cstring>tx_watchdog_spin_box</cstring>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="tx_watchdog_spin_box">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes before unattended transmissions are aborted (beacons, auto-replies, etc).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="specialValueText">
-               <string>Disabled</string>
-              </property>
-              <property name="suffix">
-               <string> minutes</string>
-              </property>
-              <property name="prefix">
-               <string/>
-              </property>
-              <property name="minimum">
-               <number>0</number>
-              </property>
-              <property name="maximum">
-               <number>1440</number>
-              </property>
-              <property name="singleStep">
-               <number>1</number>
-              </property>
-              <property name="value">
-               <number>60</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_9">
-            <item>
-             <widget class="QCheckBox" name="CW_id_after_73_check_box">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="visible">
-               <bool>false</bool>
-              </property>
-              <property name="toolTip">
-               <string>Send a CW ID after every 73 or free text message.</string>
-              </property>
-              <property name="text">
-               <string>CW ID a&amp;fter 73</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="visible">
-               <bool>false</bool>
-              </property>
-              <property name="text">
-               <string>Periodic CW ID Inter&amp;val:</string>
-              </property>
-              <property name="buddy">
-               <cstring>CW_id_interval_spin_box</cstring>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="CW_id_interval_spin_box">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="visible">
-               <bool>false</bool>
-              </property>
-              <property name="toolTip">
-               <string>Send a CW ID periodically every few minutes.
+              <item>
+               <widget class="QCheckBox" name="relay_disabled_check_box">
+                <property name="text">
+                 <string>Disable message relay (&gt;) when AUTO is enabled</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="monitor_last_used_check_box">
+                <property name="visible">
+                 <bool>false</bool>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check this if you wish to automatically return to the last monitored frequency when monitor is enabled, leave it unchecked if you wish to have the current rig frequency maintained.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="text">
+                 <string>Monitor returns to last used frequency</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="tx_qsy_check_box">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Some rigs are not able to process CAT commands while transmitting. This means that if you are operating in split mode you may have to uncheck this option.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="text">
+                 <string>Allow Tx frequency changes while transmitting</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="single_decode_check_box">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="visible">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>Single decode</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="transmit_directed_check_box">
+                <property name="text">
+                 <string>Immediately transmit CQ, Reply, QTC, QTH, Saved, and Directed messages from the menu</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_9">
+                <item>
+                 <widget class="QCheckBox" name="CW_id_after_73_check_box">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="visible">
+                   <bool>false</bool>
+                  </property>
+                  <property name="toolTip">
+                   <string>Send a CW ID after every 73 or free text message.</string>
+                  </property>
+                  <property name="text">
+                   <string>CW ID a&amp;fter 73</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label">
+                  <property name="enabled">
+                   <bool>true</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="visible">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Periodic CW ID Inter&amp;val:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>CW_id_interval_spin_box</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="CW_id_interval_spin_box">
+                  <property name="enabled">
+                   <bool>true</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="visible">
+                   <bool>false</bool>
+                  </property>
+                  <property name="toolTip">
+                   <string>Send a CW ID periodically every few minutes.
 This might be required under your countries licence regulations.
 It will not interfere with other users as it is always sent in the
 quiet period when decoding is done.</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+             <widget class="QCheckBox" name="enable_VHF_features_check_box">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>100</width>
+                <height>30</height>
+               </rect>
+              </property>
+              <property name="visible">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string>Enable VHF/UHF/Microwave features</string>
               </property>
              </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-         <widget class="QCheckBox" name="enable_VHF_features_check_box">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>100</width>
-            <height>30</height>
-           </rect>
-          </property>
-          <property name="visible">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Enable VHF/UHF/Microwave features</string>
-          </property>
-         </widget>
-         <widget class="QCheckBox" name="decode_at_52s_check_box">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>100</width>
-            <height>30</height>
-           </rect>
-          </property>
-          <property name="visible">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Decode after EME delay</string>
-          </property>
-         </widget>
-         <widget class="QCheckBox" name="quick_call_check_box">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>100</width>
-            <height>30</height>
-           </rect>
-          </property>
-          <property name="visible">
-           <bool>false</bool>
-          </property>
-          <property name="toolTip">
-           <string>Automatic transmission mode.</string>
-          </property>
-          <property name="text">
-           <string>Doubl&amp;e-click on call sets Tx enable</string>
-          </property>
-         </widget>
-         <widget class="QCheckBox" name="disable_TX_on_73_check_box">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>100</width>
-            <height>30</height>
-           </rect>
-          </property>
-          <property name="visible">
-           <bool>false</bool>
-          </property>
-          <property name="toolTip">
-           <string>Turns off automatic transmissions after sending a 73 or any other free
+             <widget class="QCheckBox" name="decode_at_52s_check_box">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>100</width>
+                <height>30</height>
+               </rect>
+              </property>
+              <property name="visible">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string>Decode after EME delay</string>
+              </property>
+             </widget>
+             <widget class="QCheckBox" name="quick_call_check_box">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>100</width>
+                <height>30</height>
+               </rect>
+              </property>
+              <property name="visible">
+               <bool>false</bool>
+              </property>
+              <property name="toolTip">
+               <string>Automatic transmission mode.</string>
+              </property>
+              <property name="text">
+               <string>Doubl&amp;e-click on call sets Tx enable</string>
+              </property>
+             </widget>
+             <widget class="QCheckBox" name="disable_TX_on_73_check_box">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>100</width>
+                <height>30</height>
+               </rect>
+              </property>
+              <property name="visible">
+               <bool>false</bool>
+              </property>
+              <property name="toolTip">
+               <string>Turns off automatic transmissions after sending a 73 or any other free
 text message.</string>
-          </property>
-          <property name="text">
-           <string>Di&amp;sable Tx after sending 73</string>
-          </property>
+              </property>
+              <property name="text">
+               <string>Di&amp;sable Tx after sending 73</string>
+              </property>
+             </widget>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="groupBox_15">
+             <property name="title">
+              <string>Aging</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_22">
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_155">
+                <item>
+                 <widget class="QLabel" name="ping_label_11">
+                  <property name="text">
+                   <string>Remove callsigns from call activity after:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>callsign_aging_spin_box</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="callsign_aging_spin_box">
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended pings&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <property name="specialValueText">
+                   <string>Disabled</string>
+                  </property>
+                  <property name="suffix">
+                   <string> minutes</string>
+                  </property>
+                  <property name="prefix">
+                   <string/>
+                  </property>
+                  <property name="minimum">
+                   <number>0</number>
+                  </property>
+                  <property name="maximum">
+                   <number>1440</number>
+                  </property>
+                  <property name="singleStep">
+                   <number>1</number>
+                  </property>
+                  <property name="value">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_156">
+                <item>
+                 <widget class="QLabel" name="ping_label_12">
+                  <property name="text">
+                   <string>Remove messages from band activity after:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>callsign_aging_spin_box</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="activity_aging_spin_box">
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended pings&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <property name="specialValueText">
+                   <string>Disabled</string>
+                  </property>
+                  <property name="suffix">
+                   <string> minutes</string>
+                  </property>
+                  <property name="prefix">
+                   <string/>
+                  </property>
+                  <property name="minimum">
+                   <number>0</number>
+                  </property>
+                  <property name="maximum">
+                   <number>1440</number>
+                  </property>
+                  <property name="singleStep">
+                   <number>1</number>
+                  </property>
+                  <property name="value">
+                   <number>2</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="groupBox_12">
+             <property name="title">
+              <string>Heartbeat (HB)</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_21">
+              <item>
+               <widget class="QCheckBox" name="ping_anywhere_check_box">
+                <property name="text">
+                 <string>Allow transmitting heartbeat pings outside of heartbeat sub-channel (500Hz - 1000Hz)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_15">
+                <item>
+                 <widget class="QLabel" name="ping_label_10">
+                  <property name="text">
+                   <string>Heartbeat interval:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="ping_spin_box">
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended pings&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <property name="suffix">
+                   <string> minutes</string>
+                  </property>
+                  <property name="prefix">
+                   <string/>
+                  </property>
+                  <property name="minimum">
+                   <number>5</number>
+                  </property>
+                  <property name="maximum">
+                   <number>1440</number>
+                  </property>
+                  <property name="singleStep">
+                   <number>1</number>
+                  </property>
+                  <property name="value">
+                   <number>15</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_12">
+                <item>
+                 <widget class="QLabel" name="label_10">
+                  <property name="text">
+                   <string>Heartbeat idle watchdog timer:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>tx_watchdog_spin_box</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="tx_watchdog_spin_box">
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes before unattended transmissions are aborted (pings, auto-replies, etc).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <property name="specialValueText">
+                   <string>Disabled</string>
+                  </property>
+                  <property name="suffix">
+                   <string> minutes</string>
+                  </property>
+                  <property name="prefix">
+                   <string/>
+                  </property>
+                  <property name="minimum">
+                   <number>0</number>
+                  </property>
+                  <property name="maximum">
+                   <number>1440</number>
+                  </property>
+                  <property name="singleStep">
+                   <number>1</number>
+                  </property>
+                  <property name="value">
+                   <number>60</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </widget>
        </item>
@@ -1973,7 +1993,7 @@ comments field.</string>
             <property name="toolTip">
              <string>The program can send your station details and all
 decoded signals as spots to the http://pskreporter.info web site.
-This is used for reverse beacon analysis which is very useful
+This is used for reverse ping analysis which is very useful
 for assessing propagation and system performance.</string>
             </property>
             <property name="text">
@@ -3513,14 +3533,10 @@ soundcard changes</string>
  </widget>
  <tabstops>
   <tabstop>configuration_tabs</tabstop>
-  <tabstop>callsign_line_edit</tabstop>
-  <tabstop>grid_line_edit</tabstop>
   <tabstop>use_dynamic_grid</tabstop>
-  <tabstop>region_combo_box</tabstop>
   <tabstop>type_2_msg_gen_combo_box</tabstop>
   <tabstop>monitor_last_used_check_box</tabstop>
   <tabstop>quick_call_check_box</tabstop>
-  <tabstop>tx_watchdog_spin_box</tabstop>
   <tabstop>CW_id_after_73_check_box</tabstop>
   <tabstop>enable_VHF_features_check_box</tabstop>
   <tabstop>single_decode_check_box</tabstop>
@@ -3652,12 +3668,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="split_mode_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
  </buttongroups>
 </ui>

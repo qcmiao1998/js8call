@@ -406,7 +406,7 @@ color : white;
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="labBeacon">
+               <widget class="QLabel" name="labHeartbeat">
                 <property name="styleSheet">
                  <string notr="true">QLabel {
 font-family: MS Shell Dlg 2;
@@ -415,7 +415,7 @@ color : white;
 }</string>
                 </property>
                 <property name="text">
-                 <string>Next Beacon: disabled</string>
+                 <string>Next Heartbeat: disabled</string>
                 </property>
                 <property name="textFormat">
                  <enum>Qt::RichText</enum>
@@ -988,7 +988,7 @@ background-color: #00ff00;
                </widget>
               </item>
               <item row="4" column="1">
-               <widget class="QPushButton" name="beaconButton">
+               <widget class="QPushButton" name="heartbeatButton">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
@@ -1011,7 +1011,7 @@ background-color: #00ff00;
                  </size>
                 </property>
                 <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable the automatic beacon&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable the automatic heartbeat transmission&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
@@ -1043,7 +1043,7 @@ background-color: #6699ff;
 }</string>
                 </property>
                 <property name="text">
-                 <string>BEACON</string>
+                 <string>HB</string>
                 </property>
                 <property name="checkable">
                  <bool>true</bool>

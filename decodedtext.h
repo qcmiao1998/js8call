@@ -34,7 +34,7 @@ public:
   explicit DecodedText (QString const& js8callmessage);
 
   bool tryUnpack();
-  bool tryUnpackBeacon();
+  bool tryUnpackHeartbeat();
   bool tryUnpackCompound();
   bool tryUnpackDirected();
   bool tryUnpackData();
@@ -45,7 +45,7 @@ public:
   QString compoundCall() const { return compound_; }
   bool isCompound() const { return !compound_.isEmpty(); }
 
-  bool isBeacon() const { return isBeacon_; }
+  bool isHeartbeat() const { return isHeartbeat_; }
   bool isAlt() const { return isAlt_; }
 
   QStringList directedMessage() const { return directed_; }
@@ -99,7 +99,7 @@ private:
       column_qsoText = 22 };
 
   quint8 frameType_;
-  bool isBeacon_;
+  bool isHeartbeat_;
   bool isAlt_;
   QString compound_;
   QString extra_;

@@ -578,7 +578,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   x1=XfromFreq(500);
   x2=XfromFreq(1000);
   if(x1<=m_w and x2>0) {
-    painter0.setPen(penBlue);               //Mark beacon range
+    painter0.setPen(penBlue);               //Mark ping range
     painter0.drawLine(x1+1,26,x2-2,26);
     painter0.drawLine(x1+1,28,x2-2,28);
   }

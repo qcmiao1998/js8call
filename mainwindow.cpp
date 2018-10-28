@@ -872,8 +872,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   TxAgainTimer.setSingleShot(true);
   connect(&TxAgainTimer, SIGNAL(timeout()), this, SLOT(TxAgain()));
 
-  beaconTimer.setSingleShot(false);
-  connect(&beaconTimer, &QTimer::timeout, this, &MainWindow::checkBeacon);
+  heartbeatTimer.setSingleShot(false);
+  connect(&heartbeatTimer, &QTimer::timeout, this, &MainWindow::checkHeartbeat);
 
   connect(m_wideGraph.data (), SIGNAL(setFreq3(int,int)),this,
           SLOT(setFreq4(int,int)));
@@ -1372,22 +1372,22 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   p.setColor(QPalette::Inactive, QPalette::Highlight, p.color(QPalette::Active, QPalette::Highlight));
   ui->tableWidgetCalls->setPalette(p);
 
-  // Don't block beacon's first run...
+  // Don't block ping's first run...
   m_lastTxTime = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
 
 
-  auto beaconNow = new QAction(QString("Beacon Now"), ui->beaconButton);
-  connect(beaconNow, &QAction::triggered, this, [this](){
+  auto heartbeatNow = new QAction(QString("Send Heartbeat Now"), ui->heartbeatButton);
+  connect(heartbeatNow, &QAction::triggered, this, [this](){
     if(m_transmitting){
         return;
     }
-    if(!ui->beaconButton->isChecked()){
-        ui->beaconButton->setChecked(true);
+    if(!ui->heartbeatButton->isChecked()){
+        ui->heartbeatButton->setChecked(true);
     }
-    scheduleBeacon(true);
+    scheduleHeartbeat(true);
   });
-  ui->beaconButton->setContextMenuPolicy(Qt::ActionsContextMenu);
-  ui->beaconButton->addAction(beaconNow);
+  ui->heartbeatButton->setContextMenuPolicy(Qt::ActionsContextMenu);
+  ui->heartbeatButton->addAction(heartbeatNow);
 
   pskSetLocal();
   aprsSetLocal();
@@ -3634,18 +3634,18 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
           // Process compound callsign commands (put them in cache)"
 #if 1
-          qDebug() << "decoded" << decodedtext.frameType() << decodedtext.isCompound() << decodedtext.isDirectedMessage() << decodedtext.isBeacon();
+          qDebug() << "decoded" << decodedtext.frameType() << decodedtext.isCompound() << decodedtext.isDirectedMessage() << decodedtext.isHeartbeat();
           bool shouldProcessCompound = true;
           if(shouldProcessCompound && decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
             cd.call = decodedtext.compoundCall();
-            cd.grid = decodedtext.extra(); // compound calls via beacons may contain grid...
+            cd.grid = decodedtext.extra(); // compound calls via pings may contain grid...
             cd.snr = decodedtext.snr();
             cd.freq = decodedtext.frequencyOffset();
             cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
             cd.bits = decodedtext.bits();
 
-            // Only respond to BEACONS...remember that CQ messages are "Alt" beacons
-            if(decodedtext.isBeacon()){
+            // Only respond to PINGS...remember that CQ messages are "Alt" pings
+            if(decodedtext.isHeartbeat()){
                 if(decodedtext.isAlt()){
 
                     // this is a cq with a compound call, ala "KN4CRD/P: CQCQCQ"
@@ -3653,10 +3653,10 @@ void MainWindow::readFromStdout()                             //readFromStdout
                     logCallActivity(cd, true);
 
                 } else {
-                    // convert BEACON to a directed command and process...
+                    // convert PING to a directed command and process...
                     cmd.from = cd.call;
                     cmd.to = "@ALLCALL";
-                    cmd.cmd = " BEACON";
+                    cmd.cmd = " PING";
                     cmd.snr = cd.snr;
                     cmd.bits = cd.bits;
                     cmd.grid = cd.grid;
@@ -4357,9 +4357,9 @@ void MainWindow::guiUpdate()
       t.time().toString() + (!drift ? " " : QString(" (%1%2ms)").arg(drift > 0 ? "+" : "").arg(drift));
     ui->labUTC->setText(utc);
 
-    auto delta = t.secsTo(m_nextBeacon);
-    auto beacon = ui->beaconButton->isChecked() ? delta > 0 ? QString("%1 s").arg(delta) : "queued!" : m_nextBeaconPaused ? "paused" : "disabled";
-    ui->labBeacon->setText(QString("Next Beacon: %1").arg(beacon));
+    auto delta = t.secsTo(m_nextHeartbeat);
+    auto ping = ui->heartbeatButton->isChecked() ? delta > 0 ? QString("%1 s").arg(delta) : "queued!" : m_nextHeartPaused ? "paused" : "disabled";
+    ui->labHeartbeat->setText(QString("Next Heartbeat: %1").arg(ping));
 
     auto callLabel = m_config.my_callsign();
     if(m_config.use_dynamic_grid() && !m_config.my_grid().isEmpty()){
@@ -4946,7 +4946,7 @@ void MainWindow::restoreActivity(QString key){
 void MainWindow::clearActivity(){
     m_bandActivity.clear();
     m_callActivity.clear();
-    m_callSeenBeacon.clear();
+    m_callSeenHeartbeat.clear();
     m_compoundCallCache.clear();
     m_rxCallCache.clear();
     m_rxCallQueue.clear();
@@ -5180,9 +5180,9 @@ void MainWindow::enqueueMessage(int priority, QString message, int freq, Callbac
     );
 }
 
-void MainWindow::enqueueBeacon(QString message){
-    m_txBeaconQueue.enqueue(message);
-    scheduleBeacon(true);
+void MainWindow::enqueueHeartbeat(QString message){
+    m_txHeartbeatQueue.enqueue(message);
+    scheduleHeartbeat(true);
 }
 
 void MainWindow::resetMessage(){
@@ -5406,9 +5406,9 @@ bool MainWindow::prepareNextMessageFrame()
 
     updateTxButtonDisplay();
 
-    if(ui->beaconButton->isChecked()){
-        // bump beacon
-        scheduleBeacon(false);
+    if(ui->heartbeatButton->isChecked()){
+        // bump ping
+        scheduleHeartbeat(false);
     }
 
     return true;
@@ -5468,8 +5468,8 @@ int MainWindow::findFreeFreqOffset(int fmin, int fmax, int bw){
     return fmin;
 }
 
-// scheduleBeacon
-void MainWindow::scheduleBeacon(bool first){
+// schedulePing
+void MainWindow::scheduleHeartbeat(bool first){
     auto timestamp = DriftingDateTime::currentDateTimeUtc();
     auto orig = timestamp;
 
@@ -5480,7 +5480,7 @@ void MainWindow::scheduleBeacon(bool first){
 
     // round to 15 second increment
     int secondsSinceEpoch = (timestamp.toMSecsSinceEpoch()/1000);
-    int delta = roundUp(secondsSinceEpoch, 15) + 1 + (first ? 0 : qMax(1, m_config.beacon()) * 60) - secondsSinceEpoch;
+    int delta = roundUp(secondsSinceEpoch, 15) + 1 + (first ? 0 : qMax(1, m_config.ping()) * 60) - secondsSinceEpoch;
     timestamp = timestamp.addSecs(delta);
 
     // 25% of the time, switch intervals
@@ -5489,75 +5489,75 @@ void MainWindow::scheduleBeacon(bool first){
         timestamp = timestamp.addSecs(15);
     }
 
-    m_nextBeacon = timestamp;
-    m_nextBeaconQueued = false;
-    m_nextBeaconPaused = false;
+    m_nextHeartbeat = timestamp;
+    m_nextHeartbeatQueued = false;
+    m_nextHeartPaused = false;
 
-    if(!beaconTimer.isActive()){
-        beaconTimer.setInterval(1000);
-        beaconTimer.start();
+    if(!heartbeatTimer.isActive()){
+        heartbeatTimer.setInterval(1000);
+        heartbeatTimer.start();
     }
 }
 
-// pauseBeacon
-void MainWindow::pauseBeacon(){
-    ui->beaconButton->setChecked(false);
-    m_nextBeaconPaused = true;
+// pausePing
+void MainWindow::pauseHeartbeat(){
+    ui->heartbeatButton->setChecked(false);
+    m_nextHeartPaused = true;
 
-    if(beaconTimer.isActive()){
-        beaconTimer.stop();
+    if(heartbeatTimer.isActive()){
+        heartbeatTimer.stop();
     }
 }
 
-// checkBeacon
-void MainWindow::checkBeacon(){
-    if(!ui->beaconButton->isChecked()){
+// checkPing
+void MainWindow::checkHeartbeat(){
+    if(!ui->heartbeatButton->isChecked()){
         return;
     }
-    auto secondsUntilBeacon = DriftingDateTime::currentDateTimeUtc().secsTo(m_nextBeacon);
-    if(secondsUntilBeacon > 5 && m_txBeaconQueue.isEmpty()){
+    auto secondsUntilHeartbeat = DriftingDateTime::currentDateTimeUtc().secsTo(m_nextHeartbeat);
+    if(secondsUntilHeartbeat > 5 && m_txHeartbeatQueue.isEmpty()){
         return;
     }
-    if(m_nextBeaconQueued){
+    if(m_nextHeartbeatQueued){
         return;
     }
     if(m_tx_watchdog){
         return;
     }
 
-    prepareBeacon();
+    prepareHeartbeat();
 }
 
-// prepareBeacon
-void MainWindow::prepareBeacon(){
+// preparePing
+void MainWindow::prepareHeartbeat(){
     QStringList lines;
 
     QString mycall = m_config.my_callsign();
     QString mygrid = m_config.my_grid().left(4);
 
     // JS8Call Style
-    if(m_txBeaconQueue.isEmpty()){
-        lines.append(QString("%1: BEACON %2").arg(mycall).arg(mygrid));
+    if(m_txHeartbeatQueue.isEmpty()){
+        lines.append(QString("%1: PING %2").arg(mycall).arg(mygrid));
     } else {
-        while(!m_txBeaconQueue.isEmpty() && lines.length() < 1){
-            lines.append(m_txBeaconQueue.dequeue());
+        while(!m_txHeartbeatQueue.isEmpty() && lines.length() < 1){
+            lines.append(m_txHeartbeatQueue.dequeue());
         }
     }
 
-    // Choose a beacon frequency
-    auto f = m_config.beacon_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
+    // Choose a ping frequency
+    auto f = m_config.ping_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
 
     auto text = lines.join(QChar('\n'));
     if(text.isEmpty()){
         return;
     }
 
-    // Queue the beacon
+    // Queue the ping
     enqueueMessage(PriorityLow, text, f, [this](){
-        m_nextBeaconQueued = false;
+        m_nextHeartbeatQueued = false;
     });
 
-    m_nextBeaconQueued = true;
+    m_nextHeartbeatQueued = true;
 }
 
 
@@ -5642,7 +5642,7 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   auto dateTimeQSOOff = DriftingDateTime::currentDateTimeUtc();
   if (dateTimeQSOOff < m_dateTimeQSOOn) dateTimeQSOOff = m_dateTimeQSOOn;
   QString call=callsignSelected();
-  if(call == "@ALLCALL"){
+  if(call.startsWith("@")){
       call = "";
   }
   QString grid="";
@@ -6538,7 +6538,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1>[MESSAGE]").arg(selectedCall), true, true);
     });
 
-    auto qsoQueryAction = menu->addAction(QString("%1 BEACON REQ [CALLSIGN]? - Please acknowledge you can communicate directly with [CALLSIGN]").arg(call).trimmed());
+    auto qsoQueryAction = menu->addAction(QString("%1 PING REQ [CALLSIGN]? - Please acknowledge you can communicate directly with [CALLSIGN]").arg(call).trimmed());
     connect(qsoQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -6546,7 +6546,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1 BEACON REQ [CALLSIGN]?").arg(selectedCall), true, true);
+        addMessageText(QString("%1 PING REQ [CALLSIGN]?").arg(selectedCall), true, true);
     });
 
     menu->addSeparator();
@@ -7136,17 +7136,17 @@ void MainWindow::on_pbT2R_clicked()
     }
 }
 
-void MainWindow::on_beaconButton_clicked()
+void MainWindow::on_heartbeatButton_clicked()
 {
-    // clear the beacon queue when you toggle the button
-    m_txBeaconQueue.clear();
+    // clear the ping queue when you toggle the button
+    m_txHeartbeatQueue.clear();
     displayBandActivity();
 
     // then process the action
-    if(ui->beaconButton->isChecked()){
-        scheduleBeacon(false);
+    if(ui->heartbeatButton->isChecked()){
+        scheduleHeartbeat(false);
     } else {
-        pauseBeacon();
+        pauseHeartbeat();
     }
 }
 
@@ -8212,7 +8212,7 @@ void MainWindow::processRxActivity() {
                 continue;
             }
 
-            if(d.isDirected && d.text.contains("BEACON")){
+            if(d.isDirected && d.text.contains(": PING")){
                 continue;
             }
 
@@ -8466,15 +8466,13 @@ void MainWindow::processCommandActivity() {
 
     auto now = DriftingDateTime::currentDateTimeUtc();
 
-    int freqOffset = currentFreqOffset();
-
     while (!m_rxCommandQueue.isEmpty()) {
         auto d = m_rxCommandQueue.dequeue();
 
         bool isAllCall = isAllCallIncluded(d.to);
         bool isGroupCall = isGroupCallIncluded(d.to);
 
-        qDebug() << "try processing command" << d.from << d.to << d.cmd << d.freq << d.grid << d.extra;
+        qDebug() << "try processing command" << d.from << d.to << d.cmd << d.freq << d.grid << d.extra << isAllCall << isGroupCall;
 
         // if we need a compound callsign but never got one...skip
         if (d.from == "<....>" || d.to == "<....>") {
@@ -8496,7 +8494,7 @@ void MainWindow::processCommandActivity() {
         cd.snr = d.snr;
         cd.freq = d.freq;
         cd.bits = d.bits;
-        cd.ackTimestamp = d.text.contains("BEACON ACK") || toMe ? d.utcTimestamp : QDateTime{};
+        cd.ackTimestamp = d.text.contains("PING ACK") || toMe ? d.utcTimestamp : QDateTime{};
         cd.utcTimestamp = d.utcTimestamp;
         logCallActivity(cd, true);
 
@@ -8536,8 +8534,8 @@ void MainWindow::processCommandActivity() {
         // we'd be double printing here if were on frequency, so let's be "smart" about this...
         bool shouldDisplay = true;
 
-        // don't display beacon allcalls
-        if(isAllCall && ad.text.contains("BEACON")){
+        // don't display ping allcalls
+        if(isAllCall && (ad.text.contains(": PING") || d.cmd == " PING")){
             shouldDisplay = false;
         }
 
@@ -8546,9 +8544,9 @@ void MainWindow::processCommandActivity() {
             c.movePosition(QTextCursor::End);
             ui->textEditRX->setTextCursor(c);
 
-            // BEACON ACKs are the most likely source of items to be overwritten (multiple responses at once)...
+            // ACKs are the most likely source of items to be overwritten (multiple responses at once)...
             // so don't overwrite those (i.e., print each on a new line)
-            bool shouldOverwrite = (!d.cmd.contains("BEACON ACK")); /* && isRecentOffset(d.freq);*/
+            bool shouldOverwrite = (!d.cmd.contains("PING ACK")); /* && isRecentOffset(d.freq);*/
 
             if(shouldOverwrite && ui->textEditRX->find(d.utcTimestamp.time().toString(), QTextDocument::FindBackward)){
                 // ... maybe we could delete the last line that had this message on this frequency...
@@ -8588,9 +8586,9 @@ void MainWindow::processCommandActivity() {
             writeDirectedCommandToFile(d);
         }
 
-        // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past beacon interval)
-        // that way we never get spammed by allcalls at a higher frequency than what we would normally beacon
-        if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < m_config.beacon()) {
+        // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past ping interval)
+        // that way we never get spammed by allcalls at a higher frequency than what we would normally ping
+        if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < m_config.ping()) {
             continue;
         }
 
@@ -8750,22 +8748,22 @@ void MainWindow::processCommandActivity() {
             reply = m_lastTxMessage;
         }
 
-        // PROCESS BEACON
-        else if (d.cmd == " BEACON" && ui->beaconButton->isChecked()){
-            reply = QString("%1 BEACON ACK %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
+        // PROCESS PING
+        else if (d.cmd == " PING" && ui->heartbeatButton->isChecked()){
+            reply = QString("%1 PING ACK %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
 
-            enqueueBeacon(reply);
+            enqueueHeartbeat(reply);
 
             if(isAllCall){
-                // since all beacons are technically @ALLCALL, let's bump the allcall cache here...
+                // since all pings are technically @ALLCALL, let's bump the allcall cache here...
                 m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 5);
             }
 
             continue;
         }
 
-        // PROCESS BUFFERED BEACON REQ QUERY
-        else if (d.cmd == " BEACON REQ" && ui->beaconButton->isChecked()){
+        // PROCESS BUFFERED PING REQ QUERY
+        else if (d.cmd == " PING REQ" && ui->heartbeatButton->isChecked()){
             auto who = d.text;
             if(who.isEmpty()){
                 continue;
@@ -8785,17 +8783,17 @@ void MainWindow::processCommandActivity() {
                 }
 
                 if(baseCall == cd.call || baseCall == Radio::base_callsign(cd.call)){
-                    auto r = QString("%1 BEACON ACK %2").arg(cd.call).arg(Varicode::formatSNR(cd.snr));
+                    auto r = QString("%1 ACK %2").arg(cd.call).arg(Varicode::formatSNR(cd.snr));
                     replies.append(r);
                 }
             }
             reply = replies.join("\n");
 
             if(!reply.isEmpty()){
-                enqueueBeacon(reply);
+                enqueueHeartbeat(reply);
 
                 if(isAllCall){
-                    // since all beacons are technically @ALLCALL, let's bump the allcall cache here...
+                    // since all pings are technically @ALLCALL, let's bump the allcall cache here...
                     m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 25);
                 }
             }
@@ -8851,8 +8849,8 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-        // do not queue @ALLCALL replies if auto-reply is not checked or it's a beacon reply
-        if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains("BEACON")){
+        // do not queue @ALLCALL replies if auto-reply is not checked or it's a ping reply
+        if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains("PING")){
             continue;
         }
 
@@ -9028,10 +9026,10 @@ void MainWindow::processTxQueue(){
     // add the message to the outgoing message text box
     addMessageText(message.message, true);
 
-    // check to see if this is a high priority message, or if we have autoreply enabled, or if this is a beacon and the beacon button is enabled
+    // check to see if this is a high priority message, or if we have autoreply enabled, or if this is a ping and the ping button is enabled
     if(message.priority >= PriorityHigh   ||
        (ui->autoReplyButton->isChecked()) ||
-       (ui->beaconButton->isChecked() && message.message.contains("BEACON"))
+       (ui->heartbeatButton->isChecked() && message.message.contains("PING"))
     ){
         // then try to set the frequency...
         setFreqOffsetForRestore(f, true);
@@ -9072,7 +9070,7 @@ void MainWindow::displayBandActivity() {
         selectedOffset = selectedItems.first()->text().toInt();
     }
 
-    bool beaconEnabled = ui->beaconButton->isChecked();
+    bool pingEnabled = ui->heartbeatButton->isChecked();
 
     ui->tableWidgetRXAll->setUpdatesEnabled(false);
     {
@@ -9163,8 +9161,8 @@ void MainWindow::displayBandActivity() {
                     if (!isOffsetSelected && activityAging && item.utcTimestamp.secsTo(now) / 60 >= activityAging) {
                         continue;
                     }
-                    if (!beaconEnabled && (item.text.contains(": BEACON") || item.text.contains("BEACON ACK"))){
-                        // hide beacons if we're not beaconing.
+                    if (!pingEnabled && (item.text.contains(": PING") || item.text.contains("PING ACK"))){
+                        // hide pings if we're not pinging.
                         continue;
                     }
                     if (item.text.isEmpty()) {
@@ -9482,7 +9480,7 @@ void MainWindow::networkMessage(Message const &message)
 
     auto type = message.type();
 
-    if(type == "PONG"){
+    if(type == "PING"){
         return;
     }
 
