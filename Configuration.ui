@@ -631,7 +631,7 @@ text message.</string>
                 <item>
                  <widget class="QSpinBox" name="heartbeat_spin_box">
                   <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended pings&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended heartbeat transmissions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                   </property>
                   <property name="suffix">
                    <string> minutes</string>
@@ -670,10 +670,7 @@ text message.</string>
                 <item>
                  <widget class="QSpinBox" name="tx_watchdog_spin_box">
                   <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes before unattended transmissions are aborted (pings, auto-replies, etc).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                  </property>
-                  <property name="specialValueText">
-                   <string>Disabled</string>
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes before unattended heartbeat transmissions are aborted.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                   </property>
                   <property name="suffix">
                    <string> minutes</string>
@@ -682,7 +679,7 @@ text message.</string>
                    <string/>
                   </property>
                   <property name="minimum">
-                   <number>0</number>
+                   <number>1</number>
                   </property>
                   <property name="maximum">
                    <number>1440</number>

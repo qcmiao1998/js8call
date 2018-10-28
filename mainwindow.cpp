@@ -1498,8 +1498,10 @@ void MainWindow::initializeDummyData(){
 
     displayActivity(true);
 
+    ui->heartbeatButton->click();
     QTimer::singleShot(10000, this, [this](){
-        tx_watchdog(true);
+         m_idleMinutes = 61;
+         scheduleHeartbeat(true);
     });
 }
 
@@ -1535,9 +1537,10 @@ void MainWindow::on_the_minute ()
         }
     }
 
-  if (m_config.watchdog () && !m_mode.startsWith ("WSPR"))
+  if (m_config.watchdog ())
     {
       ++m_idleMinutes;
+      qDebug() << "idle" << m_idleMinutes << "minutes";
       update_watchdog_label ();
     }
   else
@@ -4079,10 +4082,10 @@ void MainWindow::guiUpdate()
     }
 
     // watchdog!
-    if (m_config.watchdog() && !m_mode.startsWith ("WSPR")
-        && m_idleMinutes >= m_config.watchdog ()) {
-      tx_watchdog (true);       // disable transmit
-    }
+    // if (m_config.watchdog() && !m_mode.startsWith ("WSPR")
+    //     && m_idleMinutes >= m_config.watchdog ()) {
+    //   tx_watchdog (true);       // disable transmit
+    // }
 
     float fTR=float((ms%(1000*m_TRperiod)))/(1000*m_TRperiod);
 
@@ -4261,7 +4264,8 @@ void MainWindow::guiUpdate()
       auto const& current_message = QString::fromLatin1 (msgsent);
       if(m_config.watchdog () && !m_mode.startsWith ("WSPR")
          && current_message != m_msgSent0) {
-        tx_watchdog (false);  // in case we are auto sequencing
+        // new messages don't reset the idle timer :|
+        // tx_watchdog (false);  // in case we are auto sequencing
         m_msgSent0 = current_message;
       }
 
@@ -4334,7 +4338,10 @@ void MainWindow::guiUpdate()
         }
       }
     } else if(m_monitoring) {
-      if (!m_tx_watchdog) {
+      if (m_tx_watchdog) {
+        tx_status_label.setStyleSheet ("QLabel{background-color: #ff0000}");
+        tx_status_label.setText ("Idle watchdog");
+      } else {
         tx_status_label.setStyleSheet("QLabel{background-color: #00ff00}");
         QString t;
         t="Receiving";
@@ -4425,9 +4432,11 @@ void MainWindow::guiUpdate()
 
 void MainWindow::startTx()
 {
+#if IDLE_BLOCKS_TX
   if(m_tx_watchdog){
       return;
   }
+#endif
 
   if(!prepareNextMessageFrame()){
     return;
@@ -4481,7 +4490,11 @@ void MainWindow::stopTx()
     tx_status_label.setText("");
   }
 
+#if IDLE_BLOCKS_TX
   bool shouldContinue = !m_tx_watchdog && prepareNextMessageFrame();
+#else
+  bool shouldContinue = prepareNextMessageFrame();
+#endif
   if(!shouldContinue){
       // TODO: jsherer - split this up...
       ui->extFreeTextMsgEdit->setReadOnly(false);
@@ -5509,6 +5522,12 @@ void MainWindow::pauseHeartbeat(){
     }
 }
 
+// unpausePing
+void MainWindow::unpauseHeartbeat(){
+    ui->heartbeatButton->setChecked(true);
+    scheduleHeartbeat(false);
+}
+
 // checkPing
 void MainWindow::checkHeartbeat(){
     if(!ui->heartbeatButton->isChecked()){
@@ -5523,6 +5542,12 @@ void MainWindow::checkHeartbeat(){
     }
     if(m_tx_watchdog){
         return;
+    }
+
+    // idle heartbeat watchdog!
+    if (m_config.watchdog() && m_idleMinutes >= m_config.watchdog ()){
+      tx_watchdog (true);       // disable transmit
+      return;
     }
 
     prepareHeartbeat();
@@ -8983,9 +9008,11 @@ void MainWindow::processSpots() {
 }
 
 void MainWindow::processTxQueue(){
+#if IDLE_BLOCKS_TX
     if(m_tx_watchdog){
         return;
     }
+#endif
 
     if(m_txMessageQueue.isEmpty()){
         return;
@@ -10148,12 +10175,13 @@ void MainWindow::tx_watchdog (bool triggered)
       tx_status_label.setStyleSheet ("QLabel{background-color: #ff0000}");
       tx_status_label.setText ("Idle watchdog");
 
-      MessageBox::warning_message(this, QString("You have been idle for more than %1 minutes.").arg(m_config.watchdog()));
-
+      pauseHeartbeat();
+      MessageBox::warning_message(this, QString("Attempting to transmit heartbeat, but you have been idle for more than %1 minutes.").arg(m_config.watchdog()));
+      unpauseHeartbeat();
     }
   else
     {
-      m_idleMinutes = 0;
+      // m_idleMinutes = 0;
       update_watchdog_label ();
     }
   if (prior != triggered) statusUpdate ();

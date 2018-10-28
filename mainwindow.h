@@ -303,6 +303,7 @@ private slots:
   int findFreeFreqOffset(int fmin, int fmax, int bw);
   void scheduleHeartbeat(bool first=false);
   void pauseHeartbeat();
+  void unpauseHeartbeat();
   void checkHeartbeat();
   void prepareHeartbeat();
   QString calculateDistance(QString const& grid, int *pDistance=nullptr);
