@@ -628,7 +628,7 @@ private:
   bool spot_to_reporting_networks_;
   bool transmit_directed_;
   bool autoreply_off_at_startup_;
-  bool ping_anywhere_;
+  bool heartbeat_anywhere_;
   bool relay_disabled_;
   bool monitor_off_at_startup_;
   bool monitor_last_used_;
@@ -642,7 +642,7 @@ private:
   bool miles_;
   bool quick_call_;
   bool disable_TX_on_73_;
-  int ping_;
+  int heartbeat_;
   int watchdog_;
   bool TX_messages_;
   bool enable_VHF_features_;
@@ -759,7 +759,7 @@ void Configuration::set_spot_to_reporting_networks (bool spot)
 
 bool Configuration::transmit_directed() const { return m_->transmit_directed_; }
 bool Configuration::autoreply_off_at_startup () const {return m_->autoreply_off_at_startup_;}
-bool Configuration::ping_anywhere() const { return m_->ping_anywhere_;}
+bool Configuration::heartbeat_anywhere() const { return m_->heartbeat_anywhere_;}
 bool Configuration::relay_off() const { return m_->relay_disabled_; }
 bool Configuration::monitor_off_at_startup () const {return m_->monitor_off_at_startup_;}
 bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->monitor_last_used_;}
@@ -773,7 +773,7 @@ bool Configuration::clear_DX () const {return m_->clear_DX_;}
 bool Configuration::miles () const {return m_->miles_;}
 bool Configuration::quick_call () const {return m_->quick_call_;}
 bool Configuration::disable_TX_on_73 () const {return m_->disable_TX_on_73_;}
-int Configuration::ping () const {return m_->ping_;}
+int Configuration::heartbeat () const {return m_->heartbeat_;}
 int Configuration::watchdog () const {return m_->watchdog_;}
 bool Configuration::TX_messages () const {return m_->TX_messages_;}
 bool Configuration::enable_VHF_features () const {return m_->enable_VHF_features_;}
@@ -1338,7 +1338,7 @@ void Configuration::impl::initialize_models ()
   ui_->psk_reporter_check_box->setChecked (spot_to_reporting_networks_);
   ui_->transmit_directed_check_box->setChecked(transmit_directed_);
   ui_->autoreply_off_check_box->setChecked (autoreply_off_at_startup_);
-  ui_->ping_anywhere_check_box->setChecked(ping_anywhere_);
+  ui_->heartbeat_anywhere_check_box->setChecked(heartbeat_anywhere_);
   ui_->relay_disabled_check_box->setChecked(relay_disabled_);
   ui_->monitor_off_check_box->setChecked (monitor_off_at_startup_);
   ui_->monitor_last_used_check_box->setChecked (monitor_last_used_);
@@ -1350,7 +1350,7 @@ void Configuration::impl::initialize_models ()
   ui_->miles_check_box->setChecked (miles_);
   ui_->quick_call_check_box->setChecked (quick_call_);
   ui_->disable_TX_on_73_check_box->setChecked (disable_TX_on_73_);
-  ui_->ping_spin_box->setValue (ping_);
+  ui_->heartbeat_spin_box->setValue (heartbeat_);
   ui_->tx_watchdog_spin_box->setValue (watchdog_);
   ui_->enable_VHF_features_check_box->setChecked(enable_VHF_features_);
   ui_->decode_at_52s_check_box->setChecked(decode_at_52s_);
@@ -1596,7 +1596,7 @@ void Configuration::impl::read_settings ()
 
   transmit_directed_ = settings_->value ("TransmitDirected", true).toBool();
   autoreply_off_at_startup_ = settings_->value ("AutoreplyOFF", false).toBool ();
-  ping_anywhere_ = settings_->value("BeaconAnywhere", false).toBool();
+  heartbeat_anywhere_ = settings_->value("BeaconAnywhere", false).toBool();
   relay_disabled_ = settings_->value ("RelayOFF", false).toBool ();
   monitor_off_at_startup_ = settings_->value ("MonitorOFF", false).toBool ();
   monitor_last_used_ = settings_->value ("MonitorLastUsed", false).toBool ();
@@ -1657,7 +1657,7 @@ void Configuration::impl::read_settings ()
   miles_ = settings_->value ("Miles", false).toBool ();
   quick_call_ = settings_->value ("QuickCall", false).toBool ();
   disable_TX_on_73_ = settings_->value ("73TxDisable", false).toBool ();
-  ping_ = settings_->value ("TxBeacon", 30).toInt ();
+  heartbeat_ = settings_->value ("TxBeacon", 30).toInt ();
   watchdog_ = settings_->value ("TxIdleWatchdog", 60).toInt ();
   if(watchdog_){
       watchdog_ = qMax(5, watchdog_);
@@ -1762,7 +1762,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("Type2MsgGen", QVariant::fromValue (type_2_msg_gen_));
   settings_->setValue ("TransmitDirected", transmit_directed_);
   settings_->setValue ("AutoreplyOFF", autoreply_off_at_startup_);
-  settings_->setValue ("BeaconAnywhere", ping_anywhere_);
+  settings_->setValue ("BeaconAnywhere", heartbeat_anywhere_);
   settings_->setValue ("RelayOFF", relay_disabled_);
   settings_->setValue ("MonitorOFF", monitor_off_at_startup_);
   settings_->setValue ("MonitorLastUsed", monitor_last_used_);
@@ -1791,7 +1791,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("Miles", miles_);
   settings_->setValue ("QuickCall", quick_call_);
   settings_->setValue ("73TxDisable", disable_TX_on_73_);
-  settings_->setValue ("TxBeacon", ping_);
+  settings_->setValue ("TxBeacon", heartbeat_);
   settings_->setValue ("TxIdleWatchdog", watchdog_);
   settings_->setValue ("Tx2QSO", TX_messages_);
   settings_->setValue ("CATForceDTR", rig_params_.force_dtr);
@@ -2260,7 +2260,7 @@ void Configuration::impl::accept ()
   tx_qsy_allowed_ = ui_->tx_qsy_check_box->isChecked ();
   transmit_directed_ = ui_->transmit_directed_check_box->isChecked();
   autoreply_off_at_startup_ = ui_->autoreply_off_check_box->isChecked ();
-  ping_anywhere_ = ui_->ping_anywhere_check_box->isChecked();
+  heartbeat_anywhere_ = ui_->heartbeat_anywhere_check_box->isChecked();
   relay_disabled_ = ui_->relay_disabled_check_box->isChecked();
   monitor_off_at_startup_ = ui_->monitor_off_check_box->isChecked ();
   monitor_last_used_ = ui_->monitor_last_used_check_box->isChecked ();
@@ -2272,7 +2272,7 @@ void Configuration::impl::accept ()
   miles_ = ui_->miles_check_box->isChecked ();
   quick_call_ = ui_->quick_call_check_box->isChecked ();
   disable_TX_on_73_ = ui_->disable_TX_on_73_check_box->isChecked ();
-  ping_ = ui_->ping_spin_box->value ();
+  heartbeat_ = ui_->heartbeat_spin_box->value ();
   watchdog_ = ui_->tx_watchdog_spin_box->value ();
   data_mode_ = static_cast<DataMode> (ui_->TX_mode_button_group->checkedId ());
   save_directory_ = ui_->save_path_display_label->text ();

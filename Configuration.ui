@@ -613,9 +613,9 @@ text message.</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_21">
               <item>
-               <widget class="QCheckBox" name="ping_anywhere_check_box">
+               <widget class="QCheckBox" name="heartbeat_anywhere_check_box">
                 <property name="text">
-                 <string>Allow transmitting heartbeat pings outside of heartbeat sub-channel (500Hz - 1000Hz)</string>
+                 <string>Allow heartbeat transmissions outside of heartbeat sub-channel (500Hz - 1000Hz)</string>
                 </property>
                </widget>
               </item>
@@ -629,7 +629,7 @@ text message.</string>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QSpinBox" name="ping_spin_box">
+                 <widget class="QSpinBox" name="heartbeat_spin_box">
                   <property name="toolTip">
                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended pings&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                   </property>

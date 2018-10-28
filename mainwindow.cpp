@@ -1372,7 +1372,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   p.setColor(QPalette::Inactive, QPalette::Highlight, p.color(QPalette::Active, QPalette::Highlight));
   ui->tableWidgetCalls->setPalette(p);
 
-  // Don't block ping's first run...
+  // Don't block heartbeat's first run...
   m_lastTxTime = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
 
 
@@ -3644,7 +3644,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
             cd.bits = decodedtext.bits();
 
-            // Only respond to PINGS...remember that CQ messages are "Alt" pings
+            // Only respond to HEARTBEATS...remember that CQ messages are "Alt" pings
             if(decodedtext.isHeartbeat()){
                 if(decodedtext.isAlt()){
 
@@ -3653,10 +3653,10 @@ void MainWindow::readFromStdout()                             //readFromStdout
                     logCallActivity(cd, true);
 
                 } else {
-                    // convert PING to a directed command and process...
+                    // convert HEARTBEAT to a directed command and process...
                     cmd.from = cd.call;
                     cmd.to = "@ALLCALL";
-                    cmd.cmd = " PING";
+                    cmd.cmd = " HEARTBEAT";
                     cmd.snr = cd.snr;
                     cmd.bits = cd.bits;
                     cmd.grid = cd.grid;
@@ -5480,7 +5480,7 @@ void MainWindow::scheduleHeartbeat(bool first){
 
     // round to 15 second increment
     int secondsSinceEpoch = (timestamp.toMSecsSinceEpoch()/1000);
-    int delta = roundUp(secondsSinceEpoch, 15) + 1 + (first ? 0 : qMax(1, m_config.ping()) * 60) - secondsSinceEpoch;
+    int delta = roundUp(secondsSinceEpoch, 15) + 1 + (first ? 0 : qMax(1, m_config.heartbeat()) * 60) - secondsSinceEpoch;
     timestamp = timestamp.addSecs(delta);
 
     // 25% of the time, switch intervals
@@ -5537,7 +5537,7 @@ void MainWindow::prepareHeartbeat(){
 
     // JS8Call Style
     if(m_txHeartbeatQueue.isEmpty()){
-        lines.append(QString("%1: PING %2").arg(mycall).arg(mygrid));
+        lines.append(QString("%1: HEARTBEAT %2").arg(mycall).arg(mygrid));
     } else {
         while(!m_txHeartbeatQueue.isEmpty() && lines.length() < 1){
             lines.append(m_txHeartbeatQueue.dequeue());
@@ -5545,7 +5545,7 @@ void MainWindow::prepareHeartbeat(){
     }
 
     // Choose a ping frequency
-    auto f = m_config.ping_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
+    auto f = m_config.heartbeat_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
 
     auto text = lines.join(QChar('\n'));
     if(text.isEmpty()){
@@ -6538,7 +6538,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1>[MESSAGE]").arg(selectedCall), true, true);
     });
 
-    auto qsoQueryAction = menu->addAction(QString("%1 PING REQ [CALLSIGN]? - Please acknowledge you can communicate directly with [CALLSIGN]").arg(call).trimmed());
+    auto qsoQueryAction = menu->addAction(QString("%1 HEARTBEAT REQ [CALLSIGN]? - Please acknowledge you can communicate directly with [CALLSIGN]").arg(call).trimmed());
     connect(qsoQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -6546,7 +6546,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1 PING REQ [CALLSIGN]?").arg(selectedCall), true, true);
+        addMessageText(QString("%1 HEARTBEAT REQ [CALLSIGN]?").arg(selectedCall), true, true);
     });
 
     menu->addSeparator();
@@ -8212,7 +8212,7 @@ void MainWindow::processRxActivity() {
                 continue;
             }
 
-            if(d.isDirected && d.text.contains(": PING")){
+            if(d.isDirected && d.text.contains(": HEARTBEAT")){
                 continue;
             }
 
@@ -8494,7 +8494,7 @@ void MainWindow::processCommandActivity() {
         cd.snr = d.snr;
         cd.freq = d.freq;
         cd.bits = d.bits;
-        cd.ackTimestamp = d.text.contains("PING ACK") || toMe ? d.utcTimestamp : QDateTime{};
+        cd.ackTimestamp = d.text.contains("HEARTBEAT ACK") || toMe ? d.utcTimestamp : QDateTime{};
         cd.utcTimestamp = d.utcTimestamp;
         logCallActivity(cd, true);
 
@@ -8535,7 +8535,7 @@ void MainWindow::processCommandActivity() {
         bool shouldDisplay = true;
 
         // don't display ping allcalls
-        if(isAllCall && (ad.text.contains(": PING") || d.cmd == " PING")){
+        if(isAllCall && (ad.text.contains(": HEARTBEAT") || d.cmd == " HEARTBEAT")){
             shouldDisplay = false;
         }
 
@@ -8546,7 +8546,7 @@ void MainWindow::processCommandActivity() {
 
             // ACKs are the most likely source of items to be overwritten (multiple responses at once)...
             // so don't overwrite those (i.e., print each on a new line)
-            bool shouldOverwrite = (!d.cmd.contains("PING ACK")); /* && isRecentOffset(d.freq);*/
+            bool shouldOverwrite = (!d.cmd.contains("HEARTBEAT ACK")); /* && isRecentOffset(d.freq);*/
 
             if(shouldOverwrite && ui->textEditRX->find(d.utcTimestamp.time().toString(), QTextDocument::FindBackward)){
                 // ... maybe we could delete the last line that had this message on this frequency...
@@ -8588,7 +8588,7 @@ void MainWindow::processCommandActivity() {
 
         // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past ping interval)
         // that way we never get spammed by allcalls at a higher frequency than what we would normally ping
-        if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < m_config.ping()) {
+        if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < m_config.heartbeat()) {
             continue;
         }
 
@@ -8748,9 +8748,9 @@ void MainWindow::processCommandActivity() {
             reply = m_lastTxMessage;
         }
 
-        // PROCESS PING
-        else if (d.cmd == " PING" && ui->heartbeatButton->isChecked()){
-            reply = QString("%1 PING ACK %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
+        // PROCESS HEARTBEAT
+        else if (d.cmd == " HEARTBEAT" && ui->heartbeatButton->isChecked()){
+            reply = QString("%1 HEARTBEAT ACK %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
 
             enqueueHeartbeat(reply);
 
@@ -8762,8 +8762,8 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-        // PROCESS BUFFERED PING REQ QUERY
-        else if (d.cmd == " PING REQ" && ui->heartbeatButton->isChecked()){
+        // PROCESS BUFFERED HEARTBEAT REQ QUERY
+        else if (d.cmd == " HEARTBEAT REQ" && ui->heartbeatButton->isChecked()){
             auto who = d.text;
             if(who.isEmpty()){
                 continue;
@@ -8850,7 +8850,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // do not queue @ALLCALL replies if auto-reply is not checked or it's a ping reply
-        if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains("PING")){
+        if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains("HEARTBEAT")){
             continue;
         }
 
@@ -9029,7 +9029,7 @@ void MainWindow::processTxQueue(){
     // check to see if this is a high priority message, or if we have autoreply enabled, or if this is a ping and the ping button is enabled
     if(message.priority >= PriorityHigh   ||
        (ui->autoReplyButton->isChecked()) ||
-       (ui->heartbeatButton->isChecked() && message.message.contains("PING"))
+       (ui->heartbeatButton->isChecked() && message.message.contains("HEARTBEAT"))
     ){
         // then try to set the frequency...
         setFreqOffsetForRestore(f, true);
@@ -9161,7 +9161,7 @@ void MainWindow::displayBandActivity() {
                     if (!isOffsetSelected && activityAging && item.utcTimestamp.secsTo(now) / 60 >= activityAging) {
                         continue;
                     }
-                    if (!pingEnabled && (item.text.contains(": PING") || item.text.contains("PING ACK"))){
+                    if (!pingEnabled && (item.text.contains(": HEARTBEAT") || item.text.contains("HEARTBEAT ACK"))){
                         // hide pings if we're not pinging.
                         continue;
                     }
@@ -9480,7 +9480,7 @@ void MainWindow::networkMessage(Message const &message)
 
     auto type = message.type();
 
-    if(type == "PING"){
+    if(type == "HEARTBEAT"){
         return;
     }
 

@@ -121,7 +121,7 @@ public:
   void set_spot_to_reporting_networks (bool);
   bool transmit_directed() const;
   bool autoreply_off_at_startup () const;
-  bool ping_anywhere() const;
+  bool heartbeat_anywhere() const;
   bool relay_off() const;
   bool monitor_off_at_startup () const;
   bool monitor_last_used () const;
@@ -135,7 +135,7 @@ public:
   bool miles () const;
   bool quick_call () const;
   bool disable_TX_on_73 () const;
-  int ping () const;
+  int heartbeat () const;
   int watchdog () const;
   bool TX_messages () const;
   bool split_mode () const;
