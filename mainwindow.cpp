@@ -3611,6 +3611,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
             d.snr = decodedtext.snr();
             d.isBuffered = false;
+            d.tdrift = decodedtext.dt();
 
             // if we have any "first" frame, and a buffer is already established, clear it...
             int prevBufferOffset = -1;
@@ -3646,6 +3647,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             cd.freq = decodedtext.frequencyOffset();
             cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
             cd.bits = decodedtext.bits();
+            cd.tdrift = decodedtext.dt();
 
             // Only respond to HEARTBEATS...remember that CQ messages are "Alt" pings
             if(decodedtext.isHeartbeat()){
@@ -3692,6 +3694,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
               cmd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
               cmd.bits = decodedtext.bits();
               cmd.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
+              cmd.tdrift = decodedtext.dt();
 
               // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
               if((Varicode::isCommandBuffered(cmd.cmd) && (cmd.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) || cmd.from == "<....>" || cmd.to == "<....>"){
@@ -4104,7 +4107,7 @@ void MainWindow::guiUpdate()
     // TODO: stop
     if(msgLength==0 and !m_tune) on_stopTxButton_clicked();
 
-    float lateThreshold=(12.6/4.0)/15.0; //0.75;
+    float lateThreshold=((12.6/4.0)-0.5)/15.0; //0.75;
     if(g_iptt==0 and ((m_bTxTime and fTR<lateThreshold and msgLength>0) or m_tune)) {
       //### Allow late starts
       icw[0]=m_ncw;
@@ -6329,6 +6332,7 @@ void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
         {"Frequency Offset", "offset"},
         {"Last heard timestamp", "timestamp"},
         {"SNR", "snr"},
+        {"Time delta", "tdrift"},
     };
 
     if(tableKey == "call"){
@@ -6339,6 +6343,9 @@ void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
         });
     }
 
+    columnKeys.prepend({"Show Column Labels", "labels"});
+
+    bool first = true;
     foreach(auto p, columnKeys){
         auto columnLabel = p.first;
         auto columnKey = p.second;
@@ -6350,6 +6357,11 @@ void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
         connect(a, &QAction::triggered, this, [this, a, tableKey, columnKey](){
             setShowColumn(tableKey, columnKey, a->isChecked());
         });
+
+        if(first){
+            menu->addSeparator();
+            first = false;
+        }
     }
 }
 
@@ -9204,6 +9216,7 @@ void MainWindow::displayBandActivity() {
                 QStringList text;
                 QString age;
                 int snr = 0;
+                float tdrift = 0;
                 int activityAging = m_config.activity_aging();
                 foreach(ActivityDetail item, items) {
 
@@ -9233,6 +9246,7 @@ void MainWindow::displayBandActivity() {
                     text.append(item.text);
                     snr = item.snr;
                     age = since(item.utcTimestamp);
+                    tdrift = item.tdrift;
                 }
 
                 auto joined = text.join("");
@@ -9242,18 +9256,23 @@ void MainWindow::displayBandActivity() {
 
                 ui->tableWidgetRXAll->insertRow(ui->tableWidgetRXAll->rowCount());
                 int row = ui->tableWidgetRXAll->rowCount() - 1;
+                int col = 0;
 
                 auto offsetItem = new QTableWidgetItem(QString("%1").arg(offset));
                 offsetItem->setData(Qt::UserRole, QVariant(offset));
-                ui->tableWidgetRXAll->setItem(row, 0, offsetItem);
+                ui->tableWidgetRXAll->setItem(row, col++, offsetItem);
 
                 auto ageItem = new QTableWidgetItem(QString("(%1)").arg(age));
                 ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-                ui->tableWidgetRXAll->setItem(row, 1, ageItem);
+                ui->tableWidgetRXAll->setItem(row, col++, ageItem);
 
                 auto snrItem = new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(snr)));
                 snrItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-                ui->tableWidgetRXAll->setItem(row, 2, snrItem);
+                ui->tableWidgetRXAll->setItem(row, col++, snrItem);
+
+                auto tdriftItem = new QTableWidgetItem(QString::number(tdrift, 'f', 2));
+                tdriftItem->setData(Qt::UserRole, QVariant(tdrift));
+                ui->tableWidgetRXAll->setItem(row, col++, tdriftItem);
 
                 // align right if eliding...
                 int colWidth = ui->tableWidgetRXAll->columnWidth(3);
@@ -9272,6 +9291,7 @@ void MainWindow::displayBandActivity() {
                     text.last().contains(QRegularExpression {"\\b(CQCQCQ|CQ)\\b"})
                 ){
                     offsetItem->setBackground(QBrush(m_config.color_CQ()));
+                    tdriftItem->setBackground(QBrush(m_config.color_CQ()));
                     ageItem->setBackground(QBrush(m_config.color_CQ()));
                     snrItem->setBackground(QBrush(m_config.color_CQ()));
                     textItem->setBackground(QBrush(m_config.color_CQ()));
@@ -9285,12 +9305,13 @@ void MainWindow::displayBandActivity() {
                     (text.last().contains(Radio::base_callsign(m_config.my_callsign())))
                 ) {
                     offsetItem->setBackground(QBrush(m_config.color_MyCall()));
+                    tdriftItem->setBackground(QBrush(m_config.color_MyCall()));
                     ageItem->setBackground(QBrush(m_config.color_MyCall()));
                     snrItem->setBackground(QBrush(m_config.color_MyCall()));
                     textItem->setBackground(QBrush(m_config.color_MyCall()));
                 }
 
-                ui->tableWidgetRXAll->setItem(row, 3, textItem);
+                ui->tableWidgetRXAll->setItem(row, col++, textItem);
 
                 if (isOffsetSelected) {
                     for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
@@ -9317,15 +9338,20 @@ void MainWindow::displayBandActivity() {
             }
         }
 
+        // Column labels
+        ui->tableWidgetRXAll->horizontalHeader()->setVisible(showColumn("band", "labels"));
+
         // Hide columns
         ui->tableWidgetRXAll->setColumnHidden(0, !showColumn("band", "offset"));
         ui->tableWidgetRXAll->setColumnHidden(1, !showColumn("band", "timestamp"));
         ui->tableWidgetRXAll->setColumnHidden(2, !showColumn("band", "snr"));
+        ui->tableWidgetRXAll->setColumnHidden(3, !showColumn("band", "tdrift"));
 
         // Resize the table columns
         ui->tableWidgetRXAll->resizeColumnToContents(0);
         ui->tableWidgetRXAll->resizeColumnToContents(1);
         ui->tableWidgetRXAll->resizeColumnToContents(2);
+        ui->tableWidgetRXAll->resizeColumnToContents(3);
 
         // Reset the scroll position
         ui->tableWidgetRXAll->verticalScrollBar()->setValue(currentScrollPos);
@@ -9441,6 +9467,7 @@ void MainWindow::displayCallActivity() {
 
             ui->tableWidgetCalls->insertRow(ui->tableWidgetCalls->rowCount());
             int row = ui->tableWidgetCalls->rowCount() - 1;
+            int col = 0;
 
 #if SHOW_THROUGH_CALLS
             QString displayCall = d.through.isEmpty() ? d.call : QString("%1>%2").arg(d.through).arg(d.call);
@@ -9449,17 +9476,19 @@ void MainWindow::displayCallActivity() {
 #endif
             auto displayItem = new QTableWidgetItem(displayCall);
             displayItem->setData(Qt::UserRole, QVariant((d.call)));
-            ui->tableWidgetCalls->setItem(row, 0, displayItem);
-            ui->tableWidgetCalls->setItem(row, 1, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
-            ui->tableWidgetCalls->setItem(row, 2, new QTableWidgetItem(QString("%1").arg(d.freq)));
-            ui->tableWidgetCalls->setItem(row, 3, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
+            ui->tableWidgetCalls->setItem(row, col++, displayItem);
+            ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
+            ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
+            ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(d.freq)));
+            ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString::number(d.tdrift, 'f', 2)));
+
             auto gridItem = new QTableWidgetItem(QString("%1").arg(d.grid.trimmed().left(4)));
             gridItem->setToolTip(d.grid.trimmed());
-            ui->tableWidgetCalls->setItem(row, 4, gridItem);
+            ui->tableWidgetCalls->setItem(row, col++, gridItem);
 
             auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
             distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, 5, distanceItem);
+            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, col++, distanceItem);
 
             if (isCallSelected) {
                 for(int i = 0; i < ui->tableWidgetCalls->columnCount(); i++){
@@ -9485,13 +9514,17 @@ void MainWindow::displayCallActivity() {
             }
         }
 
+        // Column labels
+        ui->tableWidgetCalls->horizontalHeader()->setVisible(showColumn("call", "labels"));
+
         // Hide columns
         ui->tableWidgetCalls->setColumnHidden(0, !showColumn("call", "callsign"));
         ui->tableWidgetCalls->setColumnHidden(1, !showColumn("call", "timestamp"));
         ui->tableWidgetCalls->setColumnHidden(2, !showColumn("call", "offset"));
         ui->tableWidgetCalls->setColumnHidden(3, !showColumn("call", "snr"));
-        ui->tableWidgetCalls->setColumnHidden(4, !showColumn("call", "grid"));
-        ui->tableWidgetCalls->setColumnHidden(5, !showColumn("call", "distance"));
+        ui->tableWidgetCalls->setColumnHidden(4, !showColumn("call", "tdrift"));
+        ui->tableWidgetCalls->setColumnHidden(5, !showColumn("call", "grid"));
+        ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "distance"));
 
         // Resize the table columns
         ui->tableWidgetCalls->resizeColumnToContents(0);
@@ -9499,6 +9532,7 @@ void MainWindow::displayCallActivity() {
         ui->tableWidgetCalls->resizeColumnToContents(2);
         ui->tableWidgetCalls->resizeColumnToContents(3);
         ui->tableWidgetCalls->resizeColumnToContents(4);
+        ui->tableWidgetCalls->resizeColumnToContents(5);
 
         // Reset the scroll position
         ui->tableWidgetCalls->verticalScrollBar()->setValue(currentScrollPos);

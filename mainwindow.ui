@@ -1248,6 +1248,9 @@ background-color: #00ff00;
         <attribute name="horizontalHeaderDefaultSectionSize">
          <number>30</number>
         </attribute>
+        <attribute name="horizontalHeaderHighlightSections">
+         <bool>false</bool>
+        </attribute>
         <attribute name="horizontalHeaderMinimumSectionSize">
          <number>20</number>
         </attribute>
@@ -1270,6 +1273,11 @@ background-color: #00ff00;
         <column>
          <property name="text">
           <string>SNR</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Time Drift</string>
          </property>
         </column>
         <column>
@@ -1395,6 +1403,9 @@ QTextEdit[transmitting=&quot;true&quot;] {
         <attribute name="horizontalHeaderDefaultSectionSize">
          <number>30</number>
         </attribute>
+        <attribute name="horizontalHeaderHighlightSections">
+         <bool>false</bool>
+        </attribute>
         <attribute name="horizontalHeaderMinimumSectionSize">
          <number>20</number>
         </attribute>
@@ -1422,6 +1433,11 @@ QTextEdit[transmitting=&quot;true&quot;] {
         <column>
          <property name="text">
           <string>SNR</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Time Drift</string>
          </property>
         </column>
         <column>

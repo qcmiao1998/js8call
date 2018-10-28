@@ -688,6 +688,7 @@ private:
     QDateTime utcTimestamp;
     int snr;
     int bits;
+    float tdrift;
   };
 
   struct CommandDetail
@@ -704,6 +705,7 @@ private:
     QString grid;
     QString text;
     QString extra;
+    float tdrift;
   };
 
   struct ActivityDetail
@@ -719,6 +721,7 @@ private:
     QDateTime utcTimestamp;
     int snr;
     bool shouldDisplay;
+    float tdrift;
   };
 
   struct MessageBuffer {
