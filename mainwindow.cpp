@@ -1539,8 +1539,7 @@ void MainWindow::on_the_minute ()
 
   if (m_config.watchdog ())
     {
-      ++m_idleMinutes;
-      qDebug() << "idle" << m_idleMinutes << "minutes";
+      incrementIdleTimer();
       update_watchdog_label ();
     }
   else
@@ -2655,6 +2654,8 @@ bool MainWindow::eventFilter (QObject * object, QEvent * event)
       // fall through
     case QEvent::MouseButtonPress:
       // reset the Tx watchdog
+      qDebug() << event;
+      resetIdleTimer();
       tx_watchdog (false);
       break;
 
@@ -10160,6 +10161,18 @@ void MainWindow::remove_child_from_event_filter (QObject * target)
     {
       target->removeEventFilter (this);
     }
+}
+
+void MainWindow::resetIdleTimer(){
+    if(m_idleMinutes){
+      m_idleMinutes = 0;
+      qDebug() << "idle" << m_idleMinutes << "minutes";
+    }
+}
+
+void MainWindow::incrementIdleTimer(){
+    m_idleMinutes++;
+    qDebug() << "increment idle to" << m_idleMinutes << "minutes";
 }
 
 void MainWindow::tx_watchdog (bool triggered)

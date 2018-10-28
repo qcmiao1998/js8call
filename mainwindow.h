@@ -935,6 +935,9 @@ private:
   void add_child_to_event_filter (QObject *);
   void remove_child_from_event_filter (QObject *);
   void setup_status_bar (bool vhf);
+
+  void resetIdleTimer();
+  void incrementIdleTimer();
   void tx_watchdog (bool triggered);
   qint64  nWidgets(QString t);
   void displayWidgets(qint64 n);
