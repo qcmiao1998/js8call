@@ -741,7 +741,8 @@ private:
   QString m_txTextDirtyLastSelectedCall;
   QString m_lastTxMessage;
   QDateTime m_lastTxTime;
-
+  int m_timeDeltaMsMMA;
+  int m_timeDeltaMsMMA_N;
 
   enum Priority {
     PriorityLow    =   10,
@@ -897,6 +898,8 @@ private:
   void markOffsetDirected(int offset, bool isAllCall);
   void clearOffsetDirected(int offset);
   void processActivity(bool force=false);
+  void observeTimeDeltaForAverage(float delta);
+  void resetTimeDeltaAverage();
   void processRxActivity();
   void processCompoundActivity();
   void processBufferedActivity();

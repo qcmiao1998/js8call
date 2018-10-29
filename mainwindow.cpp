@@ -1479,6 +1479,7 @@ void MainWindow::initializeDummyData(){
         cd.ackTimestamp = i == 1 ? dt.addSecs(-900) : QDateTime{};
         cd.utcTimestamp = dt;
         cd.grid = i == 5 ? "J042" : i == 6 ? " FN42FN42FN" : "";
+        cd.tdrift = 0.1*i;
         logCallActivity(cd, false);
 
         ActivityDetail ad = {};
@@ -3667,6 +3668,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                     cmd.grid = cd.grid;
                     cmd.freq = cd.freq;
                     cmd.utcTimestamp = cd.utcTimestamp;
+                    cmd.tdrift = cd.tdrift;
                     m_rxCommandQueue.append(cmd);
                 }
 
@@ -3709,6 +3711,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                     cmdcd.freq = cmd.freq;
                     cmdcd.utcTimestamp = cmd.utcTimestamp;
                     cmdcd.ackTimestamp = cmd.to == m_config.my_callsign() ? cmd.utcTimestamp : QDateTime{};
+                    cmdcd.tdrift = cmd.tdrift;
                     logCallActivity(cmdcd, false);
                 }
 
@@ -3740,7 +3743,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
                   td.snr = snr;
                   td.freq = cmd.freq;
                   td.utcTimestamp = cmd.utcTimestamp;
-                  m_callActivity[relayCall] = td;
+                  td.tdrift = cmd.tdrift;
+                  logCallActivity(td, true);
               }
           }
 #endif
@@ -4972,6 +4976,8 @@ void MainWindow::clearActivity(){
     m_rxActivityQueue.clear();
     m_rxCommandQueue.clear();
     m_lastTxMessage.clear();
+
+    resetTimeDeltaAverage();
 
     clearTableWidget(ui->tableWidgetCalls);
     createAllcallTableRows(ui->tableWidgetCalls, "");
@@ -7074,11 +7080,13 @@ void MainWindow::on_driftSyncEndButton_clicked(){
 
 void MainWindow::on_driftSyncResetButton_clicked(){
     setDrift(0);
+    resetTimeDeltaAverage();
 }
 
 void MainWindow::setDrift(int n){
     DriftingDateTime::setDrift(n);
 
+    qDebug() << qSetRealNumberPrecision(12) << "Average delta:" << m_timeDeltaMsMMA;
     qDebug() << qSetRealNumberPrecision(12) << "Drift milliseconds:" << n;
     qDebug() << qSetRealNumberPrecision(12) << "Clock time:" << QDateTime::currentDateTimeUtc();
     qDebug() << qSetRealNumberPrecision(12) << "Drifted time:" << DriftingDateTime::currentDateTimeUtc();
@@ -8230,6 +8238,25 @@ void MainWindow::processActivity(bool force) {
     m_rxDirty = false;
 }
 
+void MainWindow::observeTimeDeltaForAverage(float delta){
+    // compute average drift
+    if(m_timeDeltaMsMMA_N == 0){
+        m_timeDeltaMsMMA_N++;
+        m_timeDeltaMsMMA = (int)(delta*1000);
+    } else {
+        m_timeDeltaMsMMA_N++;
+        m_timeDeltaMsMMA = (((m_timeDeltaMsMMA_N-1)*m_timeDeltaMsMMA) + (int)(delta*1000))/ min(m_timeDeltaMsMMA_N, 100);
+    }
+
+    // display average
+    ui->driftAvgLabel->setText(QString("Avg RX Drift: %1 ms").arg(m_timeDeltaMsMMA));
+}
+
+void MainWindow::resetTimeDeltaAverage(){
+    m_timeDeltaMsMMA = 0;
+    m_timeDeltaMsMMA_N = 0;
+}
+
 void MainWindow::processRxActivity() {
     if(m_rxActivityQueue.isEmpty()){
         return;
@@ -8239,6 +8266,8 @@ void MainWindow::processRxActivity() {
 
     while (!m_rxActivityQueue.isEmpty()) {
         ActivityDetail d = m_rxActivityQueue.dequeue();
+
+        observeTimeDeltaForAverage(d.tdrift);
 
         // use the actual frequency and check its delta from our current frequency
         // meaning, if our current offset is 1502 and the d.freq is 1492, the delta is <= 10;
@@ -8555,6 +8584,7 @@ void MainWindow::processCommandActivity() {
         cd.bits = d.bits;
         cd.ackTimestamp = d.text.contains("HEARTBEAT ACK") || toMe ? d.utcTimestamp : QDateTime{};
         cd.utcTimestamp = d.utcTimestamp;
+        cd.tdrift = d.tdrift;
         logCallActivity(cd, true);
 
         // we're only responding to allcall, groupcalls, and our callsign at this point, so we'll end after logging the callsigns we've heard
@@ -8788,6 +8818,7 @@ void MainWindow::processCommandActivity() {
                     cd.freq = d.freq;
                     cd.through = d.from;
                     cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+                    cd.tdrift = d.tdrift;
                     logCallActivity(cd, false);
                 }
 
@@ -8881,6 +8912,7 @@ void MainWindow::processCommandActivity() {
                cd.grid = grid;
                cd.snr = d.snr;
                cd.utcTimestamp = d.utcTimestamp;
+               cd.tdrift = d.tdrift;
 
                m_aprsCallCache.remove(cd.call);
                m_aprsCallCache.remove(APRSISClient::replaceCallsignSuffixWithSSID(cd.call, Radio::base_callsign(cd.call)));
@@ -9270,7 +9302,7 @@ void MainWindow::displayBandActivity() {
                 snrItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
                 ui->tableWidgetRXAll->setItem(row, col++, snrItem);
 
-                auto tdriftItem = new QTableWidgetItem(QString::number(tdrift, 'f', 2));
+                auto tdriftItem = new QTableWidgetItem(QString("%1 ms").arg((int)(1000*tdrift)));
                 tdriftItem->setData(Qt::UserRole, QVariant(tdrift));
                 ui->tableWidgetRXAll->setItem(row, col++, tdriftItem);
 
@@ -9480,7 +9512,7 @@ void MainWindow::displayCallActivity() {
             ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
             ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
             ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(d.freq)));
-            ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString::number(d.tdrift, 'f', 2)));
+            ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 ms").arg((int)(1000*d.tdrift))));
 
             auto gridItem = new QTableWidgetItem(QString("%1").arg(d.grid.trimmed().left(4)));
             gridItem->setToolTip(d.grid.trimmed());
