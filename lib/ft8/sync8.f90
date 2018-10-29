@@ -37,17 +37,15 @@ subroutine sync8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
      savg=savg + s(1:NH1,j)                   !Average spectrum
   enddo
   call baseline(savg,nfa,nfb,sbase)
-!  savg=savg/NHSYM
-!  do i=1,NH1
-!     write(51,3051) i*df,savg(i),db(savg(i))
-!3051 format(f10.3,e12.3,f12.3)
-!  enddo
 
   ia=max(1,nint(nfa/df))
   ib=nint(nfb/df)
   nssy=NSPS/NSTEP   ! # steps per symbol
   nfos=NFFT1/NSPS   ! # frequency bin oversampling factor
   jstrt=0.5/tstep
+
+  candidate0=0.
+  k=0
 
   do i=ia,ib
      do j=-JZ,+JZ
@@ -95,20 +93,18 @@ subroutine sync8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   iz=ib-ia+1
   call indexx(red(ia:ib),iz,indx)
   ibase=indx(nint(0.40*iz)) - 1 + ia
+  if(ibase.lt.1) ibase=1
+  if(ibase.gt.nh1) ibase=nh1
   base=red(ibase)
   red=red/base
 
-  candidate0=0.
-  k=0
-  do i=1,200
-     ji=iz+1-1
-     if(ji.eq.0) exit
-     n=ia + indx(ji) - 1
-     if(red(n).lt.syncmin) exit
-     if(k.lt.200) k=k+1
-     candidate0(1,k)=n*df
-     candidate0(2,k)=(jpeak(n)-1)*tstep
-     candidate0(3,k)=red(n)
+  do i=1,min(200,iz)
+    n=ia + indx(iz+1-i) - 1
+    if(red(n).lt.syncmin.or.isnan(red(n)).or.k.eq.200) exit
+    k=k+1
+    candidate0(1,k)=n*df
+    candidate0(2,k)=(jpeak(n)-1)*tstep
+    candidate0(3,k)=red(n)
   enddo
   ncand=k
 
@@ -123,9 +119,6 @@ subroutine sync8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
               if(candidate0(3,i).lt.candidate0(3,j)) candidate0(3,i)=0.
            endif
         enddo
-!        write(*,3001) i,candidate0(1,i-1),candidate0(1,i),candidate0(3,i-1),  &
-!             candidate0(3,i)
-!3001    format(i2,4f8.1)
      endif
   enddo
   
