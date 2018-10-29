@@ -4112,7 +4112,7 @@ void MainWindow::guiUpdate()
     // TODO: stop
     if(msgLength==0 and !m_tune) on_stopTxButton_clicked();
 
-    float lateThreshold=((12.6/4.0)-0.5)/15.0; //0.75;
+    float lateThreshold=2/15.0; // ((12.6/4.0)-0.5)/15.0; //0.75;
     if(g_iptt==0 and ((m_bTxTime and fTR<lateThreshold and msgLength>0) or m_tune)) {
       //### Allow late starts
       icw[0]=m_ncw;
@@ -4121,6 +4121,8 @@ void MainWindow::guiUpdate()
       setXIT (ui->TxFreqSpinBox->value ());
       Q_EMIT m_config.transceiver_ptt (true);            //Assert the PTT
       m_tx_when_ready = true;
+
+      qDebug() << "start threshold" << fTR << lateThreshold;
     }
 
     // TODO: stop
