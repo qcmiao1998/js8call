@@ -837,6 +837,7 @@ private:
   bool m_tx_when_ready;
   bool m_transmitting;
   bool m_tune;
+  bool m_deadAirTone;
   bool m_tx_watchdog;           // true when watchdog triggered
   bool m_block_pwr_tooltip;
   bool m_PwrBandSetOK;

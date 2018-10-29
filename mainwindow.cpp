@@ -3561,16 +3561,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
       DecodedText decodedtext {QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"}), "FT8" == m_mode &&
             ui->cbVHFcontest->isChecked(), m_config.my_grid ()};
 
-      // only display frames that are JS8Call frames (should decrease false decodes by at least 12%)
-      int bits = decodedtext.bits();
-
-      bool bValidFrame = (
-        decodedtext.snr() > -24                                              &&
-        (bits == Varicode::JS8Call                                           ||
-        ((bits & Varicode::JS8CallFirst)    == Varicode::JS8CallFirst)       ||
-        ((bits & Varicode::JS8CallLast)     == Varicode::JS8CallLast)        ||
-        ((bits & Varicode::JS8CallData)     == Varicode::JS8CallData)) // This is unused...so is invalid at this time...
-      );
+      bool bValidFrame = decodedtext.snr() > -24;
 
       qDebug() << "valid" << bValidFrame << "decoded text" << decodedtext.message();
 
@@ -4025,6 +4016,7 @@ void MainWindow::guiUpdate()
   static char msgsent[29];
   static int msgibits;
   double txDuration;
+
   QString rt;
 
   quint64 thisLoop = QDateTime::currentMSecsSinceEpoch();
@@ -4060,7 +4052,7 @@ void MainWindow::guiUpdate()
   // how long is the tx?
   m_bTxTime = (t2p >= tx1) and (t2p < tx2);
 
-  if(m_tune) m_bTxTime=true;                 //"Tune" takes precedence
+  if(m_tune) m_bTxTime=true;                 // "Tune" and tones take precedence
 
   if(m_transmitting or m_auto or m_tune) {
     m_dateTimeLastTX = DriftingDateTime::currentDateTime ();
@@ -4112,7 +4104,20 @@ void MainWindow::guiUpdate()
     // TODO: stop
     if(msgLength==0 and !m_tune) on_stopTxButton_clicked();
 
-    float lateThreshold=2/15.0; // ((12.6/4.0)-0.5)/15.0; //0.75;
+    // 15.0 - 12.6
+    if(fTR > 1.0-(2.4/15.0) && fTR < 1.0){
+        if(!m_deadAirTone){
+            qDebug() << "should start dead air tone";
+            m_deadAirTone = true;
+        }
+    } else {
+        if(m_deadAirTone){
+            qDebug() << "should stop dead air tone";
+            m_deadAirTone = false;
+        }
+    }
+
+    float lateThreshold=(2.5 - m_config.txDelay())/15.0; // 0.75;
     if(g_iptt==0 and ((m_bTxTime and fTR<lateThreshold and msgLength>0) or m_tune)) {
       //### Allow late starts
       icw[0]=m_ncw;
@@ -5422,19 +5427,6 @@ bool MainWindow::prepareNextMessageFrame()
     return false;
   } else {
     ui->nextFreeTextMsg->setText(frame);
-
-    /*
-    int count = m_txFrameCount;
-    int sent = count - m_txFrameQueue.count();
-
-    if(sent == 1){
-        m_i3bit |= Varicode::JS8CallFirst;
-    }
-    if(count == sent){
-        m_i3bit |= Varicode::JS8CallLast;
-    }
-    */
-
     m_i3bit = bits;
 
     updateTxButtonDisplay();
