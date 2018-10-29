@@ -24,6 +24,7 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
   , frameType_(Varicode::FrameUnknown)
   , isHeartbeat_(false)
   , isAlt_(false)
+  , bits_{0}
 {
     if(message_.length() >= 1) {
         message_ = message_.left (21).remove (QRegularExpression {"[<>]"});
@@ -58,14 +59,17 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
         }
     }
 
+    bits_ = bits();
+
     tryUnpack();
 }
 
-DecodedText::DecodedText (QString const& js8callmessage):
+DecodedText::DecodedText (QString const& js8callmessage, int bits):
     frameType_(Varicode::FrameUnknown),
     message_(js8callmessage),
     isHeartbeat_(false),
-    isAlt_(false)
+    isAlt_(false),
+    bits_(bits)
 {
     is_standard_ = QRegularExpression("^(CQ|DE|QRZ)\\s").match(message_).hasMatch();
 
@@ -80,6 +84,10 @@ bool DecodedText::tryUnpack(){
 
     bool unpacked = false;
     if(!unpacked){
+        unpacked = tryUnpackData();
+    }
+
+    if(!unpacked){
         unpacked = tryUnpackHeartbeat();
     }
 
@@ -89,10 +97,6 @@ bool DecodedText::tryUnpack(){
 
     if(!unpacked){
         unpacked = tryUnpackDirected();
-    }
-
-    if(!unpacked){
-        unpacked = tryUnpackData();
     }
 
     return unpacked;
@@ -210,6 +214,10 @@ bool DecodedText::tryUnpackData(){
     // data frames calls will always be 12+ chars and contain no spaces.
     if(m.length() < 12 || m.contains(' ')){
       return false;
+    }
+
+    if((bits_ & Varicode::JS8CallData) != Varicode::JS8CallData){
+        return false;
     }
 
     quint8 type = Varicode::FrameUnknown;

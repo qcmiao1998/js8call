@@ -2204,7 +2204,7 @@ void MainWindow::fastSink(qint64 frames)
          m_config.color_NewCall(),m_config.ppfx());
     m_bDecoded=true;
     if (m_mode != "ISCAT") postDecode (true, decodedtext.string ());
-    writeAllTxt(message);
+    writeAllTxt(message, decodedtext.bits());
     bool stdMsg = decodedtext.report(m_baseCall,
                   Radio::base_callsign(ui->dxCallEntry->text()),m_rptRcvd);
     //if (stdMsg) pskPost (decodedtext);
@@ -3445,7 +3445,7 @@ void::MainWindow::fast_decode_done()
       m_bDecoded=true;
     }
     postDecode (true, decodedtext.string ());
-    writeAllTxt(message);
+    writeAllTxt(message, decodedtext.bits());
 
     if(m_mode=="JT9" or m_mode=="MSK144") {
       // find and extract any report for myCall
@@ -3462,7 +3462,7 @@ void::MainWindow::fast_decode_done()
   m_bFastDone=false;
 }
 
-void MainWindow::writeAllTxt(QString message)
+void MainWindow::writeAllTxt(QString message, int bits)
 {
   // Write decoded text to file "ALL.TXT".
   QFile f {m_config.writeable_data_dir ().absoluteFilePath ("ALL.TXT")};
@@ -3474,7 +3474,7 @@ void MainWindow::writeAllTxt(QString message)
               << m_mode << endl;
           m_RxLog=0;
         }
-        auto dt = DecodedText(message);
+        auto dt = DecodedText(message, bits);
         out << dt.message() << endl;
         f.close();
       } else {
@@ -3569,7 +3569,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         (bits == Varicode::JS8Call                                           ||
         ((bits & Varicode::JS8CallFirst)    == Varicode::JS8CallFirst)       ||
         ((bits & Varicode::JS8CallLast)     == Varicode::JS8CallLast)        ||
-        ((bits & Varicode::JS8CallReserved) == 0 /*Varicode::JS8CallReserved*/)) // This is unused...so is invalid at this time...
+        ((bits & Varicode::JS8CallData)     == Varicode::JS8CallData)) // This is unused...so is invalid at this time...
       );
 
       qDebug() << "valid" << bValidFrame << "decoded text" << decodedtext.message();
@@ -4023,6 +4023,7 @@ void MainWindow::guiUpdate()
   static quint64 lastLoop;
   static char message[29];
   static char msgsent[29];
+  static int msgibits;
   double txDuration;
   QString rt;
 
@@ -4170,11 +4171,12 @@ void MainWindow::guiUpdate()
       char ft8msgbits[75 + 12]; //packed 75 bit ft8 message plus 12-bit CRC
       genft8_(message, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
               const_cast<int *> (itone), 22, 6, 22);
-
+      msgibits = m_i3bit;
       msgsent[22]=0;
     }
 
     m_currentMessage = QString::fromLatin1(msgsent);
+    m_currentMessageBits = msgibits;
     m_bCallingCQ = CALLING == m_QSOProgress
       || m_currentMessage.contains (QRegularExpression {"^(CQ|QRZ) "});
     if(m_mode=="FT8") {
@@ -4322,7 +4324,7 @@ void MainWindow::guiUpdate()
 
     if(m_transmitting) {
       char s[41];
-      auto dt = DecodedText(msgsent);
+      auto dt = DecodedText(msgsent, msgibits);
       sprintf(s,"Tx: %s", dt.message().toLocal8Bit().mid(0, 41).data());
       m_nsendingsh=0;
       if(s[4]==64) m_nsendingsh=1;
@@ -4486,7 +4488,7 @@ void MainWindow::startTx2()
 void MainWindow::stopTx()
 {
   Q_EMIT endTransmitMessage ();
-  auto dt = DecodedText(m_currentMessage.trimmed());
+  auto dt = DecodedText(m_currentMessage.trimmed(), m_currentMessageBits);
   last_tx_label.setText("Last Tx: " + dt.message()); //m_currentMessage.trimmed());
 
   m_btxok = false;
@@ -5301,7 +5303,7 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
 
   QStringList lines;
   foreach(auto frame, frames){
-      auto dt = DecodedText(frame);
+      auto dt = DecodedText(frame.first, frame.second);
       lines.append(dt.message());
   }
 
@@ -5324,9 +5326,9 @@ void MainWindow::resetMessageTransmitQueue(){
   m_txMessageQueue.clear();
 }
 
-QString MainWindow::popMessageFrame(){
+QPair<QString, int> MainWindow::popMessageFrame(){
   if(m_txFrameQueue.isEmpty()){
-      return QString();
+      return QPair<QString, int>{};
   }
   return m_txFrameQueue.dequeue();
 }
@@ -5371,7 +5373,7 @@ int MainWindow::currentFreqOffset(){
     return ui->RxFreqSpinBox->value();
 }
 
-QStringList MainWindow::buildMessageFrames(const QString &text){
+QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text){
     // prepare selected callsign for directed message
     QString selectedCall = callsignSelected();
 
@@ -5395,7 +5397,7 @@ QStringList MainWindow::buildMessageFrames(const QString &text){
 #if 0
     qDebug() << "frames:";
     foreach(auto frame, frames){
-        auto dt = DecodedText(frame);
+        auto dt = DecodedText(frame.frame, frame.bits);
         qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType());
     }
 #endif
@@ -5407,7 +5409,10 @@ bool MainWindow::prepareNextMessageFrame()
 {
   m_i3bit = Varicode::JS8Call;
 
-  QString frame = popMessageFrame();
+  QPair<QString, int> f = popMessageFrame();
+  auto frame = f.first;
+  auto bits = f.second;
+
   if(frame.isEmpty()){
     ui->nextFreeTextMsg->clear();
     updateTxButtonDisplay();
@@ -5416,6 +5421,7 @@ bool MainWindow::prepareNextMessageFrame()
   } else {
     ui->nextFreeTextMsg->setText(frame);
 
+    /*
     int count = m_txFrameCount;
     int sent = count - m_txFrameQueue.count();
 
@@ -5425,6 +5431,9 @@ bool MainWindow::prepareNextMessageFrame()
     if(count == sent){
         m_i3bit |= Varicode::JS8CallLast;
     }
+    */
+
+    m_i3bit = bits;
 
     updateTxButtonDisplay();
 
@@ -8011,8 +8020,8 @@ void MainWindow::refreshTextDisplay(){
 
     QStringList textList;
     qDebug() << "frames:";
-    foreach(auto frame, frames){
-        auto dt = DecodedText(frame);
+    foreach(Frame frame, frames){
+        auto dt = DecodedText(frame.frame, frame.bits);
         qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType());
         textList.append(dt.message());
     }
@@ -8053,14 +8062,16 @@ void MainWindow::refreshTextDisplay(){
     );
 
     connect(t, &BuildMessageFramesThread::finished, t, &QObject::deleteLater);
-    connect(t, &BuildMessageFramesThread::resultReady, this, [this, text](const QStringList frames){
+    connect(t, &BuildMessageFramesThread::resultReady, this, [this, text](QStringList frames, QList<int> bits){
 
         QStringList textList;
         qDebug() << "frames:";
+        int i = 0;
         foreach(auto frame, frames){
-            auto dt = DecodedText(frame);
+            auto dt = DecodedText(frame, bits.at(i));
             qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType());
             textList.append(dt.message());
+            i++;
         }
 
         auto transmitText = textList.join("");
@@ -8389,7 +8400,7 @@ void MainWindow::processCompoundActivity() {
             bits == Varicode::JS8Call                                         ||
             ((bits & Varicode::JS8CallFirst)    == Varicode::JS8CallFirst)    ||
             ((bits & Varicode::JS8CallLast)     == Varicode::JS8CallLast)     ||
-            ((bits & Varicode::JS8CallReserved) == Varicode::JS8CallReserved)
+            ((bits & Varicode::JS8CallData)     == Varicode::JS8CallData)
         );
         if (!validBits) {
             qDebug() << "-> buffer.cmd bits is invalid...skip";
@@ -10346,7 +10357,7 @@ void MainWindow::write_transmit_entry (QString const& file_name)
       QTextStream out(&f);
       auto time = DriftingDateTime::currentDateTimeUtc ();
       time = time.addSecs (-(time.time ().second () % m_TRperiod));
-      auto dt = DecodedText(m_currentMessage);
+      auto dt = DecodedText(m_currentMessage, m_currentMessageBits);
       out << time.toString("yyyy-MM-dd hh:mm:ss")
           << "  Transmitting " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6)
           << " MHz  " << QString(m_modeTx).replace("FT8", "JS8")

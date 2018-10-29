@@ -12,6 +12,7 @@
 #include <QVector>
 #include <QThread>
 
+
 class Varicode
 {
 public:
@@ -20,12 +21,12 @@ public:
         JS8Call          = 0, // [000] <- any other frame of the message
         JS8CallFirst     = 1, // [001] <- the first frame of a message
         JS8CallLast      = 2, // [010] <- the last frame of a message
-        JS8CallReserved  = 4, // [100] <- a reserved flag for future use...
+        JS8CallData      = 4, // [100] <- raw data frame (no frame type header)
     };
 
     enum FrameType {
         FrameUnknown          = 255, // [11111111] <- only used as a sentinel
-        FrameHeartbeat           = 0,   // [000]
+        FrameHeartbeat        = 0,   // [000]
         FrameCompound         = 1,   // [001]
         FrameCompoundDirected = 2,   // [010]
         FrameDirected         = 3,   // [011]
@@ -147,7 +148,7 @@ public:
     static QString packDataMessage(QString const& text, int *n);
     static QString unpackDataMessage(QString const& text, quint8 *pType);
 
-    static QStringList buildMessageFrames(
+    static QList<QPair<QString, int>> buildMessageFrames(
         QString const& mycall,
         //QString const& basecall,
         QString const& mygrid,
@@ -171,7 +172,7 @@ public:
                              QObject *parent=nullptr);
     void run() override;
 signals:
-    void resultReady(const QStringList s);
+    void resultReady(QStringList, QList<int>);
 
 private:
     QString m_mycall;

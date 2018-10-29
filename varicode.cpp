@@ -104,7 +104,7 @@ QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
 QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:HEARTBEAT (ACK|REQ)|AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|SNR[?]|QTC[?]|QTH[?]|GRID[?]|STATUS[?]|(?:(?:ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|QTC|GRID|ACTIVE|IDLE)(?=[ ]|$))|[#> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
-QString optional_num_pattern = QString("(?<num>(?<=SNR|ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
+QString optional_num_pattern = QString("(?<num>(?<=SNR|HEARTBEAT ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
 
 QRegularExpression directed_re("^"                    +
                                callsign_pattern       +
@@ -981,7 +981,7 @@ quint8 Varicode::packCmd(quint8 cmd, quint8 num, bool *pPackedNum){
         // [1][X][6]
         // X = 0 == SNR
         // X = 1 == ACK
-        value = ((1 << 1) | (int)(cmdStr == " ACK")) << 6;
+        value = ((1 << 1) | (int)(cmdStr == " HEARTBEAT ACK")) << 6;
         value = value + (num & ((1<<6)-1));
         if(pPackedNum) *pPackedNum = true;
     } else {
@@ -999,7 +999,7 @@ quint8 Varicode::unpackCmd(quint8 value, quint8 *pNum){
 
         auto cmd = directed_cmds[" SNR"];
         if(value & (1<<6)){
-            cmd = directed_cmds[" ACK"];
+            cmd = directed_cmds[" HEARTBEAT ACK"];
         }
         return cmd;
     } else {
@@ -1459,12 +1459,10 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
 QString packHuffMessage(const QString &input, int *n){
     static const int frameSize = 72;
 
-    QString frame;
+    QString frame = {false};
 
-    // [3][69] = 72
-    QVector<bool> frameDataBits;
-
-    QVector<bool> frameHeaderBits = Varicode::intToBits(Varicode::FrameDataUncompressed, 3);
+    // [1][71] = 72
+    QVector<bool> frameBits = {false};
 
     int i = 0;
 
@@ -1474,6 +1472,7 @@ QString packHuffMessage(const QString &input, int *n){
     for(it = input.constBegin(); it != input.constEnd(); it++){
         auto ch = (*it).toUpper();
         if(!validChars.contains(ch)){
+            if(n) *n = 0;
             return frame;
         }
     }
@@ -1482,32 +1481,28 @@ QString packHuffMessage(const QString &input, int *n){
     foreach(auto pair, Varicode::huffEncode(Varicode::defaultHuffTable(), input)){
         auto charN = pair.first;
         auto charBits = pair.second;
-        if(frameHeaderBits.length() + frameDataBits.length() + charBits.length() < frameSize){
-            frameDataBits += charBits;
+        if(frameBits.length() + charBits.length() < frameSize){
+            frameBits += charBits;
             i += charN;
             continue;
         }
         break;
     }
 
-    QVector<bool> framePadBits;
+    qDebug() << "Huff bits" << frameBits.length() << "chars" << i;
 
-    int pad = frameSize - frameHeaderBits.length() - frameDataBits.length();
+    int pad = frameSize - frameBits.length();
     if(pad){
         // the way we will pad is this...
         // set the bit after the frame to 0 and every bit after that a 1
         // to unpad, seek from the end of the bits until you hit a zero... the rest is the actual frame.
         for(int i = 0; i < pad; i++){
-            framePadBits.append(i == 0 ? (bool)0 : (bool)1);
+            frameBits.append(i == 0 ? (bool)0 : (bool)1);
         }
     }
 
-    qDebug() << "Huff bits" << frameDataBits.length() << "chars" << i;
-
-    QVector<bool> allBits = frameHeaderBits + frameDataBits + framePadBits;
-
-    quint64 value = Varicode::bitsToInt(allBits.constBegin(), 64);
-    quint8 rem = (quint8)Varicode::bitsToInt(allBits.constBegin() + 64, 8);
+    quint64 value = Varicode::bitsToInt(frameBits.constBegin(), 64);
+    quint8 rem = (quint8)Varicode::bitsToInt(frameBits.constBegin() + 64, 8);
     frame = Varicode::pack72bits(value, rem);
 
     if(n) *n = i;
@@ -1520,9 +1515,8 @@ QString packCompressedMessage(const QString &input, int *n){
 
     QString frame;
 
-    QVector<bool> frameBits;
-
-    frameBits.append(Varicode::intToBits(Varicode::FrameDataCompressed, 3));
+    // [1][71] = 72
+    QVector<bool> frameBits = {true};
 
     int i = 0;
     foreach(auto pair, JSC::compress(input)){
@@ -1538,7 +1532,7 @@ QString packCompressedMessage(const QString &input, int *n){
         break;
     }
 
-    qDebug() << "Compressed bits" << frameBits.length() - 3 << "chars" << i;
+    qDebug() << "Compressed bits" << frameBits.length() << "chars" << i;
 
     int pad = frameSize - frameBits.length();
     if(pad){
@@ -1588,25 +1582,25 @@ QString Varicode::unpackDataMessage(const QString &text, quint8 *pType){
     quint64 value = Varicode::unpack72bits(text, &rem);
     auto bits = Varicode::intToBits(value, 64) + Varicode::intToBits(rem, 8);
 
-    quint8 type = Varicode::bitsToInt(bits.mid(0, 3));
+    bool compressed = bits.at(0);
 
     int n = bits.lastIndexOf(0);
-    bits = bits.mid(3, n-3);
+    bits = bits.mid(1, n-1);
 
-    if(type == FrameDataUncompressed){
+    if(compressed){
+        unpacked = JSC::decompress(bits);
+        if(pType) *pType = Varicode::FrameDataCompressed;
+    } else {
         // huff decode the bits (without escapes)
         unpacked = Varicode::huffDecode(Varicode::defaultHuffTable(), bits);
-        if(pType) *pType = type;
-    } else if(type == FrameDataCompressed) {
-        unpacked = JSC::decompress(bits);
-        if(pType) *pType = type;
+        if(pType) *pType = Varicode::FrameDataUncompressed;
     }
 
     return unpacked;
 }
 
 // TODO: remove the dependence on providing all this data?
-QStringList Varicode::buildMessageFrames(
+QList<QPair<QString, int>> Varicode::buildMessageFrames(
     QString const& mycall,
     //QString const& basecall,
     QString const& mygrid,
@@ -1621,7 +1615,7 @@ QStringList Varicode::buildMessageFrames(
 
     bool mycallCompound = Varicode::isCompoundCallsign(mycall);
 
-    QStringList frames;
+    QList<QPair<QString, int>> frames;
 
     foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
         // once we find a directed call, data encode the rest of the line.
@@ -1735,13 +1729,13 @@ QStringList Varicode::buildMessageFrames(
           }
 
           if(useBcn){
-              frames.append(frame);
+              frames.append({ frame, Varicode::JS8Call });
               line = line.mid(l);
           }
 
 #if ALLOW_SEND_COMPOUND
           if(useCmp){
-              frames.append(frame);
+              frames.append({ frame, Varicode::JS8Call });
               line = line.mid(o);
           }
 #endif
@@ -1775,14 +1769,14 @@ QStringList Varicode::buildMessageFrames(
                   QString deCompoundMessage = QString("`%1 %2").arg(mycall).arg(mygrid);
                   QString deCompoundFrame = Varicode::packCompoundMessage(deCompoundMessage, nullptr);
                   if(!deCompoundFrame.isEmpty()){
-                      frames.append(deCompoundFrame);
+                      frames.append({ deCompoundFrame, Varicode::JS8Call });
                   }
 
                   // Followed, by a standard OR compound directed message...
                   QString dirCompoundMessage = QString("`%1%2%3").arg(dirTo).arg(dirCmd).arg(dirNum);
                   QString dirCompoundFrame = Varicode::packCompoundMessage(dirCompoundMessage, nullptr);
                   if(!dirCompoundFrame.isEmpty()){
-                      frames.append(dirCompoundFrame);
+                      frames.append({ dirCompoundFrame, Varicode::JS8Call });
                   }
                   shouldUseStandardFrame = false;
               }
@@ -1790,7 +1784,7 @@ QStringList Varicode::buildMessageFrames(
 
               if(shouldUseStandardFrame) {
                   // otherwise, just send the standard directed frame
-                  frames.append(frame);
+                  frames.append({ frame, Varicode::JS8Call });
               }
 
               line = line.mid(n);
@@ -1818,10 +1812,15 @@ QStringList Varicode::buildMessageFrames(
           }
 
           if(useDat){
-              frames.append(frame);
+              frames.append({ frame, Varicode::JS8CallData });
               line = line.mid(m);
           }
         }
+    }
+
+    if(!frames.isEmpty()){
+        frames.first().second |= Varicode::JS8CallFirst;
+        frames.last().second |= Varicode::JS8CallLast;
     }
 
     return frames;
@@ -1854,5 +1853,12 @@ void BuildMessageFramesThread::run(){
         m_text
     );
 
-    emit resultReady(results);
+    QList<QString> frames;
+    QList<int> bits;
+    foreach(auto pair, results){
+        frames.append(pair.first);
+        bits.append(pair.second);
+    }
+
+    emit resultReady(frames, bits);
 }

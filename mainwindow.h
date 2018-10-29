@@ -155,7 +155,7 @@ public slots:
   void createMessage(QString const& text);
   void createMessageTransmitQueue(QString const& text);
   void resetMessageTransmitQueue();
-  QString popMessageFrame();
+  QPair<QString, int> popMessageFrame();
 protected:
   void keyPressEvent (QKeyEvent *) override;
   void closeEvent(QCloseEvent *) override;
@@ -298,7 +298,7 @@ private slots:
   void on_nextFreeTextMsg_currentTextChanged (QString const&);
   void on_extFreeTextMsgEdit_currentTextChanged (QString const&);
   int currentFreqOffset();
-  QStringList buildMessageFrames(QString const& text);
+  QList<QPair<QString, int>> buildMessageFrames(QString const& text);
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);
   int findFreeFreqOffset(int fmin, int fmax, int bw);
@@ -415,7 +415,7 @@ private:
 
 private:
   void astroUpdate ();
-  void writeAllTxt(QString message);
+  void writeAllTxt(QString message, int bits);
   void hideMenus(bool b);
 
   NetworkAccessManager m_network_manager;
@@ -553,6 +553,7 @@ private:
   bool    m_sentFirst73;
   int     m_currentMessageType;
   QString m_currentMessage;
+  int     m_currentMessageBits;
   int     m_lastMessageType;
   QString m_lastMessageSent;
   bool    m_bShMsgs;
@@ -773,7 +774,7 @@ private:
   QMap<QString, QVariant> m_showColumnsCache; // table column:key -> show boolean
   QMap<QString, QVariant> m_sortCache; // table key -> sort by
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent
-  QQueue<QString> m_txFrameQueue; // frames to be sent
+  QQueue<QPair<QString, int>> m_txFrameQueue; // frames to be sent
   QQueue<ActivityDetail> m_rxActivityQueue; // all rx activity queue
   QQueue<CommandDetail> m_rxCommandQueue; // command queue for processing commands
   QQueue<CallDetail> m_rxCallQueue; // call detail queue for spots to pskreporter

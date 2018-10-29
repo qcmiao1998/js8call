@@ -31,7 +31,7 @@ class DecodedText
 {
 public:
   explicit DecodedText (QString const& message, bool, QString const& my_grid);
-  explicit DecodedText (QString const& js8callmessage);
+  explicit DecodedText (QString const& js8callmessage, int bits);
 
   bool tryUnpack();
   bool tryUnpackHeartbeat();
@@ -109,6 +109,7 @@ private:
   bool contest_mode_;
   QString message_;
   bool is_standard_;
+  int bits_;
 };
 
 #endif // DECODEDTEXT_H
