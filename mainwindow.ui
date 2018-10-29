@@ -1277,12 +1277,12 @@ background-color: #00ff00;
         </column>
         <column>
          <property name="text">
-          <string>Time Drift</string>
+          <string>Rx Drift</string>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>Text</string>
+          <string>Message(s)</string>
          </property>
         </column>
        </widget>
@@ -1437,7 +1437,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
         </column>
         <column>
          <property name="text">
-          <string>Time Drift</string>
+          <string>Rx Drift</string>
          </property>
         </column>
         <column>
