@@ -1459,7 +1459,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
 QString packHuffMessage(const QString &input, int *n){
     static const int frameSize = 72;
 
-    QString frame = {false};
+    QString frame;
 
     // [1][71] = 72
     QVector<bool> frameBits = {false};
