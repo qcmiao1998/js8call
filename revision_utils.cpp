@@ -33,6 +33,8 @@ QString version (bool include_patch)
 
 QString program_title (QString const& revision)
 {
-  QString id {"JS8Call de KN4CRD (v%1)"};
-  return id.arg(QCoreApplication::applicationVersion ());
+  QString id {"%1 DE KN4CRD (v%2)"};
+  id = id.arg(QCoreApplication::applicationName());
+  id = id.arg(QCoreApplication::applicationVersion ());
+  return id;
 }
