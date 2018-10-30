@@ -178,8 +178,8 @@ quint16 nusergrid = nbasegrid + 10;
 quint16 nmaxgrid  = (1<<15)-1;
 
 QMap<QString, quint32> basecalls = {
-    { "<....>",    nbasecall + 1 },  // incomplete callsign
-    { "@ALLCALL",   nbasecall + 2 }, // ALLCALL group
+    { "<....>",    nbasecall + 1 }, // incomplete callsign
+    { "@ALLCALL",  nbasecall + 2 }, // ALLCALL group
 };
 
 QMap<quint32, QString> cqs = {
