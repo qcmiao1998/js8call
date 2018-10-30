@@ -8254,7 +8254,7 @@ void MainWindow::observeTimeDeltaForAverage(float delta){
     }
 
     // display average
-    ui->driftAvgLabel->setText(QString("Avg RX Drift: %1 ms").arg(m_timeDeltaMsMMA));
+    ui->driftAvgLabel->setText(QString("Avg RX TDrift: %1 ms").arg(m_timeDeltaMsMMA));
 }
 
 void MainWindow::resetTimeDeltaAverage(){

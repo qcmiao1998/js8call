@@ -1277,7 +1277,7 @@ background-color: #00ff00;
         </column>
         <column>
          <property name="text">
-          <string>Rx Drift</string>
+          <string>Rx TDrift</string>
          </property>
         </column>
         <column>
@@ -1437,7 +1437,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
         </column>
         <column>
          <property name="text">
-          <string>Rx Drift</string>
+          <string>Rx TDrift</string>
          </property>
         </column>
         <column>
@@ -2050,15 +2050,21 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
            </property>
            <item>
             <widget class="QLabel" name="driftAvgLabel">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="text">
-              <string>Avg RX Drift: 0 ms</string>
+              <string>Avg RX TDrift: 0 ms</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QSpinBox" name="driftSpinBox">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
