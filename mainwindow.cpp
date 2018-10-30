@@ -198,7 +198,7 @@ namespace
 
   QString since(QDateTime time){
       int delta = time.toUTC().secsTo(DriftingDateTime::currentDateTimeUtc());
-      if(delta < 30){
+      if(delta < 15){
           return QString("now");
       }
 
