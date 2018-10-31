@@ -633,23 +633,26 @@ text message.</string>
                   <property name="toolTip">
                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended heartbeat transmissions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                   </property>
+                  <property name="specialValueText">
+                   <string>Disabled</string>
+                  </property>
                   <property name="suffix">
                    <string> minutes</string>
                   </property>
                   <property name="prefix">
-                   <string/>
+                   <string>every </string>
                   </property>
                   <property name="minimum">
-                   <number>5</number>
+                   <number>0</number>
                   </property>
                   <property name="maximum">
                    <number>1440</number>
                   </property>
                   <property name="singleStep">
-                   <number>1</number>
+                   <number>5</number>
                   </property>
                   <property name="value">
-                   <number>15</number>
+                   <number>30</number>
                   </property>
                  </widget>
                 </item>
@@ -676,7 +679,7 @@ text message.</string>
                    <string> minutes</string>
                   </property>
                   <property name="prefix">
-                   <string/>
+                   <string>after </string>
                   </property>
                   <property name="minimum">
                    <number>1</number>

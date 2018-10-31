@@ -4381,7 +4381,22 @@ void MainWindow::guiUpdate()
     ui->labUTC->setText(utc);
 
     auto delta = t.secsTo(m_nextHeartbeat);
-    auto ping = ui->heartbeatButton->isChecked() ? delta > 0 ? QString("%1 s").arg(delta) : "queued!" : m_nextHeartPaused ? "paused" : "disabled";
+    QString ping;
+    if(ui->heartbeatButton->isChecked()){
+        if(heartbeatTimer.isActive()){
+            if(delta > 0){
+                ping = QString("%1 s").arg(delta);
+            } else {
+                ping = "queued!";
+            }
+        } else {
+            ping = "on demand";
+        }
+    } else if (m_nextHeartPaused) {
+        ping = "paused";
+    } else {
+        ping = "disabled";
+    }
     ui->labHeartbeat->setText(QString("Next Heartbeat: %1").arg(ping));
 
     auto callLabel = m_config.my_callsign();
@@ -5497,6 +5512,12 @@ int MainWindow::findFreeFreqOffset(int fmin, int fmax, int bw){
 void MainWindow::scheduleHeartbeat(bool first){
     auto timestamp = DriftingDateTime::currentDateTimeUtc();
     auto orig = timestamp;
+
+    // if we have the heartbeat interval disabled, return early, unless this is a "heartbeat now"
+    if(!m_config.heartbeat() && !first){
+        heartbeatTimer.stop();
+        return;
+    }
 
     // remove milliseconds
     auto t = timestamp.time();
@@ -8838,7 +8859,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS HEARTBEAT
-        else if (d.cmd == " HEARTBEAT" && ui->heartbeatButton->isChecked()){
+        else if (d.cmd == " HEARTBEAT" && ui->heartbeatButton->isChecked() && ui->autoReplyButton->isChecked()){
             reply = QString("%1 HEARTBEAT ACK %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
 
             enqueueHeartbeat(reply);
