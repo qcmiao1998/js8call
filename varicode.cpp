@@ -1654,7 +1654,7 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(
         if(!selectedCall.isEmpty() && !line.startsWith(selectedCall) && !line.startsWith("`")){
             bool lineStartsWithBaseCall = (
                 line.startsWith("@ALLCALL") ||
-                line.startsWith("HEARTBEAT")  ||
+                line.contains("HEARTBEAT")  ||
                 Varicode::startsWithCQ(line)
             );
 
