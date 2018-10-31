@@ -20,6 +20,7 @@ class LogBook
 {
 public:
     void init();
+    bool hasWorkedBefore(const QString &call, const QString &band, const QString &mode);
     void match(/*in*/ const QString call,
               /*out*/ QString &countryName,
                       bool &callWorkedBefore,

@@ -33,19 +33,6 @@ void LogBook::init()
   _log.load();
 
   _setAlreadyWorkedFromLog();
-
-  /*
-    int QSOcount = _log.getCount();
-    int count = _worked.getWorkedCount();
-    qDebug() << QSOcount << "QSOs and" << count << "countries worked in file" << logFilename;
-  */
-
-  //    QString call = "ok1ct";
-  //    QString countryName;
-  //    bool callWorkedBefore,countryWorkedBefore;
-  //    match(/*in*/call, /*out*/ countryName,callWorkedBefore,countryWorkedBefore);
-  //    qDebug() << countryName;
-
 }
 
 
@@ -59,9 +46,12 @@ void LogBook::_setAlreadyWorkedFromLog()
       if (countryName.length() > 0)
         {
           _worked.setAsWorked(countryName);
-          //qDebug() << countryName << " worked " << c;
         }
     }
+}
+
+bool LogBook::hasWorkedBefore(const QString &call, const QString &band, const QString &mode){
+    return _log.match(call, band, mode);
 }
 
 void LogBook::match(/*in*/const QString call,
@@ -71,11 +61,10 @@ void LogBook::match(/*in*/const QString call,
 {
   if (call.length() > 0)
     {
-      QString currentMode = "JT9"; // JT65 == JT9 in ADIF::match()
+      QString currentMode = "";  // match any mode
       QString currentBand = "";  // match any band
       callWorkedBefore = _log.match(call,currentBand,currentMode);
       countryName = _countries.find(call);
-//      qDebug() << "B" << countryName;
 
       if (countryName.length() > 0)  //  country was found
         countryWorkedBefore = _worked.getHasWorked(countryName);
@@ -85,12 +74,10 @@ void LogBook::match(/*in*/const QString call,
           countryWorkedBefore = false;
         }
     }
-  //qDebug() << "Logbook:" << call << ":" << countryName << "Cty B4:" << countryWorkedBefore << "call B4:" << callWorkedBefore;
 }
 
 void LogBook::addAsWorked(const QString call, const QString band, const QString mode, const QString date)
 {
-  //qDebug() << "adding " << call << " as worked";
   _log.add(call,band,mode,date);
   QString countryName = _countries.find(call);
   if (countryName.length() > 0)

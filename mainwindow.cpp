@@ -5686,7 +5686,7 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   if(m_callActivity.contains(call)){
       grid = m_callActivity[call].grid;
   }
-  m_logDlg->initLogQSO (call, grid, m_modeTx == "FT8" ? "JS8" : m_modeTx, m_rptSent, m_rptRcvd,
+  m_logDlg->initLogQSO (call.trimmed(), grid.trimmed(), m_modeTx == "FT8" ? "JS8" : m_modeTx, m_rptSent, m_rptRcvd,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),
                         m_config.my_callsign(), m_config.my_grid(),
                         m_config.log_as_DATA(), m_config.report_in_comments(),
@@ -5701,7 +5701,7 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
                             , QString const& my_call, QString const& my_grid, QByteArray const& ADIF)
 {
   QString date = QSO_date_on.toString("yyyyMMdd");
-  m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), m_modeTx, date);
+  m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), m_modeTx == "FT8" ? "JS8" : m_modeTx, date);
 
 #if 0
   m_messageClient->qso_logged (QSO_date_off, call, grid, dial_freq, mode, rpt_sent, rpt_received, tx_power, comments, name, QSO_date_on, operator_call, my_call, my_grid);
@@ -6119,16 +6119,9 @@ void MainWindow::vhfWarning()
   m_bVHFwarned=true;
 }
 
-void MainWindow::enable_DXCC_entity (bool on)
+void MainWindow::enable_DXCC_entity (bool /*on*/)
 {
-  if (on and !m_mode.startsWith ("WSPR") and m_mode!="Echo") {
-    m_logBook.init();                        // re-read the log and cty.dat files
-//    ui->gridLayout->setColumnStretch(0,55);  // adjust proportions of text displays
-//    ui->gridLayout->setColumnStretch(1,45);
-  } else {
-//    ui->gridLayout->setColumnStretch(0,0);
-//    ui->gridLayout->setColumnStretch(1,0);
-  }
+  m_logBook.init();                        // re-read the log and cty.dat files
   updateGeometry ();
 }
 
@@ -6345,6 +6338,7 @@ void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
     };
 
     if(tableKey == "call"){
+        columnKeys.prepend({"Worked Before Flag", "flag"});
         columnKeys.prepend({"Callsign", "callsign"});
         columnKeys.append({
           {"Grid Locator", "grid"},
@@ -9509,11 +9503,23 @@ void MainWindow::displayCallActivity() {
 #if SHOW_THROUGH_CALLS
             QString displayCall = d.through.isEmpty() ? d.call : QString("%1>%2").arg(d.through).arg(d.call);
 #else
+            // unicode star
             QString displayCall = d.ackTimestamp.isValid() ? QString("\u2605 %1").arg(d.call) : d.call;
 #endif
+
+            QString flag;
+            if(m_logBook.hasWorkedBefore(d.call, "", m_modeTx == "FT8" ? "JS8" : m_modeTx)){
+                // unicode checkmark
+                flag = "\u2713";
+            }
+
             auto displayItem = new QTableWidgetItem(displayCall);
             displayItem->setData(Qt::UserRole, QVariant((d.call)));
             ui->tableWidgetCalls->setItem(row, col++, displayItem);
+
+            auto flagItem = new QTableWidgetItem(flag);
+            flagItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+            ui->tableWidgetCalls->setItem(row, col++, flagItem);
             ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
             ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
             ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(d.freq)));
@@ -9556,12 +9562,13 @@ void MainWindow::displayCallActivity() {
 
         // Hide columns
         ui->tableWidgetCalls->setColumnHidden(0, !showColumn("call", "callsign"));
-        ui->tableWidgetCalls->setColumnHidden(1, !showColumn("call", "timestamp"));
-        ui->tableWidgetCalls->setColumnHidden(2, !showColumn("call", "offset"));
-        ui->tableWidgetCalls->setColumnHidden(3, !showColumn("call", "snr"));
-        ui->tableWidgetCalls->setColumnHidden(4, !showColumn("call", "tdrift"));
-        ui->tableWidgetCalls->setColumnHidden(5, !showColumn("call", "grid"));
-        ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "distance"));
+        ui->tableWidgetCalls->setColumnHidden(1, !showColumn("call", "flag"));
+        ui->tableWidgetCalls->setColumnHidden(2, !showColumn("call", "timestamp"));
+        ui->tableWidgetCalls->setColumnHidden(3, !showColumn("call", "offset"));
+        ui->tableWidgetCalls->setColumnHidden(4, !showColumn("call", "snr"));
+        ui->tableWidgetCalls->setColumnHidden(5, !showColumn("call", "tdrift"));
+        ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "grid"));
+        ui->tableWidgetCalls->setColumnHidden(7, !showColumn("call", "distance"));
 
         // Resize the table columns
         ui->tableWidgetCalls->resizeColumnToContents(0);
@@ -9570,6 +9577,7 @@ void MainWindow::displayCallActivity() {
         ui->tableWidgetCalls->resizeColumnToContents(3);
         ui->tableWidgetCalls->resizeColumnToContents(4);
         ui->tableWidgetCalls->resizeColumnToContents(5);
+        ui->tableWidgetCalls->resizeColumnToContents(6);
 
         // Reset the scroll position
         ui->tableWidgetCalls->verticalScrollBar()->setValue(currentScrollPos);
