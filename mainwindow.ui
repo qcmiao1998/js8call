@@ -2121,7 +2121,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Observe signals in the waterfall and click this to synchronize your time drift with the start of a TX cycle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="text">
-              <string>Sync Time Drift to TX Start</string>
+              <string>Sync Time Drift to Now (TX Start)</string>
              </property>
             </widget>
            </item>
@@ -2137,7 +2137,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Observe signals in the waterfall and click this to synchronize your time drift with the end of a TX cycle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="text">
-              <string>Sync Time Drift to TX End</string>
+              <string>Sync Time Drift to Now (TX End)</string>
              </property>
             </widget>
            </item>
