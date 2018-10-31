@@ -22,9 +22,9 @@ subroutine extractmessage174(decoded,msgreceived,ncrcflag)
   i1Dec8BitBytes(10)=iand(i1Dec8BitBytes(10),128+64+32)
   i1Dec8BitBytes(11)=0
   icrc12=crc12(c_loc(i1Dec8BitBytes),11)          !CRC12 computed from 75 msg bits
-!  icrc12=xor(icrc12, 41) ! TODO: jsherer - could change the crc here
+  icrc12=xor(icrc12, 42) ! TODO: jsherer - could change the crc here
 
-  if(ncrc12.eq.icrc12 .or. sum(decoded(57:87)).eq.0) then  !### Kludge ###
+  if(ncrc12.eq.icrc12) then ! .or. sum(decoded(57:87)).eq.0) then  !### Kludge ###
 ! CRC12 checks out --- unpack 72-bit message
     do ibyte=1,12
       itmp=0
