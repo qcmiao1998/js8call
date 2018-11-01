@@ -93,32 +93,6 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
         n30min=minval(n30fox(1:nfox))
         n30max=maxval(n30fox(1:nfox))
      endif
-     j=0
-     rewind 19
-     if(nfox.eq.0) then
-        endfile 19
-        rewind 19
-     else
-        do i=1,nfox
-           n=n30fox(i)
-           if(n30max-n30fox(i).le.4) then
-              j=j+1
-              c2fox(j)=c2fox(i)
-              g2fox(j)=g2fox(i)
-              nsnrfox(j)=nsnrfox(i)
-              nfreqfox(j)=nfreqfox(i)
-              n30fox(j)=n
-              m=n30max-n
-              if(len(trim(g2fox(j))).eq.4) then
-                 call azdist(mygrid,g2fox(j),0.d0,nAz,nEl,nDmiles,nDkm, &
-                      nHotAz,nHotABetter)
-              else
-                 nDkm=9999
-              endif
-           endif
-        enddo
-        nfox=j
-     endif
      go to 800
   endif
 
