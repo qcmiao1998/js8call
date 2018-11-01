@@ -675,6 +675,9 @@ text message.</string>
                   <property name="toolTip">
                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes before unattended heartbeat transmissions are aborted.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                   </property>
+                  <property name="specialValueText">
+                   <string>Disabled</string>
+                  </property>
                   <property name="suffix">
                    <string> minutes</string>
                   </property>
@@ -682,7 +685,7 @@ text message.</string>
                    <string>after </string>
                   </property>
                   <property name="minimum">
-                   <number>1</number>
+                   <number>0</number>
                   </property>
                   <property name="maximum">
                    <number>1440</number>
@@ -3668,12 +3671,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="TX_mode_button_group"/>
-  <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="TX_mode_button_group"/>
  </buttongroups>
 </ui>
