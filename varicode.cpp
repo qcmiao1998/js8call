@@ -27,6 +27,7 @@
 
 #include "varicode.h"
 #include "jsc.h"
+#include "decodedtext.h"
 
 #include <cmath>
 
@@ -1892,12 +1893,15 @@ void BuildMessageFramesThread::run(){
         m_text
     );
 
-    QList<QString> frames;
-    QList<int> bits;
-    foreach(auto pair, results){
-        frames.append(pair.first);
-        bits.append(pair.second);
+    // TODO: jsherer - we wouldn't normally use decodedtext.h here... but it's useful for computing the actual frames transmitted.
+    QStringList textList;
+    qDebug() << "frames:";
+    foreach(auto frame, results){
+        auto dt = DecodedText(frame.first, frame.second);
+        qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType());
+        textList.append(dt.message());
     }
 
-    emit resultReady(frames, bits);
+    auto transmitText = textList.join("");
+    emit resultReady(transmitText, results.length());
 }

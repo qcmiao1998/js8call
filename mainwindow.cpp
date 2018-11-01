@@ -8544,7 +8544,7 @@ void MainWindow::updateTextDisplay(){
 
 
 #if __APPLE__
-#define USE_SYNC_FRAME_COUNT 1
+#define USE_SYNC_FRAME_COUNT 0
 #else
 #define USE_SYNC_FRAME_COUNT 0
 #endif
@@ -8600,28 +8600,14 @@ void MainWindow::refreshTextDisplay(){
     );
 
     connect(t, &BuildMessageFramesThread::finished, t, &QObject::deleteLater);
-    connect(t, &BuildMessageFramesThread::resultReady, this, [this, text](QStringList frames, QList<int> bits){
-
-        QStringList textList;
-        qDebug() << "frames:";
-        int i = 0;
-        foreach(auto frame, frames){
-            auto dt = DecodedText(frame, bits.at(i));
-            qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType());
-            textList.append(dt.message());
-            i++;
-        }
-
-        auto transmitText = textList.join("");
-        auto count = frames.length();
-
+    connect(t, &BuildMessageFramesThread::resultReady, this, [this, text](QString transmitText, int frames){
         // ugh...i hate these globals
         m_txTextDirtyLastSelectedCall = callsignSelected(true);
         m_txTextDirtyLastText = text;
-        m_txFrameCountEstimate = count;
+        m_txFrameCountEstimate = frames;
         m_txTextDirty = false;
 
-        updateTextStatsDisplay(transmitText, count);
+        updateTextStatsDisplay(transmitText, frames);
         updateTxButtonDisplay();
 
     });

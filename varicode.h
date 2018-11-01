@@ -174,7 +174,7 @@ public:
                              QObject *parent=nullptr);
     void run() override;
 signals:
-    void resultReady(QStringList, QList<int>);
+    void resultReady(QString, int);
 
 private:
     QString m_mycall;
