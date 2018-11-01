@@ -1622,6 +1622,7 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(
     #define ALLOW_SEND_COMPOUND_DIRECTED 1
     #define AUTO_PREPEND_DIRECTED 1
     #define AUTO_REMOVE_MYCALL 1
+    #define AUTO_PREPEND_DIRECTED_ALLOW_TEXT_CALLSIGNS 1
 
     bool mycallCompound = Varicode::isCompoundCallsign(mycall);
 
