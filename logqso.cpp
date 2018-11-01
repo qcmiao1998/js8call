@@ -98,9 +98,9 @@ void LogQSO::accept()
   QString hisCall,hisGrid,mode,rptSent,rptRcvd,dateOn,dateOff,timeOn,timeOff,band,operator_call;
   QString comments,name;
 
-  hisCall=ui->call->text();
-  hisGrid=ui->grid->text();
-  mode=ui->mode->text();
+  hisCall=ui->call->text().toUpper();
+  hisGrid=ui->grid->text().toUpper();
+  mode=ui->mode->text().toUpper();
   rptSent=ui->sent->text();
   rptRcvd=ui->rcvd->text();
   m_dateTimeOn = ui->start_date_time->dateTime ();
