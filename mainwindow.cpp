@@ -8275,6 +8275,9 @@ void MainWindow::observeTimeDeltaForAverage(float delta){
 void MainWindow::resetTimeDeltaAverage(){
     m_timeDeltaMsMMA = 0;
     m_timeDeltaMsMMA_N = 0;
+
+    // observe zero for reset
+    observeTimeDeltaForAverage(0);
 }
 
 void MainWindow::processRxActivity() {
