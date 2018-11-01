@@ -551,7 +551,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_manual {&m_network_manager},
   m_txFrameCount {0},
   m_txTextDirty {false},
-  m_previousFreq {0}
+  m_previousFreq {0},
+  m_txFrameCountEstimate {0},
+  m_txFrameCount {0}
 {
   ui->setupUi(this);
 
@@ -8020,7 +8022,12 @@ void MainWindow::updateTextDisplay(){
     }
 }
 
+
+#if __APPLE__
+#define USE_SYNC_FRAME_COUNT 1
+#else
 #define USE_SYNC_FRAME_COUNT 0
+#endif
 
 void MainWindow::refreshTextDisplay(){
     qDebug() << "refreshing text display...";
