@@ -8025,7 +8025,7 @@ void MainWindow::updateTextDisplay(){
 #if __APPLE__
 #define USE_SYNC_FRAME_COUNT 1
 #else
-#define USE_SYNC_FRAME_COUNT 1
+#define USE_SYNC_FRAME_COUNT 0
 #endif
 
 void MainWindow::refreshTextDisplay(){
