@@ -8859,7 +8859,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS HEARTBEAT
-        else if (d.cmd == " HEARTBEAT" && ui->heartbeatButton->isChecked() && ui->autoReplyButton->isChecked()){
+        else if (d.cmd == " HEARTBEAT" && ui->heartbeatButton->isChecked() && ui->autoReplyButton->isChecked() && !ui->selcalButton->isChecked()){
             reply = QString("%1 HEARTBEAT ACK %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
 
             enqueueHeartbeat(reply);
