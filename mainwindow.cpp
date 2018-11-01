@@ -6358,7 +6358,7 @@ void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
         {"Frequency Offset", "offset"},
         {"Last heard timestamp", "timestamp"},
         {"SNR", "snr"},
-        {"Time delta", "tdrift"},
+        {"RX Time Drift", "tdrift"},
     };
 
     if(tableKey == "call"){
@@ -9596,8 +9596,8 @@ void MainWindow::displayCallActivity() {
         ui->tableWidgetCalls->setColumnHidden(0, !showColumn("call", "callsign"));
         ui->tableWidgetCalls->setColumnHidden(1, !showColumn("call", "flag"));
         ui->tableWidgetCalls->setColumnHidden(2, !showColumn("call", "timestamp"));
-        ui->tableWidgetCalls->setColumnHidden(3, !showColumn("call", "offset"));
-        ui->tableWidgetCalls->setColumnHidden(4, !showColumn("call", "snr"));
+        ui->tableWidgetCalls->setColumnHidden(3, !showColumn("call", "snr"));
+        ui->tableWidgetCalls->setColumnHidden(4, !showColumn("call", "offset"));
         ui->tableWidgetCalls->setColumnHidden(5, !showColumn("call", "tdrift"));
         ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "grid"));
         ui->tableWidgetCalls->setColumnHidden(7, !showColumn("call", "distance"));
