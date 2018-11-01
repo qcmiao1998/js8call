@@ -6245,6 +6245,7 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
     if(sender == ui->tableWidgetRXAll){
         m_bandActivity.clear();
         clearTableWidget(ui->tableWidgetRXAll);
+        resetTimeDeltaAverage();
     }
 
     // TODO: jsherer - abstract this into a tableWidgetCallsReset function
@@ -6252,6 +6253,7 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
         m_callActivity.clear();
         clearTableWidget((ui->tableWidgetCalls));
         createAllcallTableRows(ui->tableWidgetCalls, "");
+        resetTimeDeltaAverage();
     }
 
     if(sender == ui->extFreeTextMsgEdit){
