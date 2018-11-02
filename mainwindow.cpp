@@ -151,6 +151,9 @@ extern "C" {
   void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
+
+#define TEST_FOX_WAVE_GEN 1
+
 const int NEAR_THRESHOLD_RX = 10;
 
 int volatile itone[NUM_ISCAT_SYMBOLS];  //Audio tones for all Tx symbols
@@ -1575,6 +1578,12 @@ void MainWindow::initializeDummyData(){
     displayTextForFreq("HELLO BRAVE  NEW   WORLD    \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
 
     displayActivity(true);
+
+    ui->heartbeatButton->click();
+    QTimer::singleShot(10000, this, [this](){
+         m_idleMinutes = 61;
+         scheduleHeartbeat(true);
+    });
 }
 
 void MainWindow::initialize_fonts ()
@@ -2374,6 +2383,7 @@ void MainWindow::on_menuControl_aboutToShow(){
     ui->actionEnable_Spotting->setChecked(ui->spotButton->isChecked());
     ui->actionEnable_Active->setChecked(ui->activeButton->isChecked());
     ui->actionEnable_Auto_Reply->setChecked(ui->autoReplyButton->isChecked());
+    ui->actionEnable_Heartbeat->setChecked(ui->heartbeatButton->isChecked());
     ui->actionEnable_Selcall->setChecked(ui->selcalButton->isChecked());
 
     QMenu * heartbeatMenu = new QMenu(this->menuBar());
@@ -4491,6 +4501,41 @@ void MainWindow::guiUpdate()
               const_cast<int *> (itone), 22, 6, 22);
       msgibits = m_i3bit;
       msgsent[22]=0;
+
+      if(TEST_FOX_WAVE_GEN) {
+
+        foxcom_.nslots=1;
+
+        foxcom_.nfreq=ui->TxFreqSpinBox->value();
+        if(m_config.split_mode()) foxcom_.nfreq = foxcom_.nfreq - m_XIT;  //Fox Tx freq
+        strncpy(&foxcom_.cmsg[0][0], QString::fromStdString(message).toLatin1(), 12);
+        foxcom_.i3bit[0] = m_i3bit;
+
+        if(!m_txFrameQueue.isEmpty()){
+            auto pair = m_txFrameQueue.dequeue();
+            strncpy(&foxcom_.cmsg[1][0], pair.first.toLatin1(), 12);
+            foxcom_.i3bit[1] = pair.second;
+            foxcom_.nslots++;
+        }
+
+        /*
+        foreach(auto pair, ){
+            int i = foxcom_.nslots;
+
+            strncpy(&foxcom_.cmsg[i][0], pair.first.toLatin1(), 12);
+            foxcom_.i3bit[i] = pair.second;
+
+            foxcom_.nslots++;
+        }
+        count += 4;
+        */
+
+        foxgen_();
+      }
+
+
+
+
     }
 
     m_currentMessage = QString::fromLatin1(msgsent);
@@ -5547,6 +5592,7 @@ void MainWindow::enqueueMessage(int priority, QString message, int freq, Callbac
 
 void MainWindow::enqueueHeartbeat(QString message){
     m_txHeartbeatQueue.enqueue(message);
+    scheduleHeartbeat(true);
 }
 
 void MainWindow::resetMessage(){
@@ -5839,6 +5885,7 @@ int MainWindow::findFreeFreqOffset(int fmin, int fmax, int bw){
 // schedulePing
 void MainWindow::scheduleHeartbeat(bool first){
     auto timestamp = DriftingDateTime::currentDateTimeUtc();
+    auto orig = timestamp;
 
     // if we have the heartbeat interval disabled, return early, unless this is a "heartbeat now"
     if(!m_config.heartbeat() && !first){
@@ -5874,6 +5921,7 @@ void MainWindow::scheduleHeartbeat(bool first){
 
 // pausePing
 void MainWindow::pauseHeartbeat(){
+    ui->heartbeatButton->setChecked(false);
     m_nextHeartPaused = true;
 
     if(heartbeatTimer.isActive()){
@@ -5883,6 +5931,7 @@ void MainWindow::pauseHeartbeat(){
 
 // unpausePing
 void MainWindow::unpauseHeartbeat(){
+    ui->heartbeatButton->setChecked(true);
     scheduleHeartbeat(false);
 }
 
@@ -6088,6 +6137,7 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
   m_logBook.init();
 
   if (m_config.clear_callsign ()){
+      clearDX ();
       clearCallsignSelected();
   }
 
@@ -8040,6 +8090,9 @@ void MainWindow::transmit (double snr)
     if(m_config.x2ToneSpacing()) toneSpacing=2*12000.0/1920.0;
     if(m_config.x4ToneSpacing()) toneSpacing=4*12000.0/1920.0;
     if(m_config.bFox() and !m_tune) toneSpacing=-1;
+
+    if(TEST_FOX_WAVE_GEN && !m_tune) toneSpacing=-1;
+
     Q_EMIT sendMessage (NUM_FT8_SYMBOLS,
            1920.0, ui->TxFreqSpinBox->value () - m_XIT,
            toneSpacing, m_soundOutput, m_config.audio_output_channel (),
@@ -8615,7 +8668,11 @@ void MainWindow::refreshTextDisplay(){
         // ugh...i hate these globals
         m_txTextDirtyLastSelectedCall = callsignSelected(true);
         m_txTextDirtyLastText = text;
+#if TEST_FOX_WAVE_GEN
+        m_txFrameCountEstimate = (int)ceil(float(frames)/2.0);
+#else
         m_txFrameCountEstimate = frames;
+#endif
         m_txTextDirty = false;
 
         updateTextStatsDisplay(transmitText, frames);
@@ -8643,11 +8700,15 @@ void MainWindow::updateTxButtonDisplay(){
     // update transmit button
     if(m_tune || m_transmitting || m_txFrameCount > 0){
         int count = m_txFrameCount;
-        int sent = count - m_txFrameQueue.count();
+//#if TEST_FOX_WAVE_GEN
+//    count = qMax(1, (int)ceil(float(count)/4.0));
+//#endif
+        int sent = count - (int)ceil(float(m_txFrameQueue.count())/4.0);
+
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("Sending (%1/%2)").arg(sent).arg(count));
         ui->startTxButton->setEnabled(false);
     } else {
-        ui->startTxButton->setText(m_txFrameCountEstimate <= 0 ? QString("Send") : QString("Send (%1)").arg(m_txFrameCountEstimate));
+        ui->startTxButton->setText(m_txFrameCountEstimate <= 0 ? QString("Send") : QString("Turbo Send (%1)").arg(m_txFrameCountEstimate));
         ui->startTxButton->setEnabled(m_txFrameCountEstimate > 0 && ensureSelcalCallsignSelected(false));
     }
 }

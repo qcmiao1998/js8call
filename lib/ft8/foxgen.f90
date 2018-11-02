@@ -48,50 +48,50 @@ subroutine foxgen()
 
   do n=1,nslots
      i3b=i3bit(n)
-     if(i3b.eq.0) then
-        msg=cmsg(n)(1:22)                     !Standard FT8 message
-     else
-        i1=index(cmsg(n),' ')                 !Special Fox message
-        i2=index(cmsg(n),';')
-        i3=index(cmsg(n),'<')
-        i4=index(cmsg(n),'>')
-        msg=cmsg(n)(1:i1)//cmsg(n)(i2+1:i3-2)//'                   '
-        read(cmsg(n)(i4+2:i4+4),*) irpt
-     endif
-     call genft8(msg,mygrid,bcontest,0,msgsent,msgbits,itone)
+     !if(i3b.eq.0) then
+        msg=cmsg(n)(1:12)                     !Standard FT8 message
+     !else
+     !   i1=index(cmsg(n),' ')                 !Special Fox message
+     !   i2=index(cmsg(n),';')
+     !   i3=index(cmsg(n),'<')
+     !   i4=index(cmsg(n),'>')
+     !   msg=cmsg(n)(1:i1)//cmsg(n)(i2+1:i3-2)//'                   '
+     !   read(cmsg(n)(i4+2:i4+4),*) irpt
+     !endif
+     call genft8(msg,mygrid,bcontest,i3b,msgsent,msgbits,itone)
 !     print*,'Foxgen:',n,cmsg(n),msgsent
 
-     if(i3b.eq.1) then
-        icrc10=crc10(c_loc(mycall),12)
-        nrpt=irpt+30
-        write(cbits,1001) msgbits(1:56),icrc10,nrpt,i3b,0
-1001    format(56b1.1,b10.10,b6.6,b3.3,b12.12)
-        read(cbits,1002) msgbits
-1002    format(87i1)
-
-        cb88=cbits//'0'
-        read(cb88,1003) i1Msg8BitBytes(1:11)
-1003    format(11b8)
-        icrc12=crc12(c_loc(i1Msg8BitBytes),11)
-!        icrc12=xor(icrc12, 41) ! TODO: jsherer - could change the crc here
-
-        write(cbits,1001) msgbits(1:56),icrc10,nrpt,i3b,icrc12
-        read(cbits,1002) msgbits
-
-        call encode174(msgbits,codeword)      !Encode the test message
-        
-! Message structure: S7 D29 S7 D29 S7
-        itone(1:7)=icos7
-        itone(36+1:36+7)=icos7
-        itone(NN-6:NN)=icos7
-        k=7
-        do j=1,ND
-           i=3*j -2
-           k=k+1
-           if(j.eq.30) k=k+7
-           itone(k)=codeword(i)*4 + codeword(i+1)*2 + codeword(i+2)
-        enddo
-     endif
+!!      if(i3b.eq.1) then
+!!         icrc10=crc10(c_loc(mycall),12)
+!!         nrpt=irpt+30
+!!         write(cbits,1001) msgbits(1:56),icrc10,nrpt,i3b,0
+!! 1001    format(56b1.1,b10.10,b6.6,b3.3,b12.12)
+!!         read(cbits,1002) msgbits
+!! 1002    format(87i1)
+!! 
+!!         cb88=cbits//'0'
+!!         read(cb88,1003) i1Msg8BitBytes(1:11)
+!! 1003    format(11b8)
+!!         icrc12=crc12(c_loc(i1Msg8BitBytes),11)
+!! !        icrc12=xor(icrc12, 41) ! TODO: jsherer - could change the crc here
+!! 
+!!         write(cbits,1001) msgbits(1:56),icrc10,nrpt,i3b,icrc12
+!!         read(cbits,1002) msgbits
+!! 
+!!         call encode174(msgbits,codeword)      !Encode the test message
+!!         
+!! ! Message structure: S7 D29 S7 D29 S7
+!!         itone(1:7)=icos7
+!!         itone(36+1:36+7)=icos7
+!!         itone(NN-6:NN)=icos7
+!!         k=7
+!!         do j=1,ND
+!!            i=3*j -2
+!!            k=k+1
+!!            if(j.eq.30) k=k+7
+!!            itone(k)=codeword(i)*4 + codeword(i+1)*2 + codeword(i+2)
+!!         enddo
+!!      endif
      
 ! Make copies of itone() and msgbits() for ft8sim
      itone2=itone
