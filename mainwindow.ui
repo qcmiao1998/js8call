@@ -1422,7 +1422,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
         </column>
         <column>
          <property name="text">
-          <string/>
+          <string>✓</string>
          </property>
          <property name="textAlignment">
           <set>AlignCenter</set>
