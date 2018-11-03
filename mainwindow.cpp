@@ -4512,30 +4512,13 @@ void MainWindow::guiUpdate()
         foxcom_.i3bit[0] = m_i3bit;
 
         if(!m_txFrameQueue.isEmpty()){
-            auto pair = m_txFrameQueue.dequeue();
-            strncpy(&foxcom_.cmsg[1][0], pair.first.toLatin1(), 12);
-            foxcom_.i3bit[1] = pair.second;
-            foxcom_.nslots++;
+        auto pair = m_txFrameQueue.dequeue();
+        strncpy(&foxcom_.cmsg[1][0], pair.first.toLatin1(), 12);
+        foxcom_.i3bit[1] = pair.second;
         }
-
-        /*
-        foreach(auto pair, ){
-            int i = foxcom_.nslots;
-
-            strncpy(&foxcom_.cmsg[i][0], pair.first.toLatin1(), 12);
-            foxcom_.i3bit[i] = pair.second;
-
-            foxcom_.nslots++;
-        }
-        count += 4;
-        */
 
         foxgen_();
       }
-
-
-
-
     }
 
     m_currentMessage = QString::fromLatin1(msgsent);
@@ -8090,7 +8073,6 @@ void MainWindow::transmit (double snr)
     if(m_config.x2ToneSpacing()) toneSpacing=2*12000.0/1920.0;
     if(m_config.x4ToneSpacing()) toneSpacing=4*12000.0/1920.0;
     if(m_config.bFox() and !m_tune) toneSpacing=-1;
-
     if(TEST_FOX_WAVE_GEN && !m_tune) toneSpacing=-1;
 
     Q_EMIT sendMessage (NUM_FT8_SYMBOLS,
@@ -8700,9 +8682,9 @@ void MainWindow::updateTxButtonDisplay(){
     // update transmit button
     if(m_tune || m_transmitting || m_txFrameCount > 0){
         int count = m_txFrameCount;
-//#if TEST_FOX_WAVE_GEN
-//    count = qMax(1, (int)ceil(float(count)/4.0));
-//#endif
+#if TEST_FOX_WAVE_GEN
+    count = qMax(1, (int)ceil(float(count)/4.0));
+#endif
         int sent = count - (int)ceil(float(m_txFrameQueue.count())/4.0);
 
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("Sending (%1/%2)").arg(sent).arg(count));
