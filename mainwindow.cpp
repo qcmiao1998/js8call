@@ -5743,7 +5743,10 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
 
   clearCallsignSelected();
 
+  m_logBook.init();
+
   if (m_config.clear_DX () and !m_config.bHound()) clearDX ();
+
   m_dateTimeQSOOn = QDateTime {};
 }
 
@@ -6032,6 +6035,8 @@ void MainWindow::on_actionErase_js8call_log_adi_triggered()
   if(ret==MessageBox::Yes) {
     QFile f {m_config.writeable_data_dir ().absoluteFilePath ("js8call_log.adi")};
     f.remove();
+
+    m_logBook.init();
   }
 }
 
