@@ -1445,6 +1445,9 @@ void MainWindow::initializeDummyData(){
         return;
     }
 
+    // auto d = DecodedText("h+vWp6mRPprH", 6);
+    // qDebug() << d.message() << buildMessageFrames(d.message());
+
     // qDebug() << Varicode::isValidCallsign("@GROUP1", nullptr);
     // qDebug() << Varicode::packAlphaNumeric50("VE7/KN4CRD");
     // qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("VE7/KN4CRD"));
@@ -3549,14 +3552,6 @@ void MainWindow::readFromStdout()                             //readFromStdout
         MessageBox::warning_message (this, tr ("File Open Error")
                                      , tr ("Cannot open \"%1\" for append: %2")
                                      .arg (f.fileName ()).arg (f.errorString ()));
-      }
-      if (m_config.insert_blank () && m_blankLine && !m_config.bFox()) {
-        QString band;
-        if((DriftingDateTime::currentMSecsSinceEpoch() / 1000 - m_secBandChanged) > 4*m_TRperiod/4) {
-          band = ' ' + m_config.bands ()->find (m_freqNominal);
-        }
-        ui->decodedTextBrowser->insertLineSpacer (band.rightJustified  (40, '-'));
-        m_blankLine = false;
       }
 
       DecodedText decodedtext {QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"}), "FT8" == m_mode &&

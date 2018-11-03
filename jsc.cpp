@@ -107,17 +107,23 @@ QString JSC::decompress(Codeword const& bitvec){
 
     QList<quint64> bytes;
     QList<int> separators;
-    auto iter = bitvec.begin();
-    while(iter != bitvec.end()){
-        quint64 byte = Varicode::bitsToInt(iter, 4);
-        iter += 4;
+
+    int i = 0;
+    int count = bitvec.count();
+    while(i < count){
+        auto b = bitvec.mid(i, 4);
+        if(b.length() != 4){
+            break;
+        }
+        quint64 byte = Varicode::bitsToInt(b);
         bytes.append(byte);
+        i += 4;
 
         if(byte < s){
-            if(*iter){
+            if(count - i > 0 && bitvec.at(i)){
                 separators.append(bytes.length()-1);
             }
-            iter += 1;
+            i += 1;
         }
     }
 
