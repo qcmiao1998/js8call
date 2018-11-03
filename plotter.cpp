@@ -9,6 +9,7 @@
 #include "DriftingDateTime.h"
 
 #define MAX_SCREENSIZE 2048
+#define TEST_FOX_WAVE_GEN 1
 
 extern "C" {
   void flat4_(float swide[], int* iz, int* nflatten);
@@ -587,6 +588,9 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   if(m_mode=="FT8"){
       int fwidth=XfromFreq(m_rxFreq+bw)-XfromFreq(m_rxFreq);
+#if TEST_FOX_WAVE_GEN
+      int offset=XfromFreq(m_rxFreq+bw+10)-XfromFreq(m_rxFreq+bw);
+#endif
       QPainter overPainter(&m_DialOverlayPixmap);
       overPainter.initFrom(this);
       overPainter.setCompositionMode(QPainter::CompositionMode_Source);
@@ -595,10 +599,18 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       overPainter.setPen(thinRed);
       overPainter.drawLine(0, 30, 0, m_h);
       overPainter.drawLine(fwidth+1, 30, fwidth+1, m_h);
+#if TEST_FOX_WAVE_GEN
+      overPainter.drawLine(offset+fwidth+1, 30, offset+fwidth+1, m_h);
+      overPainter.drawLine(offset+2*fwidth+1, 30, offset+2*fwidth+1, m_h);
+#endif
 
       overPainter.setPen(penRed);
       overPainter.drawLine(0, 26, fwidth, 26);
       overPainter.drawLine(0, 28, fwidth, 28);
+#if TEST_FOX_WAVE_GEN
+      overPainter.drawLine(offset+fwidth, 26, offset+2*fwidth, 26);
+      overPainter.drawLine(offset+fwidth, 28, offset+2*fwidth, 28);
+#endif
 
       QPainter hoverPainter(&m_HoverOverlayPixmap);
       hoverPainter.initFrom(this);
@@ -607,6 +619,10 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       hoverPainter.setPen(QPen(Qt::white));
       hoverPainter.drawLine(0, 30, 0, m_h);
       hoverPainter.drawLine(fwidth+1, 30, fwidth+1, m_h);
+#if TEST_FOX_WAVE_GEN
+      hoverPainter.drawLine(offset+fwidth+1, 30, offset+fwidth+1, m_h);
+      hoverPainter.drawLine(offset+2*fwidth+1, 30, offset+2*fwidth+1, m_h);
+#endif
 
 #if DRAW_FREQ_OVERLAY
       int f = FreqfromX(m_lastMouseX);

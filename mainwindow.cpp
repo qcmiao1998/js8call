@@ -4512,9 +4512,10 @@ void MainWindow::guiUpdate()
         foxcom_.i3bit[0] = m_i3bit;
 
         if(!m_txFrameQueue.isEmpty()){
-        auto pair = m_txFrameQueue.dequeue();
-        strncpy(&foxcom_.cmsg[1][0], pair.first.toLatin1(), 12);
-        foxcom_.i3bit[1] = pair.second;
+            auto pair = m_txFrameQueue.dequeue();
+            strncpy(&foxcom_.cmsg[1][0], pair.first.toLatin1(), 12);
+            foxcom_.i3bit[1] = pair.second;
+            foxcom_.nslots += 1;
         }
 
         foxgen_();
@@ -8683,11 +8684,11 @@ void MainWindow::updateTxButtonDisplay(){
     if(m_tune || m_transmitting || m_txFrameCount > 0){
         int count = m_txFrameCount;
 #if TEST_FOX_WAVE_GEN
-    count = qMax(1, (int)ceil(float(count)/4.0));
+    count = qMax(1, (int)ceil(float(count)/2.0));
 #endif
-        int sent = count - (int)ceil(float(m_txFrameQueue.count())/4.0);
+        int sent = count - (int)ceil(float(m_txFrameQueue.count())/2.0);
 
-        ui->startTxButton->setText(m_tune ? "Tuning" : QString("Sending (%1/%2)").arg(sent).arg(count));
+        ui->startTxButton->setText(m_tune ? "Tuning" : QString("Turboing (%1/%2)").arg(sent).arg(count));
         ui->startTxButton->setEnabled(false);
     } else {
         ui->startTxButton->setText(m_txFrameCountEstimate <= 0 ? QString("Send") : QString("Turbo Send (%1)").arg(m_txFrameCountEstimate));
