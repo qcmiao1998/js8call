@@ -117,13 +117,13 @@ subroutine foxgen()
 !  call plotspec(1,wave)          !Plot the spectrum
 
 ! Apply compression
-!  rms=sqrt(dot_product(wave,wave)/kz)
-!  wave=wave/rms
-!  do i=1,NWAVE
-!     wave(i)=h1(wave(i))
-!  enddo
-!  peak2=maxval(abs(wave))
-!  wave=wave/peak2
+  rms=sqrt(dot_product(wave,wave)/kz)
+  wave=wave/rms
+  do i=1,NWAVE
+     wave(i)=h1(wave(i))
+  enddo
+  peak2=maxval(abs(wave))
+  wave=wave/peak2
   
 !  call plotspec(2,wave)          !Plot the spectrum
 
