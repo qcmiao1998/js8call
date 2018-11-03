@@ -8962,12 +8962,18 @@ void MainWindow::processCommandActivity() {
         }
 #endif
 
+        // well, if there's no reply, don't do anything...
         if (reply.isEmpty()) {
             continue;
         }
 
         // do not queue @ALLCALL replies if auto-reply is not checked or it's a ping reply
         if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains("HEARTBEAT")){
+            continue;
+        }
+
+        // do not queue for reply if there's text in the window
+        if(!ui->extFreeTextMsgEdit->toPlainText().isEmpty()){
             continue;
         }
 
