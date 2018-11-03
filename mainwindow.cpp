@@ -6358,7 +6358,7 @@ void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
         {"Frequency Offset", "offset"},
         {"Last heard timestamp", "timestamp"},
         {"SNR", "snr"},
-        {"RX Time Drift", "tdrift"},
+        {"Time Delta", "tdrift"},
     };
 
     QMap<QString, bool> defaultOverride = {
@@ -8289,7 +8289,7 @@ void MainWindow::observeTimeDeltaForAverage(float delta){
     }
 
     // display average
-    ui->driftAvgLabel->setText(QString("Avg RX TDrift: %1 ms").arg(m_timeDeltaMsMMA));
+    ui->driftAvgLabel->setText(QString("Avg Time Delta: %1 ms").arg(m_timeDeltaMsMMA));
 }
 
 void MainWindow::resetTimeDeltaAverage(){
