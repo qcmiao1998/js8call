@@ -271,7 +271,7 @@ private slots:
   void on_qthMacroButton_clicked();
   void on_qtcMacroButton_clicked();
   void setShowColumn(QString tableKey, QString columnKey, bool value);
-  bool showColumn(QString tableKey, QString columnKey);
+  bool showColumn(QString tableKey, QString columnKey, bool default_=true);
   void buildShowColumnsMenu(QMenu *menu, QString tableKey);
   void setSortBy(QString key, QString value);
   QString getSortBy(QString key, QString defaultValue);

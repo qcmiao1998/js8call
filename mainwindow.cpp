@@ -6349,8 +6349,8 @@ void MainWindow::setShowColumn(QString tableKey, QString columnKey, bool value){
     displayCallActivity();
 }
 
-bool MainWindow::showColumn(QString tableKey, QString columnKey){
-    return m_showColumnsCache.value(tableKey + columnKey, QVariant(true)).toBool();
+bool MainWindow::showColumn(QString tableKey, QString columnKey, bool default_){
+    return m_showColumnsCache.value(tableKey + columnKey, QVariant(default_)).toBool();
 }
 
 void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
@@ -6359,6 +6359,12 @@ void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
         {"Last heard timestamp", "timestamp"},
         {"SNR", "snr"},
         {"RX Time Drift", "tdrift"},
+    };
+
+    QMap<QString, bool> defaultOverride = {
+        {"tdrift", false},
+        {"grid", false},
+        {"distance", false}
     };
 
     if(tableKey == "call"){
@@ -6379,7 +6385,13 @@ void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
 
         auto a = menu->addAction(columnLabel);
         a->setCheckable(true);
-        a->setChecked(showColumn(tableKey, columnKey));
+
+
+        bool showByDefault = true;
+        if(defaultOverride.contains(columnKey)){
+            showByDefault = defaultOverride[columnKey];
+        }
+        a->setChecked(showColumn(tableKey, columnKey, showByDefault));
 
         connect(a, &QAction::triggered, this, [this, a, tableKey, columnKey](){
             setShowColumn(tableKey, columnKey, a->isChecked());
@@ -9414,7 +9426,7 @@ void MainWindow::displayBandActivity() {
         ui->tableWidgetRXAll->setColumnHidden(0, !showColumn("band", "offset"));
         ui->tableWidgetRXAll->setColumnHidden(1, !showColumn("band", "timestamp"));
         ui->tableWidgetRXAll->setColumnHidden(2, !showColumn("band", "snr"));
-        ui->tableWidgetRXAll->setColumnHidden(3, !showColumn("band", "tdrift"));
+        ui->tableWidgetRXAll->setColumnHidden(3, !showColumn("band", "tdrift", false));
 
         // Resize the table columns
         ui->tableWidgetRXAll->resizeColumnToContents(0);
@@ -9604,9 +9616,9 @@ void MainWindow::displayCallActivity() {
         ui->tableWidgetCalls->setColumnHidden(2, !showColumn("call", "timestamp"));
         ui->tableWidgetCalls->setColumnHidden(3, !showColumn("call", "snr"));
         ui->tableWidgetCalls->setColumnHidden(4, !showColumn("call", "offset"));
-        ui->tableWidgetCalls->setColumnHidden(5, !showColumn("call", "tdrift"));
-        ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "grid"));
-        ui->tableWidgetCalls->setColumnHidden(7, !showColumn("call", "distance"));
+        ui->tableWidgetCalls->setColumnHidden(5, !showColumn("call", "tdrift", false));
+        ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "grid", false));
+        ui->tableWidgetCalls->setColumnHidden(7, !showColumn("call", "distance", false));
 
         // Resize the table columns
         ui->tableWidgetCalls->resizeColumnToContents(0);
