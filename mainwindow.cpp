@@ -1448,7 +1448,7 @@ void MainWindow::initializeDummyData(){
     auto d = DecodedText("h+vWp6mRPprH", 6);
     qDebug() << d.message() << buildMessageFrames(d.message());
 
-    auto d = DecodedText("bYG4CKYT0cKG", 7);
+    d = DecodedText("bYG4CKYT0cKG", 7);
     qDebug() << d.message();
 
     // qDebug() << Varicode::isValidCallsign("@GROUP1", nullptr);
@@ -8747,7 +8747,7 @@ void MainWindow::processCommandActivity() {
                 continue;
             }
 
-            reply = QString("%1 QTH %2").arg(d.from).arg(qth);
+            reply = QString("%1 QTH %2").arg(d.from).arg(replaceMacros(qth, buildMacroValues(), true));
         }
 
         // QUERIED ACTIVE
@@ -8771,7 +8771,11 @@ void MainWindow::processCommandActivity() {
 
         // QUERIED STATION MESSAGE
         else if (d.cmd == " QTC?" && !isAllCall) {
-            reply = QString("%1 QTC %2").arg(d.from).arg(m_config.my_station());
+            QString qtc = m_config.my_station();
+            if(qtc.isEmpty()) {
+                continue;
+            }
+            reply = QString("%1 QTC %2").arg(d.from).arg(replaceMacros(qtc, buildMacroValues(), true));
         }
 
 #if ALLOW_STATIONS_HEARD
