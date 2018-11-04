@@ -1445,8 +1445,11 @@ void MainWindow::initializeDummyData(){
         return;
     }
 
-    // auto d = DecodedText("h+vWp6mRPprH", 6);
-    // qDebug() << d.message() << buildMessageFrames(d.message());
+    auto d = DecodedText("h+vWp6mRPprH", 6);
+    qDebug() << d.message() << buildMessageFrames(d.message());
+
+    auto d = DecodedText("bYG4CKYT0cKG", 7);
+    qDebug() << d.message();
 
     // qDebug() << Varicode::isValidCallsign("@GROUP1", nullptr);
     // qDebug() << Varicode::packAlphaNumeric50("VE7/KN4CRD");

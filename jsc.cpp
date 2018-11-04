@@ -137,8 +137,14 @@ QString JSC::decompress(Codeword const& bitvec){
             k++;
         }
 
+        if(start + k >= bytes.length()){
+            break;
+        }
         j = j*s + bytes[start + k] + base[k];
 
+        if(j >= (int)JSC::size){
+            break;
+        }
         auto word = QString(JSC::map[j].str);
 
         out.append(word);
