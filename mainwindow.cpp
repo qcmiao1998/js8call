@@ -3898,6 +3898,10 @@ bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffs
 }
 
 void MainWindow::logCallActivity(CallDetail d, bool spot){
+    if(d.call.trimmed().isEmpty()){
+        return;
+    }
+
     if(m_callActivity.contains(d.call)){
         // update (keep grid)
         CallDetail old = m_callActivity[d.call];
@@ -9558,6 +9562,10 @@ void MainWindow::displayCallActivity() {
 
         int callsignAging = m_config.callsign_aging();
         foreach(QString call, keys) {
+            if(call.trimmed().isEmpty()){
+                continue;
+            }
+
             CallDetail d = m_callActivity[call];
 
             bool isCallSelected = (call == selectedCall);
