@@ -153,6 +153,7 @@ extern "C" {
 
 
 #define TEST_FOX_WAVE_GEN 1
+#define TEST_FOX_WAVE_GEN_SLOTS 2
 
 const int NEAR_THRESHOLD_RX = 10;
 
@@ -4510,12 +4511,11 @@ void MainWindow::guiUpdate()
         if(m_config.split_mode()) foxcom_.nfreq = foxcom_.nfreq - m_XIT;  //Fox Tx freq
         strncpy(&foxcom_.cmsg[0][0], QString::fromStdString(message).toLatin1(), 12);
         foxcom_.i3bit[0] = m_i3bit;
-
-        if(!m_txFrameQueue.isEmpty()){
             auto pair = m_txFrameQueue.dequeue();
-            strncpy(&foxcom_.cmsg[1][0], pair.first.toLatin1(), 12);
-            foxcom_.i3bit[1] = pair.second;
+            strncpy(&foxcom_.cmsg[i][0], pair.first.toLatin1(), 12);
+            foxcom_.i3bit[i] = pair.second;
             foxcom_.nslots += 1;
+            i += 1;
         }
 
         foxgen_();
@@ -8652,13 +8652,13 @@ void MainWindow::refreshTextDisplay(){
         m_txTextDirtyLastSelectedCall = callsignSelected(true);
         m_txTextDirtyLastText = text;
 #if TEST_FOX_WAVE_GEN
-        m_txFrameCountEstimate = (int)ceil(float(frames)/2.0);
+        m_txFrameCountEstimate = (int)ceil(float(frames)/TEST_FOX_WAVE_GEN_SLOTS);
 #else
         m_txFrameCountEstimate = frames;
 #endif
         m_txTextDirty = false;
 
-        updateTextStatsDisplay(transmitText, frames);
+        updateTextStatsDisplay(transmitText, m_txFrameCountEstimate);
         updateTxButtonDisplay();
 
     });
@@ -8684,9 +8684,14 @@ void MainWindow::updateTxButtonDisplay(){
     if(m_tune || m_transmitting || m_txFrameCount > 0){
         int count = m_txFrameCount;
 #if TEST_FOX_WAVE_GEN
-    count = qMax(1, (int)ceil(float(count)/2.0));
+    count = qMax(1, (int)ceil(float(count)/TEST_FOX_WAVE_GEN_SLOTS));
 #endif
-        int sent = count - (int)ceil(float(m_txFrameQueue.count())/2.0);
+
+#if TEST_FOX_WAVE_GEN
+    int sent = count - (int)ceil(float(m_txFrameQueue.count())/TEST_FOX_WAVE_GEN_SLOTS);
+#else
+    int sent = count - m_txFrameQueue.count();
+#endif
 
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("Turboing (%1/%2)").arg(sent).arg(count));
         ui->startTxButton->setEnabled(false);
