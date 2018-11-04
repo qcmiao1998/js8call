@@ -6564,7 +6564,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
 
     menu->addSeparator();
 
-    auto snrQueryAction = menu->addAction(QString("%1 SNR? - What is my signal report?").arg(call));
+    auto snrQueryAction = menu->addAction(QString("%1 SNR? - What is my signal report?").arg(call).trimmed());
     snrQueryAction->setDisabled(isAllCall);
     connect(snrQueryAction, &QAction::triggered, this, [this](){
 
@@ -6578,7 +6578,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto qthQueryAction = menu->addAction(QString("%1 QTH? - What is your QTH message?").arg(call));
+    auto qthQueryAction = menu->addAction(QString("%1 QTH? - What is your QTH message?").arg(call).trimmed());
     qthQueryAction->setDisabled(isAllCall);
     connect(qthQueryAction, &QAction::triggered, this, [this](){
 
@@ -6592,7 +6592,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto gridQueryAction = menu->addAction(QString("%1 GRID? - What is your current grid locator?").arg(call));
+    auto gridQueryAction = menu->addAction(QString("%1 GRID? - What is your current grid locator?").arg(call).trimmed());
     gridQueryAction->setDisabled(isAllCall);
     connect(gridQueryAction, &QAction::triggered, this, [this](){
 
@@ -6801,6 +6801,19 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 FB").arg(selectedCall), true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
+    });
+
+    auto tuAction = menu->addAction(QString("%1 TU - Thank You").arg(call).trimmed());
+    connect(tuAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 TU").arg(selectedCall), true);
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
