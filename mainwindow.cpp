@@ -1503,6 +1503,7 @@ void MainWindow::initializeDummyData(){
 
     displayTextForFreq("KN4CRD: @ALLCALL? \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-315), true, true, true);
     displayTextForFreq("J1Y: KN4CRD SNR -05 \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
+    displayTextForFreq("HELLO BRAVE  NEW   WORLD    \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
 
     displayActivity(true);
 
@@ -5169,6 +5170,7 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
         c.insertText(text);
     } else {
         text = text.toHtmlEscaped();
+        text = text.replace(" ", "&nbsp;");
         if(bold){
             text = QString("<strong>%1</strong>").arg(text);
         }
