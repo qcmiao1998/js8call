@@ -3887,6 +3887,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
             if(!m_bandActivity.contains(offset)){
                 QList<int> offsets = {
+                    offset - 60, offset + 60,
                     offset - 1, offset - 2, offset - 3, offset - 4, offset - 5, offset - 6, offset - 7, offset - 8, offset - 9, offset - 10,
                     offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 7, offset + 8, offset + 9, offset + 10
                 };
@@ -4198,6 +4199,8 @@ bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffs
     }
 
     QList<int> offsets = {
+        offset - 60,
+        offset + 60,
         offset - 1, offset - 2, offset - 3, offset - 4, offset - 5, offset - 6, offset - 7, offset - 8, offset - 9, offset - 10,
         offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 7, offset + 8, offset + 9, offset + 10
     };
@@ -4511,6 +4514,8 @@ void MainWindow::guiUpdate()
         if(m_config.split_mode()) foxcom_.nfreq = foxcom_.nfreq - m_XIT;  //Fox Tx freq
         strncpy(&foxcom_.cmsg[0][0], QString::fromStdString(message).toLatin1(), 12);
         foxcom_.i3bit[0] = m_i3bit;
+        int i = 1;
+        while(!m_txFrameQueue.isEmpty() && foxcom_.nslots < TEST_FOX_WAVE_GEN_SLOTS){
             auto pair = m_txFrameQueue.dequeue();
             strncpy(&foxcom_.cmsg[i][0], pair.first.toLatin1(), 12);
             foxcom_.i3bit[i] = pair.second;
@@ -7788,6 +7793,10 @@ void MainWindow::on_pbT2R_clicked()
     }
 }
 
+void MainWindow::on_turboButton_clicked(){
+  m_wideGraph->setTurbo(ui->turboButton->isChecked());
+}
+
 void MainWindow::on_readFreq_clicked()
 {
   if (m_transmitting) return;
@@ -8074,7 +8083,7 @@ void MainWindow::transmit (double snr)
     if(m_config.x2ToneSpacing()) toneSpacing=2*12000.0/1920.0;
     if(m_config.x4ToneSpacing()) toneSpacing=4*12000.0/1920.0;
     if(m_config.bFox() and !m_tune) toneSpacing=-1;
-    if(TEST_FOX_WAVE_GEN && !m_tune) toneSpacing=-1;
+    if(TEST_FOX_WAVE_GEN && ui->turboButton->isChecked() && !m_tune) toneSpacing=-1;
 
     Q_EMIT sendMessage (NUM_FT8_SYMBOLS,
            1920.0, ui->TxFreqSpinBox->value () - m_XIT,
@@ -8652,7 +8661,7 @@ void MainWindow::refreshTextDisplay(){
         m_txTextDirtyLastSelectedCall = callsignSelected(true);
         m_txTextDirtyLastText = text;
 #if TEST_FOX_WAVE_GEN
-        m_txFrameCountEstimate = (int)ceil(float(frames)/TEST_FOX_WAVE_GEN_SLOTS);
+        m_txFrameCountEstimate = ui->turboButton->isChecked() ? (int)ceil(float(frames)/TEST_FOX_WAVE_GEN_SLOTS) : frames;
 #else
         m_txFrameCountEstimate = frames;
 #endif
@@ -8684,19 +8693,20 @@ void MainWindow::updateTxButtonDisplay(){
     if(m_tune || m_transmitting || m_txFrameCount > 0){
         int count = m_txFrameCount;
 #if TEST_FOX_WAVE_GEN
-    count = qMax(1, (int)ceil(float(count)/TEST_FOX_WAVE_GEN_SLOTS));
+        if(ui->turboButton->isChecked()){
+            count = qMax(1, (int)ceil(float(count)/TEST_FOX_WAVE_GEN_SLOTS));
+        }
 #endif
 
 #if TEST_FOX_WAVE_GEN
-    int sent = count - (int)ceil(float(m_txFrameQueue.count())/TEST_FOX_WAVE_GEN_SLOTS);
+    int sent = count - ui->turboButton->isChecked() ? (int)ceil(float(m_txFrameQueue.count())/TEST_FOX_WAVE_GEN_SLOTS) : m_txFrameQueue.count();
 #else
     int sent = count - m_txFrameQueue.count();
 #endif
-
-        ui->startTxButton->setText(m_tune ? "Tuning" : QString("Turboing (%1/%2)").arg(sent).arg(count));
+        ui->startTxButton->setText(m_tune ? "Tuning" : QString("%1 (%2/%3)").arg(ui->turboButton->isChecked() ? "Turboing" : "Send").arg(sent).arg(count));
         ui->startTxButton->setEnabled(false);
     } else {
-        ui->startTxButton->setText(m_txFrameCountEstimate <= 0 ? QString("Send") : QString("Turbo Send (%1)").arg(m_txFrameCountEstimate));
+        ui->startTxButton->setText(m_txFrameCountEstimate <= 0 ? QString("Send") : QString("Send (%1)").arg(m_txFrameCountEstimate));
         ui->startTxButton->setEnabled(m_txFrameCountEstimate > 0 && ensureSelcalCallsignSelected(false));
     }
 }

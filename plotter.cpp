@@ -28,6 +28,7 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_plot2dGain {0},
   m_plot2dZero {0},
   m_nSubMode {0},
+  m_turbo {false},
   m_Running {false},
   m_paintEventBusy {false},
   m_fftBinWidth {1500.0/2048.0},
@@ -600,16 +601,20 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       overPainter.drawLine(0, 30, 0, m_h);
       overPainter.drawLine(fwidth+1, 30, fwidth+1, m_h);
 #if TEST_FOX_WAVE_GEN
-      overPainter.drawLine(offset+fwidth+1, 30, offset+fwidth+1, m_h);
-      overPainter.drawLine(offset+2*fwidth+1, 30, offset+2*fwidth+1, m_h);
+      if(m_turbo){
+        overPainter.drawLine(offset+fwidth+1, 30, offset+fwidth+1, m_h);
+        overPainter.drawLine(offset+2*fwidth+1, 30, offset+2*fwidth+1, m_h);
+      }
 #endif
 
       overPainter.setPen(penRed);
       overPainter.drawLine(0, 26, fwidth, 26);
       overPainter.drawLine(0, 28, fwidth, 28);
 #if TEST_FOX_WAVE_GEN
-      overPainter.drawLine(offset+fwidth, 26, offset+2*fwidth, 26);
-      overPainter.drawLine(offset+fwidth, 28, offset+2*fwidth, 28);
+      if(m_turbo){
+        overPainter.drawLine(offset+fwidth, 26, offset+2*fwidth, 26);
+        overPainter.drawLine(offset+fwidth, 28, offset+2*fwidth, 28);
+      }
 #endif
 
       QPainter hoverPainter(&m_HoverOverlayPixmap);
@@ -620,8 +625,10 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       hoverPainter.drawLine(0, 30, 0, m_h);
       hoverPainter.drawLine(fwidth+1, 30, fwidth+1, m_h);
 #if TEST_FOX_WAVE_GEN
-      hoverPainter.drawLine(offset+fwidth+1, 30, offset+fwidth+1, m_h);
-      hoverPainter.drawLine(offset+2*fwidth+1, 30, offset+2*fwidth+1, m_h);
+      if(m_turbo){
+        hoverPainter.drawLine(offset+fwidth+1, 30, offset+fwidth+1, m_h);
+        hoverPainter.drawLine(offset+2*fwidth+1, 30, offset+2*fwidth+1, m_h);
+      }
 #endif
 
 #if DRAW_FREQ_OVERLAY
@@ -881,6 +888,15 @@ void CPlotter::setDialFreq(double d)
 void CPlotter::setRxBand(QString band)
 {
   m_rxBand=band;
+  DrawOverlay();
+  update();
+}
+
+void CPlotter::setTurbo(bool turbo)
+{
+  m_turbo=turbo;
+  DrawOverlay();
+  update();
 }
 
 void CPlotter::setFlatten(bool b1, bool b2)

@@ -81,6 +81,7 @@ public:
   void setFlatten(bool b1, bool b2);
   void setTol(int n);
   void setRxBand(QString band);
+  void setTurbo(bool turbo);
   void setReference(bool b) {m_bReference = b;}
   bool Reference() const {return m_bReference;}
   void drawRed(int ia, int ib, float swide[]);
@@ -147,6 +148,7 @@ private:
   QString m_rxBand;
   QString m_redFile;
 
+  bool    m_turbo;
   bool    m_Running;
   bool    m_paintEventBusy;
   bool    m_dataFromDisk;

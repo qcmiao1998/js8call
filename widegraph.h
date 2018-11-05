@@ -50,6 +50,7 @@ public:
   void   drawRed(int ia, int ib);
   void   setVHF(bool bVHF);
   void   setRedFile(QString fRed);
+  void   setTurbo(bool turbo);
 
 signals:
   void freezeDecode2(int n);
