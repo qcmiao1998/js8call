@@ -2281,8 +2281,21 @@ void MainWindow::showSoundOutError(const QString& errorMsg)
 }
 
 void MainWindow::showStatusMessage(const QString& statusMsg)
-{statusBar()->showMessage(statusMsg);}
+{
+    statusBar()->showMessage(statusMsg);
+}
 
+
+/**
+ * This function forces the menuBar to rebuild a QAction that has a submenu
+ * on OSX fixing a weird bug where they aren't displayed correctly.
+ */
+void rebuildMacQAction(QMenu *menu, QAction *existingAction){
+    auto dummyAction = new QAction("...");
+    menu->insertAction(existingAction, dummyAction);
+    menu->insertAction(dummyAction, existingAction);
+    menu->removeAction(dummyAction);
+}
 
 void MainWindow::on_menuWindow_aboutToShow(){
     auto hsizes = ui->textHorizontalSplitter->sizes();
@@ -2296,25 +2309,37 @@ void MainWindow::on_menuWindow_aboutToShow(){
     ui->actionShow_Time_Drift_Controls->setChecked(ui->driftSyncFrame->isVisible());
     ui->actionShow_Time_Drift_Controls->setEnabled(ui->actionShow_Waterfall->isChecked());
 
-    QMenu * sortBandMenu = new QMenu(ui->menuWindow);
+    QMenu * sortBandMenu = new QMenu(this->menuBar()); //ui->menuWindow);
     buildBandActivitySortByMenu(sortBandMenu);
     ui->actionSort_Band_Activity->setMenu(sortBandMenu);
     ui->actionSort_Band_Activity->setEnabled(ui->actionShow_Band_Activity->isChecked());
+#if __APPLE__
+    rebuildMacQAction(ui->menuWindow, ui->actionSort_Band_Activity);
+#endif
 
-    QMenu * sortCallMenu = new QMenu(ui->menuWindow);
+    QMenu * sortCallMenu = new QMenu(this->menuBar()); //ui->menuWindow);
     buildCallActivitySortByMenu(sortCallMenu);
     ui->actionSort_Call_Activity->setMenu(sortCallMenu);
     ui->actionSort_Call_Activity->setEnabled(ui->actionShow_Call_Activity->isChecked());
+#if __APPLE__
+    rebuildMacQAction(ui->menuWindow, ui->actionSort_Call_Activity);
+#endif
 
-    QMenu * showBandMenu = new QMenu(ui->menuWindow);
+    QMenu * showBandMenu = new QMenu(this->menuBar()); //ui->menuWindow);
     buildShowColumnsMenu(showBandMenu, "band");
     ui->actionShow_Band_Activity_Columns->setMenu(showBandMenu);
     ui->actionShow_Band_Activity_Columns->setEnabled(ui->actionShow_Band_Activity->isChecked());
+#if __APPLE__
+    rebuildMacQAction(ui->menuWindow, ui->actionShow_Band_Activity_Columns);
+#endif
 
-    QMenu * showCallMenu = new QMenu(ui->menuWindow);
+    QMenu * showCallMenu = new QMenu(this->menuBar()); //ui->menuWindow);
     buildShowColumnsMenu(showCallMenu, "call");
     ui->actionShow_Call_Activity_Columns->setMenu(showCallMenu);
     ui->actionShow_Call_Activity_Columns->setEnabled(ui->actionShow_Call_Activity->isChecked());
+#if __APPLE__
+    rebuildMacQAction(ui->menuWindow, ui->actionShow_Call_Activity_Columns);
+#endif
 }
 
 void MainWindow::on_actionShow_Band_Activity_triggered(bool checked){
