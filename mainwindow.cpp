@@ -3887,7 +3887,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
             if(!m_bandActivity.contains(offset)){
                 QList<int> offsets = {
-                    offset - 60, offset + 60,
+                    offset - 60, offset - 61, offset - 62, offset - 63, offset - 64, offset - 65, offset - 66, offset - 67, offset - 68, offset - 69,
+                    offset + 60, offset + 61, offset + 62, offset + 63, offset + 64, offset + 65, offset + 66, offset + 67, offset + 68, offset + 69,
                     offset - 1, offset - 2, offset - 3, offset - 4, offset - 5, offset - 6, offset - 7, offset - 8, offset - 9, offset - 10,
                     offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 7, offset + 8, offset + 9, offset + 10
                 };
@@ -4199,8 +4200,8 @@ bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffs
     }
 
     QList<int> offsets = {
-        offset - 60,
-        offset + 60,
+        offset - 60, offset - 61, offset - 62, offset - 63, offset - 64, offset - 65, offset - 66, offset - 67, offset - 68, offset - 69,
+        offset + 60, offset + 61, offset + 62, offset + 63, offset + 64, offset + 65, offset + 66, offset + 67, offset + 68, offset + 69,
         offset - 1, offset - 2, offset - 3, offset - 4, offset - 5, offset - 6, offset - 7, offset - 8, offset - 9, offset - 10,
         offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 7, offset + 8, offset + 9, offset + 10
     };
@@ -7795,6 +7796,8 @@ void MainWindow::on_pbT2R_clicked()
 
 void MainWindow::on_turboButton_clicked(){
   m_wideGraph->setTurbo(ui->turboButton->isChecked());
+  m_txTextDirty = true;
+  updateTextDisplay();
 }
 
 void MainWindow::on_readFreq_clicked()
@@ -8699,11 +8702,15 @@ void MainWindow::updateTxButtonDisplay(){
 #endif
 
 #if TEST_FOX_WAVE_GEN
-    int sent = count - ui->turboButton->isChecked() ? (int)ceil(float(m_txFrameQueue.count())/TEST_FOX_WAVE_GEN_SLOTS) : m_txFrameQueue.count();
+    int left = m_txFrameQueue.count();
+    if(ui->turboButton->isChecked()){
+        left = (int)ceil(float(m_txFrameQueue.count())/TEST_FOX_WAVE_GEN_SLOTS);
+    }
+    int sent = count - left;
 #else
     int sent = count - m_txFrameQueue.count();
 #endif
-        ui->startTxButton->setText(m_tune ? "Tuning" : QString("%1 (%2/%3)").arg(ui->turboButton->isChecked() ? "Turboing" : "Send").arg(sent).arg(count));
+        ui->startTxButton->setText(m_tune ? "Tuning" : QString("%1 (%2/%3)").arg(ui->turboButton->isChecked() ? "Turbo" : "Send").arg(sent).arg(count));
         ui->startTxButton->setEnabled(false);
     } else {
         ui->startTxButton->setText(m_txFrameCountEstimate <= 0 ? QString("Send") : QString("Send (%1)").arg(m_txFrameCountEstimate));
