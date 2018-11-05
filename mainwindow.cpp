@@ -6923,6 +6923,7 @@ QMap<QString, QString> MainWindow::buildMacroValues(){
         auto cd = m_callActivity[selectedCall];
 
         values["<CALL>"] = selectedCall;
+        values["<TDELTA>"] = QString("%1 ms").arg((int)(1000*cd.tdrift));
 
         if(cd.snr > -31){
             values["<SNR>"] = Varicode::formatSNR(cd.snr);
