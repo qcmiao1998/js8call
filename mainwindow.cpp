@@ -5170,7 +5170,8 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
         c.insertText(text);
     } else {
         text = text.toHtmlEscaped();
-        text = text.replace(" ", "&nbsp;");
+        text = text.replace("   ", "&nbsp;&nbsp;&nbsp;");
+        text = text.replace("  ", "&nbsp;&nbsp;");
         if(bold){
             text = QString("<strong>%1</strong>").arg(text);
         }
