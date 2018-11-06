@@ -2292,7 +2292,7 @@ void MainWindow::showStatusMessage(const QString& statusMsg)
  * on OSX fixing a weird bug where they aren't displayed correctly.
  */
 void rebuildMacQAction(QMenu *menu, QAction *existingAction){
-    auto dummyAction = new QAction("...");
+    auto dummyAction = new QAction("...", menu);
     menu->insertAction(existingAction, dummyAction);
     menu->insertAction(dummyAction, existingAction);
     menu->removeAction(dummyAction);
