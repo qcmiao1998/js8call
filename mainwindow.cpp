@@ -5651,7 +5651,7 @@ void MainWindow::prepareHeartbeat(){
 
 
 
-QString MainWindow::calculateDistance(QString const& value, int *pDistance)
+QString MainWindow::calculateDistance(QString const& value, int *pDistance, int *pAzimuth)
 {
     QString grid = value.trimmed();
     if(grid.isEmpty() || grid.length() < 4){
@@ -5665,13 +5665,15 @@ QString MainWindow::calculateDistance(QString const& value, int *pDistance)
             const_cast <char *> ((grid + "      ").left (6).toLatin1().constData()),&utch,
             &nAz,&nEl,&nDmiles,&nDkm,&nHotAz,&nHotABetter,6,6);
 
+    if(pAzimuth) *pAzimuth = nAz;
+
     if(m_config.miles()){
         if(pDistance) *pDistance = nDmiles;
-        return QString("%1 mi").arg(nDmiles);
+        return QString("%1 mi / %2°").arg(nDmiles).arg(nAz);
     }
 
     if(pDistance) *pDistance = nDkm;
-    return QString("%1 km").arg(nDkm);
+    return QString("%1 km / %2°").arg(nDkm).arg(nAz);
 }
 
 // this function is called by auto_tx_mode, which is called by autoButton.clicked

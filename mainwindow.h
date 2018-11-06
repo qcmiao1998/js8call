@@ -307,7 +307,7 @@ private slots:
   void unpauseHeartbeat();
   void checkHeartbeat();
   void prepareHeartbeat();
-  QString calculateDistance(QString const& grid, int *pDistance=nullptr);
+  QString calculateDistance(QString const& grid, int *pDistance=nullptr, int *pAzimuth=nullptr);
   void on_driftSpinBox_valueChanged(int n);
   void on_driftSyncButton_clicked();
   void on_driftSyncEndButton_clicked();
