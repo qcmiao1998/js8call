@@ -4507,7 +4507,10 @@ void MainWindow::guiUpdate()
       msgibits = m_i3bit;
       msgsent[22]=0;
 
-      if(TEST_FOX_WAVE_GEN) {
+      m_currentMessage = QString::fromLatin1(msgsent);
+      m_currentMessageBits = msgibits;
+
+      if(TEST_FOX_WAVE_GEN && ui->turboButton->isChecked()) {
 
         foxcom_.nslots=1;
 
@@ -4521,15 +4524,24 @@ void MainWindow::guiUpdate()
             strncpy(&foxcom_.cmsg[i][0], pair.first.toLatin1(), 12);
             foxcom_.i3bit[i] = pair.second;
             foxcom_.nslots += 1;
+
+            //m_currentMessage.append(pair.first);
+            //m_currentMessageBits |= pair.second;
+
             i += 1;
+        }
+
+        if(i > 1){
+            updateTxButtonDisplay();
         }
 
         foxgen_();
       }
     }
 
-    m_currentMessage = QString::fromLatin1(msgsent);
-    m_currentMessageBits = msgibits;
+    //m_currentMessage = QString::fromLatin1(msgsent);
+    //m_currentMessageBits = msgibits;
+
     m_bCallingCQ = CALLING == m_QSOProgress
       || m_currentMessage.contains (QRegularExpression {"^(CQ|QRZ) "});
     if(m_mode=="FT8") {
@@ -8704,9 +8716,9 @@ void MainWindow::updateTxButtonDisplay(){
 #if TEST_FOX_WAVE_GEN
     int left = m_txFrameQueue.count();
     if(ui->turboButton->isChecked()){
-        left = (int)ceil(float(m_txFrameQueue.count())/TEST_FOX_WAVE_GEN_SLOTS);
+        left = (int)ceil(float(left)/TEST_FOX_WAVE_GEN_SLOTS);
     }
-    int sent = count - left;
+    int sent = qMax(1, count - left);
 #else
     int sent = count - m_txFrameQueue.count();
 #endif
