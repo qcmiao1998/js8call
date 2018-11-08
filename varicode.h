@@ -21,22 +21,28 @@ public:
         JS8Call          = 0, // [000] <- any other frame of the message
         JS8CallFirst     = 1, // [001] <- the first frame of a message
         JS8CallLast      = 2, // [010] <- the last frame of a message
-        JS8CallData      = 4, // [100] <- raw data frame (no frame type header)
+        JS8CallExtended  = 4, // [100] <- raw data frame (no frame type header)
     };
 
+    /*
+
+    000 = heartbeat
+    001 = compound
+    010 = compound directed
+    011 = directed
+    1XX = data, with X bits dropped
+    */
     enum FrameType {
         FrameUnknown          = 255, // [11111111] <- only used as a sentinel
         FrameHeartbeat        = 0,   // [000]
         FrameCompound         = 1,   // [001]
         FrameCompoundDirected = 2,   // [010]
         FrameDirected         = 3,   // [011]
-        FrameReservedA        = 4,   // [100] <- Reserved for future use, likely an extension of one of these formats.
-        FrameDataUncompressed = 5,   // [101]
-        FrameDataCompressed   = 6,   // [110]
-        FrameReservedB        = 7,   // [111] <- Reserved for future use, likely binary data / other formats.
+        FrameData             = 4,   // [1XX] // but this only encodes the msb bit 1 and drops the two zeros
+        FrameDataCompressed   = 6,   // [11X] // but this only encodes the first 2 msb bits and drops the lsb
     };
 
-    static const quint8 FrameTypeMax = 7;
+    static const quint8 FrameTypeMax = 6;
 
     static QString frameTypeString(quint8 type) {
         const char* FrameTypeStrings[] = {
@@ -44,10 +50,9 @@ public:
             "FrameCompound",
             "FrameCompoundDirected",
             "FrameDirected",
-            "FrameReservedA",
-            "FrameDataUncompressed",
+            "FrameData",
+            "FrameUnknown", // 5
             "FrameDataCompressed",
-            "FrameReservedB"
         };
 
         if(type > FrameTypeMax){
@@ -148,7 +153,7 @@ public:
     static QStringList unpackDirectedMessage(QString const& text, quint8 *pType);
 
     static QString packDataMessage(QString const& text, int *n);
-    static QString unpackDataMessage(QString const& text, quint8 *pType);
+    static QString unpackDataMessage(QString const& text);
 
     static QList<QPair<QString, int>> buildMessageFrames(
         QString const& mycall,

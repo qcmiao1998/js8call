@@ -221,19 +221,14 @@ bool DecodedText::tryUnpackData(){
       return false;
     }
 
-    if((bits_ & Varicode::JS8CallData) != Varicode::JS8CallData){
-        return false;
-    }
-
-    quint8 type = Varicode::FrameUnknown;
-    QString data = Varicode::unpackDataMessage(m, &type);
+    QString data = Varicode::unpackDataMessage(m);
 
     if(data.isEmpty()){
       return false;
     }
 
     message_ = data;
-    frameType_ = type;
+    frameType_ = Varicode::FrameData;
     return true;
 }
 

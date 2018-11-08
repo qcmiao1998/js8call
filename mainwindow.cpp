@@ -3887,8 +3887,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
             if(!m_bandActivity.contains(offset)){
                 QList<int> offsets = {
-                    offset - 60, offset - 61, offset - 62, offset - 63, offset - 64, offset - 65, offset - 66, offset - 67, offset - 68, offset - 69,
-                    offset + 60, offset + 61, offset + 62, offset + 63, offset + 64, offset + 65, offset + 66, offset + 67, offset + 68, offset + 69,
+                    // offset - 60, offset - 61, offset - 62, offset - 63, offset - 64, offset - 65, offset - 66, offset - 67, offset - 68, offset - 69,
+                    // offset + 60, offset + 61, offset + 62, offset + 63, offset + 64, offset + 65, offset + 66, offset + 67, offset + 68, offset + 69,
                     offset - 1, offset - 2, offset - 3, offset - 4, offset - 5, offset - 6, offset - 7, offset - 8, offset - 9, offset - 10,
                     offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 7, offset + 8, offset + 9, offset + 10
                 };
@@ -4200,8 +4200,8 @@ bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffs
     }
 
     QList<int> offsets = {
-        offset - 60, offset - 61, offset - 62, offset - 63, offset - 64, offset - 65, offset - 66, offset - 67, offset - 68, offset - 69,
-        offset + 60, offset + 61, offset + 62, offset + 63, offset + 64, offset + 65, offset + 66, offset + 67, offset + 68, offset + 69,
+        //offset - 60, offset - 61, offset - 62, offset - 63, offset - 64, offset - 65, offset - 66, offset - 67, offset - 68, offset - 69,
+        //offset + 60, offset + 61, offset + 62, offset + 63, offset + 64, offset + 65, offset + 66, offset + 67, offset + 68, offset + 69,
         offset - 1, offset - 2, offset - 3, offset - 4, offset - 5, offset - 6, offset - 7, offset - 8, offset - 9, offset - 10,
         offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 7, offset + 8, offset + 9, offset + 10
     };
@@ -4517,12 +4517,12 @@ void MainWindow::guiUpdate()
         foxcom_.nfreq=ui->TxFreqSpinBox->value();
         if(m_config.split_mode()) foxcom_.nfreq = foxcom_.nfreq - m_XIT;  //Fox Tx freq
         strncpy(&foxcom_.cmsg[0][0], QString::fromStdString(message).toLatin1(), 12);
-        foxcom_.i3bit[0] = m_i3bit;
+        foxcom_.i3bit[0] = m_i3bit | Varicode::JS8CallExtended;
         int i = 1;
         while(!m_txFrameQueue.isEmpty() && foxcom_.nslots < TEST_FOX_WAVE_GEN_SLOTS){
             auto pair = m_txFrameQueue.dequeue();
             strncpy(&foxcom_.cmsg[i][0], pair.first.toLatin1(), 12);
-            foxcom_.i3bit[i] = pair.second;
+            foxcom_.i3bit[i] = pair.second | Varicode::JS8CallExtended;
             foxcom_.nslots += 1;
 
             //m_currentMessage.append(pair.first);
@@ -9022,7 +9022,7 @@ void MainWindow::processCompoundActivity() {
             bits == Varicode::JS8Call                                         ||
             ((bits & Varicode::JS8CallFirst)    == Varicode::JS8CallFirst)    ||
             ((bits & Varicode::JS8CallLast)     == Varicode::JS8CallLast)     ||
-            ((bits & Varicode::JS8CallData)     == Varicode::JS8CallData)
+            ((bits & Varicode::JS8CallExtended) == Varicode::JS8CallExtended)
         );
         if (!validBits) {
             qDebug() << "-> buffer.cmd bits is invalid...skip";

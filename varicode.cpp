@@ -1183,7 +1183,9 @@ QString Varicode::packHeartbeatMessage(QString const &text, const QString &calls
         cqNumber = cqs.key(type, 0);
     }
 
-    frame = packCompoundFrame(callsign, FrameHeartbeat, packed_extra, cqNumber);
+    quint8 cqNumber = cqs.key(type, 0);
+
+    frame = packCompoundFrame(callsign, Varicode::FrameHeartbeat, packed_extra, cqNumber);
     if(frame.isEmpty()){
         if(n) *n = 0;
         return frame;
@@ -1194,12 +1196,12 @@ QString Varicode::packHeartbeatMessage(QString const &text, const QString &calls
 }
 
 QStringList Varicode::unpackHeartbeatMessage(const QString &text, quint8 *pType, bool * isAlt, quint8 * pBits3){
-    quint8 type = FrameHeartbeat;
+    quint8 type = Varicode::FrameHeartbeat;
     quint16 num = nmaxgrid;
     quint8 bits3 = 0;
 
     QStringList unpacked = unpackCompoundFrame(text, &type, &num, &bits3);
-    if(unpacked.isEmpty() || type != FrameHeartbeat){
+    if(unpacked.isEmpty() || type != Varicode::FrameHeartbeat){
         return QStringList{};
     }
 
@@ -1239,7 +1241,7 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
         return frame;
     }
 
-    quint8 type = FrameCompound;
+    quint8 type = Varicode::FrameCompound;
     quint16 extra = nmaxgrid;
 
     qDebug() << "try pack cmd" << cmd << directed_cmds.contains(cmd) << Varicode::isCommandAllowed(cmd);
@@ -1249,7 +1251,7 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
         qint8 inum = Varicode::packNum(num, nullptr);
         extra = nusergrid + Varicode::packCmd(directed_cmds[cmd], inum, &packedNum);
 
-        type = FrameCompoundDirected;
+        type = Varicode::FrameCompoundDirected;
     } else if(!grid.isEmpty()){
         extra = Varicode::packGrid(grid);
     }
@@ -1261,12 +1263,12 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
 }
 
 QStringList Varicode::unpackCompoundMessage(const QString &text, quint8 *pType, quint8 *pBits3){
-    quint8 type = FrameCompound;
+    quint8 type = Varicode::FrameCompound;
     quint16 extra = nmaxgrid;
     quint8 bits3 = 0;
 
     QStringList unpacked = unpackCompoundFrame(text, &type, &extra, &bits3);
-    if(unpacked.isEmpty() || (type != FrameCompound && type != FrameCompoundDirected)){
+    if(unpacked.isEmpty() || (type != Varicode::FrameCompound && type != Varicode::FrameCompoundDirected)){
         return QStringList {};
     }
 
@@ -1294,7 +1296,7 @@ QString Varicode::packCompoundFrame(const QString &callsign, quint8 type, quint1
     QString frame;
 
     // needs to be a compound type...
-    if(type == FrameDataCompressed || type == FrameDataUncompressed || type == FrameDirected){
+    if(type == Varicode::FrameData || type == Varicode::FrameDirected){
         return frame;
     }
 
@@ -1338,7 +1340,7 @@ QStringList Varicode::unpackCompoundFrame(const QString &text, quint8 *pType, qu
     quint8 packed_flag = Varicode::bitsToInt(bits.mid(0, 3));
 
     // needs to be a ping type...
-    if(packed_flag == FrameDataCompressed || packed_flag == FrameDataUncompressed || packed_flag == FrameDirected){
+    if(packed_flag == Varicode::FrameData || packed_flag == Varicode::FrameDirected){
         return unpacked;
     }
 
@@ -1439,7 +1441,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &mycall
         cmdOut = cmd.trimmed();
         packed_cmd = directed_cmds[cmdOut];
     }
-    quint8 packed_flag = FrameDirected;
+    quint8 packed_flag = Varicode::FrameDirected;
     quint8 packed_extra = inum;
 
     // [3][28][28][5],[2][6] = 72
@@ -1467,7 +1469,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
     auto bits = Varicode::intToBits(Varicode::unpack72bits(text, &extra), 64);
 
     quint8 packed_flag = Varicode::bitsToInt(bits.mid(0, 3));
-    if(packed_flag != FrameDirected){
+    if(packed_flag != Varicode::FrameDirected){
         return unpacked;
     }
 
@@ -1500,8 +1502,12 @@ QString packHuffMessage(const QString &input, int *n){
 
     QString frame;
 
-    // [1][71] = 72
-    QVector<bool> frameBits = {false};
+    // [1][1][70] = 72
+    // The first bit is a flag that indicates this is a data frame, technically encoded as [100]
+    // but, since none of the other frame types start with a 1, we can drop the two zeros and use
+    // them for encoding the first two bits of the actuall data sent. boom!
+    // The second bit is a flag that indicates this is not compressed frame (huffman coding)
+    QVector<bool> frameBits = {true, false};
 
     int i = 0;
 
@@ -1554,8 +1560,12 @@ QString packCompressedMessage(const QString &input, int *n){
 
     QString frame;
 
-    // [1][71] = 72
-    QVector<bool> frameBits = {true};
+    // [1][1][70] = 72
+    // The first bit is a flag that indicates this is a data frame, technically encoded as [100]
+    // but, since none of the other frame types start with a 1, we can drop the two zeros and use
+    // them for encoding the first two bits of the actuall data sent. boom!
+    // The second bit is a flag that indicates this is a compressed frame (dense coding)
+    QVector<bool> frameBits = {true, true};
 
     int i = 0;
     foreach(auto pair, JSC::compress(input)){
@@ -1593,24 +1603,25 @@ QString packCompressedMessage(const QString &input, int *n){
 }
 
 QString Varicode::packDataMessage(const QString &input, int *n){
-    QString huffFrame;
-    int huffChars = 0;
-    huffFrame = packHuffMessage(input, &huffChars);
+   QString huffFrame;
+   int huffChars = 0;
+   huffFrame = packHuffMessage(input, &huffChars);
 
-    QString compressedFrame;
-    int compressedChars = 0;
-    compressedFrame = packCompressedMessage(input, &compressedChars);
+   QString compressedFrame;
+   int compressedChars = 0;
+   compressedFrame = packCompressedMessage(input, &compressedChars);
 
-    if(huffChars > compressedChars){
-        if(n) *n = huffChars;
-        return huffFrame;
-    } else {
-        if(n) *n = compressedChars;
-        return compressedFrame;
-    }
+   if(huffChars > compressedChars){
+       if(n) *n = huffChars;
+       return huffFrame;
+   } else {
+       if(n) *n = compressedChars;
+       return compressedFrame;
+   }
 }
 
-QString Varicode::unpackDataMessage(const QString &text, quint8 *pType){
+
+QString Varicode::unpackDataMessage(const QString &text){
     QString unpacked;
 
     if(text.length() < 12 || text.contains(" ")){
@@ -1621,18 +1632,24 @@ QString Varicode::unpackDataMessage(const QString &text, quint8 *pType){
     quint64 value = Varicode::unpack72bits(text, &rem);
     auto bits = Varicode::intToBits(value, 64) + Varicode::intToBits(rem, 8);
 
+    bool isData = bits.at(0);
+    if(!isData){
+        return unpacked;
+    }
+
+    bits = bits.mid(1);
+
     bool compressed = bits.at(0);
 
     int n = bits.lastIndexOf(0);
     bits = bits.mid(1, n-1);
 
     if(compressed){
+        // partial word (s,c)-dense coding with code tables
         unpacked = JSC::decompress(bits);
-        if(pType) *pType = Varicode::FrameDataCompressed;
     } else {
         // huff decode the bits (without escapes)
         unpacked = Varicode::huffDecode(Varicode::defaultHuffTable(), bits);
-        if(pType) *pType = Varicode::FrameDataUncompressed;
     }
 
     return unpacked;
@@ -1852,7 +1869,7 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(
           }
 
           if(useDat){
-              frames.append({ frame, Varicode::JS8CallData });
+              frames.append({ frame, Varicode::JS8Call });
               line = line.mid(m);
           }
         }
