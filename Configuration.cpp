@@ -1430,7 +1430,7 @@ void Configuration::impl::done (int r)
 {
   // do this here since window is still on screen at this point
   SettingsGroup g {settings_, "Configuration"};
-  settings_->setValue ("window/geometry", saveGeometry ());
+  settings_->setValue ("WindowGeometry", saveGeometry ());
 
   QDialog::done (r);
 }
@@ -1438,7 +1438,7 @@ void Configuration::impl::done (int r)
 void Configuration::impl::read_settings ()
 {
   SettingsGroup g {settings_, "Configuration"};
-  restoreGeometry (settings_->value ("window/geometry").toByteArray ());
+  restoreGeometry (settings_->value ("WindowGeometry").toByteArray ());
 
   auto_switch_bands_ = settings_->value("AutoSwitchBands", false).toBool();
   my_callsign_ = settings_->value ("MyCall", QString {}).toString ();

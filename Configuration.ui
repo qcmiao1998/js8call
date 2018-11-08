@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>750</width>
-    <height>748</height>
+    <width>800</width>
+    <height>651</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -3672,11 +3672,11 @@ soundcard changes</string>
  </connections>
  <buttongroups>
   <buttongroup name="CAT_handshake_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
  </buttongroups>
 </ui>
