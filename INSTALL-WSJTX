@@ -54,7 +54,8 @@ On Debian based systems, install requirements like:
 
 sudo apt install git cmake clang gfortran \
 libfftw3-dev git libgfortran3 libusb-1.0-dev autoconf libtool \
-texinfo qt5-default qtmultimedia5-dev libqt5multimedia5-plugins libqt5serialport5-dev
+texinfo qt5-default qtmultimedia5-dev libqt5multimedia5-plugins libqt5serialport5-dev \
+libudev-dev pkg-config
 
 The Hamlib  library is  required. Currently WSJT-X  needs to  be built
 using a  forked version of the  Hamlib git master. This  fork contains
