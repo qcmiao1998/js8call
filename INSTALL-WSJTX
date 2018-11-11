@@ -50,6 +50,12 @@ require this so normally you  can choose not to install libusb-1.0-dev
 but if you have  a SoftRock USB or similar SDR that  uses a custom USB
 interface then it is required.
 
+On Debian based systems, install requirements like:
+
+sudo apt install git cmake clang gfortran \
+libfftw3-dev git libgfortran3 libusb-1.0-dev autoconf libtool \
+texinfo qt5-default qtmultimedia5-dev libqt5multimedia5-plugins libqt5serialport5-dev
+
 The Hamlib  library is  required. Currently WSJT-X  needs to  be built
 using a  forked version of the  Hamlib git master. This  fork contains
 patches  not yet  accepted by  the Hamlib  development team  which are
