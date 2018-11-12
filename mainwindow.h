@@ -171,6 +171,7 @@ private slots:
   void on_tx5_currentTextChanged (QString const&);
   void on_tx6_editingFinished();
   void on_menuWindow_aboutToShow();
+  void on_actionShow_Frequency_Clock_triggered(bool checked);
   void on_actionShow_Band_Activity_triggered(bool checked);
   void on_actionShow_Call_Activity_triggered(bool checked);
   void on_actionShow_Waterfall_triggered(bool checked);

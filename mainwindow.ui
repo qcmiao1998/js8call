@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>872</width>
-    <height>566</height>
+    <height>605</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -23,6 +23,12 @@
    <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralWidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,0,0">
     <property name="spacing">
      <number>6</number>
@@ -60,7 +66,7 @@
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
          <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
+         <verstretch>1</verstretch>
         </sizepolicy>
        </property>
        <property name="minimumSize">
@@ -395,7 +401,7 @@ color : white;
                  <number>0</number>
                 </property>
                 <property name="text">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;2015 Jun 17 &lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;01:23:45 &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;01:23:45&lt;br/&gt;2015 Jun 17 &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -1171,15 +1177,15 @@ background-color: #00ff00;
       </widget>
       <widget class="QSplitter" name="textHorizontalSplitter">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
+         <verstretch>4</verstretch>
         </sizepolicy>
        </property>
        <property name="minimumSize">
         <size>
          <width>0</width>
-         <height>100</height>
+         <height>75</height>
         </size>
        </property>
        <property name="orientation">
@@ -1707,10 +1713,16 @@ color:#555;
       </widget>
       <widget class="QFrame" name="frame_5">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
          <horstretch>0</horstretch>
-         <verstretch>2</verstretch>
+         <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>10</height>
+        </size>
        </property>
        <property name="frameShape">
         <enum>QFrame::NoFrame</enum>
@@ -1736,6 +1748,12 @@ color:#555;
         </property>
         <item>
          <widget class="QWidget" name="bandHorizontalWidget" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <layout class="QHBoxLayout" name="horizontalLayoutBand">
            <property name="spacing">
             <number>0</number>
@@ -1757,8 +1775,17 @@ color:#555;
              <property name="spacing">
               <number>0</number>
              </property>
+             <property name="sizeConstraint">
+              <enum>QLayout::SetDefaultConstraint</enum>
+             </property>
              <item>
               <widget class="QFrame" name="frame_4">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="minimumSize">
                 <size>
                  <width>0</width>
@@ -1789,6 +1816,12 @@ color:#555;
                 </property>
                 <item>
                  <widget class="QFrame" name="frame_3">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
@@ -1889,7 +1922,7 @@ background-color: #00ff00;
                      <property name="minimumSize">
                       <size>
                        <width>75</width>
-                       <height>0</height>
+                       <height>1</height>
                       </size>
                      </property>
                      <property name="maximumSize">
@@ -1923,14 +1956,14 @@ background-color: #00ff00;
            <item>
             <widget class="QMdiArea" name="mdiArea">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+              <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
                <horstretch>10</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="minimumSize">
               <size>
-               <width>0</width>
+               <width>1</width>
                <height>1</height>
               </size>
              </property>
@@ -1950,13 +1983,16 @@ background-color: #00ff00;
            </item>
            <item>
             <layout class="QVBoxLayout" name="verticalLayout_9">
+             <property name="sizeConstraint">
+              <enum>QLayout::SetNoConstraint</enum>
+             </property>
              <property name="leftMargin">
               <number>4</number>
              </property>
              <item>
               <widget class="QSlider" name="outAttenuation">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
                  <horstretch>1</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -1964,7 +2000,7 @@ background-color: #00ff00;
                <property name="minimumSize">
                 <size>
                  <width>60</width>
-                 <height>0</height>
+                 <height>1</height>
                 </size>
                </property>
                <property name="font">
@@ -2028,6 +2064,12 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
         </item>
         <item>
          <widget class="QFrame" name="driftSyncFrame">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -2920,7 +2962,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  <enum>QTabWidget::Triangular</enum>
                 </property>
                 <property name="currentIndex">
-                 <number>3</number>
+                 <number>0</number>
                 </property>
                 <widget class="QWidget" name="tab">
                  <attribute name="title">
@@ -4710,7 +4752,7 @@ list. The list can be maintained in Settings (F2).</string>
      <bool>false</bool>
     </property>
     <property name="title">
-     <string>View</string>
+     <string>Old View</string>
     </property>
     <addaction name="actionWide_Waterfall"/>
     <addaction name="actionAstronomical_data"/>
@@ -4771,7 +4813,7 @@ list. The list can be maintained in Settings (F2).</string>
      <bool>false</bool>
     </property>
     <property name="title">
-     <string>Mode</string>
+     <string>Old Mode</string>
     </property>
     <addaction name="actionFT8"/>
     <addaction name="actionJT4"/>
@@ -4797,7 +4839,7 @@ list. The list can be maintained in Settings (F2).</string>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
-     <string>Tools</string>
+     <string>Old Tools</string>
     </property>
     <addaction name="actionErase_reference_spectrum"/>
     <addaction name="actionMeasure_reference_spectrum"/>
@@ -4810,8 +4852,10 @@ list. The list can be maintained in Settings (F2).</string>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
-     <string>&amp;Window</string>
+     <string>&amp;View</string>
     </property>
+    <addaction name="actionShow_Frequency_Clock"/>
+    <addaction name="separator"/>
     <addaction name="actionShow_Band_Activity"/>
     <addaction name="actionShow_Band_Activity_Columns"/>
     <addaction name="actionSort_Band_Activity"/>
@@ -4839,14 +4883,14 @@ list. The list can be maintained in Settings (F2).</string>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
-   <addaction name="menuView"/>
-   <addaction name="menuMode"/>
    <addaction name="menuDecode"/>
    <addaction name="menuSave"/>
    <addaction name="menu_Log"/>
-   <addaction name="menuTools"/>
    <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
+   <addaction name="menuView"/>
+   <addaction name="menuMode"/>
+   <addaction name="menuTools"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionExit">
@@ -5542,7 +5586,7 @@ list. The list can be maintained in Settings (F2).</string>
   </action>
   <action name="actionReset_Window_Sizes">
    <property name="text">
-    <string>Reset Window Sizes</string>
+    <string>Reset Frame Sizes</string>
    </property>
   </action>
   <action name="actionSort_Band_Activity">
@@ -5609,6 +5653,17 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Deep (3x)</string>
+   </property>
+  </action>
+  <action name="actionShow_Frequency_Clock">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Frequency &amp;&amp; Clock</string>
    </property>
   </action>
  </widget>

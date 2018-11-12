@@ -1102,10 +1102,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->menuTools->setEnabled(false);
   ui->menuView->setEnabled(false);
   foreach(auto action, ui->menuBar->actions()){
-      if(action->text() == "View") ui->menuBar->removeAction(action);
-      if(action->text() == "Mode") ui->menuBar->removeAction(action);
-      //if(action->text() == "Decode") ui->menuBar->removeAction(action);
-      if(action->text() == "Tools") ui->menuBar->removeAction(action);
+      if(action->text() == "Old View") ui->menuBar->removeAction(action);
+      if(action->text() == "Old Mode") ui->menuBar->removeAction(action);
+      if(action->text() == "Old Tools") ui->menuBar->removeAction(action);
   }
   ui->dxCallEntry->clear();
   ui->dxGridEntry->clear();
@@ -1762,8 +1761,9 @@ void MainWindow::readSettings()
   ui->cbAutoSeq->setVisible(false);
   ui->cbFirst->setVisible(false);
   m_settings->beginGroup("MainWindow");
+  setMinimumSize(800, 400);
   restoreGeometry (m_settings->value ("geometry", saveGeometry ()).toByteArray ());
-  setMinimumSize(800, 545);
+  setMinimumSize(800, 400);
 
   m_geometryNoControls = m_settings->value ("geometryNoControls",saveGeometry()).toByteArray();
   restoreState (m_settings->value ("state", saveState ()).toByteArray ());
@@ -2304,6 +2304,7 @@ void MainWindow::on_menuWindow_aboutToShow(){
     ui->actionShow_Call_Activity->setChecked(hsizes.at(2) > 0);
 
     auto vsizes = ui->mainSplitter->sizes();
+    ui->actionShow_Frequency_Clock->setChecked(vsizes.first() > 0);
     ui->actionShow_Waterfall->setChecked(vsizes.last() > 0);
     ui->actionShow_Waterfall_Controls->setChecked(m_wideGraph->controlsVisible());
     ui->actionShow_Waterfall_Controls->setEnabled(ui->actionShow_Waterfall->isChecked());
@@ -2341,6 +2342,13 @@ void MainWindow::on_menuWindow_aboutToShow(){
 #if __APPLE__
     rebuildMacQAction(ui->menuWindow, ui->actionShow_Call_Activity_Columns);
 #endif
+}
+
+void MainWindow::on_actionShow_Frequency_Clock_triggered(bool checked){
+    auto vsizes = ui->mainSplitter->sizes();
+    vsizes[0] = checked ? ui->logHorizontalWidget->minimumHeight() : 0;
+    ui->logHorizontalWidget->setVisible(checked);
+    ui->mainSplitter->setSizes(vsizes);
 }
 
 void MainWindow::on_actionShow_Band_Activity_triggered(bool checked){
@@ -2434,6 +2442,8 @@ void MainWindow::openSettings(int tab){
                 AudioDevice::Mono == m_config.audio_output_channel () ? 1 : 2,
                 m_msAudioOutputBuffered);
         }
+
+        ui->bandComboBox->view ()->setMinimumWidth (ui->bandComboBox->view ()->sizeHintForColumn (FrequencyList_v2::frequency_mhz_column));
 
         displayDialFrequency ();
         displayActivity(true);
@@ -4405,9 +4415,10 @@ void MainWindow::guiUpdate()
 
     auto drift = DriftingDateTime::drift();
     QDateTime t = DriftingDateTime::currentDateTimeUtc();
-    QString utc = t.date().toString("yyyy MMM dd") + "\n " +
-      t.time().toString() + (!drift ? " " : QString(" (%1%2ms)").arg(drift > 0 ? "+" : "").arg(drift));
-    ui->labUTC->setText(utc);
+    QStringList parts;
+    parts << (t.time().toString() + (!drift ? " " : QString(" (%1%2ms)").arg(drift > 0 ? "+" : "").arg(drift)));
+    parts << t.date().toString("yyyy MMM dd");
+    ui->labUTC->setText(parts.join("\n"));
 
     auto delta = t.secsTo(m_nextHeartbeat);
     QString ping;
