@@ -1294,6 +1294,22 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto clearAction4 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetCalls);
   connect(clearAction4, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetCalls); });
 
+  auto addStation = new QAction(QString("Add New Station.."), ui->tableWidgetCalls);
+  connect(addStation, &QAction::triggered, this, [this](){
+      bool ok = false;
+      QString callsign = QInputDialog::getText(this, tr("Add New Station..."),
+                                               tr("Station Callsign:"), QLineEdit::Normal,
+                                               "", &ok).toUpper().trimmed();
+      if(!ok || callsign.isEmpty()){
+         return;
+      }
+
+      CallDetail cd = {};
+      cd.call = callsign;
+      m_callActivity[callsign] = cd;
+      displayActivity(true);
+  });
+
   auto removeStation = new QAction(QString("Remove Station"), ui->tableWidgetCalls);
   connect(removeStation, &QAction::triggered, this, [this](){
       QString selectedCall = callsignSelected();
@@ -1305,7 +1321,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
 
   ui->tableWidgetCalls->setContextMenuPolicy(Qt::CustomContextMenu);
-  connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, logAction, clearAction4, clearActionAll, removeStation](QPoint const &point){
+  connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, logAction, clearAction4, clearActionAll, addStation, removeStation](QPoint const &point){
     QMenu * menu = new QMenu(ui->tableWidgetCalls);
 
     ui->tableWidgetRXAll->selectionModel()->clearSelection();
@@ -1351,6 +1367,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
     menu->addSeparator();
 
+    menu->addAction(addStation);
     removeStation->setDisabled(missingCallsign || isAllCall);
     menu->addAction(removeStation);
 
@@ -9639,18 +9656,28 @@ void MainWindow::displayCallActivity() {
             auto flagItem = new QTableWidgetItem(flag);
             flagItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
             ui->tableWidgetCalls->setItem(row, col++, flagItem);
-            ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
-            ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
-            ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(d.freq)));
-            ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 ms").arg((int)(1000*d.tdrift))));
+            if(d.utcTimestamp.isValid()){
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(d.freq)));
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 ms").arg((int)(1000*d.tdrift))));
 
-            auto gridItem = new QTableWidgetItem(QString("%1").arg(d.grid.trimmed().left(4)));
-            gridItem->setToolTip(d.grid.trimmed());
-            ui->tableWidgetCalls->setItem(row, col++, gridItem);
+                auto gridItem = new QTableWidgetItem(QString("%1").arg(d.grid.trimmed().left(4)));
+                gridItem->setToolTip(d.grid.trimmed());
+                ui->tableWidgetCalls->setItem(row, col++, gridItem);
 
-            auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
-            distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-            ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, col++, distanceItem);
+                auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
+                distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+                ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, col++, distanceItem);
+
+            } else {
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
+            }
 
             if (isCallSelected) {
                 for(int i = 0; i < ui->tableWidgetCalls->columnCount(); i++){
