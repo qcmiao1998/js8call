@@ -1706,6 +1706,7 @@ void MainWindow::writeSettings()
   m_settings->setValue("ShowTimeDrift", ui->driftSyncFrame->isVisible());
   m_settings->setValue("TimeDrift", ui->driftSpinBox->value());
   m_settings->setValue("SelCal", ui->selcalButton->isChecked());
+  m_settings->setValue("ShowTooltips", ui->actionShow_Tooltips->isChecked());
 
   m_settings->endGroup();
 
@@ -1817,6 +1818,7 @@ void MainWindow::readSettings()
   ui->driftSyncFrame->setVisible(m_settings->value("ShowTimeDrift", false).toBool());
   ui->driftSpinBox->setValue(m_settings->value("TimeDrift", 0).toInt());
   ui->selcalButton->setChecked(m_settings->value("SelCal", false).toBool());
+  ui->actionShow_Tooltips->setChecked(m_settings->value("ShowTooltips", true).toBool());
 
   m_settings->endGroup();
 
@@ -2727,6 +2729,13 @@ bool MainWindow::eventFilter (QObject * object, QEvent * event)
     case QEvent::ChildRemoved:
       // ensure our child widgets get d=removed from our event filter
       remove_child_from_event_filter (static_cast<QChildEvent *> (event)->child ());
+      break;
+
+    case QEvent::ToolTip:
+      if(!ui->actionShow_Tooltips->isChecked()){
+          return true;
+      }
+
       break;
 
     default: break;

@@ -4854,6 +4854,7 @@ list. The list can be maintained in Settings (F2).</string>
     <property name="title">
      <string>&amp;View</string>
     </property>
+    <addaction name="actionShow_Tooltips"/>
     <addaction name="actionShow_Frequency_Clock"/>
     <addaction name="separator"/>
     <addaction name="actionShow_Band_Activity"/>
@@ -5561,6 +5562,9 @@ list. The list can be maintained in Settings (F2).</string>
    <property name="text">
     <string>Show Band Activity</string>
    </property>
+   <property name="shortcut">
+    <string>F7</string>
+   </property>
   </action>
   <action name="actionShow_Call_Activity">
    <property name="checkable">
@@ -5572,6 +5576,9 @@ list. The list can be maintained in Settings (F2).</string>
    <property name="text">
     <string>Show Call Activity</string>
    </property>
+   <property name="shortcut">
+    <string>F8</string>
+   </property>
   </action>
   <action name="actionShow_Waterfall">
    <property name="checkable">
@@ -5582,6 +5589,9 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Show Waterfall</string>
+   </property>
+   <property name="shortcut">
+    <string>F4</string>
    </property>
   </action>
   <action name="actionReset_Window_Sizes">
@@ -5664,6 +5674,20 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Show Frequency &amp;&amp; Clock</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
+   </property>
+  </action>
+  <action name="actionShow_Tooltips">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Tooltips</string>
    </property>
   </action>
  </widget>
