@@ -463,6 +463,9 @@ private:
   void delete_selected_macros (QModelIndexList);
   Q_SLOT void on_save_path_select_push_button_clicked (bool);
   Q_SLOT void on_azel_path_select_push_button_clicked (bool);
+  Q_SLOT void on_sound_cq_path_select_push_button_clicked();
+  Q_SLOT void on_sound_cq_path_test_push_button_clicked();
+  Q_SLOT void on_sound_cq_path_reset_push_button_clicked();
   Q_SLOT void on_sound_dm_path_select_push_button_clicked();
   Q_SLOT void on_sound_dm_path_test_push_button_clicked();
   Q_SLOT void on_sound_dm_path_reset_push_button_clicked();
@@ -517,6 +520,7 @@ private:
   QDir default_azel_directory_;
   QDir azel_directory_;
 
+  QString sound_cq_path_; // cq message sound file
   QString sound_dm_path_; // directed message sound file
   QString sound_am_path_; // alert message sound file
 
@@ -810,6 +814,7 @@ QStringListModel * Configuration::macros () {return &m_->macros_;}
 QStringListModel const * Configuration::macros () const {return &m_->macros_;}
 QDir Configuration::save_directory () const {return m_->save_directory_;}
 QDir Configuration::azel_directory () const {return m_->azel_directory_;}
+QString Configuration::sound_cq_path() const {return m_->sound_cq_path_;}
 QString Configuration::sound_dm_path() const {return m_->sound_dm_path_;}
 QString Configuration::sound_am_path() const {return m_->sound_am_path_;}
 QString Configuration::rig_name () const {return m_->rig_params_.rig_name;}
@@ -1332,6 +1337,7 @@ void Configuration::impl::initialize_models ()
   ui_->PTT_method_button_group->button (rig_params_.ptt_type)->setChecked (true);
   ui_->save_path_display_label->setText (save_directory_.absolutePath ());
   ui_->azel_path_display_label->setText (azel_directory_.absolutePath ());
+  ui_->sound_cq_path_display_label->setText(sound_cq_path_);
   ui_->sound_dm_path_display_label->setText(sound_dm_path_);
   ui_->sound_am_path_display_label->setText(sound_am_path_);
   ui_->CW_id_after_73_check_box->setChecked (id_after_73_);
@@ -1536,6 +1542,7 @@ void Configuration::impl::read_settings ()
   RxBandwidth_ = settings_->value ("RxBandwidth", 2500).toInt ();
   save_directory_ = settings_->value ("SaveDir", default_save_directory_.absolutePath ()).toString ();
   azel_directory_ = settings_->value ("AzElDir", default_azel_directory_.absolutePath ()).toString ();
+  sound_cq_path_ = settings_->value ("SoundCQPath", "").toString ();
   sound_dm_path_ = settings_->value ("SoundDMPath", "").toString ();
   sound_am_path_ = settings_->value ("SoundAMPath", "").toString ();
 
@@ -1739,6 +1746,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("PTTport", rig_params_.ptt_port);
   settings_->setValue ("SaveDir", save_directory_.absolutePath ());
   settings_->setValue ("AzElDir", azel_directory_.absolutePath ());
+  settings_->setValue ("SoundCQPath", sound_cq_path_);
   settings_->setValue ("SoundDMPath", sound_dm_path_);
   settings_->setValue ("SoundAMPath", sound_am_path_);
 
@@ -2284,6 +2292,7 @@ void Configuration::impl::accept ()
   data_mode_ = static_cast<DataMode> (ui_->TX_mode_button_group->checkedId ());
   save_directory_ = ui_->save_path_display_label->text ();
   azel_directory_ = ui_->azel_path_display_label->text ();
+  sound_cq_path_ = ui_->sound_cq_path_display_label->text();
   sound_dm_path_ = ui_->sound_dm_path_display_label->text();
   sound_am_path_ = ui_->sound_am_path_display_label->text();
   enable_VHF_features_ = ui_->enable_VHF_features_check_box->isChecked ();
@@ -2950,6 +2959,37 @@ void Configuration::impl::on_azel_path_select_push_button_clicked (bool /* check
       ui_->azel_path_display_label->setText(fd.selectedFiles().at(0));
     }
   }
+}
+
+void Configuration::impl::on_sound_cq_path_select_push_button_clicked(){
+    QStringList filters;
+    filters << "Audio files (*.wav)"
+            << "Any files (*)";
+
+    QFileDialog fd {this, tr ("Sound File"), ui_->sound_cq_path_display_label->text ()};
+    fd.setNameFilters(filters);
+
+    if (fd.exec ()) {
+      if (fd.selectedFiles ().size ()) {
+        if(rig_params_.ptt_type == TransceiverFactory::PTT_method_VOX){
+          QMessageBox::warning(this, "Notifications Sounds Warning", "You have enabled notification sounds while using VOX. To avoid transmitting these notification sounds, please make sure your rig is using a different sound card than your system.");
+        }
+        ui_->sound_cq_path_display_label->setText(fd.selectedFiles().at(0));
+      }
+    }
+}
+
+void Configuration::impl::on_sound_cq_path_test_push_button_clicked(){
+    auto path = ui_->sound_cq_path_display_label->text();
+    if(path.isEmpty()){
+        return;
+    }
+
+    QSound::play(path);
+}
+
+void Configuration::impl::on_sound_cq_path_reset_push_button_clicked(){
+    ui_->sound_cq_path_display_label->clear();
 }
 
 void Configuration::impl::on_sound_dm_path_select_push_button_clicked(){

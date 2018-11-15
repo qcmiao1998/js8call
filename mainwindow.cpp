@@ -3710,6 +3710,9 @@ void MainWindow::readFromStdout()                             //readFromStdout
                     // it is not processed elsewhere, so we need to just log it here.
                     logCallActivity(cd, true);
 
+                    // play cq notification
+                    playSoundNotification(m_config.sound_cq_path());
+
                 } else {
                     // convert HEARTBEAT to a directed command and process...
                     cmd.from = cd.call;
@@ -3933,6 +3936,15 @@ void MainWindow::readFromStdout()                             //readFromStdout
   // See MainWindow::postDecode for displaying the latest decodes
 }
 
+void MainWindow::playSoundNotification(const QString &path){
+    if(path.isEmpty()){
+        return;
+    }
+
+    qDebug() << "Trying to play sound file" << path;
+
+    QSound::play(path);
+}
 
 bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffset){
     if(m_messageBuffer.contains(offset)){
@@ -8796,10 +8808,7 @@ void MainWindow::processCommandActivity() {
             });
 
             if(!isAllCall){
-                auto wav = m_config.sound_dm_path();
-                if(!wav.isEmpty()){
-                    QSound::play(wav);
-                }
+                playSoundNotification(m_config.sound_dm_path());
             }
 
             writeDirectedCommandToFile(d);
@@ -9172,10 +9181,7 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
         }
     });
 
-    auto wav = m_config.sound_am_path();
-    if(!wav.isEmpty()){
-        QSound::play(wav);
-    }
+    playSoundNotification(m_config.sound_am_path());
 
     msgBox->setModal(false);
     msgBox->show();
