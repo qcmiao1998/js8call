@@ -5378,7 +5378,7 @@ void MainWindow::createMessage(QString const& text){
     }
 
     resetMessageTransmitQueue();
-    createMessageTransmitQueue(text);
+    createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false));
 }
 
 void MainWindow::createMessageTransmitQueue(QString const& text){
