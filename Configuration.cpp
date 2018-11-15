@@ -1042,6 +1042,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   , default_audio_output_device_selected_ {false}
 {
   ui_->setupUi (this);
+
 //  ui_->groupBox_6->setVisible(false);              //### Temporary ??? ###
 
   {
@@ -1438,7 +1439,9 @@ void Configuration::impl::done (int r)
 void Configuration::impl::read_settings ()
 {
   SettingsGroup g {settings_, "Configuration"};
+  setMinimumSize(800, 400);
   restoreGeometry (settings_->value ("WindowGeometry").toByteArray ());
+  setMinimumSize(800, 400);
 
   auto_switch_bands_ = settings_->value("AutoSwitchBands", false).toBool();
   my_callsign_ = settings_->value ("MyCall", QString {}).toString ();
@@ -1880,7 +1883,8 @@ void Configuration::impl::set_rig_invariants ()
       // makes no sense with rig as "None"
       ui_->monitor_last_used_check_box->setEnabled (false);
 
-      ui_->CAT_control_group_box->setEnabled (false);
+      ui_->catTab->setEnabled(false);
+      //ui_->CAT_control_group_box->setEnabled (false);
       ui_->test_CAT_push_button->setEnabled (false);
       ui_->test_PTT_push_button->setEnabled (TransceiverFactory::PTT_method_DTR == ptt_method
                                              || TransceiverFactory::PTT_method_RTS == ptt_method);
@@ -1889,7 +1893,8 @@ void Configuration::impl::set_rig_invariants ()
   else
     {
       ui_->monitor_last_used_check_box->setEnabled (true);
-      ui_->CAT_control_group_box->setEnabled (true);
+      ui_->catTab->setEnabled(true);
+      //ui_->CAT_control_group_box->setEnabled (true);
       ui_->test_CAT_push_button->setEnabled (true);
       ui_->test_PTT_push_button->setEnabled (false);
       ui_->TX_audio_source_group_box->setEnabled (transceiver_factory_.has_CAT_PTT_mic_data (rig) && TransceiverFactory::PTT_method_CAT == ptt_method);
@@ -1940,7 +1945,9 @@ void Configuration::impl::set_rig_invariants ()
               break;
             }
         }
+
       ui_->CAT_serial_port_parameters_group_box->setEnabled (is_serial_CAT);
+
       ui_->force_DTR_combo_box->setEnabled (is_serial_CAT
                                             && (cat_port != ptt_port
                                                 || !ui_->PTT_DTR_radio_button->isEnabled ()
