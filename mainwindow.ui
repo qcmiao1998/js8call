@@ -4751,12 +4751,22 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionErase_ALL_TXT"/>
     <addaction name="actionErase_js8call_log_adi"/>
    </widget>
+   <widget class="QMenu" name="menuControl">
+    <property name="title">
+     <string>C&amp;ontrol</string>
+    </property>
+    <addaction name="actionEnable_Spotting"/>
+    <addaction name="actionEnable_Heartbeat"/>
+    <addaction name="actionEnable_Auto_Reply"/>
+    <addaction name="actionEnable_Selcall"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
    <addaction name="menuDecode"/>
    <addaction name="menuSave"/>
    <addaction name="menu_Log"/>
    <addaction name="menuWindow"/>
+   <addaction name="menuControl"/>
    <addaction name="menuHelp"/>
    <addaction name="menuView"/>
    <addaction name="menuMode"/>
@@ -5557,6 +5567,38 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Show Tooltips</string>
+   </property>
+  </action>
+  <action name="actionEnable_Spotting">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Spotting</string>
+   </property>
+  </action>
+  <action name="actionEnable_Heartbeat">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Heartbeat</string>
+   </property>
+  </action>
+  <action name="actionEnable_Auto_Reply">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Auto Reply</string>
+   </property>
+  </action>
+  <action name="actionEnable_Selcall">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Selective Calling</string>
    </property>
   </action>
  </widget>

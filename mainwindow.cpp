@@ -2346,6 +2346,29 @@ void rebuildMacQAction(QMenu *menu, QAction *existingAction){
     menu->removeAction(dummyAction);
 }
 
+void MainWindow::on_menuControl_aboutToShow(){
+    ui->actionEnable_Spotting->setChecked(ui->spotButton->isChecked());
+    ui->actionEnable_Auto_Reply->setChecked(ui->autoReplyButton->isChecked());
+    ui->actionEnable_Heartbeat->setChecked(ui->heartbeatButton->isChecked());
+    ui->actionEnable_Selcall->setChecked(ui->selcalButton->isChecked());
+}
+
+void MainWindow::on_actionEnable_Spotting_toggled(bool checked){
+    ui->spotButton->setChecked(checked);
+}
+
+void MainWindow::on_actionEnable_Auto_Reply_toggled(bool checked){
+    ui->autoReplyButton->setChecked(checked);
+}
+
+void MainWindow::on_actionEnable_Heartbeat_toggled(bool checked){
+    ui->heartbeatButton->setChecked(checked);
+}
+
+void MainWindow::on_actionEnable_Selcall_toggled(bool checked){
+    ui->selcalButton->setChecked(checked);
+}
+
 void MainWindow::on_menuWindow_aboutToShow(){
     auto hsizes = ui->textHorizontalSplitter->sizes();
     ui->actionShow_Band_Activity->setChecked(hsizes.at(0) > 0);
@@ -7363,7 +7386,6 @@ void MainWindow::resetPushButtonToggleText(QPushButton *btn){
         style = style.replace("font-weight:bold;", "font-weight:normal;");
     }
     btn->setStyleSheet(style);
-
 
 #if PUSH_BUTTON_CHECKMARK
     auto on = "✓ ";

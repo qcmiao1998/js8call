@@ -171,6 +171,11 @@ private slots:
   void on_tx4_editingFinished();
   void on_tx5_currentTextChanged (QString const&);
   void on_tx6_editingFinished();
+  void on_menuControl_aboutToShow();
+  void on_actionEnable_Spotting_toggled(bool checked);
+  void on_actionEnable_Auto_Reply_toggled(bool checked);
+  void on_actionEnable_Heartbeat_toggled(bool checked);
+  void on_actionEnable_Selcall_toggled(bool checked);
   void on_menuWindow_aboutToShow();
   void on_actionShow_Frequency_Clock_triggered(bool checked);
   void on_actionShow_Band_Activity_triggered(bool checked);
