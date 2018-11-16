@@ -2660,7 +2660,23 @@ void MainWindow::on_monitorTxButton_toggled(bool checked){
 }
 
 void MainWindow::on_selcalButton_toggled(bool checked){
+    if(checked){
+        if(callsignSelected() == "@ALLCALL"){
+            clearCallsignSelected();
+        }
+        if(ui->tableWidgetRXAll->isVisible()){
+            ui->tableWidgetRXAll->setVisible(false);
+            m_bandActivityWasVisible = true;
+        } else {
+            m_bandActivityWasVisible = false;
+        }
+    } else {
+        ui->tableWidgetRXAll->setVisible(m_bandActivityWasVisible);
+    }
+
     resetPushButtonToggleText(ui->selcalButton);
+
+    displayCallActivity();
 }
 
 void MainWindow::on_tuneButton_toggled(bool checked){
@@ -2672,6 +2688,17 @@ void MainWindow::on_spotButton_toggled(bool checked){
 }
 
 void MainWindow::on_heartbeatButton_toggled(bool checked){
+    // clear the ping queue when you toggle the button
+    m_txHeartbeatQueue.clear();
+    displayBandActivity();
+
+    // then process the action
+    if(checked){
+        scheduleHeartbeat(false);
+    } else {
+        pauseHeartbeat();
+    }
+
     resetPushButtonToggleText(ui->heartbeatButton);
 }
 
@@ -7456,37 +7483,6 @@ void MainWindow::on_pbT2R_clicked()
     {
       ui->RxFreqSpinBox->setValue (ui->TxFreqSpinBox->value ());
     }
-}
-
-void MainWindow::on_heartbeatButton_clicked()
-{
-    // clear the ping queue when you toggle the button
-    m_txHeartbeatQueue.clear();
-    displayBandActivity();
-
-    // then process the action
-    if(ui->heartbeatButton->isChecked()){
-        scheduleHeartbeat(false);
-    } else {
-        pauseHeartbeat();
-    }
-}
-
-void MainWindow::on_selcalButton_clicked(){
-    if(ui->selcalButton->isChecked()){
-        if(callsignSelected() == "@ALLCALL"){
-            clearCallsignSelected();
-        }
-        if(ui->tableWidgetRXAll->isVisible()){
-            ui->tableWidgetRXAll->setVisible(false);
-            m_bandActivityWasVisible = true;
-        } else {
-            m_bandActivityWasVisible = false;
-        }
-    } else {
-        ui->tableWidgetRXAll->setVisible(m_bandActivityWasVisible);
-    }
-    displayCallActivity();
 }
 
 void MainWindow::on_readFreq_clicked()
