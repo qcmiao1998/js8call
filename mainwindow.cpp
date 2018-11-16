@@ -1460,7 +1460,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
 
-QDate eol(2018, 11, 15);
+QDate eol(2018, 11, 30);
 
 void MainWindow::checkExpiryWarningMessage()
 {
@@ -5809,7 +5809,6 @@ QString MainWindow::calculateDistance(QString const& value, int *pDistance, int 
 void MainWindow::on_startTxButton_toggled(bool checked)
 {
     if(checked){
-        checkExpiryWarningMessage();
         createMessage(ui->extFreeTextMsgEdit->toPlainText());
         startTx();
     } else {
