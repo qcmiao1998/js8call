@@ -1406,6 +1406,35 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->heartbeatButton->setContextMenuPolicy(Qt::ActionsContextMenu);
   ui->heartbeatButton->addAction(heartbeatNow);
 
+
+  int width = 75;
+  /*
+  QList<QPushButton*> btns;
+  foreach(auto child, ui->buttonGrid->children()){
+      if(!child->isWidgetType()){
+          continue;
+      }
+
+      if(!child->objectName().contains("Button")){
+          continue;
+      }
+
+      auto b = qobject_cast<QPushButton*>(child);
+      width = qMax(width, b->geometry().width());
+      btns.append(b);
+  }
+  */
+  auto buttonLayout = ui->buttonGrid->layout();
+  auto gridButtonLayout = qobject_cast<QGridLayout*>(buttonLayout);
+  gridButtonLayout->setColumnMinimumWidth(0, width);
+  gridButtonLayout->setColumnMinimumWidth(1, width);
+  gridButtonLayout->setColumnMinimumWidth(2, width);
+  gridButtonLayout->setColumnMinimumWidth(3, width);
+  gridButtonLayout->setColumnStretch(0, 1);
+  gridButtonLayout->setColumnStretch(1, 1);
+  gridButtonLayout->setColumnStretch(2, 1);
+  gridButtonLayout->setColumnStretch(3, 1);
+
   pskSetLocal();
   aprsSetLocal();
 
@@ -2593,6 +2622,34 @@ void MainWindow::on_autoButton_clicked (bool checked)
   if(!checked){
       on_stopTxButton_clicked();
   }
+}
+
+void MainWindow::on_autoReplyButton_toggled(bool checked){
+    resetPushButtonToggleText(ui->autoReplyButton);
+}
+
+void MainWindow::on_monitorButton_toggled(bool checked){
+    resetPushButtonToggleText(ui->monitorButton);
+}
+
+void MainWindow::on_monitorTxButton_toggled(bool checked){
+    resetPushButtonToggleText(ui->monitorTxButton);
+}
+
+void MainWindow::on_selcalButton_toggled(bool checked){
+    resetPushButtonToggleText(ui->selcalButton);
+}
+
+void MainWindow::on_tuneButton_toggled(bool checked){
+    resetPushButtonToggleText(ui->tuneButton);
+}
+
+void MainWindow::on_spotButton_toggled(bool checked){
+    resetPushButtonToggleText(ui->spotButton);
+}
+
+void MainWindow::on_heartbeatButton_toggled(bool checked){
+    resetPushButtonToggleText(ui->heartbeatButton);
 }
 
 void MainWindow::auto_tx_mode (bool state)
@@ -4430,6 +4487,7 @@ void MainWindow::guiUpdate()
           tx_status_label.setText(t.trimmed());
         }
       }
+
     } else if(m_monitoring) {
       if (m_tx_watchdog) {
         tx_status_label.setStyleSheet ("QLabel{background-color: #ff0000}");
@@ -7296,7 +7354,52 @@ void MainWindow::stopTuneATU()
   m_bTxTime=false;
 }
 
+void MainWindow::resetPushButtonToggleText(QPushButton *btn){
+    bool checked = btn->isChecked();
+    auto style = btn->styleSheet();
+    if(checked){
+        style = style.replace("font-weight:normal;", "font-weight:bold;");
+    } else {
+        style = style.replace("font-weight:bold;", "font-weight:normal;");
+    }
+    btn->setStyleSheet(style);
+
+
+#if PUSH_BUTTON_CHECKMARK
+    auto on = "✓ ";
+    auto text = btn->text();
+    if(checked){
+        btn->setText(on + text.replace(on, ""));
+    } else {
+        btn->setText(text.replace(on, ""));
+    }
+#endif
+
+#if PUSH_BUTTON_MIN_WIDTH
+    int width = 0;
+    QList<QPushButton*> btns;
+    foreach(auto child, ui->buttonGrid->children()){
+        if(!child->isWidgetType()){
+            continue;
+        }
+
+        if(!child->objectName().contains("Button")){
+            continue;
+        }
+
+        auto b = qobject_cast<QPushButton*>(child);
+        width = qMax(width, b->geometry().width());
+        btns.append(b);
+    }
+
+    foreach(auto child, btns){
+        child->setMinimumWidth(width);
+    }
+#endif
+}
+
 void MainWindow::on_monitorTxButton_clicked(){
+    ui->monitorTxButton->setChecked(false);
     on_stopTxButton_clicked();
 }
 
@@ -7830,6 +7933,8 @@ void MainWindow::aprsSetLocal ()
 
 void MainWindow::transmitDisplay (bool transmitting)
 {
+  ui->monitorTxButton->setChecked(transmitting);
+
   if (transmitting == m_transmitting) {
     if (transmitting) {
       ui->signal_meter_widget->setValue(0,0);
@@ -7873,8 +7978,10 @@ void MainWindow::transmitDisplay (bool transmitting)
   }
 
   // TODO: jsherer - encapsulate this in a function?
+  /*
   ui->monitorButton->setVisible(!transmitting);
   ui->monitorTxButton->setVisible(transmitting);
+  */
 }
 
 void MainWindow::on_sbFtol_valueChanged(int value)

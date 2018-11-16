@@ -187,6 +187,7 @@ private slots:
   void on_actionAbout_triggered();
   void on_autoButton_clicked (bool);
   void on_labDialFreq_clicked();
+  void resetPushButtonToggleText(QPushButton *btn);
   void on_monitorTxButton_clicked();
   void on_stopTxButton_clicked();
   void on_stopButton_clicked();
@@ -344,6 +345,14 @@ private slots:
   void stop_tuning ();
   void stopTuneATU();
   void auto_tx_mode(bool);
+  void on_autoReplyButton_toggled(bool checked);
+  void on_monitorButton_toggled(bool checked);
+  void on_monitorTxButton_toggled(bool checked);
+  void on_selcalButton_toggled(bool checked);
+  void on_tuneButton_toggled(bool checked);
+  void on_spotButton_toggled(bool checked);
+  void on_heartbeatButton_toggled(bool checked);
+
   void on_actionMessage_averaging_triggered();
   void on_actionFox_Log_triggered();
   void on_actionInclude_averaging_toggled (bool);

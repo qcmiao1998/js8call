@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>872</width>
+    <width>994</width>
     <height>605</height>
    </rect>
   </property>
@@ -170,13 +170,13 @@
                <number>6</number>
               </property>
               <property name="leftMargin">
-               <number>18</number>
+               <number>10</number>
               </property>
               <property name="topMargin">
                <number>6</number>
               </property>
               <property name="rightMargin">
-               <number>18</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
                <number>6</number>
@@ -303,8 +303,8 @@ QPushButton[oob=&quot;true&quot;] {
              </property>
              <property name="sizeHint" stdset="0">
               <size>
-               <width>40</width>
-               <height>20</height>
+               <width>10</width>
+               <height>10</height>
               </size>
              </property>
             </spacer>
@@ -328,16 +328,16 @@ QPushButton[oob=&quot;true&quot;] {
                <number>6</number>
               </property>
               <property name="leftMargin">
-               <number>18</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>6</number>
+               <number>10</number>
               </property>
               <property name="rightMargin">
-               <number>18</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>6</number>
+               <number>10</number>
               </property>
               <item>
                <spacer name="verticalSpacer_4">
@@ -460,24 +460,37 @@ color : white;
              </property>
              <property name="sizeHint" stdset="0">
               <size>
-               <width>40</width>
-               <height>20</height>
+               <width>10</width>
+               <height>10</height>
               </size>
              </property>
             </spacer>
            </item>
            <item>
-            <widget class="QFrame" name="frame_2">
+            <widget class="QFrame" name="buttonGrid">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="styleSheet">
-              <string notr="true">QFrame { 
-	color:white;
-	background-color:rgb(0,0,0);
+              <string notr="true">QPushButton {
+	background-color:lightgray;
+	padding:0.25em 0.25em; font-weight:normal;
+	border-style:solid;
+	border-width:0px;
+	border-radius:2px;
+ }
+
+QPushButton:checked { 
+  background-color:#6699ff;
 }</string>
              </property>
              <property name="frameShape">
@@ -486,203 +499,101 @@ color : white;
              <property name="frameShadow">
               <enum>QFrame::Plain</enum>
              </property>
-             <layout class="QGridLayout" name="gridLayout_8">
-              <item row="2" column="3">
-               <spacer name="verticalSpacer_9">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
+             <layout class="QGridLayout" name="gridLayout_8" columnstretch="1,1,1,1,0" columnminimumwidth="75,75,75,75,0">
+              <property name="sizeConstraint">
+               <enum>QLayout::SetMinimumSize</enum>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>10</number>
+              </property>
+              <property name="rightMargin">
+               <number>10</number>
+              </property>
+              <property name="bottomMargin">
+               <number>10</number>
+              </property>
+              <property name="spacing">
+               <number>10</number>
+              </property>
+              <item row="2" column="0">
+               <widget class="QPushButton" name="spotButton">
+                <property name="enabled">
+                 <bool>true</bool>
                 </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item row="1" column="1">
-               <widget class="QWidget" name="monitorContainer" native="true">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>75</width>
+                  <width>0</width>
                   <height>30</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
-                  <width>0</width>
-                  <height>30</height>
+                  <width>16777215</width>
+                  <height>16777215</height>
                  </size>
                 </property>
-                <widget class="QPushButton" name="monitorButton">
-                 <property name="enabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="geometry">
-                  <rect>
-                   <x>0</x>
-                   <y>0</y>
-                   <width>75</width>
-                   <height>30</height>
-                  </rect>
-                 </property>
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>75</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable the receiver&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton {
-font-family: helvetica;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-radius:2px;
-border-width:0px;
-border-color: gray;
-font-size:90%;
-min-width:75px;
-min-height:30px;
-/*max-width:60px;*/
-max-height:30px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: yellow;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}
-QPushButton:checked {
-background-color: #00ff00;
+                <property name="font">
+                 <font>
+                  <pointsize>9</pointsize>
+                 </font>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable spotting of callsigns heard to PSKReporter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+	background-color:lightgray;
+	padding:0.25em 0.25em; font-weight:normal;
+	border-style:solid;
+	border-width:0px;
+	border-radius:2px;
+ }
+
+QPushButton:checked { 
+  background-color:#6699ff;
 }</string>
-                 </property>
-                 <property name="text">
-                  <string>RX</string>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-                <widget class="QPushButton" name="monitorTxButton">
-                 <property name="enabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="geometry">
-                  <rect>
-                   <x>0</x>
-                   <y>0</y>
-                   <width>75</width>
-                   <height>30</height>
-                  </rect>
-                 </property>
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>75</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="visible">
-                  <bool>false</bool>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton {
-font-family: helvetica;
-font-weight: bold;
-color: black;
-border-style: solid;
-border-radius:2px;
-border-width:0px;
-border-color: gray;
-font-size:90%;
-min-width:75px;
-min-height:30px;
-/*max-width:60px;*/
-max-height:30px;
-background-color: yellow;
-}
-</string>
-                 </property>
-                 <property name="text">
-                  <string>TX</string>
-                 </property>
-                 <property name="checkable">
-                  <bool>false</bool>
-                 </property>
-                </widget>
+                </property>
+                <property name="text">
+                 <string>SPOT</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="flat">
+                 <bool>false</bool>
+                </property>
                </widget>
               </item>
-              <item row="5" column="3">
-               <spacer name="verticalSpacer_8">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item row="1" column="5">
+              <item row="1" column="4">
                <widget class="QPushButton" name="activeButton">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>75</width>
-                  <height>30</height>
+                  <width>0</width>
+                  <height>0</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
-                  <width>0</width>
-                  <height>30</height>
+                  <width>16777215</width>
+                  <height>16777215</height>
                  </size>
                 </property>
                 <property name="visible">
@@ -690,35 +601,6 @@ background-color: yellow;
                 </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable automatic station replies to directed queries&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QPushButton {
-font-family: helvetica;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-radius:2px;
-border-width:0px;
-border-color: gray;
-font-size:90%;
-min-width:75px;
-min-height:30px;
-/*max-width:60px;*/
-max-height:30px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}
-QPushButton:checked {
-background-color: #6699ff;
-}</string>
                 </property>
                 <property name="text">
                  <string>ACTIVE</string>
@@ -728,59 +610,103 @@ background-color: #6699ff;
                 </property>
                </widget>
               </item>
-              <item row="1" column="2">
-               <widget class="QPushButton" name="tuneButton">
+              <item row="1" column="0">
+               <widget class="QPushButton" name="monitorButton">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>75</width>
+                  <width>0</width>
                   <height>30</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>9</pointsize>
+                 </font>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable the receiver&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+	background-color:lightgray;
+	padding:0.25em 0.25em; font-weight:normal;
+	border-style:solid;
+	border-width:0px;
+	border-radius:2px;
+ }
+
+QPushButton:checked { 
+  background-color:#00ff00;
+}</string>
+                </property>
+                <property name="text">
+                 <string>RX</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="flat">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QPushButton" name="tuneButton">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
                   <height>30</height>
                  </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>9</pointsize>
+                 </font>
                 </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Transmit a tuning tone&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
-font-family: helvetica;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-radius:2px;
-border-width:0px;
-border-color: gray;
-font-size:90%;
-min-width:75px;
-min-height:30px;
-/*max-width:60px;*/
-max-height:30px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}
-QPushButton:checked {
-background-color: #6699ff;
+	background-color:lightgray;
+	padding:0.25em 0.25em; font-weight:normal;
+	border-style:solid;
+	border-width:0px;
+	border-radius:2px;
+ }
+
+QPushButton:checked { 
+  background-color:#6699ff;
 }</string>
                 </property>
                 <property name="text">
@@ -789,263 +715,108 @@ background-color: #6699ff;
                 <property name="checkable">
                  <bool>true</bool>
                 </property>
+                <property name="flat">
+                 <bool>false</bool>
+                </property>
                </widget>
               </item>
-              <item row="0" column="3">
-               <spacer name="verticalSpacer_7">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item row="4" column="2">
-               <widget class="QPushButton" name="autoReplyButton">
+              <item row="1" column="1">
+               <widget class="QPushButton" name="monitorTxButton">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>75</width>
+                  <width>0</width>
                   <height>30</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
-                  <width>0</width>
-                  <height>30</height>
+                  <width>16777215</width>
+                  <height>16777215</height>
                  </size>
                 </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable automatic station replies to directed queries&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QPushButton {
-font-family: helvetica;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-radius:2px;
-border-width:0px;
-border-color: gray;
-font-size:90%;
-min-width:75px;
-min-height:30px;
-/*max-width:60px;*/
-max-height:30px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}
-QPushButton:checked {
-background-color: #6699ff;
-}</string>
-                </property>
-                <property name="text">
-                 <string>AUTO</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="3">
-               <widget class="QPushButton" name="spotButton">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>75</width>
-                  <height>30</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>0</width>
-                  <height>30</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable spotting of callsigns heard to PSKReporter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QPushButton {
-font-family: helvetica;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-radius:2px;
-border-width:0px;
-border-color: gray;
-font-size:90%;
-min-width:75px;
-min-height:30px;
-/*max-width:60px;*/
-max-height:30px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}
-QPushButton:checked {
-background-color: #00ff00;
-}</string>
-                </property>
-                <property name="text">
-                 <string>SPOT</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="4">
-               <widget class="QPushButton" name="logQSOButton">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>75</width>
-                  <height>30</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>0</width>
-                  <height>30</height>
-                 </size>
+                <property name="font">
+                 <font>
+                  <pointsize>9</pointsize>
+                 </font>
                 </property>
                 <property name="visible">
                  <bool>true</bool>
                 </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Insert a new entry into the log&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
-font-family: helvetica;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-radius:2px;
-border-width:0px;
-border-color: gray;
-font-size:90%;
-min-width:75px;
-min-height:30px;
-/*max-width:60px;*/
-max-height:30px;
-}
-QPushButton:pressed {
-background-color: darkgray;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
+	background-color:lightgray;
+	padding:0.25em 0.25em; font-weight:normal;
+	border-style:solid;
+	border-width:0px;
+	border-radius:2px;
+ }
+
+QPushButton:checked { 
+  background-color:#ff0000;
 }</string>
                 </property>
                 <property name="text">
-                 <string>LOG</string>
+                 <string>TX</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="flat">
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>
-              <item row="4" column="1">
+              <item row="2" column="1">
                <widget class="QPushButton" name="heartbeatButton">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>75</width>
+                  <width>0</width>
                   <height>30</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
-                  <width>0</width>
-                  <height>30</height>
+                  <width>16777215</width>
+                  <height>16777215</height>
                  </size>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>9</pointsize>
+                 </font>
                 </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable the automatic heartbeat transmission&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
-font-family: helvetica;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-radius:2px;
-border-width:0px;
-border-color: gray;
-font-size:90%;
-min-width:75px;
-min-height:30px;
-/*max-width:60px;*/
-max-height:30px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}
-QPushButton:checked {
-background-color: #6699ff;
+	background-color:lightgray;
+	padding:0.25em 0.25em; font-weight:normal;
+	border-style:solid;
+	border-width:0px;
+	border-radius:2px;
+ }
+
+QPushButton:checked { 
+  background-color:#6699ff;
 }</string>
                 </property>
                 <property name="text">
@@ -1054,30 +825,38 @@ background-color: #6699ff;
                 <property name="checkable">
                  <bool>true</bool>
                 </property>
+                <property name="flat">
+                 <bool>false</bool>
+                </property>
                </widget>
               </item>
-              <item row="4" column="3">
+              <item row="2" column="3">
                <widget class="QPushButton" name="selcalButton">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>75</width>
+                  <width>0</width>
                   <height>30</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
-                  <width>0</width>
-                  <height>30</height>
+                  <width>16777215</width>
+                  <height>16777215</height>
                  </size>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>9</pointsize>
+                 </font>
                 </property>
                 <property name="visible">
                  <bool>true</bool>
@@ -1087,31 +866,15 @@ background-color: #6699ff;
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
-font-family: helvetica;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-radius:2px;
-border-width:0px;
-border-color: gray;
-font-size:90%;
-min-width:75px;
-min-height:30px;
-/*max-width:60px;*/
-max-height:30px;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
-}
-QPushButton:checked {
-background-color: #6699ff;
+	background-color:lightgray;
+	padding:0.25em 0.25em; font-weight:normal;
+	border-style:solid;
+	border-width:0px;
+	border-radius:2px;
+ }
+
+QPushButton:checked { 
+  background-color:#6699ff;
 }</string>
                 </property>
                 <property name="text">
@@ -1120,52 +883,152 @@ background-color: #6699ff;
                 <property name="checkable">
                  <bool>true</bool>
                 </property>
+                <property name="flat">
+                 <bool>false</bool>
+                </property>
                </widget>
               </item>
-              <item row="4" column="4">
-               <widget class="QPushButton" name="stopTxButton">
+              <item row="2" column="2">
+               <widget class="QPushButton" name="autoReplyButton">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="minimumSize">
                  <size>
-                  <width>75</width>
+                  <width>0</width>
                   <height>30</height>
                  </size>
                 </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>9</pointsize>
+                 </font>
+                </property>
                 <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Stop transmitting&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable or disable automatic station replies to directed queries&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
-font-family: helvetica;
-font-weight: bold;
-background-color: lightgray;
-color: black;
-border-style: solid;
-border-radius:2px;
-border-width:0px;
-border-color: gray;
-font-size:90%;
-min-width:75px;
-min-height:30px;
-/*max-width:60px;*/
-max-height:30px;
-}
-QPushButton:pressed {
-background-color: darkgray;
-}
-QPushButton[state=&quot;error&quot;] {
-background-color: red;
-}
-QPushButton[state=&quot;warning&quot;] {
-background-color: orange;
-}
-QPushButton[state=&quot;ok&quot;] {
-background-color: #00ff00;
+	background-color:lightgray;
+	padding:0.25em 0.25em; font-weight:normal;
+	border-style:solid;
+	border-width:0px;
+	border-radius:2px;
+ }
+
+QPushButton:checked { 
+  background-color:#6699ff;
 }</string>
                 </property>
                 <property name="text">
-                 <string>HALT</string>
+                 <string>AUTO</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="flat">
+                 <bool>false</bool>
                 </property>
                </widget>
+              </item>
+              <item row="1" column="3">
+               <widget class="QPushButton" name="logQSOButton">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>9</pointsize>
+                 </font>
+                </property>
+                <property name="visible">
+                 <bool>true</bool>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Insert a new entry into the log&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+	background-color:lightgray;
+	padding:0.25em 0.25em; font-weight:normal;
+	border-style:solid;
+	border-width:0px;
+	border-radius:2px;
+ }
+
+QPushButton:checked { 
+  background-color:#6699ff;
+}</string>
+                </property>
+                <property name="text">
+                 <string>LOG</string>
+                </property>
+                <property name="flat">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <spacer name="verticalSpacer_7">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeType">
+                 <enum>QSizePolicy::MinimumExpanding</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>10</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item row="3" column="0">
+               <spacer name="verticalSpacer_8">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeType">
+                 <enum>QSizePolicy::MinimumExpanding</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>10</height>
+                 </size>
+                </property>
+               </spacer>
               </item>
              </layout>
             </widget>
@@ -1498,54 +1361,6 @@ QTextEdit[transmitting=&quot;true&quot;] {
         <property name="bottomMargin">
          <number>0</number>
         </property>
-        <item row="1" column="2">
-         <widget class="QPushButton" name="replyMacroButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reply to a CQ&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Reply</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="13">
-         <spacer name="horizontalSpacer_5">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="1" column="13">
-         <spacer name="horizontalSpacer_5">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
         <item row="1" column="11">
          <widget class="QPushButton" name="queryButton">
           <property name="minimumSize">
@@ -1562,8 +1377,126 @@ QTextEdit[transmitting=&quot;true&quot;] {
           </property>
          </widget>
         </item>
+        <item row="1" column="16">
+         <widget class="QPushButton" name="stopTxButton">
+          <property name="minimumSize">
+           <size>
+            <width>75</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Stop transmitting&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Halt</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="14">
+         <spacer name="horizontalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Preferred</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>10</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="5">
+         <widget class="QPushButton" name="qtcMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send your station message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>QTC</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QPushButton" name="snrMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send an SNR message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>SNR</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="7">
+         <spacer name="horizontalSpacer_8">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Preferred</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>10</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="replyMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reply to a CQ&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Reply</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="6">
+         <widget class="QPushButton" name="macrosMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send a saved message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Saved</string>
+          </property>
+         </widget>
+        </item>
         <item row="1" column="12">
          <widget class="QPushButton" name="deselectButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -1613,39 +1546,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
           </property>
          </widget>
         </item>
-        <item row="1" column="7">
-         <spacer name="horizontalSpacer_8">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="1" column="5">
-         <widget class="QPushButton" name="qtcMacroButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send your station message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>QTC</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="14">
+        <item row="1" column="15">
          <widget class="QPushButton" name="startTxButton">
           <property name="enabled">
            <bool>false</bool>
@@ -1674,38 +1575,6 @@ color:#555;
           </property>
           <property name="checkable">
            <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="6">
-         <widget class="QPushButton" name="macrosMacroButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send a saved message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Saved</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QPushButton" name="snrMacroButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send an SNR message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>SNR</string>
           </property>
          </widget>
         </item>
@@ -4730,7 +4599,7 @@ list. The list can be maintained in Settings (F2).</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>872</width>
+     <width>994</width>
      <height>22</height>
     </rect>
    </property>
