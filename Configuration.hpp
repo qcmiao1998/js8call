@@ -99,6 +99,8 @@ public:
   QString my_grid () const;
   QString my_station () const;
   QSet<QString> my_groups() const;
+  void addGroup(QString const &group);
+  void removeGroup(QString const &group);
   int activity_aging() const;
   int callsign_aging() const;
   QString my_qth () const;

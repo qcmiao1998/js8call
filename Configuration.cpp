@@ -945,6 +945,20 @@ QSet<QString> Configuration::my_groups() const {
     return QSet<QString>::fromList(m_->my_groups_);
 }
 
+void Configuration::addGroup(QString const &group){
+    QSet<QString> groups = my_groups();
+    groups.insert(group.trimmed());
+    m_->my_groups_ = groups.toList();
+    m_->write_settings();
+}
+
+void Configuration::removeGroup(QString const &group){
+    QSet<QString> groups = my_groups();
+    groups.remove(group.trimmed());
+    m_->my_groups_ = groups.toList();
+    m_->write_settings();
+}
+
 QString Configuration::my_qth() const
 {
     return m_->my_qth_.trimmed();

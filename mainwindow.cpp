@@ -1294,29 +1294,41 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto clearAction4 = new QAction(QString("Clear"), ui->tableWidgetCalls);
   connect(clearAction4, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetCalls); });
 
-  auto addStation = new QAction(QString("Add New Station.."), ui->tableWidgetCalls);
+  auto addStation = new QAction(QString("Add New Station or Group..."), ui->tableWidgetCalls);
   connect(addStation, &QAction::triggered, this, [this](){
       bool ok = false;
-      QString callsign = QInputDialog::getText(this, tr("Add New Station..."),
-                                               tr("Station Callsign:"), QLineEdit::Normal,
+      QString callsign = QInputDialog::getText(this, tr("Add New Station or Group..."),
+                                               tr("Station or Group Callsign:"), QLineEdit::Normal,
                                                "", &ok).toUpper().trimmed();
-      if(!ok || callsign.isEmpty()){
+      if(!ok || callsign.trimmed().isEmpty()){
          return;
       }
 
-      CallDetail cd = {};
-      cd.call = callsign;
-      m_callActivity[callsign] = cd;
+      if(callsign.startsWith("@")){
+          m_config.addGroup(callsign);
+      } else {
+          CallDetail cd = {};
+          cd.call = callsign;
+          m_callActivity[callsign] = cd;
+      }
+
       displayActivity(true);
   });
 
   auto removeStation = new QAction(QString("Remove Station"), ui->tableWidgetCalls);
   connect(removeStation, &QAction::triggered, this, [this](){
       QString selectedCall = callsignSelected();
-      if(!selectedCall.isEmpty() && m_callActivity.contains(selectedCall)){
-          m_callActivity.remove(selectedCall);
-          displayActivity(true);
+      if(selectedCall.isEmpty()){
+          return;
       }
+
+      if (selectedCall.startsWith("@")){
+          m_config.removeGroup(selectedCall);
+      } else if(m_callActivity.contains(selectedCall)){
+          m_callActivity.remove(selectedCall);
+      }
+
+      displayActivity(true);
   });
 
 
@@ -1369,6 +1381,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
     menu->addAction(addStation);
     removeStation->setDisabled(missingCallsign || isAllCall);
+    removeStation->setText(selectedCall.startsWith("@") ? "Remove Group" : "Remove Station");
     menu->addAction(removeStation);
 
     menu->addSeparator();
@@ -5213,6 +5226,9 @@ void MainWindow::createAllcallTableRows(QTableWidget *table, QString const &sele
         table->insertRow(table->rowCount());
 
         foreach(auto cd, m_callActivity.values()){
+            if (cd.call.trimmed().isEmpty()){
+                continue;
+            }
             if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
                 continue;
             }
@@ -9764,6 +9780,9 @@ void MainWindow::displayCallActivity() {
             }
 
             CallDetail d = m_callActivity[call];
+            if(d.call.trimmed().isEmpty()){
+                continue;
+            }
 
             bool isCallSelected = (call == selectedCall);
 
