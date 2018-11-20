@@ -1142,11 +1142,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto clearActionSep = new QAction(nullptr);
   clearActionSep->setSeparator(true);
 
-  auto clearActionAll = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear All"), nullptr);
+  auto clearActionAll = new QAction(QString("Clear All"), nullptr);
   connect(clearActionAll, &QAction::triggered, this, &MainWindow::clearActivity);
 
   // setup tablewidget context menus
-  auto clearAction1 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->textEditRX);
+  auto clearAction1 = new QAction(QString("Clear"), ui->textEditRX);
   connect(clearAction1, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->textEditRX); });
 
   ui->textEditRX->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -1164,7 +1164,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   });
 
-  auto clearAction2 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->extFreeTextMsgEdit);
+  auto clearAction2 = new QAction(QString("Clear"), ui->extFreeTextMsgEdit);
   connect(clearAction2, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->extFreeTextMsgEdit); });
 
   auto restoreAction = new QAction(QString("Restore Previous Message"), ui->extFreeTextMsgEdit);
@@ -1206,7 +1206,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
 
 
-  auto clearAction3 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetRXAll);
+  auto clearAction3 = new QAction(QString("Clear"), ui->tableWidgetRXAll);
   connect(clearAction3, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetRXAll); });
 
   auto removeActivity = new QAction(QString("Remove Activity"), ui->tableWidgetRXAll);
@@ -1291,7 +1291,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
 
 
-  auto clearAction4 = new QAction(QIcon::fromTheme("edit-clear"), QString("Clear"), ui->tableWidgetCalls);
+  auto clearAction4 = new QAction(QString("Clear"), ui->tableWidgetCalls);
   connect(clearAction4, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetCalls); });
 
   auto addStation = new QAction(QString("Add New Station.."), ui->tableWidgetCalls);
@@ -7147,7 +7147,7 @@ void MainWindow::buildSavedMessagesMenu(QMenu *menu){
 
     menu->addSeparator();
 
-    auto editAction = new QAction(QIcon::fromTheme("edit-edit"), QString("&Edit Saved Messages"), menu);
+    auto editAction = new QAction(QString("&Edit Saved Messages"), menu);
     menu->addAction(editAction);
     connect(editAction, &QAction::triggered, this, [this](){
         openSettings(5);
