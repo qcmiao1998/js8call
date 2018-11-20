@@ -2673,10 +2673,8 @@ void MainWindow::on_monitorTxButton_toggled(bool checked){
 }
 
 void MainWindow::on_selcalButton_toggled(bool checked){
+#if SELCAL_SHOULD_HIDE_BAND_ACTIVITY
     if(checked){
-        if(callsignSelected() == "@ALLCALL"){
-            clearCallsignSelected();
-        }
         if(ui->tableWidgetRXAll->isVisible()){
             ui->tableWidgetRXAll->setVisible(false);
             m_bandActivityWasVisible = true;
@@ -2685,6 +2683,11 @@ void MainWindow::on_selcalButton_toggled(bool checked){
         }
     } else {
         ui->tableWidgetRXAll->setVisible(m_bandActivityWasVisible);
+    }
+#endif
+
+    if(checked && callsignSelected() == "@ALLCALL"){
+        clearCallsignSelected();
     }
 
     resetPushButtonToggleText(ui->selcalButton);
@@ -8558,7 +8561,7 @@ void MainWindow::processRxActivity() {
         int prevOffset = d.freq;
         if(hasExistingMessageBuffer(d.freq, false, &prevOffset) && (
                 (m_messageBuffer[prevOffset].cmd.to == m_config.my_callsign()) ||
-                (isAllCallIncluded(m_messageBuffer[prevOffset].cmd.to) && !ui->selcalButton->isChecked()) ||
+                // (isAllCallIncluded(m_messageBuffer[prevOffset].cmd.to) && !ui->selcalButton->isChecked()) || // don't incrementally print allcalls
                 (isGroupCallIncluded(m_messageBuffer[prevOffset].cmd.to))
             )
         ){
@@ -8906,7 +8909,7 @@ void MainWindow::processCommandActivity() {
         bool shouldDisplay = true;
 
         // don't display ping allcalls
-        if(isAllCall && (ad.text.contains(": HEARTBEAT") || d.cmd == " HEARTBEAT")){
+        if(isAllCall && (d.cmd != " " || ad.text.contains(": HEARTBEAT"))){ // || d.cmd == " HEARTBEAT")){
             shouldDisplay = false;
         }
 
