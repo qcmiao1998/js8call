@@ -54,19 +54,21 @@ QMap<QString, int> directed_cmds = {
     {" QTC?",     2  }, // query station message
     {"&",         2  }, // compat
 
+    //{"$",       3  }, // query station(s) heard
+
     {" GRID?",    4  }, // query grid
     {"^",         4  }, // compat
+
+    {">",         5  }, // relay message
 
     {" STATUS?",  6  }, // query idle message
     {"*",         6  }, // compat
 
-    {">",     5  }, // relay message
-    {"#",     8  }, // all or nothing message
+    //{"!",       7  }, // alert message
 
-    //{"!",     7  }, // alert message
-    //{"$",     3  }, // query station(s) heard
+    {"#",         8  }, // all or nothing message
 
-    {" TU",     9  }, // thank you
+    {" TU",       9  }, // thank you
 
     {" ACTIVE",     10 }, // i have been active in the past 10 minutes
     {" IDLE",       11 }, // i have not been active in the past 10 minutes
