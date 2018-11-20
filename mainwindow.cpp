@@ -5952,11 +5952,14 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
       {"STATION.GRID", QVariant(my_grid)}
   });
 
-  clearCallsignSelected();
-
   m_logBook.init();
 
-  if (m_config.clear_DX () and !m_config.bHound()) clearDX ();
+  if (m_config.clear_callsign ()){
+      clearDX ();
+      clearCallsignSelected();
+  }
+
+  displayCallActivity();
 
   m_dateTimeQSOOn = QDateTime {};
 }
@@ -8521,6 +8524,9 @@ void MainWindow::processActivity(bool force) {
 }
 
 void MainWindow::observeTimeDeltaForAverage(float delta){
+    // delta can only be +/- 15 seconds
+    delta = qMax(-15.0F, qMin(delta, 15.0F));
+
     // compute average drift
     if(m_timeDeltaMsMMA_N == 0){
         m_timeDeltaMsMMA_N++;
