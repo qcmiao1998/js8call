@@ -4509,7 +4509,8 @@ void MainWindow::guiUpdate()
       m_currentMessage = QString::fromLatin1(msgsent);
       m_currentMessageBits = msgibits;
 
-      if(TEST_FOX_WAVE_GEN && ui->turboButton->isChecked()) {
+#if TEST_FOX_WAVE_GEN
+      if(ui->turboButton->isChecked()) {
 
         foxcom_.nslots=1;
 
@@ -4536,10 +4537,8 @@ void MainWindow::guiUpdate()
 
         foxgen_();
       }
+#endif
     }
-
-    //m_currentMessage = QString::fromLatin1(msgsent);
-    //m_currentMessageBits = msgibits;
 
     m_bCallingCQ = CALLING == m_QSOProgress
       || m_currentMessage.contains (QRegularExpression {"^(CQ|QRZ) "});
