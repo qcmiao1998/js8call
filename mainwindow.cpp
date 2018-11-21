@@ -151,9 +151,8 @@ extern "C" {
   void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
-
-#define TEST_FOX_WAVE_GEN 1
-#define TEST_FOX_WAVE_GEN_SLOTS 2
+#define TEST_FOX_WAVE_GEN 0
+#define TEST_FOX_WAVE_GEN_SLOTS 1
 
 const int NEAR_THRESHOLD_RX = 10;
 
@@ -8707,20 +8706,19 @@ void MainWindow::updateTxButtonDisplay(){
     // update transmit button
     if(m_tune || m_transmitting || m_txFrameCount > 0){
         int count = m_txFrameCount;
+
 #if TEST_FOX_WAVE_GEN
         if(ui->turboButton->isChecked()){
             count = qMax(1, (int)ceil(float(count)/TEST_FOX_WAVE_GEN_SLOTS));
         }
-#endif
 
-#if TEST_FOX_WAVE_GEN
-    int left = m_txFrameQueue.count();
-    if(ui->turboButton->isChecked()){
-        left = (int)ceil(float(left)/TEST_FOX_WAVE_GEN_SLOTS);
-    }
-    int sent = qMax(1, count - left);
+        int left = m_txFrameQueue.count();
+        if(ui->turboButton->isChecked()){
+            left = (int)ceil(float(left)/TEST_FOX_WAVE_GEN_SLOTS);
+        }
+        int sent = qMax(1, count - left);
 #else
-    int sent = count - m_txFrameQueue.count();
+        int sent = count - m_txFrameQueue.count();
 #endif
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("%1 (%2/%3)").arg(ui->turboButton->isChecked() ? "Turbo" : "Send").arg(sent).arg(count));
         ui->startTxButton->setEnabled(false);
