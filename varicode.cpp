@@ -1214,7 +1214,6 @@ QStringList Varicode::unpackHeartbeatMessage(const QString &text, quint8 *pType,
     return unpacked;
 }
 
-
 // KN4CRD/XXXX EM73
 // XXXX/KN4CRD EM73
 // KN4CRD/P
@@ -1504,7 +1503,7 @@ QString packHuffMessage(const QString &input, int *n){
 
     // [1][1][70] = 72
     // The first bit is a flag that indicates this is a data frame, technically encoded as [100]
-    // but, since none of the other frame types start with a 1, we can drop the two zeros and use
+    // but, since none of the other frame types start with a 0, we can drop the two zeros and use
     // them for encoding the first two bits of the actuall data sent. boom!
     // The second bit is a flag that indicates this is not compressed frame (huffman coding)
     QVector<bool> frameBits = {true, false};

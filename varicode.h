@@ -21,7 +21,7 @@ public:
         JS8Call          = 0, // [000] <- any other frame of the message
         JS8CallFirst     = 1, // [001] <- the first frame of a message
         JS8CallLast      = 2, // [010] <- the last frame of a message
-        JS8CallExtended  = 4, // [100] <- raw data frame (no frame type header)
+        JS8CallExtended  = 4, // [100] <- extended frame (no frame type header)
     };
 
     /*
@@ -30,7 +30,7 @@ public:
     001 = compound
     010 = compound directed
     011 = directed
-    1XX = data, with X bits dropped
+    1XX = data, with the X lsb bits dropped
     */
     enum FrameType {
         FrameUnknown          = 255, // [11111111] <- only used as a sentinel
@@ -38,7 +38,7 @@ public:
         FrameCompound         = 1,   // [001]
         FrameCompoundDirected = 2,   // [010]
         FrameDirected         = 3,   // [011]
-        FrameData             = 4,   // [1XX] // but this only encodes the msb bit 1 and drops the two zeros
+        FrameData             = 4,   // [10X] // but this only encodes the first 2 msb bits and drops the lsb
         FrameDataCompressed   = 6,   // [11X] // but this only encodes the first 2 msb bits and drops the lsb
     };
 
