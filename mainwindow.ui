@@ -972,6 +972,9 @@ QPushButton:checked {
               </item>
               <item row="2" column="4">
                <widget class="QPushButton" name="turboButton">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -988,6 +991,9 @@ QPushButton:checked {
                  <font>
                   <pointsize>9</pointsize>
                  </font>
+                </property>
+                <property name="visible">
+                 <bool>false</bool>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
