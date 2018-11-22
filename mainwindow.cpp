@@ -2383,6 +2383,8 @@ void MainWindow::on_actionEnable_Selcall_toggled(bool checked){
 }
 
 void MainWindow::on_menuWindow_aboutToShow(){
+    ui->actionShow_Fullscreen->setChecked((windowState() & Qt::WindowFullScreen) == Qt::WindowFullScreen);
+
     auto hsizes = ui->textHorizontalSplitter->sizes();
     ui->actionShow_Band_Activity->setChecked(hsizes.at(0) > 0);
     ui->actionShow_Call_Activity->setChecked(hsizes.at(2) > 0);
@@ -2426,6 +2428,16 @@ void MainWindow::on_menuWindow_aboutToShow(){
 #if __APPLE__
     rebuildMacQAction(ui->menuWindow, ui->actionShow_Call_Activity_Columns);
 #endif
+}
+
+void MainWindow::on_actionShow_Fullscreen_triggered(bool checked){
+    auto state = windowState();
+    if(checked){
+        state |= Qt::WindowFullScreen;
+    } else {
+        state &= ~Qt::WindowFullScreen;
+    }
+    setWindowState(state);
 }
 
 void MainWindow::on_actionShow_Frequency_Clock_triggered(bool checked){

@@ -4723,7 +4723,6 @@ list. The list can be maintained in Settings (F2).</string>
     <property name="title">
      <string>&amp;View</string>
     </property>
-    <addaction name="actionShow_Tooltips"/>
     <addaction name="actionShow_Frequency_Clock"/>
     <addaction name="separator"/>
     <addaction name="actionShow_Band_Activity"/>
@@ -4738,6 +4737,8 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionShow_Waterfall_Controls"/>
     <addaction name="actionShow_Time_Drift_Controls"/>
     <addaction name="separator"/>
+    <addaction name="actionShow_Fullscreen"/>
+    <addaction name="actionShow_Tooltips"/>
     <addaction name="actionReset_Window_Sizes"/>
    </widget>
    <widget class="QMenu" name="menu_Log">
@@ -5599,6 +5600,17 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Enable Selective Calling</string>
+   </property>
+  </action>
+  <action name="actionShow_Fullscreen">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Fullscreen</string>
+   </property>
+   <property name="shortcut">
+    <string>F11</string>
    </property>
   </action>
  </widget>

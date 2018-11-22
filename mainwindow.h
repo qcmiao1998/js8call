@@ -177,6 +177,7 @@ private slots:
   void on_actionEnable_Heartbeat_toggled(bool checked);
   void on_actionEnable_Selcall_toggled(bool checked);
   void on_menuWindow_aboutToShow();
+  void on_actionShow_Fullscreen_triggered(bool checked);
   void on_actionShow_Frequency_Clock_triggered(bool checked);
   void on_actionShow_Band_Activity_triggered(bool checked);
   void on_actionShow_Call_Activity_triggered(bool checked);
