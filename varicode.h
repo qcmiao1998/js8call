@@ -21,7 +21,7 @@ public:
         JS8Call          = 0, // [000] <- any other frame of the message
         JS8CallFirst     = 1, // [001] <- the first frame of a message
         JS8CallLast      = 2, // [010] <- the last frame of a message
-        JS8CallExtended  = 4, // [100] <- extended frame (no frame type header)
+        JS8CallFlag      = 4, // [100] <- flagged frame (no frame type header)
     };
 
     /*

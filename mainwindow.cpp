@@ -9019,7 +9019,7 @@ void MainWindow::processCompoundActivity() {
             bits == Varicode::JS8Call                                         ||
             ((bits & Varicode::JS8CallFirst)    == Varicode::JS8CallFirst)    ||
             ((bits & Varicode::JS8CallLast)     == Varicode::JS8CallLast)     ||
-            ((bits & Varicode::JS8CallExtended) == Varicode::JS8CallExtended)
+            ((bits & Varicode::JS8CallFlag) == Varicode::JS8CallFlag)
         );
         if (!validBits) {
             qDebug() << "-> buffer.cmd bits is invalid...skip";
