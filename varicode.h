@@ -63,7 +63,9 @@ public:
 
     static QMap<QString, QString> defaultHuffTable();
     static QString cqString(int number);
+    static QString hbString(int number);
     static bool startsWithCQ(QString text);
+    static bool startsWithHB(QString text);
     static QString formatSNR(int snr);
     static QString formatPWR(int dbm);
 

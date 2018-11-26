@@ -140,7 +140,7 @@ bool DecodedText::tryUnpackHeartbeat(){
         cmp.append(parts.at(1));
     }
     compound_ = cmp.join("/");
-    message_ = QString("%1: %2 %3 ").arg(compound_).arg(isAlt ? Varicode::cqString(bits3) : "HEARTBEAT").arg(extra_);
+    message_ = QString("%1: %2 %3 ").arg(compound_).arg(isAlt ? Varicode::cqString(bits3) : Varicode::hbString(bits3)).arg(extra_);
     frameType_ = type;
     return true;
 }

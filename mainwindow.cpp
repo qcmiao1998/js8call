@@ -1405,21 +1405,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // Don't block heartbeat's first run...
   m_lastTxTime = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
 
-
-  auto heartbeatNow = new QAction(QString("Send Heartbeat Now"), ui->heartbeatButton);
-  connect(heartbeatNow, &QAction::triggered, this, [this](){
-    if(m_transmitting){
-        return;
-    }
-    if(!ui->heartbeatButton->isChecked()){
-        ui->heartbeatButton->setChecked(true);
-    }
-    scheduleHeartbeat(true);
-  });
-  ui->heartbeatButton->setContextMenuPolicy(Qt::ActionsContextMenu);
-  ui->heartbeatButton->addAction(heartbeatNow);
-
-
   int width = 75;
   /*
   QList<QPushButton*> btns;
@@ -1564,12 +1549,6 @@ void MainWindow::initializeDummyData(){
     displayTextForFreq("HELLO BRAVE  NEW   WORLD    \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
 
     displayActivity(true);
-
-    ui->heartbeatButton->click();
-    QTimer::singleShot(10000, this, [this](){
-         m_idleMinutes = 61;
-         scheduleHeartbeat(true);
-    });
 }
 
 void MainWindow::initialize_fonts ()
@@ -2361,8 +2340,8 @@ void rebuildMacQAction(QMenu *menu, QAction *existingAction){
 
 void MainWindow::on_menuControl_aboutToShow(){
     ui->actionEnable_Spotting->setChecked(ui->spotButton->isChecked());
+    ui->actionEnable_Active->setChecked(ui->activeButton->isChecked());
     ui->actionEnable_Auto_Reply->setChecked(ui->autoReplyButton->isChecked());
-    ui->actionEnable_Heartbeat->setChecked(ui->heartbeatButton->isChecked());
     ui->actionEnable_Selcall->setChecked(ui->selcalButton->isChecked());
 }
 
@@ -2374,8 +2353,8 @@ void MainWindow::on_actionEnable_Auto_Reply_toggled(bool checked){
     ui->autoReplyButton->setChecked(checked);
 }
 
-void MainWindow::on_actionEnable_Heartbeat_toggled(bool checked){
-    ui->heartbeatButton->setChecked(checked);
+void MainWindow::on_actionEnable_Active_toggled(bool checked){
+    ui->activeButton->setChecked(checked);
 }
 
 void MainWindow::on_actionEnable_Selcall_toggled(bool checked){
@@ -2715,6 +2694,27 @@ void MainWindow::on_spotButton_toggled(bool checked){
     resetPushButtonToggleText(ui->spotButton);
 }
 
+void MainWindow::on_activeButton_toggled(bool checked){
+#if 0
+    // clear the ping queue when you toggle the button
+    m_txHeartbeatQueue.clear();
+    displayBandActivity();
+
+    // then process the action
+    if(checked){
+        scheduleHeartbeat(false);
+    } else {
+        pauseHeartbeat();
+    }
+#endif
+
+    // we call this so hb button disabled state is updated
+    updateButtonDisplay();
+
+    resetPushButtonToggleText(ui->activeButton);
+}
+
+#if 0
 void MainWindow::on_heartbeatButton_toggled(bool checked){
     // clear the ping queue when you toggle the button
     m_txHeartbeatQueue.clear();
@@ -2729,6 +2729,7 @@ void MainWindow::on_heartbeatButton_toggled(bool checked){
 
     resetPushButtonToggleText(ui->heartbeatButton);
 }
+#endif
 
 void MainWindow::auto_tx_mode (bool state)
 {
@@ -3852,7 +3853,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                     // convert HEARTBEAT to a directed command and process...
                     cmd.from = cd.call;
                     cmd.to = "@ALLCALL";
-                    cmd.cmd = " HEARTBEAT";
+                    cmd.cmd = " ACTIVE";
                     cmd.snr = cd.snr;
                     cmd.bits = cd.bits;
                     cmd.grid = cd.grid;
@@ -4569,7 +4570,7 @@ void MainWindow::guiUpdate()
     } else if(m_monitoring) {
       if (m_tx_watchdog) {
         tx_status_label.setStyleSheet ("QLabel{background-color: #ff0000}");
-        tx_status_label.setText ("Idle watchdog");
+        tx_status_label.setText ("Inactive watchdog");
       } else {
         tx_status_label.setStyleSheet("QLabel{background-color: #00ff00}");
         QString t;
@@ -4594,24 +4595,22 @@ void MainWindow::guiUpdate()
     parts << t.date().toString("yyyy MMM dd");
     ui->labUTC->setText(parts.join("\n"));
 
+#if 0
     auto delta = t.secsTo(m_nextHeartbeat);
     QString ping;
-    if(ui->heartbeatButton->isChecked()){
-        if(heartbeatTimer.isActive()){
-            if(delta > 0){
-                ping = QString("%1 s").arg(delta);
-            } else {
-                ping = "queued!";
-            }
+    if(heartbeatTimer.isActive()){
+        if(delta > 0){
+            ping = QString("%1 s").arg(delta);
         } else {
-            ping = "on demand";
+            ping = "queued!";
         }
     } else if (m_nextHeartPaused) {
         ping = "paused";
     } else {
-        ping = "disabled";
+        ping = "on demand";
     }
     ui->labHeartbeat->setText(QString("Next Heartbeat: %1").arg(ping));
+#endif
 
     auto callLabel = m_config.my_callsign();
     if(m_config.use_dynamic_grid() && !m_config.my_grid().isEmpty()){
@@ -5446,7 +5445,6 @@ void MainWindow::enqueueMessage(int priority, QString message, int freq, Callbac
 
 void MainWindow::enqueueHeartbeat(QString message){
     m_txHeartbeatQueue.enqueue(message);
-    scheduleHeartbeat(true);
 }
 
 void MainWindow::resetMessage(){
@@ -5664,10 +5662,7 @@ bool MainWindow::prepareNextMessageFrame()
 
     updateTxButtonDisplay();
 
-    if(ui->heartbeatButton->isChecked()){
-        // bump ping
-        scheduleHeartbeat(false);
-    }
+    // TODO: bump heartbeat
 
     return true;
   }
@@ -5726,10 +5721,10 @@ int MainWindow::findFreeFreqOffset(int fmin, int fmax, int bw){
     return fmin;
 }
 
+#if 0
 // schedulePing
 void MainWindow::scheduleHeartbeat(bool first){
     auto timestamp = DriftingDateTime::currentDateTimeUtc();
-    auto orig = timestamp;
 
     // if we have the heartbeat interval disabled, return early, unless this is a "heartbeat now"
     if(!m_config.heartbeat() && !first){
@@ -5765,7 +5760,6 @@ void MainWindow::scheduleHeartbeat(bool first){
 
 // pausePing
 void MainWindow::pauseHeartbeat(){
-    ui->heartbeatButton->setChecked(false);
     m_nextHeartPaused = true;
 
     if(heartbeatTimer.isActive()){
@@ -5775,13 +5769,12 @@ void MainWindow::pauseHeartbeat(){
 
 // unpausePing
 void MainWindow::unpauseHeartbeat(){
-    ui->heartbeatButton->setChecked(true);
     scheduleHeartbeat(false);
 }
 
 // checkPing
 void MainWindow::checkHeartbeat(){
-    if(!ui->heartbeatButton->isChecked()){
+    if(m_config.heartbeat() <= 0){
         return;
     }
     auto secondsUntilHeartbeat = DriftingDateTime::currentDateTimeUtc().secsTo(m_nextHeartbeat);
@@ -5835,8 +5828,11 @@ void MainWindow::prepareHeartbeat(){
 
     m_nextHeartbeatQueued = true;
 }
+#endif
 
+void MainWindow::checkHeartbeat(){
 
+}
 
 QString MainWindow::calculateDistance(QString const& value, int *pDistance, int *pAzimuth)
 {
@@ -6496,6 +6492,16 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
     }
 }
 
+void MainWindow::on_hbMacroButton_clicked(){
+    QString mycall = m_config.my_callsign();
+    QString mygrid = m_config.my_grid().left(4);
+    QString message = QString("%1: ACTIVE %2").arg(mycall).arg(mygrid).trimmed();
+
+    addMessageText(message);
+
+    if(m_config.transmit_directed()) toggleTx(true);
+}
+
 void MainWindow::on_cqMacroButton_clicked(){
     auto message = m_config.cq_message();
     if(message.isEmpty()){
@@ -6911,7 +6917,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1>[MESSAGE]").arg(selectedCall), true, true);
     });
 
-    auto qsoQueryAction = menu->addAction(QString("%1 HEARTBEAT REQ [CALLSIGN]? - Please acknowledge you can communicate directly with [CALLSIGN]").arg(call).trimmed());
+    auto qsoQueryAction = menu->addAction(QString("%1 QUERY [CALLSIGN]? - Please acknowledge you can communicate directly with [CALLSIGN]").arg(call).trimmed());
     connect(qsoQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -6919,7 +6925,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1 HEARTBEAT REQ [CALLSIGN]?").arg(selectedCall), true, true);
+        addMessageText(QString("%1 QUERY [CALLSIGN]?").arg(selectedCall), true, true);
     });
 
     menu->addSeparator();
@@ -7135,6 +7141,7 @@ QMap<QString, QString> MainWindow::buildMacroValues(){
         {"<MYQTH>", m_config.my_qth()},
         {"<MYCQ>", m_config.cq_message()},
         {"<MYREPLY>", m_config.reply_message()},
+        {"<MYSTATUS>", (ui->activeButton->isChecked() ? "ACTIVE" : "INACTIVE")},
     };
 
     auto selectedCall = callsignSelected();
@@ -8260,7 +8267,9 @@ void MainWindow::updateButtonDisplay(){
 
     auto selectedCallsign = callsignSelected(true);
     bool emptyCallsign = selectedCallsign.isEmpty();
+    bool isActive = ui->activeButton->isChecked();
 
+    ui->hbMacroButton->setDisabled(isTransmitting || !isActive);
     ui->cqMacroButton->setDisabled(isTransmitting);
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
     ui->snrMacroButton->setDisabled(isTransmitting || emptyCallsign);
@@ -8603,7 +8612,7 @@ void MainWindow::processRxActivity() {
                 continue;
             }
 
-            if(d.isDirected && d.text.contains(": HEARTBEAT")){
+            if(d.isDirected && d.text.contains(": ACTIVE")){ // TODO: HEARTBEAT
                 continue;
             }
 
@@ -8885,7 +8894,7 @@ void MainWindow::processCommandActivity() {
         cd.snr = d.snr;
         cd.freq = d.freq;
         cd.bits = d.bits;
-        cd.ackTimestamp = d.text.contains("HEARTBEAT ACK") || toMe ? d.utcTimestamp : QDateTime{};
+        cd.ackTimestamp = d.text.contains(": ACK") || toMe ? d.utcTimestamp : QDateTime{};
         cd.utcTimestamp = d.utcTimestamp;
         cd.tdrift = d.tdrift;
         logCallActivity(cd, true);
@@ -8927,7 +8936,7 @@ void MainWindow::processCommandActivity() {
         bool shouldDisplay = true;
 
         // don't display ping allcalls
-        if(isAllCall && (d.cmd != " " || ad.text.contains(": HEARTBEAT"))){ // || d.cmd == " HEARTBEAT")){
+        if(isAllCall && (d.cmd != " " || ad.text.contains(": ACTIVE"))){ // || d.cmd == " HEARTBEAT")){
             shouldDisplay = false;
         }
 
@@ -8938,7 +8947,7 @@ void MainWindow::processCommandActivity() {
 
             // ACKs are the most likely source of items to be overwritten (multiple responses at once)...
             // so don't overwrite those (i.e., print each on a new line)
-            bool shouldOverwrite = (!d.cmd.contains("HEARTBEAT ACK")); /* && isRecentOffset(d.freq);*/
+            bool shouldOverwrite = (!d.cmd.contains(" ACK")); /* && isRecentOffset(d.freq);*/
 
             if(shouldOverwrite && ui->textEditRX->find(d.utcTimestamp.time().toString(), QTextDocument::FindBackward)){
                 // ... maybe we could delete the last line that had this message on this frequency...
@@ -9006,10 +9015,10 @@ void MainWindow::processCommandActivity() {
 
         // QUERIED ACTIVE
         else if (d.cmd == " STATUS?" && !isAllCall) {
-            if(m_idleMinutes < 10){
+            if(ui->activeButton->isChecked()){
                 reply = QString("%1 ACTIVE").arg(d.from);
             } else {
-                reply = QString("%1 IDLE").arg(d.from);
+                reply = QString("%1 INACTIVE").arg(d.from);
             }
         }
 
@@ -9142,22 +9151,18 @@ void MainWindow::processCommandActivity() {
             reply = m_lastTxMessage;
         }
 
-        // PROCESS HEARTBEAT
-        else if (d.cmd == " HEARTBEAT" && ui->heartbeatButton->isChecked() && ui->autoReplyButton->isChecked() && !ui->selcalButton->isChecked()){
-            reply = QString("%1 HEARTBEAT ACK %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
-
-            enqueueHeartbeat(reply);
+        // PROCESS ACTIVE HEARTBEAT
+        else if (d.cmd == " ACTIVE" && ui->autoReplyButton->isChecked() && !ui->selcalButton->isChecked()){
+            reply = QString("%1 ACK %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
 
             if(isAllCall){
                 // since all pings are technically @ALLCALL, let's bump the allcall cache here...
                 m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 5);
             }
-
-            continue;
         }
 
-        // PROCESS BUFFERED HEARTBEAT REQ QUERY
-        else if (d.cmd == " HEARTBEAT REQ" && ui->heartbeatButton->isChecked()){
+        // PROCESS BUFFERED QUERY
+        else if (d.cmd == " QUERY" && ui->autoReplyButton->isChecked() && !ui->selcalButton->isChecked()){
             auto who = d.text;
             if(who.isEmpty()){
                 continue;
@@ -9184,15 +9189,11 @@ void MainWindow::processCommandActivity() {
             reply = replies.join("\n");
 
             if(!reply.isEmpty()){
-                enqueueHeartbeat(reply);
-
                 if(isAllCall){
                     // since all pings are technically @ALLCALL, let's bump the allcall cache here...
                     m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 25);
                 }
             }
-
-            continue;
         }
 
         // PROCESS BUFFERED APRS:
@@ -9246,7 +9247,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // do not queue @ALLCALL replies if auto-reply is not checked or it's a ping reply
-        if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains("HEARTBEAT")){
+        if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains("ACTIVE")){
             continue;
         }
 
@@ -9428,8 +9429,7 @@ void MainWindow::processTxQueue(){
 
     // check to see if this is a high priority message, or if we have autoreply enabled, or if this is a ping and the ping button is enabled
     if(message.priority >= PriorityHigh   ||
-       (ui->autoReplyButton->isChecked()) ||
-       (ui->heartbeatButton->isChecked() && message.message.contains("HEARTBEAT"))
+       (ui->autoReplyButton->isChecked())
     ){
         // then try to set the frequency...
         setFreqOffsetForRestore(f, true);
@@ -9470,7 +9470,9 @@ void MainWindow::displayBandActivity() {
         selectedOffset = selectedItems.first()->text().toInt();
     }
 
-    bool pingEnabled = ui->heartbeatButton->isChecked();
+#if 0
+    bool pingEnabled = m_config.heartbeat() > 0;
+#endif
 
     ui->tableWidgetRXAll->setUpdatesEnabled(false);
     {
@@ -9562,10 +9564,12 @@ void MainWindow::displayBandActivity() {
                     if (!isOffsetSelected && activityAging && item.utcTimestamp.secsTo(now) / 60 >= activityAging) {
                         continue;
                     }
+#if 0
                     if (!pingEnabled && (item.text.contains(": HEARTBEAT") || item.text.contains("HEARTBEAT ACK"))){
                         // hide pings if we're not pinging.
                         continue;
                     }
+#endif
                     if (item.text.isEmpty()) {
                         continue;
                     }
@@ -9933,7 +9937,7 @@ void MainWindow::networkMessage(Message const &message)
 
     auto type = message.type();
 
-    if(type == "HEARTBEAT"){
+    if(type == "PING"){
         return;
     }
 
@@ -10611,11 +10615,12 @@ void MainWindow::tx_watchdog (bool triggered)
       if (m_auto) auto_tx_mode (false);
       stopTx();
       tx_status_label.setStyleSheet ("QLabel{background-color: #ff0000}");
-      tx_status_label.setText ("Idle watchdog");
+      tx_status_label.setText ("Inactive watchdog");
 
-      pauseHeartbeat();
-      MessageBox::warning_message(this, QString("Attempting to transmit heartbeat, but you have been idle for more than %1 minutes.").arg(m_config.watchdog()));
-      unpauseHeartbeat();
+      // if the watchdog is triggered...we're no longer active
+      ui->activeButton->setChecked(false);
+
+      MessageBox::warning_message(this, QString("Attempting to transmit, but you have been inactive for more than %1 minutes.").arg(m_config.watchdog()));
     }
   else
     {

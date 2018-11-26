@@ -173,8 +173,8 @@ private slots:
   void on_tx6_editingFinished();
   void on_menuControl_aboutToShow();
   void on_actionEnable_Spotting_toggled(bool checked);
+  void on_actionEnable_Active_toggled(bool checked);
   void on_actionEnable_Auto_Reply_toggled(bool checked);
-  void on_actionEnable_Heartbeat_toggled(bool checked);
   void on_actionEnable_Selcall_toggled(bool checked);
   void on_menuWindow_aboutToShow();
   void on_actionShow_Fullscreen_triggered(bool checked);
@@ -274,6 +274,7 @@ private slots:
   void on_rbGenMsg_clicked(bool checked);
   void on_rbFreeText_clicked(bool checked);
   void on_clearAction_triggered(QObject * sender);
+  void on_hbMacroButton_clicked();
   void on_cqMacroButton_clicked();
   void on_replyMacroButton_clicked();
   void on_snrMacroButton_clicked();
@@ -311,11 +312,7 @@ private slots:
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);
   int findFreeFreqOffset(int fmin, int fmax, int bw);
-  void scheduleHeartbeat(bool first=false);
-  void pauseHeartbeat();
-  void unpauseHeartbeat();
   void checkHeartbeat();
-  void prepareHeartbeat();
   QString calculateDistance(QString const& grid, int *pDistance=nullptr, int *pAzimuth=nullptr);
   void on_driftSpinBox_valueChanged(int n);
   void on_driftSyncButton_clicked();
@@ -355,7 +352,7 @@ private slots:
   void on_selcalButton_toggled(bool checked);
   void on_tuneButton_toggled(bool checked);
   void on_spotButton_toggled(bool checked);
-  void on_heartbeatButton_toggled(bool checked);
+  void on_activeButton_toggled(bool checked);
 
   void on_actionMessage_averaging_triggered();
   void on_actionFox_Log_triggered();
