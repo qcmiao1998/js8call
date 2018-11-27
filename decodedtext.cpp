@@ -126,7 +126,7 @@ bool DecodedText::tryUnpackHeartbeat(){
 
     // Heartbeat Alt Type
     // ---------------
-    // 1      0   BCN
+    // 1      0   HB
     // 1      1   CQ
     isHeartbeat_ = true;
     isAlt_ = isAlt;

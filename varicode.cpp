@@ -54,7 +54,7 @@ QMap<QString, int> directed_cmds = {
     {" QTC?",     2  }, // query station message
     {"&",         2  }, // compat
 
-    //{"$",       3  }, // query station(s) heard
+    //{"$",       3  }, // unused
 
     {" GRID?",    4  }, // query grid
     {"^",         4  }, // compat
@@ -64,17 +64,18 @@ QMap<QString, int> directed_cmds = {
     {" STATUS?",  6  }, // query idle message
     {"*",         6  }, // compat
 
-    //{"!",       7  }, // alert message
+    //{"!",       7  }, // unused
 
     {"#",         8  }, // all or nothing message
 
     {" TU",       9  }, // thank you
 
-    {" ACTIVE",     10 }, // i have been active in the past 10 minutes
-    {" INACTIVE",   11 }, // i have not been active in the past 10 minutes
+    {" ACTIVE",     10 }, // i am active
+    {" IDLE",       11 }, // i am idle
 
-    //{" HEARTBEAT",     -1 }, // this is my ping (unused except for faux processing of pings as directed commands)
-    //{" HEARTBEAT ACK", 12 }, // i acknowledge your ping at this SNR
+    {" HB",     -1 }, // this is my heartbeat (unused except for faux processing of HBs as directed commands)
+
+    //{"", 12 }, // unused
 
     {" QUERY",   13 }, // can you transmit a ping to callsign?
 
@@ -115,7 +116,7 @@ QMap<int, int> checksum_cmds = {
 };
 
 QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|SNR[?]|QTC[?]|QTH[?]|GRID[?]|STATUS[?]|(?:(?:QUERY|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|QTC|GRID|INACTIVE|ACTIVE|TU)(?=[ ]|$))|[?*^&@#> ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|QRZ[?]|SNR[?]|QTC[?]|QTH[?]|GRID[?]|STATUS[?]|(?:(?:QUERY|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|QTC|GRID|ACTIVE|IDLE|TU)(?=[ ]|$))|[?*^&@#> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR|ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
@@ -125,7 +126,7 @@ QRegularExpression directed_re("^"                    +
                                optional_cmd_pattern   +
                                optional_num_pattern);
 
-QRegularExpression heartbeat_re(R"(^\s*(?<type>CQCQCQ|CQ QRPP?|CQ DX|CQ TEST|CQ( CQ){0,2}|ACTIVE)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
+QRegularExpression heartbeat_re(R"(^\s*(?<type>CQCQCQ|CQ QRPP?|CQ DX|CQ TEST|CQ( CQ){0,2}|HB (ACTIVE|IDLE))(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
 QRegularExpression compound_re("^\\s*[`]"              +
                                callsign_pattern        +
@@ -208,8 +209,8 @@ QMap<quint32, QString> cqs = {
 };
 
 QMap<quint32, QString> hbs = {
-    { 0, "ACTIVE"    },
-    { 1, "INACTIVE"  },
+    { 0, "HB ACTIVE"    },
+    { 1, "HB IDLE"  },
 };
 
 
@@ -1144,7 +1145,8 @@ bool Varicode::isCompoundCallsign(const QString &callsign){
 // CQCQCQ EM73
 // CQ DX EM73
 // CQ QRP EM73
-// ACTIVE EM73
+// HB ACTIVE EM73
+// HB IDLE EM73
 QString Varicode::packHeartbeatMessage(QString const &text, const QString &callsign, int *n){
     QString frame;
 
@@ -1158,8 +1160,8 @@ QString Varicode::packHeartbeatMessage(QString const &text, const QString &calls
 
     // Heartbeat Alt Type
     // ---------------
-    // 1      0   ACTIVE
-    // 1      1   CQCQCQ
+    // 1      0   HB
+    // 1      1   CQ
 
     auto type = parsedText.captured("type");
     auto isAlt = type.startsWith("CQ");
@@ -1174,11 +1176,11 @@ QString Varicode::packHeartbeatMessage(QString const &text, const QString &calls
         packed_extra = Varicode::packGrid(extra);
     }
 
-    quint8 cqNumber = cqs.key(type, 0);
+    quint8 cqNumber = hbs.key(type, 0);
 
     if(isAlt){
         packed_extra |= (1<<15);
-        cqNumber = hbs.key(type, 0);
+        cqNumber = cqs.key(type, 0);
     }
 
     frame = packCompoundFrame(callsign, FrameHeartbeat, packed_extra, cqNumber);

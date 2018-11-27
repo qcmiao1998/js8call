@@ -3853,7 +3853,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                     // convert HEARTBEAT to a directed command and process...
                     cmd.from = cd.call;
                     cmd.to = "@ALLCALL";
-                    cmd.cmd = " ACTIVE";
+                    cmd.cmd = " HB";
                     cmd.snr = cd.snr;
                     cmd.bits = cd.bits;
                     cmd.grid = cd.grid;
@@ -6495,7 +6495,8 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
 void MainWindow::on_hbMacroButton_clicked(){
     QString mycall = m_config.my_callsign();
     QString mygrid = m_config.my_grid().left(4);
-    QString message = QString("%1: ACTIVE %2").arg(mycall).arg(mygrid).trimmed();
+    QString status = ui->activeButton->isChecked() ? "ACTIVE" : "IDLE";
+    QString message = QString("%1: HB %2 %3").arg(mycall).arg(status).arg(mygrid).trimmed();
 
     addMessageText(message);
 
@@ -6849,7 +6850,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto stationIdleQueryAction = menu->addAction(QString("%1 STATUS? - Is your station active or idle?").arg(call).trimmed());
+    auto stationIdleQueryAction = menu->addAction(QString("%1 STATUS? - Is your station active or inactive?").arg(call).trimmed());
     stationIdleQueryAction->setDisabled(isAllCall);
     connect(stationIdleQueryAction, &QAction::triggered, this, [this](){
 
@@ -7141,7 +7142,7 @@ QMap<QString, QString> MainWindow::buildMacroValues(){
         {"<MYQTH>", m_config.my_qth()},
         {"<MYCQ>", m_config.cq_message()},
         {"<MYREPLY>", m_config.reply_message()},
-        {"<MYSTATUS>", (ui->activeButton->isChecked() ? "ACTIVE" : "INACTIVE")},
+        {"<MYSTATUS>", (ui->activeButton->isChecked() ? "ACTIVE" : "IDLE")},
     };
 
     auto selectedCall = callsignSelected();
@@ -8267,9 +8268,8 @@ void MainWindow::updateButtonDisplay(){
 
     auto selectedCallsign = callsignSelected(true);
     bool emptyCallsign = selectedCallsign.isEmpty();
-    bool isActive = ui->activeButton->isChecked();
 
-    ui->hbMacroButton->setDisabled(isTransmitting || !isActive);
+    ui->hbMacroButton->setDisabled(isTransmitting);
     ui->cqMacroButton->setDisabled(isTransmitting);
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
     ui->snrMacroButton->setDisabled(isTransmitting || emptyCallsign);
@@ -8612,7 +8612,7 @@ void MainWindow::processRxActivity() {
                 continue;
             }
 
-            if(d.isDirected && d.text.contains(": ACTIVE")){ // TODO: HEARTBEAT
+            if(d.isDirected && d.text.contains(": HB ")){ // TODO: HEARTBEAT
                 continue;
             }
 
@@ -8936,7 +8936,7 @@ void MainWindow::processCommandActivity() {
         bool shouldDisplay = true;
 
         // don't display ping allcalls
-        if(isAllCall && (d.cmd != " " || ad.text.contains(": ACTIVE"))){ // || d.cmd == " HEARTBEAT")){
+        if(isAllCall && (d.cmd != " " || ad.text.contains(": HB "))){
             shouldDisplay = false;
         }
 
@@ -9018,7 +9018,7 @@ void MainWindow::processCommandActivity() {
             if(ui->activeButton->isChecked()){
                 reply = QString("%1 ACTIVE").arg(d.from);
             } else {
-                reply = QString("%1 INACTIVE").arg(d.from);
+                reply = QString("%1 IDLE").arg(d.from);
             }
         }
 
@@ -9152,7 +9152,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS ACTIVE HEARTBEAT
-        else if (d.cmd == " ACTIVE" && ui->autoReplyButton->isChecked() && !ui->selcalButton->isChecked()){
+        else if (d.cmd == " HB" && ui->autoReplyButton->isChecked() && !ui->selcalButton->isChecked()){
             reply = QString("%1 ACK %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
 
             if(isAllCall){
@@ -9247,7 +9247,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // do not queue @ALLCALL replies if auto-reply is not checked or it's a ping reply
-        if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains("ACTIVE")){
+        if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains(" HB")){
             continue;
         }
 
