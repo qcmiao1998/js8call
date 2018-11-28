@@ -9094,9 +9094,9 @@ void MainWindow::processCommandActivity() {
             writeDirectedCommandToFile(d);
         }
 
-        // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past ping interval)
-        // that way we never get spammed by allcalls at a higher frequency than what we would normally ping
-        if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < m_config.heartbeat()) {
+        // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past five minutes)
+        // that way we never get spammed by allcalls at too high of a frequency
+        if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < 5) {
             continue;
         }
 
@@ -9580,9 +9580,7 @@ void MainWindow::displayBandActivity() {
         selectedOffset = selectedItems.first()->text().toInt();
     }
 
-#if 0
-    bool pingEnabled = m_config.heartbeat() > 0;
-#endif
+    bool hbEnabled = ui->hbMacroButton->isChecked();
 
     ui->tableWidgetRXAll->setUpdatesEnabled(false);
     {
@@ -9674,12 +9672,12 @@ void MainWindow::displayBandActivity() {
                     if (!isOffsetSelected && activityAging && item.utcTimestamp.secsTo(now) / 60 >= activityAging) {
                         continue;
                     }
-#if 0
-                    if (!pingEnabled && (item.text.contains(": HEARTBEAT") || item.text.contains("HEARTBEAT ACK"))){
-                        // hide pings if we're not pinging.
+
+                    if (!hbEnabled && (item.text.contains(": HB") || item.text.contains(" ACK "))){
+                        // hide heartbeats and acks if we are not currently heartbeating
                         continue;
                     }
-#endif
+
                     if (item.text.isEmpty()) {
                         continue;
                     }
