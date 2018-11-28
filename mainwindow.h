@@ -274,7 +274,12 @@ private slots:
   void on_rbGenMsg_clicked(bool checked);
   void on_rbFreeText_clicked(bool checked);
   void on_clearAction_triggered(QObject * sender);
+  void buildRepeatMenu(QMenu *menu, QPushButton * button, int * interval);
+  void sendHeartbeat();
+  void on_hbMacroButton_toggled(bool checked);
   void on_hbMacroButton_clicked();
+  void sendCQ();
+  void on_cqMacroButton_toggled(bool checked);
   void on_cqMacroButton_clicked();
   void on_replyMacroButton_clicked();
   void on_snrMacroButton_clicked();
@@ -859,7 +864,10 @@ private:
   double m_toneSpacing;
   int m_firstDecode;
   QProgressDialog m_optimizingProgress;
+  int m_hbInterval;
   QTimer m_heartbeat;
+  int m_cqInterval;
+  QTimer m_cq;
   MessageClient * m_messageClient;
   PSK_Reporter *psk_Reporter;
   APRSISClient * m_aprsClient;

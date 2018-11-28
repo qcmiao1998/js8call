@@ -1462,8 +1462,17 @@ color:#555;
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send a CQ message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:checked { 
+  font-weight:bold;
+  color:black;
+}</string>
+          </property>
           <property name="text">
            <string>CQ</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
           </property>
           <property name="flat">
            <bool>false</bool>
@@ -1529,8 +1538,17 @@ color:#555;
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;Send a Heartbeat message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:checked { 
+  font-weight:bold;
+  color:black;
+}</string>
+          </property>
           <property name="text">
            <string>HB</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
           </property>
          </widget>
         </item>

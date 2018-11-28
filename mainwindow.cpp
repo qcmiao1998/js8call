@@ -552,7 +552,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_txFrameCount {0},
   m_txTextDirty {false},
   m_txFrameCountEstimate {0},
-  m_previousFreq {0}
+  m_previousFreq {0},
+  m_hbInterval {0},
+  m_cqInterval {0}
 {
   ui->setupUi(this);
 
@@ -875,6 +877,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   heartbeatTimer.setSingleShot(false);
   connect(&heartbeatTimer, &QTimer::timeout, this, &MainWindow::checkHeartbeat);
+
+  m_heartbeat.setSingleShot(false);
+  connect(&m_heartbeat, &QTimer::timeout, this, &MainWindow::sendHeartbeat);
+
+  m_cq.setSingleShot(false);
+  connect(&m_cq, &QTimer::timeout, this, &MainWindow::sendCQ);
 
   connect(m_wideGraph.data (), SIGNAL(setFreq3(int,int)),this,
           SLOT(setFreq4(int,int)));
@@ -1402,6 +1410,34 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   p.setColor(QPalette::Inactive, QPalette::Highlight, p.color(QPalette::Active, QPalette::Highlight));
   ui->tableWidgetCalls->setPalette(p);
 
+  ui->hbMacroButton->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->hbMacroButton, &QPushButton::customContextMenuRequested, this, [this](QPoint const &point){
+      QMenu * menu = new QMenu(ui->hbMacroButton);
+
+      buildRepeatMenu(menu, ui->hbMacroButton, &m_hbInterval);
+
+      menu->addSeparator();
+
+      auto now = menu->addAction("Send Heartbeat Now");
+      connect(now, &QAction::triggered, this, &MainWindow::sendHeartbeat);
+
+      menu->popup(ui->hbMacroButton->mapToGlobal(point));
+  });
+
+  ui->cqMacroButton->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->cqMacroButton, &QPushButton::customContextMenuRequested, this, [this](QPoint const &point){
+      QMenu * menu = new QMenu(ui->cqMacroButton);
+
+      buildRepeatMenu(menu, ui->cqMacroButton, &m_cqInterval);
+
+      menu->addSeparator();
+
+      auto now = menu->addAction("Send CQ Message Now");
+      connect(now, &QAction::triggered, this, &MainWindow::sendCQ);
+
+      menu->popup(ui->cqMacroButton->mapToGlobal(point));
+  });
+
   // Don't block heartbeat's first run...
   m_lastTxTime = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
 
@@ -1771,6 +1807,8 @@ void MainWindow::writeSettings()
   m_settings->setValue ("JT65AP", ui->actionEnable_AP_JT65->isChecked ());
   m_settings->setValue("SortBy", QVariant(m_sortCache));
   m_settings->setValue("ShowColumns", QVariant(m_showColumnsCache));
+  m_settings->setValue("HBInterval", m_hbInterval);
+  m_settings->setValue("CQInterval", m_cqInterval);
 
 
 
@@ -1901,6 +1939,8 @@ void MainWindow::readSettings()
 
   m_sortCache = m_settings->value("SortBy").toMap();
   m_showColumnsCache = m_settings->value("ShowColumns").toMap();
+  m_hbInterval = m_settings->value("HBInterval", 0).toInt();
+  m_cqInterval = m_settings->value("CQInterval", 0).toInt();
 
   // TODO: jsherer - any other customizations?
   //ui->mainSplitter->setSizes(m_settings->value("MainSplitter", QVariant::fromValue(ui->mainSplitter->sizes())).value<QList<int> >());
@@ -6492,7 +6532,37 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
     }
 }
 
-void MainWindow::on_hbMacroButton_clicked(){
+void MainWindow::buildRepeatMenu(QMenu *menu, QPushButton * button, int * interval){
+    QList<QPair<QString, int>> items = {
+        {"Do Not Repeat",     0},
+        {"Every 1 minute",    1},
+        {"Every 5 minutes",   5},
+        {"Every 10 minutes", 10},
+        {"Every 15 minutes", 15},
+        {"Every 30 minutes", 30},
+        {"Every 60 minutes", 60}
+    };
+
+    QActionGroup * group = new QActionGroup(menu);
+
+    foreach(auto pair, items){
+        int minutes = pair.second;
+        auto action = menu->addAction(pair.first);
+        action->setData(pair.second);
+        action->setCheckable(true);
+        action->setChecked(*interval == minutes);
+        group->addAction(action);
+
+        connect(action, &QAction::toggled, this, [this, minutes, interval, button](bool checked){
+            if(checked){
+                *interval = minutes;
+                button->setChecked(minutes > 0);
+            }
+        });
+    }
+}
+
+void MainWindow::sendHeartbeat(){
     QString mycall = m_config.my_callsign();
     QString mygrid = m_config.my_grid().left(4);
     QString status = ui->activeButton->isChecked() ? "ACTIVE" : "IDLE";
@@ -6503,7 +6573,28 @@ void MainWindow::on_hbMacroButton_clicked(){
     if(m_config.transmit_directed()) toggleTx(true);
 }
 
-void MainWindow::on_cqMacroButton_clicked(){
+void MainWindow::on_hbMacroButton_toggled(bool checked){
+    if(checked){
+        if(m_hbInterval){
+
+            m_heartbeat.setInterval((m_hbInterval * 60) * 1000);
+            m_heartbeat.start();
+
+        } else {
+            sendHeartbeat();
+
+            // make this button emulate a single press button
+            ui->hbMacroButton->setChecked(false);
+        }
+    } else {
+        m_heartbeat.stop();
+    }
+}
+
+void MainWindow::on_hbMacroButton_clicked(){
+}
+
+void MainWindow::sendCQ(){
     auto message = m_config.cq_message();
     if(message.isEmpty()){
         QString mygrid = m_config.my_grid().left(4);
@@ -6515,6 +6606,25 @@ void MainWindow::on_cqMacroButton_clicked(){
     addMessageText(replaceMacros(message, buildMacroValues(), true));
 
     if(m_config.transmit_directed()) toggleTx(true);
+}
+
+void MainWindow::on_cqMacroButton_toggled(bool checked){
+    if(checked){
+        sendCQ();
+
+        if(m_cqInterval){
+            m_cq.setInterval((m_cqInterval * 60) * 1000);
+            m_cq.start();
+        } else {
+            // make this button emulate a single press button
+            ui->cqMacroButton->setChecked(false);
+        }
+    } else {
+        m_cq.stop();
+    }
+}
+
+void MainWindow::on_cqMacroButton_clicked(){
 }
 
 void MainWindow::on_replyMacroButton_clicked(){
