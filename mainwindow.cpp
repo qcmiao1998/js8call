@@ -6534,13 +6534,13 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
 
 void MainWindow::buildRepeatMenu(QMenu *menu, QPushButton * button, int * interval){
     QList<QPair<QString, int>> items = {
-        {"Do not repeat",     0},
-        {"Repeat every 1 minute",    1},
-        {"Repeat every 5 minutes",   5},
-        {"Repeat every 10 minutes", 10},
-        {"Repeat every 15 minutes", 15},
-        {"Repeat every 30 minutes", 30},
-        {"Repeat every 60 minutes", 60},
+        {"On demand / do not repeat",  0},
+        {"Repeat every 1 minute",      1},
+        {"Repeat every 5 minutes",     5},
+        {"Repeat every 10 minutes",   10},
+        {"Repeat every 15 minutes",   15},
+        {"Repeat every 30 minutes",   30},
+        {"Repeat every 60 minutes",   60},
     };
 
     QActionGroup * group = new QActionGroup(menu);
