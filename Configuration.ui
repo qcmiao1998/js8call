@@ -279,8 +279,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>724</width>
-                <height>410</height>
+                <width>738</width>
+                <height>453</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -683,6 +683,19 @@ text message.</string>
                 </widget>
                </item>
                <item>
+                <spacer name="verticalSpacer_5">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
                 <widget class="QGroupBox" name="heartbeatGroupBox">
                  <property name="visible">
                   <bool>false</bool>
@@ -756,19 +769,6 @@ text message.</string>
               </layout>
              </widget>
             </widget>
-           </item>
-           <item>
-            <spacer name="verticalSpacer_5">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
            </item>
           </layout>
          </widget>
@@ -2011,7 +2011,7 @@ both here.</string>
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-23</y>
+            <y>0</y>
             <width>746</width>
             <height>525</height>
            </rect>
