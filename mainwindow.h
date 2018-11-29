@@ -317,7 +317,7 @@ private slots:
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);
   int findFreeFreqOffset(int fmin, int fmax, int bw);
-  void checkHeartbeat();
+  void checkRepeat();
   QString calculateDistance(QString const& grid, int *pDistance=nullptr, int *pAzimuth=nullptr);
   void on_driftSpinBox_valueChanged(int n);
   void on_driftSyncButton_clicked();
@@ -665,7 +665,7 @@ private:
   QTimer minuteTimer;
   QTimer splashTimer;
   QTimer p1Timer;
-  QTimer heartbeatTimer;
+  QTimer repeatTimer;
 
   QString m_path;
   QString m_baseCall;
@@ -835,9 +835,10 @@ private:
   QQueue<QString> m_foxQSOinProgress;  //QSOs in progress: Fox has sent a report
   QQueue<qint64>  m_foxRateQueue;
 
-  bool m_nextHeartbeatQueued = false;
-  bool m_nextHeartPaused = false;
+  int m_hbInterval;
+  int m_cqInterval;
   QDateTime m_nextHeartbeat;
+  QDateTime m_nextCQ;
   QDateTime m_dateTimeQSOOn;
   QDateTime m_dateTimeLastTX;
 
@@ -864,10 +865,6 @@ private:
   double m_toneSpacing;
   int m_firstDecode;
   QProgressDialog m_optimizingProgress;
-  int m_hbInterval;
-  QTimer m_heartbeat;
-  int m_cqInterval;
-  QTimer m_cq;
   MessageClient * m_messageClient;
   PSK_Reporter *psk_Reporter;
   APRSISClient * m_aprsClient;
@@ -906,6 +903,7 @@ private:
   void postDecode (bool is_new, QString const& message);
   void displayTransmit();
   void updateButtonDisplay();
+  void updateRepeatButtonDisplay();
   void updateTextDisplay();
   void updateFrameCountEstimate(int count);
   void updateTextStatsDisplay(QString text, int count);
@@ -954,6 +952,10 @@ private:
                           , QString const& his_call
                           , QString const& his_grid) const;
   void read_wav_file (QString const& fname);
+  QDateTime nextTransmitCycle();
+  void resetAutomaticIntervalTransmissions(bool stopCQ, bool stopHB);
+  void resetCQTimer(bool stop);
+  void resetHeartbeatTimer(bool stop);
   void decodeDone ();
   void subProcessFailed (QProcess *, int exit_code, QProcess::ExitStatus);
   void subProcessError (QProcess *, QProcess::ProcessError);

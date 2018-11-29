@@ -875,14 +875,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   TxAgainTimer.setSingleShot(true);
   connect(&TxAgainTimer, SIGNAL(timeout()), this, SLOT(TxAgain()));
 
-  heartbeatTimer.setSingleShot(false);
-  connect(&heartbeatTimer, &QTimer::timeout, this, &MainWindow::checkHeartbeat);
-
-  m_heartbeat.setSingleShot(false);
-  connect(&m_heartbeat, &QTimer::timeout, this, &MainWindow::sendHeartbeat);
-
-  m_cq.setSingleShot(false);
-  connect(&m_cq, &QTimer::timeout, this, &MainWindow::sendCQ);
+  repeatTimer.setSingleShot(false);
+  repeatTimer.setInterval(1000);
+  connect(&repeatTimer, &QTimer::timeout, this, &MainWindow::checkRepeat);
 
   connect(m_wideGraph.data (), SIGNAL(setFreq3(int,int)),this,
           SLOT(setFreq4(int,int)));
@@ -3729,6 +3724,46 @@ void MainWindow::writeAllTxt(QString message, int bits)
       }
 }
 
+QDateTime MainWindow::nextTransmitCycle(){
+    auto timestamp = DriftingDateTime::currentDateTimeUtc();
+
+    // remove milliseconds
+    auto t = timestamp.time();
+    t.setHMS(t.hour(), t.minute(), t.second());
+    timestamp.setTime(t);
+
+    // round to 15 second increment
+    int secondsSinceEpoch = (timestamp.toMSecsSinceEpoch()/1000);
+    int delta = roundUp(secondsSinceEpoch, 15) + 1 - secondsSinceEpoch;
+    timestamp = timestamp.addSecs(delta);
+
+    return timestamp;
+}
+
+void MainWindow::resetAutomaticIntervalTransmissions(bool stopCQ, bool stopHB){
+    resetCQTimer(stopCQ);
+    resetHeartbeatTimer(stopHB);
+}
+
+void MainWindow::resetCQTimer(bool stop){
+    if(ui->cqMacroButton->isChecked() && m_cqInterval > 0){
+        ui->cqMacroButton->setChecked(false);
+        if(!stop){
+            ui->cqMacroButton->setChecked(true);
+        }
+    }
+}
+
+void MainWindow::resetHeartbeatTimer(bool stop){
+    // toggle the heartbeat timer if we have a repeating heartbeat
+    if(ui->hbMacroButton->isChecked() && m_hbInterval > 0){
+        ui->hbMacroButton->setChecked(false);
+        if(!stop){
+            ui->hbMacroButton->setChecked(true);
+        }
+    }
+}
+
 void MainWindow::decodeDone ()
 {
   dec_data.params.nagain=0;
@@ -4681,6 +4716,9 @@ void MainWindow::guiUpdate()
     // update the dial frequency once per second..
     displayDialFrequency();
 
+    // update repeat button text once per second..
+    updateRepeatButtonDisplay();
+
     // once per second...but not when we're transmitting
     if(!m_transmitting){
         // process all received activity...
@@ -5587,6 +5625,9 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
 
   displayTextForFreq(lines.join("") + " \u2301 ", freq, DriftingDateTime::currentDateTimeUtc(), true, true, true);
 
+  // if we're transmitting a message to be displayed, we should bump the repeat buttons...
+  resetAutomaticIntervalTransmissions(false, false);
+
   // keep track of the last message text sent
   m_lastTxMessage = text;
 }
@@ -5870,8 +5911,18 @@ void MainWindow::prepareHeartbeat(){
 }
 #endif
 
-void MainWindow::checkHeartbeat(){
+void MainWindow::checkRepeat(){
+    if(ui->hbMacroButton->isChecked() && m_hbInterval > 0 && m_nextHeartbeat.isValid()){
+        if(DriftingDateTime::currentDateTimeUtc().secsTo(m_nextHeartbeat) <= 0){
+            sendHeartbeat();
+        }
+    }
 
+    if(ui->cqMacroButton->isChecked() && m_cqInterval > 0 && m_nextCQ.isValid()){
+        if(DriftingDateTime::currentDateTimeUtc().secsTo(m_nextCQ) <= 0){
+            sendCQ();
+        }
+    }
 }
 
 QString MainWindow::calculateDistance(QString const& value, int *pDistance, int *pAzimuth)
@@ -6556,6 +6607,10 @@ void MainWindow::buildRepeatMenu(QMenu *menu, QPushButton * button, int * interv
         connect(action, &QAction::toggled, this, [this, minutes, interval, button](bool checked){
             if(checked){
                 *interval = minutes;
+                if(minutes > 0){
+                    // force a re-toggle
+                    button->setChecked(false);
+                }
                 button->setChecked(minutes > 0);
             }
         });
@@ -6576,9 +6631,11 @@ void MainWindow::sendHeartbeat(){
 void MainWindow::on_hbMacroButton_toggled(bool checked){
     if(checked){
         if(m_hbInterval){
+            m_nextHeartbeat = nextTransmitCycle().addSecs(m_hbInterval * 60);
 
-            m_heartbeat.setInterval((m_hbInterval * 60) * 1000);
-            m_heartbeat.start();
+            if(!repeatTimer.isActive()){
+                repeatTimer.start();
+            }
 
         } else {
             sendHeartbeat();
@@ -6587,8 +6644,10 @@ void MainWindow::on_hbMacroButton_toggled(bool checked){
             ui->hbMacroButton->setChecked(false);
         }
     } else {
-        m_heartbeat.stop();
+        m_nextHeartbeat = QDateTime{};
     }
+
+    updateRepeatButtonDisplay();
 }
 
 void MainWindow::on_hbMacroButton_clicked(){
@@ -6610,18 +6669,24 @@ void MainWindow::sendCQ(){
 
 void MainWindow::on_cqMacroButton_toggled(bool checked){
     if(checked){
-        sendCQ();
-
         if(m_cqInterval){
-            m_cq.setInterval((m_cqInterval * 60) * 1000);
-            m_cq.start();
+            m_nextCQ = nextTransmitCycle().addSecs(m_cqInterval * 60);
+
+            if(!repeatTimer.isActive()){
+                repeatTimer.start();
+            }
+
         } else {
+            sendCQ();
+
             // make this button emulate a single press button
             ui->cqMacroButton->setChecked(false);
         }
     } else {
-        m_cq.stop();
+        m_nextCQ= QDateTime{};
     }
+
+    updateRepeatButtonDisplay();
 }
 
 void MainWindow::on_cqMacroButton_clicked(){
@@ -7613,6 +7678,7 @@ void MainWindow::on_stopTxButton_clicked()                    //Stop Tx
   ui->cbFirst->setStyleSheet ("");
 
   resetMessage();
+  resetAutomaticIntervalTransmissions(true, false);
 }
 
 void MainWindow::rigOpen ()
@@ -8389,6 +8455,33 @@ void MainWindow::updateButtonDisplay(){
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
     ui->deselectButton->setDisabled(isTransmitting || emptyCallsign);
     ui->queryButton->setText(emptyCallsign ? "Directed" : QString("Directed to %1").arg(selectedCallsign));
+
+    // refresh repeat button text too
+    updateRepeatButtonDisplay();
+}
+
+void MainWindow::updateRepeatButtonDisplay(){
+    if(ui->hbMacroButton->isChecked() && m_hbInterval > 0 && m_nextHeartbeat.isValid()){
+        auto secs = DriftingDateTime::currentDateTimeUtc().secsTo(m_nextHeartbeat);
+        if(secs > 0){
+            ui->hbMacroButton->setText(QString("HB (%1)").arg(secs));
+        } else {
+            ui->hbMacroButton->setText(QString("HB (now)"));
+        }
+    } else {
+        ui->hbMacroButton->setText("HB");
+    }
+
+    if(ui->cqMacroButton->isChecked() && m_cqInterval > 0 && m_nextCQ.isValid()){
+        auto secs = DriftingDateTime::currentDateTimeUtc().secsTo(m_nextCQ);
+        if(secs > 0){
+            ui->cqMacroButton->setText(QString("CQ (%1)").arg(secs));
+        } else {
+            ui->cqMacroButton->setText(QString("CQ (now)"));
+        }
+    } else {
+        ui->cqMacroButton->setText("CQ");
+    }
 }
 
 void MainWindow::updateTextDisplay(){
@@ -8775,6 +8868,9 @@ void MainWindow::processRxActivity() {
         // log it to the display!
         displayTextForFreq(d.text, d.freq, d.utcTimestamp, false, isFirst, isLast);
 
+        // if we've received a message to be displayed, we should bump the repeat buttons...
+        resetAutomaticIntervalTransmissions(true, false);
+
         if(isLast){
             clearOffsetDirected(d.freq);
         }
@@ -9088,6 +9184,10 @@ void MainWindow::processCommandActivity() {
             });
 
             if(!isAllCall){
+                // if we've received a message to be displayed, we should bump the repeat buttons...
+                resetAutomaticIntervalTransmissions(true, false);
+
+                // and we should play the sound notification if there is one...
                 playSoundNotification(m_config.sound_dm_path());
             }
 
