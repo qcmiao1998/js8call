@@ -332,7 +332,7 @@ private slots:
   void on_pbR2T_clicked();
   void on_pbT2R_clicked();
   void acceptQSO (QDateTime const&, QString const& call, QString const& grid
-                  , Frequency dial_freq, QString const& mode
+                  , Frequency dial_freq, QString const& mode, QString const& submode
                   , QString const& rpt_sent, QString const& rpt_received
                   , QString const& tx_power, QString const& comments
                   , QString const& name, QDateTime const& QSO_date_on, QString const& operator_call

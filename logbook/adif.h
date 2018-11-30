@@ -23,15 +23,15 @@ class ADIF
 	public:
 	void init(QString const& filename);
 	void load();
-	void add(QString const& call, QString const& band, QString const& mode, QString const& date);
-	bool match(QString const& call, QString const& band, QString const& mode) const;
+    void add(QString const& call, QString const& band, QString const& mode, const QString &submode, QString const& date);
+    bool match(QString const& call, QString const& band) const;
 	QList<QString> getCallList() const;
 	int getCount() const;
 		
         // open ADIF file and append the QSO details. Return true on success
 	bool addQSOToFile(QByteArray const& ADIF_record);
 
-  QByteArray QSOToADIF(QString const& hisCall, QString const& hisGrid, QString const& mode, QString const& rptSent
+  QByteArray QSOToADIF(QString const& hisCall, QString const& hisGrid, QString const& mode, QString const& submode, QString const& rptSent
 											 , QString const& rptRcvd, QDateTime const& dateTimeOn, QDateTime const& dateTimeOff
 											 , QString const& band, QString const& comments, QString const& name
 											 , QString const& strDialFreq, QString const& m_myCall, QString const& m_myGrid
@@ -41,7 +41,7 @@ class ADIF
 private:
 		struct QSO
 		{
-		  QString call,band,mode,date;
+          QString call,band,mode,submode,date;
 		};		  
 
 		QMultiHash<QString, QSO> _data;

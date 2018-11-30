@@ -50,8 +50,8 @@ void LogBook::_setAlreadyWorkedFromLog()
     }
 }
 
-bool LogBook::hasWorkedBefore(const QString &call, const QString &band, const QString &mode){
-    return _log.match(call, band, mode);
+bool LogBook::hasWorkedBefore(const QString &call, const QString &band){
+    return _log.match(call, band);
 }
 
 void LogBook::match(/*in*/const QString call,
@@ -61,9 +61,8 @@ void LogBook::match(/*in*/const QString call,
 {
   if (call.length() > 0)
     {
-      QString currentMode = "";  // match any mode
       QString currentBand = "";  // match any band
-      callWorkedBefore = _log.match(call,currentBand,currentMode);
+      callWorkedBefore = _log.match(call,currentBand);
       countryName = _countries.find(call);
 
       if (countryName.length() > 0)  //  country was found
@@ -76,9 +75,9 @@ void LogBook::match(/*in*/const QString call,
     }
 }
 
-void LogBook::addAsWorked(const QString call, const QString band, const QString mode, const QString date)
+void LogBook::addAsWorked(const QString call, const QString band, const QString mode, const QString submode, const QString date)
 {
-  _log.add(call,band,mode,date);
+  _log.add(call,band,mode,submode,date);
   QString countryName = _countries.find(call);
   if (countryName.length() > 0)
     _worked.setAsWorked(countryName);

@@ -6032,14 +6032,14 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
 }
 
 void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, QString const& grid
-                            , Frequency dial_freq, QString const& mode
+                            , Frequency dial_freq, QString const& mode, QString const &submode
                             , QString const& rpt_sent, QString const& rpt_received
                             , QString const& tx_power, QString const& comments
                             , QString const& name, QDateTime const& QSO_date_on, QString const& operator_call
                             , QString const& my_call, QString const& my_grid, QByteArray const& ADIF)
 {
   QString date = QSO_date_on.toString("yyyyMMdd");
-  m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), m_modeTx == "FT8" ? "JS8" : m_modeTx, date);
+  m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), mode, submode, date);
 
 #if 0
   m_messageClient->qso_logged (QSO_date_off, call, grid, dial_freq, mode, rpt_sent, rpt_received, tx_power, comments, name, QSO_date_on, operator_call, my_call, my_grid);
@@ -6053,6 +6053,7 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
       {"GRID", QVariant(grid)},
       {"FREQ", QVariant(dial_freq)},
       {"MODE", QVariant(mode)},
+      {"SUBMODE", QVariant(submode)},
       {"RPT.SENT", QVariant(rpt_sent)},
       {"RPT.RECV", QVariant(rpt_received)},
       {"NAME", QVariant(name)},
@@ -10080,7 +10081,7 @@ void MainWindow::displayCallActivity() {
 #endif
 
             QString flag;
-            if(m_logBook.hasWorkedBefore(d.call, "", m_modeTx == "FT8" ? "JS8" : m_modeTx)){
+            if(m_logBook.hasWorkedBefore(d.call, "")){
                 // unicode checkmark
                 flag = "\u2713";
             }

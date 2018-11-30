@@ -100,6 +100,7 @@ void ADIF::load()
           add (extractField (record, "CALL")
                , extractField (record, "BAND")
                , extractField (record, "MODE")
+               , extractField (record, "SUBMODE")
                , extractField (record, "QSO_DATE"));
         }
         inputFile.close ();
@@ -107,12 +108,13 @@ void ADIF::load()
 }
 
 
-void ADIF::add(QString const& call, QString const& band, QString const& mode, QString const& date)
+void ADIF::add(QString const& call, QString const& band, QString const& mode, QString const& submode, QString const& date)
 {
     QSO q;
     q.call = call;
     q.band = band;
     q.mode = mode;
+    q.submode = submode;
     q.date = date;
     if (q.call.size ())
       {
@@ -121,8 +123,8 @@ void ADIF::add(QString const& call, QString const& band, QString const& mode, QS
       }
 }
 
-// return true if in the log same band and mode (where JT65 == JT9)
-bool ADIF::match(QString const& call, QString const& band, QString const& mode) const
+// return true if in the log same band
+bool ADIF::match(QString const& call, QString const& band) const
 {
     QList<QSO> qsos = _data.values(call);
     if (qsos.size()>0)
@@ -134,22 +136,6 @@ bool ADIF::match(QString const& call, QString const& band, QString const& mode) 
                   || (band=="")
                   || (q.band==""))
             {
-                if (
-                     (
-                       ((mode.compare("JT65",Qt::CaseInsensitive)==0) ||
-                        (mode.compare("JT9",Qt::CaseInsensitive)==0)  ||
-                        (mode.compare("JS8",Qt::CaseInsensitive)==0)  ||
-                        (mode.compare("FT8",Qt::CaseInsensitive)==0))
-                       &&
-                       ((q.mode.compare("JT65",Qt::CaseInsensitive)==0) ||
-                        (q.mode.compare("JT9",Qt::CaseInsensitive)==0)  ||
-                        (q.mode.compare("JS8",Qt::CaseInsensitive)==0)  ||
-                        (q.mode.compare("FT8",Qt::CaseInsensitive)==0))
-                     )
-                        || (mode.compare(q.mode,Qt::CaseInsensitive)==0)
-                        || (mode=="")
-                        || (q.mode=="")
-                    )
                 return true;
             }
         }
@@ -176,7 +162,7 @@ int ADIF::getCount() const
     return _data.size();
 }   
     
-QByteArray ADIF::QSOToADIF(QString const& hisCall, QString const& hisGrid, QString const& mode
+QByteArray ADIF::QSOToADIF(QString const& hisCall, QString const& hisGrid, QString const& mode, QString const& submode
                            , QString const& rptSent, QString const& rptRcvd, QDateTime const& dateTimeOn
                            , QDateTime const& dateTimeOff, QString const& band, QString const& comments
                            , QString const& name, QString const& strDialFreq, QString const& m_myCall
@@ -186,6 +172,9 @@ QByteArray ADIF::QSOToADIF(QString const& hisCall, QString const& hisGrid, QStri
   t = "<call:" + QString::number(hisCall.length()) + ">" + hisCall;
   t += " <gridsquare:" + QString::number(hisGrid.length()) + ">" + hisGrid;
   t += " <mode:" + QString::number(mode.length()) + ">" + mode;
+  if(!submode.isEmpty()){
+    t += " <submode:" + QString::number(submode.length()) + ">" + submode;
+  }
   t += " <rst_sent:" + QString::number(rptSent.length()) + ">" + rptSent;
   t += " <rst_rcvd:" + QString::number(rptRcvd.length()) + ">" + rptRcvd;
   t += " <qso_date:8>" + dateTimeOn.date().toString("yyyyMMdd");

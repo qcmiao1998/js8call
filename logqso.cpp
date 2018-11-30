@@ -95,12 +95,16 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
 
 void LogQSO::accept()
 {
-  QString hisCall,hisGrid,mode,rptSent,rptRcvd,dateOn,dateOff,timeOn,timeOff,band,operator_call;
+  QString hisCall,hisGrid,mode,submode,rptSent,rptRcvd,dateOn,dateOff,timeOn,timeOff,band,operator_call;
   QString comments,name;
 
   hisCall=ui->call->text().toUpper();
   hisGrid=ui->grid->text().toUpper();
-  mode=ui->mode->text().toUpper();
+  mode = ui->mode->text().toUpper();
+  if(mode == "JS8"){
+    mode="MFSK";
+    submode="JS8";
+  }
   rptSent=ui->sent->text();
   rptRcvd=ui->rcvd->text();
   m_dateTimeOn = ui->start_date_time->dateTime ();
@@ -115,10 +119,10 @@ void LogQSO::accept()
   //Log this QSO to ADIF file "js8call_log.adi"
   QString filename = "js8call_log.adi";  // TODO allow user to set
   ADIF adifile;
-  auto adifilePath = QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath ("js8call_log.adi");
+  auto adifilePath = QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath (filename);
   adifile.init(adifilePath);
 
-  QByteArray ADIF {adifile.QSOToADIF (hisCall, hisGrid, mode, rptSent, rptRcvd, m_dateTimeOn, m_dateTimeOff, band
+  QByteArray ADIF {adifile.QSOToADIF (hisCall, hisGrid, mode, submode, rptSent, rptRcvd, m_dateTimeOn, m_dateTimeOff, band
                                       , comments, name, strDialFreq, m_myCall, m_myGrid, m_txPower, operator_call)};
   if (!adifile.addQSOToFile (ADIF))
   {
@@ -148,7 +152,7 @@ void LogQSO::accept()
       m_dateTimeOn.time().toString("hh:mm:ss,") +
       m_dateTimeOff.date().toString("yyyy-MM-dd,") +
       m_dateTimeOff.time().toString("hh:mm:ss,") + hisCall + "," +
-      hisGrid + "," + strDialFreq + "," + mode +
+      hisGrid + "," + strDialFreq + "," + (mode == "MFSK" ? "JS8" : mode) +
       "," + rptSent + "," + rptRcvd + "," + m_txPower +
       "," + comments + "," + name;
     QTextStream out(&f);
@@ -157,7 +161,7 @@ void LogQSO::accept()
   }
 
 //Clean up and finish logging
-  Q_EMIT acceptQSO (m_dateTimeOff, hisCall, hisGrid, m_dialFreq, mode, rptSent, rptRcvd, m_txPower, comments, name,m_dateTimeOn, operator_call, m_myCall, m_myGrid, ADIF);
+  Q_EMIT acceptQSO (m_dateTimeOff, hisCall, hisGrid, m_dialFreq, mode, submode, rptSent, rptRcvd, m_txPower, comments, name,m_dateTimeOn, operator_call, m_myCall, m_myGrid, ADIF);
   QDialog::accept();
 }
 

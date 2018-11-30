@@ -20,12 +20,12 @@ class LogBook
 {
 public:
     void init();
-    bool hasWorkedBefore(const QString &call, const QString &band, const QString &mode);
+    bool hasWorkedBefore(const QString &call, const QString &band);
     void match(/*in*/ const QString call,
               /*out*/ QString &countryName,
                       bool &callWorkedBefore,
                       bool &countryWorkedBefore) const;
-    void addAsWorked(const QString call, const QString band, const QString mode, const QString date);
+    void addAsWorked(const QString call, const QString band, const QString mode, const QString submode, const QString date);
 
 private:
    CountryDat _countries;

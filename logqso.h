@@ -40,7 +40,7 @@ public slots:
 
 signals:
   void acceptQSO (QDateTime const& QSO_date_off, QString const& call, QString const& grid
-                  , Radio::Frequency dial_freq, QString const& mode
+                  , Radio::Frequency dial_freq, QString const& mode, QString const& submode
                   , QString const& rpt_sent, QString const& rpt_received
                   , QString const& tx_power, QString const& comments
                   , QString const& name, QDateTime const& QSO_date_on,  QString const& operator_call
