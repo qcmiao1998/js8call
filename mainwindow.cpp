@@ -553,6 +553,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_txTextDirty {false},
   m_txFrameCountEstimate {0},
   m_previousFreq {0},
+  m_hbHidden { false },
   m_hbInterval {0},
   m_cqInterval {0}
 {
@@ -1409,6 +1410,16 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->hbMacroButton, &QPushButton::customContextMenuRequested, this, [this](QPoint const &point){
       QMenu * menu = new QMenu(ui->hbMacroButton);
 
+      auto hide = menu->addAction("Show Heartbeats and ACKs");
+      hide->setCheckable(true);
+      hide->setChecked(!m_hbHidden);
+      connect(hide, &QAction::triggered, this, [this](bool checked){
+        m_hbHidden = !checked;
+        displayBandActivity();
+      });
+
+      menu->addSeparator();
+
       buildRepeatMenu(menu, ui->hbMacroButton, &m_hbInterval);
 
       menu->addSeparator();
@@ -1802,6 +1813,7 @@ void MainWindow::writeSettings()
   m_settings->setValue ("JT65AP", ui->actionEnable_AP_JT65->isChecked ());
   m_settings->setValue("SortBy", QVariant(m_sortCache));
   m_settings->setValue("ShowColumns", QVariant(m_showColumnsCache));
+  m_settings->setValue("HBHidden", m_hbHidden);
   m_settings->setValue("HBInterval", m_hbInterval);
   m_settings->setValue("CQInterval", m_cqInterval);
 
@@ -1934,6 +1946,7 @@ void MainWindow::readSettings()
 
   m_sortCache = m_settings->value("SortBy").toMap();
   m_showColumnsCache = m_settings->value("ShowColumns").toMap();
+  m_hbHidden = m_settings->value("HBHidden", false).toBool();
   m_hbInterval = m_settings->value("HBInterval", 0).toInt();
   m_cqInterval = m_settings->value("CQInterval", 0).toInt();
 
@@ -6627,16 +6640,9 @@ void MainWindow::sendHeartbeat(){
     QString status = ui->activeButton->isChecked() ? "ACTIVE" : "IDLE";
     QString message = QString("%1: HB %2 %3").arg(mycall).arg(status).arg(mygrid).trimmed();
 
-    /*
-    addMessageText(message);
-
-    if(m_config.transmit_directed()) toggleTx(true);
-    */
-
     auto f = m_config.heartbeat_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
 
-    enqueueMessage(PriorityLow, message, f, [this](){
-    });
+    enqueueMessage(PriorityLow, message, f, [this](){ /* */ });
 }
 
 void MainWindow::on_hbMacroButton_toggled(bool checked){
@@ -9693,8 +9699,6 @@ void MainWindow::displayBandActivity() {
         selectedOffset = selectedItems.first()->text().toInt();
     }
 
-    bool hbEnabled = ui->hbMacroButton->isChecked();
-
     ui->tableWidgetRXAll->setUpdatesEnabled(false);
     {
         // Scroll Position
@@ -9786,12 +9790,10 @@ void MainWindow::displayBandActivity() {
                         continue;
                     }
 
-#if 0
-                    if (!hbEnabled && (item.text.contains(": HB") || item.text.contains(" ACK "))){
-                        // hide heartbeats and acks if we are not currently heartbeating
+                    if (m_hbHidden && (item.text.contains(" HB ") || item.text.contains(" ACK "))){
+                        // hide heartbeats and acks if we have heartbeating hidden
                         continue;
                     }
-#endif
 
                     if (item.text.isEmpty()) {
                         continue;

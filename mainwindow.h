@@ -835,6 +835,7 @@ private:
   QQueue<QString> m_foxQSOinProgress;  //QSOs in progress: Fox has sent a report
   QQueue<qint64>  m_foxRateQueue;
 
+  bool m_hbHidden;
   int m_hbInterval;
   int m_cqInterval;
   QDateTime m_nextHeartbeat;
