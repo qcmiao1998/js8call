@@ -1410,22 +1410,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->hbMacroButton, &QPushButton::customContextMenuRequested, this, [this](QPoint const &point){
       QMenu * menu = new QMenu(ui->hbMacroButton);
 
-      auto hide = menu->addAction("Show Heartbeats and ACKs");
-      hide->setCheckable(true);
-      hide->setChecked(!m_hbHidden);
-      connect(hide, &QAction::triggered, this, [this](bool checked){
-        m_hbHidden = !checked;
-        displayBandActivity();
-      });
-
-      menu->addSeparator();
-
-      buildRepeatMenu(menu, ui->hbMacroButton, &m_hbInterval);
-
-      menu->addSeparator();
-
-      auto now = menu->addAction("Send Heartbeat Now");
-      connect(now, &QAction::triggered, this, &MainWindow::sendHeartbeat);
+      buildHeartbeatMenu(menu);
 
       menu->popup(ui->hbMacroButton->mapToGlobal(point));
   });
@@ -1434,12 +1419,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->cqMacroButton, &QPushButton::customContextMenuRequested, this, [this](QPoint const &point){
       QMenu * menu = new QMenu(ui->cqMacroButton);
 
-      buildRepeatMenu(menu, ui->cqMacroButton, &m_cqInterval);
-
-      menu->addSeparator();
-
-      auto now = menu->addAction("Send CQ Message Now");
-      connect(now, &QAction::triggered, this, &MainWindow::sendCQ);
+      buildCQMenu(menu);
 
       menu->popup(ui->cqMacroButton->mapToGlobal(point));
   });
@@ -2391,6 +2371,20 @@ void MainWindow::on_menuControl_aboutToShow(){
     ui->actionEnable_Active->setChecked(ui->activeButton->isChecked());
     ui->actionEnable_Auto_Reply->setChecked(ui->autoReplyButton->isChecked());
     ui->actionEnable_Selcall->setChecked(ui->selcalButton->isChecked());
+
+    QMenu * heartbeatMenu = new QMenu(this->menuBar());
+    buildHeartbeatMenu(heartbeatMenu);
+    ui->actionHeartbeat->setMenu(heartbeatMenu);
+#if __APPLE__
+    rebuildMacQAction(ui->menuControl, ui->actionHeartbeat);
+#endif
+
+    QMenu * cqMenu = new QMenu(this->menuBar());
+    buildCQMenu(cqMenu);
+    ui->actionCQ->setMenu(cqMenu);
+#if __APPLE__
+    rebuildMacQAction(ui->menuControl, ui->actionCQ);
+#endif
 }
 
 void MainWindow::on_actionEnable_Spotting_toggled(bool checked){
@@ -6598,6 +6592,34 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
         m_rxFrameBlockNumbers.clear();
         m_rxActivityQueue.clear();
     }
+}
+
+void MainWindow::buildHeartbeatMenu(QMenu *menu){
+    auto hide = menu->addAction("Show Heartbeats and ACKs");
+    hide->setCheckable(true);
+    hide->setChecked(!m_hbHidden);
+    connect(hide, &QAction::triggered, this, [this](bool checked){
+      m_hbHidden = !checked;
+      displayBandActivity();
+    });
+
+    menu->addSeparator();
+
+    buildRepeatMenu(menu, ui->hbMacroButton, &m_hbInterval);
+
+    menu->addSeparator();
+
+    auto now = menu->addAction("Send Heartbeat Now");
+    connect(now, &QAction::triggered, this, &MainWindow::sendHeartbeat);
+}
+
+void MainWindow::buildCQMenu(QMenu *menu){
+    buildRepeatMenu(menu, ui->cqMacroButton, &m_cqInterval);
+
+    menu->addSeparator();
+
+    auto now = menu->addAction("Send CQ Message Now");
+    connect(now, &QAction::triggered, this, &MainWindow::sendCQ);
 }
 
 void MainWindow::buildRepeatMenu(QMenu *menu, QPushButton * button, int * interval){

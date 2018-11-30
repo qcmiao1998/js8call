@@ -4734,6 +4734,9 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionEnable_Active"/>
     <addaction name="actionEnable_Auto_Reply"/>
     <addaction name="actionEnable_Selcall"/>
+    <addaction name="separator"/>
+    <addaction name="actionHeartbeat"/>
+    <addaction name="actionCQ"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
@@ -5585,6 +5588,16 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="shortcut">
     <string>F11</string>
+   </property>
+  </action>
+  <action name="actionHeartbeat">
+   <property name="text">
+    <string>Heartbeat...</string>
+   </property>
+  </action>
+  <action name="actionCQ">
+   <property name="text">
+    <string>CQ...</string>
    </property>
   </action>
  </widget>

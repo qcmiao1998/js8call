@@ -274,6 +274,8 @@ private slots:
   void on_rbGenMsg_clicked(bool checked);
   void on_rbFreeText_clicked(bool checked);
   void on_clearAction_triggered(QObject * sender);
+  void buildHeartbeatMenu(QMenu *menu);
+  void buildCQMenu(QMenu *menu);
   void buildRepeatMenu(QMenu *menu, QPushButton * button, int * interval);
   void sendHeartbeat();
   void on_hbMacroButton_toggled(bool checked);
