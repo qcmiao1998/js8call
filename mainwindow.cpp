@@ -9401,7 +9401,8 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS ACTIVE HEARTBEAT
-        else if (d.cmd == " HB" && ui->autoReplyButton->isChecked() && !ui->selcalButton->isChecked()){
+        // if we have auto reply enabled and we are heartbeating and selcall is not enabled
+        else if (d.cmd == " HB" && ui->autoReplyButton->isChecked() && ui->hbMacroButton->isChecked() && m_hbInterval > 0 && !ui->selcalButton->isChecked()){
             reply = QString("%1 ACK %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
 
             if(isAllCall){
@@ -9495,9 +9496,14 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-        // do not queue @ALLCALL replies if auto-reply is not checked or it's a ping reply
-        if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains(" HB ")){
+        // do not queue @ALLCALL replies if auto-reply is not checked
+        if(!ui->autoReplyButton->isChecked() && isAllCall){
             continue;
+        }
+
+        // do not queue a reply if it's a HB and HB is not active
+        if((!ui->hbMacroButton->isChecked() || m_hbInterval <= 0) && d.cmd.contains("HB")){
+
         }
 
         // do not queue for reply if there's text in the window
