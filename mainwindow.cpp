@@ -7717,7 +7717,7 @@ void MainWindow::on_stopTxButton_clicked()                    //Stop Tx
   ui->cbFirst->setStyleSheet ("");
 
   resetMessage();
-  resetAutomaticIntervalTransmissions(true, false);
+  resetAutomaticIntervalTransmissions(false, false);
 }
 
 void MainWindow::rigOpen ()
