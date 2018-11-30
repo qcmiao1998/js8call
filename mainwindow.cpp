@@ -2716,6 +2716,10 @@ void MainWindow::on_selcalButton_toggled(bool checked){
         clearCallsignSelected();
     }
 
+    if(checked){
+        resetAutomaticIntervalTransmissions(true, true);
+    }
+
     resetPushButtonToggleText(ui->selcalButton);
 
     displayCallActivity();
