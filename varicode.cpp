@@ -74,8 +74,7 @@ QMap<QString, int> directed_cmds = {
     {" IDLE",       11 }, // i am idle
 
     {" HB",     -1 }, // this is my heartbeat (unused except for faux processing of HBs as directed commands)
-
-    //{"", 12 }, // unused
+    {" HB ACK", 12 }, // (unused, but a compatibility display)
 
     {" QUERY",   13 }, // can you transmit a ping to callsign?
 
