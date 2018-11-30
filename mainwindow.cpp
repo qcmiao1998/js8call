@@ -6627,9 +6627,16 @@ void MainWindow::sendHeartbeat(){
     QString status = ui->activeButton->isChecked() ? "ACTIVE" : "IDLE";
     QString message = QString("%1: HB %2 %3").arg(mycall).arg(status).arg(mygrid).trimmed();
 
+    /*
     addMessageText(message);
 
     if(m_config.transmit_directed()) toggleTx(true);
+    */
+
+    auto f = m_config.heartbeat_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
+
+    enqueueMessage(PriorityLow, message, f, [this](){
+    });
 }
 
 void MainWindow::on_hbMacroButton_toggled(bool checked){
@@ -9461,7 +9468,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // do not queue @ALLCALL replies if auto-reply is not checked or it's a ping reply
-        if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains(" HB")){
+        if(!ui->autoReplyButton->isChecked() && isAllCall && !d.cmd.contains(" HB ")){
             continue;
         }
 
@@ -9643,7 +9650,9 @@ void MainWindow::processTxQueue(){
 
     // check to see if this is a high priority message, or if we have autoreply enabled, or if this is a ping and the ping button is enabled
     if(message.priority >= PriorityHigh   ||
-       (ui->autoReplyButton->isChecked())
+       message.message.contains(" HB ")   ||
+       message.message.contains(" ACK ")  ||
+       ui->autoReplyButton->isChecked()
     ){
         // then try to set the frequency...
         setFreqOffsetForRestore(f, true);
@@ -9777,10 +9786,12 @@ void MainWindow::displayBandActivity() {
                         continue;
                     }
 
+#if 0
                     if (!hbEnabled && (item.text.contains(": HB") || item.text.contains(" ACK "))){
                         // hide heartbeats and acks if we are not currently heartbeating
                         continue;
                     }
+#endif
 
                     if (item.text.isEmpty()) {
                         continue;

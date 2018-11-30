@@ -683,6 +683,25 @@ text message.</string>
                 </widget>
                </item>
                <item>
+               <widget class="QGroupBox" name="heartbeatGroupBox">
+                <property name="visible">
+                 <bool>true</bool>
+                </property>
+                <property name="title">
+                 <string>Heartbeat (HB)</string>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_211">
+                 <item>
+                  <widget class="QCheckBox" name="heartbeat_anywhere_check_box">
+                   <property name="text">
+                    <string>Allow heartbeat transmissions outside of heartbeat sub-channel (500Hz - 1000Hz)</string>
+                   </property>
+                  </widget>
+                 </item>
+                 </layout>
+               </widget>
+               </item>
+               <item>
                 <spacer name="verticalSpacer_5">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
@@ -696,7 +715,7 @@ text message.</string>
                 </spacer>
                </item>
                <item>
-                <widget class="QGroupBox" name="heartbeatGroupBox">
+                <widget class="QGroupBox" name="heartbeatGroupBoxOld">
                  <property name="visible">
                   <bool>false</bool>
                  </property>
@@ -705,16 +724,12 @@ text message.</string>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_21">
                   <item>
-                   <widget class="QCheckBox" name="heartbeat_anywhere_check_box">
-                    <property name="text">
-                     <string>Allow heartbeat transmissions outside of heartbeat sub-channel (500Hz - 1000Hz)</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
                    <layout class="QHBoxLayout" name="horizontalLayout_15">
                     <item>
                      <widget class="QLabel" name="ping_label_10">
+                     <property name="visible">
+                      <bool>false</bool>
+                     </property>
                       <property name="text">
                        <string>Heartbeat interval:</string>
                       </property>
@@ -722,6 +737,9 @@ text message.</string>
                     </item>
                     <item>
                      <widget class="QSpinBox" name="heartbeat_spin_box">
+                     <property name="visible">
+                      <bool>false</bool>
+                     </property>
                       <property name="toolTip">
                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended heartbeat transmissions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                       </property>
