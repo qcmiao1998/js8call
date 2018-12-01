@@ -3722,7 +3722,7 @@ void MainWindow::writeAllTxt(QString message, int bits)
         if(m_RxLog==1) {
           out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
               << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
-              << m_mode << endl;
+              << "JS8" << endl;
           m_RxLog=0;
         }
         auto dt = DecodedText(message, bits);
@@ -3827,7 +3827,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         if(m_RxLog==1) {
           out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
               << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
-              << m_mode << endl;
+              << "JS8" << endl;
           m_RxLog=0;
         }
         int n=t.length();
@@ -7929,7 +7929,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
                 QTextStream out(&f2);
                 out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
                     << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
-                    << m_mode << endl;
+                    << "JS8" << endl;
                 f2.close();
               } else {
                 MessageBox::warning_message (this, tr ("File Error")
@@ -10946,7 +10946,7 @@ void MainWindow::write_transmit_entry (QString const& file_name)
       auto dt = DecodedText(m_currentMessage, m_currentMessageBits);
       out << time.toString("yyyy-MM-dd hh:mm:ss")
           << "  Transmitting " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6)
-          << " MHz  " << QString(m_modeTx).replace("FT8", "JS8")
+          << " MHz  " << "JS8"
           << ":  " << dt.message() << endl;
       f.close();
     }
