@@ -280,7 +280,7 @@ private slots:
   void sendHeartbeat();
   void on_hbMacroButton_toggled(bool checked);
   void on_hbMacroButton_clicked();
-  void sendCQ();
+  void sendCQ(bool repeat=false);
   void on_cqMacroButton_toggled(bool checked);
   void on_cqMacroButton_clicked();
   void on_replyMacroButton_clicked();

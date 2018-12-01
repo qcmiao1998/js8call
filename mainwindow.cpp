@@ -5931,7 +5931,7 @@ void MainWindow::checkRepeat(){
 
     if(ui->cqMacroButton->isChecked() && m_cqInterval > 0 && m_nextCQ.isValid()){
         if(DriftingDateTime::currentDateTimeUtc().secsTo(m_nextCQ) <= 0){
-            sendCQ();
+            sendCQ(true);
         }
     }
 }
@@ -6620,7 +6620,7 @@ void MainWindow::buildCQMenu(QMenu *menu){
     menu->addSeparator();
 
     auto now = menu->addAction("Send CQ Message Now");
-    connect(now, &QAction::triggered, this, &MainWindow::sendCQ);
+    connect(now, &QAction::triggered, this, [this](){ sendCQ(true); });
 }
 
 void MainWindow::buildRepeatMenu(QMenu *menu, QPushButton * button, int * interval){
@@ -6693,7 +6693,7 @@ void MainWindow::on_hbMacroButton_toggled(bool checked){
 void MainWindow::on_hbMacroButton_clicked(){
 }
 
-void MainWindow::sendCQ(){
+void MainWindow::sendCQ(bool repeat){
     auto message = m_config.cq_message();
     if(message.isEmpty()){
         QString mygrid = m_config.my_grid().left(4);
@@ -6704,7 +6704,7 @@ void MainWindow::sendCQ(){
 
     addMessageText(replaceMacros(message, buildMacroValues(), true));
 
-    if(m_config.transmit_directed()) toggleTx(true);
+    if(repeat || m_config.transmit_directed()) toggleTx(true);
 }
 
 void MainWindow::on_cqMacroButton_toggled(bool checked){
