@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -279,8 +279,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>738</width>
-                <height>453</height>
+                <width>654</width>
+                <height>489</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -683,23 +683,23 @@ text message.</string>
                 </widget>
                </item>
                <item>
-               <widget class="QGroupBox" name="heartbeatGroupBox">
-                <property name="visible">
-                 <bool>true</bool>
-                </property>
-                <property name="title">
-                 <string>Heartbeat (HB)</string>
-                </property>
-                <layout class="QVBoxLayout" name="verticalLayout_211">
-                 <item>
-                  <widget class="QCheckBox" name="heartbeat_anywhere_check_box">
-                   <property name="text">
-                    <string>Allow heartbeat transmissions outside of heartbeat sub-channel (500Hz - 1000Hz)</string>
-                   </property>
-                  </widget>
-                 </item>
+                <widget class="QGroupBox" name="heartbeatGroupBox">
+                 <property name="visible">
+                  <bool>false</bool>
+                 </property>
+                 <property name="title">
+                  <string>Heartbeat (HB)</string>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_211">
+                  <item>
+                   <widget class="QCheckBox" name="heartbeat_anywhere_check_box">
+                    <property name="text">
+                     <string>Allow heartbeat transmissions outside of heartbeat sub-channel (500Hz - 1000Hz)</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
-               </widget>
+                </widget>
                </item>
                <item>
                 <spacer name="verticalSpacer_5">
@@ -727,9 +727,9 @@ text message.</string>
                    <layout class="QHBoxLayout" name="horizontalLayout_15">
                     <item>
                      <widget class="QLabel" name="ping_label_10">
-                     <property name="visible">
-                      <bool>false</bool>
-                     </property>
+                      <property name="visible">
+                       <bool>false</bool>
+                      </property>
                       <property name="text">
                        <string>Heartbeat interval:</string>
                       </property>
@@ -737,9 +737,9 @@ text message.</string>
                     </item>
                     <item>
                      <widget class="QSpinBox" name="heartbeat_spin_box">
-                     <property name="visible">
-                      <bool>false</bool>
-                     </property>
+                      <property name="visible">
+                       <bool>false</bool>
+                      </property>
                       <property name="toolTip">
                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes between unattended heartbeat transmissions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                       </property>
@@ -2031,7 +2031,7 @@ both here.</string>
             <x>0</x>
             <y>0</y>
             <width>746</width>
-            <height>525</height>
+            <height>554</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_30">
@@ -4067,12 +4067,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
  </buttongroups>
 </ui>
