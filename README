@@ -10,10 +10,12 @@ JS8Call is an experiment to test the feasibility of a digital mode with the robu
 
 * For release announcements and discussion, join the JS8Call mailing list here: https://groups.io/g/js8call
 
+* Documentation is available here: https://docs.google.com/document/d/159S4wqMUVdMA7qBgaSWmU-iDI4C9wd4CuWnetN68O9U/edit?pli=1#heading=h.kfnyge37yfr
+
 
 # Notice
 
-JS8Call is a derivative of the WSJT-X application, restructured and redesigned for message passing using FT8 modulation. It is not supported by nor endorsed by the WSJT-X development group. While the WSJT-X group maintains copyright over the original work and code, JS8Call is a derivative work licensed under and in accordance with the terms of the GPLv3 license. The source code modifications are public and can be found in this repository: https://bitbucket.org/widefido/wsjtx/
+JS8Call is a derivative of the WSJT-X application, restructured and redesigned for message passing using FT8 modulation. It is not supported by nor endorsed by the WSJT-X development group. While the WSJT-X group maintains copyright over the original work and code, JS8Call is a derivative work licensed under and in accordance with the terms of the GPLv3 license. The source code modifications are public and can be found in this repository: https://bitbucket.org/widefido/js8call/
 
 
 # History
@@ -33,3 +35,7 @@ JS8Call is a derivative of the WSJT-X application, restructured and redesigned f
 * August 12, 2018 - Version 0.4 released - (“leaked” on QRZ) - 500 testers
 * September 2, 2018 - Version 0.5 released - 3000 testers
 * September 14, 2018 - Version 0.6 released - 5000 testers
+* October 8, 2018 - Version 0.7 released - 6000 testers, name changed to JS8 & JS8Call
+* October 31, 2018 - Version 0.8 released - ~7000 testers
+* November 15, 2018 - Version 0.9 released - ~7500 testers
+* November 30, 2018 - Version 0.10 released - ~7800 testers
