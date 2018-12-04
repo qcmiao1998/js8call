@@ -5584,9 +5584,7 @@ bool MainWindow::ensureSelcalCallsignSelected(bool alert){
 
 bool MainWindow::ensureKeyNotStuck(QString const& text){
     // be annoying and drop messages with all the same character to reduce spam...
-    if(text.length() > 10 && QString(text).replace(text.at(0), "").isEmpty()){
-
-        MessageBox::warning_message(this, tr ("Please enter a message before trying to transmit"));
+    if(text.length() > 5 && QString(text).replace(text.at(0), "").trimmed().isEmpty()){
 
         return false;
     }
@@ -5607,6 +5605,17 @@ void MainWindow::createMessage(QString const& text){
 
     if(!ensureKeyNotStuck(text)){
         on_stopTxButton_clicked();
+
+        ui->monitorButton->setChecked(false);
+        on_monitorButton_clicked(false);
+
+        foreach(auto obj, this->children()){
+            if(obj->isWidgetType()){
+                auto wid = qobject_cast<QWidget*>(obj);
+                wid->setEnabled(false);
+            }
+        }
+
         return;
     }
 
