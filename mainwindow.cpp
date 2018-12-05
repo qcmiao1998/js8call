@@ -5048,6 +5048,7 @@ void MainWindow::clearDX ()
   m_rptRcvd.clear ();
   m_qsoStart.clear ();
   m_qsoStop.clear ();
+
   if (ui->tabWidget->currentIndex() == 1) {
     ui->genMsg->setText(ui->tx6->text());
     m_ntx=7;
@@ -6075,7 +6076,6 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
   m_logBook.init();
 
   if (m_config.clear_callsign ()){
-      clearDX ();
       clearCallsignSelected();
   }
 
