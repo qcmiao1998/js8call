@@ -1206,6 +1206,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     menu->addAction(clearActionAll);
 
     menu->popup(ui->extFreeTextMsgEdit->mapToGlobal(point));
+
+    displayActivity(true);
   });
 
 
@@ -1290,6 +1292,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     menu->addAction(clearActionAll);
 
     menu->popup(ui->tableWidgetRXAll->mapToGlobal(point));
+
+    displayActivity(true);
   });
 
 
