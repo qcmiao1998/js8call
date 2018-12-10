@@ -180,6 +180,7 @@ private slots:
   void on_actionShow_Fullscreen_triggered(bool checked);
   void on_actionShow_Frequency_Clock_triggered(bool checked);
   void on_actionShow_Band_Activity_triggered(bool checked);
+  void on_actionShow_Band_Heartbeats_and_ACKs_triggered(bool checked);
   void on_actionShow_Call_Activity_triggered(bool checked);
   void on_actionShow_Waterfall_triggered(bool checked);
   void on_actionShow_Waterfall_Controls_triggered(bool checked);

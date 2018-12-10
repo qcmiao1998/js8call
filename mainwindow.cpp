@@ -2453,6 +2453,9 @@ void MainWindow::on_menuWindow_aboutToShow(){
 #if __APPLE__
     rebuildMacQAction(ui->menuWindow, ui->actionShow_Call_Activity_Columns);
 #endif
+
+    ui->actionShow_Band_Heartbeats_and_ACKs->setChecked(!m_hbHidden);
+    ui->actionShow_Band_Heartbeats_and_ACKs->setEnabled(ui->actionShow_Band_Activity->isChecked());
 }
 
 void MainWindow::on_actionShow_Fullscreen_triggered(bool checked){
@@ -2478,6 +2481,11 @@ void MainWindow::on_actionShow_Band_Activity_triggered(bool checked){
     ui->textHorizontalSplitter->setSizes(hsizes);
     ui->tableWidgetRXAll->setVisible(checked);
     m_bandActivityWasVisible = checked;
+}
+
+void MainWindow::on_actionShow_Band_Heartbeats_and_ACKs_triggered(bool checked){
+    m_hbHidden = !checked;
+    displayBandActivity();
 }
 
 void MainWindow::on_actionShow_Call_Activity_triggered(bool checked){
@@ -6609,16 +6617,6 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
 }
 
 void MainWindow::buildHeartbeatMenu(QMenu *menu){
-    auto hide = menu->addAction("Show Heartbeats and ACKs");
-    hide->setCheckable(true);
-    hide->setChecked(!m_hbHidden);
-    connect(hide, &QAction::triggered, this, [this](bool checked){
-      m_hbHidden = !checked;
-      displayBandActivity();
-    });
-
-    menu->addSeparator();
-
     buildRepeatMenu(menu, ui->hbMacroButton, &m_hbInterval);
 
     menu->addSeparator();

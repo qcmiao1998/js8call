@@ -4700,6 +4700,7 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionShow_Frequency_Clock"/>
     <addaction name="separator"/>
     <addaction name="actionShow_Band_Activity"/>
+    <addaction name="actionShow_Band_Heartbeats_and_ACKs"/>
     <addaction name="actionShow_Band_Activity_Columns"/>
     <addaction name="actionSort_Band_Activity"/>
     <addaction name="separator"/>
@@ -5598,6 +5599,14 @@ list. The list can be maintained in Settings (F2).</string>
   <action name="actionCQ">
    <property name="text">
     <string>CQ...</string>
+   </property>
+  </action>
+  <action name="actionShow_Band_Heartbeats_and_ACKs">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Band Heartbeats and ACKs</string>
    </property>
   </action>
  </widget>
