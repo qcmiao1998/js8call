@@ -1028,6 +1028,12 @@ namespace
   }
 }
 
+template <typename T> void setUppercase(T* t){
+    auto f = t->font();
+    f.setCapitalization(QFont::AllUppercase);
+    t->setFont(f);
+}
+
 Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
                            QSettings * settings, QWidget * parent)
   : QDialog {parent}
@@ -1137,6 +1143,16 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   ui_->qth_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->reply_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->cq_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
+  ui_->groups_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
+
+  setUppercase(ui_->callsign_line_edit);
+  setUppercase(ui_->grid_line_edit);
+  setUppercase(ui_->add_macro_line_edit);
+  setUppercase(ui_->station_message_line_edit);
+  setUppercase(ui_->qth_message_line_edit);
+  setUppercase(ui_->reply_message_line_edit);
+  setUppercase(ui_->cq_message_line_edit);
+  setUppercase(ui_->groups_line_edit);
 
   ui_->udp_server_port_spin_box->setMinimum (1);
   ui_->udp_server_port_spin_box->setMaximum (std::numeric_limits<port_type>::max ());
@@ -2267,12 +2283,10 @@ void Configuration::impl::accept ()
   Q_ASSERT (audio_output_channel_ <= AudioDevice::Both);
 
   auto_switch_bands_ = ui_->auto_switch_bands_check_box->isChecked();
-  my_callsign_ = ui_->callsign_line_edit->text ();
-  my_grid_ = ui_->grid_line_edit->text ();
+  my_callsign_ = ui_->callsign_line_edit->text ().toUpper();
+  my_grid_ = ui_->grid_line_edit->text ().toUpper();
   my_station_ = ui_->station_message_line_edit->text().toUpper();
-
   my_groups_ = splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), true);
-
   cq_ = ui_->cq_message_line_edit->text().toUpper();
   reply_ = ui_->reply_message_line_edit->text().toUpper();
   my_qth_ = ui_->qth_message_line_edit->text().toUpper();
@@ -2698,43 +2712,23 @@ void Configuration::impl::on_sound_output_combo_box_currentTextChanged (QString 
 
 void Configuration::impl::on_station_message_line_edit_textChanged(QString const &text)
 {
-  QString upper = text.toUpper();
-  if(text != upper){
-    ui_->station_message_line_edit->setText (upper);
-  }
 }
 
 
 void Configuration::impl::on_groups_line_edit_textChanged(QString const &text)
 {
-  QString upper = text.toUpper();
-  if(text != upper){
-    ui_->groups_line_edit->setText (upper);
-  }
 }
 
 void Configuration::impl::on_qth_message_line_edit_textChanged(QString const &text)
 {
-  QString upper = text.toUpper();
-  if(text != upper){
-    ui_->qth_message_line_edit->setText (upper);
-  }
 }
 
 void Configuration::impl::on_cq_message_line_edit_textChanged(QString const &text)
 {
-  QString upper = text.toUpper();
-  if(text != upper){
-    ui_->cq_message_line_edit->setText (upper);
-  }
 }
 
 void Configuration::impl::on_reply_message_line_edit_textChanged(QString const &text)
 {
-  QString upper = text.toUpper();
-  if(text != upper){
-    ui_->reply_message_line_edit->setText (upper);
-  }
 }
 
 void Configuration::impl::on_add_macro_line_edit_editingFinished ()
@@ -2793,7 +2787,7 @@ void Configuration::impl::on_add_macro_push_button_clicked (bool /* checked */)
     {
       auto index = next_macros_.index (next_macros_.rowCount () - 1);
       ui_->macros_list_view->setCurrentIndex (index);
-      next_macros_.setData (index, ui_->add_macro_line_edit->text ());
+      next_macros_.setData (index, ui_->add_macro_line_edit->text ().toUpper());
       ui_->add_macro_line_edit->clear ();
     }
 }
