@@ -5877,7 +5877,6 @@ int MainWindow::findFreeFreqOffset(int fmin, int fmax, int bw){
 // schedulePing
 void MainWindow::scheduleHeartbeat(bool first){
     auto timestamp = DriftingDateTime::currentDateTimeUtc();
-    auto orig = timestamp;
 
     // if we have the heartbeat interval disabled, return early, unless this is a "heartbeat now"
     if(!m_config.heartbeat() && !first){
@@ -5913,7 +5912,6 @@ void MainWindow::scheduleHeartbeat(bool first){
 
 // pausePing
 void MainWindow::pauseHeartbeat(){
-    ui->heartbeatButton->setChecked(false);
     m_nextHeartPaused = true;
 
     if(heartbeatTimer.isActive()){
@@ -5923,7 +5921,6 @@ void MainWindow::pauseHeartbeat(){
 
 // unpausePing
 void MainWindow::unpauseHeartbeat(){
-    ui->heartbeatButton->setChecked(true);
     scheduleHeartbeat(false);
 }
 
@@ -6129,7 +6126,6 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
   m_logBook.init();
 
   if (m_config.clear_callsign ()){
-      clearDX ();
       clearCallsignSelected();
   }
 
@@ -8708,10 +8704,11 @@ void MainWindow::updateTxButtonDisplay(){
             left = (int)ceil(float(left)/TEST_FOX_WAVE_GEN_SLOTS);
         }
         int sent = qMax(1, count - left);
+        ui->startTxButton->setText(m_tune ? "Tuning" : QString("%1 (%2/%3)").arg(ui->turboButton->isChecked() ? "Turbo" : "Send").arg(sent).arg(count));
 #else
         int sent = count - m_txFrameQueue.count();
+        ui->startTxButton->setText(m_tune ? "Tuning" : QString("%Send (%1/%2)").arg(sent).arg(count));
 #endif
-        ui->startTxButton->setText(m_tune ? "Tuning" : QString("%1 (%2/%3)").arg(ui->turboButton->isChecked() ? "Turbo" : "Send").arg(sent).arg(count));
         ui->startTxButton->setEnabled(false);
     } else {
         ui->startTxButton->setText(m_txFrameCountEstimate <= 0 ? QString("Send") : QString("Send (%1)").arg(m_txFrameCountEstimate));

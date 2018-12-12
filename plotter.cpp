@@ -9,7 +9,7 @@
 #include "DriftingDateTime.h"
 
 #define MAX_SCREENSIZE 2048
-#define TEST_FOX_WAVE_GEN 1
+#define TEST_FOX_WAVE_GEN 0
 
 extern "C" {
   void flat4_(float swide[], int* iz, int* nflatten);
