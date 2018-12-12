@@ -151,8 +151,17 @@ extern "C" {
   void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
+#ifndef TEST_FOX_WAVE_GEN
 #define TEST_FOX_WAVE_GEN 0
-#define TEST_FOX_WAVE_GEN_SLOTS 1
+#endif
+
+#ifndef TEST_FOX_WAVE_GEN_SLOTS
+#if TEST_FOX_WAVE_GEN
+    #define TEST_FOX_WAVE_GEN_SLOTS 2
+#else
+    #define TEST_FOX_WAVE_GEN_SLOTS 1
+#endif
+#endif
 
 const int NEAR_THRESHOLD_RX = 10;
 
@@ -8707,7 +8716,7 @@ void MainWindow::updateTxButtonDisplay(){
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("%1 (%2/%3)").arg(ui->turboButton->isChecked() ? "Turbo" : "Send").arg(sent).arg(count));
 #else
         int sent = count - m_txFrameQueue.count();
-        ui->startTxButton->setText(m_tune ? "Tuning" : QString("%Send (%1/%2)").arg(sent).arg(count));
+        ui->startTxButton->setText(m_tune ? "Tuning" : QString("Send (%1/%2)").arg(sent).arg(count));
 #endif
         ui->startTxButton->setEnabled(false);
     } else {
