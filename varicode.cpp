@@ -1183,8 +1183,6 @@ QString Varicode::packHeartbeatMessage(QString const &text, const QString &calls
         cqNumber = cqs.key(type, 0);
     }
 
-    quint8 cqNumber = cqs.key(type, 0);
-
     frame = packCompoundFrame(callsign, Varicode::FrameHeartbeat, packed_extra, cqNumber);
     if(frame.isEmpty()){
         if(n) *n = 0;

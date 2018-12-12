@@ -1578,12 +1578,6 @@ void MainWindow::initializeDummyData(){
     displayTextForFreq("HELLO BRAVE  NEW   WORLD    \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
 
     displayActivity(true);
-
-    ui->heartbeatButton->click();
-    QTimer::singleShot(10000, this, [this](){
-         m_idleMinutes = 61;
-         scheduleHeartbeat(true);
-    });
 }
 
 void MainWindow::initialize_fonts ()
@@ -2383,7 +2377,6 @@ void MainWindow::on_menuControl_aboutToShow(){
     ui->actionEnable_Spotting->setChecked(ui->spotButton->isChecked());
     ui->actionEnable_Active->setChecked(ui->activeButton->isChecked());
     ui->actionEnable_Auto_Reply->setChecked(ui->autoReplyButton->isChecked());
-    ui->actionEnable_Heartbeat->setChecked(ui->heartbeatButton->isChecked());
     ui->actionEnable_Selcall->setChecked(ui->selcalButton->isChecked());
 
     QMenu * heartbeatMenu = new QMenu(this->menuBar());
@@ -5592,7 +5585,6 @@ void MainWindow::enqueueMessage(int priority, QString message, int freq, Callbac
 
 void MainWindow::enqueueHeartbeat(QString message){
     m_txHeartbeatQueue.enqueue(message);
-    scheduleHeartbeat(true);
 }
 
 void MainWindow::resetMessage(){
