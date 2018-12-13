@@ -476,7 +476,7 @@ QPushButton:checked {
              <property name="frameShadow">
               <enum>QFrame::Plain</enum>
              </property>
-             <layout class="QGridLayout" name="gridLayout_8" columnstretch="1,1,1,1" columnminimumwidth="75,75,75,75">
+             <layout class="QGridLayout" name="gridLayout_8" columnstretch="1,1,1,1,0" columnminimumwidth="75,75,75,75,0">
               <property name="sizeConstraint">
                <enum>QLayout::SetMinimumSize</enum>
               </property>
@@ -1367,7 +1367,7 @@ background-color: #00ff00;
 color:#555;
 }
 QPushButton[transmitting=&quot;true&quot;]{
-background:yellow;
+background:#ff0000;
 color:#555;
 }</string>
           </property>

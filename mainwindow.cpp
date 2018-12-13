@@ -4694,11 +4694,11 @@ void MainWindow::guiUpdate()
       m_nsendingsh=0;
       if(s[4]==64) m_nsendingsh=1;
       if(m_nsendingsh==1 or m_currentMessageType==7) {
-        tx_status_label.setStyleSheet("QLabel{background-color: #66ffff}");
+        tx_status_label.setStyleSheet("QLabel{background-color: #ff0000}");
       } else if(m_nsendingsh==-1 or m_currentMessageType==6) {
-        tx_status_label.setStyleSheet("QLabel{background-color: #ffccff}");
+        tx_status_label.setStyleSheet("QLabel{background-color: #ff0000}");
       } else {
-        tx_status_label.setStyleSheet("QLabel{background-color: #ffff33}");
+        tx_status_label.setStyleSheet("QLabel{background-color: #ff0000}");
       }
       if(m_tune) {
         tx_status_label.setText("Tx: TUNE");
@@ -4714,7 +4714,7 @@ void MainWindow::guiUpdate()
 
     } else if(m_monitoring) {
       if (m_tx_watchdog) {
-        tx_status_label.setStyleSheet ("QLabel{background-color: #ff0000}");
+        tx_status_label.setStyleSheet ("QLabel{background-color: #000000; color:#ffffff}");
         tx_status_label.setText ("Inactive watchdog");
       } else {
         tx_status_label.setStyleSheet("QLabel{background-color: #00ff00}");
@@ -4850,6 +4850,9 @@ void MainWindow::startTx()
   // disallow editing of the text while transmitting
   ui->extFreeTextMsgEdit->setReadOnly(true);
   update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", true);
+
+  // update the tx button display
+  updateTxButtonDisplay();
 }
 
 void MainWindow::startTx2()
@@ -8318,11 +8321,7 @@ void MainWindow::transmitDisplay (bool transmitting)
     }
   }
 
-  // TODO: jsherer - encapsulate this in a function?
-  /*
-  ui->monitorButton->setVisible(!transmitting);
-  ui->monitorTxButton->setVisible(transmitting);
-  */
+  updateTxButtonDisplay();
 }
 
 void MainWindow::on_sbFtol_valueChanged(int value)
@@ -8716,7 +8715,8 @@ void MainWindow::updateTxButtonDisplay(){
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("%1 (%2/%3)").arg(ui->turboButton->isChecked() ? "Turbo" : "Send").arg(sent).arg(count));
 #else
         int sent = count - m_txFrameQueue.count();
-        ui->startTxButton->setText(m_tune ? "Tuning" : QString("Send (%1/%2)").arg(sent).arg(count));
+        ui->startTxButton->setText(
+            m_tune ? "Tuning" : QString("%1 (%2/%3)").arg(m_transmitting ? "Sending" : "Ready").arg(sent).arg(count));
 #endif
         ui->startTxButton->setEnabled(false);
     } else {
@@ -10938,7 +10938,7 @@ void MainWindow::tx_watchdog (bool triggered)
       if (m_tune) stop_tuning ();
       if (m_auto) auto_tx_mode (false);
       stopTx();
-      tx_status_label.setStyleSheet ("QLabel{background-color: #ff0000}");
+      tx_status_label.setStyleSheet ("QLabel{background-color: #000000; color:#ffffff; }");
       tx_status_label.setText ("Inactive watchdog");
 
       // if the watchdog is triggered...we're no longer active
