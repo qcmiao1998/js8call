@@ -752,6 +752,10 @@ private:
     QList<ActivityDetail> msgs;
   };
 
+  int m_bandActivityWidth;
+  int m_callActivityWidth;
+  int m_textActivityWidth;
+  int m_waterfallHeight;
   bool m_bandActivityWasVisible;
   bool m_rxDirty;
   bool m_rxDisplayDirty;

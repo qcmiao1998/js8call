@@ -2489,10 +2489,35 @@ void MainWindow::on_actionShow_Frequency_Clock_triggered(bool checked){
 
 void MainWindow::on_actionShow_Band_Activity_triggered(bool checked){
     auto hsizes = ui->textHorizontalSplitter->sizes();
-    hsizes[0] = checked ? ui->textHorizontalSplitter->width()/4 : 0;
+
+    if(m_bandActivityWidth == 0){
+        m_bandActivityWidth = ui->textHorizontalSplitter->width()/4;
+    }
+
+    if(m_callActivityWidth == 0){
+        m_callActivityWidth = ui->textHorizontalSplitter->width()/4;
+    }
+
+    if(m_textActivityWidth == 0){
+        m_textActivityWidth = ui->textHorizontalSplitter->width()/2;
+    }
+
+    if(checked){
+        hsizes[0] = m_bandActivityWidth;
+        hsizes[1] = m_textActivityWidth;
+        if(hsizes[2]) hsizes[2] = m_callActivityWidth;
+
+    } else {
+        if(hsizes[0]) m_bandActivityWidth = hsizes[0];
+        if(hsizes[1]) m_textActivityWidth = hsizes[1];
+        if(hsizes[2]) m_callActivityWidth = hsizes[2];
+        hsizes[0] = 0;
+    }
+
     ui->textHorizontalSplitter->setSizes(hsizes);
     ui->tableWidgetRXAll->setVisible(checked);
     m_bandActivityWasVisible = checked;
+
 }
 
 void MainWindow::on_actionShow_Band_Heartbeats_and_ACKs_triggered(bool checked){
@@ -2502,18 +2527,53 @@ void MainWindow::on_actionShow_Band_Heartbeats_and_ACKs_triggered(bool checked){
 
 void MainWindow::on_actionShow_Call_Activity_triggered(bool checked){
     auto hsizes = ui->textHorizontalSplitter->sizes();
-    hsizes[2] = checked ? ui->textHorizontalSplitter->width()/4 : 0;
+
+    if(m_bandActivityWidth == 0){
+        m_bandActivityWidth = ui->textHorizontalSplitter->width()/4;
+    }
+
+    if(m_callActivityWidth == 0){
+        m_callActivityWidth = ui->textHorizontalSplitter->width()/4;
+    }
+
+    if(m_textActivityWidth == 0){
+        m_textActivityWidth = ui->textHorizontalSplitter->width()/2;
+    }
+
+    if(checked){
+        if(hsizes[0]) hsizes[0] = m_bandActivityWidth;
+        hsizes[1] = m_textActivityWidth;
+        hsizes[2] = m_callActivityWidth;
+
+        //hsizes[0] = m_callActivityWidth;
+        //hsizes[1] -= m_callActivityWidth;
+    } else {
+        if(hsizes[0]) m_bandActivityWidth = hsizes[0];
+        if(hsizes[1]) m_textActivityWidth = hsizes[1];
+        if(hsizes[2]) m_callActivityWidth = hsizes[2];
+        hsizes[2] = 0;
+    }
+
     ui->textHorizontalSplitter->setSizes(hsizes);
     ui->tableWidgetCalls->setVisible(checked);
 }
 
 void MainWindow::on_actionShow_Waterfall_triggered(bool checked){
     auto vsizes = ui->mainSplitter->sizes();
-    vsizes[0] = qMin(vsizes[0], ui->logHorizontalWidget->minimumHeight());
-    int oldHeight = vsizes[vsizes.length()-1];
-    int newHeight = checked ? ui->mainSplitter->height()/4 : 0;
-    vsizes[1] += oldHeight - newHeight;
-    vsizes[vsizes.length()-1] = newHeight;
+
+    if(m_waterfallHeight == 0){
+        m_waterfallHeight = ui->mainSplitter->height()/4;
+    }
+
+    if(checked){
+        vsizes[vsizes.length() - 1] = m_waterfallHeight;
+
+    } else {
+        m_waterfallHeight = vsizes[vsizes.length() - 1];
+        vsizes[1] += m_waterfallHeight;
+        vsizes[vsizes.length() - 1] = 0;
+    }
+
     ui->mainSplitter->setSizes(vsizes);
     ui->bandHorizontalWidget->setVisible(checked);
 }
