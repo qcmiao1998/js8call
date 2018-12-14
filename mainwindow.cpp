@@ -2545,8 +2545,6 @@ void MainWindow::on_actionShow_Call_Activity_triggered(bool checked){
         hsizes[1] = m_textActivityWidth;
         hsizes[2] = m_callActivityWidth;
 
-        //hsizes[0] = m_callActivityWidth;
-        //hsizes[1] -= m_callActivityWidth;
     } else {
         if(hsizes[0]) m_bandActivityWidth = hsizes[0];
         if(hsizes[1]) m_textActivityWidth = hsizes[1];
