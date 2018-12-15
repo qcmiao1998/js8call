@@ -2022,7 +2022,7 @@ QStringList splitGroups(QString groupsString, bool filter){
 
 bool Configuration::impl::validate ()
 {
-  auto callsign = ui_->callsign_line_edit->text().trimmed();
+  auto callsign = ui_->callsign_line_edit->text().toUpper().trimmed();
   if(!Varicode::isValidCallsign(callsign, nullptr) || callsign.startsWith("@")){
       MessageBox::critical_message (this, tr ("The callsign format you provided is not supported"));
       return false;
@@ -2033,6 +2033,12 @@ bool Configuration::impl::validate ()
           MessageBox::critical_message (this, QString("%1 is not a valid group").arg(group));
           return false;
       }
+  }
+
+  auto cq = ui_->cq_message_line_edit->text().toUpper().trimmed();
+  if(!cq.isEmpty() && !(cq.startsWith("CQ") || cq.contains(callsign))){
+      MessageBox::critical_message (this, QString("The CQ message format is invalid. It must either start with \"CQ\" or contain your callsign."));
+      return false;
   }
 
   if (ui_->sound_input_combo_box->currentIndex () < 0
