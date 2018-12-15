@@ -153,6 +153,7 @@ public slots:
   bool ensureCallsignSet(bool alert=true);
   bool ensureSelcalCallsignSelected(bool alert=true);
   bool ensureKeyNotStuck(QString const& text);
+  bool ensureNotIdle();
   void createMessage(QString const& text);
   void createMessageTransmitQueue(QString const& text);
   void resetMessageTransmitQueue();

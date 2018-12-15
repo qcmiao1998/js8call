@@ -5706,11 +5706,23 @@ bool MainWindow::ensureSelcalCallsignSelected(bool alert){
 bool MainWindow::ensureKeyNotStuck(QString const& text){
     // be annoying and drop messages with all the same character to reduce spam...
     if(text.length() > 5 && QString(text).replace(text.at(0), "").trimmed().isEmpty()){
-
         return false;
     }
 
     return true;
+}
+
+bool MainWindow::ensureNotIdle(){
+    if (!m_config.watchdog()){
+        return true;
+    }
+
+    if(m_idleMinutes < m_config.watchdog ()){
+        return true;
+    }
+
+    tx_watchdog (true);       // disable transmit and auto replies
+    return false;
 }
 
 void MainWindow::createMessage(QString const& text){
@@ -5720,6 +5732,11 @@ void MainWindow::createMessage(QString const& text){
     }
 
     if(!ensureSelcalCallsignSelected()){
+        on_stopTxButton_clicked();
+        return;
+    }
+
+    if(!ensureNotIdle()){
         on_stopTxButton_clicked();
         return;
     }
@@ -11000,9 +11017,24 @@ void MainWindow::tx_watchdog (bool triggered)
       tx_status_label.setText ("Inactive watchdog");
 
       // if the watchdog is triggered...we're no longer active
+      bool wasAuto = ui->autoReplyButton->isChecked();
+      bool wasActive = ui->activeButton->isChecked();
+      bool wasHB = ui->hbMacroButton->isChecked();
+      bool wasCQ = ui->cqMacroButton->isChecked();
+
+      // save the button states
+      ui->autoReplyButton->setChecked(false);
       ui->activeButton->setChecked(false);
+      ui->hbMacroButton->setChecked(false);
+      ui->cqMacroButton->setChecked(false);
 
       MessageBox::warning_message(this, QString("Attempting to transmit, but you have been inactive for more than %1 minutes.").arg(m_config.watchdog()));
+
+      // restore the button states
+      ui->autoReplyButton->setChecked(wasAuto);
+      ui->activeButton->setChecked(wasActive);
+      ui->hbMacroButton->setChecked(wasHB);
+      ui->cqMacroButton->setChecked(wasCQ);
     }
   else
     {
