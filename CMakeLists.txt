@@ -1272,12 +1272,14 @@ if (NOT WIN32 AND NOT APPLE)
     #COMPONENT runtime
     )
 
-    execute_process(COMMAND ln -s /opt/js8call/bin/js8call ljs8call)
+    IF("${CMAKE_INSTALL_PREFIX}" STREQUAL "/opt/js8call")
+        execute_process(COMMAND ln -s /opt/js8call/bin/js8call ljs8call)
 
-    install(FILES
-        ${CMAKE_BINARY_DIR}/ljs8call DESTINATION /usr/bin/ RENAME js8call
-        #COMPONENT runtime
-    )
+        install(FILES
+            ${CMAKE_BINARY_DIR}/ljs8call DESTINATION /usr/bin/ RENAME js8call
+            #COMPONENT runtime
+        )
+    endif()
 endif (NOT WIN32 AND NOT APPLE)
 
 
