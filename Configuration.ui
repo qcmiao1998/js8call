@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -279,7 +279,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>654</width>
+                <width>724</width>
                 <height>489</height>
                </rect>
               </property>
@@ -642,7 +642,7 @@ text message.</string>
                     <item>
                      <widget class="QLabel" name="label_10">
                       <property name="text">
-                       <string>Disable automatic transmissions:</string>
+                       <string>Disable automatic transmissions after:</string>
                       </property>
                       <property name="buddy">
                        <cstring>tx_watchdog_spin_box</cstring>
@@ -661,7 +661,7 @@ text message.</string>
                        <string> minutes of inactivity</string>
                       </property>
                       <property name="prefix">
-                       <string>after </string>
+                       <string/>
                       </property>
                       <property name="minimum">
                        <number>0</number>
@@ -2084,7 +2084,7 @@ both here.</string>
                    <bool>true</bool>
                   </property>
                   <property name="visible">
-                   <bool>true</bool>
+                   <bool>false</bool>
                   </property>
                   <property name="toolTip">
                    <string>Check this option to force deselect callsign after logging.</string>
@@ -4069,8 +4069,8 @@ soundcard changes</string>
  <buttongroups>
   <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
   <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
