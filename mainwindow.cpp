@@ -7215,8 +7215,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-#if ALLOW_STATIONS_HEARD
-    auto heardQueryAction = menu->addAction(QString("%1$ - What are the stations are you hearing? (Top 2 ranked by most recently heard)").arg(call).trimmed());
+    auto heardQueryAction = menu->addAction(QString("%1 HEARING? - What are the stations are you hearing? (Top 4 ranked by most recently heard)").arg(call).trimmed());
     heardQueryAction->setDisabled(isAllCall);
     connect(heardQueryAction, &QAction::triggered, this, [this](){
 
@@ -7225,11 +7224,10 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1$").arg(selectedCall), true);
+        addMessageText(QString("%1 HEARING?").arg(selectedCall), true);
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
-#endif
 
     auto hashAction = menu->addAction(QString("%1#[MESSAGE] - Please ACK if you receive this message in its entirety").arg(call).trimmed());
     hashAction->setDisabled(isAllCall);
@@ -9436,11 +9434,10 @@ void MainWindow::processCommandActivity() {
             reply = QString("%1 QTC %2").arg(d.from).arg(replaceMacros(qtc, buildMacroValues(), true));
         }
 
-#if ALLOW_STATIONS_HEARD
         // QUERIED STATIONS HEARD
-        else if (d.cmd == "$" && !isAllCall) {
+        else if (d.cmd == " HEARING?" && !isAllCall) {
             int i = 0;
-            int maxStations = 2;
+            int maxStations = 4;
             auto calls = m_callActivity.keys();
             qStableSort(calls.begin(), calls.end(), [this](QString
                 const & a, QString
@@ -9468,7 +9465,7 @@ void MainWindow::processCommandActivity() {
                     continue;
                 }
 
-                lines.append(QString("%1 %2 (%3)").arg(cd.call).arg(Varicode::formatSNR(cd.snr)).arg(since(cd.utcTimestamp)));
+                lines.append(cd.call);
 
                 i++;
             }
@@ -9476,16 +9473,6 @@ void MainWindow::processCommandActivity() {
             lines.prepend(QString("%1 HEARING").arg(d.from));
             reply = lines.join(' ');
         }
-#endif
-
-#if 0
-        // PROCESS RETRANSMIT
-        else if (d.cmd == "|" && !isAllCall) {
-            // TODO: jsherer - perhaps parse d.text and ensure it is a valid message as well as prefix it with our call...
-
-            reply = QString("%1 ACK\n%2 DE %1").arg(d.from).arg(d.text);
-        }
-#endif
 
         // PROCESS RELAY
         else if (d.cmd == ">" && !isAllCall && !isGroupCall) {
