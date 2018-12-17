@@ -9482,7 +9482,7 @@ void MainWindow::processCommandActivity() {
                 reply = QString("%1 DE %2").arg(text).arg(d.from);
 
             // otherwise, as long as we're not an ACK...alert the user and either send an ACK or Message
-            } else if(!d.text.startsWith("ACK DE")) {
+            } else if(!d.text.startsWith("ACK")) {
                 QStringList calls;
                 QString callDePattern = {R"(\sDE\s(?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
                 QRegularExpression re(callDePattern);
@@ -9506,7 +9506,12 @@ void MainWindow::processCommandActivity() {
 
                 calls.prepend(d.from);
 
-                processAlertReplyForCommand(d, calls.join('>'), ">");
+                auto relayFrom = calls.join('>');
+
+                reply = QString("%1>ACK").arg(relayFrom);
+
+                // TODO: put message in inbox instead...
+                //processAlertReplyForCommand(d, relayFrom, ">");
             }
         }
 
@@ -9688,17 +9693,12 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
     msgBox->setText(header);
     msgBox->setInformativeText(text);
 
-    auto ab = msgBox->addButton("ACK", QMessageBox::AcceptRole);
     auto rb = msgBox->addButton("Reply", QMessageBox::AcceptRole);
     auto db = msgBox->addButton("Discard", QMessageBox::NoRole);
 
-    connect(msgBox, &QMessageBox::buttonClicked, this, [this, cmd, from, fromLabel, d, db, rb, ab](QAbstractButton * btn) {
+    connect(msgBox, &QMessageBox::buttonClicked, this, [this, cmd, from, fromLabel, d, db, rb](QAbstractButton * btn) {
         if (btn == db) {
             return;
-        }
-
-        if (btn == ab){
-            enqueueMessage(PriorityHigh, QString("%1%2ACK").arg(from).arg(cmd), -1, nullptr);
         }
 
         if(btn == rb){
