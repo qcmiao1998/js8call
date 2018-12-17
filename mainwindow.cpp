@@ -7397,19 +7397,6 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto qrzAction = menu->addAction(QString("%1 QRZ? - Who is calling me?").arg(call).trimmed());
-    connect(qrzAction, &QAction::triggered, this, [this](){
-
-        QString selectedCall = callsignSelected();
-        if(selectedCall.isEmpty()){
-            return;
-        }
-
-        addMessageText(QString("%1 QRZ?").arg(selectedCall), true);
-
-        if(m_config.transmit_directed()) toggleTx(true);
-    });
-
     auto sevenThreeAction = menu->addAction(QString("%1 73 - I send my best regards").arg(call).trimmed());
     connect(sevenThreeAction, &QAction::triggered, this, [this](){
 
