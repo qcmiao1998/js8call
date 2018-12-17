@@ -76,7 +76,8 @@ QMap<QString, int> directed_cmds = {
     {" IDLE",       11 }, // i am idle
 
     {" HB",     -1 }, // this is my heartbeat (unused except for faux processing of HBs as directed commands)
-    {" HB ACK", 12 }, // (unused, but a compatibility display)
+
+    // {" ",     12 }, // unused
 
     {" QUERY",   13 }, // can you transmit a ping to callsign?
 
@@ -103,7 +104,7 @@ QMap<QString, int> directed_cmds = {
     {" ",        31  }, // send freetext
 };
 
-QSet<int> allowed_cmds = {-1, 0, 1, 2, 3, 4, 5, 6, /*7,*/ 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, /*24,*/ 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {-1, 0, 1, 2, 3, 4, 5, 6, /*7,*/ 8, 9, 10, 11, /*12,*/ 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, /*24,*/ 25, 26, 27, 28, 29, 30, 31};
 
 QSet<int> buffered_cmds = {3, 5, /*6,*/ /*7,*/ 8, 13, 14, 15};
 
