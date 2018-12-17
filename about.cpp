@@ -31,7 +31,7 @@ CAboutDlg::CAboutDlg(QWidget *parent) :
                          "community.<br /><br />"
                          "JS8Call stands on the shoulder of giants...the takeoff angle "
                          "is better up there.<br /><br />"
-                         "A special thanks goes out to the JS8Call development team:<br/><br/><strong>"
+                         "A special thanks goes out to:<br/><br/><strong>"
                          "KC9QNE, "
                          "KI6SSI, "
                          "K0OG, "
@@ -41,8 +41,8 @@ CAboutDlg::CAboutDlg(QWidget *parent) :
                          "OH8STN, "
                          "VA3OSO, "
                          "VK1MIC, "
-                         "W0FW,</strong><br/><br/>and the many other amateur radio operators who have given "
-                         "JS8Call a chance.");
+                         "W0FW,</strong><br/><br/>and the many other amateur radio operators who have helped<br/>"
+                         "bring JS8Call into the world.");
 }
 
 CAboutDlg::~CAboutDlg()
