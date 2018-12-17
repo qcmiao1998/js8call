@@ -7229,18 +7229,6 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto hashAction = menu->addAction(QString("%1#[MESSAGE] - Please ACK if you receive this message in its entirety").arg(call).trimmed());
-    hashAction->setDisabled(isAllCall);
-    connect(hashAction, &QAction::triggered, this, [this](){
-
-        QString selectedCall = callsignSelected();
-        if(selectedCall.isEmpty()){
-            return;
-        }
-
-        addMessageText(QString("%1#[MESSAGE]").arg(selectedCall), true, true);
-    });
-
 #if 0
     auto retransmitAction = menu->addAction(QString("%1|[MESSAGE] - Please ACK and retransmit the following message").arg(call).trimmed());
     retransmitAction->setDisabled(isAllCall);
@@ -7255,7 +7243,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
     });
 #endif
 
-    auto alertAction = menu->addAction(QString("%1>[MESSAGE] - Please (optionally) relay and display this message in an reply dialog").arg(call).trimmed());
+    auto alertAction = menu->addAction(QString("%1>[MESSAGE] - Please ACK, optionally relay, and display this message in an alert").arg(call).trimmed());
     alertAction->setDisabled(isAllCall);
     connect(alertAction, &QAction::triggered, this, [this](){
 
@@ -9513,11 +9501,6 @@ void MainWindow::processCommandActivity() {
                 // TODO: put message in inbox instead...
                 //processAlertReplyForCommand(d, relayFrom, ">");
             }
-        }
-
-        // PROCESS BUFFERED MESSAGE
-        else if (d.cmd == "#" && !isAllCall) {
-            reply = QString("%1 ACK").arg(d.from);
         }
 
         // PROCESS AGN
