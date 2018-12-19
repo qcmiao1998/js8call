@@ -5439,12 +5439,16 @@ void MainWindow::clearActivity(){
     ui->extFreeTextMsgEdit->clear();
     ui->extFreeTextMsgEdit->setReadOnly(false);
     update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", false);
+
+    displayActivity(true);
 }
 
 void MainWindow::createAllcallTableRows(QTableWidget *table, QString const &selectedCall){
     int count = 0;
     auto now = DriftingDateTime::currentDateTimeUtc();
     int callsignAging = m_config.callsign_aging();
+
+    int startCol = 1;
 
     if(!ui->selcalButton->isChecked()){
         table->insertRow(table->rowCount());
@@ -5458,12 +5462,19 @@ void MainWindow::createAllcallTableRows(QTableWidget *table, QString const &sele
             }
             count++;
         }
+
+        auto emptyItem = new QTableWidgetItem("");
+        emptyItem->setData(Qt::UserRole, QVariant("@ALLCALL"));
+        table->setItem(table->rowCount() - 1, 0, emptyItem);
+
         auto item = new QTableWidgetItem(count == 0 ? QString("@ALLCALL") : QString("@ALLCALL (%1)").arg(count));
         item->setData(Qt::UserRole, QVariant("@ALLCALL"));
-        table->setItem(table->rowCount() - 1, 0, item);
-        table->setSpan(table->rowCount() - 1, 0, 1, table->columnCount());
+
+        table->setItem(table->rowCount() - 1, startCol, item);
+        table->setSpan(table->rowCount() - 1, startCol, 1, table->columnCount());
         if(selectedCall == "@ALLCALL"){
             table->item(table->rowCount()-1, 0)->setSelected(true);
+            table->item(table->rowCount()-1, startCol)->setSelected(true);
         }
     }
 
@@ -5472,13 +5483,18 @@ void MainWindow::createAllcallTableRows(QTableWidget *table, QString const &sele
     foreach(auto group, groups){
         table->insertRow(table->rowCount());
 
+        auto emptyItem = new QTableWidgetItem("");
+        emptyItem->setData(Qt::UserRole, QVariant(group));
+        table->setItem(table->rowCount() - 1, 0, emptyItem);
+
         auto item = new QTableWidgetItem(group);
         item->setData(Qt::UserRole, QVariant(group));
-        table->setItem(table->rowCount() - 1, 0, item);
-        table->setSpan(table->rowCount() - 1, 0, 1, table->columnCount());
+        table->setItem(table->rowCount() - 1, startCol, item);
+        table->setSpan(table->rowCount() - 1, startCol, 1, table->columnCount());
 
         if(selectedCall == group){
             table->item(table->rowCount()-1, 0)->setSelected(true);
+            table->item(table->rowCount()-1, startCol)->setSelected(true);
         }
     }
 }
@@ -6718,6 +6734,7 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
         m_bandActivity.clear();
         clearTableWidget(ui->tableWidgetRXAll);
         resetTimeDeltaAverage();
+        displayBandActivity();
     }
 
     // TODO: jsherer - abstract this into a tableWidgetCallsReset function
@@ -6726,6 +6743,7 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
         clearTableWidget((ui->tableWidgetCalls));
         createAllcallTableRows(ui->tableWidgetCalls, "");
         resetTimeDeltaAverage();
+        displayCallActivity();
     }
 
     if(sender == ui->extFreeTextMsgEdit){
@@ -7631,7 +7649,15 @@ void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
 
     auto call = callsignSelected();
 
-    addMessageText(call);
+    if(m_rxCallsignCommandQueue.contains(call) && !m_rxCallsignCommandQueue[call].isEmpty()){
+        CommandDetail d = m_rxCallsignCommandQueue[call].first();
+        m_rxCallsignCommandQueue[call].removeFirst();
+
+        processAlertReplyForCommand(d, d.relayPath, d.cmd);
+
+    } else {
+        addMessageText(call);
+    }
 }
 
 void MainWindow::on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected){
@@ -9494,12 +9520,13 @@ void MainWindow::processCommandActivity() {
 
                 calls.prepend(d.from);
 
-                auto relayFrom = calls.join('>');
+                auto relayPath = calls.join('>');
 
-                reply = QString("%1>ACK").arg(relayFrom);
+                reply = QString("%1 ACK").arg(relayPath);
 
-                // TODO: put message in inbox instead...
-                //processAlertReplyForCommand(d, relayFrom, ">");
+                // put message in inbox instead...
+                d.relayPath = relayPath;
+                m_rxCallsignCommandQueue[d.from].append(d);
             }
         }
 
@@ -9681,6 +9708,7 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
 
     connect(msgBox, &QMessageBox::buttonClicked, this, [this, cmd, from, fromLabel, d, db, rb](QAbstractButton * btn) {
         if (btn == db) {
+            displayCallActivity();
             return;
         }
 
@@ -10154,6 +10182,16 @@ void MainWindow::displayCallActivity() {
             keys = listCopyReverse(keys);
         }
 
+        // pin messages to the top
+        qStableSort(keys.begin(), keys.end(), [this](const QString left, QString right){
+            int leftHas = (int)!(m_rxCallsignCommandQueue.contains(left) && !m_rxCallsignCommandQueue[left].isEmpty());
+            int rightHas = (int)!(m_rxCallsignCommandQueue.contains(right) && !m_rxCallsignCommandQueue[right].isEmpty());
+
+            return leftHas < rightHas;
+        });
+
+        bool showIconColumn = false;
+
         int callsignAging = m_config.callsign_aging();
         foreach(QString call, keys) {
             if(call.trimmed().isEmpty()){
@@ -10179,13 +10217,24 @@ void MainWindow::displayCallActivity() {
             QString displayCall = d.through.isEmpty() ? d.call : QString("%1>%2").arg(d.through).arg(d.call);
 #else
             // unicode star
-            QString displayCall = d.ackTimestamp.isValid() ? QString("\u2605 %1").arg(d.call) : d.call;
+            QString displayCall = d.call;
 #endif
 
             QString flag;
             if(m_logBook.hasWorkedBefore(d.call, "")){
                 // unicode checkmark
                 flag = "\u2713";
+            }
+
+            // icon column (flag -> star -> empty)
+            bool hasMessage = m_rxCallsignCommandQueue.contains(d.call) && !m_rxCallsignCommandQueue[d.call].isEmpty();
+            bool hasAck = d.ackTimestamp.isValid();
+            auto iconItem = new QTableWidgetItem(hasMessage ? "\u2691" : hasAck ? "\u2605" : "");
+            iconItem->setData(Qt::UserRole, QVariant((d.call)));
+            iconItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+            ui->tableWidgetCalls->setItem(row, col++, iconItem);
+            if(hasMessage || hasAck){
+                showIconColumn = true;
             }
 
             auto displayItem = new QTableWidgetItem(displayCall);
@@ -10210,12 +10259,14 @@ void MainWindow::displayCallActivity() {
                 ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, col++, distanceItem);
 
             } else {
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // age
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // snr
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // freq
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // tdrift
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // grid
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // distance
+
+                //ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
             }
 
             if (isCallSelected) {
@@ -10234,10 +10285,13 @@ void MainWindow::displayCallActivity() {
 
         // Set item fonts
         for(int row = 0; row < ui->tableWidgetCalls->rowCount(); row++){
+            auto bold = ui->tableWidgetCalls->item(row,  0)->text() == "\u2691";
             for(int col = 0; col < ui->tableWidgetCalls->columnCount(); col++){
                 auto item = ui->tableWidgetCalls->item(row, col);
                 if(item){
-                    item->setFont(m_config.table_font());
+                    auto f = m_config.table_font();
+                    f.setBold(bold);
+                    item->setFont(f);
                 }
             }
         }
@@ -10246,14 +10300,15 @@ void MainWindow::displayCallActivity() {
         ui->tableWidgetCalls->horizontalHeader()->setVisible(showColumn("call", "labels"));
 
         // Hide columns
-        ui->tableWidgetCalls->setColumnHidden(0, !showColumn("call", "callsign"));
-        ui->tableWidgetCalls->setColumnHidden(1, !showColumn("call", "flag"));
-        ui->tableWidgetCalls->setColumnHidden(2, !showColumn("call", "timestamp"));
-        ui->tableWidgetCalls->setColumnHidden(3, !showColumn("call", "snr"));
-        ui->tableWidgetCalls->setColumnHidden(4, !showColumn("call", "offset"));
-        ui->tableWidgetCalls->setColumnHidden(5, !showColumn("call", "tdrift", false));
-        ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "grid", false));
-        ui->tableWidgetCalls->setColumnHidden(7, !showColumn("call", "distance", false));
+        ui->tableWidgetCalls->setColumnHidden(0, !showIconColumn);
+        ui->tableWidgetCalls->setColumnHidden(1, !showColumn("call", "callsign"));
+        ui->tableWidgetCalls->setColumnHidden(2, !showColumn("call", "flag"));
+        ui->tableWidgetCalls->setColumnHidden(3, !showColumn("call", "timestamp"));
+        ui->tableWidgetCalls->setColumnHidden(4, !showColumn("call", "snr"));
+        ui->tableWidgetCalls->setColumnHidden(5, !showColumn("call", "offset"));
+        ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "tdrift", false));
+        ui->tableWidgetCalls->setColumnHidden(7, !showColumn("call", "grid", false));
+        ui->tableWidgetCalls->setColumnHidden(8, !showColumn("call", "distance", false));
 
         // Resize the table columns
         ui->tableWidgetCalls->resizeColumnToContents(0);
@@ -10263,6 +10318,7 @@ void MainWindow::displayCallActivity() {
         ui->tableWidgetCalls->resizeColumnToContents(4);
         ui->tableWidgetCalls->resizeColumnToContents(5);
         ui->tableWidgetCalls->resizeColumnToContents(6);
+        ui->tableWidgetCalls->resizeColumnToContents(7);
 
         // Reset the scroll position
         ui->tableWidgetCalls->verticalScrollBar()->setValue(currentScrollPos);

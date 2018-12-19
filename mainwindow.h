@@ -729,6 +729,7 @@ private:
     QString text;
     QString extra;
     float tdrift;
+    QString relayPath;
   };
 
   struct ActivityDetail
@@ -815,6 +816,8 @@ private:
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
   QQueue<QString> m_txHeartbeatQueue; // ping frames to be sent
   QMap<QString, QDateTime> m_aprsCallCache;
+
+  QMap<QString, QList<CommandDetail>> m_rxCallsignCommandQueue; // call -> [cmd, ...]
 
   QMap<QString, QMap<QString, CallDetail>> m_callActivityCache; // band -> call activity
   QMap<QString, QMap<int, QList<ActivityDetail>>> m_bandActivityCache; // band -> band activity
