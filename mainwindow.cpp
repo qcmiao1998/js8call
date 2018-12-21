@@ -9391,9 +9391,9 @@ void MainWindow::processCommandActivity() {
             writeDirectedCommandToFile(d);
         }
 
-        // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past five minutes)
+        // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past ten minutes)
         // that way we never get spammed by allcalls at too high of a frequency
-        if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < 5) {
+        if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < 10) {
             continue;
         }
 
