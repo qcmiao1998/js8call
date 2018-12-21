@@ -3016,7 +3016,7 @@ void MainWindow::createStatusBar()                           //createStatusBar
 {
   tx_status_label.setAlignment (Qt::AlignHCenter);
   tx_status_label.setMinimumSize (QSize  {150, 18});
-  tx_status_label.setStyleSheet ("QLabel{background-color: #00ff00}");
+  tx_status_label.setStyleSheet ("QLabel{background-color: #22ff22}");
   tx_status_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
   statusBar()->addWidget (&tx_status_label);
 
@@ -4757,11 +4757,11 @@ void MainWindow::guiUpdate()
       m_nsendingsh=0;
       if(s[4]==64) m_nsendingsh=1;
       if(m_nsendingsh==1 or m_currentMessageType==7) {
-        tx_status_label.setStyleSheet("QLabel{background-color: #ff0000}");
+        tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000; }");
       } else if(m_nsendingsh==-1 or m_currentMessageType==6) {
-        tx_status_label.setStyleSheet("QLabel{background-color: #ff0000}");
+        tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000; }");
       } else {
-        tx_status_label.setStyleSheet("QLabel{background-color: #ff0000}");
+        tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000; }");
       }
       if(m_tune) {
         tx_status_label.setText("Tx: TUNE");
@@ -4780,12 +4780,12 @@ void MainWindow::guiUpdate()
         tx_status_label.setStyleSheet ("QLabel{background-color: #000000; color:#ffffff}");
         tx_status_label.setText ("Inactive watchdog");
       } else {
-        tx_status_label.setStyleSheet("QLabel{background-color: #00ff00}");
+        tx_status_label.setStyleSheet("QLabel{background-color: #22ff22}");
         QString t;
         t="Receiving";
         if(m_mode=="MSK144") {
           int npct=int(100.0*m_fCPUmskrtd/0.298667);
-          if(npct>90) tx_status_label.setStyleSheet("QLabel{background-color: #ff0000}");
+          if(npct>90) tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000; }");
           t.sprintf("Receiving   %2d%%",npct);
         }
         tx_status_label.setText (t);
