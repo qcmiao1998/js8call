@@ -280,6 +280,7 @@ private slots:
   void buildCQMenu(QMenu *menu);
   void buildRepeatMenu(QMenu *menu, QPushButton * button, int * interval);
   void sendHeartbeat();
+  void sendHeartbeatAck(QString to, int snr);
   void on_hbMacroButton_toggled(bool checked);
   void on_hbMacroButton_clicked();
   void sendCQ(bool repeat=false);

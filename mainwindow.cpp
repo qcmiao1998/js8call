@@ -6822,6 +6822,14 @@ void MainWindow::sendHeartbeat(){
     enqueueMessage(PriorityLow, message, f, [this](){ /* */ });
 }
 
+void MainWindow::sendHeartbeatAck(QString to, int snr){
+    auto message = QString("%1 ACK %2").arg(to).arg(Varicode::formatSNR(snr));
+
+    auto f = m_config.heartbeat_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
+
+    enqueueMessage(PriorityLow, message, f, [this](){ /* */ });
+}
+
 void MainWindow::on_hbMacroButton_toggled(bool checked){
     if(checked){
         if(m_hbInterval){
@@ -9538,12 +9546,15 @@ void MainWindow::processCommandActivity() {
         // PROCESS ACTIVE HEARTBEAT
         // if we have auto reply enabled and we are heartbeating and selcall is not enabled
         else if (d.cmd == " HB" && ui->autoReplyButton->isChecked() && ui->hbMacroButton->isChecked() && m_hbInterval > 0 && !ui->selcalButton->isChecked()){
-            reply = QString("%1 ACK %2").arg(d.from).arg(Varicode::formatSNR(d.snr));
+            sendHeartbeatAck(d.from, d.snr);
 
             if(isAllCall){
                 // since all pings are technically @ALLCALL, let's bump the allcall cache here...
                 m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 5);
             }
+
+            // make sure this is explicit
+            continue;
         }
 
         // PROCESS BUFFERED QUERY

@@ -389,6 +389,13 @@
                    </widget>
                   </item>
                   <item>
+                  <widget class="QCheckBox" name="heartbeat_anywhere_check_box">
+                   <property name="text">
+                    <string>Allow heartbeat transmissions outside of heartbeat sub-channel (500Hz - 1000Hz)</string>
+                   </property>
+                  </widget>
+                  </item>
+                  <item>
                    <layout class="QHBoxLayout" name="horizontalLayout_9">
                     <item>
                      <widget class="QCheckBox" name="CW_id_after_73_check_box">
@@ -690,15 +697,6 @@ text message.</string>
                  <property name="title">
                   <string>Heartbeat (HB)</string>
                  </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_211">
-                  <item>
-                   <widget class="QCheckBox" name="heartbeat_anywhere_check_box">
-                    <property name="text">
-                     <string>Allow heartbeat transmissions outside of heartbeat sub-channel (500Hz - 1000Hz)</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
                 </widget>
                </item>
                <item>
