@@ -2014,7 +2014,7 @@ QStringList splitGroups(QString groupsString, bool filter){
         if(filter && !g.startsWith("@")){
             continue;
         }
-        groups.append(group.trimmed());
+        groups.append(group.trimmed().toUpper());
     }
 
     return groups;
@@ -2028,7 +2028,7 @@ bool Configuration::impl::validate ()
       return false;
   }
 
-  foreach(auto group, splitGroups(ui_->groups_line_edit->text(), false)){
+  foreach(auto group, splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), false)){
       if(!Varicode::isCompoundCallsign(group)){
           MessageBox::critical_message (this, QString("%1 is not a valid group").arg(group));
           return false;

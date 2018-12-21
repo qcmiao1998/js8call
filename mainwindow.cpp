@@ -1325,7 +1325,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       }
 
       if(callsign.startsWith("@")){
-          m_config.addGroup(callsign);
+          if(Varicode::isCompoundCallsign(callsign)){
+              m_config.addGroup(callsign);
+          } else {
+              MessageBox::critical_message (this, QString("%1 is not a valid group").arg(callsign));
+          }
+
       } else {
           CallDetail cd = {};
           cd.call = callsign;
