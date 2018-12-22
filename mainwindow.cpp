@@ -8682,7 +8682,6 @@ void MainWindow::updateTextDisplay(){
     bool invalidSelcal = !ensureSelcalCallsignSelected(false);
 
     ui->startTxButton->setDisabled(isTransmitting || emptyText || invalidSelcal);
-    ui->startTxButton->setFlat(isTransmitting);
 
     if(m_txTextDirty){
         // debounce frame and word count
