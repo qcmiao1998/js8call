@@ -7608,6 +7608,9 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
     auto item = ui->tableWidgetRXAll->item(row, 0);
     int offset = item->text().toInt();
 
+    // switch to the offset of this row
+    setFreqOffsetForRestore(offset, false);
+
     // print the history in the main window...
     int activityAging = m_config.activity_aging();
     QDateTime now = DriftingDateTime::currentDateTimeUtc();
