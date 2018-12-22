@@ -8682,6 +8682,7 @@ void MainWindow::updateTextDisplay(){
     bool invalidSelcal = !ensureSelcalCallsignSelected(false);
 
     ui->startTxButton->setDisabled(isTransmitting || emptyText || invalidSelcal);
+    ui->startTxButton->setFlat(isTransmitting);
 
     if(m_txTextDirty){
         // debounce frame and word count
@@ -8806,9 +8807,11 @@ void MainWindow::updateTxButtonDisplay(){
             m_tune ? "Tuning" : QString("%1 (%2/%3)").arg(m_transmitting ? "Sending" : "Ready").arg(sent).arg(count));
 #endif
         ui->startTxButton->setEnabled(false);
+        ui->startTxButton->setFlat(true);
     } else {
         ui->startTxButton->setText(m_txFrameCountEstimate <= 0 ? QString("Send") : QString("Send (%1)").arg(m_txFrameCountEstimate));
         ui->startTxButton->setEnabled(m_txFrameCountEstimate > 0 && ensureSelcalCallsignSelected(false));
+        ui->startTxButton->setFlat(false);
     }
 }
 
