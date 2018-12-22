@@ -10111,6 +10111,8 @@ void MainWindow::displayBandActivity() {
 void MainWindow::displayCallActivity() {
     auto now = DriftingDateTime::currentDateTimeUtc();
 
+    ui->tableWidgetCalls->setFont(m_config.table_font());
+
     // Selected callsign
     QString selectedCall = callsignSelected();
 
