@@ -7252,7 +7252,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
     });
 #endif
 
-    auto alertAction = menu->addAction(QString("%1>[MESSAGE] - Please ACK, optionally relay, and display this message in an alert").arg(call).trimmed());
+    auto alertAction = menu->addAction(QString("%1>[MESSAGE] - Please save this message or relay it to its destination").arg(call).trimmed());
     alertAction->setDisabled(isAllCall);
     connect(alertAction, &QAction::triggered, this, [this](){
 
@@ -7275,9 +7275,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1 QUERY [CALLSIGN]?").arg(selectedCall), true, true);
     });
 
-    menu->addSeparator();
-
-    auto agnAction = menu->addAction(QString("%1 AGN? - Please repeat your last transmission").arg(call).trimmed());
+    auto agnAction = menu->addAction(QString("%1 AGN? - Please automatically repeat your last transmission").arg(call).trimmed());
     connect(agnAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7289,6 +7287,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
+
+    menu->addSeparator();
 
     auto qslQueryAction = menu->addAction(QString("%1 QSL? - Did you receive my last transmission?").arg(call).trimmed());
     connect(qslQueryAction, &QAction::triggered, this, [this](){
