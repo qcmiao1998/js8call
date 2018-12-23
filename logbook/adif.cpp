@@ -213,7 +213,7 @@ bool ADIF::addQSOToFile(QByteArray const& ADIF_record)
     {
         QTextStream out(&f2);
         if (f2.size()==0)
-            out << "WSJT-X ADIF Export<eoh>" << endl;  // new file
+            out << "JS8Call ADIF Export<eoh>" << endl;  // new file
 
         out << ADIF_record << " <eor>" << endl;
         f2.close();

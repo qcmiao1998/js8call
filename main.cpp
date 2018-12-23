@@ -107,7 +107,6 @@ int main(int argc, char *argv[])
                                    // that GUI has correct l18n
 
       // Override programs executable basename as application name.
-      //a.setApplicationName ("WSJT-X");
       a.setApplicationName("JS8Call");
       a.setApplicationVersion (version ());
 

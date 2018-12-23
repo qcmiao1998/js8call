@@ -1079,28 +1079,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   //splashTimer.setSingleShot (true);
   //splashTimer.start (20 * 1000);
 
-/*
-  if(m_config.my_callsign()=="K1JT" or m_config.my_callsign()=="K9AN" or
-     m_config.my_callsign()=="G4WJS" or
-     m_config.my_callsign().contains("KH7Z")) {
-    ui->actionWSPR_LF->setEnabled(true);
-  } else {
-    QString errorMsg;
-    MessageBox::critical_message (this,
-       "Code in the WSJT-X development branch is\n"
-       "not currently available for on-the-air use.\n\n"
-       "Please use WSJT-X v1.8.0\n", errorMsg);
-    Q_EMIT finished ();
-  }
-*/
-
-  /*
-  if(QCoreApplication::applicationVersion().contains("-devel") or
-     QCoreApplication::applicationVersion().contains("-rc")) {
-    QTimer::singleShot (0, this, SLOT (not_GA_warning_message ()));
-  }
-  */
-
   // TODO: jsherer - need to remove this eventually...
   QTimer::singleShot (0, this, SLOT (checkStartupWarnings ()));
 
@@ -4459,7 +4437,7 @@ void MainWindow::guiUpdate()
       if(onAirFreq!=m_onAirFreq0) {
         m_onAirFreq0=onAirFreq;
         auto const& message = tr ("Please choose another Tx frequency."
-                                  " WSJT-X will not knowingly transmit another"
+                                  " The app will not knowingly transmit another"
                                   " mode in the WSPR sub-band on 30m.");
 #if QT_VERSION >= 0x050400
         QTimer::singleShot (0, [=] { // don't block guiUpdate
