@@ -4852,8 +4852,8 @@ void MainWindow::guiUpdate()
     // update repeat button text once per second..
     updateRepeatButtonDisplay();
 
-    // once per second...but not when we're transmitting
-    if(!m_transmitting){
+    // once per second...but not when we're transmitting, unless it's in the first second...
+    if(!m_transmitting || (m_sec0 % (m_TRperiod))){
         // process all received activity...
         processActivity(forceDirty);
 
@@ -8934,6 +8934,9 @@ void MainWindow::processActivity(bool force) {
     // Recent Rx Activity
     processRxActivity();
 
+    // Process Idle Activity
+    processIdleActivity();
+
     // Grouped Compound Activity
     processCompoundActivity();
 
@@ -8972,6 +8975,47 @@ void MainWindow::resetTimeDeltaAverage(){
 
     // observe zero for reset
     observeTimeDeltaForAverage(0);
+}
+
+
+void MainWindow::processIdleActivity() {
+    auto now = DriftingDateTime::currentDateTimeUtc();
+
+    // if we detect an idle offset, insert an ellipsis into the activity queue and band activity
+    foreach(auto offset, m_bandActivity.keys()){
+        auto details = m_bandActivity[offset];
+        if(details.isEmpty()){
+            continue;
+        }
+
+        auto last = details.last();
+        if((last.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast){
+            continue;
+        }
+
+        if(last.utcTimestamp.secsTo(now) < m_TRperiod){
+            continue;
+        }
+
+        if(last.text == " . . . "){
+            continue;
+        }
+
+        ActivityDetail d = {};
+        d.text = " . . . ";
+        d.isFree = true;
+        d.utcTimestamp = last.utcTimestamp;
+        d.snr = last.snr;
+        d.tdrift = last.tdrift;
+        d.freq = last.freq;
+
+        if(hasExistingMessageBuffer(offset, false, nullptr)){
+            m_messageBuffer[offset].msgs.append(d);
+        }
+
+        m_rxActivityQueue.append(d);
+        m_bandActivity[offset].append(d);
+    }
 }
 
 void MainWindow::processRxActivity() {
@@ -9026,24 +9070,6 @@ void MainWindow::processRxActivity() {
             }
         }
 
-#if 0
-        // if this is a recent non-directed offset, bump the cache and display...
-        if(isRecentOffset(d.freq)){
-            markOffsetRecent(d.freq);
-            shouldDisplay = true;
-        }
-#endif
-
-#if 0
-        // if this is a (recent) directed offset, bump the cache, and display...
-        // this will allow a directed free text command followed by non-buffered data frames.
-        bool isDirectedAllCall = false;
-        if(isDirectedOffset(d.freq, &isDirectedAllCall)){
-            markOffsetDirected(d.freq, isDirectedAllCall);
-            shouldDisplay = shouldDisplay || !isDirectedAllCall;
-        }
-#endif
-
         // TODO: incremental printing of directed messages
         // Display if:
         // 1) this is a directed message header "to" us and should be buffered...
@@ -9052,11 +9078,6 @@ void MainWindow::processRxActivity() {
         if(!shouldDisplay){
             continue;
         }
-
-#if 0
-        // ok, we're good to display...let's cache that fact and then display!
-        markOffsetRecent(d.freq);
-#endif
 
         bool isFirst = (d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst;
         bool isLast = (d.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast;
@@ -9083,6 +9104,37 @@ void MainWindow::processRxActivity() {
             m_rxFrameBlockNumbers.remove(d.freq);
         }
     }
+
+#if 0
+    // TODO: this works but should also print in the rx window.
+    foreach(auto offset, m_bandActivity.keys()){
+        if(seen.contains(offset)){
+            continue;
+        }
+
+        if(m_bandActivity[offset].isEmpty()){
+            continue;
+        }
+
+        auto last = m_bandActivity[offset].last();
+        if((last.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast){
+            continue;
+        }
+
+        auto now = DriftingDateTime::currentDateTimeUtc();
+        if(last.utcTimestamp.secsTo(now) < m_TRperiod){
+            continue;
+        }
+
+        ActivityDetail d = {};
+        d.text = " . . . ";
+        d.isFree = true;
+        d.utcTimestamp = now;
+        d.snr = -99;
+
+        m_bandActivity[offset].append(d);
+    }
+#endif
 }
 
 void MainWindow::processCompoundActivity() {

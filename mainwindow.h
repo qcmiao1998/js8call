@@ -935,6 +935,7 @@ private:
   void observeTimeDeltaForAverage(float delta);
   void resetTimeDeltaAverage();
   void processRxActivity();
+  void processIdleActivity();
   void processCompoundActivity();
   void processBufferedActivity();
   void processCommandActivity();
