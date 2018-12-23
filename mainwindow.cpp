@@ -10036,15 +10036,15 @@ void MainWindow::displayBandActivity() {
                 int row = ui->tableWidgetRXAll->rowCount() - 1;
                 int col = 0;
 
-                auto offsetItem = new QTableWidgetItem(QString("%1").arg(offset));
+                auto offsetItem = new QTableWidgetItem(QString("%1 Hz").arg(offset));
                 offsetItem->setData(Qt::UserRole, QVariant(offset));
                 ui->tableWidgetRXAll->setItem(row, col++, offsetItem);
 
-                auto ageItem = new QTableWidgetItem(QString("(%1)").arg(age));
+                auto ageItem = new QTableWidgetItem(QString("%1").arg(age));
                 ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
                 ui->tableWidgetRXAll->setItem(row, col++, ageItem);
 
-                auto snrItem = new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(snr)));
+                auto snrItem = new QTableWidgetItem(QString("%1 dB").arg(Varicode::formatSNR(snr)));
                 snrItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
                 ui->tableWidgetRXAll->setItem(row, col++, snrItem);
 
@@ -10298,9 +10298,9 @@ void MainWindow::displayCallActivity() {
             flagItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
             ui->tableWidgetCalls->setItem(row, col++, flagItem);
             if(d.utcTimestamp.isValid()){
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("(%1)").arg(since(d.utcTimestamp))));
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(Varicode::formatSNR(d.snr))));
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(d.freq)));
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(since(d.utcTimestamp))));
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 dB").arg(Varicode::formatSNR(d.snr))));
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 Hz").arg(d.freq)));
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 ms").arg((int)(1000*d.tdrift))));
 
                 auto gridItem = new QTableWidgetItem(QString("%1").arg(d.grid.trimmed().left(4)));
