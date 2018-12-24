@@ -10106,6 +10106,11 @@ void MainWindow::displayBandActivity() {
         style = style.arg(m_config.color_table_foreground().name());
         ui->tableWidgetRXAll->setStyleSheet(style);
 
+        // Set the table palette for inactive selected row
+        auto p = ui->tableWidgetRXAll->palette();
+        p.setColor(QPalette::Inactive, QPalette::Highlight, p.color(QPalette::Active, QPalette::Highlight));
+        ui->tableWidgetRXAll->setPalette(p);
+
         // Set item fonts
         for(int row = 0; row < ui->tableWidgetRXAll->rowCount(); row++){
             for(int col = 0; col < ui->tableWidgetRXAll->columnCount(); col++){
@@ -10339,6 +10344,11 @@ void MainWindow::displayCallActivity() {
         style = style.arg(m_config.color_table_highlight().name());
         style = style.arg(m_config.color_table_foreground().name());
         ui->tableWidgetCalls->setStyleSheet(style);
+
+        // Set the table palette for inactive selected row
+        auto p = ui->tableWidgetCalls->palette();
+        p.setColor(QPalette::Inactive, QPalette::Highlight, p.color(QPalette::Active, QPalette::Highlight));
+        ui->tableWidgetCalls->setPalette(p);
 
         // Set item fonts
         for(int row = 0; row < ui->tableWidgetCalls->rowCount(); row++){
