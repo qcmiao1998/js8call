@@ -1237,7 +1237,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     int selectedOffset = -1;
     if(!ui->tableWidgetRXAll->selectedItems().isEmpty()){
         auto selectedItems = ui->tableWidgetRXAll->selectedItems();
-        selectedOffset = selectedItems.first()->text().toInt();
+        selectedOffset = selectedItems.first()->data(Qt::UserRole).toInt();
     }
 
     if(selectedOffset != -1){
@@ -7584,7 +7584,7 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
 
     // TODO: jsherer - could also parse the messages for the last callsign?
     auto item = ui->tableWidgetRXAll->item(row, 0);
-    int offset = item->text().toInt();
+    int offset = item->text().replace(" Hz", "").toInt();
 
     // switch to the offset of this row
     setFreqOffsetForRestore(offset, false);
@@ -8809,7 +8809,7 @@ QString MainWindow::callsignSelected(bool useInputText){
     if(!ui->tableWidgetRXAll->selectedItems().isEmpty()){
         int selectedOffset = -1;
         auto selectedItems = ui->tableWidgetRXAll->selectedItems();
-        selectedOffset = selectedItems.first()->text().toInt();
+        selectedOffset = selectedItems.first()->data(Qt::UserRole).toInt();
 
         auto keys = m_callActivity.keys();
         qStableSort(keys.begin(), keys.end(), [this](QString const &a, QString const &b){
@@ -9906,7 +9906,7 @@ void MainWindow::displayBandActivity() {
     int selectedOffset = -1;
     auto selectedItems = ui->tableWidgetRXAll->selectedItems();
     if (!selectedItems.isEmpty()) {
-        selectedOffset = selectedItems.first()->text().toInt();
+        selectedOffset = selectedItems.first()->data(Qt::UserRole).toInt();
     }
 
     ui->tableWidgetRXAll->setUpdatesEnabled(false);
@@ -10291,7 +10291,7 @@ void MainWindow::displayCallActivity() {
             }
 
             auto displayItem = new QTableWidgetItem(displayCall);
-            displayItem->setData(Qt::UserRole, QVariant((d.call)));
+            displayItem->setData(Qt::UserRole, QVariant(d.call));
             ui->tableWidgetCalls->setItem(row, col++, displayItem);
 
             auto flagItem = new QTableWidgetItem(flag);
@@ -10300,7 +10300,11 @@ void MainWindow::displayCallActivity() {
             if(d.utcTimestamp.isValid()){
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(since(d.utcTimestamp))));
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 dB").arg(Varicode::formatSNR(d.snr))));
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 Hz").arg(d.freq)));
+
+                auto offsetItem = new QTableWidgetItem(QString("%1 Hz").arg(d.freq));
+                offsetItem->setData(Qt::UserRole, QVariant(d.freq));
+                ui->tableWidgetCalls->setItem(row, col++, offsetItem);
+
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 ms").arg((int)(1000*d.tdrift))));
 
                 auto gridItem = new QTableWidgetItem(QString("%1").arg(d.grid.trimmed().left(4)));
