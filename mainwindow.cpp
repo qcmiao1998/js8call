@@ -10347,7 +10347,9 @@ void MainWindow::displayCallActivity() {
                 auto item = ui->tableWidgetCalls->item(row, col);
                 if(item){
                     auto f = m_config.table_font();
-                    f.setBold(bold);
+                    if(bold){
+                        f.setBold(true);
+                    }
                     item->setFont(f);
                 }
             }
