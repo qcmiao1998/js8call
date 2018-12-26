@@ -476,7 +476,7 @@ QPushButton:checked {
              <property name="frameShadow">
               <enum>QFrame::Plain</enum>
              </property>
-             <layout class="QGridLayout" name="gridLayout_8" columnstretch="1,1,1,0" columnminimumwidth="75,75,75,0">
+             <layout class="QGridLayout" name="gridLayout_8" columnstretch="1,1,1" columnminimumwidth="75,75,75">
               <property name="sizeConstraint">
                <enum>QLayout::SetMinimumSize</enum>
               </property>
@@ -1256,6 +1256,9 @@ QTextEdit[transmitting=&quot;true&quot;] {
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start transmitting&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
+          <property name="autoFillBackground">
+           <bool>true</bool>
+          </property>
           <property name="styleSheet">
            <string notr="true">QPushButton:checked {
 background-color: #22FF22;
@@ -1403,6 +1406,9 @@ color:#222;
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send a CQ message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
+          <property name="autoFillBackground">
+           <bool>true</bool>
+          </property>
           <property name="styleSheet">
            <string notr="true">QPushButton:checked { 
   font-weight:bold;
@@ -1478,6 +1484,9 @@ color:#222;
           </property>
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;Send a Heartbeat message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="autoFillBackground">
+           <bool>true</bool>
           </property>
           <property name="styleSheet">
            <string notr="true">QPushButton:checked { 
