@@ -1125,7 +1125,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
           return;
       }
 
-      if(!ensureCallsignSet(true) || !ensureSelcalCallsignSelected(true)){
+      if(!ensureCallsignSet(true)){
           return;
       }
 
@@ -1448,15 +1448,14 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   gridButtonLayout->setColumnMinimumWidth(0, width);
   gridButtonLayout->setColumnMinimumWidth(1, width);
   gridButtonLayout->setColumnMinimumWidth(2, width);
-  gridButtonLayout->setColumnMinimumWidth(3, width);
   gridButtonLayout->setColumnStretch(0, 1);
   gridButtonLayout->setColumnStretch(1, 1);
   gridButtonLayout->setColumnStretch(2, 1);
-  gridButtonLayout->setColumnStretch(3, 1);
 
   pskSetLocal();
   aprsSetLocal();
 
+  clearActivity();
   displayActivity(true);
 
   /*
@@ -1747,7 +1746,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("TextVerticalSplitter", ui->textVerticalSplitter->saveState());
   m_settings->setValue("ShowTimeDrift", ui->driftSyncFrame->isVisible());
   m_settings->setValue("TimeDrift", ui->driftSpinBox->value());
-  m_settings->setValue("SelCal", ui->selcalButton->isChecked());
   m_settings->setValue("ShowTooltips", ui->actionShow_Tooltips->isChecked());
 
   m_settings->endGroup();
@@ -1862,7 +1860,6 @@ void MainWindow::readSettings()
   }
   ui->driftSyncFrame->setVisible(m_settings->value("ShowTimeDrift", false).toBool());
   ui->driftSpinBox->setValue(m_settings->value("TimeDrift", 0).toInt());
-  ui->selcalButton->setChecked(m_settings->value("SelCal", false).toBool());
   ui->actionShow_Tooltips->setChecked(m_settings->value("ShowTooltips", true).toBool());
 
   m_settings->endGroup();
@@ -2367,9 +2364,7 @@ void rebuildMacQAction(QMenu *menu, QAction *existingAction){
 
 void MainWindow::on_menuControl_aboutToShow(){
     ui->actionEnable_Spotting->setChecked(ui->spotButton->isChecked());
-    ui->actionEnable_Active->setChecked(ui->activeButton->isChecked());
     ui->actionEnable_Auto_Reply->setChecked(ui->autoReplyButton->isChecked());
-    ui->actionEnable_Selcall->setChecked(ui->selcalButton->isChecked());
 
     QMenu * heartbeatMenu = new QMenu(this->menuBar());
     buildHeartbeatMenu(heartbeatMenu);
@@ -2392,14 +2387,6 @@ void MainWindow::on_actionEnable_Spotting_toggled(bool checked){
 
 void MainWindow::on_actionEnable_Auto_Reply_toggled(bool checked){
     ui->autoReplyButton->setChecked(checked);
-}
-
-void MainWindow::on_actionEnable_Active_toggled(bool checked){
-    ui->activeButton->setChecked(checked);
-}
-
-void MainWindow::on_actionEnable_Selcall_toggled(bool checked){
-    ui->selcalButton->setChecked(checked);
 }
 
 void MainWindow::on_menuWindow_aboutToShow(){
@@ -2770,33 +2757,6 @@ void MainWindow::on_monitorTxButton_toggled(bool checked){
     resetPushButtonToggleText(ui->monitorTxButton);
 }
 
-void MainWindow::on_selcalButton_toggled(bool checked){
-#if SELCAL_SHOULD_HIDE_BAND_ACTIVITY
-    if(checked){
-        if(ui->tableWidgetRXAll->isVisible()){
-            ui->tableWidgetRXAll->setVisible(false);
-            m_bandActivityWasVisible = true;
-        } else {
-            m_bandActivityWasVisible = false;
-        }
-    } else {
-        ui->tableWidgetRXAll->setVisible(m_bandActivityWasVisible);
-    }
-#endif
-
-    if(checked && callsignSelected() == "@ALLCALL"){
-        clearCallsignSelected();
-    }
-
-    if(checked){
-        resetAutomaticIntervalTransmissions(true, true);
-    }
-
-    resetPushButtonToggleText(ui->selcalButton);
-
-    displayCallActivity();
-}
-
 void MainWindow::on_tuneButton_toggled(bool checked){
     resetPushButtonToggleText(ui->tuneButton);
 }
@@ -2804,43 +2764,6 @@ void MainWindow::on_tuneButton_toggled(bool checked){
 void MainWindow::on_spotButton_toggled(bool checked){
     resetPushButtonToggleText(ui->spotButton);
 }
-
-void MainWindow::on_activeButton_toggled(bool checked){
-#if 0
-    // clear the ping queue when you toggle the button
-    m_txHeartbeatQueue.clear();
-    displayBandActivity();
-
-    // then process the action
-    if(checked){
-        scheduleHeartbeat(false);
-    } else {
-        pauseHeartbeat();
-    }
-#endif
-
-    // we call this so hb button disabled state is updated
-    updateButtonDisplay();
-
-    resetPushButtonToggleText(ui->activeButton);
-}
-
-#if 0
-void MainWindow::on_heartbeatButton_toggled(bool checked){
-    // clear the ping queue when you toggle the button
-    m_txHeartbeatQueue.clear();
-    displayBandActivity();
-
-    // then process the action
-    if(checked){
-        scheduleHeartbeat(false);
-    } else {
-        pauseHeartbeat();
-    }
-
-    resetPushButtonToggleText(ui->heartbeatButton);
-}
-#endif
 
 void MainWindow::auto_tx_mode (bool state)
 {
@@ -5433,7 +5356,8 @@ void MainWindow::createAllcallTableRows(QTableWidget *table, QString const &sele
 
     int startCol = 1;
 
-    if(!ui->selcalButton->isChecked()){
+    if(!m_config.avoid_allcall())
+    {
         table->insertRow(table->rowCount());
 
         foreach(auto cd, m_callActivity.values()){
@@ -5689,19 +5613,6 @@ bool MainWindow::ensureCallsignSet(bool alert){
     return true;
 }
 
-bool MainWindow::ensureSelcalCallsignSelected(bool alert){
-    auto selectedCallsign = callsignSelected(true);
-    bool isAllCall = isAllCallIncluded(selectedCallsign);
-    bool missingCall = selectedCallsign.isEmpty();
-    bool blockTransmit = ui->selcalButton->isChecked() && (isAllCall || missingCall);
-
-    if(blockTransmit && alert){
-        MessageBox::warning_message(this, tr ("Please select or enter a callsign to direct this message while SELCALL is enabled."));
-    }
-
-    return !blockTransmit;
-}
-
 bool MainWindow::ensureKeyNotStuck(QString const& text){
     // be annoying and drop messages with all the same character to reduce spam...
     if(text.length() > 5 && QString(text).replace(text.at(0), "").trimmed().isEmpty()){
@@ -5726,11 +5637,6 @@ bool MainWindow::ensureNotIdle(){
 
 void MainWindow::createMessage(QString const& text){
     if(!ensureCallsignSet()){
-        on_stopTxButton_clicked();
-        return;
-    }
-
-    if(!ensureSelcalCallsignSelected()){
         on_stopTxButton_clicked();
         return;
     }
@@ -6797,8 +6703,7 @@ void MainWindow::buildRepeatMenu(QMenu *menu, QPushButton * button, int * interv
 void MainWindow::sendHeartbeat(){
     QString mycall = m_config.my_callsign();
     QString mygrid = m_config.my_grid().left(4);
-    QString status = ui->activeButton->isChecked() ? "ACTIVE" : "IDLE";
-    QString message = QString("%1: HB %2 %3").arg(mycall).arg(status).arg(mygrid).trimmed();
+    QString message = QString("%1: HB %2").arg(mycall).arg(mygrid).trimmed();
 
     auto f = m_config.heartbeat_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
 
@@ -7210,7 +7115,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto stationIdleQueryAction = menu->addAction(QString("%1 STATUS? - Is your station active or inactive?").arg(call).trimmed());
+    auto stationIdleQueryAction = menu->addAction(QString("%1 STATUS? - What is the status of your station (auto, version, etc)?").arg(call).trimmed());
     stationIdleQueryAction->setDisabled(isAllCall);
     connect(stationIdleQueryAction, &QAction::triggered, this, [this](){
 
@@ -7474,8 +7379,7 @@ QMap<QString, QString> MainWindow::buildMacroValues(){
         {"<MYQTC>", m_config.my_station()},
         {"<MYQTH>", m_config.my_qth()},
         {"<MYCQ>", m_config.cq_message()},
-        {"<MYREPLY>", m_config.reply_message()},
-        {"<MYSTATUS>", (ui->activeButton->isChecked() ? "ACTIVE" : "IDLE")},
+        {"<MYREPLY>", m_config.reply_message()}
     };
 
     auto selectedCall = callsignSelected();
@@ -8660,9 +8564,8 @@ void MainWindow::updateRepeatButtonDisplay(){
 void MainWindow::updateTextDisplay(){
     bool isTransmitting = m_transmitting || m_txFrameCount > 0;
     bool emptyText = ui->extFreeTextMsgEdit->toPlainText().isEmpty();
-    bool invalidSelcal = !ensureSelcalCallsignSelected(false);
 
-    ui->startTxButton->setDisabled(isTransmitting || emptyText || invalidSelcal);
+    ui->startTxButton->setDisabled(isTransmitting || emptyText);
 
     if(m_txTextDirty){
         // debounce frame and word count
@@ -8790,7 +8693,7 @@ void MainWindow::updateTxButtonDisplay(){
         ui->startTxButton->setFlat(true);
     } else {
         ui->startTxButton->setText(m_txFrameCountEstimate <= 0 ? QString("Send") : QString("Send (%1)").arg(m_txFrameCountEstimate));
-        ui->startTxButton->setEnabled(m_txFrameCountEstimate > 0 && ensureSelcalCallsignSelected(false));
+        ui->startTxButton->setEnabled(m_txFrameCountEstimate > 0);
         ui->startTxButton->setFlat(false);
     }
 }
@@ -8944,7 +8847,10 @@ void MainWindow::observeTimeDeltaForAverage(float delta){
     }
 
     // display average
-    ui->driftAvgLabel->setText(QString("Avg Time Delta: %1 ms").arg(m_timeDeltaMsMMA));
+    if(m_timeDeltaMsMMA < -15.0F || m_timeDeltaMsMMA > 15.0F){
+        resetTimeDeltaAverage();
+    }
+    ui->driftAvgLabel->setText(QString("Avg Time Delta: %1 ms").arg((int)m_timeDeltaMsMMA));
 }
 
 void MainWindow::resetTimeDeltaAverage(){
@@ -9015,7 +8921,7 @@ void MainWindow::processRxActivity() {
         int prevOffset = d.freq;
         if(hasExistingMessageBuffer(d.freq, false, &prevOffset) && (
                 (m_messageBuffer[prevOffset].cmd.to == m_config.my_callsign()) ||
-                // (isAllCallIncluded(m_messageBuffer[prevOffset].cmd.to) && !ui->selcalButton->isChecked()) || // don't incrementally print allcalls
+                // (isAllCallIncluded(m_messageBuffer[prevOffset].cmd.to))     || // uncomment this if we want to incrementally print allcalls
                 (isGroupCallIncluded(m_messageBuffer[prevOffset].cmd.to))
             )
         ){
@@ -9040,10 +8946,6 @@ void MainWindow::processRxActivity() {
             }
 
             if(d.isDirected && d.text.contains(": HB ")){ // TODO: HEARTBEAT
-                continue;
-            }
-
-            if(ui->selcalButton->isChecked()){
                 continue;
             }
         }
@@ -9342,8 +9244,9 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-        // if selcal is enabled and this is an allcall, take no action.
-        if (isAllCall && ui->selcalButton->isChecked()) {
+        // we're only responding to allcalls if we are participating in the allcall group
+        // but, don't avoid for heartbeats...those are technically allcalls but are processed differently
+        if(isAllCall && m_config.avoid_allcall() && d.cmd != " HB"){
             continue;
         }
 
@@ -9457,11 +9360,7 @@ void MainWindow::processCommandActivity() {
 
         // QUERIED ACTIVE
         else if (d.cmd == " STATUS?" && !isAllCall) {
-            if(ui->activeButton->isChecked()){
-                reply = QString("%1 ACTIVE").arg(d.from);
-            } else {
-                reply = QString("%1 IDLE").arg(d.from);
-            }
+            reply = QString("%1 AUTO:%2 VER:%3").arg(d.from).arg(ui->autoReplyButton->isChecked() ? "ON" : "OFF").arg(version());
         }
 
         // QUERIED GRID
@@ -9585,7 +9484,7 @@ void MainWindow::processCommandActivity() {
 
         // PROCESS ACTIVE HEARTBEAT
         // if we have auto reply enabled and we are heartbeating and selcall is not enabled
-        else if (d.cmd == " HB" && ui->autoReplyButton->isChecked() && ui->hbMacroButton->isChecked() && m_hbInterval > 0 && !ui->selcalButton->isChecked()){
+        else if (d.cmd == " HB" && ui->autoReplyButton->isChecked() && ui->hbMacroButton->isChecked() && m_hbInterval > 0){
             sendHeartbeatAck(d.from, d.snr);
 
             if(isAllCall){
@@ -9598,7 +9497,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS BUFFERED QUERY
-        else if (d.cmd == " QUERY" && ui->autoReplyButton->isChecked() && !ui->selcalButton->isChecked()){
+        else if (d.cmd == " QUERY" && ui->autoReplyButton->isChecked()){
             auto who = d.text;
             if(who.isEmpty()){
                 continue;
@@ -11100,21 +10999,18 @@ void MainWindow::tx_watchdog (bool triggered)
 
       // if the watchdog is triggered...we're no longer active
       bool wasAuto = ui->autoReplyButton->isChecked();
-      bool wasActive = ui->activeButton->isChecked();
       bool wasHB = ui->hbMacroButton->isChecked();
       bool wasCQ = ui->cqMacroButton->isChecked();
 
       // save the button states
       ui->autoReplyButton->setChecked(false);
-      ui->activeButton->setChecked(false);
       ui->hbMacroButton->setChecked(false);
       ui->cqMacroButton->setChecked(false);
 
-      MessageBox::warning_message(this, QString("Attempting to transmit, but you have been inactive for more than %1 minutes.").arg(m_config.watchdog()));
+      MessageBox::warning_message(this, QString("You have been inactive for more than %1 minutes.").arg(m_config.watchdog()));
 
       // restore the button states
       ui->autoReplyButton->setChecked(wasAuto);
-      ui->activeButton->setChecked(wasActive);
       ui->hbMacroButton->setChecked(wasHB);
       ui->cqMacroButton->setChecked(wasCQ);
     }

@@ -644,6 +644,7 @@ private:
   bool ppfx_;
   bool clear_callsign_;
   bool miles_;
+  bool avoid_allcall_;
   bool quick_call_;
   bool disable_TX_on_73_;
   int heartbeat_;
@@ -775,6 +776,7 @@ bool Configuration::DXCC () const {return m_->DXCC_;}
 bool Configuration::ppfx() const {return m_->ppfx_;}
 bool Configuration::clear_callsign () const {return m_->clear_callsign_;}
 bool Configuration::miles () const {return m_->miles_;}
+bool Configuration::avoid_allcall () const {return m_->avoid_allcall_;}
 bool Configuration::quick_call () const {return m_->quick_call_;}
 bool Configuration::disable_TX_on_73 () const {return m_->disable_TX_on_73_;}
 int Configuration::heartbeat () const {return m_->heartbeat_;}
@@ -1385,6 +1387,7 @@ void Configuration::impl::initialize_models ()
   ui_->prompt_to_log_check_box->setChecked (prompt_to_log_);
   ui_->clear_callsign_check_box->setChecked (clear_callsign_);
   ui_->miles_check_box->setChecked (miles_);
+  ui_->avoid_allcall_checkbox->setChecked(avoid_allcall_);
   ui_->quick_call_check_box->setChecked (quick_call_);
   ui_->disable_TX_on_73_check_box->setChecked (disable_TX_on_73_);
   ui_->heartbeat_spin_box->setValue (heartbeat_);
@@ -1695,6 +1698,7 @@ void Configuration::impl::read_settings ()
   ppfx_ = settings_->value ("PrincipalPrefix", false).toBool ();
   clear_callsign_ = settings_->value ("ClearCallGrid", false).toBool ();
   miles_ = settings_->value ("Miles", false).toBool ();
+  avoid_allcall_ = settings_->value ("AvoidAllcall", false).toBool ();
   quick_call_ = settings_->value ("QuickCall", false).toBool ();
   disable_TX_on_73_ = settings_->value ("73TxDisable", false).toBool ();
   heartbeat_ = settings_->value ("TxBeacon", 30).toInt ();
@@ -1830,6 +1834,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("PrincipalPrefix", ppfx_);
   settings_->setValue ("ClearCallGrid", clear_callsign_);
   settings_->setValue ("Miles", miles_);
+  settings_->setValue ("AvoidAllcall", avoid_allcall_);
   settings_->setValue ("QuickCall", quick_call_);
   settings_->setValue ("73TxDisable", disable_TX_on_73_);
   settings_->setValue ("TxBeacon", heartbeat_);
@@ -2319,6 +2324,7 @@ void Configuration::impl::accept ()
   prompt_to_log_ = ui_->prompt_to_log_check_box->isChecked ();
   clear_callsign_ = ui_->clear_callsign_check_box->isChecked ();
   miles_ = ui_->miles_check_box->isChecked ();
+  avoid_allcall_ = ui_->avoid_allcall_checkbox->isChecked();
   quick_call_ = ui_->quick_call_check_box->isChecked ();
   disable_TX_on_73_ = ui_->disable_TX_on_73_check_box->isChecked ();
   heartbeat_ = ui_->heartbeat_spin_box->value ();

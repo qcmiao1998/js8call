@@ -151,7 +151,6 @@ public slots:
   void restoreMessage();
   void initializeDummyData();
   bool ensureCallsignSet(bool alert=true);
-  bool ensureSelcalCallsignSelected(bool alert=true);
   bool ensureKeyNotStuck(QString const& text);
   bool ensureNotIdle();
   void createMessage(QString const& text);
@@ -174,9 +173,7 @@ private slots:
   void on_tx6_editingFinished();
   void on_menuControl_aboutToShow();
   void on_actionEnable_Spotting_toggled(bool checked);
-  void on_actionEnable_Active_toggled(bool checked);
   void on_actionEnable_Auto_Reply_toggled(bool checked);
-  void on_actionEnable_Selcall_toggled(bool checked);
   void on_menuWindow_aboutToShow();
   void on_actionShow_Fullscreen_triggered(bool checked);
   void on_actionShow_Frequency_Clock_triggered(bool checked);
@@ -360,10 +357,8 @@ private slots:
   void on_autoReplyButton_toggled(bool checked);
   void on_monitorButton_toggled(bool checked);
   void on_monitorTxButton_toggled(bool checked);
-  void on_selcalButton_toggled(bool checked);
   void on_tuneButton_toggled(bool checked);
   void on_spotButton_toggled(bool checked);
-  void on_activeButton_toggled(bool checked);
 
   void on_actionMessage_averaging_triggered();
   void on_actionFox_Log_triggered();

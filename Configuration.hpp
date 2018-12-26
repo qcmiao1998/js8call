@@ -135,6 +135,7 @@ public:
   bool ppfx() const;
   bool clear_callsign () const;
   bool miles () const;
+  bool avoid_allcall () const;
   bool quick_call () const;
   bool disable_TX_on_73 () const;
   int heartbeat () const;
