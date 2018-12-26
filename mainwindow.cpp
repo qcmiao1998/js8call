@@ -9325,8 +9325,6 @@ void MainWindow::processCommandActivity() {
                 // and we should play the sound notification if there is one...
                 playSoundNotification(m_config.sound_dm_path());
             }
-
-            writeDirectedCommandToFile(d);
         }
 
         // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past ten minutes)
