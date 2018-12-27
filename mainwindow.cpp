@@ -1136,8 +1136,14 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto clearActionSep = new QAction(nullptr);
   clearActionSep->setSeparator(true);
 
-  auto clearActionAll = new QAction(QString("Clear All"), nullptr);
-  connect(clearActionAll, &QAction::triggered, this, &MainWindow::clearActivity);
+  auto clearActionAll = new QAction(QString("Clear All Activity"), nullptr);
+  connect(clearActionAll, &QAction::triggered, this, [this](){
+      if (QMessageBox::Yes != QMessageBox::question(this, "Clear All Activity", "Are you sure you would like to clear all activity?", QMessageBox::Yes|QMessageBox::No)){
+          return;
+      }
+
+      clearActivity();
+  });
 
   // setup tablewidget context menus
   auto clearAction1 = new QAction(QString("Clear"), ui->textEditRX);
