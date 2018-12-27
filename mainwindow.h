@@ -933,6 +933,7 @@ private:
   void processIdleActivity();
   void processCompoundActivity();
   void processBufferedActivity();
+  QString generateStatus();
   void processCommandActivity();
   void writeDirectedCommandToFile(CommandDetail d);
   void processAlertReplyForCommand(CommandDetail d, QString from, QString cmd);

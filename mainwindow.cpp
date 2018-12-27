@@ -7379,7 +7379,8 @@ QMap<QString, QString> MainWindow::buildMacroValues(){
         {"<MYQTC>", m_config.my_station()},
         {"<MYQTH>", m_config.my_qth()},
         {"<MYCQ>", m_config.cq_message()},
-        {"<MYREPLY>", m_config.reply_message()}
+        {"<MYREPLY>", m_config.reply_message()},
+        {"<MYSTATUS>", generateStatus()},
     };
 
     auto selectedCall = callsignSelected();
@@ -7401,7 +7402,7 @@ QString MainWindow::replaceMacros(QString const &text, QMap<QString, QString> va
     QString output = QString(text);
 
     foreach(auto key, values.keys()){
-        output = output.replace(key, values[key]);
+        output = output.replace(key, values[key].toUpper());
     }
 
     if(prune){
@@ -9187,6 +9188,22 @@ void MainWindow::processBufferedActivity() {
     }
 }
 
+QString MainWindow::generateStatus() {
+    static const char* yes = "+";
+    static const char* no = "-";
+
+    auto lastActive = DriftingDateTime::currentDateTimeUtc().addSecs(-m_idleMinutes*60);
+
+    auto status = QString("%1 AUTO%2 HB%3 SPOT%4 RELAY%5 V%6");
+    status = status.arg(since(lastActive).toUpper());
+    status = status.arg(ui->autoReplyButton->isChecked() ? yes : no);
+    status = status.arg(ui->hbMacroButton->isChecked() && m_hbInterval > 0 ? yes : no);
+    status = status.arg(ui->spotButton->isChecked() ? yes : no);
+    status = status.arg(!m_config.relay_off() ? yes : no);
+    status = status.arg(version().replace("-devel", "").replace("-rc", ""));
+    return status;
+}
+
 void MainWindow::processCommandActivity() {
 #if 0
     if (!m_txFrameQueue.isEmpty()) {
@@ -9358,7 +9375,7 @@ void MainWindow::processCommandActivity() {
 
         // QUERIED ACTIVE
         else if (d.cmd == " STATUS?" && !isAllCall) {
-            reply = QString("%1 AUTO:%2 VER:%3").arg(d.from).arg(ui->autoReplyButton->isChecked() ? "ON" : "OFF").arg(version());
+            reply = QString("%1 %2").arg(d.from).arg(generateStatus());
         }
 
         // QUERIED GRID
@@ -9500,6 +9517,8 @@ void MainWindow::processCommandActivity() {
             if(who.isEmpty()){
                 continue;
             }
+
+            // TODO: here is where we would process arbitrary queries if we wanted
 
             auto callsigns = Varicode::parseCallsigns(who);
             if(callsigns.isEmpty()){
