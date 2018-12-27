@@ -7121,7 +7121,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto stationIdleQueryAction = menu->addAction(QString("%1 STATUS? - What is the status of your station (auto, version, etc)?").arg(call).trimmed());
+    auto stationIdleQueryAction = menu->addAction(QString("%1 STATUS? - What is the status of your station (auto, hb, version, etc)?").arg(call).trimmed());
     stationIdleQueryAction->setDisabled(isAllCall);
     connect(stationIdleQueryAction, &QAction::triggered, this, [this](){
 
