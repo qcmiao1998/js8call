@@ -5362,25 +5362,26 @@ void MainWindow::createAllcallTableRows(QTableWidget *table, QString const &sele
 
     int startCol = 1;
 
-    if(!m_config.avoid_allcall())
-    {
-        table->insertRow(table->rowCount());
-
-        foreach(auto cd, m_callActivity.values()){
-            if (cd.call.trimmed().isEmpty()){
-                continue;
-            }
-            if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
-                continue;
-            }
-            count++;
+    foreach(auto cd, m_callActivity.values()){
+        if (cd.call.trimmed().isEmpty()){
+            continue;
         }
+        if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+            continue;
+        }
+        count++;
+    }
+
+    table->horizontalHeaderItem(startCol)->setText(count == 0 ? "Callsigns" : QString("Callsigns (%1)").arg(count));
+
+    if(!m_config.avoid_allcall()){
+        table->insertRow(table->rowCount());
 
         auto emptyItem = new QTableWidgetItem("");
         emptyItem->setData(Qt::UserRole, QVariant("@ALLCALL"));
         table->setItem(table->rowCount() - 1, 0, emptyItem);
 
-        auto item = new QTableWidgetItem(count == 0 ? QString("@ALLCALL") : QString("@ALLCALL (%1)").arg(count));
+        auto item = new QTableWidgetItem(QString("@ALLCALL"));
         item->setData(Qt::UserRole, QVariant("@ALLCALL"));
 
         table->setItem(table->rowCount() - 1, startCol, item);

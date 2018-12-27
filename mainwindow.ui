@@ -1167,7 +1167,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
         </column>
         <column>
          <property name="text">
-          <string>Callsign</string>
+          <string>Callsigns</string>
          </property>
         </column>
         <column>
@@ -1257,7 +1257,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start transmitting&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="autoFillBackground">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
           <property name="styleSheet">
            <string notr="true">QPushButton:checked {
