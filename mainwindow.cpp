@@ -4760,7 +4760,7 @@ void MainWindow::guiUpdate()
     updateRepeatButtonDisplay();
 
     // once per second...but not when we're transmitting, unless it's in the first second...
-    if(!m_transmitting || (m_sec0 % (m_TRperiod))){
+    if(!m_transmitting || (m_sec0 % (m_TRperiod) == 0)){
         // process all received activity...
         processActivity(forceDirty);
 
@@ -9196,19 +9196,19 @@ void MainWindow::processBufferedActivity() {
 }
 
 QString MainWindow::generateStatus() {
-    static const char* yes = "+";
-    static const char* no = "-";
-
     auto lastActive = DriftingDateTime::currentDateTimeUtc().addSecs(-m_idleMinutes*60);
+    QString lastActiveString = since(lastActive).toUpper().replace("NOW", "");
 
-    auto status = QString("%1 AUTO%2 HB%3 SPOT%4 RELAY%5 V%6");
-    status = status.arg(since(lastActive).toUpper());
-    status = status.arg(ui->autoReplyButton->isChecked() ? yes : no);
-    status = status.arg(ui->hbMacroButton->isChecked() && m_hbInterval > 0 ? yes : no);
-    status = status.arg(ui->spotButton->isChecked() ? yes : no);
-    status = status.arg(!m_config.relay_off() ? yes : no);
-    status = status.arg(version().replace("-devel", "").replace("-rc", ""));
-    return status;
+    QStringList status;
+    if(!lastActiveString.isEmpty()) status.append(lastActiveString);
+    if(ui->autoReplyButton->isChecked()) status.append("AUTO");
+    if(ui->hbMacroButton->isChecked() && m_hbInterval > 0) status.append("HB");
+    if(ui->spotButton->isChecked()) status.append("SPOT");
+    if(!m_config.relay_off()) status.append("RELAY");
+
+    status.append("V" + version().replace("-devel", "").replace("-rc", ""));
+
+    return status.join(" ").trimmed();
 }
 
 void MainWindow::processCommandActivity() {
