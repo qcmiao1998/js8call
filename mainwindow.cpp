@@ -7402,6 +7402,12 @@ QMap<QString, QString> MainWindow::buildMacroValues(){
         }
     }
 
+    // these macros can have recursive macros
+    values["<MYQTC>"]   = replaceMacros(values["<MYQTC>"], values, false);
+    values["<MYQTH>"]   = replaceMacros(values["<MYQTH>"], values, false);
+    values["<MYCQ>"]    = replaceMacros(values["<MYCQ>"], values, false);
+    values["<MYREPLY>"] = replaceMacros(values["<MYREPLY>"], values, false);
+
     return values;
 }
 
