@@ -3297,7 +3297,7 @@ void MainWindow::on_actionOpen_triggered()                     //Open File
 
   QString fname;
   fname=QFileDialog::getOpenFileName(this, "Open File", m_path,
-                                     "WSJT Files (*.wav)");
+                                     "Audio Files (*.wav)");
   if(!fname.isEmpty ()) {
     m_path=fname;
     int i1=fname.lastIndexOf("/");
@@ -8448,7 +8448,7 @@ void MainWindow::locationChange (QString const& location)
       grid = grid.mid (5).trimmed ();
     }
     else {
-      // TODO - support any other formats, e.g. latlong? Or have that conversion done external to wsjtx
+      // TODO - support any other formats, e.g. latlong? Or have that conversion done externally
       return;
     }
   }

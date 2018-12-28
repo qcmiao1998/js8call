@@ -11,8 +11,7 @@ class QString;
 //
 // Abstract Transceiver Interface
 //
-//  This is  the minimal  generic interface  to a  rig as  required by
-//  wsjtx.
+//  This is the minimal generic interface to a rig.
 //
 // Responsibilities
 //

@@ -26,7 +26,7 @@ class QHostAddress;
 // Class Configuration
 //
 //  Encapsulates the control, access  and, persistence of user defined
-//  settings for the wsjtx GUI.  Setting values are accessed through a
+//  settings for the GUI.  Setting values are accessed through a
 //  QDialog window containing concept orientated tab windows.
 //
 // Responsibilities
@@ -37,7 +37,7 @@ class QHostAddress;
 //  farmed out  to a  separate thread  since many  of the  rig control
 //  functions are blocking.
 //
-//  All user  settings required by  the wsjtx GUI are  exposed through
+//  All  user  settings  required  by  the  GUI  are  exposed  through
 //  query methods.  Settings only become  visible once they  have been
 //  accepted by the user which is  done by clicking the "OK" button on
 //  the settings dialog.
