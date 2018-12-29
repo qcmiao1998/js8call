@@ -2098,7 +2098,7 @@ both here.</string>
                    <bool>true</bool>
                   </property>
                   <property name="visible">
-                   <bool>false</bool>
+                   <bool>true</bool>
                   </property>
                   <property name="toolTip">
                    <string>Check this option to force deselect callsign after logging.</string>
