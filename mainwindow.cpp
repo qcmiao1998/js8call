@@ -1177,15 +1177,13 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->extFreeTextMsgEdit, &QTableWidget::customContextMenuRequested, this, [this, clearAction2, clearActionAll, restoreAction](QPoint const &point){
     QMenu * menu = new QMenu(ui->extFreeTextMsgEdit);
 
-    // spelling suggestions...
-    buildSuggestionsMenu(menu, ui->extFreeTextMsgEdit, point);
-
     auto selectedCall = callsignSelected();
     bool missingCallsign = selectedCall.isEmpty();
 
+    buildSuggestionsMenu(menu, ui->extFreeTextMsgEdit, point);
+
     restoreAction->setDisabled(m_lastTxMessage.isEmpty());
     menu->addAction(restoreAction);
-    menu->addSeparator();
 
     auto savedMenu = menu->addMenu("Saved messages...");
     buildSavedMessagesMenu(savedMenu);
@@ -7455,18 +7453,17 @@ void MainWindow::buildSuggestionsMenu(QMenu *menu, QTextEdit *edit, const QPoint
         return;
     }
 
-    QStringList suggestions = JSCChecker::suggestions(word, 10, &found);
+    QStringList suggestions = JSCChecker::suggestions(word, 5, &found);
     if(suggestions.isEmpty() && !found){
         return;
     }
 
-    auto suggestionsMenu = menu->addMenu("Suggestions...");
     if(suggestions.isEmpty()){
-        auto a = suggestionsMenu->addAction("No suggestions");
+        auto a = menu->addAction("No Suggestions");
         a->setDisabled(true);
     } else {
         foreach(auto suggestion, suggestions){
-            auto a = suggestionsMenu->addAction(suggestion);
+            auto a = menu->addAction(suggestion);
 
             connect(a, &QAction::triggered, this, [this, edit, point, suggestion](){
                 auto c = edit->cursorForPosition(point);

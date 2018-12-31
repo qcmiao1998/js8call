@@ -145,6 +145,61 @@ void JSCChecker::checkRange(QTextEdit* edit, int start, int end)
     edit->document()->blockSignals(false);
 }
 
+QSet<QString> oneEdit(QString word, bool includeAdditions, bool includeDeletions){
+    QSet<QString> all;
+
+    // 1-edit distance words (i.e., prefixed/suffixed/edited characters)
+    for(int i = 0; i < 26; i++){
+        if(includeAdditions){
+            auto prefixed = ALPHABET.mid(i, 1) + word;
+            all.insert(prefixed);
+
+            auto suffixed = word + ALPHABET.mid(i, 1);
+            all.insert(suffixed);
+        }
+
+        for(int j = 0; j < word.length(); j++){
+            auto edited = word.mid(0, j) + ALPHABET.mid(i, 1) + word.mid(j + 1, word.length() - j);
+            all.insert(edited);
+        }
+    }
+
+    // 1-edit distance words (i.e., removed characters)
+    if(includeDeletions){
+        for(int j = 0; j < word.length(); j++){
+            auto deleted = word.mid(0, j) + word.mid(j + 1, word.length() - j);
+            all.insert(deleted);
+        }
+    }
+
+    return all;
+}
+
+QMap<quint32, QString> candidates(QString word, bool includeTwoEdits){
+    // one edit
+    QSet<QString> one = oneEdit(word, true, true);
+
+    // two edits
+    QSet<QString> two;
+    if(includeTwoEdits){
+        foreach(auto w, one){
+            two |= oneEdit(w, false, false);
+        }
+    }
+
+    // existence check
+    QMap<quint32, QString> m;
+
+    quint32 index;
+    foreach(auto w, one | two){
+        if(JSC::exists(w, &index)){
+            m[index] = w;
+        }
+    }
+
+    return m;
+}
+
 QStringList JSCChecker::suggestions(QString word, int n, bool *pFound){
     QStringList s;
 
@@ -163,38 +218,16 @@ QStringList JSCChecker::suggestions(QString word, int n, bool *pFound){
         }
     }
 
-    // 1-edit distance words (i.e., prefixed/suffixed/edited/removed characters)
-    for(int i = 0; i < 26; i++){
-        auto prefixed = ALPHABET.mid(i, 1) + word;
-        if(JSC::exists(prefixed, &index)){
-            m[index] = prefixed;
-        }
-
-        auto suffixed = word + ALPHABET.mid(i, 1);
-        if(JSC::exists(suffixed, &index)){
-            m[index] = suffixed;
-        }
-
-        for(int j = 0; j < word.length(); j++){
-            auto edited = word.mid(0, j) + ALPHABET.mid(i, 1) + word.mid(j + 1, word.length() - j);
-            if(JSC::exists(edited, &index)){
-                m[index] = edited;
-            }
-        }
-    }
-    for(int j = 0; j < word.length(); j++){
-        auto deleted = word.mid(0, j) + word.mid(j + 1, word.length() - j);
-        if(JSC::exists(deleted, &index)){
-            m[index] = deleted;
-        }
-    }
+    // compute suggestion candidates
+    m.unite(candidates(word, false));
 
     // return in order of probability (i.e., index rank)
     int i = 0;
-    foreach(auto key, m.keys()){
+    foreach(auto key, m.uniqueKeys()){
         if(i >= n){
             break;
         }
+        qDebug() << "suggest" << m[key] << key;
         s.append(m[key]);
         i++;
     }
