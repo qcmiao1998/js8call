@@ -9568,8 +9568,8 @@ void MainWindow::processCommandActivity() {
                 d.relayPath = relayPath;
                 m_rxCallsignCommandQueue[d.from].append(d);
 
-                QTimer::singleShot(500, this, [this](){
-                    MessageBox::information_message(this, "A new message has been received.");
+                QTimer::singleShot(500, this, [this, d](){
+                    MessageBox::information_message(this, QString("A new message has been received at %1 UTC").arg(d.utcTimestamp.time().toString()));
                 });
             }
         }
@@ -9745,7 +9745,7 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
         text = text.replace(fromReplace, "");
     }
 
-    auto header = QString("Message from %3 at %1 (%2):");
+    auto header = QString("Message from %3 at %1 UTC (%2):");
     header = header.arg(d.utcTimestamp.time().toString());
     header = header.arg(d.freq);
     header = header.arg(fromLabel);
