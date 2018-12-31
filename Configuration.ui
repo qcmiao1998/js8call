@@ -295,8 +295,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>654</width>
-                <height>482</height>
+                <width>724</width>
+                <height>511</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -408,6 +408,13 @@
                    <widget class="QCheckBox" name="heartbeat_anywhere_check_box">
                     <property name="text">
                      <string>Allow heartbeat transmissions outside of heartbeat sub-channel (500Hz - 1000Hz)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="spellcheck_check_box">
+                    <property name="text">
+                     <string>Suggest alternative word choices for more efficient message transmission</string>
                     </property>
                    </widget>
                   </item>
@@ -892,7 +899,7 @@ text message.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>264</width>
+                <width>718</width>
                 <height>435</height>
                </rect>
               </property>
@@ -1731,8 +1738,8 @@ radio interface behave as expected.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>266</width>
-            <height>329</height>
+            <width>760</width>
+            <height>502</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -2044,7 +2051,7 @@ both here.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>508</width>
+            <width>746</width>
             <height>525</height>
            </rect>
           </property>
@@ -2098,7 +2105,7 @@ both here.</string>
                    <bool>true</bool>
                   </property>
                   <property name="visible">
-                   <bool>true</bool>
+                   <bool>false</bool>
                   </property>
                   <property name="toolTip">
                    <string>Check this option to force deselect callsign after logging.</string>
@@ -2501,8 +2508,8 @@ for assessing propagation and system performance.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>487</width>
-            <height>341</height>
+            <width>760</width>
+            <height>502</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -3079,8 +3086,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>271</width>
-                <height>195</height>
+                <width>738</width>
+                <height>378</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_15">

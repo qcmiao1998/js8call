@@ -7438,6 +7438,10 @@ QString MainWindow::replaceMacros(QString const &text, QMap<QString, QString> va
 }
 
 void MainWindow::buildSuggestionsMenu(QMenu *menu, QTextEdit *edit, const QPoint &point){
+    if(!m_config.spellcheck()){
+        return;
+    }
+
     bool found = false;
 
     auto c = edit->cursorForPosition(point);
@@ -7448,7 +7452,7 @@ void MainWindow::buildSuggestionsMenu(QMenu *menu, QTextEdit *edit, const QPoint
     c.movePosition(QTextCursor::StartOfWord);
     c.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
 
-    auto word = c.selectedText();
+    auto word = c.selectedText().trimmed();
     if(word.isEmpty()){
         return;
     }
@@ -8723,6 +8727,10 @@ void MainWindow::refreshTextDisplay(){
 }
 
 void MainWindow::updateTextWordCheckerDisplay(){
+    if(!m_config.spellcheck()){
+        return;
+    }
+
     JSCChecker::checkRange(ui->extFreeTextMsgEdit, 0, -1);
 }
 
