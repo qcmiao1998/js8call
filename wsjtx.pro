@@ -77,7 +77,8 @@ SOURCES += \
     DriftingDateTime.cpp \
     jsc.cpp \
     jsc_list.cpp \
-    jsc_map.cpp
+    jsc_map.cpp \
+    jsc_checker.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -105,7 +106,8 @@ HEADERS  += qt_helpers.hpp \
     messagereplydialog.h \
     keyeater.h \
     DriftingDateTime.h \
-    jsc.h
+    jsc.h \
+    jsc_checker.h
 
 
 INCLUDEPATH += qmake_only

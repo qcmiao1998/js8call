@@ -90,6 +90,7 @@ class Detector;
 class MultiSettings;
 class EqualizationToolsDialog;
 class DecodedText;
+class JSCChecker;
 
 using namespace std;
 typedef std::function<void()> Callback;
@@ -298,6 +299,7 @@ private slots:
   void buildQueryMenu(QMenu *, QString callsign);
   QMap<QString, QString> buildMacroValues();
   QString replaceMacros(QString const &text, QMap<QString, QString> values, bool prune);
+  void buildSuggestionsMenu(QMenu *menu, QTextEdit *edit, const QPoint &point);
   void buildSavedMessagesMenu(QMenu *menu);
   void buildRelayMenu(QMenu *menu);
   QAction* buildRelayAction(QString call);
@@ -819,6 +821,8 @@ private:
   QMap<QString, QMap<int, QList<ActivityDetail>>> m_bandActivityCache; // band -> band activity
   QMap<QString, QString> m_rxTextCache; // band -> rx text
 
+  JSCChecker * m_checker;
+
   QSet<QString> m_callSeenHeartbeat; // call
   int m_previousFreq;
   bool m_shouldRestoreFreq;
@@ -915,6 +919,7 @@ private:
   void updateRepeatButtonDisplay();
   void updateTextDisplay();
   void updateFrameCountEstimate(int count);
+  void updateTextWordCheckerDisplay();
   void updateTextStatsDisplay(QString text, int count);
   void updateTxButtonDisplay();
   bool isMyCallIncluded(QString const &text);

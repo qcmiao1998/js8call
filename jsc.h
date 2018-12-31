@@ -32,6 +32,7 @@ public:
     static QList<CodewordPair> compress(QString text);
     static QString decompress(Codeword const& bits);
 
+    static bool exists(QString w, quint32 *pIndex);
     static quint32 lookup(QString w, bool *ok);
     static quint32 lookup(char const* b, bool *ok);
 

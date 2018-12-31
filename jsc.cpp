@@ -159,6 +159,13 @@ QString JSC::decompress(Codeword const& bitvec){
     return out.join("");
 }
 
+bool JSC::exists(QString w, quint32 *pIndex){
+    bool found = false;
+    quint32 index = lookup(w, &found);
+    if(pIndex) *pIndex = index;
+    return found && JSC::map[index].size == w.length();
+}
+
 quint32 JSC::lookup(QString w, bool * ok){
     if(LOOKUP_CACHE.contains(w)){
         if(ok) *ok = true;

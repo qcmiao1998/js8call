@@ -64,6 +64,7 @@
 #include "messagereplydialog.h"
 #include "DriftingDateTime.h"
 #include "jsc.h"
+#include "jsc_checker.h"
 
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
@@ -1108,6 +1109,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   ui->spotButton->setChecked(m_config.spot_to_reporting_networks());
 
+  //m_checker = new JSCChecker(ui->extFreeTextMsgEdit, this);
+
   auto enterFilter = new EnterKeyPressEater();
   connect(enterFilter, &EnterKeyPressEater::enterKeyPressed, this, [this](QObject *, QKeyEvent *, bool *pProcessed){
       if(QApplication::keyboardModifiers() & Qt::ShiftModifier){
@@ -1173,6 +1176,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->extFreeTextMsgEdit->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->extFreeTextMsgEdit, &QTableWidget::customContextMenuRequested, this, [this, clearAction2, clearActionAll, restoreAction](QPoint const &point){
     QMenu * menu = new QMenu(ui->extFreeTextMsgEdit);
+
+    // spelling suggestions...
+    buildSuggestionsMenu(menu, ui->extFreeTextMsgEdit, point);
 
     auto selectedCall = callsignSelected();
     bool missingCallsign = selectedCall.isEmpty();
@@ -5741,10 +5747,18 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
     if(x != text){
       int pos = ui->extFreeTextMsgEdit->textCursor().position();
       int maxpos = x.size();
-      ui->extFreeTextMsgEdit->setPlainText(x);
+
+      // don't emit current text changed or text contents changed
+      ui->extFreeTextMsgEdit->blockSignals(true);
+      {
+        ui->extFreeTextMsgEdit->setPlainText(x);
+      }
+      ui->extFreeTextMsgEdit->blockSignals(false);
+
       QTextCursor c = ui->extFreeTextMsgEdit->textCursor();
       c.setPosition(pos < maxpos ? pos : maxpos, QTextCursor::MoveAnchor);
 
+      // highlight the block with our fonts
       highlightBlock(c.block(), m_config.compose_text_font(), m_config.color_compose_foreground(), QColor(Qt::transparent));
 
       ui->extFreeTextMsgEdit->setTextCursor(c);
@@ -7425,6 +7439,46 @@ QString MainWindow::replaceMacros(QString const &text, QMap<QString, QString> va
     return output;
 }
 
+void MainWindow::buildSuggestionsMenu(QMenu *menu, QTextEdit *edit, const QPoint &point){
+    bool found = false;
+
+    auto c = edit->cursorForPosition(point);
+    if(c.charFormat().underlineStyle() != QTextCharFormat::WaveUnderline){
+        return;
+    }
+
+    c.movePosition(QTextCursor::StartOfWord);
+    c.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+
+    auto word = c.selectedText();
+    if(word.isEmpty()){
+        return;
+    }
+
+    QStringList suggestions = JSCChecker::suggestions(word, 10, &found);
+    if(suggestions.isEmpty() && !found){
+        return;
+    }
+
+    auto suggestionsMenu = menu->addMenu("Suggestions...");
+    if(suggestions.isEmpty()){
+        auto a = suggestionsMenu->addAction("No suggestions");
+        a->setDisabled(true);
+    } else {
+        foreach(auto suggestion, suggestions){
+            auto a = suggestionsMenu->addAction(suggestion);
+
+            connect(a, &QAction::triggered, this, [this, edit, point, suggestion](){
+                auto c = edit->cursorForPosition(point);
+                c.select(QTextCursor::WordUnderCursor);
+                c.insertText(suggestion);
+            });
+        }
+    }
+
+    menu->addSeparator();
+}
+
 void MainWindow::buildSavedMessagesMenu(QMenu *menu){
     auto values = buildMacroValues();
 
@@ -8623,6 +8677,7 @@ void MainWindow::refreshTextDisplay(){
     m_txFrameCountEstimate = count;
     m_txTextDirty = false;
 
+    updateTextWordCheckerDisplay();
     updateTextStatsDisplay(transmitText, count);
     updateTxButtonDisplay();
 
@@ -8661,12 +8716,17 @@ void MainWindow::refreshTextDisplay(){
 #endif
         m_txTextDirty = false;
 
+        updateTextWordCheckerDisplay();
         updateTextStatsDisplay(transmitText, m_txFrameCountEstimate);
         updateTxButtonDisplay();
 
     });
     t->start();
 #endif
+}
+
+void MainWindow::updateTextWordCheckerDisplay(){
+    JSCChecker::checkRange(ui->extFreeTextMsgEdit, 0, -1);
 }
 
 void MainWindow::updateTextStatsDisplay(QString text, int count){

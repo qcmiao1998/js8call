@@ -237,6 +237,7 @@ set (wsjtx_CXXSRCS
   jsc.cpp
   jsc_list.cpp
   jsc_map.cpp
+  jsc_checker.cpp
   SelfDestructMessageBox.cpp
   messagereplydialog.cpp
   keyeater.cpp
