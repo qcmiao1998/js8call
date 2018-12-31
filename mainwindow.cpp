@@ -9567,6 +9567,10 @@ void MainWindow::processCommandActivity() {
                 // put message in inbox instead...
                 d.relayPath = relayPath;
                 m_rxCallsignCommandQueue[d.from].append(d);
+
+                QTimer::singleShot(500, this, [this](){
+                    MessageBox::information_message(this, "A new message has been received.");
+                });
             }
         }
 
