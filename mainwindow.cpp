@@ -9268,10 +9268,12 @@ void MainWindow::processBufferedActivity() {
 
 QString MainWindow::generateStatus() {
     auto lastActive = DriftingDateTime::currentDateTimeUtc().addSecs(-m_idleMinutes*60);
-    QString lastActiveString = since(lastActive).toUpper().replace("NOW", "");
+    QString lastActiveString = since(lastActive).toUpper().replace("NOW", "0M");
 
     QStringList status;
-    if(!lastActiveString.isEmpty()) status.append(lastActiveString);
+    if(!lastActiveString.isEmpty()){
+        status.append(lastActiveString);
+    }
     if(ui->autoReplyButton->isChecked()) status.append("AUTO");
     if(ui->hbMacroButton->isChecked() && m_hbInterval > 0) status.append("HB");
     if(ui->spotButton->isChecked()) status.append("SPOT");
