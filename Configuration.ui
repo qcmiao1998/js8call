@@ -295,7 +295,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>724</width>
+                <width>654</width>
                 <height>511</height>
                </rect>
               </property>
@@ -1319,9 +1319,9 @@ a few, particularly some Kenwood rigs, require it).</string>
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>0</y>
-                <width>237</width>
-                <height>436</height>
+                <y>-81</y>
+                <width>718</width>
+                <height>467</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_28">
@@ -1626,6 +1626,16 @@ this setting allows you to select which audio input will be used
                      <double>0.100000000000000</double>
                     </property>
                    </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_12">
+                    <property name="text">
+                     <string>PTT command:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QLineEdit" name="ptt_command_line_edit"/>
                   </item>
                  </layout>
                 </widget>

@@ -159,6 +159,7 @@ public:
   bool EMEonly() const;
   bool post_decodes () const;
   QString opCall() const;
+  QString ptt_command() const;
   QString aprs_server_name () const;
   port_type aprs_server_port () const;
   QString aprs_passcode () const;

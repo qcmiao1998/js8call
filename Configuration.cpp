@@ -163,6 +163,7 @@
 #include <QSerialPortInfo>
 #include <QScopedPointer>
 #include <QDateTimeEdit>
+#include <QProcess>
 
 #include "pimpl_impl.hpp"
 #include "qt_helpers.hpp"
@@ -661,7 +662,7 @@ private:
   bool x4ToneSpacing_;
   bool use_dynamic_info_;
   QString opCall_;
-
+  QString ptt_command_;
   QString aprs_server_name_;
   QString aprs_passcode_;
   port_type aprs_server_port_;
@@ -794,6 +795,7 @@ bool Configuration::x2ToneSpacing() const {return m_->x2ToneSpacing_;}
 bool Configuration::x4ToneSpacing() const {return m_->x4ToneSpacing_;}
 bool Configuration::split_mode () const {return m_->split_mode ();}
 QString Configuration::opCall() const {return m_->opCall_;}
+QString Configuration::ptt_command() const { return m_->ptt_command_.trimmed();}
 QString Configuration::aprs_server_name () const {return m_->aprs_server_name_;}
 auto Configuration::aprs_server_port () const -> port_type {return m_->aprs_server_port_;}
 QString Configuration::aprs_passcode() const { return m_->aprs_passcode_; }
@@ -903,6 +905,18 @@ void Configuration::transceiver_ptt (bool on)
 #endif
 
   m_->transceiver_ptt (on);
+
+  auto cmd = ptt_command();
+  if(!cmd.isEmpty()){
+    auto p = new QProcess(this);
+    if(cmd.contains("%1")){
+        cmd = cmd.arg(on ? "\"on\"" : "\"off\"");
+    } else {
+        cmd.append(" ");
+        cmd.append(on ? "\"on\"" : "\"off\"");
+    }
+    p->startDetached(cmd);
+  }
 }
 
 void Configuration::sync_transceiver (bool force_signal, bool enforce_mode_and_split)
@@ -1432,6 +1446,7 @@ void Configuration::impl::initialize_models ()
   ui_->TX_audio_source_button_group->button (rig_params_.audio_source)->setChecked (true);
   ui_->CAT_poll_interval_spin_box->setValue (rig_params_.poll_interval);
   ui_->opCallEntry->setText (opCall_);
+  ui_->ptt_command_line_edit->setText(ptt_command_);
   ui_->aprs_server_line_edit->setText (aprs_server_name_);
   ui_->aprs_server_port_spin_box->setValue (aprs_server_port_);
   ui_->aprs_passcode_line_edit->setText(aprs_passcode_);
@@ -1722,6 +1737,7 @@ void Configuration::impl::read_settings ()
   rig_params_.poll_interval = settings_->value ("Polling", 0).toInt ();
   rig_params_.split_mode = settings_->value ("SplitMode", QVariant::fromValue (TransceiverFactory::split_mode_none)).value<TransceiverFactory::SplitMode> ();
   opCall_ = settings_->value ("OpCall", "").toString ();
+  ptt_command_ = settings_->value("PTTCommand", "").toString();
   aprs_server_name_ = settings_->value ("aprsServer", "rotate.aprs2.net").toString ();
   aprs_server_port_ = settings_->value ("aprsServerPort", 14580).toUInt ();
   aprs_passcode_ = settings_->value ("aprsPasscode", "").toString();
@@ -1861,6 +1877,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("x2ToneSpacing", x2ToneSpacing_);
   settings_->setValue ("x4ToneSpacing", x4ToneSpacing_);
   settings_->setValue ("OpCall", opCall_);
+  settings_->setValue ("PTTCommand", ptt_command_);
   settings_->setValue ("aprsServer", aprs_server_name_);
   settings_->setValue ("aprsServerPort", aprs_server_port_);
   settings_->setValue ("aprsPasscode", aprs_passcode_);
@@ -2354,7 +2371,7 @@ void Configuration::impl::accept ()
   pwrBandTxMemory_ = ui_->checkBoxPwrBandTxMemory->isChecked ();
   pwrBandTuneMemory_ = ui_->checkBoxPwrBandTuneMemory->isChecked ();
   opCall_=ui_->opCallEntry->text();
-
+  ptt_command_ = ui_->ptt_command_line_edit->text();
   aprs_server_name_ = ui_->aprs_server_line_edit->text();
   aprs_server_port_ = ui_->aprs_server_port_spin_box->value();
   aprs_passcode_ = ui_->aprs_passcode_line_edit->text();
