@@ -50,21 +50,16 @@ QMap<QString, int> directed_cmds = {
     {"?",         0  }, // compat
 
     {" QTH?",     1  }, // query qth
-    {"@",         1  }, // compat
 
     {" QTC?",     2  }, // query station message
-    {"&",         2  }, // compat
 
     {" HEARING?", 3  }, // query station calls heard
-    {"$",         3  }, // compat
 
     {" GRID?",    4  }, // query grid
-    {"^",         4  }, // compat
 
     {">",         5  }, // relay message
 
     {" STATUS?",  6  }, // query idle message
-    {"*",         6  }, // compat
 
     //{"!",       7  }, // unused
     //{"#",       8  }, // unused
@@ -116,7 +111,7 @@ QMap<int, int> checksum_cmds = {
 };
 
 QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|SNR[?]|QTC[?]|QTH[?]|GRID[?]|STATUS[?]|HEARING[?]|(?:(?:HEARING|QUERY|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|QTC|GRID|TU)(?=[ ]|$))|[?*^&@$> ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|SNR[?]|QTC[?]|QTH[?]|GRID[?]|STATUS[?]|HEARING[?]|(?:(?:HEARING|QUERY|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|QTC|GRID|TU)(?=[ ]|$))|[?> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR|ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
