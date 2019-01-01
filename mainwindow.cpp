@@ -4456,7 +4456,7 @@ void MainWindow::guiUpdate()
       g_iptt = 1;
       setRig ();
       setXIT (ui->TxFreqSpinBox->value ());
-      Q_EMIT m_config.transceiver_ptt (true);            //Assert the PTT
+      emitPTT(true);
       m_tx_when_ready = true;
 
       qDebug() << "start threshold" << fTR << lateThreshold;
@@ -4910,7 +4910,7 @@ void MainWindow::stopTx()
 
 void MainWindow::stopTx2()
 {
-  Q_EMIT m_config.transceiver_ptt (false);      //Lower PTT
+  emitPTT(false);
 }
 
 void MainWindow::ba2msg(QByteArray ba, char message[])             //ba2msg()
@@ -10463,6 +10463,16 @@ void MainWindow::postWSPRDecode (bool is_new, QStringList parts)
 #endif
 }
 
+void MainWindow::emitPTT(bool on){
+    Q_EMIT m_config.transceiver_ptt(on);
+
+    // emit to network
+    sendNetworkMessage("RIG.PTT", on ? "on" : "off", {
+        {"PTT", QVariant(on)},
+        {"UTC", QVariant(DriftingDateTime::currentDateTimeUtc().toMSecsSinceEpoch())},
+    });
+}
+
 void MainWindow::networkMessage(Message const &message)
 {
     if(!m_config.accept_udp_requests()){
@@ -10478,8 +10488,12 @@ void MainWindow::networkMessage(Message const &message)
     // Inspired by FLDigi
     // TODO: MAIN.RX - Turn on RX
     // TODO: MAIN.TX - Transmit
+    // TODO: MAIN.PTT - PTT
     // TODO: MAIN.TUNE - Tune
     // TODO: MAIN.HALT - Halt
+    // TODO: MAIN.AUTO - Auto
+    // TODO: MAIN.SPOT - Spot
+    // TODO: MAIN.HB - HB
 
     // RIG.GET_FREQ - Get the current Frequency
     // RIG.SET_FREQ - Set the current Frequency

@@ -377,6 +377,7 @@ private slots:
   void on_cbCQonly_toggled(bool b);
   void on_cbFirst_toggled(bool b);
   void on_cbAutoSeq_toggled(bool b);
+  void emitPTT(bool on);
   void networkMessage(Message const &message);
   void sendNetworkMessage(QString const &type, QString const &message);
   void sendNetworkMessage(QString const &type, QString const &message, const QMap<QString, QVariant> &params);
