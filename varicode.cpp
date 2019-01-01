@@ -62,7 +62,8 @@ QMap<QString, int> directed_cmds = {
     {" STATUS?",  6  }, // query idle message
 
     //{"!",       7  }, // unused
-    //{"#",       8  }, // unused
+
+    {" HEARING",  8 }, // these are the stations i'm hearing
 
     {" TU",       9  }, // thank you
 
@@ -70,9 +71,9 @@ QMap<QString, int> directed_cmds = {
 
     // {" ",     10 }, // unused
     // {" ",     11 }, // unused
-    {" HEARING", 12 }, // these are the stations i'm hearing
 
-    {" QUERY",   13 }, // can you transmit a ping to callsign?
+    {" QUERY",        12 }, // issue a generic query
+    {" QUERY CALL",   13 }, // can you transmit a ping to callsign?
 
     {" APRS:",   14  }, // send an aprs packet
 
@@ -99,19 +100,20 @@ QMap<QString, int> directed_cmds = {
 
 QSet<int> allowed_cmds = {-1, 0, 1, 2, 3, 4, 5, 6, /*7,*/ /*8,*/ 9, /*10,*/ /*11,*/ 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, /*24,*/ 25, 26, 27, 28, 29, 30, 31};
 
-QSet<int> buffered_cmds = {3, 5, /*6,*/ /*7,*/ 13, 14, 15};
+QSet<int> buffered_cmds = {3, 5, /*6,*/ /*7,*/ 12, 13, 14, 15};
 
 QSet<int> snr_cmds = {25, 29};
 
 QMap<int, int> checksum_cmds = {
     {  5, 16 },
+    { 12, 16 },
     { 13, 16 },
     { 14, 16 },
     { 15,  0 }
 };
 
 QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|SNR[?]|QTC[?]|QTH[?]|GRID[?]|STATUS[?]|HEARING[?]|(?:(?:HEARING|QUERY|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|QTC|GRID|TU)(?=[ ]|$))|[?> ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|SNR[?]|QTC[?]|QTH[?]|GRID[?]|STATUS[?]|HEARING[?]|(?:(?:HEARING|QUERY CALL|QUERY|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|QTC|GRID|TU)(?=[ ]|$))|[?> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR|ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");

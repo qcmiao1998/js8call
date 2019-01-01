@@ -7188,7 +7188,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1>[MESSAGE]").arg(selectedCall), true, true);
     });
 
-    auto qsoQueryAction = menu->addAction(QString("%1 QUERY [CALLSIGN]? - Please acknowledge you can communicate directly with [CALLSIGN]").arg(call).trimmed());
+    auto qsoQueryAction = menu->addAction(QString("%1 QUERY CALL [CALLSIGN]? - Please acknowledge you can communicate directly with [CALLSIGN]").arg(call).trimmed());
     connect(qsoQueryAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -7196,7 +7196,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
             return;
         }
 
-        addMessageText(QString("%1 QUERY [CALLSIGN]?").arg(selectedCall), true, true);
+        addMessageText(QString("%1 QUERY CALL [CALLSIGN]?").arg(selectedCall), true, true);
     });
 
     auto agnAction = menu->addAction(QString("%1 AGN? - Please automatically repeat your last transmission").arg(call).trimmed());
@@ -9597,12 +9597,18 @@ void MainWindow::processCommandActivity() {
 
         // PROCESS BUFFERED QUERY
         else if (d.cmd == " QUERY" && ui->autoReplyButton->isChecked()){
+            qDebug() << "received raw query" << d.text;
+
+            // NOOP
+            continue;
+        }
+
+        // PROCESS BUFFERED QUERY CALL
+        else if (d.cmd == " QUERY CALL" && ui->autoReplyButton->isChecked()){
             auto who = d.text;
             if(who.isEmpty()){
                 continue;
             }
-
-            // TODO: here is where we would process arbitrary queries if we wanted
 
             auto callsigns = Varicode::parseCallsigns(who);
             if(callsigns.isEmpty()){
@@ -9622,6 +9628,11 @@ void MainWindow::processCommandActivity() {
                     replies.append(r);
                 }
             }
+
+            if(!replies.isEmpty()){
+                replies.prepend(QString("%1 YES").arg(d.from));
+            }
+
             reply = replies.join("\n");
 
             if(!reply.isEmpty()){
