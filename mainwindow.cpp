@@ -4185,6 +4185,20 @@ void MainWindow::playSoundNotification(const QString &path){
     QSound::play(path);
 }
 
+bool MainWindow::hasExistingMessageBufferToMe(int *pOffset){
+    foreach(auto offset, m_messageBuffer.keys()){
+        auto buffer = m_messageBuffer[offset];
+
+        // if this is a valid buffer and it's to me...
+        if(buffer.cmd.utcTimestamp.isValid() && (buffer.cmd.to == m_config.my_callsign() || buffer.cmd.to == Radio::base_callsign(m_config.my_callsign()))){
+            if(pOffset) *pOffset = offset;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffset){
     if(m_messageBuffer.contains(offset)){
         if(pPrevOffset) *pPrevOffset = offset;
@@ -9005,6 +9019,8 @@ void MainWindow::processRxActivity() {
 
     int freqOffset = currentFreqOffset();
 
+    qDebug() << m_messageBuffer.count() << "message buffers open";
+
     while (!m_rxActivityQueue.isEmpty()) {
         ActivityDetail d = m_rxActivityQueue.dequeue();
 
@@ -9472,7 +9488,7 @@ void MainWindow::processCommandActivity() {
 
         // QUERIED ACTIVE
         else if (d.cmd == " STATUS?" && !isAllCall) {
-            reply = QString("%1 %2").arg(d.from).arg(generateStatus());
+            reply = QString("%1 STATUS %2").arg(d.from).arg(generateStatus());
         }
 
         // QUERIED GRID
@@ -9588,7 +9604,7 @@ void MainWindow::processCommandActivity() {
                 m_rxCallsignCommandQueue[d.from].append(d);
 
                 QTimer::singleShot(500, this, [this, d](){
-                    MessageBox::information_message(this, QString("A new message has been received at %1 UTC").arg(d.utcTimestamp.time().toString()));
+                    MessageBox::information_message(this, QString("A new message was received at %1 UTC").arg(d.utcTimestamp.time().toString()));
                 });
             }
         }
@@ -9717,11 +9733,20 @@ void MainWindow::processCommandActivity() {
 
         // do not queue a reply if it's a HB and HB is not active
         if((!ui->hbMacroButton->isChecked() || m_hbInterval <= 0) && d.cmd.contains("HB")){
-
+            continue;
         }
 
         // do not queue for reply if there's text in the window
         if(!ui->extFreeTextMsgEdit->toPlainText().isEmpty()){
+            continue;
+        }
+
+        // do not queue for reply if there's a buffer open to us
+        int bufferOffset = 0;
+        if(hasExistingMessageBufferToMe(&bufferOffset)){
+
+            qDebug() << "skipping reply due to open buffer" << bufferOffset << m_messageBuffer.count();
+
             continue;
         }
 

@@ -132,6 +132,7 @@ public slots:
   void fastPick(int x0, int x1, int y);
 
   void playSoundNotification(const QString &path);
+  bool hasExistingMessageBufferToMe(int *pOffset);
   bool hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffset);
   void logCallActivity(CallDetail d, bool spot=true);
   QString lookupCallInCompoundCache(QString const &call);
