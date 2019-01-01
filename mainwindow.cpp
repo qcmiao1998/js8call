@@ -1232,6 +1232,15 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(logAction, &QAction::triggered, this, &MainWindow::on_logQSOButton_clicked);
 
 
+  ui->tableWidgetRXAll->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->tableWidgetRXAll->horizontalHeader(), &QHeaderView::customContextMenuRequested, this, [this](QPoint const &point){
+      QMenu * menu = new QMenu(ui->tableWidgetRXAll);
+
+      buildBandActivitySortByMenu(menu);
+
+      menu->popup(ui->tableWidgetRXAll->horizontalHeader()->mapToGlobal(point));
+  });
+
 
   ui->tableWidgetRXAll->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->tableWidgetRXAll, &QTableWidget::customContextMenuRequested, this, [this, clearAction3, clearActionAll, removeActivity, logAction](QPoint const &point){
@@ -1344,6 +1353,14 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       displayActivity(true);
   });
 
+  ui->tableWidgetCalls->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->tableWidgetCalls->horizontalHeader(), &QHeaderView::customContextMenuRequested, this, [this](QPoint const &point){
+      QMenu * menu = new QMenu(ui->tableWidgetCalls);
+
+      buildCallActivitySortByMenu(menu);
+
+      menu->popup(ui->tableWidgetCalls->horizontalHeader()->mapToGlobal(point));
+  });
 
   ui->tableWidgetCalls->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, logAction, clearAction4, clearActionAll, addStation, removeStation](QPoint const &point){
