@@ -157,9 +157,7 @@ public:
 
     static QList<QPair<QString, int>> buildMessageFrames(
         QString const& mycall,
-        //QString const& basecall,
         QString const& mygrid,
-        //bool compound,
         QString const& selectedCall,
         QString const& text
     );
@@ -171,9 +169,7 @@ class BuildMessageFramesThread : public QThread
     Q_OBJECT
 public:
     BuildMessageFramesThread(QString const& mycall,
-                             //QString const& basecall,
                              QString const& mygrid,
-                             //bool compound,
                              QString const& selectedCall,
                              QString const& text,
                              QObject *parent=nullptr);
@@ -183,9 +179,7 @@ signals:
 
 private:
     QString m_mycall;
-    //QString m_basecall;
     QString m_mygrid;
-    //bool m_compound;
     QString m_selectedCall;
     QString m_text;
 };

@@ -5741,6 +5741,8 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
       lines.append(dt.message());
   }
 
+  // TODO: jsherer - parse outgoing message so we can add it to the inbox as an outgoing message
+
   displayTextForFreq(lines.join("") + " \u2301 ", freq, DriftingDateTime::currentDateTimeUtc(), true, true, true);
 
   // if we're transmitting a message to be displayed, we should bump the repeat buttons...
@@ -5823,19 +5825,12 @@ QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text){
     QString selectedCall = callsignSelected();
 
     // prepare compound
-    //bool compound = Varicode::isCompoundCallsign(/*Radio::is_compound_callsign(*/m_config.my_callsign());
     QString mycall = m_config.my_callsign();
     QString mygrid = m_config.my_grid().left(4);
-    // QString basecall = Radio::base_callsign(m_config.my_callsign());
-    // if(basecall != mycall){
-    //     basecall = "<....>";
-    // }
 
     auto frames = Varicode::buildMessageFrames(
         mycall,
-        //basecall,
         mygrid,
-        //compound,
         selectedCall,
         text);
 

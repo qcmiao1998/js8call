@@ -1651,9 +1651,7 @@ QString Varicode::unpackDataMessage(const QString &text){
 // TODO: remove the dependence on providing all this data?
 QList<QPair<QString, int>> Varicode::buildMessageFrames(
     QString const& mycall,
-    //QString const& basecall,
     QString const& mygrid,
-    //bool compound,
     QString const& selectedCall,
     QString const& text
 ){
@@ -1878,16 +1876,12 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(
 
 BuildMessageFramesThread::BuildMessageFramesThread(
     const QString &mycall,
-    //const QString &basecall,
     const QString &mygrid,
-    //bool compound,
     const QString &selectedCall,
     const QString &text, QObject *parent):
     QThread(parent),
     m_mycall{mycall},
-    //m_basecall{basecall},
     m_mygrid{mygrid},
-    //m_compound{compound},
     m_selectedCall{selectedCall},
     m_text{text}
 {
@@ -1896,9 +1890,7 @@ BuildMessageFramesThread::BuildMessageFramesThread(
 void BuildMessageFramesThread::run(){
     auto results = Varicode::buildMessageFrames(
         m_mycall,
-        //m_basecall,
         m_mygrid,
-        //m_compound,
         m_selectedCall,
         m_text
     );
