@@ -78,7 +78,9 @@ SOURCES += \
     jsc.cpp \
     jsc_list.cpp \
     jsc_map.cpp \
-    jsc_checker.cpp
+    jsc_checker.cpp \
+    Message.cpp \
+    Inbox.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -107,7 +109,9 @@ HEADERS  += qt_helpers.hpp \
     keyeater.h \
     DriftingDateTime.h \
     jsc.h \
-    jsc_checker.h
+    jsc_checker.h \
+    Message.h \
+    Inbox.h
 
 
 INCLUDEPATH += qmake_only

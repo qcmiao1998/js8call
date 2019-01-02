@@ -817,7 +817,7 @@ private:
   QQueue<QString> m_txHeartbeatQueue; // ping frames to be sent
   QMap<QString, QDateTime> m_aprsCallCache;
 
-  QMap<QString, QList<CommandDetail>> m_rxCallsignCommandQueue; // call -> [cmd, ...]
+  QMap<QString, int> m_rxInboxCountCache; // call -> count
 
   QMap<QString, QMap<QString, CallDetail>> m_callActivityCache; // band -> call activity
   QMap<QString, QMap<int, QList<ActivityDetail>>> m_bandActivityCache; // band -> band activity
@@ -942,7 +942,9 @@ private:
   void processBufferedActivity();
   QString generateStatus();
   void processCommandActivity();
-  void writeDirectedCommandToFile(CommandDetail d);
+  QString inboxPath();
+  void refreshInboxCounts();
+  void addCommandToInbox(CommandDetail d);
   void processAlertReplyForCommand(CommandDetail d, QString from, QString cmd);
   void processSpots();
   void processTxQueue();

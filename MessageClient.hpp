@@ -6,38 +6,14 @@
 #include <QDataStream>
 #include <QDateTime>
 #include <QString>
-#include <QJsonDocument>
-#include <QJsonObject>
 
+#include "Message.h"
 #include "Radio.hpp"
 #include "pimpl_h.hpp"
 
 class QByteArray;
 class QHostAddress;
 class QColor;
-
-
-class Message {
-public:
-    Message();
-    Message(QString const &type, QString const &value="");
-    Message(QString const &type, QString const &value, QMap<QString, QVariant> const &params);
-
-    void read(const QJsonObject &json);
-    void write(QJsonObject &json) const;
-
-    QByteArray toJson() const;
-
-    QString type() const { return type_; }
-    QString value() const { return value_; }
-    QMap<QString, QVariant> params() const { return params_; }
-
-private:
-    QString type_;
-    QString value_;
-    QMap<QString, QVariant> params_;
-};
-
 
 //
 // MessageClient - Manage messages sent and replies received from a

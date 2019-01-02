@@ -178,6 +178,7 @@ set (wsjt_qt_CXXSRCS
   HRDTransceiver.cpp
   DXLabSuiteCommanderTransceiver.cpp
   NetworkMessage.cpp
+  Message.cpp
   MessageClient.cpp
   LettersSpinBox.cpp
   HintedSpinBox.cpp
@@ -242,6 +243,7 @@ set (wsjtx_CXXSRCS
   messagereplydialog.cpp
   keyeater.cpp
   APRSISClient.cpp
+  Inbox.cpp
   mainwindow.cpp
   Configuration.cpp
   main.cpp
@@ -550,6 +552,10 @@ set (qra_CSRCS
   lib/qra/qracodes/normrnd.c
   )
 
+set (sqlite3_CSRCS
+  vendor/sqlite3/sqlite3.c
+  )
+
 set (wsjt_CSRCS
   ${ka9q_CSRCS}
   lib/ftrsd/ftrsdap.c
@@ -621,6 +627,7 @@ set (all_CXXSRCS
   )
 
 set (all_C_and_CXXSRCS
+  ${sqlite3_CSRCS}
   ${wsjt_CSRCS}
   ${wsprsim_CSRCS}
   ${wsprd_CSRCS}
@@ -1112,6 +1119,7 @@ endif (${OPENMP_FOUND} OR APPLE)
 
 # build the main application
 add_executable (js8call MACOSX_BUNDLE
+  ${sqlite3_CSRCS}
   ${wsjtx_CXXSRCS}
   ${wsjtx_GENUISRCS}
   wsjtx.rc

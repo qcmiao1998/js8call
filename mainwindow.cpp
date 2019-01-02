@@ -65,6 +65,7 @@
 #include "DriftingDateTime.h"
 #include "jsc.h"
 #include "jsc_checker.h"
+#include "Inbox.h"
 
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
@@ -1519,7 +1520,7 @@ void MainWindow::checkStartupWarnings ()
 {
   MessageBox::critical_message (this,
                                 QString("This version of %1 is a pre-release development\n"
-                                "build and will expire after %2 (UTC), upon which you\n"
+                                "build andw will expire after %2 (UTC), upon which you\n"
                                 "will need to upgrade to the latest version. \n\n"
                                 "Use of development versions of JS8Call are at your own risk \n"
                                 "and carry a responsiblity to report any problems to:\n"
@@ -1533,6 +1534,28 @@ void MainWindow::checkStartupWarnings ()
 void MainWindow::initializeDummyData(){
     if(!QApplication::applicationName().contains("dummy")){
         return;
+    }
+
+    auto path = QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath(QString("test.db3")));
+    auto inbox = Inbox(path);
+    if(inbox.open()){
+        qDebug() << "test inbox opened" << inbox.count("test", "$", "%") << "messages";
+
+        int i = inbox.append(Message("test", "booya1"));
+
+        i = inbox.append(Message("test", "booya2"));
+        qDebug() << "i" << i;
+
+        qDebug() << inbox.set(i, Message("test", "booya3"));
+
+        auto m = inbox.value(i);
+        qDebug() << QString(m.toJson());
+
+        qDebug() << inbox.del(i);
+
+        foreach(auto pair, inbox.values("test", "$", "%", 0, 5)){
+            qDebug() << pair.first << QString(pair.second.toJson());
+        }
     }
 
     auto d = DecodedText("h+vWp6mRPprH", 6);
@@ -5371,6 +5394,7 @@ void MainWindow::clearActivity(){
     m_rxCommandQueue.clear();
     m_lastTxMessage.clear();
 
+    refreshInboxCounts();
     resetTimeDeltaAverage();
 
     clearTableWidget(ui->tableWidgetCalls);
@@ -7647,11 +7671,42 @@ void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
 
     auto call = callsignSelected();
 
-    if(m_rxCallsignCommandQueue.contains(call) && !m_rxCallsignCommandQueue[call].isEmpty()){
-        CommandDetail d = m_rxCallsignCommandQueue[call].first();
-        m_rxCallsignCommandQueue[call].removeFirst();
+    if(m_rxInboxCountCache.value(call, 0) > 0){
 
-        processAlertReplyForCommand(d, d.relayPath, d.cmd);
+        // TODO:
+        // CommandDetail d = m_rxCallsignInboxCountCache[call].first();
+        // m_rxCallsignInboxCountCache[call].removeFirst();
+        //
+        // processAlertReplyForCommand(d, d.relayPath, d.cmd);
+
+        Inbox i(inboxPath());
+        if(i.open()){
+            auto pair = i.firstUnreadFrom(call);
+            auto id = pair.first;
+            auto msg = pair.second;
+            auto params = msg.params();
+
+            CommandDetail d;
+            d.cmd = params.value("CMD").toString();
+            d.extra = params.value("EXTRA").toString();
+            d.freq = params.value("OFFSET").toInt();
+            d.from = params.value("FROM").toString();
+            d.grid = params.value("GRID").toString();
+            d.relayPath = params.value("PATH").toString();
+            d.snr = params.value("SNR").toInt();
+            d.tdrift = params.value("TDRIFT").toFloat();
+            d.text = params.value("TEXT").toString();
+            d.to = params.value("TO").toString();
+            d.utcTimestamp = QDateTime::fromString(params.value("UTC").toString(), "yyyy-MM-dd hh:mm:ss");
+            d.utcTimestamp.setUtcOffset(0);
+
+            msg.setType("READ");
+            i.set(id, msg);
+
+            m_rxInboxCountCache[call] = max(0, m_rxInboxCountCache.value(call) - 1);
+
+            processAlertReplyForCommand(d, d.relayPath, d.cmd);
+        }
 
     } else {
         addMessageText(call);
@@ -9594,14 +9649,11 @@ void MainWindow::processCommandActivity() {
                 }
 
                 calls.prepend(d.from);
+                d.relayPath = calls.join('>');
 
-                auto relayPath = calls.join('>');
+                reply = QString("%1 ACK").arg(d.relayPath);
 
-                reply = QString("%1 ACK").arg(relayPath);
-
-                // put message in inbox instead...
-                d.relayPath = relayPath;
-                m_rxCallsignCommandQueue[d.from].append(d);
+                addCommandToInbox(d);
 
                 QTimer::singleShot(500, this, [this, d](){
                     MessageBox::information_message(this, QString("A new message was received at %1 UTC").arg(d.utcTimestamp.time().toString()));
@@ -9763,20 +9815,86 @@ void MainWindow::processCommandActivity() {
     }
 }
 
-void MainWindow::writeDirectedCommandToFile(CommandDetail d){
-    // open file /save/messages/[callsign].txt and append a message log entry...
-    QFile f(QDir::toNativeSeparators(m_config.writeable_data_dir ().absolutePath()) + QString("/save/messages/%1.txt").arg(Radio::base_callsign(d.from)));
-    if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
-      QTextStream out(&f);
-      auto df = dialFrequency();
-      auto text = QString("%1\t%2MHz\t%3Hz\t%4dB\t%5");
-      text = text.arg(d.utcTimestamp.toString("yyyy-MM-dd hh:mm:ss"));
-      text = text.arg(Radio::frequency_MHz_string(df));
-      text = text.arg(d.freq);
-      text = text.arg(Varicode::formatSNR(d.snr));
-      text = text.arg(d.text.isEmpty() ? QString("%1 %2").arg(d.cmd).arg(d.extra).trimmed() : d.text);
-      out << text << endl;
-      f.close();
+QString MainWindow::inboxPath(){
+    return QDir::toNativeSeparators(m_config.writeable_data_dir().absoluteFilePath("inbox.db3"));
+}
+
+void MainWindow::refreshInboxCounts(){
+    auto inbox = Inbox(inboxPath());
+    if(inbox.open()){
+        // reset inbox counts
+        m_rxInboxCountCache.clear();
+
+        // compute new counts from db
+        auto v = inbox.values("UNREAD", "$", "%", 0, 10000);
+        foreach(auto pair, v){
+            auto params = pair.second.params();
+            auto to = params.value("TO").toString();
+            if(to.isEmpty() || (to != m_config.my_callsign() && to != Radio::base_callsign(m_config.my_callsign()))){
+                continue;
+            }
+            auto from = params.value("FROM").toString();
+            if(from.isEmpty()){
+                continue;
+            }
+
+            m_rxInboxCountCache[from] = m_rxInboxCountCache.value(from, 0) + 1;
+
+            if(!m_callActivity.contains(from)){
+                auto utc = params.value("UTC").toString();
+                auto snr = params.value("SNR").toInt();
+                auto freq = params.value("OFFSET").toInt();
+                auto tdrift = params.value("TDRIFT").toInt();
+
+                CallDetail cd;
+                cd.call = from;
+                cd.snr = snr;
+                cd.freq = freq;
+                cd.tdrift = tdrift;
+                cd.utcTimestamp = QDateTime::fromString(utc, "yyyy-MM-dd hh:mm:ss");
+                cd.utcTimestamp.setUtcOffset(0);
+                cd.ackTimestamp = cd.utcTimestamp;
+                logCallActivity(cd, false);
+            }
+        }
+    }
+}
+
+void MainWindow::addCommandToInbox(CommandDetail d){
+    // legacy
+    m_rxInboxCountCache[d.from] = m_rxInboxCountCache.value(d.from, 0) + 1;
+
+    // inbox:
+    auto inbox = Inbox(inboxPath());
+    if(inbox.open()){
+        auto df = dialFrequency();
+
+        QMap<QString, QVariant> v = {
+            {"UTC", QVariant(d.utcTimestamp.toString("yyyy-MM-dd hh:mm:ss"))},
+            {"TO", QVariant(d.to)},
+            {"FROM", QVariant(d.from)},
+            {"PATH", QVariant(d.relayPath)},
+            {"DIAL", QVariant((quint64)df)},
+            {"TDRIFT", QVariant(d.tdrift)},
+            {"OFFSET", QVariant(d.freq)},
+            {"CMD", QVariant(d.cmd)},
+            {"SNR", QVariant(d.snr)},
+        };
+
+        if(!d.grid.isEmpty()){
+            v["GRID"] = QVariant(d.grid);
+        }
+
+        if(!d.extra.isEmpty()){
+            v["EXTRA"] = QVariant(d.extra);
+        }
+
+        if(!d.text.isEmpty()){
+            v["TEXT"] = QVariant(d.text);
+        }
+
+        auto m = Message("UNREAD", "", v);
+        inbox.append(m);
     }
 }
 
@@ -10295,8 +10413,8 @@ void MainWindow::displayCallActivity() {
 
         // pin messages to the top
         qStableSort(keys.begin(), keys.end(), [this](const QString left, QString right){
-            int leftHas = (int)!(m_rxCallsignCommandQueue.contains(left) && !m_rxCallsignCommandQueue[left].isEmpty());
-            int rightHas = (int)!(m_rxCallsignCommandQueue.contains(right) && !m_rxCallsignCommandQueue[right].isEmpty());
+            int leftHas = (int)!(m_rxInboxCountCache.value(left, 0) > 0);
+            int rightHas = (int)!(m_rxInboxCountCache.value(right, 0) > 0);
 
             return leftHas < rightHas;
         });
@@ -10316,7 +10434,11 @@ void MainWindow::displayCallActivity() {
 
             bool isCallSelected = (call == selectedCall);
 
-            if (!isCallSelected && callsignAging && d.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+            // icon flags (flag -> star -> empty)
+            bool hasMessage = m_rxInboxCountCache.value(d.call, 0) > 0;
+            bool hasAck = d.ackTimestamp.isValid();
+
+            if (!isCallSelected && !hasMessage && callsignAging && d.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
                 continue;
             }
 
@@ -10324,6 +10446,7 @@ void MainWindow::displayCallActivity() {
             int row = ui->tableWidgetCalls->rowCount() - 1;
             int col = 0;
 
+            // icon column
 #if SHOW_THROUGH_CALLS
             QString displayCall = d.through.isEmpty() ? d.call : QString("%1>%2").arg(d.through).arg(d.call);
 #else
@@ -10337,9 +10460,6 @@ void MainWindow::displayCallActivity() {
                 flag = "\u2713";
             }
 
-            // icon column (flag -> star -> empty)
-            bool hasMessage = m_rxCallsignCommandQueue.contains(d.call) && !m_rxCallsignCommandQueue[d.call].isEmpty();
-            bool hasAck = d.ackTimestamp.isValid();
             auto iconItem = new QTableWidgetItem(hasMessage ? "\u2691" : hasAck ? "\u2605" : "");
             iconItem->setData(Qt::UserRole, QVariant((d.call)));
             iconItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
