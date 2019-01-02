@@ -1486,17 +1486,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   clearActivity();
   displayActivity(true);
 
-  /*
-  QTimer::singleShot(1000, this, [this](){
-      QPalette p;
-      p.setBrush(QPalette::Text, QColor(Qt::red));
-      p.setColor(QPalette::Text, QColor(Qt::red));
-      ui->extFreeTextMsgEdit->setPalette(p);
-      ui->extFreeTextMsgEdit->updateGeometry();
-      ui->extFreeTextMsgEdit->update();
-  });
-  */
-
   m_txTextDirtyDebounce.setSingleShot(true);
   connect(&m_txTextDirtyDebounce, &QTimer::timeout, this, &MainWindow::refreshTextDisplay);
 
@@ -1506,7 +1495,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
 
-QDate eol(2019, 1, 2);
+QDate eol(2019, 1, 23);
 
 void MainWindow::checkExpiryWarningMessage()
 {
