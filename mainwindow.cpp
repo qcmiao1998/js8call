@@ -10614,6 +10614,10 @@ void MainWindow::emitPTT(bool on){
 
 void MainWindow::networkMessage(Message const &message)
 {
+    if(!m_config.udpEnabled()){
+        return;
+    }
+
     if(!m_config.accept_udp_requests()){
         return;
     }
@@ -10785,16 +10789,28 @@ void MainWindow::networkMessage(Message const &message)
 }
 
 void MainWindow::sendNetworkMessage(QString const &type, QString const &message){
+    if(!m_config.udpEnabled()){
+        return;
+    }
+
     m_messageClient->send(Message(type, message));
 }
 
 void MainWindow::sendNetworkMessage(QString const &type, QString const &message, QMap<QString, QVariant> const &params)
 {
+    if(!m_config.udpEnabled()){
+        return;
+    }
+
     m_messageClient->send(Message(type, message, params));
 }
 
 void MainWindow::networkError (QString const& e)
 {
+  if(!m_config.udpEnabled()){
+    return;
+  }
+
   if(!m_config.accept_udp_requests()){
     return;
   }
