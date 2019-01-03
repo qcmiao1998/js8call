@@ -4682,9 +4682,7 @@ list. The list can be maintained in Settings (F2).</string>
      <string>C&amp;ontrol</string>
     </property>
     <addaction name="actionEnable_Spotting"/>
-    <addaction name="actionEnable_Active"/>
     <addaction name="actionEnable_Auto_Reply"/>
-    <addaction name="actionEnable_Selcall"/>
     <addaction name="separator"/>
     <addaction name="actionHeartbeat"/>
     <addaction name="actionCQ"/>
