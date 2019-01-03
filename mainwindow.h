@@ -101,6 +101,7 @@ class MainWindow : public QMainWindow
   Q_OBJECT;
 
   struct CallDetail;
+  struct CommandDetail;
 public:
   using Frequency = Radio::Frequency;
   using FrequencyDelta = Radio::FrequencyDelta;
@@ -135,6 +136,7 @@ public slots:
   bool hasExistingMessageBufferToMe(int *pOffset);
   bool hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffset);
   void logCallActivity(CallDetail d, bool spot=true);
+  void logHeardGraph(CommandDetail d);
   QString lookupCallInCompoundCache(QString const &call);
   void cacheActivity(QString key);
   void restoreActivity(QString key);
@@ -816,6 +818,9 @@ private:
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
   QQueue<QString> m_txHeartbeatQueue; // ping frames to be sent
   QMap<QString, QDateTime> m_aprsCallCache;
+
+  QMap<QString, QSet<QString>> m_heardGraphOutgoing; // callsign -> [stations who've this callsign has heard]
+  QMap<QString, QSet<QString>> m_heardGraphIncoming; // callsign -> [stations who've heard this callsign]
 
   QMap<QString, int> m_rxInboxCountCache; // call -> count
 

@@ -4019,6 +4019,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                     cmdcd.ackTimestamp = cmd.to == m_config.my_callsign() ? cmd.utcTimestamp : QDateTime{};
                     cmdcd.tdrift = cmd.tdrift;
                     logCallActivity(cmdcd, false);
+                    logHeardGraph(cmd);
                 }
 
                 hasExistingMessageBuffer(cmd.freq, true, nullptr);
@@ -4051,6 +4052,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                   td.utcTimestamp = cmd.utcTimestamp;
                   td.tdrift = cmd.tdrift;
                   logCallActivity(td, true);
+                  logHeardGraph(cmd);
               }
           }
 #endif
@@ -4261,6 +4263,27 @@ void MainWindow::logCallActivity(CallDetail d, bool spot){
     // enqueue for spotting to psk reporter
     if(spot){
         m_rxCallQueue.append(d);
+    }
+}
+
+void MainWindow::logHeardGraph(CommandDetail d){
+    auto from = d.from;
+    auto to = d.to;
+
+    if(to == "@ALLCALL"){
+        return;
+    }
+
+    if(m_heardGraphOutgoing.contains(from)){
+        m_heardGraphOutgoing[from].insert(to);
+    } else {
+        m_heardGraphOutgoing[from] = { to };
+    }
+
+    if(m_heardGraphIncoming.contains(to)){
+        m_heardGraphIncoming[to].insert(from);
+    } else {
+        m_heardGraphIncoming[to] = { from };
     }
 }
 
@@ -9407,6 +9430,7 @@ void MainWindow::processCommandActivity() {
         cd.utcTimestamp = d.utcTimestamp;
         cd.tdrift = d.tdrift;
         logCallActivity(cd, true);
+        logHeardGraph(d);
 
         // we're only responding to allcall, groupcalls, and our callsign at this point, so we'll end after logging the callsigns we've heard
         if (!isAllCall && !toMe && !isGroupCall) {
@@ -10454,6 +10478,17 @@ void MainWindow::displayCallActivity() {
 
             auto displayItem = new QTableWidgetItem(displayCall);
             displayItem->setData(Qt::UserRole, QVariant(d.call));
+            auto hearing = m_heardGraphOutgoing.value(d.call).values().join(", ");
+            auto heardby = m_heardGraphIncoming.value(d.call).values().join(", ");
+            QStringList tip = {};
+            if(!hearing.isEmpty()){
+                tip.append(QString("HEARING: %1").arg(hearing));
+            }
+            if(!heardby.isEmpty()){
+                tip.append(QString("HEARD BY: %1").arg(heardby));
+            }
+            displayItem->setToolTip(tip.join("\n"));
+
             ui->tableWidgetCalls->setItem(row, col++, displayItem);
 
             auto flagItem = new QTableWidgetItem(flag);
