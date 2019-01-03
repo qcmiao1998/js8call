@@ -1525,6 +1525,20 @@ void MainWindow::initializeDummyData(){
         return;
     }
 
+    CommandDetail x;
+    x.from = "KN4CRD";
+    x.to = "OH8STN";
+    logHeardGraph(x);
+
+    x.from = "KN4CRD";
+    x.to = "K0OG";
+    logHeardGraph(x);
+
+    x.from = "K0OG";
+    x.to = "KN4CRD";
+    logHeardGraph(x);
+
+
     auto path = QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath(QString("test.db3")));
     auto inbox = Inbox(path);
     if(inbox.open()){
@@ -5405,6 +5419,8 @@ void MainWindow::clearActivity(){
     m_rxActivityQueue.clear();
     m_rxCommandQueue.clear();
     m_lastTxMessage.clear();
+    m_heardGraphIncoming.clear();
+    m_heardGraphOutgoing.clear();
 
     refreshInboxCounts();
     resetTimeDeltaAverage();
@@ -6710,6 +6726,8 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
     // TODO: jsherer - abstract this into a tableWidgetCallsReset function
     if(sender == ui->tableWidgetCalls){
         m_callActivity.clear();
+        m_heardGraphIncoming.clear();
+        m_heardGraphOutgoing.clear();
         clearTableWidget((ui->tableWidgetCalls));
         createAllcallTableRows(ui->tableWidgetCalls, "");
         resetTimeDeltaAverage();
