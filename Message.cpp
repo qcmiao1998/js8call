@@ -19,6 +19,18 @@
  **/
 
 #include "Message.h"
+#include "DriftingDateTime.h"
+
+const quint32 EPOCH = 1499299200000; // July 6, 2017
+
+#if USE_SNOWFLAKE
+quint64 snowflake(quint64 epoch, quint16 machine, quint16 sequence){
+    quint64 value = (DriftingDateTime::currentMSecsSinceEpoch() - epoch) << 22;
+    value |= machine & 0x3FF << 12;
+    value |= sequence & 0xFFF;
+    return value;
+}
+#endif
 
 Message::Message()
 {
@@ -28,6 +40,7 @@ Message::Message(QString const &type, QString const &value):
     type_{ type },
     value_{ value }
 {
+    params_["_ID"] = QString::number(DriftingDateTime::currentMSecsSinceEpoch()-EPOCH);
 }
 
 Message::Message(QString const &type, QString const &value,  QMap<QString, QVariant> const &params):
@@ -35,6 +48,7 @@ Message::Message(QString const &type, QString const &value,  QMap<QString, QVari
     value_{ value },
     params_{ params }
 {
+    params_["_ID"] = QString::number(DriftingDateTime::currentMSecsSinceEpoch()-EPOCH);
 }
 
 void Message::read(const QJsonObject &json){
