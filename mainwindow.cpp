@@ -1223,7 +1223,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       }
 
       auto selectedItems = ui->tableWidgetRXAll->selectedItems();
-      int selectedOffset = selectedItems.first()->text().toInt();
+      int selectedOffset = selectedItems.first()->data(Qt::UserRole).toInt();
 
       m_bandActivity.remove(selectedOffset);
       displayActivity(true);
