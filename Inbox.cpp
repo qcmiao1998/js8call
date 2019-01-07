@@ -144,7 +144,7 @@ QList<QPair<int, Message> > Inbox::values(QString type, QString query, QString m
     rc = sqlite3_bind_int(stmt, 4, limit);
     rc = sqlite3_bind_int(stmt, 5, offset);
 
-    qDebug() << "exec" << sqlite3_expanded_sql(stmt);
+    //qDebug() << "exec" << sqlite3_expanded_sql(stmt);
 
     QList<QPair<int, Message>> v;
 
