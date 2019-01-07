@@ -1698,7 +1698,7 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(
 
 #if AUTO_PREPEND_DIRECTED_ALLOW_TEXT_CALLSIGNS
             auto calls = Varicode::parseCallsigns(line);
-            bool lineStartsWithStandardCall = !calls.isEmpty() && line.startsWith(calls.first()) && calls.first().length() > 2;
+            bool lineStartsWithStandardCall = !calls.isEmpty() && line.startsWith(calls.first()) && calls.first().length() > 3;
 #else
             bool lineStartsWithStandardCall = false;
 #endif
