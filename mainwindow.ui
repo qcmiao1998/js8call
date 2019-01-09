@@ -5543,12 +5543,12 @@ list. The list can be maintained in Settings (F2).</string>
   </action>
   <action name="actionHeartbeat">
    <property name="text">
-    <string>Heartbeat...</string>
+    <string>Send Heartbeat...</string>
    </property>
   </action>
   <action name="actionCQ">
    <property name="text">
-    <string>CQ...</string>
+    <string>Send CQ Message...</string>
    </property>
   </action>
   <action name="actionShow_Band_Heartbeats_and_ACKs">
