@@ -10265,6 +10265,8 @@ void MainWindow::displayBandActivity() {
                 // align right if eliding...
                 int colWidth = ui->tableWidgetRXAll->columnWidth(3);
                 auto textItem = new QTableWidgetItem(joined);
+                textItem->setToolTip(joined);
+
                 QFontMetrics fm(textItem->font());
                 auto elidedText = fm.elidedText(joined, Qt::ElideLeft, colWidth);
                 auto flag = Qt::AlignLeft | Qt::AlignVCenter;
