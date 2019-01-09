@@ -7691,6 +7691,18 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
     }
     ui->extFreeTextMsgEdit->setPlaceholderText(placeholderText);
 
+    // heard detail
+    auto hearing = m_heardGraphOutgoing.value(selectedCall).values().join(", ");
+    auto heardby = m_heardGraphIncoming.value(selectedCall).values().join(", ");
+    auto html = selectedCall.isEmpty() || selectedCall.contains("@") ? "" : (
+        QString("<h1>%1</h1>").arg(selectedCall) +
+        QString("<p><strong>HEARING</strong>: %1</p>").arg(hearing) +
+        QString("<p><strong>HEARD BY</strong>: %1</p>").arg(heardby)
+    );
+    ui->callDetailTextBrowser->setHtml(html);
+    ui->callDetailTextBrowser->setMinimumHeight((qreal)50.0 + min(ui->callDetailTextBrowser->document()->size().height(), ui->callsVerticalSplitter->height() * 0.33));
+
+
     // immediately update the display);
     updateButtonDisplay();
     updateTextDisplay();
@@ -10511,16 +10523,6 @@ void MainWindow::displayCallActivity() {
 
             auto displayItem = new QTableWidgetItem(displayCall);
             displayItem->setData(Qt::UserRole, QVariant(d.call));
-            auto hearing = m_heardGraphOutgoing.value(d.call).values().join(", ");
-            auto heardby = m_heardGraphIncoming.value(d.call).values().join(", ");
-            QStringList tip = {};
-            if(!hearing.isEmpty()){
-                tip.append(QString("HEARING: %1").arg(hearing));
-            }
-            if(!heardby.isEmpty()){
-                tip.append(QString("HEARD BY: %1").arg(heardby));
-            }
-            displayItem->setToolTip(tip.join("\n"));
 
             ui->tableWidgetCalls->setItem(row, col++, displayItem);
 
