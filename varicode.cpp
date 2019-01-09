@@ -314,8 +314,8 @@ bool Varicode::startsWithCQ(QString text){
 }
 
 bool Varicode::startsWithHB(QString text){
-    foreach(auto cq, hbs.values()){
-        if(text.startsWith(cq)){
+    foreach(auto hb, hbs.values()){
+        if(text.startsWith(hb)){
             return true;
         }
     }
