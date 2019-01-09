@@ -1800,6 +1800,7 @@ void MainWindow::writeSettings()
   m_settings->setValue("ShowTimeDrift", ui->driftSyncFrame->isVisible());
   m_settings->setValue("TimeDrift", ui->driftSpinBox->value());
   m_settings->setValue("ShowTooltips", ui->actionShow_Tooltips->isChecked());
+  m_settings->setValue("ShowStatusbar", ui->statusBar->isVisible());
 
   m_settings->endGroup();
 
@@ -1914,6 +1915,8 @@ void MainWindow::readSettings()
   ui->driftSyncFrame->setVisible(m_settings->value("ShowTimeDrift", false).toBool());
   ui->driftSpinBox->setValue(m_settings->value("TimeDrift", 0).toInt());
   ui->actionShow_Tooltips->setChecked(m_settings->value("ShowTooltips", true).toBool());
+  ui->actionShow_Statusbar->setChecked(m_settings->value("ShowStatusbar",true).toBool());
+  ui->statusBar->setVisible(ui->actionShow_Statusbar->isChecked());
 
   m_settings->endGroup();
 
@@ -2445,6 +2448,8 @@ void MainWindow::on_actionEnable_Auto_Reply_toggled(bool checked){
 void MainWindow::on_menuWindow_aboutToShow(){
     ui->actionShow_Fullscreen->setChecked((windowState() & Qt::WindowFullScreen) == Qt::WindowFullScreen);
 
+    ui->actionShow_Statusbar->setChecked(ui->statusBar && ui->statusBar->isVisible());
+
     auto hsizes = ui->textHorizontalSplitter->sizes();
     ui->actionShow_Band_Activity->setChecked(hsizes.at(0) > 0);
     ui->actionShow_Call_Activity->setChecked(hsizes.at(2) > 0);
@@ -2501,6 +2506,14 @@ void MainWindow::on_actionShow_Fullscreen_triggered(bool checked){
         state &= ~Qt::WindowFullScreen;
     }
     setWindowState(state);
+}
+
+void MainWindow::on_actionShow_Statusbar_triggered(bool checked){
+    if(!ui->statusBar){
+        return;
+    }
+
+    ui->statusBar->setVisible(checked);
 }
 
 void MainWindow::on_actionShow_Frequency_Clock_triggered(bool checked){
