@@ -4301,10 +4301,26 @@ void MainWindow::logHeardGraph(CommandDetail d){
         return;
     }
 
+    auto my_callsign = m_config.my_callsign();
+
+    // hearing
+    if(m_heardGraphOutgoing.contains(my_callsign)){
+        m_heardGraphOutgoing[my_callsign].insert(from);
+    } else {
+        m_heardGraphOutgoing[my_callsign].insert(from);
+    }
+
     if(m_heardGraphOutgoing.contains(from)){
         m_heardGraphOutgoing[from].insert(to);
     } else {
         m_heardGraphOutgoing[from] = { to };
+    }
+
+    // heard by
+    if(m_heardGraphIncoming.contains(from)){
+        m_heardGraphIncoming[from].insert(my_callsign);
+    } else {
+        m_heardGraphIncoming[from] = { my_callsign };
     }
 
     if(m_heardGraphIncoming.contains(to)){
@@ -7692,15 +7708,15 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
     ui->extFreeTextMsgEdit->setPlaceholderText(placeholderText);
 
     // heard detail
-    auto hearing = m_heardGraphOutgoing.value(selectedCall).values().join(", ");
-    auto heardby = m_heardGraphIncoming.value(selectedCall).values().join(", ");
+    QString hearing = m_heardGraphOutgoing.value(selectedCall).values().join(", ");
+    QString heardby = m_heardGraphIncoming.value(selectedCall).values().join(", ");
     auto html = selectedCall.isEmpty() || selectedCall.contains("@") ? "" : (
-        QString("<h1>%1</h1>").arg(selectedCall) +
-        QString("<p><strong>HEARING</strong>: %1</p>").arg(hearing) +
-        QString("<p><strong>HEARD BY</strong>: %1</p>").arg(heardby)
+        QString("<h1>%1</h1>").arg(selectedCall.toHtmlEscaped()) +
+        QString("<p><strong>HEARING</strong>: %1</p>").arg(hearing.toHtmlEscaped()) +
+        QString("<p><strong>HEARD BY</strong>: %1</p>").arg(heardby.toHtmlEscaped())
     );
     ui->callDetailTextBrowser->setHtml(html);
-    ui->callDetailTextBrowser->setMinimumHeight((qreal)50.0 + min(ui->callDetailTextBrowser->document()->size().height(), ui->callsVerticalSplitter->height() * 0.33));
+    //ui->callDetailTextBrowser->setMinimumHeight((qreal)50.0 + min(ui->callDetailTextBrowser->document()->size().height(), ui->callsVerticalSplitter->height() * 0.33));
 
 
     // immediately update the display);

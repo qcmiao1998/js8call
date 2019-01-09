@@ -1116,6 +1116,11 @@ QTextEdit[transmitting=&quot;true&quot;] {
         <property name="handleWidth">
          <number>6</number>
         </property>
+        <widget class="QTextBrowser" name="callDetailTextBrowser">
+         <property name="frameShape">
+          <enum>QFrame::Box</enum>
+         </property>
+        </widget>
         <widget class="QTableWidget" name="tableWidgetCalls">
          <property name="font">
           <font>
@@ -1221,11 +1226,6 @@ QTextEdit[transmitting=&quot;true&quot;] {
            <string>Distance</string>
           </property>
          </column>
-        </widget>
-        <widget class="QTextBrowser" name="callDetailTextBrowser">
-         <property name="frameShape">
-          <enum>QFrame::Box</enum>
-         </property>
         </widget>
        </widget>
       </widget>
