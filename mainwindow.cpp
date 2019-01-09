@@ -9645,7 +9645,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS RELAY
-        else if (d.cmd == ">" && !isAllCall && !isGroupCall) {
+        else if (d.cmd == ">" && !isAllCall) {
 
             // 1. see if there are any more hops to process
             // 2. if so, forward
@@ -9656,8 +9656,8 @@ void MainWindow::processCommandActivity() {
             auto text = d.text;
             auto match = re.match(text);
 
-            // if the text starts with a callsign, and relay is not disabled, then relay.
-            if(match.hasMatch() && !m_config.relay_off()){
+            // if the text starts with a callsign, and relay is not disabled, and this is not a group callsign, then relay.
+            if(match.hasMatch() && !m_config.relay_off() && !isGroupCall){
                 // replace freetext with relayed free text
                 if(match.captured("type") != ">"){
                     text = text.replace(match.capturedStart("type"), match.capturedLength("type"), ">");
@@ -9695,7 +9695,7 @@ void MainWindow::processCommandActivity() {
                 addCommandToInbox(d);
 
                 QTimer::singleShot(500, this, [this, d](){
-                    MessageBox::information_message(this, QString("A new message was received at %1 UTC").arg(d.utcTimestamp.time().toString()));
+                    MessageBox::information_message(this, QString("A new message was received at %1 UTC from %2").arg(d.utcTimestamp.time().toString()).arg(d.from));
                 });
             }
         }
