@@ -123,7 +123,7 @@ QRegularExpression directed_re("^"                    +
                                optional_cmd_pattern   +
                                optional_num_pattern);
 
-QRegularExpression heartbeat_re(R"(^\s*(?<type>CQCQCQ|CQ QRPP?|CQ DX|CQ TEST|CQ( CQ){0,2}|HB)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
+QRegularExpression heartbeat_re(R"(^\s*(?<type>CQCQCQ|CQ QRPP?|CQ DX|CQ TEST|CQ( CQ){0,2}|HB( AUTO)?( RELAY)?( SPOT)?)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
 QRegularExpression compound_re("^\\s*[`]"              +
                                callsign_pattern        +
@@ -206,8 +206,13 @@ QMap<quint32, QString> cqs = {
 };
 
 QMap<quint32, QString> hbs = {
-    { 0, "HB"  }, // HB ACTIVE
-    { 1, "HB"  }, // HB IDLE
+    { 0, "HB"  },                 // HB
+    { 1, "HB AUTO"  },            // HB AUTO
+    { 2, "HB AUTO RELAY"  },      // HB AUTO RELAY
+    { 3, "HB AUTO RELAY SPOT"  }, // HB AUTO RELAY SPOT
+    { 4, "HB RELAY"  },           // HB      RELAY
+    { 5, "HB RELAY SPOT"  },      // HB      RELAY SPOT
+    { 6, "HB SPOT"  },            // HB            SPOT
 };
 
 

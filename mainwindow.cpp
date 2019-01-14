@@ -6820,7 +6820,14 @@ void MainWindow::buildRepeatMenu(QMenu *menu, QPushButton * button, int * interv
 void MainWindow::sendHeartbeat(){
     QString mycall = m_config.my_callsign();
     QString mygrid = m_config.my_grid().left(4);
-    QString message = QString("%1: HB %2").arg(mycall).arg(mygrid).trimmed();
+
+    QStringList parts;
+
+    parts.append(QString("%1: HB").arg(mycall));
+    parts.append(generateStatusFlags());
+    parts.append(mygrid);
+
+    QString message = parts.join(" ").trimmed();
 
     auto f = m_config.heartbeat_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
 
@@ -9415,17 +9422,24 @@ QString MainWindow::generateStatus() {
     QString lastActiveString = since(lastActive).toUpper().replace("NOW", "0M");
 
     QStringList status;
+    status.append(generateStatusFlags());
+
     if(!lastActiveString.isEmpty()){
-        status.append(lastActiveString);
+        status.append(lastActiveString.trimmed());
     }
-    if(ui->autoReplyButton->isChecked()) status.append("AUTO");
-    if(ui->hbMacroButton->isChecked() && m_hbInterval > 0) status.append("HB");
-    if(ui->spotButton->isChecked()) status.append("SPOT");
-    if(!m_config.relay_off()) status.append("RELAY");
 
     status.append("V" + version().replace("-devel", "").replace("-rc", ""));
 
     return status.join(" ").trimmed();
+}
+
+QStringList MainWindow::generateStatusFlags() {
+    QStringList flags;
+    if(ui->hbMacroButton->isChecked() && m_hbInterval > 0) flags.append("HB");
+    if(ui->autoReplyButton->isChecked()) flags.append("AUTO");
+    if(!m_config.relay_off()) flags.append("RELAY");
+    if(ui->spotButton->isChecked()) flags.append("SPOT");
+    return flags;
 }
 
 void MainWindow::processCommandActivity() {

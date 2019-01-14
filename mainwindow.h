@@ -947,6 +947,7 @@ private:
   void processCompoundActivity();
   void processBufferedActivity();
   QString generateStatus();
+  QStringList generateStatusFlags();
   void processCommandActivity();
   QString inboxPath();
   void refreshInboxCounts();

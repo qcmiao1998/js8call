@@ -1117,6 +1117,9 @@ QTextEdit[transmitting=&quot;true&quot;] {
          <number>6</number>
         </property>
         <widget class="QTextBrowser" name="callDetailTextBrowser">
+         <property name="visible">
+           <bool>false</bool>
+         </property>
          <property name="frameShape">
           <enum>QFrame::Box</enum>
          </property>
