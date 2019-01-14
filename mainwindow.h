@@ -136,7 +136,7 @@ public slots:
   bool hasExistingMessageBufferToMe(int *pOffset);
   bool hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffset);
   void logCallActivity(CallDetail d, bool spot=true);
-  void logHeardGraph(CommandDetail d);
+  void logHeardGraph(QString from, QString to);
   QString lookupCallInCompoundCache(QString const &call);
   void cacheActivity(QString key);
   void restoreActivity(QString key);

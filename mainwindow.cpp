@@ -1525,19 +1525,9 @@ void MainWindow::initializeDummyData(){
         return;
     }
 
-    CommandDetail x;
-    x.from = "KN4CRD";
-    x.to = "OH8STN";
-    logHeardGraph(x);
-
-    x.from = "KN4CRD";
-    x.to = "K0OG";
-    logHeardGraph(x);
-
-    x.from = "K0OG";
-    x.to = "KN4CRD";
-    logHeardGraph(x);
-
+    logHeardGraph("KN4CRD", "OH8STN");
+    logHeardGraph("KN4CRD", "K0OG");
+    logHeardGraph("K0OG", "KN4CRD");
 
     auto path = QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath(QString("test.db3")));
     auto inbox = Inbox(path);
@@ -4046,7 +4036,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                     cmdcd.ackTimestamp = cmd.to == m_config.my_callsign() ? cmd.utcTimestamp : QDateTime{};
                     cmdcd.tdrift = cmd.tdrift;
                     logCallActivity(cmdcd, false);
-                    logHeardGraph(cmd);
+                    logHeardGraph(cmd.from, cmd.to);
                 }
 
                 hasExistingMessageBuffer(cmd.freq, true, nullptr);
@@ -4079,7 +4069,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                   td.utcTimestamp = cmd.utcTimestamp;
                   td.tdrift = cmd.tdrift;
                   logCallActivity(td, true);
-                  logHeardGraph(cmd);
+                  logHeardGraph(cmd.from, cmd.to);
               }
           }
 #endif
@@ -4293,14 +4283,7 @@ void MainWindow::logCallActivity(CallDetail d, bool spot){
     }
 }
 
-void MainWindow::logHeardGraph(CommandDetail d){
-    auto from = d.from;
-    auto to = d.to;
-
-    if(to == "@ALLCALL"){
-        return;
-    }
-
+void MainWindow::logHeardGraph(QString from, QString to){
     auto my_callsign = m_config.my_callsign();
 
     // hearing
@@ -4310,12 +4293,6 @@ void MainWindow::logHeardGraph(CommandDetail d){
         m_heardGraphOutgoing[my_callsign].insert(from);
     }
 
-    if(m_heardGraphOutgoing.contains(from)){
-        m_heardGraphOutgoing[from].insert(to);
-    } else {
-        m_heardGraphOutgoing[from] = { to };
-    }
-
     // heard by
     if(m_heardGraphIncoming.contains(from)){
         m_heardGraphIncoming[from].insert(my_callsign);
@@ -4323,6 +4300,18 @@ void MainWindow::logHeardGraph(CommandDetail d){
         m_heardGraphIncoming[from] = { my_callsign };
     }
 
+    if(to == "@ALLCALL"){
+        return;
+    }
+
+    // hearing
+    if(m_heardGraphOutgoing.contains(from)){
+        m_heardGraphOutgoing[from].insert(to);
+    } else {
+        m_heardGraphOutgoing[from] = { to };
+    }
+
+    // heard by
     if(m_heardGraphIncoming.contains(to)){
         m_heardGraphIncoming[to].insert(from);
     } else {
@@ -7716,6 +7705,7 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
         QString("<p><strong>HEARD BY</strong>: %1</p>").arg(heardby.toHtmlEscaped())
     );
     ui->callDetailTextBrowser->setHtml(html);
+    ui->callDetailTextBrowser->setVisible(!selectedCall.isEmpty() && (!hearing.isEmpty() || !heardby.isEmpty()));
     //ui->callDetailTextBrowser->setMinimumHeight((qreal)50.0 + min(ui->callDetailTextBrowser->document()->size().height(), ui->callsVerticalSplitter->height() * 0.33));
 
 
@@ -9489,7 +9479,7 @@ void MainWindow::processCommandActivity() {
         cd.utcTimestamp = d.utcTimestamp;
         cd.tdrift = d.tdrift;
         logCallActivity(cd, true);
-        logHeardGraph(d);
+        logHeardGraph(d.from, d.to);
 
         // we're only responding to allcall, groupcalls, and our callsign at this point, so we'll end after logging the callsigns we've heard
         if (!isAllCall && !toMe && !isGroupCall) {
@@ -9803,7 +9793,16 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-        // PROCESS BUFFERED QTH
+        // PROCESS BUFFERED HEARING
+        else if (d.cmd == " HEARING"){
+            auto calls = Varicode::parseCallsigns(d.text);
+            foreach(auto call, calls){
+                logHeardGraph(d.from, call);
+            }
+            continue;
+        }
+
+        // PROCESS BUFFERED GRID
         else if (d.cmd == " GRID"){
            // 1. parse grids
            // 2. log it to reporting networks
