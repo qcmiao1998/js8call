@@ -591,6 +591,7 @@ private:
   QString my_grid_;
   QString my_station_;
   QStringList my_groups_;
+  QStringList auto_whitelist_;
   QString my_qth_;
   QString cq_;
   QString reply_;
@@ -977,6 +978,10 @@ void Configuration::removeGroup(QString const &group){
     m_->write_settings();
 }
 
+QSet<QString> Configuration::auto_whitelist() const {
+    return QSet<QString>::fromList(m_->auto_whitelist_);
+}
+
 QString Configuration::my_qth() const
 {
     return m_->my_qth_.trimmed();
@@ -1171,6 +1176,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   setUppercase(ui_->reply_message_line_edit);
   setUppercase(ui_->cq_message_line_edit);
   setUppercase(ui_->groups_line_edit);
+  setUppercase(ui_->auto_whitelist_line_edit);
 
   ui_->udp_server_port_spin_box->setMinimum (1);
   ui_->udp_server_port_spin_box->setMaximum (std::numeric_limits<port_type>::max ());
@@ -1361,6 +1367,7 @@ void Configuration::impl::initialize_models ()
   ui_->activity_aging_spin_box->setValue(activity_aging_);
   ui_->station_message_line_edit->setText (my_station_.toUpper());
   ui_->groups_line_edit->setText(my_groups_.join(", "));
+  ui_->auto_whitelist_line_edit->setText(auto_whitelist_.join(", "));
   ui_->qth_message_line_edit->setText (my_qth_.toUpper());
   ui_->cq_message_line_edit->setText(cq_.toUpper());
   ui_->reply_message_line_edit->setText (reply_.toUpper());
@@ -1505,6 +1512,7 @@ void Configuration::impl::read_settings ()
   my_grid_ = settings_->value ("MyGrid", QString {}).toString ();
   my_station_ = settings_->value("MyStation", QString {}).toString();
   my_groups_ = settings_->value("MyGroups", QStringList{}).toStringList();
+  auto_whitelist_ = settings_->value("AutoWhitelist", QStringList{}).toStringList();
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
   my_qth_ = settings_->value("MyQTH", QString {}).toString();
@@ -1765,6 +1773,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MyGrid", my_grid_);
   settings_->setValue ("MyStation", my_station_);
   settings_->setValue ("MyGroups", my_groups_);
+  settings_->setValue ("AutoWhitelist", auto_whitelist_);
   settings_->setValue ("MyQTH", my_qth_);
   settings_->setValue ("CQMessage", cq_);
   settings_->setValue ("Reply", reply_);
@@ -2047,6 +2056,20 @@ QStringList splitGroups(QString groupsString, bool filter){
     return groups;
 }
 
+QStringList splitCalls(QString callsString){
+    QStringList calls;
+    if(callsString.isEmpty()){
+        return calls;
+    }
+
+    foreach(QString call, callsString.split(",")){
+        auto g = call.trimmed();
+        calls.append(call.trimmed().toUpper());
+    }
+
+    return calls;
+}
+
 bool Configuration::impl::validate ()
 {
   auto callsign = ui_->callsign_line_edit->text().toUpper().trimmed();
@@ -2058,6 +2081,13 @@ bool Configuration::impl::validate ()
   foreach(auto group, splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), false)){
       if(!Varicode::isCompoundCallsign(group)){
           MessageBox::critical_message (this, QString("%1 is not a valid group").arg(group));
+          return false;
+      }
+  }
+
+  foreach(auto call, splitCalls(ui_->auto_whitelist_line_edit->text().toUpper().trimmed())){
+      if(!Varicode::isValidCallsign(call, nullptr)){
+          MessageBox::critical_message (this, QString("%1 is not a valid callsign to whitelist").arg(call));
           return false;
       }
   }
@@ -2320,6 +2350,7 @@ void Configuration::impl::accept ()
   my_grid_ = ui_->grid_line_edit->text ().toUpper();
   my_station_ = ui_->station_message_line_edit->text().toUpper();
   my_groups_ = splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), true);
+  auto_whitelist_ = splitCalls(ui_->auto_whitelist_line_edit->text().toUpper().trimmed());
   cq_ = ui_->cq_message_line_edit->text().toUpper();
   reply_ = ui_->reply_message_line_edit->text().toUpper();
   my_qth_ = ui_->qth_message_line_edit->text().toUpper();

@@ -9506,6 +9506,13 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
+        // we're only responding to callsigns in our whitelist if we have one defined...
+        // make sure the whitelist is empty (no restrictions) or the from callsign or its base callsign is on it
+        auto whitelist = m_config.auto_whitelist();
+        if(!whitelist.isEmpty() && !(whitelist.contains(d.from) || whitelist.contains(Radio::base_callsign(d.from)))){
+            continue;
+        }
+
         // display the command activity
         ActivityDetail ad = {};
         ad.isLowConfidence = false;

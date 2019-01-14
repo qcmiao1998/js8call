@@ -295,8 +295,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>654</width>
-                <height>511</height>
+                <width>724</width>
+                <height>586</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -341,20 +341,6 @@
                     </property>
                     <property name="checked">
                      <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="autoreply_off_check_box">
-                    <property name="text">
-                     <string>Autoreply (AUTO) off at startup</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="relay_disabled_check_box">
-                    <property name="text">
-                     <string>Disable message relay (&gt;) when AUTO is enabled</string>
                     </property>
                    </widget>
                   </item>
@@ -566,6 +552,39 @@ text message.</string>
                    <string>Di&amp;sable Tx after sending 73</string>
                   </property>
                  </widget>
+                </widget>
+               </item>
+               <item>
+                <widget class="QGroupBox" name="groupBox_9">
+                 <property name="title">
+                  <string>Autoreply</string>
+                 </property>
+                 <layout class="QFormLayout" name="formLayout">
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="autoreply_off_check_box">
+                    <property name="text">
+                     <string>Autoreply (AUTO) off at startup</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QCheckBox" name="relay_disabled_check_box">
+                    <property name="text">
+                     <string>Disable message relay (&gt;) when AUTO is enabled</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_23">
+                    <property name="text">
+                     <string>Only autoreply to these callsigns (comma separated):</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QLineEdit" name="auto_whitelist_line_edit"/>
+                  </item>
+                 </layout>
                 </widget>
                </item>
                <item>
@@ -1319,8 +1338,8 @@ a few, particularly some Kenwood rigs, require it).</string>
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-81</y>
-                <width>718</width>
+                <y>0</y>
+                <width>237</width>
                 <height>467</height>
                </rect>
               </property>
@@ -4098,12 +4117,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="TX_mode_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
  </buttongroups>
 </ui>
