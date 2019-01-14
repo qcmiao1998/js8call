@@ -7696,6 +7696,7 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
     }
     ui->extFreeTextMsgEdit->setPlaceholderText(placeholderText);
 
+#if JS8CALL_SHOW_CALL_DETAIL_BROWSER
     // heard detail
     QString hearing = m_heardGraphOutgoing.value(selectedCall).values().join(", ");
     QString heardby = m_heardGraphIncoming.value(selectedCall).values().join(", ");
@@ -7706,8 +7707,7 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
     );
     ui->callDetailTextBrowser->setHtml(html);
     ui->callDetailTextBrowser->setVisible(!selectedCall.isEmpty() && (!hearing.isEmpty() || !heardby.isEmpty()));
-    //ui->callDetailTextBrowser->setMinimumHeight((qreal)50.0 + min(ui->callDetailTextBrowser->document()->size().height(), ui->callsVerticalSplitter->height() * 0.33));
-
+#endif
 
     // immediately update the display);
     updateButtonDisplay();
