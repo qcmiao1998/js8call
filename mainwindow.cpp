@@ -6823,8 +6823,13 @@ void MainWindow::sendHeartbeat(){
 
     QStringList parts;
 
-    parts.append(QString("%1: HB").arg(mycall));
-    parts.append(generateStatusFlags());
+    parts.append(QString("%1:").arg(mycall));
+    
+    auto flags = generateStatusFlags();
+    if(flags.first() != "HB"){
+        parts.append("HB");
+    }
+    parts.append(flags);
     parts.append(mygrid);
 
     QString message = parts.join(" ").trimmed();
