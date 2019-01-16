@@ -6834,7 +6834,14 @@ void MainWindow::sendHeartbeat(){
 
     QString message = parts.join(" ").trimmed();
 
-    auto f = m_config.heartbeat_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
+    auto f = findFreeFreqOffset(500, 1000, 50);
+
+    if(currentFreqOffset() <= 1000){
+        f = currentFreqOffset();
+    }
+    else if(m_config.heartbeat_anywhere()){
+        f = -1;
+    }
 
     enqueueMessage(PriorityLow, message, f, [this](){ /* */ });
 }
