@@ -7709,14 +7709,7 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
     ui->extFreeTextMsgEdit->setPlaceholderText(placeholderText);
 
 #if JS8CALL_SHOW_CALL_DETAIL_BROWSER
-    // heard detail
-    QString hearing = m_heardGraphOutgoing.value(selectedCall).values().join(", ");
-    QString heardby = m_heardGraphIncoming.value(selectedCall).values().join(", ");
-    auto html = selectedCall.isEmpty() || selectedCall.contains("@") ? "" : (
-        QString("<h1>%1</h1>").arg(selectedCall.toHtmlEscaped()) +
-        QString("<p><strong>HEARING</strong>: %1</p>").arg(hearing.toHtmlEscaped()) +
-        QString("<p><strong>HEARD BY</strong>: %1</p>").arg(heardby.toHtmlEscaped())
-    );
+    auto html = generateCallDetail(selectedCall);
     ui->callDetailTextBrowser->setHtml(html);
     ui->callDetailTextBrowser->setVisible(!selectedCall.isEmpty() && (!hearing.isEmpty() || !heardby.isEmpty()));
 #endif
@@ -7724,6 +7717,23 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
     // immediately update the display);
     updateButtonDisplay();
     updateTextDisplay();
+}
+
+QString MainWindow::generateCallDetail(QString selectedCall){
+    if(selectedCall.isEmpty() || selectedCall.contains("@")){
+        return "";
+    }
+
+    // heard detail
+    QString hearing = m_heardGraphOutgoing.value(selectedCall).values().join(", ");
+    QString heardby = m_heardGraphIncoming.value(selectedCall).values().join(", ");
+    QStringList detail = {
+        QString("<h1>%1</h1>").arg(selectedCall.toHtmlEscaped()),
+        QString("<p><strong>HEARING</strong>: %1</p>").arg(hearing.toHtmlEscaped()),
+        QString("<p><strong>HEARD BY</strong>: %1</p>").arg(heardby.toHtmlEscaped()),
+    };
+
+    return detail.join("\n");
 }
 
 void MainWindow::on_tableWidgetCalls_cellClicked(int /*row*/, int /*col*/){
@@ -10564,6 +10574,7 @@ void MainWindow::displayCallActivity() {
 
             auto displayItem = new QTableWidgetItem(displayCall);
             displayItem->setData(Qt::UserRole, QVariant(d.call));
+            displayItem->setToolTip(generateCallDetail(displayCall));
 
             ui->tableWidgetCalls->setItem(row, col++, displayItem);
 

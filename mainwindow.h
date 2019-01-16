@@ -314,6 +314,7 @@ private slots:
   void on_tableWidgetRXAll_cellClicked(int row, int col);
   void on_tableWidgetRXAll_cellDoubleClicked(int row, int col);
   void on_tableWidgetRXAll_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+  QString generateCallDetail(QString selectedCall);
   void on_tableWidgetCalls_cellClicked(int row, int col);
   void on_tableWidgetCalls_cellDoubleClicked(int row, int col);
   void on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
