@@ -5597,6 +5597,12 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
         }
     }
 
+    auto tc = c.document()->find(text);
+    if(!tc.isNull()&& tc.blockNumber() == tc.document()->lastBlock().blockNumber()){
+        return tc.blockNumber();
+    }
+
+
     if(found && !bold){
         c.clearSelection();
         c.insertText(text);
@@ -5800,7 +5806,8 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
 
   // TODO: jsherer - parse outgoing message so we can add it to the inbox as an outgoing message
 
-  displayTextForFreq(lines.join("") + " \u2301 ", freq, DriftingDateTime::currentDateTimeUtc(), true, true, true);
+  auto joined = Varicode::rstrip(lines.join(""));
+  displayTextForFreq(QString("%1 \u2301 ").arg(joined), freq, DriftingDateTime::currentDateTimeUtc(), true, true, true);
 
   // if we're transmitting a message to be displayed, we should bump the repeat buttons...
   resetAutomaticIntervalTransmissions(false, false);
@@ -6826,7 +6833,7 @@ void MainWindow::sendHeartbeat(){
     parts.append(QString("%1:").arg(mycall));
     
     auto flags = generateStatusFlags();
-    if(flags.first() != "HB"){
+    if(flags.isEmpty() || flags.first() != "HB"){
         parts.append("HB");
     }
     parts.append(flags);
@@ -7697,7 +7704,7 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
         isLast = (d.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast;
         if(isLast){
             // can also use \u0004 \u2666 \u2404
-            activityText.append(" \u2301 ");
+            activityText = QString("%1 \u2301 ").arg(Varicode::rstrip(activityText));
         }
     }
     if(!activityText.isEmpty()){
@@ -9217,7 +9224,7 @@ void MainWindow::processRxActivity() {
         // if we're the last message, let's display our EOT character
         if (isLast) {
             // can also use \u0004 \u2666 \u2404
-            d.text = QString("%1 \u2301 ").arg(d.text);
+            d.text = QString("%1 \u2301 ").arg(Varicode::rstrip(d.text));
         }
 
         // log it to the display!
@@ -9553,7 +9560,7 @@ void MainWindow::processCommandActivity() {
         bool isLast = (ad.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast;
         if (isLast) {
             // can also use \u0004 \u2666 \u2404
-            ad.text += QString(" \u2301 ");
+            ad.text = QString("%1 \u2301 ").arg(Varicode::rstrip(ad.text));
         }
         ad.utcTimestamp = d.utcTimestamp;
 
@@ -10299,7 +10306,7 @@ void MainWindow::displayBandActivity() {
                     }
                     if ((item.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast) {
                         // can also use \u0004 \u2666 \u2404
-                        item.text = QString("%1 \u2301 ").arg(item.text);
+                        item.text = QString("%1 \u2301 ").arg(Varicode::rstrip(item.text));
                     }
                     text.append(item.text);
                     snr = item.snr;
