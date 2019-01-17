@@ -5597,11 +5597,11 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
         }
     }
 
+    // fixup duplicate acks
     auto tc = c.document()->find(text);
-    if(!tc.isNull()&& tc.blockNumber() == tc.document()->lastBlock().blockNumber()){
+    if(!tc.isNull() && text.contains(" ACK ")){
         return tc.blockNumber();
     }
-
 
     if(found && !bold){
         c.clearSelection();
