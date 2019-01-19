@@ -9464,10 +9464,23 @@ QString MainWindow::generateStatus() {
 
 QStringList MainWindow::generateStatusFlags() {
     QStringList flags;
-    if(ui->hbMacroButton->isChecked() && m_hbInterval > 0) flags.append("HB");
-    if(ui->autoReplyButton->isChecked()) flags.append("AUTO");
-    if(!m_config.relay_off()) flags.append("RELAY");
-    if(ui->spotButton->isChecked()) flags.append("SPOT");
+
+    if(ui->hbMacroButton->isChecked() && m_hbInterval > 0){
+        flags.append("HB");
+    }
+
+    if(ui->autoReplyButton->isChecked()){
+        flags.append("AUTO");
+    }
+
+    if(ui->autoReplyButton->isChecked() && !m_config.relay_off()){
+        flags.append("RELAY");
+    }
+
+    if(ui->spotButton->isChecked()){
+        flags.append("SPOT");
+    }
+
     return flags;
 }
 
