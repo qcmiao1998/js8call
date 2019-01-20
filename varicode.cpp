@@ -123,7 +123,7 @@ QRegularExpression directed_re("^"                    +
                                optional_cmd_pattern   +
                                optional_num_pattern);
 
-QRegularExpression heartbeat_re(R"(^\s*(?<type>CQCQCQ|CQ QRPP?|CQ DX|CQ TEST|CQ( CQ){0,2}|HB( AUTO)?( RELAY)?( SPOT)?)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
+QRegularExpression heartbeat_re(R"(^\s*(?<type>CQCQCQ|CQ QRP|CQ FIELD|CQ DX|CQ CONTEST|CQ( CQ){0,2}|HB( AUTO)?( RELAY)?( SPOT)?)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
 QRegularExpression compound_re("^\\s*[`]"              +
                                callsign_pattern        +
@@ -198,8 +198,8 @@ QMap<quint32, QString> cqs = {
     { 0, "CQCQCQ" },
     { 1, "CQ DX"  },
     { 2, "CQ QRP" },
-    { 3, "CQ TEST" },
-    { 4, "CQ QRPP" },
+    { 3, "CQ CONTEST" },
+    { 4, "CQ FIELD" },
     { 5, "CQ"},
     { 6, "CQ CQ"},
     { 7, "CQ CQ CQ"},
