@@ -5694,10 +5694,6 @@ void MainWindow::enqueueMessage(int priority, QString message, int freq, Callbac
     );
 }
 
-void MainWindow::enqueueHeartbeat(QString message){
-    m_txHeartbeatQueue.enqueue(message);
-}
-
 void MainWindow::resetMessage(){
     resetMessageUI();
     resetMessageTransmitQueue();
@@ -11445,6 +11441,9 @@ void MainWindow::tx_watchdog (bool triggered)
       ui->cqMacroButton->setChecked(false);
 
       MessageBox::warning_message(this, QString("You have been inactive for more than %1 minutes.").arg(m_config.watchdog()));
+
+      // clear the tx queues
+      resetMessageTransmitQueue();
 
       // restore the button states
       ui->autoReplyButton->setChecked(wasAuto);

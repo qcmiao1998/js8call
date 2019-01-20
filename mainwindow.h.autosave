@@ -817,7 +817,6 @@ private:
   QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
   QMap<int, MessageBuffer> m_messageBuffer; // freq -> (cmd, [frames, ...])
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
-  QQueue<QString> m_txHeartbeatQueue; // ping frames to be sent
   QMap<QString, QDateTime> m_aprsCallCache;
 
   QMap<QString, QSet<QString>> m_heardGraphOutgoing; // callsign -> [stations who've this callsign has heard]
