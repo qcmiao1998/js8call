@@ -5605,7 +5605,8 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
 
     // fixup duplicate acks
     auto tc = c.document()->find(text);
-    if(!tc.isNull() && text.contains(" ACK ")){
+    if(!tc.isNull() && tc.selectedText() == text && text.contains(" ACK ")){
+        qDebug() << "found" << tc.selectedText() << "so not displaying...";
         return tc.blockNumber();
     }
 
