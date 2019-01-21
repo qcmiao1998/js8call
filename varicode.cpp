@@ -98,12 +98,19 @@ QMap<QString, int> directed_cmds = {
     {" ",        31  }, // send freetext
 };
 
+// commands allowed to be processed
 QSet<int> allowed_cmds = {-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, /*10,*/ /*11,*/ 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, /*24,*/ 25, 26, 27, 28, 29, 30, 31};
 
+// commands that result in an autoreply
+QSet<int> autoreply_cmds = {0, 1, 2, 3, 4, 6, 12, 13, 30};
+
+// commands that should be buffered
 QSet<int> buffered_cmds = {3, 5, /*6,*/ /*7,*/ 12, 13, 14, 15};
 
+// commands that may include an SNR value
 QSet<int> snr_cmds = {25, 29};
 
+// commands that are checksummed and their crc size
 QMap<int, int> checksum_cmds = {
     {  5, 16 },
     { 12, 16 },
@@ -1065,6 +1072,10 @@ int Varicode::isCommandChecksumed(const QString &cmd){
     }
 
     return checksum_cmds[directed_cmds[cmd]];
+}
+
+bool Varicode::isCommandAutoreply(const QString &cmd){
+    return directed_cmds.contains(cmd) && (autoreply_cmds.contains(directed_cmds[cmd]));
 }
 
 bool isValidCompoundCallsign(QStringRef callsign){

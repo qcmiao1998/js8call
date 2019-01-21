@@ -137,6 +137,7 @@ public:
     static bool isCommandAllowed(const QString &cmd);
     static bool isCommandBuffered(const QString &cmd);
     static int isCommandChecksumed(const QString &cmd);
+    static bool isCommandAutoreply(const QString &cmd);
     static bool isValidCallsign(const QString &callsign, bool *pIsCompound);
     static bool isCompoundCallsign(const QString &callsign);
 

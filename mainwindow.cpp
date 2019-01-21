@@ -4258,7 +4258,13 @@ bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffs
 }
 
 void MainWindow::logCallActivity(CallDetail d, bool spot){
+    // don't log empty calls
     if(d.call.trimmed().isEmpty()){
+        return;
+    }
+
+    // don't log relay calls
+    if(d.call.contains(">")){
         return;
     }
 
@@ -9769,6 +9775,33 @@ void MainWindow::processCommandActivity() {
 
                 reply = QString("%1 ACK").arg(d.relayPath);
 
+                // check to see if the relay text contains a command that should be replied to instead of an ack.
+                auto relayedCmds = d.text.split(" ");
+                if(!relayedCmds.isEmpty()){
+                    auto first = relayedCmds.first();
+
+                    auto valid = Varicode::isCommandAllowed(first);
+                    if(!valid){
+                        first = " " + first;
+                        valid = Varicode::isCommandAllowed(first);
+                    }
+
+                    if(valid && Varicode::isCommandAutoreply(first)){
+                        CommandDetail rd = {};
+                        rd.bits = d.bits;
+                        rd.cmd = first;
+                        rd.freq = d.freq;
+                        rd.from = d.relayPath;
+                        rd.text = d.text;
+                        rd.to = d.to;
+                        rd.utcTimestamp = d.utcTimestamp;
+
+                        m_rxCommandQueue.insert(0, rd);
+                        continue;
+                    }
+                }
+
+                // if we make it here, this is a message
                 addCommandToInbox(d);
 
                 QTimer::singleShot(500, this, [this, d](){
