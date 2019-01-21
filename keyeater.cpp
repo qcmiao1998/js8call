@@ -27,3 +27,18 @@ bool EnterKeyPressEater::eventFilter(QObject *obj, QEvent *event){
     // standard event processing
     return QObject::eventFilter(obj, event);
 }
+
+bool MousePressEater::eventFilter(QObject *obj, QEvent *event){
+    if (event->type() == QEvent::MouseButtonPress) {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+        bool processed = false;
+        emit this->mousePressed(obj, mouseEvent, &processed);
+        if(processed){
+            return true;
+        }
+    }
+
+    // standard event processing
+    return QObject::eventFilter(obj, event);
+}
+

@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QKeyEvent>
+#include <QMouseEvent>
 
 class EscapeKeyPressEater : public QObject
 {
@@ -28,6 +29,23 @@ protected:
 public:
     Q_SIGNAL void enterKeyPressed(QObject *obj, QKeyEvent *evt, bool *pProcessed);
 };
+
+class MousePressEater : public QObject
+{
+    Q_OBJECT
+public:
+    MousePressEater(){}
+    virtual ~MousePressEater(){}
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event);
+
+public:
+    Q_SIGNAL void mousePressed(QObject *obj, QMouseEvent *evt, bool *pProcessed);
+};
+
+
+
 
 
 #endif // KEYEATER_H

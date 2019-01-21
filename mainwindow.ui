@@ -195,6 +195,40 @@
                </spacer>
               </item>
               <item>
+               <widget class="QLCDNumber" name="currentFreq">
+                <property name="minimumSize">
+                 <size>
+                  <width>200</width>
+                  <height>40</height>
+                 </size>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::NoFrame</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Plain</enum>
+                </property>
+                <property name="lineWidth">
+                 <number>0</number>
+                </property>
+                <property name="smallDecimalPoint">
+                 <bool>false</bool>
+                </property>
+                <property name="digitCount">
+                 <number>10</number>
+                </property>
+                <property name="segmentStyle">
+                 <enum>QLCDNumber::Flat</enum>
+                </property>
+                <property name="value" stdset="0">
+                 <double>1234567890.000000000000000</double>
+                </property>
+                <property name="intValue" stdset="0">
+                 <number>1234567890</number>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QComboBox" name="bandComboBox">
                 <property name="minimumSize">
                  <size>
@@ -203,7 +237,7 @@
                  </size>
                 </property>
                 <property name="visible">
-                 <bool>true</bool>
+                 <bool>false</bool>
                 </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select operating band or enter frequency in MHz or enter kHz increment followed by k.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -224,6 +258,9 @@
               </item>
               <item>
                <widget class="QPushButton" name="labDialFreq">
+                <property name="visible">
+                 <bool>false</bool>
+                </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
  font-family: MS Shell Dlg 2;
@@ -252,6 +289,9 @@ QPushButton[oob=&quot;true&quot;] {
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="visible">
+                 <bool>true</bool>
                 </property>
                 <property name="toolTip">
                  <string>Current frequency offset</string>
@@ -1118,7 +1158,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
         </property>
         <widget class="QTextBrowser" name="callDetailTextBrowser">
          <property name="visible">
-           <bool>false</bool>
+          <bool>false</bool>
          </property>
          <property name="frameShape">
           <enum>QFrame::Box</enum>
@@ -4705,6 +4745,8 @@ list. The list can be maintained in Settings (F2).</string>
     <property name="title">
      <string>C&amp;ontrol</string>
     </property>
+    <addaction name="actionSetFrequency"/>
+    <addaction name="separator"/>
     <addaction name="actionEnable_Spotting"/>
     <addaction name="actionEnable_Auto_Reply"/>
     <addaction name="separator"/>
@@ -5587,6 +5629,11 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Show Statusbar</string>
+   </property>
+  </action>
+  <action name="actionSetFrequency">
+   <property name="text">
+    <string>Set Frequency...</string>
    </property>
   </action>
  </widget>

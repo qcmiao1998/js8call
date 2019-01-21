@@ -791,6 +791,18 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     });
 
   // Hook up working frequencies.
+  ui->currentFreq->setCursor(QCursor(Qt::PointingHandCursor));
+  ui->currentFreq->display("14.078 000");
+  auto mp = new MousePressEater();
+  connect(mp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent * e, bool *pProcessed){
+      QMenu * menu = new QMenu(ui->currentFreq);
+      buildFrequencyMenu(menu);
+      menu->popup(e->globalPos());
+      if(pProcessed) *pProcessed = true;
+  });
+  ui->currentFreq->installEventFilter(mp);
+
+  ui->bandComboBox->setVisible(false);
   ui->bandComboBox->setModel (m_config.frequencies ());
   ui->bandComboBox->setModelColumn (FrequencyList_v2::frequency_mhz_column);
 
@@ -2409,6 +2421,13 @@ void rebuildMacQAction(QMenu *menu, QAction *existingAction){
 }
 
 void MainWindow::on_menuControl_aboutToShow(){
+    QMenu * freqMenu = new QMenu(this->menuBar());
+    buildFrequencyMenu(freqMenu);
+    ui->actionSetFrequency->setMenu(freqMenu);
+#if __APPLE__
+    rebuildMacQAction(ui->menuControl, ui->actionSetFrequency);
+#endif
+
     ui->actionEnable_Spotting->setChecked(ui->spotButton->isChecked());
     ui->actionEnable_Auto_Reply->setChecked(ui->autoReplyButton->isChecked());
 
@@ -2923,6 +2942,10 @@ void MainWindow::displayDialFrequency (){
 
     update_dynamic_property (ui->labDialFreq, "oob", !valid);
     ui->labDialFreq->setText (Radio::pretty_frequency_MHz_string (dial_frequency));
+
+    auto sFreq = Radio::pretty_frequency_MHz_string (dial_frequency);
+    ui->currentFreq->setDigitCount(sFreq.length());
+    ui->currentFreq->display(sFreq);
 
     if(m_splitMode && m_transmitting){
         audio_frequency -= m_XIT;
@@ -6772,6 +6795,35 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
         ui->textEditRX->clear();
         m_rxFrameBlockNumbers.clear();
         m_rxActivityQueue.clear();
+    }
+}
+
+void MainWindow::buildFrequencyMenu(QMenu *menu){
+    auto custom = menu->addAction("Set a Custom Frequency...");
+
+    connect(custom, &QAction::triggered, this, [this](){
+        bool ok = false;
+        auto currentFreq = Radio::frequency_MHz_string(dialFrequency());
+        QString newFreq = QInputDialog::getText(this, tr("Set a Custom Frequency..."),
+                                                 tr("Frequency in MHz:"), QLineEdit::Normal,
+                                                 currentFreq, &ok).toUpper().trimmed();
+        if(!ok){
+           return;
+        }
+
+        setRig(Radio::frequency(newFreq, 6));
+    });
+
+    menu->addSeparator();
+
+    foreach(auto f, m_config.frequencies()->frequency_list()){
+        auto freq = Radio::pretty_frequency_MHz_string(f.frequency_);
+        auto const& band = m_config.bands ()->find (f.frequency_);
+
+        auto a = menu->addAction(QString("(%1)%2%2%3 MHz").arg(band).arg(QString(" ").repeated(6-band.length())).arg(freq));
+        connect(a, &QAction::triggered, this, [this, f](){
+            setRig(f.frequency_);
+        });
     }
 }
 
