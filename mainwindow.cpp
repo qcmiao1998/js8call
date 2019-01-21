@@ -9551,13 +9551,6 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-        // we're only responding to callsigns in our whitelist if we have one defined...
-        // make sure the whitelist is empty (no restrictions) or the from callsign or its base callsign is on it
-        auto whitelist = m_config.auto_whitelist();
-        if(!whitelist.isEmpty() && !(whitelist.contains(d.from) || whitelist.contains(Radio::base_callsign(d.from)))){
-            continue;
-        }
-
         // display the command activity
         ActivityDetail ad = {};
         ad.isLowConfidence = false;
@@ -9633,6 +9626,14 @@ void MainWindow::processCommandActivity() {
                 // and we should play the sound notification if there is one...
                 playSoundNotification(m_config.sound_dm_path());
             }
+        }
+
+
+        // we're only responding to callsigns in our whitelist if we have one defined...
+        // make sure the whitelist is empty (no restrictions) or the from callsign or its base callsign is on it
+        auto whitelist = m_config.auto_whitelist();
+        if(!whitelist.isEmpty() && !(whitelist.contains(d.from) || whitelist.contains(Radio::base_callsign(d.from)))){
+            continue;
         }
 
         // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past ten minutes)
