@@ -793,14 +793,33 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // Hook up working frequencies.
   ui->currentFreq->setCursor(QCursor(Qt::PointingHandCursor));
   ui->currentFreq->display("14.078 000");
-  auto mp = new MousePressEater();
-  connect(mp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent * e, bool *pProcessed){
+  auto cfmp = new MousePressEater();
+  connect(cfmp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent * e, bool *pProcessed){
       QMenu * menu = new QMenu(ui->currentFreq);
       buildFrequencyMenu(menu);
       menu->popup(e->globalPos());
       if(pProcessed) *pProcessed = true;
   });
-  ui->currentFreq->installEventFilter(mp);
+  ui->currentFreq->installEventFilter(cfmp);
+
+  ui->labDialFreqOffset->setCursor(QCursor(Qt::PointingHandCursor));
+  auto ldmp = new MousePressEater();
+  connect(ldmp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent *, bool *pProcessed){
+      bool ok = false;
+      auto currentFreq = currentFreqOffset();
+      QString newFreq = QInputDialog::getText(this, tr("Set Frequency Offset..."),
+                                               tr("Offset in Hz:"), QLineEdit::Normal,
+                                               QString("%1").arg(currentFreq), &ok).toUpper().trimmed();
+      int offset = newFreq.toInt(&ok);
+      if(!ok){
+         return;
+      }
+
+      setFreqOffsetForRestore(offset, false);
+
+      if(pProcessed) *pProcessed = true;
+  });
+  ui->labDialFreqOffset->installEventFilter(ldmp);
 
   ui->bandComboBox->setVisible(false);
   ui->bandComboBox->setModel (m_config.frequencies ());
@@ -6820,7 +6839,7 @@ void MainWindow::buildFrequencyMenu(QMenu *menu){
         auto freq = Radio::pretty_frequency_MHz_string(f.frequency_);
         auto const& band = m_config.bands ()->find (f.frequency_);
 
-        auto a = menu->addAction(QString("(%1)%2%2%3 MHz").arg(band).arg(QString(" ").repeated(6-band.length())).arg(freq));
+        auto a = menu->addAction(QString("%1:%2%2%3 MHz").arg(band).arg(QString(" ").repeated(5-band.length())).arg(freq));
         connect(a, &QAction::triggered, this, [this, f](){
             setRig(f.frequency_);
         });
