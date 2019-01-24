@@ -805,17 +805,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->labDialFreqOffset->setCursor(QCursor(Qt::PointingHandCursor));
   auto ldmp = new MousePressEater();
   connect(ldmp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent *, bool *pProcessed){
-      bool ok = false;
-      auto currentFreq = currentFreqOffset();
-      QString newFreq = QInputDialog::getText(this, tr("Set Frequency Offset..."),
-                                               tr("Offset in Hz:"), QLineEdit::Normal,
-                                               QString("%1").arg(currentFreq), &ok).toUpper().trimmed();
-      int offset = newFreq.toInt(&ok);
-      if(!ok){
-         return;
-      }
-
-      setFreqOffsetForRestore(offset, false);
+      on_actionSetOffset_triggered();
 
       if(pProcessed) *pProcessed = true;
   });
@@ -2524,6 +2514,20 @@ void MainWindow::on_menuWindow_aboutToShow(){
 
     ui->actionShow_Band_Heartbeats_and_ACKs->setChecked(!m_hbHidden);
     ui->actionShow_Band_Heartbeats_and_ACKs->setEnabled(ui->actionShow_Band_Activity->isChecked());
+}
+
+void MainWindow::on_actionSetOffset_triggered(){
+    bool ok = false;
+    auto currentFreq = currentFreqOffset();
+    QString newFreq = QInputDialog::getText(this, tr("Set Frequency Offset..."),
+                                             tr("Offset in Hz:"), QLineEdit::Normal,
+                                             QString("%1").arg(currentFreq), &ok).toUpper().trimmed();
+    int offset = newFreq.toInt(&ok);
+    if(!ok){
+       return;
+    }
+
+    setFreqOffsetForRestore(offset, false);
 }
 
 void MainWindow::on_actionShow_Fullscreen_triggered(bool checked){
@@ -9875,12 +9879,45 @@ void MainWindow::processCommandActivity() {
                 }
 
                 // if we make it here, this is a message
-                addCommandToInbox(d);
+                addCommandToMyInbox(d);
 
                 QTimer::singleShot(500, this, [this, d](){
                     MessageBox::information_message(this, QString("A new message was received at %1 UTC from %2").arg(d.utcTimestamp.time().toString()).arg(d.from));
                 });
             }
+        }
+
+        // PROCESS MESSAGE STORAGE
+        else if (d.cmd == " MSG TO:" && !isAllCall && !isGroupCall && !m_config.relay_off()){
+
+            // store message
+            QStringList segs = d.text.split(" ");
+            if(segs.isEmpty()){
+                continue;
+            }
+
+            auto to = segs.first();
+            auto text = d.text.mid(to.length()).trimmed();
+
+            CommandDetail cd = {};
+            cd.bits = d.bits;
+            cd.cmd = d.cmd;
+            cd.extra = d.extra;
+            cd.freq = d.freq;
+            cd.from = d.from;
+            cd.grid = d.grid;
+            cd.relayPath = d.relayPath;
+            cd.snr = d.snr;
+            cd.tdrift = d.tdrift;
+            cd.text = text;
+            cd.to = to;
+            cd.utcTimestamp = d.utcTimestamp;
+
+            qDebug() << "storing message to" << to << ":" << text;
+
+            addCommandToInboxStorage("STORE", cd);
+
+            reply = QString("%1 ACK").arg(d.from);
         }
 
         // PROCESS AGN
@@ -9908,6 +9945,44 @@ void MainWindow::processCommandActivity() {
 
             // NOOP
             continue;
+        }
+
+        // PROCESS BUFFERED QUERY MSGS
+        else if (d.cmd == " QUERY MSGS" && ui->autoReplyButton->isChecked()){
+            auto who = d.from;
+#if 0
+            QString key;
+            if(d.text.isEmpty()){
+                key = who;
+            } else {
+                QStringList segs = d.text.trimmed().split(" ");
+                if(segs.isEmpty()){
+                    continue;
+                }
+                key = segs.first();
+            }
+#endif
+
+            auto inbox = Inbox(inboxPath());
+            if(!inbox.open()){
+                continue;
+            }
+
+            auto v = inbox.values("STORE", "$.params.TO", who, 0, 10);
+            foreach(auto pair, v){
+                auto params = pair.second.params();
+                auto text = params.value("TEXT").toString().trimmed();
+                auto from = params.value("FROM").toString();
+                if(!text.isEmpty()){
+                    // mark as delivered
+                    pair.second.setType("DELIVERED");
+                    inbox.set(pair.first, pair.second);
+
+                    // and then reply with the text
+                    reply = QString("%1>%2 DE %3").arg(who).arg(text).arg(from);
+                    break;
+                }
+            }
         }
 
         // PROCESS BUFFERED QUERY CALL
@@ -10091,10 +10166,15 @@ void MainWindow::refreshInboxCounts(){
     }
 }
 
-void MainWindow::addCommandToInbox(CommandDetail d){
-    // legacy
+void MainWindow::addCommandToMyInbox(CommandDetail d){
+    // local cache for inbox count
     m_rxInboxCountCache[d.from] = m_rxInboxCountCache.value(d.from, 0) + 1;
 
+    // add it to my unread inbox
+    addCommandToInboxStorage("UNREAD", d);
+}
+
+void MainWindow::addCommandToInboxStorage(QString type, CommandDetail d){
     // inbox:
     auto inbox = Inbox(inboxPath());
     if(inbox.open()){
@@ -10124,7 +10204,7 @@ void MainWindow::addCommandToInbox(CommandDetail d){
             v["TEXT"] = QVariant(d.text);
         }
 
-        auto m = Message("UNREAD", "", v);
+        auto m = Message(type, "", v);
         inbox.append(m);
     }
 }

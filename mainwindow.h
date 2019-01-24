@@ -178,6 +178,7 @@ private slots:
   void on_actionEnable_Spotting_toggled(bool checked);
   void on_actionEnable_Auto_Reply_toggled(bool checked);
   void on_menuWindow_aboutToShow();
+  void on_actionSetOffset_triggered();
   void on_actionShow_Fullscreen_triggered(bool checked);
   void on_actionShow_Statusbar_triggered(bool checked);
   void on_actionShow_Frequency_Clock_triggered(bool checked);
@@ -951,7 +952,8 @@ private:
   void processCommandActivity();
   QString inboxPath();
   void refreshInboxCounts();
-  void addCommandToInbox(CommandDetail d);
+  void addCommandToMyInbox(CommandDetail d);
+  void addCommandToInboxStorage(QString type, CommandDetail d);
   void processAlertReplyForCommand(CommandDetail d, QString from, QString cmd);
   void processSpots();
   void processTxQueue();

@@ -4746,12 +4746,14 @@ list. The list can be maintained in Settings (F2).</string>
      <string>C&amp;ontrol</string>
     </property>
     <addaction name="actionSetFrequency"/>
+    <addaction name="actionSetOffset"/>
     <addaction name="separator"/>
     <addaction name="actionEnable_Spotting"/>
     <addaction name="actionEnable_Auto_Reply"/>
     <addaction name="separator"/>
     <addaction name="actionHeartbeat"/>
     <addaction name="actionCQ"/>
+    <addaction name="separator"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
@@ -5634,6 +5636,11 @@ list. The list can be maintained in Settings (F2).</string>
   <action name="actionSetFrequency">
    <property name="text">
     <string>Set Frequency...</string>
+   </property>
+  </action>
+  <action name="actionSetOffset">
+   <property name="text">
+    <string>Set Offset...</string>
    </property>
   </action>
  </widget>
