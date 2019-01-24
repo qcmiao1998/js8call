@@ -301,13 +301,11 @@ QPushButton[oob=&quot;true&quot;] {
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QLabel {
-  font-family: MS Shell Dlg 2;
-  font-size: 12pt;
-  font-style: italic;
-  color : white;
-  background-color : black;
-}
-</string>
+font-family: MS Shell Dlg 2;
+font-size: 14pt;
+line-height:12pt;
+color : white;
+}</string>
                 </property>
                 <property name="text">
                  <string>1500 Hz</string>
@@ -398,8 +396,12 @@ QPushButton[oob=&quot;true&quot;] {
               <item>
                <widget class="QLabel" name="labCallsign">
                 <property name="styleSheet">
-                 <string notr="true">QLabel { color:white; }
-</string>
+                 <string notr="true">QLabel {
+font-family: MS Shell Dlg 2;
+font-size: 14pt;
+line-height:12pt;
+color : white;
+}</string>
                 </property>
                 <property name="text">
                  <string>Callsign</string>
