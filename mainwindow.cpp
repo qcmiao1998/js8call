@@ -7390,6 +7390,18 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1>[MESSAGE]").arg(selectedCall), true, true);
     });
 
+    auto msgToAction = menu->addAction(QString("%1 MSG TO:[CALLSIGN] [MESSAGE] - Please store this message at your station for later retreival by [CALLSIGN]").arg(call).trimmed());
+    msgToAction->setDisabled(isAllCall);
+    connect(msgToAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 MSG TO:[CALLSIGN] [MESSAGE]").arg(selectedCall), true, true);
+    });
+
     auto qsoQueryAction = menu->addAction(QString("%1 QUERY CALL [CALLSIGN]? - Please acknowledge you can communicate directly with [CALLSIGN]").arg(call).trimmed());
     connect(qsoQueryAction, &QAction::triggered, this, [this](){
 
