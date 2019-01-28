@@ -1932,8 +1932,17 @@ void Configuration::impl::set_rig_invariants ()
   // only enable CAT option if transceiver has CAT PTT
   ui_->PTT_CAT_radio_button->setEnabled (CAT_PTT_enabled);
 
+  // if CAT PTT is not enabled, select VOX instead
+  if(!CAT_PTT_enabled){
+      ui_->PTT_VOX_radio_button->setChecked(true);
+  }
+
   auto enable_ptt_port = TransceiverFactory::PTT_method_CAT != ptt_method && TransceiverFactory::PTT_method_VOX != ptt_method;
   ui_->PTT_port_combo_box->setEnabled (enable_ptt_port);
+  // if PTT port is not enabled, fill it with the text of the CAT port
+  if(!enable_ptt_port){
+    ui_->PTT_port_combo_box->lineEdit()->setText(ui_->CAT_port_combo_box->currentText());
+  }
   ui_->PTT_port_label->setEnabled (enable_ptt_port);
 
   if (CAT_indirect_serial_PTT)
@@ -2182,6 +2191,12 @@ TransceiverFactory::ParameterPack Configuration::impl::gather_rig_data ()
   result.rts_high = ui_->force_RTS_combo_box->isEnabled () && 1 == ui_->force_RTS_combo_box->currentIndex ();
   result.poll_interval = ui_->CAT_poll_interval_spin_box->value ();
   result.ptt_type = static_cast<TransceiverFactory::PTTMethod> (ui_->PTT_method_button_group->checkedId ());
+
+  // don't allow CAT for None rig
+  if(result.rig_name == "None" && result.ptt_type == TransceiverFactory::PTT_method_CAT){
+      result.ptt_type = TransceiverFactory::PTT_method_VOX;
+  }
+
   result.ptt_port = ui_->PTT_port_combo_box->currentText ();
   result.audio_source = static_cast<TransceiverFactory::TXAudioSource> (ui_->TX_audio_source_button_group->checkedId ());
   result.split_mode = static_cast<TransceiverFactory::SplitMode> (ui_->split_mode_button_group->checkedId ());
