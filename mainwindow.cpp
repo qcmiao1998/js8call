@@ -5802,15 +5802,15 @@ bool MainWindow::ensureNotIdle(){
     return false;
 }
 
-void MainWindow::createMessage(QString const& text){
+bool MainWindow::ensureCreateMessageReady(const QString &text){
     if(!ensureCallsignSet()){
         on_stopTxButton_clicked();
-        return;
+        return false;
     }
 
     if(!ensureNotIdle()){
         on_stopTxButton_clicked();
-        return;
+        return false;
     }
 
     if(!ensureKeyNotStuck(text)){
@@ -5826,19 +5826,26 @@ void MainWindow::createMessage(QString const& text){
             }
         }
 
-        return;
+        return false;
     }
 
     if(text.contains("APRS:") && !m_aprsClient->isPasscodeValid()){
         MessageBox::warning_message(this, tr ("Please ensure a valid APRS passcode is set in the settings when sending an APRS packet."));
-        return;
+        return false;
     }
 
-    resetMessageTransmitQueue();
-    createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false));
+    return true;
 }
 
-void MainWindow::createMessageTransmitQueue(QString const& text){
+QString MainWindow::createMessage(QString const& text){
+    return createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false), true);
+}
+
+QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
+  if(reset){
+      resetMessageTransmitQueue();
+  }
+
   auto frames = buildMessageFrames(text);
 
   m_txFrameQueue.append(frames);
@@ -5863,6 +5870,8 @@ void MainWindow::createMessageTransmitQueue(QString const& text){
 
   // keep track of the last message text sent
   m_lastTxMessage = text;
+
+  return joined;
 }
 
 void MainWindow::restoreMessage(){
@@ -6188,8 +6197,16 @@ QString MainWindow::calculateDistance(QString const& value, int *pDistance, int 
 void MainWindow::on_startTxButton_toggled(bool checked)
 {
     if(checked){
-        createMessage(ui->extFreeTextMsgEdit->toPlainText());
-        startTx();
+        auto text = ui->extFreeTextMsgEdit->toPlainText();
+        if(ensureCreateMessageReady(text)){
+
+            auto txText = createMessage(text);
+            if(txText != text){
+                ui->extFreeTextMsgEdit->setPlainText(txText);
+            }
+
+            startTx();
+        }
     } else {
         resetMessage();
         stopTx();

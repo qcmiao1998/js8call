@@ -156,8 +156,9 @@ public slots:
   bool ensureCallsignSet(bool alert=true);
   bool ensureKeyNotStuck(QString const& text);
   bool ensureNotIdle();
-  void createMessage(QString const& text);
-  void createMessageTransmitQueue(QString const& text);
+  bool ensureCreateMessageReady(const QString &text);
+  QString createMessage(QString const& text);
+  QString createMessageTransmitQueue(QString const& text, bool reset);
   void resetMessageTransmitQueue();
   QPair<QString, int> popMessageFrame();
 protected:
