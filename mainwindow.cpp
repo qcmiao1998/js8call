@@ -6928,7 +6928,8 @@ void MainWindow::sendHeartbeat(){
         f = -1;
     }
 
-    enqueueMessage(PriorityLow, message, f, [this](){ /* */ });
+    enqueueMessage(PriorityLow + 1, message, f, [this](){ /* */ });
+    processTxQueue();
 }
 
 void MainWindow::sendHeartbeatAck(QString to, int snr){
@@ -6936,7 +6937,8 @@ void MainWindow::sendHeartbeatAck(QString to, int snr){
 
     auto f = m_config.heartbeat_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
 
-    enqueueMessage(PriorityLow, message, f, [this](){ /* */ });
+    enqueueMessage(PriorityLow + 1, message, f, [this](){ /* */ });
+    processTxQueue();
 }
 
 void MainWindow::on_hbMacroButton_toggled(bool checked){
