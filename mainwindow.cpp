@@ -10551,7 +10551,7 @@ void MainWindow::displayBandActivity() {
                     tdrift = item.tdrift;
                 }
 
-                auto joined = text.join("");
+                auto joined = Varicode::rstrip(text.join(""));
                 if (joined.isEmpty()) {
                     continue;
                 }
@@ -10579,7 +10579,10 @@ void MainWindow::displayBandActivity() {
                 // align right if eliding...
                 int colWidth = ui->tableWidgetRXAll->columnWidth(3);
                 auto textItem = new QTableWidgetItem(joined);
-                textItem->setToolTip(joined);
+                auto html = QString("<qt/>%1").arg(joined.toHtmlEscaped());
+                html = html.replace("\u2301", "\u2301<br/><br/>");
+                html = html.replace(QRegularExpression("([<]br[/][>])+$"), "");
+                textItem->setToolTip(html);
 
                 QFontMetrics fm(textItem->font());
                 auto elidedText = fm.elidedText(joined, Qt::ElideLeft, colWidth);
