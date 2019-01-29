@@ -11671,6 +11671,9 @@ void MainWindow::tx_watchdog (bool triggered)
       ui->hbMacroButton->setChecked(false);
       ui->cqMacroButton->setChecked(false);
 
+      // clear the tx queues
+      resetMessageTransmitQueue();
+
       MessageBox::warning_message(this, QString("You have been inactive for more than %1 minutes.").arg(m_config.watchdog()));
 
       // clear the tx queues
