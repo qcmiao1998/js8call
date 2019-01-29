@@ -9657,6 +9657,31 @@ void MainWindow::processCommandActivity() {
         logCallActivity(cd, true);
         logHeardGraph(d.from, d.to);
 
+        // PROCESS BUFFERED GRID FOR EVERYONE
+        if (d.cmd == " GRID"){
+           // 1. parse grids
+           // 2. log it to reporting networks
+           auto grids = Varicode::parseGrids(d.text);
+           foreach(auto grid, grids){
+               CallDetail cd = {};
+               cd.bits = d.bits;
+               cd.call = d.from;
+               cd.freq = d.freq;
+               cd.grid = grid;
+               cd.snr = d.snr;
+               cd.utcTimestamp = d.utcTimestamp;
+               cd.tdrift = d.tdrift;
+
+               m_aprsCallCache.remove(cd.call);
+               m_aprsCallCache.remove(APRSISClient::replaceCallsignSuffixWithSSID(cd.call, Radio::base_callsign(cd.call)));
+
+               logCallActivity(cd, true);
+           }
+
+           // make sure this is explicit
+           continue;
+        }
+
         // we're only responding to allcall, groupcalls, and our callsign at this point, so we'll end after logging the callsigns we've heard
         if (!isAllCall && !toMe && !isGroupCall) {
             continue;
@@ -10082,31 +10107,6 @@ void MainWindow::processCommandActivity() {
                 logHeardGraph(d.from, call);
             }
             continue;
-        }
-
-        // PROCESS BUFFERED GRID
-        else if (d.cmd == " GRID"){
-           // 1. parse grids
-           // 2. log it to reporting networks
-           auto grids = Varicode::parseGrids(d.text);
-           foreach(auto grid, grids){
-               CallDetail cd = {};
-               cd.bits = d.bits;
-               cd.call = d.from;
-               cd.freq = d.freq;
-               cd.grid = grid;
-               cd.snr = d.snr;
-               cd.utcTimestamp = d.utcTimestamp;
-               cd.tdrift = d.tdrift;
-
-               m_aprsCallCache.remove(cd.call);
-               m_aprsCallCache.remove(APRSISClient::replaceCallsignSuffixWithSSID(cd.call, Radio::base_callsign(cd.call)));
-
-               logCallActivity(cd, true);
-           }
-
-           // make sure this is explicit
-           continue;
         }
 
 #if 0
