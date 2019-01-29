@@ -545,26 +545,6 @@ set (wsjt_qt_UISRCS
   wf_palette_design_dialog.ui
   )
 
-set (wsprsim_CSRCS
-  lib/wsprd/wsprsim.c
-  lib/wsprd/wsprsim_utils.c
-  lib/wsprd/wsprd_utils.c
-  lib/wsprd/fano.c
-  lib/wsprd/tab.c
-  lib/wsprd/nhash.c
-  )
-
-set (wsprd_CSRCS
-  lib/wsprd/wsprd.c
-  lib/wsprd/wsprsim_utils.c
-  lib/wsprd/wsprd_utils.c
-  lib/wsprd/fano.c
-  lib/wsprd/jelinek.c
-  lib/wsprd/tab.c
-  lib/wsprd/nhash.c
-  lib/init_random_seed.c
-  )
-
 set (wsjtx_UISRCS
   mainwindow.ui
   about.ui
@@ -594,8 +574,6 @@ set (all_CXXSRCS
 set (all_C_and_CXXSRCS
   ${sqlite3_CSRCS}
   ${wsjt_CSRCS}
-  ${wsprsim_CSRCS}
-  ${wsprd_CSRCS}
   ${all_CXXSRCS}
   )
 
