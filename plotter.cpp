@@ -166,7 +166,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool bRed)
   }
 
   ymin=1.e30;
-  if(swide[0]>1.e29 and swide[0]< 1.5e30) painter1.setPen(Qt::green);
+  if(swide[0]>1.e29 and swide[0]< 1.5e30) painter1.setPen(Qt::green); // horizontal line
   if(swide[0]>1.4e30) painter1.setPen(Qt::yellow);
   if(!m_bReplot) {
     m_j=0;
@@ -415,139 +415,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   if(m_mode=="FT8") bw=7*12000.0/1920.0;     //FT8
 
-  if(m_mode=="JT4") {                        //JT4
-    bw=3*11025.0/2520.0;                     //Max tone spacing (3/4 of actual BW)
-    if(m_nSubMode==1) bw=2*bw;
-    if(m_nSubMode==2) bw=4*bw;
-    if(m_nSubMode==3) bw=9*bw;
-    if(m_nSubMode==4) bw=18*bw;
-    if(m_nSubMode==5) bw=36*bw;
-    if(m_nSubMode==6) bw=72*bw;
-
-    painter0.setPen(penGreen);
-    x1=XfromFreq(m_rxFreq-m_tol);
-    x2=XfromFreq(m_rxFreq+m_tol);
-    painter0.drawLine(x1,29,x2,29);
-    for(int i=0; i<4; i++) {
-      x1=XfromFreq(m_rxFreq+bw*i/3.0);
-      int j=24;
-      if(i==0) j=18;
-      painter0.drawLine(x1,j,x1,30);
-    }
-    painter0.setPen(penRed);
-    for(int i=0; i<4; i++) {
-      x1=XfromFreq(m_txFreq+bw*i/3.0);
-      painter0.drawLine(x1,12,x1,18);
-    }
-  }
-
-  if(m_modeTx=="JT9" and m_nSubMode>0) {     //JT9
-    bw=8.0*12000.0/m_nsps;
-    if(m_nSubMode==1) bw=2*bw;   //B
-    if(m_nSubMode==2) bw=4*bw;   //C
-    if(m_nSubMode==3) bw=8*bw;   //D
-    if(m_nSubMode==4) bw=16*bw;  //E
-    if(m_nSubMode==5) bw=32*bw;  //F
-    if(m_nSubMode==6) bw=64*bw;  //G
-    if(m_nSubMode==7) bw=128*bw; //H
-  }
-
-  if(m_mode=="QRA64") {                      //QRA64
-    bw=63.0*12000.0/m_nsps;
-    if(m_nSubMode==1) bw=2*bw;   //B
-    if(m_nSubMode==2) bw=4*bw;   //C
-    if(m_nSubMode==3) bw=8*bw;   //D
-    if(m_nSubMode==4) bw=16*bw;  //E
-  }
-
-  if(m_modeTx=="JT65") {                     //JT65
-    bw=65.0*11025.0/4096.0;
-    if(m_nSubMode==1) bw=2*bw;   //B
-    if(m_nSubMode==2) bw=4*bw;   //C
-  }
-
   painter0.setPen(penGreen);
-  if(m_mode=="WSPR") {
-    x1=XfromFreq(1400);
-    x2=XfromFreq(1600);
-    painter0.drawLine(x1,29,x2,29);
-  }
-
-  if(m_mode=="WSPR-LF") {
-    x1=XfromFreq(1600);
-    x2=XfromFreq(1700);
-    painter0.drawLine(x1,29,x2,29);
-  }
-
-  if(m_mode=="FreqCal") {                   //FreqCal
-    x1=XfromFreq(m_rxFreq-m_tol);
-    x2=XfromFreq(m_rxFreq+m_tol);
-    painter0.drawLine(x1,29,x2,29);
-    x1=XfromFreq(m_rxFreq);
-    painter0.drawLine(x1,24,x1,30);
-  }
-
-  if(false && (m_mode=="JT9" or m_mode=="JT65" or m_mode=="JT9+JT65" or m_mode=="QRA64" or m_mode=="FT8")) {
-
-    if(m_mode=="QRA64" or (m_mode=="JT65" and m_bVHF)) {
-      painter0.setPen(penGreen);
-      x1=XfromFreq(m_rxFreq-m_tol);
-      x2=XfromFreq(m_rxFreq+m_tol);
-      painter0.drawLine(x1,28,x2,28);
-      x1=XfromFreq(m_rxFreq);
-      painter0.drawLine(x1,24,x1,30);
-
-      if(m_mode=="JT65") {
-        painter0.setPen(penOrange);
-        x3=XfromFreq(m_rxFreq+20.0*bw/65.0);    //RO
-        painter0.drawLine(x3,24,x3,30);
-        x4=XfromFreq(m_rxFreq+30.0*bw/65.0);    //RRR
-        painter0.drawLine(x4,24,x4,30);
-        x5=XfromFreq(m_rxFreq+40.0*bw/65.0);    //73
-        painter0.drawLine(x5,24,x5,30);
-      }
-      painter0.setPen(penGreen);
-      x6=XfromFreq(m_rxFreq+bw);             //Highest tone
-      painter0.drawLine(x6,24,x6,30);
-
-    } else {
-      painter0.setPen(penGreen);
-      x1=XfromFreq(m_rxFreq);
-      x2=XfromFreq(m_rxFreq+bw);
-      painter0.drawLine(x1,24,x1,30);
-      painter0.drawLine(x1,28,x2,28);
-      painter0.drawLine(x2,24,x2,30);
-    }
-  }
-
-  if(false && (m_mode=="JT9" or m_mode=="JT65" or m_mode=="JT9+JT65" or
-     m_mode.mid(0,4)=="WSPR" or m_mode=="QRA64" or m_mode=="FT8")) {
-    painter0.setPen(penRed);
-    x1=XfromFreq(m_txFreq);
-    x2=XfromFreq(m_txFreq+bw);
-    if(m_mode=="WSPR") {
-      bw=4*12000.0/8192.0;                  //WSPR
-      x1=XfromFreq(m_txFreq-0.5*bw);
-      x2=XfromFreq(m_txFreq+0.5*bw);
-    }
-    if(m_mode=="WSPR-LF") {
-      bw=3*12000.0/8640.0;                  //WSPR-LF
-      x1=XfromFreq(m_txFreq-0.5*bw);
-      x2=XfromFreq(m_txFreq+0.5*bw);
-    }
-    painter0.drawLine(x1,17,x1,21);
-    painter0.drawLine(x1,17,x2,17);
-    painter0.drawLine(x2,17,x2,21);
-  }
-
-  if(m_mode=="JT9+JT65") {
-    QPen pen2(Qt::blue, 3);                //Mark the JT65 | JT9 divider
-    painter0.setPen(pen2);
-    x1=XfromFreq(m_fMin);
-    if(x1<2) x1=2;
-    x2=x1+30;
-    painter0.drawLine(x1,8,x1,28);
-  }
 
   if(m_dialFreq>10.13 and m_dialFreq< 10.15 and m_mode.mid(0,4)!="WSPR") {
     float f1=1.0e6*(10.1401 - m_dialFreq);
