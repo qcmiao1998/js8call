@@ -97,7 +97,6 @@ public:
   bool use_dynamic_grid() const;
   QString my_callsign () const;
   QString my_grid () const;
-  QString my_station () const;
   QSet<QString> my_groups() const;
   void addGroup(QString const &group);
   void removeGroup(QString const &group);
@@ -233,8 +232,8 @@ public:
   // Set the dynamic grid which is only used if configuration setting is enabled.
   void set_dynamic_location (QString const&);
 
-  // Set the dynamic statios message which is only used if configuration setting is enabled.
-  void set_dynamic_station_message(QString const& qtc);
+  // Set the dynamic station qth message which is only used if configuration setting is enabled.
+  void set_dynamic_station_qth(QString const& qth);
 
 
   // This method queries if a CAT and PTT connection is operational.

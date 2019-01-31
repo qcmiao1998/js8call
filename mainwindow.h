@@ -293,7 +293,6 @@ private slots:
   void on_replyMacroButton_clicked();
   void on_snrMacroButton_clicked();
   void on_qthMacroButton_clicked();
-  void on_qtcMacroButton_clicked();
   void setShowColumn(QString tableKey, QString columnKey, bool value);
   bool showColumn(QString tableKey, QString columnKey, bool default_=true);
   void buildShowColumnsMenu(QMenu *menu, QString tableKey);

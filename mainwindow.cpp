@@ -7070,17 +7070,6 @@ void MainWindow::on_qthMacroButton_clicked(){
     if(m_config.transmit_directed()) toggleTx(true);
 }
 
-void MainWindow::on_qtcMacroButton_clicked(){
-    QString qtc = m_config.my_station();
-    if(qtc.isEmpty()){
-        return;
-    }
-
-    addMessageText(QString("QTC %1").arg(replaceMacros(qtc, buildMacroValues(), true)));
-
-    if(m_config.transmit_directed()) toggleTx(true);
-}
-
 void MainWindow::setShowColumn(QString tableKey, QString columnKey, bool value){
     m_showColumnsCache[tableKey + columnKey] = QVariant(value);
     displayBandActivity();
@@ -7206,7 +7195,6 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
 
     auto grid = m_config.my_grid();
 
-    bool emptyQTC = m_config.my_station().isEmpty();
     bool emptyQTH = m_config.my_qth().isEmpty();
     bool emptyGrid = m_config.my_grid().isEmpty();
 
@@ -7254,21 +7242,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto qtcAction = menu->addAction(QString("%1 QTC - Send my station message").arg(call).trimmed());
-    qtcAction->setDisabled(emptyQTC);
-    connect(qtcAction, &QAction::triggered, this, [this](){
-
-        QString selectedCall = callsignSelected();
-        if(selectedCall.isEmpty()){
-            return;
-        }
-
-        addMessageText(QString("%1 QTC %2").arg(selectedCall).arg(m_config.my_station()), true);
-
-        if(m_config.transmit_directed()) toggleTx(true);
-    });
-
-    auto qthAction = menu->addAction(QString("%1 QTH - Send my station location message").arg(call).trimmed());
+    auto qthAction = menu->addAction(QString("%1 QTH - Send my station message").arg(call).trimmed());
     qthAction->setDisabled(emptyQTH);
     connect(qthAction, &QAction::triggered, this, [this](){
 
@@ -7313,7 +7287,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto qthQueryAction = menu->addAction(QString("%1 QTH? - What is your QTH message?").arg(call).trimmed());
+    auto qthQueryAction = menu->addAction(QString("%1 QTH? - What is your station message?").arg(call).trimmed());
     qthQueryAction->setDisabled(isAllCall);
     connect(qthQueryAction, &QAction::triggered, this, [this](){
 
@@ -7337,20 +7311,6 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 GRID?").arg(selectedCall), true);
-
-        if(m_config.transmit_directed()) toggleTx(true);
-    });
-
-    auto stationMessageQueryAction = menu->addAction(QString("%1 QTC? - What is your station message?").arg(call).trimmed());
-    stationMessageQueryAction->setDisabled(isAllCall);
-    connect(stationMessageQueryAction, &QAction::triggered, this, [this](){
-
-        QString selectedCall = callsignSelected();
-        if(selectedCall.isEmpty()){
-            return;
-        }
-
-        addMessageText(QString("%1 QTC?").arg(selectedCall), true);
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
@@ -7639,7 +7599,6 @@ QMap<QString, QString> MainWindow::buildMacroValues(){
         {"<MYCALL>", m_config.my_callsign()},
         {"<MYGRID4>", m_config.my_grid().left(4)},
         {"<MYGRID12>", m_config.my_grid().left(12)},
-        {"<MYQTC>", m_config.my_station()},
         {"<MYQTH>", m_config.my_qth()},
         {"<MYCQ>", m_config.cq_message()},
         {"<MYREPLY>", m_config.reply_message()},
@@ -7659,7 +7618,6 @@ QMap<QString, QString> MainWindow::buildMacroValues(){
     }
 
     // these macros can have recursive macros
-    values["<MYQTC>"]   = replaceMacros(values["<MYQTC>"], values, false);
     values["<MYQTH>"]   = replaceMacros(values["<MYQTH>"], values, false);
     values["<MYCQ>"]    = replaceMacros(values["<MYCQ>"], values, false);
     values["<MYREPLY>"] = replaceMacros(values["<MYREPLY>"], values, false);
@@ -8598,7 +8556,7 @@ bool MainWindow::shortList(QString callsign)
 void MainWindow::pskSetLocal ()
 {
   psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (),
-        m_config.my_station(), QString {"JS8Call v" + version() }.simplified ());
+        m_config.my_qth(), QString {"JS8Call v" + version() }.simplified ());
 }
 
 void MainWindow::aprsSetLocal ()
@@ -8893,7 +8851,6 @@ void MainWindow::updateButtonDisplay(){
     ui->cqMacroButton->setDisabled(isTransmitting);
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
     ui->snrMacroButton->setDisabled(isTransmitting || emptyCallsign);
-    ui->qtcMacroButton->setDisabled(isTransmitting || m_config.my_station().isEmpty());
     ui->qthMacroButton->setDisabled(isTransmitting || m_config.my_qth().isEmpty());
     ui->macrosMacroButton->setDisabled(isTransmitting);
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
@@ -9822,15 +9779,6 @@ void MainWindow::processCommandActivity() {
             reply = QString("%1 GRID %2").arg(d.from).arg(grid);
         }
 
-        // QUERIED STATION MESSAGE
-        else if (d.cmd == " QTC?" && !isAllCall) {
-            QString qtc = m_config.my_station();
-            if(qtc.isEmpty()) {
-                continue;
-            }
-            reply = QString("%1 QTC %2").arg(d.from).arg(replaceMacros(qtc, buildMacroValues(), true));
-        }
-
         // QUERIED STATIONS HEARD
         else if (d.cmd == " HEARING?" && !isAllCall) {
             int i = 0;
@@ -10017,18 +9965,7 @@ void MainWindow::processCommandActivity() {
         // PROCESS BUFFERED QUERY MSGS
         else if (d.cmd == " QUERY MSGS" && ui->autoReplyButton->isChecked()){
             auto who = d.from;
-#if 0
-            QString key;
-            if(d.text.isEmpty()){
-                key = who;
-            } else {
-                QStringList segs = d.text.trimmed().split(" ");
-                if(segs.isEmpty()){
-                    continue;
-                }
-                key = segs.first();
-            }
-#endif
+            auto cmd =
 
             auto inbox = Inbox(inboxPath());
             if(!inbox.open()){
@@ -10050,6 +9987,8 @@ void MainWindow::processCommandActivity() {
                     break;
                 }
             }
+
+            reply = replies.join("\n");
         }
 
         // PROCESS BUFFERED QUERY CALL
@@ -11011,8 +10950,8 @@ void MainWindow::networkMessage(Message const &message)
     // STATION.GET_CALLSIGN - Get the current callsign
     // STATION.GET_GRID - Get the current grid locator
     // STATION.SET_GRID - Set the current grid locator
-    // STATION.GET_QTC - Get the current station message
-    // STATION.SET_QTC - Set the current station message
+    // STATION.GET_QTH - Get the current station qth
+    // STATION.SET_QTH - Set the current station qth
     if(type == "STATION.GET_CALLSIGN"){
         sendNetworkMessage("STATION.CALLSIGN", m_config.my_callsign());
         return;
@@ -11029,14 +10968,14 @@ void MainWindow::networkMessage(Message const &message)
         return;
     }
 
-    if(type == "STATION.GET_QTC"){
-        sendNetworkMessage("STATION.QTC", m_config.my_station());
+    if(type == "STATION.GET_QTH"){
+        sendNetworkMessage("STATION.QTH", m_config.my_qth());
         return;
     }
 
-    if(type == "STATION.SET_QTC"){
-        m_config.set_dynamic_station_message(message.value());
-        sendNetworkMessage("STATION.QTC", m_config.my_station());
+    if(type == "STATION.SET_QTH"){
+        m_config.set_dynamic_station_qth(message.value());
+        sendNetworkMessage("STATION.QTH", m_config.my_qth());
         return;
     }
 

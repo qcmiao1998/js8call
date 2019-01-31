@@ -583,13 +583,12 @@ private:
   bool frequency_calibration_disabled_; // not persistent
   unsigned transceiver_command_number_;
   QString dynamic_grid_;
-  QString dynamic_qtc_;
+  QString dynamic_qth_;
 
   // configuration fields that we publish
   bool auto_switch_bands_;
   QString my_callsign_;
   QString my_grid_;
-  QString my_station_;
   QStringList my_groups_;
   QStringList auto_whitelist_;
   QString my_qth_;
@@ -951,15 +950,6 @@ QString Configuration::my_grid() const
   return grid.trimmed();
 }
 
-QString Configuration::my_station() const
-{
-    auto station = m_->my_station_;
-    if(m_->use_dynamic_info_ && !m_->dynamic_qtc_.isEmpty()){
-        station = m_->dynamic_qtc_;
-    }
-    return station.trimmed();
-}
-
 QSet<QString> Configuration::my_groups() const {
     return QSet<QString>::fromList(m_->my_groups_);
 }
@@ -984,7 +974,12 @@ QSet<QString> Configuration::auto_whitelist() const {
 
 QString Configuration::my_qth() const
 {
-    return m_->my_qth_.trimmed();
+    auto qth = m_->my_qth_;
+    if(m_->use_dynamic_info_ && !m_->dynamic_qth_.isEmpty()){
+        qth = m_->dynamic_qth_;
+    }
+
+    return qth.trimmed();
 }
 
 QString Configuration::cq_message() const
@@ -1012,9 +1007,9 @@ void Configuration::set_dynamic_location (QString const& grid_descriptor)
   m_->dynamic_grid_ = grid_descriptor.trimmed ();
 }
 
-void Configuration::set_dynamic_station_message(QString const& qtc)
+void Configuration::set_dynamic_station_qth(QString const& qth)
 {
-  m_->dynamic_qtc_ = qtc.trimmed ();
+  m_->dynamic_qth_ = qth.trimmed ();
 }
 
 namespace
@@ -1365,7 +1360,6 @@ void Configuration::impl::initialize_models ()
   ui_->grid_line_edit->setText (my_grid_.toUpper());
   ui_->callsign_aging_spin_box->setValue(callsign_aging_);
   ui_->activity_aging_spin_box->setValue(activity_aging_);
-  ui_->station_message_line_edit->setText (my_station_.toUpper());
   ui_->groups_line_edit->setText(my_groups_.join(", "));
   ui_->auto_whitelist_line_edit->setText(auto_whitelist_.join(", "));
   ui_->qth_message_line_edit->setText (my_qth_.toUpper());
@@ -1510,7 +1504,6 @@ void Configuration::impl::read_settings ()
   auto_switch_bands_ = settings_->value("AutoSwitchBands", false).toBool();
   my_callsign_ = settings_->value ("MyCall", QString {}).toString ();
   my_grid_ = settings_->value ("MyGrid", QString {}).toString ();
-  my_station_ = settings_->value("MyStation", QString {}).toString();
   my_groups_ = settings_->value("MyGroups", QStringList{}).toStringList();
   auto_whitelist_ = settings_->value("AutoWhitelist", QStringList{}).toStringList();
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
@@ -1771,7 +1764,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("AutoSwitchBands", auto_switch_bands_);
   settings_->setValue ("MyCall", my_callsign_);
   settings_->setValue ("MyGrid", my_grid_);
-  settings_->setValue ("MyStation", my_station_);
   settings_->setValue ("MyGroups", my_groups_);
   settings_->setValue ("AutoWhitelist", auto_whitelist_);
   settings_->setValue ("MyQTH", my_qth_);
@@ -2363,7 +2355,6 @@ void Configuration::impl::accept ()
   auto_switch_bands_ = ui_->auto_switch_bands_check_box->isChecked();
   my_callsign_ = ui_->callsign_line_edit->text ().toUpper();
   my_grid_ = ui_->grid_line_edit->text ().toUpper();
-  my_station_ = ui_->station_message_line_edit->text().toUpper();
   my_groups_ = splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), true);
   auto_whitelist_ = splitCalls(ui_->auto_whitelist_line_edit->text().toUpper().trimmed());
   cq_ = ui_->cq_message_line_edit->text().toUpper();
