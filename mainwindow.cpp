@@ -9964,6 +9964,8 @@ void MainWindow::processCommandActivity() {
 
         // PROCESS BUFFERED QUERY
         else if (d.cmd == " QUERY" && ui->autoReplyButton->isChecked()){
+            auto who = d.from;
+
             QStringList segs = d.text.split(" ");
             if(segs.isEmpty()){
                 continue;
@@ -9972,8 +9974,39 @@ void MainWindow::processCommandActivity() {
             auto cmd = segs.first();
             segs.removeFirst();
 
-            if(cmd == "MSG"){
+            if(cmd == "MSG" && !segs.isEmpty()){
+                auto inbox = Inbox(inboxPath());
+                if(!inbox.open()){
+                    continue;
+                }
 
+                bool ok = false;
+                int mid = QString(segs.first()).toInt(&ok);
+                if(!ok){
+                    continue;
+                }
+
+                auto msg = inbox.value(mid);
+                auto params = msg.params();
+                if(params.isEmpty()){
+                    continue;
+                }
+
+                auto from = params.value("FROM").toString().trimmed();
+                if(from != who){
+                    continue;
+                }
+
+                auto text = params.value("TEXT").toString().trimmed();
+                if(text.isEmpty()){
+                    continue;
+                }
+
+                reply = QString("%1>MSG %2 %3 DE %4");
+                reply = reply.arg(who);
+                reply = reply.arg(mid);
+                reply = reply.arg(text);
+                reply = reply.arg(from);
             }
         }
 
@@ -9986,12 +10019,14 @@ void MainWindow::processCommandActivity() {
                 continue;
             }
 
+            // if this is an allcall or a directed call, check to see if we have a stored message for user.
+            // we reply yes if the user would be able to retreive a stored message
             auto v = inbox.values("STORE", "$.params.TO", who, 0, 10);
             foreach(auto pair, v){
                 auto params = pair.second.params();
                 auto text = params.value("TEXT").toString().trimmed();
                 if(!text.isEmpty()){
-                    reply = QString("%1 YES").arg(who);
+                    reply = QString("%1 YES MSG %2").arg(who).arg(pair.first);
                     break;
                 }
             }
