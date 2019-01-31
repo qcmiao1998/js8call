@@ -454,7 +454,6 @@ private:
   Q_SLOT void on_add_macro_push_button_clicked (bool = false);
   Q_SLOT void on_delete_macro_push_button_clicked (bool = false);
   Q_SLOT void on_PTT_method_button_group_buttonClicked (int);
-  Q_SLOT void on_station_message_line_edit_textChanged(QString const&);
   Q_SLOT void on_groups_line_edit_textChanged(QString const&);
   Q_SLOT void on_qth_message_line_edit_textChanged(QString const&);
   Q_SLOT void on_cq_message_line_edit_textChanged(QString const&);
@@ -1157,7 +1156,6 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   ui_->callsign_line_edit->setValidator (new CallsignValidator {this});
   ui_->grid_line_edit->setValidator (new MaidenheadLocatorValidator {this, MaidenheadLocatorValidator::Length::doubleextended});
   ui_->add_macro_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui_->station_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->qth_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->reply_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->cq_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
@@ -1166,7 +1164,6 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   setUppercase(ui_->callsign_line_edit);
   setUppercase(ui_->grid_line_edit);
   setUppercase(ui_->add_macro_line_edit);
-  setUppercase(ui_->station_message_line_edit);
   setUppercase(ui_->qth_message_line_edit);
   setUppercase(ui_->reply_message_line_edit);
   setUppercase(ui_->cq_message_line_edit);
@@ -2781,11 +2778,6 @@ void Configuration::impl::on_sound_output_combo_box_currentTextChanged (QString 
 {
   default_audio_output_device_selected_ = QAudioDeviceInfo::defaultOutputDevice ().deviceName () == text;
 }
-
-void Configuration::impl::on_station_message_line_edit_textChanged(QString const &text)
-{
-}
-
 
 void Configuration::impl::on_groups_line_edit_textChanged(QString const &text)
 {

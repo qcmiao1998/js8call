@@ -92,7 +92,7 @@ QMap<QString, int> directed_cmds = {
     {" QSL?",    22  }, // do you copy?
     {" QSL",     23  }, // i copy
 
-    // {" ",     24  }, // unused
+    {" CMD",     24  }, // open ended command
 
     {" SNR",     25  }, // seen a station at the provided snr
     {" NO",      26  }, // negative confirm
@@ -105,13 +105,13 @@ QMap<QString, int> directed_cmds = {
 };
 
 // commands allowed to be processed
-QSet<int> allowed_cmds = {-1, 0, 1, /*2,*/ 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, /*16,*/ 17, 18, 19, 20, 21, 22, 23, /*24,*/ 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {-1, 0, 1, /*2,*/ 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, /*16,*/ 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
-// commands that result in an autoreply
-QSet<int> autoreply_cmds = {0, 1, 3, 4, 6, 10, 12, 13, 30};
+// commands that result in an autoreply (which can be relayed)
+QSet<int> autoreply_cmds = {0, 1, 3, 4, 6, 10, 11, 12, 13, 30};
 
 // commands that should be buffered
-QSet<int> buffered_cmds = {3, 5, /*6,*/ /*7,*/ 10, 11, 12, 13, 14, 15};
+QSet<int> buffered_cmds = {3, 5, /*6,*/ /*7,*/ 10, 11, 12, 13, 14, 15, 24};
 
 // commands that may include an SNR value
 QSet<int> snr_cmds = {25, 29};
@@ -124,11 +124,12 @@ QMap<int, int> checksum_cmds = {
     { 12, 16 },
     { 13, 16 },
     { 14, 16 },
-    { 15,  0 }
+    { 15,  0 },
+    { 24, 16 }
 };
 
 QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|MSG TO[:]|SNR[?]|QTH[?]|GRID[?]|STATUS[?]|HEARING[?]|(?:(?:STATUS|HEARING|QUERY CALL|QUERY MSGS|QUERY|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|GRID|TU)(?=[ ]|$))|[?> ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|MSG TO[:]|SNR[?]|QTH[?]|GRID[?]|STATUS[?]|HEARING[?]|(?:(?:STATUS|HEARING|QUERY CALL|QUERY MSGS|QUERY|CMD|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|QTH|GRID|TU)(?=[ ]|$))|[?> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR|ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");

@@ -9954,18 +9954,32 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
+        // PROCESS BUFFERED CMD
+        else if (d.cmd == " CMD" && ui->autoReplyButton->isChecked()){
+            qDebug() << "skipping incoming command" << d.text;
+
+            // make sure this is explicit
+            continue;
+        }
+
         // PROCESS BUFFERED QUERY
         else if (d.cmd == " QUERY" && ui->autoReplyButton->isChecked()){
-            qDebug() << "received raw query" << d.text;
+            QStringList segs = d.text.split(" ");
+            if(segs.isEmpty()){
+                continue;
+            }
 
-            // NOOP
-            continue;
+            auto cmd = segs.first();
+            segs.removeFirst();
+
+            if(cmd == "MSG"){
+
+            }
         }
 
         // PROCESS BUFFERED QUERY MSGS
         else if (d.cmd == " QUERY MSGS" && ui->autoReplyButton->isChecked()){
             auto who = d.from;
-            auto cmd =
 
             auto inbox = Inbox(inboxPath());
             if(!inbox.open()){
@@ -9976,19 +9990,16 @@ void MainWindow::processCommandActivity() {
             foreach(auto pair, v){
                 auto params = pair.second.params();
                 auto text = params.value("TEXT").toString().trimmed();
-                auto from = params.value("FROM").toString();
                 if(!text.isEmpty()){
-                    // mark as delivered
-                    pair.second.setType("DELIVERED");
-                    inbox.set(pair.first, pair.second);
-
-                    // and then reply with the text
-                    reply = QString("%1>%2 DE %3").arg(who).arg(text).arg(from);
+                    reply = QString("%1 YES").arg(who);
                     break;
                 }
             }
 
-            reply = replies.join("\n");
+            // if this is not an allcall and we have no messages, reply no.
+            if(!isAllCall && reply.isEmpty()){
+                reply = QString("%1 NO").arg(who);
+            }
         }
 
         // PROCESS BUFFERED QUERY CALL
@@ -10266,6 +10277,9 @@ void MainWindow::processSpots() {
         return;
     }
 
+    // Get the dial frequency to report
+    auto dial = dialFrequency();
+
     // Process spots to be sent...
     pskSetLocal();
     aprsSetLocal();
@@ -10275,9 +10289,19 @@ void MainWindow::processSpots() {
         if(d.call.isEmpty()){
             continue;
         }
+
         qDebug() << "spotting call to reporting networks" << d.call << d.snr << d.freq;
+
         pskLogReport("JS8", d.freq, d.snr, d.call, d.grid);
         aprsLogReport(d.freq, d.snr, d.call, d.grid);
+
+        sendNetworkMessage("RX.SPOT", "", {
+            {"DIAL", QVariant(dial)},
+            {"OFFSET", QVariant(d.freq)},
+            {"CALL", QVariant(d.call)},
+            {"SNR", QVariant(d.snr)},
+            {"GRID", QVariant(d.grid)},
+        });
     }
 }
 
