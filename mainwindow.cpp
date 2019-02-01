@@ -11048,6 +11048,9 @@ void MainWindow::networkMessage(Message const &message)
         return;
     }
 
+    auto params = message.params();
+    auto id = params.value("_ID", QVariant(0));
+
     // Inspired by FLDigi
     // TODO: MAIN.RX - Turn on RX
     // TODO: MAIN.TX - Transmit
@@ -11062,6 +11065,7 @@ void MainWindow::networkMessage(Message const &message)
     // RIG.SET_FREQ - Set the current Frequency
     if(type == "RIG.GET_FREQ"){
         sendNetworkMessage("RIG.FREQ", "", {
+            {"_ID", id},
             {"DIAL", QVariant((quint64)dialFrequency())},
             {"OFFSET", QVariant((quint64)currentFreqOffset())}
         });
@@ -11093,29 +11097,39 @@ void MainWindow::networkMessage(Message const &message)
     // STATION.GET_QTH - Get the current station qth
     // STATION.SET_QTH - Set the current station qth
     if(type == "STATION.GET_CALLSIGN"){
-        sendNetworkMessage("STATION.CALLSIGN", m_config.my_callsign());
+        sendNetworkMessage("STATION.CALLSIGN", m_config.my_callsign(), {
+            {"_ID", id},
+        });
         return;
     }
 
     if(type == "STATION.GET_GRID"){
-        sendNetworkMessage("STATION.GRID", m_config.my_grid());
+        sendNetworkMessage("STATION.GRID", m_config.my_grid(), {
+            {"_ID", id},
+        });
         return;
     }
 
     if(type == "STATION.SET_GRID"){
         m_config.set_dynamic_location(message.value());
-        sendNetworkMessage("STATION.GRID", m_config.my_grid());
+        sendNetworkMessage("STATION.GRID", m_config.my_grid(), {
+            {"_ID", id},
+        });
         return;
     }
 
     if(type == "STATION.GET_QTH"){
-        sendNetworkMessage("STATION.QTH", m_config.my_qth());
+        sendNetworkMessage("STATION.QTH", m_config.my_qth(), {
+            {"_ID", id},
+        });
         return;
     }
 
     if(type == "STATION.SET_QTH"){
         m_config.set_dynamic_station_qth(message.value());
-        sendNetworkMessage("STATION.QTH", m_config.my_qth());
+        sendNetworkMessage("STATION.QTH", m_config.my_qth(), {
+            {"_ID", id},
+        });
         return;
     }
 
@@ -11127,7 +11141,10 @@ void MainWindow::networkMessage(Message const &message)
     if(type == "RX.GET_CALL_ACTIVITY"){
         auto now = DriftingDateTime::currentDateTimeUtc();
         int callsignAging = m_config.callsign_aging();
-        QMap<QString, QVariant> calls;
+        QMap<QString, QVariant> calls = {
+            {"_ID", id},
+        };
+
         foreach(auto cd, m_callActivity.values()){
             if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
                 continue;
@@ -11144,12 +11161,16 @@ void MainWindow::networkMessage(Message const &message)
     }
 
     if(type == "RX.GET_CALL_SELECTED"){
-        sendNetworkMessage("RX.CALL_SELECTED", callsignSelected());
+        sendNetworkMessage("RX.CALL_SELECTED", callsignSelected(), {
+            {"_ID", id},
+        });
         return;
     }
 
     if(type == "RX.GET_BAND_ACTIVITY"){
-        QMap<QString, QVariant> offsets;
+        QMap<QString, QVariant> offsets = {
+            {"_ID", id},
+        };
         foreach(auto offset, m_bandActivity.keys()){
             auto activity = m_bandActivity[offset];
             if(activity.isEmpty()){
@@ -11171,7 +11192,9 @@ void MainWindow::networkMessage(Message const &message)
     }
 
     if(type == "RX.GET_TEXT"){
-        sendNetworkMessage("RX.TEXT", ui->textEditRX->toPlainText());
+        sendNetworkMessage("RX.TEXT", ui->textEditRX->toPlainText(), {
+            {"_ID", id},
+        });
         return;
     }
 
@@ -11180,12 +11203,17 @@ void MainWindow::networkMessage(Message const &message)
     // TX.SEND_MESSAGE
 
     if(type == "TX.GET_TEXT"){
-        sendNetworkMessage("TX.TEXT", ui->extFreeTextMsgEdit->toPlainText());
+        sendNetworkMessage("TX.TEXT", ui->extFreeTextMsgEdit->toPlainText(), {
+            {"_ID", id},
+        });
         return;
     }
 
     if(type == "TX.SET_TEXT"){
         addMessageText(message.value(), true);
+        sendNetworkMessage("TX.TEXT", ui->extFreeTextMsgEdit->toPlainText(), {
+            {"_ID", id},
+        });
         return;
     }
 

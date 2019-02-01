@@ -48,7 +48,9 @@ Message::Message(QString const &type, QString const &value,  QMap<QString, QVari
     value_{ value },
     params_{ params }
 {
-    params_["_ID"] = QString::number(DriftingDateTime::currentMSecsSinceEpoch()-EPOCH);
+    if(params_.value("_ID", 0).toInt() == 0){
+        params_["_ID"] = QString::number(DriftingDateTime::currentMSecsSinceEpoch()-EPOCH);
+    }
 }
 
 void Message::read(const QJsonObject &json){
