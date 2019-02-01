@@ -291,7 +291,9 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
           if (m_ic > i1) m_amp = 0.0;
 
           sample=qRound(m_amp*qSin(m_phi));
+#if TEST_FOX_WAVE_GEN
           if(m_toneSpacing < 0) sample=qRound(m_amp*foxcom_.wave[m_ic]);
+#endif
           samples = load(postProcessSample(sample), samples);
           ++framesGenerated;
           ++m_ic;
