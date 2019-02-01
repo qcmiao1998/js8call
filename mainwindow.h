@@ -284,7 +284,7 @@ private slots:
   void buildCQMenu(QMenu *menu);
   void buildRepeatMenu(QMenu *menu, QPushButton * button, int * interval);
   void sendHeartbeat();
-  void sendHeartbeatAck(QString to, int snr);
+  void sendHeartbeatAck(QString to, int snr, QString extra);
   void on_hbMacroButton_toggled(bool checked);
   void on_hbMacroButton_clicked();
   void sendCQ(bool repeat=false);
@@ -952,8 +952,10 @@ private:
   void processCommandActivity();
   QString inboxPath();
   void refreshInboxCounts();
-  void addCommandToMyInbox(CommandDetail d);
-  void addCommandToInboxStorage(QString type, CommandDetail d);
+  int addCommandToMyInbox(CommandDetail d);
+  int addCommandToInboxStorage(QString type, CommandDetail d);
+  int getNextMessageIdForCallsign(QString callsign);
+  QStringList parseRelayPathCallsigns(QString from, QString text);
   void processAlertReplyForCommand(CommandDetail d, QString from, QString cmd);
   void processSpots();
   void processTxQueue();

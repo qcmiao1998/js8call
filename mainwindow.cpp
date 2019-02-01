@@ -5728,7 +5728,7 @@ void MainWindow::addMessageText(QString text, bool clear, bool selectFirstPlaceh
     c.insertText(text);
 
     if(selectFirstPlaceholder){
-        auto match = QRegularExpression("(\\[.+\\])").match(ui->extFreeTextMsgEdit->toPlainText());
+        auto match = QRegularExpression("(\\[[^\\]]+\\])").match(ui->extFreeTextMsgEdit->toPlainText());
         if(match.hasMatch()){
             c.setPosition(match.capturedStart());
             c.setPosition(match.capturedEnd(), QTextCursor::KeepAnchor);
@@ -6949,8 +6949,8 @@ void MainWindow::sendHeartbeat(){
     processTxQueue();
 }
 
-void MainWindow::sendHeartbeatAck(QString to, int snr){
-    auto message = QString("%1 ACK %2").arg(to).arg(Varicode::formatSNR(snr));
+void MainWindow::sendHeartbeatAck(QString to, int snr, QString extra){
+    auto message = QString("%1 ACK %2 %3").arg(to).arg(Varicode::formatSNR(snr)).arg(extra).trimmed();
 
     auto f = m_config.heartbeat_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
 
@@ -7357,7 +7357,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
     });
 #endif
 
-    auto alertAction = menu->addAction(QString("%1>[MESSAGE] - Please save this message or relay it to its destination").arg(call).trimmed());
+    auto alertAction = menu->addAction(QString("%1>[MESSAGE] - Please relay this message to its destination").arg(call).trimmed());
     alertAction->setDisabled(isAllCall);
     connect(alertAction, &QAction::triggered, this, [this](){
 
@@ -7505,19 +7505,6 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 FB").arg(selectedCall), true);
-
-        if(m_config.transmit_directed()) toggleTx(true);
-    });
-
-    auto tuAction = menu->addAction(QString("%1 TU - Thank You").arg(call).trimmed());
-    connect(tuAction, &QAction::triggered, this, [this](){
-
-        QString selectedCall = callsignSelected();
-        if(selectedCall.isEmpty()){
-            return;
-        }
-
-        addMessageText(QString("%1 TU").arg(selectedCall), true);
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
@@ -9696,10 +9683,13 @@ void MainWindow::processCommandActivity() {
                 c.movePosition(QTextCursor::StartOfBlock);
                 c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
                 qDebug() << "should display directed message, erasing last rx activity line..." << c.selectedText();
+                c.removeSelectedText();
                 c.deletePreviousChar();
                 c.deletePreviousChar();
+                /*
                 c.deleteChar();
                 c.deleteChar();
+                */
             }
 
             // log it to the display!
@@ -9841,14 +9831,9 @@ void MainWindow::processCommandActivity() {
 
             // otherwise, as long as we're not an ACK...alert the user and either send an ACK or Message
             } else if(!d.text.startsWith("ACK")) {
-                QStringList calls;
-                QString callDePattern = {R"(\sDE\s(?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
-                QRegularExpression re(callDePattern);
-                auto iter = re.globalMatch(text);
-                while(iter.hasNext()){
-                    auto match = iter.next();
-                    calls.prepend(match.captured("callsign"));
-                }
+
+                // parse out the callsign path
+                auto calls = parseRelayPathCallsigns(d.from, d.text);
 
                 // put these third party calls in the heard list
                 foreach(auto call, calls){
@@ -9862,7 +9847,6 @@ void MainWindow::processCommandActivity() {
                     logCallActivity(cd, false);
                 }
 
-                calls.prepend(d.from);
                 d.relayPath = calls.join('>');
 
                 reply = QString("%1 ACK").arg(d.relayPath);
@@ -9883,7 +9867,7 @@ void MainWindow::processCommandActivity() {
                         rd.bits = d.bits;
                         rd.cmd = first;
                         rd.freq = d.freq;
-                        rd.from = d.relayPath;
+                        rd.from = d.relayPath; // is this correct?
                         rd.text = d.text;
                         rd.to = d.to;
                         rd.utcTimestamp = d.utcTimestamp;
@@ -9893,12 +9877,16 @@ void MainWindow::processCommandActivity() {
                     }
                 }
 
+#if STORE_RELAY_MSGS_TO_INBOX
                 // if we make it here, this is a message
                 addCommandToMyInbox(d);
+#endif
 
+#if ALERT_ON_NEW_MSG
                 QTimer::singleShot(500, this, [this, d](){
                     MessageBox::information_message(this, QString("A new message was received at %1 UTC from %2").arg(d.utcTimestamp.time().toString()).arg(d.from));
                 });
+#endif
             }
         }
 
@@ -9943,19 +9931,69 @@ void MainWindow::processCommandActivity() {
         // PROCESS ACTIVE HEARTBEAT
         // if we have auto reply enabled and we are heartbeating and selcall is not enabled
         else if (d.cmd == " HB" && ui->autoReplyButton->isChecked() && ui->hbMacroButton->isChecked() && m_hbInterval > 0){
-            sendHeartbeatAck(d.from, d.snr);
+
+            // check to see if we have a message for a station who is heartbeating
+            QString extra;
+            auto mid = getNextMessageIdForCallsign(d.from);
+            if(mid != -1){
+                extra = QString("MSG ID %1").arg(mid);
+            }
+
+            sendHeartbeatAck(d.from, d.snr, extra);
 
             if(isAllCall){
                 // since all pings are technically @ALLCALL, let's bump the allcall cache here...
                 m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 5);
             }
 
+            continue;
+        }
+
+        // PROCESS MSG
+        else if (d.cmd == " MSG"){
+
+            auto segs = d.text.split(" ");
+            if(segs.isEmpty()){
+                continue;
+            }
+
+            bool ok = false;
+            auto mid = segs.first().toInt(&ok);
+            if(!ok){
+                continue;
+            }
+
+            segs.removeFirst();
+            if(segs.isEmpty()){
+                continue;
+            }
+
+            auto text = segs.join(" ");
+
+            qDebug() << "adding message" << mid << "to inbox" << text;
+
+            auto calls = parseRelayPathCallsigns(d.from, text);
+
+            d.cmd = " MSG ";
+            d.relayPath = calls.join(">");
+            d.text = text;
+
+            addCommandToMyInbox(d);
+
+            // make sure this is explicit
+            continue;
+        }
+
+        // PROCESS ACKS
+        else if (d.cmd == " ACK"){
+            qDebug() << "skipping incoming ack" << d.text;
+
             // make sure this is explicit
             continue;
         }
 
         // PROCESS BUFFERED CMD
-        else if (d.cmd == " CMD" && ui->autoReplyButton->isChecked()){
+        else if (d.cmd == " CMD"){
             qDebug() << "skipping incoming command" << d.text;
 
             // make sure this is explicit
@@ -9963,7 +10001,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS BUFFERED QUERY
-        else if (d.cmd == " QUERY" && ui->autoReplyButton->isChecked()){
+        else if (d.cmd == " QUERY"){
             auto who = d.from;
 
             QStringList segs = d.text.split(" ");
@@ -10002,7 +10040,12 @@ void MainWindow::processCommandActivity() {
                     continue;
                 }
 
-                reply = QString("%1>MSG %2 %3 DE %4");
+                // mark as delivered (so subsequent HBs and QUERY MSGS don't receive this message)
+                msg.setType("DELIVERED");
+                inbox.set(mid, msg);
+
+                // and reply
+                reply = QString("%1 MSG %2 %3 DE %4");
                 reply = reply.arg(who);
                 reply = reply.arg(mid);
                 reply = reply.arg(text);
@@ -10014,21 +10057,11 @@ void MainWindow::processCommandActivity() {
         else if (d.cmd == " QUERY MSGS" && ui->autoReplyButton->isChecked()){
             auto who = d.from;
 
-            auto inbox = Inbox(inboxPath());
-            if(!inbox.open()){
-                continue;
-            }
-
             // if this is an allcall or a directed call, check to see if we have a stored message for user.
             // we reply yes if the user would be able to retreive a stored message
-            auto v = inbox.values("STORE", "$.params.TO", who, 0, 10);
-            foreach(auto pair, v){
-                auto params = pair.second.params();
-                auto text = params.value("TEXT").toString().trimmed();
-                if(!text.isEmpty()){
-                    reply = QString("%1 YES MSG %2").arg(who).arg(pair.first);
-                    break;
-                }
+            auto mid = getNextMessageIdForCallsign(who);
+            if(mid != -1){
+                reply = QString("%1 YES MSG ID %2").arg(who).arg(mid);
             }
 
             // if this is not an allcall and we have no messages, reply no.
@@ -10193,47 +10226,81 @@ void MainWindow::refreshInboxCounts(){
     }
 }
 
-void MainWindow::addCommandToMyInbox(CommandDetail d){
+int MainWindow::addCommandToMyInbox(CommandDetail d){
     // local cache for inbox count
     m_rxInboxCountCache[d.from] = m_rxInboxCountCache.value(d.from, 0) + 1;
 
     // add it to my unread inbox
-    addCommandToInboxStorage("UNREAD", d);
+    return addCommandToInboxStorage("UNREAD", d);
 }
 
-void MainWindow::addCommandToInboxStorage(QString type, CommandDetail d){
+int MainWindow::addCommandToInboxStorage(QString type, CommandDetail d){
     // inbox:
     auto inbox = Inbox(inboxPath());
-    if(inbox.open()){
-        auto df = dialFrequency();
-
-        QMap<QString, QVariant> v = {
-            {"UTC", QVariant(d.utcTimestamp.toString("yyyy-MM-dd hh:mm:ss"))},
-            {"TO", QVariant(d.to)},
-            {"FROM", QVariant(d.from)},
-            {"PATH", QVariant(d.relayPath)},
-            {"DIAL", QVariant((quint64)df)},
-            {"TDRIFT", QVariant(d.tdrift)},
-            {"OFFSET", QVariant(d.freq)},
-            {"CMD", QVariant(d.cmd)},
-            {"SNR", QVariant(d.snr)},
-        };
-
-        if(!d.grid.isEmpty()){
-            v["GRID"] = QVariant(d.grid);
-        }
-
-        if(!d.extra.isEmpty()){
-            v["EXTRA"] = QVariant(d.extra);
-        }
-
-        if(!d.text.isEmpty()){
-            v["TEXT"] = QVariant(d.text);
-        }
-
-        auto m = Message(type, "", v);
-        inbox.append(m);
+    if(!inbox.open()){
+        return -1;
     }
+
+    auto df = dialFrequency();
+
+    QMap<QString, QVariant> v = {
+        {"UTC", QVariant(d.utcTimestamp.toString("yyyy-MM-dd hh:mm:ss"))},
+        {"TO", QVariant(d.to)},
+        {"FROM", QVariant(d.from)},
+        {"PATH", QVariant(d.relayPath)},
+        {"DIAL", QVariant((quint64)df)},
+        {"TDRIFT", QVariant(d.tdrift)},
+        {"OFFSET", QVariant(d.freq)},
+        {"CMD", QVariant(d.cmd)},
+        {"SNR", QVariant(d.snr)},
+    };
+
+    if(!d.grid.isEmpty()){
+        v["GRID"] = QVariant(d.grid);
+    }
+
+    if(!d.extra.isEmpty()){
+        v["EXTRA"] = QVariant(d.extra);
+    }
+
+    if(!d.text.isEmpty()){
+        v["TEXT"] = QVariant(d.text);
+    }
+
+    auto m = Message(type, "", v);
+
+    return inbox.append(m);
+}
+
+int MainWindow::getNextMessageIdForCallsign(QString callsign){
+    auto inbox = Inbox(inboxPath());
+    if(!inbox.open()){
+        return -1;
+    }
+
+    auto v = inbox.values("STORE", "$.params.TO", callsign, 0, 10);
+    foreach(auto pair, v){
+        auto params = pair.second.params();
+        auto text = params.value("TEXT").toString().trimmed();
+        if(!text.isEmpty()){
+            return pair.first;
+        }
+    }
+
+    return -1;
+}
+
+QStringList MainWindow::parseRelayPathCallsigns(QString from, QString text){
+    QStringList calls;
+    QString callDePattern = {R"(\sDE\s(?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
+    QRegularExpression re(callDePattern);
+    auto iter = re.globalMatch(text);
+    while(iter.hasNext()){
+        auto match = iter.next();
+        calls.prepend(match.captured("callsign"));
+    }
+    calls.prepend(from);
+    return calls;
 }
 
 void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QString cmd){
