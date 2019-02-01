@@ -1520,12 +1520,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
 
-QDate eol(2019, 2, 7);
+QDate eol(2019, 2, 21);
 
 void MainWindow::checkExpiryWarningMessage()
 {
     if(QDateTime::currentDateTimeUtc().date() > eol){
-        MessageBox::critical_message (this, QString("This pre-release development build of JS8Call has reached its end-of-live. Please check for an upgrade to the latest version. In the meantime, the software will continue to operate as usual."));
+        MessageBox::critical_message (this, QString("This pre-release development build of JS8Call has reached its end-of-life. Please check for an upgrade to the latest version. In the meantime, the software will continue to operate as usual."));
         return;
     }
 }
