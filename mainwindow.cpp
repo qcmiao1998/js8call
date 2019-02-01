@@ -1351,9 +1351,13 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
           }
 
       } else {
-          CallDetail cd = {};
-          cd.call = callsign;
-          m_callActivity[callsign] = cd;
+          if(Varicode::isValidCallsign(callsign, nullptr)){
+              CallDetail cd = {};
+              cd.call = callsign;
+              m_callActivity[callsign] = cd;
+          } else {
+              MessageBox::critical_message (this, QString("%1 is not a valid callsign or group").arg(callsign));
+          }
       }
 
       displayActivity(true);
@@ -9731,8 +9735,11 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-        // and mark the offset as a directed offset so future free text is displayed
-        // markOffsetDirected(ad.freq, isAllCall);
+
+        // HACK: if this is an autoreply cmd and relay path is populated and cmd is not MSG or MSG TO:, then swap out the relay path
+        if(Varicode::isCommandAutoreply(d.cmd) && !d.relayPath.isEmpty() && !d.cmd.startsWith(" MSG")){
+            d.from = d.relayPath;
+        }
 
         // construct a reply, if needed
         QString reply;
@@ -9852,7 +9859,7 @@ void MainWindow::processCommandActivity() {
                 reply = QString("%1 ACK").arg(d.relayPath);
 
                 // check to see if the relay text contains a command that should be replied to instead of an ack.
-                auto relayedCmds = d.text.split(" ");
+                QStringList relayedCmds = d.text.split(" ");
                 if(!relayedCmds.isEmpty()){
                     auto first = relayedCmds.first();
 
@@ -9860,6 +9867,21 @@ void MainWindow::processCommandActivity() {
                     if(!valid){
                         first = " " + first;
                         valid = Varicode::isCommandAllowed(first);
+                        if(valid){
+                            relayedCmds.removeFirst();
+                        }
+                    }
+
+                    // HACK: "MSG TO:" should be supported but contains a space :(
+                    if(!relayedCmds.isEmpty() && first == " MSG"){
+                        auto second = relayedCmds.first();
+                        if(second == "TO:"){
+                            first = " MSG TO:";
+                            relayedCmds.removeFirst();
+                        } else if(second.startsWith("TO:")){
+                            first = " MSG TO:";
+                            relayedCmds.replace(0, second.mid(3));
+                        }
                     }
 
                     if(valid && Varicode::isCommandAutoreply(first)){
@@ -9867,8 +9889,9 @@ void MainWindow::processCommandActivity() {
                         rd.bits = d.bits;
                         rd.cmd = first;
                         rd.freq = d.freq;
-                        rd.from = d.relayPath; // is this correct?
-                        rd.text = d.text;
+                        rd.from = d.from;
+                        rd.relayPath = d.relayPath;
+                        rd.text = relayedCmds.join(" "); //d.text;
                         rd.to = d.to;
                         rd.utcTimestamp = d.utcTimestamp;
 
@@ -9900,7 +9923,12 @@ void MainWindow::processCommandActivity() {
             }
 
             auto to = segs.first();
-            auto text = d.text.mid(to.length()).trimmed();
+            segs.removeFirst();
+
+            auto text = segs.join(" ").trimmed();
+
+            auto calls = parseRelayPathCallsigns(d.from, text);
+            d.relayPath = calls.join(">");
 
             CommandDetail cd = {};
             cd.bits = d.bits;
@@ -9920,7 +9948,8 @@ void MainWindow::processCommandActivity() {
 
             addCommandToInboxStorage("STORE", cd);
 
-            reply = QString("%1 ACK").arg(d.from);
+            // we haven't replaced the from with the relay path, so we have to use it for the ack if there is one
+            reply = QString("%1 ACK").arg(calls.length() > 1 ? d.relayPath : d.from);
         }
 
         // PROCESS AGN
@@ -9950,27 +9979,11 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS MSG
-        else if (d.cmd == " MSG"){
+        else if (d.cmd == " MSG" && !isAllCall){
 
-            auto segs = d.text.split(" ");
-            if(segs.isEmpty()){
-                continue;
-            }
+            auto text = d.text;
 
-            bool ok = false;
-            auto mid = segs.first().toInt(&ok);
-            if(!ok){
-                continue;
-            }
-
-            segs.removeFirst();
-            if(segs.isEmpty()){
-                continue;
-            }
-
-            auto text = segs.join(" ");
-
-            qDebug() << "adding message" << mid << "to inbox" << text;
+            qDebug() << "adding message to inbox" << text;
 
             auto calls = parseRelayPathCallsigns(d.from, text);
 
@@ -9980,12 +9993,12 @@ void MainWindow::processCommandActivity() {
 
             addCommandToMyInbox(d);
 
-            // make sure this is explicit
-            continue;
+            // we haven't replaced the from with the relay path, so we have to use it for the ack if there is one
+            reply = QString("%1 ACK").arg(calls.length() > 1 ? d.relayPath : d.from);
         }
 
         // PROCESS ACKS
-        else if (d.cmd == " ACK"){
+        else if (d.cmd == " ACK" && !isAllCall){
             qDebug() << "skipping incoming ack" << d.text;
 
             // make sure this is explicit
@@ -9993,7 +10006,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS BUFFERED CMD
-        else if (d.cmd == " CMD"){
+        else if (d.cmd == " CMD" && !isAllCall){
             qDebug() << "skipping incoming command" << d.text;
 
             // make sure this is explicit
@@ -10001,7 +10014,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS BUFFERED QUERY
-        else if (d.cmd == " QUERY"){
+        else if (d.cmd == " QUERY" && !isAllCall){
             auto who = d.from;
 
             QStringList segs = d.text.split(" ");
@@ -10031,7 +10044,9 @@ void MainWindow::processCommandActivity() {
                 }
 
                 auto from = params.value("FROM").toString().trimmed();
-                if(from != who){
+
+                auto to = params.value("TO").toString().trimmed();
+                if(to != who){
                     continue;
                 }
 
@@ -10045,9 +10060,8 @@ void MainWindow::processCommandActivity() {
                 inbox.set(mid, msg);
 
                 // and reply
-                reply = QString("%1 MSG %2 %3 DE %4");
+                reply = QString("%1 MSG %2 DE %3");
                 reply = reply.arg(who);
-                reply = reply.arg(mid);
                 reply = reply.arg(text);
                 reply = reply.arg(from);
             }
@@ -10119,7 +10133,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS BUFFERED HEARING
-        else if (d.cmd == " HEARING"){
+        else if (d.cmd == " HEARING" && !isAllCall){
             auto calls = Varicode::parseCallsigns(d.text);
             foreach(auto call, calls){
                 logHeardGraph(d.from, call);
