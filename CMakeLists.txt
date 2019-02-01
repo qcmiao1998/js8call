@@ -244,6 +244,7 @@ set (wsjtx_CXXSRCS
   keyeater.cpp
   APRSISClient.cpp
   Inbox.cpp
+  messagewindow.cpp
   mainwindow.cpp
   Configuration.cpp
   main.cpp
@@ -547,6 +548,7 @@ set (wsjt_qt_UISRCS
 
 set (wsjtx_UISRCS
   mainwindow.ui
+  messagewindow.ui
   about.ui
   astro.ui
   echograph.ui

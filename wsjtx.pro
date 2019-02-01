@@ -80,7 +80,8 @@ SOURCES += \
     jsc_map.cpp \
     jsc_checker.cpp \
     Message.cpp \
-    Inbox.cpp
+    Inbox.cpp \
+    messagewindow.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -111,7 +112,8 @@ HEADERS  += qt_helpers.hpp \
     jsc.h \
     jsc_checker.h \
     Message.h \
-    Inbox.h
+    Inbox.h \
+    messagewindow.h
 
 
 INCLUDEPATH += qmake_only
@@ -124,7 +126,8 @@ HEADERS += OmniRigTransceiver.hpp
 FORMS    += mainwindow.ui about.ui Configuration.ui widegraph.ui astro.ui \
     logqso.ui wf_palette_design_dialog.ui messageaveraging.ui echograph.ui \
     fastgraph.ui \
-    messagereplydialog.ui
+    messagereplydialog.ui \
+    messagewindow.ui
 
 RC_FILE = wsjtx.rc
 RESOURCES = wsjtx.qrc

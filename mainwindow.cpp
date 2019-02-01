@@ -66,6 +66,7 @@
 #include "jsc.h"
 #include "jsc_checker.h"
 #include "Inbox.h"
+#include "messagewindow.h"
 
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
