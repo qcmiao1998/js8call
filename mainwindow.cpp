@@ -11048,6 +11048,8 @@ void MainWindow::networkMessage(Message const &message)
         return;
     }
 
+    qDebug() << "try processing network message" << type;
+
     auto params = message.params();
     auto id = params.value("_ID", QVariant(0));
 
@@ -11230,6 +11232,7 @@ void MainWindow::networkMessage(Message const &message)
     if(type == "WINDOW.RAISE"){
         setWindowState(Qt::WindowActive);
         activateWindow();
+        raise();
         return;
     }
 

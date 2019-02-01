@@ -1,7 +1,8 @@
 from __future__ import print_function
 
-import json
 from socket import socket, AF_INET, SOCK_DGRAM
+
+import json
 import time
 
 listen = ('127.0.0.1', 2237)
@@ -37,13 +38,10 @@ class Server(object):
         if params:
             print('-> params: ', params)
 
-        #### if typ == 'PING':
-        ####     if self.first:
-        ####         self.send('RX.GET_BAND_ACTIVITY')
-        ####         self.send('TX.SET_TEXT', 'HERE WE GO')
-        ####         time.sleep(1)
-        ####         self.send('WINDOW.RAISE')
-        ####         self.first = False
+        if typ == 'PING':
+            if self.first:
+                self.send('STATION.GET_CALLSIGN')
+                self.first = False
 
         #### if typ == 'PING':
         ####     self.send('STATION.GET_GRID')
@@ -64,6 +62,10 @@ class Server(object):
             self.close()
 
     def send(self, *args, **kwargs):
+        params = kwargs.get('params', {})
+        if '_ID' not in params:
+            params['_ID'] = int(time.time()*1000)
+            kwargs['params'] = params
         message = to_message(*args, **kwargs)
         print('outgoing message:', message)
         self.sock.sendto(message, self.reply_to)
