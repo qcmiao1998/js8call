@@ -9730,6 +9730,13 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
+        // we'll never reply to a blacklisted callsign or base callsign
+        auto blacklist = m_config.auto_blacklist();
+        if(!blacklist.isEmpty() && (blacklist.contains(d.from) || blacklist.contains(Radio::base_callsign(d.from)))){
+            qDebug() << "skipping command for blacklist" << d.from;
+            continue;
+        }
+
         // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past ten minutes)
         // that way we never get spammed by allcalls at too high of a frequency
         if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < 10) {

@@ -277,9 +277,9 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-133</y>
+                <y>0</y>
                 <width>724</width>
-                <height>586</height>
+                <height>617</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -566,6 +566,16 @@ text message.</string>
                   </item>
                   <item row="2" column="1">
                    <widget class="QLineEdit" name="auto_whitelist_line_edit"/>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_15">
+                    <property name="text">
+                     <string>Never autoreply to these callsigns (comma separated):</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QLineEdit" name="auto_blacklist_line_edit"/>
                   </item>
                  </layout>
                 </widget>

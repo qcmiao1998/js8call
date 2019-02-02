@@ -590,6 +590,7 @@ private:
   QString my_grid_;
   QStringList my_groups_;
   QStringList auto_whitelist_;
+  QStringList auto_blacklist_;
   QString my_qth_;
   QString cq_;
   QString reply_;
@@ -969,6 +970,10 @@ void Configuration::removeGroup(QString const &group){
 
 QSet<QString> Configuration::auto_whitelist() const {
     return QSet<QString>::fromList(m_->auto_whitelist_);
+}
+
+QSet<QString> Configuration::auto_blacklist() const {
+    return QSet<QString>::fromList(m_->auto_blacklist_);
 }
 
 QString Configuration::my_qth() const
@@ -1359,6 +1364,7 @@ void Configuration::impl::initialize_models ()
   ui_->activity_aging_spin_box->setValue(activity_aging_);
   ui_->groups_line_edit->setText(my_groups_.join(", "));
   ui_->auto_whitelist_line_edit->setText(auto_whitelist_.join(", "));
+  ui_->auto_blacklist_line_edit->setText(auto_blacklist_.join(", "));
   ui_->qth_message_line_edit->setText (my_qth_.toUpper());
   ui_->cq_message_line_edit->setText(cq_.toUpper());
   ui_->reply_message_line_edit->setText (reply_.toUpper());
@@ -1503,6 +1509,7 @@ void Configuration::impl::read_settings ()
   my_grid_ = settings_->value ("MyGrid", QString {}).toString ();
   my_groups_ = settings_->value("MyGroups", QStringList{}).toStringList();
   auto_whitelist_ = settings_->value("AutoWhitelist", QStringList{}).toStringList();
+  auto_blacklist_ = settings_->value("AutoBlacklist", QStringList{}).toStringList();
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
   my_qth_ = settings_->value("MyQTH", QString {}).toString();
@@ -1763,6 +1770,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MyGrid", my_grid_);
   settings_->setValue ("MyGroups", my_groups_);
   settings_->setValue ("AutoWhitelist", auto_whitelist_);
+  settings_->setValue ("AutoBlacklist", auto_blacklist_);
   settings_->setValue ("MyQTH", my_qth_);
   settings_->setValue ("CQMessage", cq_);
   settings_->setValue ("Reply", reply_);
@@ -2354,6 +2362,7 @@ void Configuration::impl::accept ()
   my_grid_ = ui_->grid_line_edit->text ().toUpper();
   my_groups_ = splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), true);
   auto_whitelist_ = splitCalls(ui_->auto_whitelist_line_edit->text().toUpper().trimmed());
+  auto_blacklist_ = splitCalls(ui_->auto_blacklist_line_edit->text().toUpper().trimmed());
   cq_ = ui_->cq_message_line_edit->text().toUpper();
   reply_ = ui_->reply_message_line_edit->text().toUpper();
   my_qth_ = ui_->qth_message_line_edit->text().toUpper();

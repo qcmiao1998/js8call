@@ -101,6 +101,7 @@ public:
   void addGroup(QString const &group);
   void removeGroup(QString const &group);
   QSet<QString> auto_whitelist() const;
+  QSet<QString> auto_blacklist() const;
   int activity_aging() const;
   int callsign_aging() const;
   QString my_qth () const;
