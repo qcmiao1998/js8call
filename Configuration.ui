@@ -277,7 +277,7 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>0</y>
+                <y>-133</y>
                 <width>724</width>
                 <height>586</height>
                </rect>
@@ -666,7 +666,7 @@ text message.</string>
                <item>
                 <widget class="QGroupBox" name="groupBox_8">
                  <property name="title">
-                  <string>Idle Watchdog</string>
+                  <string>Idle Timeout</string>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_32">
                   <item>

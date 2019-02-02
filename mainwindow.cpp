@@ -4844,7 +4844,7 @@ void MainWindow::guiUpdate()
     } else if(m_monitoring) {
       if (m_tx_watchdog) {
         tx_status_label.setStyleSheet ("QLabel{background-color: #000000; color:#ffffff}");
-        tx_status_label.setText ("Inactive watchdog");
+        tx_status_label.setText ("Idle timeout");
       } else {
         tx_status_label.setStyleSheet("QLabel{background-color: #22ff22}");
         QString t;
@@ -9722,20 +9722,26 @@ void MainWindow::processCommandActivity() {
             }
         }
 
-
         // we're only responding to callsigns in our whitelist if we have one defined...
         // make sure the whitelist is empty (no restrictions) or the from callsign or its base callsign is on it
         auto whitelist = m_config.auto_whitelist();
         if(!whitelist.isEmpty() && !(whitelist.contains(d.from) || whitelist.contains(Radio::base_callsign(d.from)))){
+            qDebug() << "skipping command for whitelist" << d.from;
             continue;
         }
 
         // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past ten minutes)
         // that way we never get spammed by allcalls at too high of a frequency
         if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < 10) {
+            qDebug() << "skipping command for allcall timeout" << d.from;
             continue;
         }
 
+        // don't actually process any automatic message replies while in idle
+        if(m_tx_watchdog){
+            qDebug() << "skipping command for idle timeout" << d.from;
+            continue;
+        }
 
         // HACK: if this is an autoreply cmd and relay path is populated and cmd is not MSG or MSG TO:, then swap out the relay path
         if(Varicode::isCommandAutoreply(d.cmd) && !d.relayPath.isEmpty() && !d.cmd.startsWith(" MSG")){
@@ -11770,7 +11776,7 @@ void MainWindow::tx_watchdog (bool triggered)
       if (m_auto) auto_tx_mode (false);
       stopTx();
       tx_status_label.setStyleSheet ("QLabel{background-color: #000000; color:#ffffff; }");
-      tx_status_label.setText ("Inactive watchdog");
+      tx_status_label.setText ("Idle timeout");
 
       // if the watchdog is triggered...we're no longer active
       bool wasAuto = ui->autoReplyButton->isChecked();
@@ -11785,6 +11791,26 @@ void MainWindow::tx_watchdog (bool triggered)
       // clear the tx queues
       resetMessageTransmitQueue();
 
+      QMessageBox * msgBox = new QMessageBox(this);
+      msgBox->setIcon(QMessageBox::Information);
+      msgBox->setText("Idle Timeout");
+      msgBox->setInformativeText(QString("You have been idle for more than %1 minutes.").arg(m_config.watchdog()));
+      msgBox->addButton(QMessageBox::Ok);
+
+      connect(msgBox, &QMessageBox::finished, this, [this, wasAuto, wasHB, wasCQ](int /*result*/) {
+          // restore the button states
+          ui->autoReplyButton->setChecked(wasAuto);
+          ui->hbMacroButton->setChecked(wasHB);
+          ui->cqMacroButton->setChecked(wasCQ);
+
+          this->tx_watchdog(false);
+      });
+      msgBox->setModal(true);
+      msgBox->show();
+
+
+
+#if 0
       MessageBox::warning_message(this, QString("You have been inactive for more than %1 minutes.").arg(m_config.watchdog()));
 
       // clear the tx queues
@@ -11794,6 +11820,7 @@ void MainWindow::tx_watchdog (bool triggered)
       ui->autoReplyButton->setChecked(wasAuto);
       ui->hbMacroButton->setChecked(wasHB);
       ui->cqMacroButton->setChecked(wasCQ);
+#endif
     }
   else
     {
