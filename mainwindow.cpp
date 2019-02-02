@@ -1380,6 +1380,40 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       displayActivity(true);
   });
 
+  auto historyAction = new QAction(QString("Message History..."), ui->tableWidgetCalls);
+  connect(historyAction, &QAction::triggered, this, [this](){
+      QString selectedCall = callsignSelected();
+      if(selectedCall.isEmpty()){
+          return;
+      }
+
+      Inbox inbox(inboxPath());
+      if(!inbox.open()){
+          return;
+      }
+
+      QList<Message> msgs;
+      foreach(auto pair, inbox.values("UNREAD", "$.params.FROM", selectedCall, 0, 1000)){
+          msgs.append(pair.second);
+      }
+      foreach(auto pair, inbox.values("READ", "$.params.FROM", selectedCall, 0, 1000)){
+          msgs.append(pair.second);
+      }
+
+      qStableSort(msgs.begin(), msgs.end(), [](Message const &a, Message const &b){
+          return a.params().value("UTC") < b.params().value("UTC");
+      });
+
+      auto mw = new MessageWindow(this);
+      connect(mw, &MessageWindow::replyMessage, this, [this](const QString &text){
+          addMessageText(text, true, false);
+          toggleTx(true);
+      });
+      mw->setCall(selectedCall);
+      mw->populateMessages(msgs);
+      mw->show();
+  });
+
   ui->tableWidgetCalls->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->tableWidgetCalls->horizontalHeader(), &QHeaderView::customContextMenuRequested, this, [this](QPoint const &point){
       QMenu * menu = new QMenu(ui->tableWidgetCalls);
@@ -1390,13 +1424,14 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   });
 
   ui->tableWidgetCalls->setContextMenuPolicy(Qt::CustomContextMenu);
-  connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, logAction, clearAction4, clearActionAll, addStation, removeStation](QPoint const &point){
+  connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, logAction, historyAction, clearAction4, clearActionAll, addStation, removeStation](QPoint const &point){
     QMenu * menu = new QMenu(ui->tableWidgetCalls);
 
     ui->tableWidgetRXAll->selectionModel()->clearSelection();
 
     QString selectedCall = callsignSelected();
     bool isAllCall = isAllCallIncluded(selectedCall);
+    bool isGroupCall = isGroupCallIncluded(selectedCall);
     bool missingCallsign = selectedCall.isEmpty();
 
     if(!missingCallsign && !isAllCall){
@@ -1412,6 +1447,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
     menu->addAction(logAction);
     logAction->setDisabled(missingCallsign || isAllCall);
+
+    menu->addAction(historyAction);
+    historyAction->setDisabled(missingCallsign || isAllCall || isGroupCall);
 
     menu->addSeparator();
 
@@ -7832,7 +7870,9 @@ void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
     on_tableWidgetCalls_cellClicked(row, col);
 
     auto call = callsignSelected();
+    addMessageText(call);
 
+#if 0
     if(m_rxInboxCountCache.value(call, 0) > 0){
 
         // TODO:
@@ -7843,6 +7883,15 @@ void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
 
         Inbox i(inboxPath());
         if(i.open()){
+            QList<Message> msgs;
+            foreach(auto pair, i.values("UNREAD", "$.params.FROM", call, 0, 1000)){
+                msgs.append(pair.second);
+            }
+
+            auto mw = new MessageWindow(this);
+            mw->populateMessages(msgs);
+            mw->show();
+
             auto pair = i.firstUnreadFrom(call);
             auto id = pair.first;
             auto msg = pair.second;
@@ -7873,6 +7922,7 @@ void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
     } else {
         addMessageText(call);
     }
+#endif
 }
 
 void MainWindow::on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected){
