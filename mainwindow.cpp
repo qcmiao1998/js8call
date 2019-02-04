@@ -1629,8 +1629,10 @@ void MainWindow::initializeDummyData(){
     // qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("@GROUP/42"));
     // qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("SP1ATOM"));
 
+
+
     QList<QString> calls = {
-        "@GROUP/42",
+        "@GROUP42",
         "KN4CRD",
         "VE7/KN4CRD",
         "KN4CRD/P",
@@ -1672,6 +1674,15 @@ void MainWindow::initializeDummyData(){
 
         i++;
     }
+
+    CommandDetail cmd = {};
+    cmd.cmd = ">";
+    cmd.to = m_config.my_callsign();
+    cmd.from = "N0JDS";
+    cmd.relayPath = "N0JDS>OH8STN";
+    cmd.text = "HELLO BRAVE SOUL";
+    cmd.utcTimestamp = dt;
+    addCommandToMyInbox(cmd);
 
     displayTextForFreq("KN4CRD: @ALLCALL? \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-315), true, true, true);
     displayTextForFreq("J1Y: KN4CRD SNR -05 \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
