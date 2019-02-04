@@ -1448,8 +1448,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     menu->addAction(logAction);
     logAction->setDisabled(missingCallsign || isAllCall);
 
+#if SHOW_MESSAGE_HISTORY
     menu->addAction(historyAction);
     historyAction->setDisabled(missingCallsign || isAllCall || isGroupCall);
+#endif
 
     menu->addSeparator();
 
