@@ -1664,9 +1664,10 @@ void MainWindow::initializeDummyData(){
         logCallActivity(cd, false);
 
         ActivityDetail ad = {};
+        ad.bits = Varicode::JS8CallFirst | Varicode::JS8CallLast;
         ad.snr = i == 3 ? -100 : i;
         ad.freq = 500 + 100*i;
-        ad.text = QString("%1: %2 TEST").arg(call).arg(m_config.my_callsign());
+        ad.text = QString("%1: %2 TEST MESSAGE").arg(call).arg(m_config.my_callsign());
         ad.utcTimestamp = dt;
         m_bandActivity[500+100*i] = { ad };
 
