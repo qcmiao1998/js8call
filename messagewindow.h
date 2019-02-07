@@ -2,6 +2,7 @@
 #define MESSAGEWINDOW_H
 
 #include <QDialog>
+#include <QPair>
 #include <QItemSelection>
 
 #include "Message.h"
@@ -23,7 +24,7 @@ signals:
 
 public slots:
     void setCall(const QString &call);
-    void populateMessages(QList<Message> msgs);
+    void populateMessages(QList<QPair<int, Message>> msgs);
     QString prepareReplyMessage(QString path, QString text);
 
 private slots:

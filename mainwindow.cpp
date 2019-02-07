@@ -1392,21 +1392,21 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
           return;
       }
 
-      QList<Message> msgs;
-      foreach(auto pair, inbox.values("READ", "$.params.FROM", selectedCall, 0, 1000)){
-          msgs.append(pair.second);
-      }
+      QList<QPair<int, Message> > msgs;
+
+      msgs.append(inbox.values("READ", "$.params.FROM", selectedCall, 0, 1000));
+
       foreach(auto pair, inbox.values("UNREAD", "$.params.FROM", selectedCall, 0, 1000)){
-          auto msg = pair.second;
-          msgs.append(msg);
+          msgs.append(pair);
 
           // mark as read
+          auto msg = pair.second;
           msg.setType("READ");
           inbox.set(pair.first, msg);
       }
 
-      qStableSort(msgs.begin(), msgs.end(), [](Message const &a, Message const &b){
-          return a.params().value("UTC") > b.params().value("UTC");
+      qStableSort(msgs.begin(), msgs.end(), [](QPair<int, Message> const &a, QPair<int, Message> const &b){
+          return a.second.params().value("UTC") > b.second.params().value("UTC");
       });
 
       auto mw = new MessageWindow(this);
@@ -7436,6 +7436,19 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1>[MESSAGE]").arg(selectedCall), true, true);
     });
 
+    auto msgAction = menu->addAction(QString("%1 MSG [MESSAGE] - Please store this message in your inbox").arg(call).trimmed());
+    msgAction->setDisabled(isAllCall);
+    connect(msgAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 MSG [MESSAGE]").arg(selectedCall), true, true);
+    });
+
+
     auto msgToAction = menu->addAction(QString("%1 MSG TO:[CALLSIGN] [MESSAGE] - Please store this message at your station for later retreival by [CALLSIGN]").arg(call).trimmed());
     msgToAction->setDisabled(isAllCall);
     connect(msgToAction, &QAction::triggered, this, [this](){
@@ -7459,7 +7472,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1 QUERY CALL [CALLSIGN]?").arg(selectedCall), true, true);
     });
 
-    auto qsoQueryMsgAction = menu->addAction(QString("%1 QUERY MSGS - Please deliver any messages you have for me").arg(call).trimmed());
+    auto qsoQueryMsgAction = menu->addAction(QString("%1 QUERY MSGS - Do you have any messages for me?").arg(call).trimmed());
     connect(qsoQueryMsgAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
@@ -9992,12 +10005,6 @@ void MainWindow::processCommandActivity() {
                 // if we make it here, this is a message
                 addCommandToMyInbox(d);
 #endif
-
-#if ALERT_ON_NEW_MSG
-                QTimer::singleShot(500, this, [this, d](){
-                    MessageBox::information_message(this, QString("A new message was received at %1 UTC from %2").arg(d.utcTimestamp.time().toString()).arg(d.from));
-                });
-#endif
             }
         }
 
@@ -10083,6 +10090,19 @@ void MainWindow::processCommandActivity() {
 
             // we haven't replaced the from with the relay path, so we have to use it for the ack if there is one
             reply = QString("%1 ACK").arg(calls.length() > 1 ? d.relayPath : d.from);
+
+#define SHOW_ALERT_FOR_MSG 1
+#if SHOW_ALERT_FOR_MSG
+            SelfDestructMessageBox * m = new SelfDestructMessageBox(300,
+              "New Message Received",
+              QString("A new message was received at %1 UTC from %2").arg(d.utcTimestamp.time().toString()).arg(d.from),
+              QMessageBox::Information,
+              QMessageBox::Ok,
+              QMessageBox::Ok,
+              this);
+
+            m->show();
+#endif
         }
 
         // PROCESS ACKS
@@ -11894,7 +11914,7 @@ void MainWindow::tx_watchdog (bool triggered)
 
       QMessageBox * msgBox = new QMessageBox(this);
       msgBox->setIcon(QMessageBox::Information);
-      msgBox->setText("Idle Timeout");
+      msgBox->setWindowTitle("Idle Timeout");
       msgBox->setInformativeText(QString("You have been idle for more than %1 minutes.").arg(m_config.watchdog()));
       msgBox->addButton(QMessageBox::Ok);
 

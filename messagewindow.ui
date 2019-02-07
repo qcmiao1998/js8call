@@ -110,8 +110,16 @@
        <property name="text">
         <string>⚑</string>
        </property>
+       <property name="toolTip">
+        <string>Read / Unread Status</string>
+       </property>
        <property name="textAlignment">
         <set>AlignCenter</set>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>ID</string>
        </property>
       </column>
       <column>
@@ -136,7 +144,6 @@
       </column>
      </widget>
      <widget class="QTextEdit" name="messageTextEdit">
-      <property name="visible"><bool>false</bool></property>
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
         <horstretch>0</horstretch>
@@ -148,17 +155,22 @@
         <pointsize>14</pointsize>
        </font>
       </property>
+      <property name="visible">
+       <bool>false</bool>
+      </property>
       <property name="styleSheet">
        <string notr="true">QTextEdit { background-color:#ffeaa7; }</string>
       </property>
      </widget>
      <widget class="QTextEdit" name="replytextEdit">
-      <property name="visible"><bool>false</bool></property>
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
         <horstretch>0</horstretch>
         <verstretch>1</verstretch>
        </sizepolicy>
+      </property>
+      <property name="visible">
+       <bool>false</bool>
       </property>
      </widget>
     </widget>

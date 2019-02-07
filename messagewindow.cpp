@@ -52,14 +52,16 @@ void MessageWindow::setCall(const QString &call){
     setWindowTitle(QString("Message History: %1").arg(call));
 }
 
-void MessageWindow::populateMessages(QList<Message> msgs){
+void MessageWindow::populateMessages(QList<QPair<int, Message> > msgs){
     for(int i = ui->messageTableWidget->rowCount(); i >= 0; i--){
         ui->messageTableWidget->removeRow(i);
     }
 
     ui->messageTableWidget->setUpdatesEnabled(false);
     {
-        foreach(auto msg, msgs){
+        foreach(auto pair, msgs){
+            auto mid = pair.first;
+            auto msg = pair.second;
             auto params = msg.params();
 
             int row = ui->messageTableWidget->rowCount();
@@ -71,6 +73,11 @@ void MessageWindow::populateMessages(QList<Message> msgs){
             typeItem->setData(Qt::UserRole, msg.type());
             typeItem->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
             ui->messageTableWidget->setItem(row, col++, typeItem);
+
+            auto midItem = new QTableWidgetItem(QString::number(mid));
+            midItem->setData(Qt::UserRole, mid);
+            midItem->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+            ui->messageTableWidget->setItem(row, col++, midItem);
 
             auto date = params.value("UTC").toString();
             auto timestamp = QDateTime::fromString(date, "yyyy-MM-dd hh:mm:ss");
@@ -103,6 +110,7 @@ void MessageWindow::populateMessages(QList<Message> msgs){
         ui->messageTableWidget->resizeColumnToContents(1);
         ui->messageTableWidget->resizeColumnToContents(2);
         ui->messageTableWidget->resizeColumnToContents(3);
+        ui->messageTableWidget->resizeColumnToContents(4);
     }
     ui->messageTableWidget->setUpdatesEnabled(true);
 
