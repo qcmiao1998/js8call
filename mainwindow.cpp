@@ -10029,7 +10029,7 @@ void MainWindow::processCommandActivity() {
             cd.snr = d.snr;
             cd.tdrift = d.tdrift;
             cd.text = text;
-            cd.to = to;
+            cd.to = Radio::base_callsign(to);
             cd.utcTimestamp = d.utcTimestamp;
 
             qDebug() << "storing message to" << to << ":" << text;
@@ -10134,7 +10134,7 @@ void MainWindow::processCommandActivity() {
                 auto from = params.value("FROM").toString().trimmed();
 
                 auto to = params.value("TO").toString().trimmed();
-                if(to != who){
+                if(to != who && to != Radio::base_callsign(who)){
                     continue;
                 }
 
@@ -10391,8 +10391,17 @@ int MainWindow::getNextMessageIdForCallsign(QString callsign){
         return -1;
     }
 
-    auto v = inbox.values("STORE", "$.params.TO", callsign, 0, 10);
-    foreach(auto pair, v){
+    auto v1 = inbox.values("STORE", "$.params.TO", callsign, 0, 10);
+    foreach(auto pair, v1){
+        auto params = pair.second.params();
+        auto text = params.value("TEXT").toString().trimmed();
+        if(!text.isEmpty()){
+            return pair.first;
+        }
+    }
+
+    auto v2 = inbox.values("STORE", "$.params.TO", Radio::base_callsign(callsign), 0, 10);
+    foreach(auto pair, v2){
         auto params = pair.second.params();
         auto text = params.value("TEXT").toString().trimmed();
         if(!text.isEmpty()){
