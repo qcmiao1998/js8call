@@ -111,8 +111,7 @@ void MessageWindow::populateMessages(QList<Message> msgs){
     }
 }
 
-QString MessageWindow::prepareReplyMessage(QString path){
-    auto text = ui->replytextEdit->toPlainText();
+QString MessageWindow::prepareReplyMessage(QString path, QString text){
     return QString("%1 MSG %2").arg(path).arg(text);
 }
 
@@ -135,9 +134,8 @@ void MessageWindow::on_replyPushButton_clicked(){
     }
 
     auto path = item->data(Qt::UserRole).toString();
-    auto message = prepareReplyMessage(path);
+    auto text = "[MESSAGE]"; // ui->replytextEdit->toPlainText();
+    auto message = prepareReplyMessage(path, text);
 
     emit replyMessage(message);
-
-    close();
 }

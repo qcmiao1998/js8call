@@ -24,7 +24,7 @@ signals:
 public slots:
     void setCall(const QString &call);
     void populateMessages(QList<Message> msgs);
-    QString prepareReplyMessage(QString path);
+    QString prepareReplyMessage(QString path, QString text);
 
 private slots:
     void on_messageTableWidget_selectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/);

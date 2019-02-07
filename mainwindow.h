@@ -952,6 +952,7 @@ private:
   void processCommandActivity();
   QString inboxPath();
   void refreshInboxCounts();
+  bool hasMessageHistory(QString call);
   int addCommandToMyInbox(CommandDetail d);
   int addCommandToInboxStorage(QString type, CommandDetail d);
   int getNextMessageIdForCallsign(QString callsign);

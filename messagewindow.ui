@@ -136,6 +136,7 @@
       </column>
      </widget>
      <widget class="QTextEdit" name="messageTextEdit">
+      <property name="visible"><bool>false</bool></property>
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
         <horstretch>0</horstretch>
@@ -152,6 +153,7 @@
       </property>
      </widget>
      <widget class="QTextEdit" name="replytextEdit">
+      <property name="visible"><bool>false</bool></property>
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
         <horstretch>0</horstretch>

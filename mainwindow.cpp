@@ -1380,7 +1380,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       displayActivity(true);
   });
 
-  auto historyAction = new QAction(QString("Message History..."), ui->tableWidgetCalls);
+  auto historyAction = new QAction(QString("View Message Inbox..."), ui->tableWidgetCalls);
   connect(historyAction, &QAction::triggered, this, [this](){
       QString selectedCall = callsignSelected();
       if(selectedCall.isEmpty()){
@@ -1393,21 +1393,32 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       }
 
       QList<Message> msgs;
-      foreach(auto pair, inbox.values("UNREAD", "$.params.FROM", selectedCall, 0, 1000)){
-          msgs.append(pair.second);
-      }
       foreach(auto pair, inbox.values("READ", "$.params.FROM", selectedCall, 0, 1000)){
           msgs.append(pair.second);
       }
+      foreach(auto pair, inbox.values("UNREAD", "$.params.FROM", selectedCall, 0, 1000)){
+          auto msg = pair.second;
+          msgs.append(msg);
+
+          // mark as read
+          msg.setType("READ");
+          inbox.set(pair.first, msg);
+      }
 
       qStableSort(msgs.begin(), msgs.end(), [](Message const &a, Message const &b){
-          return a.params().value("UTC") < b.params().value("UTC");
+          return a.params().value("UTC") > b.params().value("UTC");
       });
 
       auto mw = new MessageWindow(this);
-      connect(mw, &MessageWindow::replyMessage, this, [this](const QString &text){
-          addMessageText(text, true, false);
-          toggleTx(true);
+      connect(mw, &MessageWindow::finished, this, [this](int){
+          refreshInboxCounts();
+          displayCallActivity();
+      });
+      connect(mw, &MessageWindow::replyMessage, this, [this, mw](const QString &text){
+          addMessageText(text, true, true);
+          refreshInboxCounts();
+          displayCallActivity();
+          mw->close();
       });
       mw->setCall(selectedCall);
       mw->populateMessages(msgs);
@@ -1448,10 +1459,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     menu->addAction(logAction);
     logAction->setDisabled(missingCallsign || isAllCall);
 
-#if SHOW_MESSAGE_HISTORY
     menu->addAction(historyAction);
-    historyAction->setDisabled(missingCallsign || isAllCall || isGroupCall);
-#endif
+    historyAction->setDisabled(missingCallsign || isAllCall || isGroupCall || !hasMessageHistory(selectedCall));
 
     menu->addSeparator();
 
@@ -1575,7 +1584,7 @@ void MainWindow::checkStartupWarnings ()
 {
   MessageBox::critical_message (this,
                                 QString("This version of %1 is a pre-release development\n"
-                                "build andw will expire after %2 (UTC), upon which you\n"
+                                "build and will expire after %2 (UTC), upon which you\n"
                                 "will need to upgrade to the latest version. \n\n"
                                 "Use of development versions of JS8Call are at your own risk \n"
                                 "and carry a responsiblity to report any problems to:\n"
@@ -1629,10 +1638,11 @@ void MainWindow::initializeDummyData(){
     // qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("@GROUP/42"));
     // qDebug() << Varicode::unpackAlphaNumeric50(Varicode::packAlphaNumeric50("SP1ATOM"));
 
-
+    if(!m_config.my_groups().contains("@GROUP42")){
+        m_config.addGroup("@GROUP42");
+    }
 
     QList<QString> calls = {
-        "@GROUP42",
         "KN4CRD",
         "VE7/KN4CRD",
         "KN4CRD/P",
@@ -7844,7 +7854,7 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
     }
     ui->extFreeTextMsgEdit->setPlaceholderText(placeholderText);
 
-#if JS8CALL_SHOW_CALL_DETAIL_BROWSER
+#if SHOW_CALL_DETAIL_BROWSER
     auto html = generateCallDetail(selectedCall);
     ui->callDetailTextBrowser->setHtml(html);
     ui->callDetailTextBrowser->setVisible(!selectedCall.isEmpty() && (!hearing.isEmpty() || !heardby.isEmpty()));
@@ -7886,7 +7896,7 @@ void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
     auto call = callsignSelected();
     addMessageText(call);
 
-#if 0
+#if SHOW_MESSAGE_HISTORY_ON_DOUBLECLICK
     if(m_rxInboxCountCache.value(call, 0) > 0){
 
         // TODO:
@@ -10316,6 +10326,17 @@ void MainWindow::refreshInboxCounts(){
             }
         }
     }
+}
+
+bool MainWindow::hasMessageHistory(QString call){
+    auto inbox = Inbox(inboxPath());
+    if(!inbox.open()){
+        return false;
+    }
+
+    int unread = inbox.count("UNREAD", "$.params.FROM", call);
+    int read = inbox.count("READ", "$.params.FROM", call);
+    return (unread + read) > 0;
 }
 
 int MainWindow::addCommandToMyInbox(CommandDetail d){
