@@ -18,15 +18,19 @@ public:
                            QMessageBox::Icon icon,
                            QMessageBox::StandardButtons buttons = QMessageBox::Ok | QMessageBox::Cancel,
                            QMessageBox::StandardButton defaultButton = QMessageBox::Ok,
+                           bool show_countdown = false,
                            QWidget* parent = nullptr,
                            Qt::WindowFlags flags = 0);
 
     void showEvent(QShowEvent* event) override;
 
+    void setShowCountdown(bool countdown){ m_show_countdown = countdown; }
+
 private slots:
     void tick();
 
 private:
+    bool m_show_countdown;
     int m_timeout;
     QString m_text;
     QTimer m_timer;

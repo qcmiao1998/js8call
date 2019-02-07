@@ -7,11 +7,13 @@ SelfDestructMessageBox::SelfDestructMessageBox(
         QMessageBox::Icon icon,
         QMessageBox::StandardButtons buttons,
         QMessageBox::StandardButton defaultButton,
+        bool show_countdown,
         QWidget* parent,
         Qt::WindowFlags flags)
   : QMessageBox(icon, title, text, buttons, parent, flags),
     m_timeout(timeout),
-    m_text(text)
+    m_text(text),
+    m_show_countdown(show_countdown)
 {
     connect(&m_timer, &QTimer::timeout, this, &SelfDestructMessageBox::tick);
     m_timer.setInterval(1000);
@@ -31,7 +33,9 @@ void SelfDestructMessageBox::tick(){
     m_timeout--;
 
     if(m_timeout){
-        setText(m_text.arg(m_timeout));
+        if(m_show_countdown){
+            setText(m_text.arg(m_timeout));
+        }
         return;
     }
 

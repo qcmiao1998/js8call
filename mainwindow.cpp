@@ -1815,6 +1815,7 @@ void MainWindow::tryBandHop(){
             QMessageBox::Information,
             QMessageBox::Ok | QMessageBox::Cancel,
             QMessageBox::Ok,
+            true,
             this);
 
           connect(m, &SelfDestructMessageBox::accepted, this, [this, frequency](){
@@ -10099,6 +10100,7 @@ void MainWindow::processCommandActivity() {
               QMessageBox::Information,
               QMessageBox::Ok,
               QMessageBox::Ok,
+              false,
               this);
 
             m->show();
