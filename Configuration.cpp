@@ -1929,11 +1929,6 @@ void Configuration::impl::set_rig_invariants ()
   // only enable CAT option if transceiver has CAT PTT
   ui_->PTT_CAT_radio_button->setEnabled (CAT_PTT_enabled);
 
-  // if CAT PTT is not enabled, select VOX instead
-  if(!CAT_PTT_enabled){
-      ui_->PTT_VOX_radio_button->setChecked(true);
-  }
-
   auto enable_ptt_port = TransceiverFactory::PTT_method_CAT != ptt_method && TransceiverFactory::PTT_method_VOX != ptt_method;
   ui_->PTT_port_combo_box->setEnabled (enable_ptt_port);
   // if PTT port is not enabled, fill it with the text of the CAT port
