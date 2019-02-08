@@ -7473,8 +7473,8 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         addMessageText(QString("%1 QUERY CALL [CALLSIGN]?").arg(selectedCall), true, true);
     });
 
-    auto qsoQueryMsgAction = menu->addAction(QString("%1 QUERY MSGS - Do you have any messages for me?").arg(call).trimmed());
-    connect(qsoQueryMsgAction, &QAction::triggered, this, [this](){
+    auto qsoQueryMsgsAction = menu->addAction(QString("%1 QUERY MSGS - Do you have any messages for me?").arg(call).trimmed());
+    connect(qsoQueryMsgsAction, &QAction::triggered, this, [this](){
 
         QString selectedCall = callsignSelected();
         if(selectedCall.isEmpty()){
@@ -7482,6 +7482,17 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         }
 
         addMessageText(QString("%1 QUERY MSGS").arg(selectedCall), true, true);
+    });
+
+    auto qsoQueryMsgAction = menu->addAction(QString("%1 QUERY MSG [ID] - Please deliver the complete message identified by ID").arg(call).trimmed());
+    connect(qsoQueryMsgAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 QUERY MSG [ID]").arg(selectedCall), true, true);
     });
 
     auto agnAction = menu->addAction(QString("%1 AGN? - Please automatically repeat your last transmission").arg(call).trimmed());
