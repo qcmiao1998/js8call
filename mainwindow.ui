@@ -1396,7 +1396,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
          </widget>
         </item>
         <item row="1" column="5">
-         <widget class="QPushButton" name="qthMacroButton">
+         <widget class="QPushButton" name="infoMacroButton">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -1404,10 +1404,10 @@ QTextEdit[transmitting=&quot;true&quot;] {
            </size>
           </property>
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send your station location message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send your station information&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
-           <string>QTH</string>
+           <string>Info</string>
           </property>
          </widget>
         </item>

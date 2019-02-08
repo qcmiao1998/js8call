@@ -455,7 +455,7 @@ private:
   Q_SLOT void on_delete_macro_push_button_clicked (bool = false);
   Q_SLOT void on_PTT_method_button_group_buttonClicked (int);
   Q_SLOT void on_groups_line_edit_textChanged(QString const&);
-  Q_SLOT void on_qth_message_line_edit_textChanged(QString const&);
+  Q_SLOT void on_info_message_line_edit_textChanged(QString const&);
   Q_SLOT void on_cq_message_line_edit_textChanged(QString const&);
   Q_SLOT void on_reply_message_line_edit_textChanged(QString const&);
   Q_SLOT void on_add_macro_line_edit_editingFinished ();
@@ -582,7 +582,7 @@ private:
   bool frequency_calibration_disabled_; // not persistent
   unsigned transceiver_command_number_;
   QString dynamic_grid_;
-  QString dynamic_qth_;
+  QString dynamic_info_;
 
   // configuration fields that we publish
   bool auto_switch_bands_;
@@ -591,7 +591,7 @@ private:
   QStringList my_groups_;
   QStringList auto_whitelist_;
   QStringList auto_blacklist_;
-  QString my_qth_;
+  QString my_info_;
   QString cq_;
   QString reply_;
   int callsign_aging_;
@@ -976,14 +976,14 @@ QSet<QString> Configuration::auto_blacklist() const {
     return QSet<QString>::fromList(m_->auto_blacklist_);
 }
 
-QString Configuration::my_qth() const
+QString Configuration::my_info() const
 {
-    auto qth = m_->my_qth_;
-    if(m_->use_dynamic_info_ && !m_->dynamic_qth_.isEmpty()){
-        qth = m_->dynamic_qth_;
+    auto info = m_->my_info_;
+    if(m_->use_dynamic_info_ && !m_->dynamic_info_.isEmpty()){
+        info = m_->dynamic_info_;
     }
 
-    return qth.trimmed();
+    return info.trimmed();
 }
 
 QString Configuration::cq_message() const
@@ -1011,9 +1011,9 @@ void Configuration::set_dynamic_location (QString const& grid_descriptor)
   m_->dynamic_grid_ = grid_descriptor.trimmed ();
 }
 
-void Configuration::set_dynamic_station_qth(QString const& qth)
+void Configuration::set_dynamic_station_info(QString const& info)
 {
-  m_->dynamic_qth_ = qth.trimmed ();
+  m_->dynamic_info_ = info.trimmed ();
 }
 
 namespace
@@ -1161,7 +1161,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   ui_->callsign_line_edit->setValidator (new CallsignValidator {this});
   ui_->grid_line_edit->setValidator (new MaidenheadLocatorValidator {this, MaidenheadLocatorValidator::Length::doubleextended});
   ui_->add_macro_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui_->qth_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
+  ui_->info_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->reply_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->cq_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->groups_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
@@ -1169,7 +1169,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   setUppercase(ui_->callsign_line_edit);
   setUppercase(ui_->grid_line_edit);
   setUppercase(ui_->add_macro_line_edit);
-  setUppercase(ui_->qth_message_line_edit);
+  setUppercase(ui_->info_message_line_edit);
   setUppercase(ui_->reply_message_line_edit);
   setUppercase(ui_->cq_message_line_edit);
   setUppercase(ui_->groups_line_edit);
@@ -1365,7 +1365,7 @@ void Configuration::impl::initialize_models ()
   ui_->groups_line_edit->setText(my_groups_.join(", "));
   ui_->auto_whitelist_line_edit->setText(auto_whitelist_.join(", "));
   ui_->auto_blacklist_line_edit->setText(auto_blacklist_.join(", "));
-  ui_->qth_message_line_edit->setText (my_qth_.toUpper());
+  ui_->info_message_line_edit->setText (my_info_.toUpper());
   ui_->cq_message_line_edit->setText(cq_.toUpper());
   ui_->reply_message_line_edit->setText (reply_.toUpper());
   ui_->use_dynamic_grid->setChecked(use_dynamic_info_);
@@ -1512,7 +1512,7 @@ void Configuration::impl::read_settings ()
   auto_blacklist_ = settings_->value("AutoBlacklist", QStringList{}).toStringList();
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
-  my_qth_ = settings_->value("MyQTH", QString {}).toString();
+  my_info_ = settings_->value("MyInfo", QString {}).toString();
   cq_ = settings_->value("CQMessage", QString {"CQCQCQ <MYGRID4>"}).toString();
   reply_ = settings_->value("Reply", QString {"HW CPY?"}).toString();
   next_color_cq_ = color_cq_ = settings_->value("colorCQ","#66ff66").toString();
@@ -1771,7 +1771,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MyGroups", my_groups_);
   settings_->setValue ("AutoWhitelist", auto_whitelist_);
   settings_->setValue ("AutoBlacklist", auto_blacklist_);
-  settings_->setValue ("MyQTH", my_qth_);
+  settings_->setValue ("MyInfo", my_info_);
   settings_->setValue ("CQMessage", cq_);
   settings_->setValue ("Reply", reply_);
   settings_->setValue ("CallsignAging", callsign_aging_);
@@ -2360,7 +2360,7 @@ void Configuration::impl::accept ()
   auto_blacklist_ = splitCalls(ui_->auto_blacklist_line_edit->text().toUpper().trimmed());
   cq_ = ui_->cq_message_line_edit->text().toUpper();
   reply_ = ui_->reply_message_line_edit->text().toUpper();
-  my_qth_ = ui_->qth_message_line_edit->text().toUpper();
+  my_info_ = ui_->info_message_line_edit->text().toUpper();
   callsign_aging_ = ui_->callsign_aging_spin_box->value();
   activity_aging_ = ui_->activity_aging_spin_box->value();
   spot_to_reporting_networks_ = ui_->psk_reporter_check_box->isChecked ();
@@ -2787,7 +2787,7 @@ void Configuration::impl::on_groups_line_edit_textChanged(QString const &text)
 {
 }
 
-void Configuration::impl::on_qth_message_line_edit_textChanged(QString const &text)
+void Configuration::impl::on_info_message_line_edit_textChanged(QString const &text)
 {
 }
 

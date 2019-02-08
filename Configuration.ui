@@ -36,7 +36,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget_2">
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="stationTab">
           <attribute name="title">
@@ -216,7 +216,7 @@
                    </widget>
                   </item>
                   <item row="2" column="1">
-                   <widget class="QLineEdit" name="qth_message_line_edit">
+                   <widget class="QLineEdit" name="info_message_line_edit">
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message that is transmitted in response to &amp;quot;@&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
@@ -228,7 +228,7 @@
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="text">
-                     <string>Station Message (QTH &amp; Equipment):</string>
+                     <string>Station Info (Rig, Antenna, Location, etc):</string>
                     </property>
                    </widget>
                   </item>
@@ -369,7 +369,7 @@
                   <item>
                    <widget class="QCheckBox" name="transmit_directed_check_box">
                     <property name="text">
-                     <string>Immediately transmit CQ, Reply, QTH, Saved, and Directed messages from the menu</string>
+                     <string>Immediately transmit CQ, Reply, Info, Saved, and Directed messages from the menu</string>
                     </property>
                    </widget>
                   </item>
@@ -4111,11 +4111,11 @@ soundcard changes</string>
  </connections>
  <buttongroups>
   <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
-  <buttongroup name="PTT_method_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
  </buttongroups>
 </ui>

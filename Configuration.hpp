@@ -104,7 +104,7 @@ public:
   QSet<QString> auto_blacklist() const;
   int activity_aging() const;
   int callsign_aging() const;
-  QString my_qth () const;
+  QString my_info () const;
   QString cq_message () const;
   QString reply_message () const;
   QFont table_font() const;
@@ -234,7 +234,7 @@ public:
   void set_dynamic_location (QString const&);
 
   // Set the dynamic station qth message which is only used if configuration setting is enabled.
-  void set_dynamic_station_qth(QString const& qth);
+  void set_dynamic_station_info(QString const& info);
 
 
   // This method queries if a CAT and PTT connection is operational.
