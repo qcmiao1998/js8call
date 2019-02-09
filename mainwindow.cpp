@@ -1440,7 +1440,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       }
 
       CommandDetail d = {};
-      d.cmd = " MSG";
+      d.cmd = " MSG ";
       d.to = selectedCall;
       d.from = m_config.my_callsign();
       d.relayPath = d.from;
