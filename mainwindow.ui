@@ -1407,7 +1407,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send your station information&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
-           <string>Info</string>
+           <string>INFO</string>
           </property>
          </widget>
         </item>
