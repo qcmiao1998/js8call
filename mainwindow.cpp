@@ -6990,21 +6990,23 @@ void MainWindow::buildRepeatMenu(QMenu *menu, QPushButton * button, int * interv
         {"Repeat every 15 minutes",   15},
         {"Repeat every 30 minutes",   30},
         {"Repeat every 60 minutes",   60},
-        {"Custom (Repeat every N minutes)", -1},
+        {"Repeat every N minutes (Custom Interval)", -1},
     };
 
     QActionGroup * group = new QActionGroup(menu);
 
-    bool set = false;
+    bool isSet = false;
     foreach(auto pair, items){
         int minutes = pair.second;
         auto action = menu->addAction(pair.first);
         action->setData(minutes);
         action->setCheckable(true);
-        action->setChecked(*interval == minutes || (minutes == -1 && set == false));
-        if(*interval == minutes){
-            set = true;
+        bool isMatch = *interval == minutes;
+        bool isCustom = (minutes == -1 && isSet == false);
+        if(isMatch){
+            isSet = true;
         }
+        action->setChecked(isMatch || isCustom);
         group->addAction(action);
 
         connect(action, &QAction::toggled, this, [this, minutes, interval, button](bool checked){
