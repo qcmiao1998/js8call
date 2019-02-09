@@ -6990,44 +6990,54 @@ void MainWindow::buildRepeatMenu(QMenu *menu, QPushButton * button, int * interv
         {"Repeat every 15 minutes",   15},
         {"Repeat every 30 minutes",   30},
         {"Repeat every 60 minutes",   60},
-        {"Repeat every N minutes (Custom Interval)", -1},
+        {"Repeat every N minutes (Custom Interval)", -1}, // this needs to be last because of isSet bool
     };
+
+    auto customFormat = QString("Repeat every %1 minutes (Custom Interval)");
 
     QActionGroup * group = new QActionGroup(menu);
 
     bool isSet = false;
     foreach(auto pair, items){
         int minutes = pair.second;
-        auto action = menu->addAction(pair.first);
-        action->setData(minutes);
-        action->setCheckable(true);
         bool isMatch = *interval == minutes;
         bool isCustom = (minutes == -1 && isSet == false);
         if(isMatch){
             isSet = true;
         }
+
+        auto text = pair.first;
+        if(isCustom){
+            text = QString(customFormat).arg(*interval);
+        }
+
+        auto action = menu->addAction(text);
+        action->setData(minutes);
+        action->setCheckable(true);
         action->setChecked(isMatch || isCustom);
         group->addAction(action);
 
-        connect(action, &QAction::toggled, this, [this, minutes, interval, button](bool checked){
+        connect(action, &QAction::toggled, this, [this, action, customFormat, minutes, interval, button](bool checked){
+            int min = minutes;
+
             if(checked){
 
                 if(minutes == -1){
                     bool ok = false;
-                    int min = QInputDialog::getInt(this, "Repeat every N minutes", "Minutes", 0, 1, 1440, 1, &ok);
+                    min = QInputDialog::getInt(this, "Repeat every N minutes", "Minutes", 0, 1, 1440, 1, &ok);
                     if(!ok){
                         return;
                     }
-                    *interval = min;
-                } else {
-                    *interval = minutes;
+                    action->setText(QString(customFormat).arg(*interval));
                 }
 
-                if(minutes > 0){
+                *interval = min;
+
+                if(min > 0){
                     // force a re-toggle
                     button->setChecked(false);
                 }
-                button->setChecked(minutes > 0);
+                button->setChecked(min > 0);
             }
         });
     }
