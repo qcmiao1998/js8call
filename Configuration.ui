@@ -36,7 +36,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget_2">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="stationTab">
           <attribute name="title">
@@ -279,7 +279,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>724</width>
-                <height>617</height>
+                <height>646</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -377,6 +377,13 @@
                    <widget class="QCheckBox" name="heartbeat_anywhere_check_box">
                     <property name="text">
                      <string>Allow heartbeat transmissions outside of heartbeat sub-channel (500Hz - 1000Hz)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="heartbeat_qso_pause_check_box">
+                    <property name="text">
+                     <string>Pause heartbeat transmissions while in a QSO (i.e., callsign is selected)</string>
                     </property>
                    </widget>
                   </item>

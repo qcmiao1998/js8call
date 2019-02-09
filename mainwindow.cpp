@@ -7084,6 +7084,8 @@ void MainWindow::sendHeartbeatAck(QString to, int snr, QString extra){
 
 void MainWindow::on_hbMacroButton_toggled(bool checked){
     if(checked){
+        clearCallsignSelected();
+
         if(m_hbInterval){
             m_nextHeartbeat = nextTransmitCycle().addSecs(m_hbInterval * 60);
 
@@ -7123,6 +7125,8 @@ void MainWindow::sendCQ(bool repeat){
 
 void MainWindow::on_cqMacroButton_toggled(bool checked){
     if(checked){
+        clearCallsignSelected();
+
         if(m_cqInterval){
             m_nextCQ = nextTransmitCycle().addSecs(m_cqInterval * 60);
 
@@ -7930,8 +7934,28 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
 
     auto placeholderText = QString("Type your outgoing messages here.");
     auto selectedCall = callsignSelected();
-    if(!selectedCall.isEmpty()){
+    if(selectedCall.isEmpty()){
+        // try to restore hb
+        if(m_hbPaused){
+            ui->hbMacroButton->setChecked(true);
+            m_hbPaused = false;
+        }
+    } else {
         placeholderText = QString("Type your outgoing directed message to %1 here.").arg(selectedCall);
+
+        // TODO: jsherer - move this to a generic "callsign changed" signal
+        if(m_config.heartbeat_qso_pause()){
+            // don't hb if we select a callsign... (but we should keep track so if we deselect, we restore our hb)
+            if(ui->hbMacroButton->isChecked()){
+                ui->hbMacroButton->setChecked(false);
+                m_hbPaused = true;
+            }
+
+            // don't cq if we select a callsign... (and it will not be restored otherwise)
+            if(ui->cqMacroButton->isChecked()){
+                ui->cqMacroButton->setChecked(false);
+            }
+        }
     }
     ui->extFreeTextMsgEdit->setPlaceholderText(placeholderText);
 

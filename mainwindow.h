@@ -859,6 +859,8 @@ private:
   bool m_hbHidden;
   int m_hbInterval;
   int m_cqInterval;
+  bool m_hbPaused;
+  bool m_cqPaused;
   QDateTime m_nextHeartbeat;
   QDateTime m_nextCQ;
   QDateTime m_dateTimeQSOOn;
