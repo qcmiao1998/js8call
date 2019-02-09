@@ -1208,7 +1208,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     restoreAction->setDisabled(m_lastTxMessage.isEmpty());
     menu->addAction(restoreAction);
 
-    auto savedMenu = menu->addMenu("Saved messages...");
+    auto savedMenu = menu->addMenu("Saved Messages...");
     buildSavedMessagesMenu(savedMenu);
 
     auto directedMenu = menu->addMenu(QString("Directed to %1...").arg(selectedCall));
@@ -1283,7 +1283,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     }
 
     if(selectedOffset != -1){
-        auto qsyAction = menu->addAction(QString("Jump to %1Hz...").arg(selectedOffset));
+        auto qsyAction = menu->addAction(QString("Jump to %1Hz").arg(selectedOffset));
         connect(qsyAction, &QAction::triggered, this, [this, selectedOffset](){
             setFreqOffsetForRestore(selectedOffset, false);
         });
@@ -1295,7 +1295,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
     menu->addSeparator();
 
-    auto savedMenu = menu->addMenu("Saved messages...");
+    auto savedMenu = menu->addMenu("Saved Messages...");
     buildSavedMessagesMenu(savedMenu);
 
     auto directedMenu = menu->addMenu(QString("Directed to %1...").arg(selectedCall));
@@ -1337,7 +1337,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto addStation = new QAction(QString("Add New Station or Group..."), ui->tableWidgetCalls);
   connect(addStation, &QAction::triggered, this, [this](){
       bool ok = false;
-      QString callsign = QInputDialog::getText(this, tr("Add New Station or Group..."),
+      QString callsign = QInputDialog::getText(this, tr("Add New Station or Group"),
                                                tr("Station or Group Callsign:"), QLineEdit::Normal,
                                                "", &ok).toUpper().trimmed();
       if(!ok || callsign.trimmed().isEmpty()){
@@ -1380,7 +1380,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       displayActivity(true);
   });
 
-  auto historyAction = new QAction(QString("View Message Inbox..."), ui->tableWidgetCalls);
+  auto historyAction = new QAction(QString("Message Inbox..."), ui->tableWidgetCalls);
   connect(historyAction, &QAction::triggered, this, [this](){
       QString selectedCall = callsignSelected();
       if(selectedCall.isEmpty()){
@@ -1473,7 +1473,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     if(!missingCallsign && !isAllCall){
         int selectedOffset = m_callActivity[selectedCall].freq;
         if(selectedOffset != -1){
-            auto qsyAction = menu->addAction(QString("Jump to %1Hz...").arg(selectedOffset));
+            auto qsyAction = menu->addAction(QString("Jump to %1Hz").arg(selectedOffset));
             connect(qsyAction, &QAction::triggered, this, [this, selectedOffset](){
                 setFreqOffsetForRestore(selectedOffset, false);
             });
@@ -1492,7 +1492,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
     menu->addSeparator();
 
-    auto savedMenu = menu->addMenu("Saved messages...");
+    auto savedMenu = menu->addMenu("Saved Messages...");
     buildSavedMessagesMenu(savedMenu);
 
     auto directedMenu = menu->addMenu(QString("Directed to %1...").arg(selectedCall));
@@ -2615,7 +2615,7 @@ void MainWindow::on_menuWindow_aboutToShow(){
 void MainWindow::on_actionSetOffset_triggered(){
     bool ok = false;
     auto currentFreq = currentFreqOffset();
-    QString newFreq = QInputDialog::getText(this, tr("Set Frequency Offset..."),
+    QString newFreq = QInputDialog::getText(this, tr("Set Frequency Offset"),
                                              tr("Offset in Hz:"), QLineEdit::Normal,
                                              QString("%1").arg(currentFreq), &ok).toUpper().trimmed();
     int offset = newFreq.toInt(&ok);
@@ -6940,7 +6940,7 @@ void MainWindow::buildFrequencyMenu(QMenu *menu){
     connect(custom, &QAction::triggered, this, [this](){
         bool ok = false;
         auto currentFreq = Radio::frequency_MHz_string(dialFrequency());
-        QString newFreq = QInputDialog::getText(this, tr("Set a Custom Frequency..."),
+        QString newFreq = QInputDialog::getText(this, tr("Set a Custom Frequency"),
                                                  tr("Frequency in MHz:"), QLineEdit::Normal,
                                                  currentFreq, &ok).toUpper().trimmed();
         if(!ok){
@@ -6990,21 +6990,37 @@ void MainWindow::buildRepeatMenu(QMenu *menu, QPushButton * button, int * interv
         {"Repeat every 15 minutes",   15},
         {"Repeat every 30 minutes",   30},
         {"Repeat every 60 minutes",   60},
+        {"Custom (Repeat every N minutes)", -1},
     };
 
     QActionGroup * group = new QActionGroup(menu);
 
+    bool set = false;
     foreach(auto pair, items){
         int minutes = pair.second;
         auto action = menu->addAction(pair.first);
-        action->setData(pair.second);
+        action->setData(minutes);
         action->setCheckable(true);
-        action->setChecked(*interval == minutes);
+        action->setChecked(*interval == minutes || (minutes == -1 && set == false));
+        if(*interval == minutes){
+            set = true;
+        }
         group->addAction(action);
 
         connect(action, &QAction::toggled, this, [this, minutes, interval, button](bool checked){
             if(checked){
-                *interval = minutes;
+
+                if(minutes == -1){
+                    bool ok = false;
+                    int min = QInputDialog::getInt(this, "Repeat every N minutes", "Minutes", 0, 1, 1440, 1, &ok);
+                    if(!ok){
+                        return;
+                    }
+                    *interval = min;
+                } else {
+                    *interval = minutes;
+                }
+
                 if(minutes > 0){
                     // force a re-toggle
                     button->setChecked(false);
