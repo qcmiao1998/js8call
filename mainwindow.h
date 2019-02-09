@@ -954,7 +954,7 @@ private:
   void refreshInboxCounts();
   bool hasMessageHistory(QString call);
   int addCommandToMyInbox(CommandDetail d);
-  int addCommandToInboxStorage(QString type, CommandDetail d);
+  int addCommandToStorage(QString type, CommandDetail d);
   int getNextMessageIdForCallsign(QString callsign);
   QStringList parseRelayPathCallsigns(QString from, QString text);
   void processAlertReplyForCommand(CommandDetail d, QString from, QString cmd);

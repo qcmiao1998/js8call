@@ -1425,6 +1425,31 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       mw->show();
   });
 
+  auto localMessageAction = new QAction(QString("Store Message..."), ui->tableWidgetCalls);
+  connect(localMessageAction, &QAction::triggered, this, [this](){
+      QString selectedCall = callsignSelected();
+      if(selectedCall.isEmpty()){
+          return;
+      }
+
+      auto m = new MessageReplyDialog(this);
+      m->setWindowTitle("Message");
+      m->setLabel(QString("Store this message locally for %1:").arg(selectedCall));
+      if(m->exec() != QMessageBox::Accepted){
+          return;
+      }
+
+      CommandDetail d = {};
+      d.cmd = " MSG";
+      d.to = selectedCall;
+      d.from = m_config.my_callsign();
+      d.relayPath = d.from;
+      d.text = m->textValue();
+      d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+
+      addCommandToStorage("STORE", d);
+  });
+
   ui->tableWidgetCalls->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->tableWidgetCalls->horizontalHeader(), &QHeaderView::customContextMenuRequested, this, [this](QPoint const &point){
       QMenu * menu = new QMenu(ui->tableWidgetCalls);
@@ -1435,7 +1460,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   });
 
   ui->tableWidgetCalls->setContextMenuPolicy(Qt::CustomContextMenu);
-  connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, logAction, historyAction, clearAction4, clearActionAll, addStation, removeStation](QPoint const &point){
+  connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, logAction, historyAction, localMessageAction, clearAction4, clearActionAll, addStation, removeStation](QPoint const &point){
     QMenu * menu = new QMenu(ui->tableWidgetCalls);
 
     ui->tableWidgetRXAll->selectionModel()->clearSelection();
@@ -1461,6 +1486,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
     menu->addAction(historyAction);
     historyAction->setDisabled(missingCallsign || isAllCall || isGroupCall || !hasMessageHistory(selectedCall));
+
+    menu->addAction(localMessageAction);
+    localMessageAction->setDisabled(missingCallsign || isAllCall || isGroupCall);
 
     menu->addSeparator();
 
@@ -10054,7 +10082,7 @@ void MainWindow::processCommandActivity() {
 
             qDebug() << "storing message to" << to << ":" << text;
 
-            addCommandToInboxStorage("STORE", cd);
+            addCommandToStorage("STORE", cd);
 
             // we haven't replaced the from with the relay path, so we have to use it for the ack if there is one
             reply = QString("%1 ACK").arg(calls.length() > 1 ? d.relayPath : d.from);
@@ -10378,10 +10406,10 @@ int MainWindow::addCommandToMyInbox(CommandDetail d){
     m_rxInboxCountCache[d.from] = m_rxInboxCountCache.value(d.from, 0) + 1;
 
     // add it to my unread inbox
-    return addCommandToInboxStorage("UNREAD", d);
+    return addCommandToStorage("UNREAD", d);
 }
 
-int MainWindow::addCommandToInboxStorage(QString type, CommandDetail d){
+int MainWindow::addCommandToStorage(QString type, CommandDetail d){
     // inbox:
     auto inbox = Inbox(inboxPath());
     if(!inbox.open()){
