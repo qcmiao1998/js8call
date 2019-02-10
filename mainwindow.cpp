@@ -9825,20 +9825,24 @@ void MainWindow::processCommandActivity() {
         ad.bits = d.bits;
         ad.freq = d.freq;
         ad.snr = d.snr;
-        ad.text = QString("%1: %2%3 ").arg(d.from).arg(d.to).arg(d.cmd);
+
+        QStringList text;
+        text.append(QString("%1: %2%3").arg(d.from).arg(d.to).arg(d.cmd));
+
         if(!d.extra.isEmpty()){
-            ad.text += d.extra;
+            text.append(d.extra);
         }
         if(!d.text.isEmpty()){
-            ad.text += d.text;
+            text.append(d.text);
         }
+        ad.text = text.join(" ");
+
         bool isLast = (ad.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast;
         if (isLast) {
             // can also use \u0004 \u2666 \u2404
             ad.text = QString("%1 \u2301 ").arg(Varicode::rstrip(ad.text));
         }
         ad.utcTimestamp = d.utcTimestamp;
-
 
         // we'd be double printing here if were on frequency, so let's be "smart" about this...
         bool shouldDisplay = true;
@@ -10814,29 +10818,45 @@ void MainWindow::displayBandActivity() {
                 int snr = 0;
                 float tdrift = 0;
                 int activityAging = m_config.activity_aging();
-                foreach(ActivityDetail item, items) {
 
+                // hide items that shouldn't appear
+                for(int i = 0; i < items.length(); i++){
+                    auto item = items[i];
+
+                    bool shouldDisplay = true;
+
+                    // hide aged items
                     if (!isOffsetSelected && activityAging && item.utcTimestamp.secsTo(now) / 60 >= activityAging) {
-                        continue;
+                        shouldDisplay = false;
                     }
 
-                    if (m_hbHidden && (item.text.contains(" HB ") || item.text.contains(" ACK "))){
+                    // hide heartbeat items
+                    if (m_hbHidden){
                         // hide heartbeats and acks if we have heartbeating hidden
+                        if(item.text.contains(" HB ") || item.text.contains(" ACK ")){
+                            shouldDisplay = false;
+                        }
+                    }
+
+                    // hide empty items
+                    if (item.text.isEmpty()) {
+                        shouldDisplay = false;
+                    }
+
+                    // set the visibility of the item
+                    items[i].shouldDisplay = shouldDisplay;
+                }
+
+                // show the items that should appear
+                foreach(ActivityDetail item, items) {
+                    if(!item.shouldDisplay){
                         continue;
                     }
 
-                    if (item.text.isEmpty()) {
-                        continue;
-                    }
-    #if 0
-                    if (item.isCompound || (item.isDirected && item.text.contains("<....>"))){
-                        //continue;
-                        item.text = "[...]";
-                    }
-    #endif
                     if (item.isLowConfidence) {
                         item.text = QString("[%1]").arg(item.text);
                     }
+
                     if ((item.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast) {
                         // can also use \u0004 \u2666 \u2404
                         item.text = QString("%1 \u2301 ").arg(Varicode::rstrip(item.text));
