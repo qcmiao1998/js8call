@@ -6370,17 +6370,12 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
 void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, QString const& grid
                             , Frequency dial_freq, QString const& mode, QString const &submode
                             , QString const& rpt_sent, QString const& rpt_received
-                            , QString const& tx_power, QString const& comments
+                            , QString const& comments
                             , QString const& name, QDateTime const& QSO_date_on, QString const& operator_call
                             , QString const& my_call, QString const& my_grid, QByteArray const& ADIF)
 {
   QString date = QSO_date_on.toString("yyyyMMdd");
   m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), mode, submode, date);
-
-#if 0
-  m_messageClient->qso_logged (QSO_date_off, call, grid, dial_freq, mode, rpt_sent, rpt_received, tx_power, comments, name, QSO_date_on, operator_call, my_call, my_grid);
-  m_messageClient->logged_ADIF (ADIF);
-#endif
 
   sendNetworkMessage("LOG.QSO", QString(ADIF), {
       {"UTC.ON", QVariant(QSO_date_on.toMSecsSinceEpoch())},

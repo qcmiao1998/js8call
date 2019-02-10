@@ -343,7 +343,7 @@ private slots:
   void acceptQSO (QDateTime const&, QString const& call, QString const& grid
                   , Frequency dial_freq, QString const& mode, QString const& submode
                   , QString const& rpt_sent, QString const& rpt_received
-                  , QString const& tx_power, QString const& comments
+                  , QString const& comments
                   , QString const& name, QDateTime const& QSO_date_on, QString const& operator_call
                   , QString const& my_call, QString const& my_grid, QByteArray const& ADIF);
   void on_bandComboBox_currentIndexChanged (int index);

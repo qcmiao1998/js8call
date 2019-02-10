@@ -166,7 +166,7 @@ QByteArray ADIF::QSOToADIF(QString const& hisCall, QString const& hisGrid, QStri
                            , QString const& rptSent, QString const& rptRcvd, QDateTime const& dateTimeOn
                            , QDateTime const& dateTimeOff, QString const& band, QString const& comments
                            , QString const& name, QString const& strDialFreq, QString const& m_myCall
-                           , QString const& m_myGrid, QString const& m_txPower, QString const& operator_call)
+                           , QString const& m_myGrid, QString const& operator_call)
 {
   QString t;
   t = "<call:" + QString::number(hisCall.length()) + ">" + hisCall;
@@ -187,9 +187,6 @@ QByteArray ADIF::QSOToADIF(QString const& hisCall, QString const& hisGrid, QStri
       m_myCall;
   t += " <my_gridsquare:" + QString::number(m_myGrid.length()) + ">" +
       m_myGrid;
-  if (m_txPower != "")
-    t += " <tx_pwr:" + QString::number(m_txPower.length()) +
-        ">" + m_txPower;
   if (comments != "")
     t += " <comment:" + QString::number(comments.length()) +
         ">" + comments;

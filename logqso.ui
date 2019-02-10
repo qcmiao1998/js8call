@@ -126,6 +126,19 @@
     </layout>
    </item>
    <item>
+    <spacer name="verticalSpacer_3">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -307,25 +320,17 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_6">
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Tx power</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="txPower"/>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="cbTxPower">
-       <property name="text">
-        <string>Retain</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <spacer name="verticalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -434,8 +439,6 @@
   <tabstop>rcvd</tabstop>
   <tabstop>grid</tabstop>
   <tabstop>name</tabstop>
-  <tabstop>txPower</tabstop>
-  <tabstop>cbTxPower</tabstop>
   <tabstop>comments</tabstop>
   <tabstop>cbComments</tabstop>
  </tabstops>

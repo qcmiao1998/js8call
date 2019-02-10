@@ -33,7 +33,7 @@ public:
                   QString const& rptSent, QString const& rptRcvd, QDateTime const& dateTimeOn,
                   QDateTime const& dateTimeOff,
                   Radio::Frequency dialFreq, QString const& myCall, QString const& myGrid,
-                  bool toRTTY, bool dBtoComments, bool bFox, QString const& opCall);
+                  bool toDATA, bool dBtoComments, bool bFox, QString const& opCall);
 
 public slots:
   void accept();
@@ -42,7 +42,7 @@ signals:
   void acceptQSO (QDateTime const& QSO_date_off, QString const& call, QString const& grid
                   , Radio::Frequency dial_freq, QString const& mode, QString const& submode
                   , QString const& rpt_sent, QString const& rpt_received
-                  , QString const& tx_power, QString const& comments
+                  , QString const& comments
                   , QString const& name, QDateTime const& QSO_date_on,  QString const& operator_call
                   , QString const& my_call, QString const& my_grid, QByteArray const& ADIF);
 
@@ -56,7 +56,6 @@ private:
   QScopedPointer<Ui::LogQSO> ui;
   QSettings * m_settings;
   Configuration const * m_config;
-  QString m_txPower;
   QString m_comments;
   Radio::Frequency m_dialFreq;
   QString m_myCall;

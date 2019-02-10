@@ -37,9 +37,7 @@ void LogQSO::loadSettings ()
 {
   m_settings->beginGroup ("LogQSO");
   restoreGeometry (m_settings->value ("geometry", saveGeometry ()).toByteArray ());
-  ui->cbTxPower->setChecked (m_settings->value ("SaveTxPower", false).toBool ());
   ui->cbComments->setChecked (m_settings->value ("SaveComments", false).toBool ());
-  m_txPower = m_settings->value ("TxPower", "").toString ();
   m_comments = m_settings->value ("LogComments", "").toString();
   m_settings->endGroup ();
 }
@@ -48,9 +46,7 @@ void LogQSO::storeSettings () const
 {
   m_settings->beginGroup ("LogQSO");
   m_settings->setValue ("geometry", saveGeometry ());
-  m_settings->setValue ("SaveTxPower", ui->cbTxPower->isChecked ());
   m_settings->setValue ("SaveComments", ui->cbComments->isChecked ());
-  m_settings->setValue ("TxPower", m_txPower);
   m_settings->setValue ("LogComments", m_comments);
   m_settings->endGroup ();
 }
@@ -59,15 +55,13 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
                         QString const& rptSent, QString const& rptRcvd,
                         QDateTime const& dateTimeOn, QDateTime const& dateTimeOff,
                         Radio::Frequency dialFreq, QString const& myCall, QString const& myGrid,
-                        bool toRTTY, bool dBtoComments, bool bFox, QString const& opCall)
+                        bool toDATA, bool dBtoComments, bool bFox, QString const& opCall)
 {
   if(!isHidden()) return;
   ui->call->setText(hisCall);
   ui->grid->setText(hisGrid);
   ui->name->setText("");
-  ui->txPower->setText("");
   ui->comments->setText("");
-  if (ui->cbTxPower->isChecked ()) ui->txPower->setText(m_txPower);
   if (ui->cbComments->isChecked ()) ui->comments->setText(m_comments);
   if(dBtoComments) {
     QString t=mode;
@@ -75,7 +69,7 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
     if(rptRcvd!="") t+="  Rcvd: " + rptRcvd;
     ui->comments->setText(t);
   }
-  if(toRTTY) mode="DATA";
+  if(toDATA) mode="DATA";
   ui->mode->setText(mode);
   ui->sent->setText(rptSent);
   ui->rcvd->setText(rptRcvd);
@@ -111,7 +105,6 @@ void LogQSO::accept()
   m_dateTimeOff = ui->end_date_time->dateTime ();
   band=ui->band->text();
   name=ui->name->text();
-  m_txPower=ui->txPower->text();
   comments=ui->comments->text();
   m_comments=comments;
   QString strDialFreq(QString::number(m_dialFreq / 1.e6,'f',6));
@@ -123,7 +116,7 @@ void LogQSO::accept()
   adifile.init(adifilePath);
 
   QByteArray ADIF {adifile.QSOToADIF (hisCall, hisGrid, mode, submode, rptSent, rptRcvd, m_dateTimeOn, m_dateTimeOff, band
-                                      , comments, name, strDialFreq, m_myCall, m_myGrid, m_txPower, operator_call)};
+                                      , comments, name, strDialFreq, m_myCall, m_myGrid, operator_call)};
   if (!adifile.addQSOToFile (ADIF))
   {
     MessageBox::warning_message (this, tr ("Log file error"),
@@ -153,7 +146,7 @@ void LogQSO::accept()
       m_dateTimeOff.date().toString("yyyy-MM-dd,") +
       m_dateTimeOff.time().toString("hh:mm:ss,") + hisCall + "," +
       hisGrid + "," + strDialFreq + "," + (mode == "MFSK" ? "JS8" : mode) +
-      "," + rptSent + "," + rptRcvd + "," + m_txPower +
+      "," + rptSent + "," + rptRcvd +
       "," + comments + "," + name;
     QTextStream out(&f);
     out << logEntry << endl;
@@ -161,7 +154,7 @@ void LogQSO::accept()
   }
 
 //Clean up and finish logging
-  Q_EMIT acceptQSO (m_dateTimeOff, hisCall, hisGrid, m_dialFreq, mode, submode, rptSent, rptRcvd, m_txPower, comments, name,m_dateTimeOn, operator_call, m_myCall, m_myGrid, ADIF);
+  Q_EMIT acceptQSO (m_dateTimeOff, hisCall, hisGrid, m_dialFreq, mode, submode, rptSent, rptRcvd, comments, name,m_dateTimeOn, operator_call, m_myCall, m_myGrid, ADIF);
   QDialog::accept();
 }
 

@@ -32,10 +32,10 @@ class ADIF
 	bool addQSOToFile(QByteArray const& ADIF_record);
 
   QByteArray QSOToADIF(QString const& hisCall, QString const& hisGrid, QString const& mode, QString const& submode, QString const& rptSent
-											 , QString const& rptRcvd, QDateTime const& dateTimeOn, QDateTime const& dateTimeOff
-											 , QString const& band, QString const& comments, QString const& name
-											 , QString const& strDialFreq, QString const& m_myCall, QString const& m_myGrid
-											 , QString const& m_txPower, QString const& operator_call);
+                                             , QString const& rptRcvd, QDateTime const& dateTimeOn, QDateTime const& dateTimeOff
+                                             , QString const& band, QString const& comments, QString const& name
+                                             , QString const& strDialFreq, QString const& m_myCall, QString const& m_myGrid
+                                             , QString const& operator_call);
 
 
 private:
