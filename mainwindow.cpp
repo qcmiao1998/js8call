@@ -6959,20 +6959,30 @@ void MainWindow::buildFrequencyMenu(QMenu *menu){
 }
 
 void MainWindow::buildHeartbeatMenu(QMenu *menu){
+    if(m_hbInterval > 0){
+        auto startStop = menu->addAction(ui->hbMacroButton->isChecked() ? "Stop Heartbeat Timer" : "Start Heartbeat Timer");
+        connect(startStop, &QAction::triggered, this, [this](){ ui->hbMacroButton->toggle(); });
+        menu->addSeparator();
+    }
+
     buildRepeatMenu(menu, ui->hbMacroButton, &m_hbInterval);
 
     menu->addSeparator();
-
     auto now = menu->addAction("Send Heartbeat Now");
     connect(now, &QAction::triggered, this, &MainWindow::sendHeartbeat);
 }
 
 void MainWindow::buildCQMenu(QMenu *menu){
+    if(m_cqInterval > 0){
+        auto startStop = menu->addAction(ui->cqMacroButton->isChecked() ? "Stop CQ Timer" : "Start CQ Timer");
+        connect(startStop, &QAction::triggered, this, [this](){ ui->cqMacroButton->toggle(); });
+        menu->addSeparator();
+    }
+
     buildRepeatMenu(menu, ui->cqMacroButton, &m_cqInterval);
 
     menu->addSeparator();
-
-    auto now = menu->addAction("Send CQ Message Now");
+    auto now = menu->addAction("Send CQ Now");
     connect(now, &QAction::triggered, this, [this](){ sendCQ(true); });
 }
 
