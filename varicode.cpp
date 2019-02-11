@@ -72,6 +72,7 @@ QMap<QString, int> directed_cmds = {
     {" QUERY",        11  }, // generic query
 
     {" QUERY MSGS",   12  }, // do you have any stored messages?
+    {" QUERY MSGS?",  12  }, // do you have any stored messages?
 
     {" QUERY CALL",   13  }, // can you transmit a ping to callsign?
 
@@ -128,7 +129,7 @@ QMap<int, int> checksum_cmds = {
 };
 
 QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|MSG TO[:]|SNR[?]|INFO[?]|GRID[?]|STATUS[?]|HEARING[?]|(?:(?:STATUS|HEARING|QUERY CALL|QUERY MSGS|QUERY|CMD|MSG|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|INFO|GRID)(?=[ ]|$))|[?> ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|MSG TO[:]|SNR[?]|INFO[?]|GRID[?]|STATUS[?]|QUERY MSGS[?]|HEARING[?]|(?:(?:STATUS|HEARING|QUERY CALL|QUERY MSGS|QUERY|CMD|MSG|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|INFO|GRID)(?=[ ]|$))|[?> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR|ACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
