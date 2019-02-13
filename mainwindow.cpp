@@ -568,9 +568,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_txTextDirty {false},
   m_txFrameCountEstimate {0},
   m_previousFreq {0},
+  m_hbPaused { false },
   m_hbHidden { false },
   m_hbInterval {0},
-  m_cqInterval {0}
+  m_cqInterval {0},
+  m_cqPaused { false }
 {
   ui->setupUi(this);
 
