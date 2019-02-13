@@ -209,6 +209,38 @@ QMap<QString, quint32> basecalls = {
     { "<....>",    nbasecall + 1  }, // incomplete callsign
     { "@ALLCALL",  nbasecall + 2  }, // ALLCALL group
     { "@JS8NET",   nbasecall + 3  }, // JS8NET group
+
+    // continental dx
+    { "@DX/NA",    nbasecall + 4  }, // North America DX group
+    { "@DX/SA",    nbasecall + 5  }, // South America DX group
+    { "@DX/EU",    nbasecall + 6  }, // Europe DX group
+    { "@DX/AS",    nbasecall + 7  }, // Asia DX group
+    { "@DX/AF",    nbasecall + 8  }, // Africa DX group
+    { "@DX/OC",    nbasecall + 9  }, // Oceania DX group
+    { "@DX/AN",    nbasecall + 10 }, // Antarctica DX group
+
+    // itu regions
+    { "@REGION/1", nbasecall + 11 }, // ITU Region 1
+    { "@REGION/2", nbasecall + 12 }, // ITU Region 2
+    { "@REGION/3", nbasecall + 13 }, // ITU Region 3
+
+    // generic
+    { "@GROUP/0",  nbasecall + 14 }, // Generic group
+    { "@GROUP/1",  nbasecall + 15 }, // Generic group
+    { "@GROUP/2",  nbasecall + 16 }, // Generic group
+    { "@GROUP/3",  nbasecall + 17 }, // Generic group
+    { "@GROUP/4",  nbasecall + 18 }, // Generic group
+    { "@GROUP/5",  nbasecall + 19 }, // Generic group
+    { "@GROUP/6",  nbasecall + 20 }, // Generic group
+    { "@GROUP/7",  nbasecall + 21 }, // Generic group
+    { "@GROUP/8",  nbasecall + 22 }, // Generic group
+    { "@GROUP/9",  nbasecall + 23 }, // Generic group
+
+    // ops
+    { "@COMMAND",  nbasecall + 24 }, // Command group
+    { "@CONTROL",  nbasecall + 25 }, // Control group
+    { "@NET",      nbasecall + 26 }, // Net group
+    { "@NTS",      nbasecall + 27 }, // NTS group
 };
 
 QMap<quint32, QString> cqs = {
