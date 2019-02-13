@@ -206,9 +206,9 @@ quint16 nusergrid = nbasegrid + 10;
 quint16 nmaxgrid  = (1<<15)-1;
 
 QMap<QString, quint32> basecalls = {
-    { "<....>",    nbasecall + 1 }, // incomplete callsign
-    { "@ALLCALL",  nbasecall + 2 }, // ALLCALL group
-    { "@JS8NET",   nbasecall + 3 }, // JS8NET group
+    { "<....>",    nbasecall + 1  }, // incomplete callsign
+    { "@ALLCALL",  nbasecall + 2  }, // ALLCALL group
+    { "@JS8NET",   nbasecall + 3  }, // JS8NET group
 };
 
 QMap<quint32, QString> cqs = {
@@ -1145,7 +1145,7 @@ bool Varicode::isValidCallsign(const QString &callsign, bool *pIsCompound){
 }
 
 bool Varicode::isCompoundCallsign(const QString &callsign){
-    if(basecalls.contains(callsign)){
+    if(basecalls.contains(callsign) && !callsign.startsWith("@")){
         return false;
     }
 
