@@ -1166,8 +1166,6 @@ bool Varicode::isValidCallsign(const QString &callsign, bool *pIsCompound){
     if(match.hasMatch() && (match.capturedLength() == callsign.length())){
         bool isValid = isValidCompoundCallsign(match.capturedRef(0));
 
-        qDebug() << "is valid compound??" << match.capturedRef(0) << isValid;
-
         if(pIsCompound) *pIsCompound = isValid;
         return isValid;
     }
