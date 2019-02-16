@@ -6958,7 +6958,12 @@ void MainWindow::buildFrequencyMenu(QMenu *menu){
 
     menu->addSeparator();
 
-    foreach(auto f, m_config.frequencies()->frequency_list()){
+    auto frequencies = m_config.frequencies()->frequency_list();
+    qSort(frequencies.begin(), frequencies.end(), [](FrequencyList_v2::Item &a, FrequencyList_v2::Item &b) {
+        return a.frequency_ < b.frequency_;
+    });
+
+    foreach(auto f, frequencies){
         auto freq = Radio::pretty_frequency_MHz_string(f.frequency_);
         auto const& band = m_config.bands ()->find (f.frequency_);
 
