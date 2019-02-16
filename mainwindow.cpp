@@ -1394,7 +1394,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(historyAction, &QAction::triggered, this, [this](){
       QString selectedCall = callsignSelected();
       if(selectedCall.isEmpty()){
-          return;
+          selectedCall = "%";
       }
 
       Inbox inbox(inboxPath());
@@ -9317,7 +9317,11 @@ bool MainWindow::isMyCallIncluded(const QString &text){
         return false;
     }
 
-    return text.contains(myCall);
+    if(!text.contains(myCall)){
+        return false;
+    }
+
+    return Varicode::parseCallsigns(text).contains(myCall);
 }
 
 bool MainWindow::isAllCallIncluded(const QString &text){
@@ -10944,8 +10948,7 @@ void MainWindow::displayBandActivity() {
 
                 // TODO: jsherer - there's a potential here for a previous allcall to poison the highlight.
                 if (
-                    (isDirectedOffset(offset, &isDirectedAllCall) && !isDirectedAllCall) ||
-                    (text.last().contains(Radio::base_callsign(m_config.my_callsign())))
+                    (isDirectedOffset(offset, &isDirectedAllCall) && !isDirectedAllCall) || isMyCallIncluded(text.last())
                 ) {
                     offsetItem->setBackground(QBrush(m_config.color_MyCall()));
                     tdriftItem->setBackground(QBrush(m_config.color_MyCall()));
