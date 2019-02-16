@@ -139,6 +139,11 @@
       </column>
       <column>
        <property name="text">
+        <string>To</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
         <string>Message</string>
        </property>
       </column>

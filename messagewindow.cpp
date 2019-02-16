@@ -100,6 +100,12 @@ void MessageWindow::populateMessages(QList<QPair<int, Message> > msgs){
             fromItem->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
             ui->messageTableWidget->setItem(row, col++, fromItem);
 
+            auto to = params.value("TO").toString();
+            auto toItem = new QTableWidgetItem(to);
+            toItem->setData(Qt::UserRole, to);
+            toItem->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+            ui->messageTableWidget->setItem(row, col++, toItem);
+
             auto text = params.value("TEXT").toString();
             auto textItem = new QTableWidgetItem(text);
             textItem->setData(Qt::UserRole, text);
@@ -112,6 +118,7 @@ void MessageWindow::populateMessages(QList<QPair<int, Message> > msgs){
         ui->messageTableWidget->resizeColumnToContents(2);
         ui->messageTableWidget->resizeColumnToContents(3);
         ui->messageTableWidget->resizeColumnToContents(4);
+        ui->messageTableWidget->resizeColumnToContents(5);
     }
     ui->messageTableWidget->setUpdatesEnabled(true);
 
