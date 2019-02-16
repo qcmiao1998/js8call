@@ -4722,6 +4722,7 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionShow_Fullscreen"/>
     <addaction name="actionShow_Statusbar"/>
     <addaction name="actionShow_Tooltips"/>
+    <addaction name="actionShow_Message_Inbox"/>
     <addaction name="separator"/>
     <addaction name="actionReset_Window_Sizes"/>
    </widget>
@@ -5636,6 +5637,11 @@ list. The list can be maintained in Settings (F2).</string>
   <action name="actionSetOffset">
    <property name="text">
     <string>Set Offset...</string>
+   </property>
+  </action>
+  <action name="actionShow_Message_Inbox">
+   <property name="text">
+    <string>Show Message Inbox...</string>
    </property>
   </action>
  </widget>

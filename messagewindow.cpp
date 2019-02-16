@@ -3,6 +3,7 @@
 #include "moc_messagewindow.cpp"
 
 #include <QDateTime>
+#include <QMenu>
 
 #include "Radio.hpp"
 #include "keyeater.h"
@@ -49,7 +50,7 @@ MessageWindow::~MessageWindow()
 }
 
 void MessageWindow::setCall(const QString &call){
-    setWindowTitle(QString("Message History: %1").arg(call));
+    setWindowTitle(QString("Messages: %1").arg(call == "%" ? "All" : call));
 }
 
 void MessageWindow::populateMessages(QList<QPair<int, Message> > msgs){

@@ -1390,7 +1390,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       displayActivity(true);
   });
 
-  auto historyAction = new QAction(QString("Message Inbox..."), ui->tableWidgetCalls);
+  auto historyAction = new QAction(QString("Show Message Inbox..."), ui->tableWidgetCalls);
+  connect(ui->actionShow_Message_Inbox, &QAction::triggered, historyAction, &QAction::trigger);
   connect(historyAction, &QAction::triggered, this, [this](){
       QString selectedCall = callsignSelected();
       if(selectedCall.isEmpty()){
