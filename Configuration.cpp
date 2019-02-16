@@ -781,6 +781,12 @@ bool Configuration::ppfx() const {return m_->ppfx_;}
 bool Configuration::clear_callsign () const {return m_->clear_callsign_;}
 bool Configuration::miles () const {return m_->miles_;}
 bool Configuration::avoid_allcall () const {return m_->avoid_allcall_;}
+bool Configuration::set_avoid_allcall(bool avoid) {
+    if(m_->avoid_allcall_ != avoid){
+        m_->avoid_allcall_ = avoid;
+        m_->write_settings();
+    }
+}
 bool Configuration::spellcheck () const {return m_->spellcheck_;}
 bool Configuration::quick_call () const {return m_->quick_call_;}
 bool Configuration::disable_TX_on_73 () const {return m_->disable_TX_on_73_;}

@@ -1346,7 +1346,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
          return;
       }
 
-      if(callsign.startsWith("@")){
+      // if we're adding allcall, turn off allcall avoidance
+      if(callsign == "@ALLCALL"){
+          m_config.set_avoid_allcall(false);
+      }
+      else if(callsign.startsWith("@")){
           if(Varicode::isCompoundCallsign(callsign)){
               m_config.addGroup(callsign);
           } else {
@@ -1373,9 +1377,13 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
           return;
       }
 
-      if (selectedCall.startsWith("@")){
+      if (selectedCall == "@ALLCALL"){
+          m_config.set_avoid_allcall(true);
+      }
+      else if (selectedCall.startsWith("@")){
           m_config.removeGroup(selectedCall);
-      } else if(m_callActivity.contains(selectedCall)){
+      }
+      else if(m_callActivity.contains(selectedCall)){
           m_callActivity.remove(selectedCall);
       }
 
@@ -1516,7 +1524,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     menu->addSeparator();
 
     menu->addAction(addStation);
-    removeStation->setDisabled(missingCallsign || isAllCall);
+    removeStation->setDisabled(missingCallsign);
     removeStation->setText(selectedCall.startsWith("@") ? "Remove Group" : "Remove Station");
     menu->addAction(removeStation);
 
