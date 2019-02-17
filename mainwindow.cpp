@@ -1405,7 +1405,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
       QList<QPair<int, Message> > msgs;
 
-      msgs.append(inbox.values("STORE", "$.params.FROM", Radio::base_callsign(m_config.my_callsign()), 0, 1000));
+      msgs.append(inbox.values("STORE", "$.params.TO", selectedCall, 0, 1000));
+
       msgs.append(inbox.values("READ", "$.params.FROM", selectedCall, 0, 1000));
 
       foreach(auto pair, inbox.values("UNREAD", "$.params.FROM", selectedCall, 0, 1000)){
@@ -10486,9 +10487,10 @@ bool MainWindow::hasMessageHistory(QString call){
         return false;
     }
 
+    int store = inbox.count("STORE", "$.params.TO", call);
     int unread = inbox.count("UNREAD", "$.params.FROM", call);
     int read = inbox.count("READ", "$.params.FROM", call);
-    return (unread + read) > 0;
+    return (store + unread + read) > 0;
 }
 
 int MainWindow::addCommandToMyInbox(CommandDetail d){
