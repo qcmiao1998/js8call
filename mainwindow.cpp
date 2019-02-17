@@ -1405,6 +1405,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
       QList<QPair<int, Message> > msgs;
 
+      msgs.append(inbox.values("STORE", "$.params.FROM", Radio::base_callsign(m_config.my_callsign()), 0, 1000));
       msgs.append(inbox.values("READ", "$.params.FROM", selectedCall, 0, 1000));
 
       foreach(auto pair, inbox.values("UNREAD", "$.params.FROM", selectedCall, 0, 1000)){
@@ -1424,6 +1425,14 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       connect(mw, &MessageWindow::finished, this, [this](int){
           refreshInboxCounts();
           displayCallActivity();
+      });
+      connect(mw, &MessageWindow::deleteMessage, this, [this](int id){
+          Inbox inbox(inboxPath());
+          if(!inbox.open()){
+              return;
+          }
+
+          inbox.del(id);
       });
       connect(mw, &MessageWindow::replyMessage, this, [this, mw](const QString &text){
           addMessageText(text, true, true);

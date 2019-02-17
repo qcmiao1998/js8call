@@ -42,6 +42,30 @@ MessageWindow::MessageWindow(QWidget *parent) :
 
     ui->messageTableWidget->horizontalHeader()->setVisible(true);
     ui->messageTableWidget->resizeColumnsToContents();
+
+    ui->messageTableWidget->setContextMenuPolicy(Qt::ActionsContextMenu);
+    auto deleteAction = new QAction("Delete", ui->messageTableWidget);
+    connect(deleteAction, &QAction::triggered, this, [this](){
+        auto items = ui->messageTableWidget->selectedItems();
+        if(items.isEmpty()){
+            return;
+        }
+        auto item = items.first();
+        auto col = ui->messageTableWidget->item(item->row(), 1);
+        if(!col){
+            return;
+        }
+        bool ok = false;
+        auto mid = col->data(Qt::UserRole).toInt(&ok);
+        if(!ok){
+            return;
+        }
+
+        ui->messageTableWidget->removeRow(item->row());
+
+        emit this->deleteMessage(mid);
+    });
+    ui->messageTableWidget->addAction(deleteAction);
 }
 
 MessageWindow::~MessageWindow()

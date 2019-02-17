@@ -20,6 +20,7 @@ public:
     ~MessageWindow();
 
 signals:
+    void deleteMessage(int id);
     void replyMessage(const QString &call);
 
 public slots:
