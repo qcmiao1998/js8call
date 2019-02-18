@@ -8757,8 +8757,8 @@ bool MainWindow::shortList(QString callsign)
 
 void MainWindow::pskSetLocal ()
 {
-  psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (),
-        m_config.my_info(), QString {"JS8Call v" + version() }.simplified ());
+  auto info = replaceMacros(m_config.my_info(), buildMacroValues(), true);
+  psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (), info, QString {"JS8Call v" + version() }.simplified ());
 }
 
 void MainWindow::aprsSetLocal ()
