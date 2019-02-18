@@ -9846,6 +9846,19 @@ void MainWindow::processCommandActivity() {
            continue;
         }
 
+        // PROCESS BUFFERED HEARING FOR EVERYONE
+        if (d.cmd == " HEARING"){
+            // 1. parse callsigns
+            // 2. log it to the heard graph
+            auto calls = Varicode::parseCallsigns(d.text);
+            foreach(auto call, calls){
+                logHeardGraph(d.from, call);
+            }
+
+            // make sure this is explicit
+            continue;
+        }
+
         // we're only responding to allcall, groupcalls, and our callsign at this point, so we'll end after logging the callsigns we've heard
         if (!isAllCall && !toMe && !isGroupCall) {
             continue;
@@ -10370,15 +10383,6 @@ void MainWindow::processCommandActivity() {
             m_aprsClient->enqueueThirdParty(Radio::base_callsign(d.from), d.text);
 
             // make sure this is explicit
-            continue;
-        }
-
-        // PROCESS BUFFERED HEARING
-        else if (d.cmd == " HEARING" && !isAllCall){
-            auto calls = Varicode::parseCallsigns(d.text);
-            foreach(auto call, calls){
-                logHeardGraph(d.from, call);
-            }
             continue;
         }
 
