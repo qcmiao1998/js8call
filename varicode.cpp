@@ -1169,7 +1169,6 @@ bool Varicode::isValidCallsign(const QString &callsign, bool *pIsCompound){
     auto match = QRegularExpression(base_callsign_pattern).match(callsign);
     if(match.hasMatch() && (match.capturedLength() == callsign.length())){
         if(pIsCompound) *pIsCompound = false;
-        qDebug() << "match" << match.capturedTexts();
         return callsign.length() > 2 && QRegularExpression("[0-9][A-Z]|[A-Z][0-9]").match(callsign).hasMatch();
     }
 

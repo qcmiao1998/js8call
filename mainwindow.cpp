@@ -1747,6 +1747,14 @@ void MainWindow::initializeDummyData(){
     displayTextForFreq("J1Y: KN4CRD SNR -05 \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
     displayTextForFreq("HELLO BRAVE  NEW   WORLD    \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
 
+    auto now = DriftingDateTime::currentDateTimeUtc();
+    displayTextForFreq("KN4CRD: JY1 ACK -12 \u2301 ", 780, now, false, true, true);
+    displayTextForFreq("KN4CRD: JY1 ACK -12 \u2301 ", 780, now, false, true, true); // should be hidden (duplicate)
+    displayTextForFreq("OH8STN: JY1 ACK -12 \u2301 ", 780, now, false, true, true);
+
+    displayTextForFreq("KN4CRD: JY1 ACK -10 \u2301 ", 800, now, false, true, true);
+    displayTextForFreq("KN4CRD: JY1 ACK -12 \u2301 ", 780, now.addSecs(120), false, true, true);
+
     displayActivity(true);
 }
 
@@ -5768,8 +5776,12 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
     // fixup duplicate acks
     auto tc = c.document()->find(text);
     if(!tc.isNull() && tc.selectedText() == text && text.contains(" ACK ")){
-        qDebug() << "found" << tc.selectedText() << "so not displaying...";
-        return tc.blockNumber();
+        tc.select(QTextCursor::BlockUnderCursor);
+
+        if(tc.selectedText().trimmed().startsWith(date.time().toString())){
+            qDebug() << "found" << tc.selectedText() << "so not displaying...";
+            return tc.blockNumber();
+        }
     }
 
     if(found && !bold){
