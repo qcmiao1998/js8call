@@ -120,8 +120,8 @@ public:
     static quint64 packAlphaNumeric50(QString const& value);
     static QString unpackAlphaNumeric50(quint64 packed);
 
-    static quint32 packCallsign(QString const& value);
-    static QString unpackCallsign(quint32 value);
+    static quint32 packCallsign(QString const& value, bool *pPortable);
+    static QString unpackCallsign(quint32 value, bool portable);
 
     static QString deg2grid(float dlong, float dlat);
     static QPair<float, float> grid2deg(QString const &grid);
