@@ -4753,11 +4753,14 @@ void MainWindow::guiUpdate()
       char ft8msgbits[75 + 12]; //packed 75 bit ft8 message plus 12-bit CRC
       genft8_(message, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
               const_cast<int *> (itone), 22, 6, 22);
+
       msgibits = m_i3bit;
       msgsent[22]=0;
 
-      m_currentMessage = QString::fromLatin1(msgsent);
+      m_currentMessage = QString::fromLatin1(msgsent).trimmed();
       m_currentMessageBits = msgibits;
+
+      emitTones();
 
 #if TEST_FOX_WAVE_GEN
       if(ui->turboButton->isChecked()) {
@@ -11323,6 +11326,22 @@ void MainWindow::emitPTT(bool on){
     sendNetworkMessage("RIG.PTT", on ? "on" : "off", {
         {"PTT", QVariant(on)},
         {"UTC", QVariant(DriftingDateTime::currentDateTimeUtc().toMSecsSinceEpoch())},
+    });
+}
+
+void MainWindow::emitTones(){
+    if(!m_config.udpEnabled()){
+        return;
+    }
+
+    // emit tone numbers to network
+    QVariantList t;
+    for(int i = 0; i < NUM_FT8_SYMBOLS; i++){
+        t.append(QVariant((int)itone[i]));
+    }
+
+    sendNetworkMessage("TX.FRAME", "", {
+        {"TONES", t}
     });
 }
 
