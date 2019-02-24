@@ -9999,7 +9999,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // HACK: if this is an autoreply cmd and relay path is populated and cmd is not MSG or MSG TO:, then swap out the relay path
-        if(Varicode::isCommandAutoreply(d.cmd) && !d.relayPath.isEmpty() && !d.cmd.startsWith(" MSG")){
+        if(Varicode::isCommandAutoreply(d.cmd) && !d.relayPath.isEmpty() && !d.cmd.startsWith(" MSG") && !d.cmd.startsWith(" QUERY")){
             d.from = d.relayPath;
         }
 
@@ -10135,23 +10135,35 @@ void MainWindow::processCommandActivity() {
                     }
 
                     // HACK: "MSG TO:" should be supported but contains a space :(
-                    if(!relayedCmds.isEmpty() && first == " MSG"){
-                        auto second = relayedCmds.first();
-                        if(second == "TO:"){
-                            first = " MSG TO:";
-                            relayedCmds.removeFirst();
-                        } else if(second.startsWith("TO:")){
-                            first = " MSG TO:";
-                            relayedCmds.replace(0, second.mid(3));
+                    if(!relayedCmds.isEmpty()){
+                        if(first == " MSG"){
+                            auto second = relayedCmds.first();
+                            if(second == "TO:"){
+                                first = " MSG TO:";
+                                relayedCmds.removeFirst();
+                            } else if(second.startsWith("TO:")){
+                                first = " MSG TO:";
+                                relayedCmds.replace(0, second.mid(3));
+                            }
+                        } else if (first == " QUERY"){
+                            auto second = relayedCmds.first();
+                            if(second == "MSGS" || second == "MSGS?"){
+                                first = " QUERY MSGS";
+                                relayedCmds.removeFirst();
+                            }
+                            else if(second == "CALL"){
+                                first = " QUERY CALL";
+                                relayedCmds.removeFirst();
+                            }
                         }
                     }
 
-                    if(valid && Varicode::isCommandAutoreply(first)){
+                    if(Varicode::isCommandAllowed(first) && Varicode::isCommandAutoreply(first)){
                         CommandDetail rd = {};
                         rd.bits = d.bits;
                         rd.cmd = first;
                         rd.freq = d.freq;
-                        rd.from = d.from;
+                        rd.from = d.from; // note, MSG and QUERY commands are not set with from as the relay path.
                         rd.relayPath = d.relayPath;
                         rd.text = relayedCmds.join(" "); //d.text;
                         rd.to = d.to;
@@ -10285,7 +10297,14 @@ void MainWindow::processCommandActivity() {
 
         // PROCESS BUFFERED QUERY
         else if (d.cmd == " QUERY" && !isAllCall){
-            auto who = d.from;
+            auto who = d.from; // keep in mind, this is the sender, not the original requestor if relayed
+            auto replyPath = d.from;
+
+            if(d.relayPath.contains(">")){
+                auto path = d.relayPath.split(">");
+                who = path.last();
+                replyPath = d.relayPath;
+            }
 
             QStringList segs = d.text.split(" ");
             if(segs.isEmpty()){
@@ -10330,8 +10349,8 @@ void MainWindow::processCommandActivity() {
                 inbox.set(mid, msg);
 
                 // and reply
-                reply = QString("%1 MSG %2 DE %3");
-                reply = reply.arg(who);
+                reply = QString("%1 MSG %2 FROM %3");
+                reply = reply.arg(replyPath);
                 reply = reply.arg(text);
                 reply = reply.arg(from);
             }
@@ -10339,23 +10358,35 @@ void MainWindow::processCommandActivity() {
 
         // PROCESS BUFFERED QUERY MSGS
         else if (d.cmd == " QUERY MSGS" && ui->autoReplyButton->isChecked()){
-            auto who = d.from;
+            auto who = d.from; // keep in mind, this is the sender, not the original requestor if relayed
+            auto replyPath = d.from;
+
+            if(d.relayPath.contains(">")){
+                auto path = d.relayPath.split(">");
+                who = path.last();
+                replyPath = d.relayPath;
+            }
 
             // if this is an allcall or a directed call, check to see if we have a stored message for user.
             // we reply yes if the user would be able to retreive a stored message
             auto mid = getNextMessageIdForCallsign(who);
             if(mid != -1){
-                reply = QString("%1 YES MSG ID %2").arg(who).arg(mid);
+                reply = QString("%1 YES MSG ID %2").arg(replyPath).arg(mid);
             }
 
             // if this is not an allcall and we have no messages, reply no.
             if(!isAllCall && reply.isEmpty()){
-                reply = QString("%1 NO").arg(who);
+                reply = QString("%1 NO").arg(replyPath);
             }
         }
 
         // PROCESS BUFFERED QUERY CALL
         else if (d.cmd == " QUERY CALL" && ui->autoReplyButton->isChecked()){
+            auto replyPath = d.from;
+            if(d.relayPath.contains(">")){
+                replyPath = d.relayPath;
+            }
+
             auto who = d.text;
             if(who.isEmpty()){
                 continue;
@@ -10375,20 +10406,20 @@ void MainWindow::processCommandActivity() {
                 }
 
                 if(baseCall == cd.call || baseCall == Radio::base_callsign(cd.call)){
-                    auto r = QString("%1 ACK %2").arg(cd.call).arg(Varicode::formatSNR(cd.snr));
+                    auto r = QString("%1 (%2)").arg(Varicode::formatSNR(cd.snr)).arg(since(cd.utcTimestamp)).trimmed();
                     replies.append(r);
+                    break;
                 }
             }
 
             if(!replies.isEmpty()){
-                replies.prepend(QString("%1 YES").arg(d.from));
+                replies.prepend(QString("%1 YES").arg(replyPath));
             }
 
-            reply = replies.join("\n");
+            reply = replies.join(" ");
 
             if(!reply.isEmpty()){
                 if(isAllCall){
-                    // since all pings are technically @ALLCALL, let's bump the allcall cache here...
                     m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 25);
                 }
             }
@@ -10945,7 +10976,8 @@ void MainWindow::displayBandActivity() {
                 ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
                 ui->tableWidgetRXAll->setItem(row, col++, ageItem);
 
-                auto snrItem = new QTableWidgetItem(QString("%1 dB").arg(Varicode::formatSNR(snr)));
+                auto snrText = Varicode::formatSNR(snr);
+                auto snrItem = new QTableWidgetItem(snrText.isEmpty() ? "" : QString("%1 dB").arg(snrText));
                 snrItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
                 ui->tableWidgetRXAll->setItem(row, col++, snrItem);
 
@@ -11213,7 +11245,9 @@ void MainWindow::displayCallActivity() {
             ui->tableWidgetCalls->setItem(row, col++, flagItem);
             if(d.utcTimestamp.isValid()){
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(since(d.utcTimestamp))));
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 dB").arg(Varicode::formatSNR(d.snr))));
+
+                auto snrText = Varicode::formatSNR(d.snr);
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(snrText.isEmpty() ? "" : QString("%1 dB").arg(snrText)));
 
                 auto offsetItem = new QTableWidgetItem(QString("%1 Hz").arg(d.freq));
                 offsetItem->setData(Qt::UserRole, QVariant(d.freq));
