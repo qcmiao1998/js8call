@@ -10905,6 +10905,7 @@ void MainWindow::displayBandActivity() {
 
             QList < ActivityDetail > items = m_bandActivity[offset];
             if (items.length() > 0) {
+                QDateTime timestamp;
                 QStringList text;
                 QString age;
                 int snr = 0;
@@ -10956,6 +10957,7 @@ void MainWindow::displayBandActivity() {
                     text.append(item.text);
                     snr = item.snr;
                     age = since(item.utcTimestamp);
+                    timestamp = item.utcTimestamp;
                     tdrift = item.tdrift;
                 }
 
@@ -10972,8 +10974,9 @@ void MainWindow::displayBandActivity() {
                 offsetItem->setData(Qt::UserRole, QVariant(offset));
                 ui->tableWidgetRXAll->setItem(row, col++, offsetItem);
 
-                auto ageItem = new QTableWidgetItem(QString("%1").arg(age));
+                auto ageItem = new QTableWidgetItem(age);
                 ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+                ageItem->setToolTip(timestamp.toString());
                 ui->tableWidgetRXAll->setItem(row, col++, ageItem);
 
                 auto snrText = Varicode::formatSNR(snr);
@@ -11244,7 +11247,10 @@ void MainWindow::displayCallActivity() {
             flagItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
             ui->tableWidgetCalls->setItem(row, col++, flagItem);
             if(d.utcTimestamp.isValid()){
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1").arg(since(d.utcTimestamp))));
+                auto ageItem = new QTableWidgetItem(since(d.utcTimestamp));
+                ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+                ageItem->setToolTip(d.utcTimestamp.toString());
+                ui->tableWidgetCalls->setItem(row, col++, ageItem);
 
                 auto snrText = Varicode::formatSNR(d.snr);
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(snrText.isEmpty() ? "" : QString("%1 dB").arg(snrText)));
