@@ -1755,6 +1755,8 @@ void MainWindow::initializeDummyData(){
     displayTextForFreq("KN4CRD: JY1 ACK -10 \u2301 ", 800, now, false, true, true);
     displayTextForFreq("KN4CRD: JY1 ACK -12 \u2301 ", 780, now.addSecs(120), false, true, true);
 
+    displayTextForFreq("HELLO\\nBRAVE\\nNEW\\nWORLD \u2301 ", 1500, now, false, true, true);
+
     displayActivity(true);
 }
 
@@ -5720,7 +5722,7 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
         block = -1;
     }
 
-    block = writeMessageTextToUI(date, text, freq, isTx, block);
+    block = writeMessageTextToUI(date, text.replace("\\n", "\n"), freq, isTx, block);
 
     // never cache tx or last lines
     if(isTx || isLast) {
