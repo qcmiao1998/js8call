@@ -10081,7 +10081,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS RELAY
-        else if (d.cmd == ">" && !isAllCall) {
+        else if (d.cmd == ">" && !isAllCall && !m_config.relay_off()) {
 
             // 1. see if there are any more hops to process
             // 2. if so, forward
@@ -10093,12 +10093,12 @@ void MainWindow::processCommandActivity() {
             auto match = re.match(text);
 
             // if the text starts with a callsign, and relay is not disabled, and this is not a group callsign, then relay.
-            if(match.hasMatch() && !m_config.relay_off() && !isGroupCall){
+            if(match.hasMatch() && !isGroupCall){
                 // replace freetext with relayed free text
                 if(match.captured("type") != ">"){
                     text = text.replace(match.capturedStart("type"), match.capturedLength("type"), ">");
                 }
-                reply = QString("%1 DE %2").arg(text).arg(d.from);
+                reply = QString("%1 VIA %2").arg(text).arg(d.from);
 
             // otherwise, as long as we're not an ACK...alert the user and either send an ACK or Message
             } else if(!d.text.startsWith("ACK")) {
@@ -10621,7 +10621,7 @@ int MainWindow::getNextMessageIdForCallsign(QString callsign){
 
 QStringList MainWindow::parseRelayPathCallsigns(QString from, QString text){
     QStringList calls;
-    QString callDePattern = {R"(\sDE\s(?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
+    QString callDePattern = {R"(\sVIA\s(?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
     QRegularExpression re(callDePattern);
     auto iter = re.globalMatch(text);
     while(iter.hasNext()){
@@ -10643,7 +10643,7 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
 
     QString fromReplace = QString{};
     foreach(auto call, calls){
-        fromReplace.append(" DE ");
+        fromReplace.append(" VIA ");
         fromReplace.append(call);
     }
 
