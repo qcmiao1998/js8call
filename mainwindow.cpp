@@ -7272,11 +7272,11 @@ void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
     };
 
     if(tableKey == "call"){
-        columnKeys.prepend({"Worked Before Flag", "flag"});
         columnKeys.prepend({"Callsign", "callsign"});
         columnKeys.append({
           {"Grid Locator", "grid"},
-          {"Distance", "distance"}
+          {"Distance", "distance"},
+          {"Log Details", "log"}
         });
     }
 
@@ -11233,11 +11233,7 @@ void MainWindow::displayCallActivity() {
             QString displayCall = d.call;
 #endif
 
-            QString flag;
-            if(m_logBook.hasWorkedBefore(d.call, "")){
-                // unicode checkmark
-                flag = "\u2713";
-            }
+
 
             auto iconItem = new QTableWidgetItem(hasMessage ? "\u2691" : hasAck ? "\u2605" : "");
             iconItem->setData(Qt::UserRole, QVariant((d.call)));
@@ -11250,12 +11246,8 @@ void MainWindow::displayCallActivity() {
             auto displayItem = new QTableWidgetItem(displayCall);
             displayItem->setData(Qt::UserRole, QVariant(d.call));
             displayItem->setToolTip(generateCallDetail(displayCall));
-
             ui->tableWidgetCalls->setItem(row, col++, displayItem);
 
-            auto flagItem = new QTableWidgetItem(flag);
-            flagItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-            ui->tableWidgetCalls->setItem(row, col++, flagItem);
             if(d.utcTimestamp.isValid()){
                 auto ageItem = new QTableWidgetItem(since(d.utcTimestamp));
                 ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
@@ -11279,6 +11271,15 @@ void MainWindow::displayCallActivity() {
                 distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, col++, distanceItem);
 
+                QString flag;
+                if(m_logBook.hasWorkedBefore(d.call, "")){
+                    // unicode checkmark
+                    flag = "\u2713";
+                }
+                auto logDetailsItem = new QTableWidgetItem(flag);
+                logDetailsItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                ui->tableWidgetCalls->setItem(row, col++, logDetailsItem);
+
             } else {
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // age
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // snr
@@ -11286,8 +11287,7 @@ void MainWindow::displayCallActivity() {
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // tdrift
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // grid
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // distance
-
-                //ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(""));
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // log details
             }
 
             if (isCallSelected) {
@@ -11330,13 +11330,13 @@ void MainWindow::displayCallActivity() {
         // Hide columns
         ui->tableWidgetCalls->setColumnHidden(0, !showIconColumn);
         ui->tableWidgetCalls->setColumnHidden(1, !showColumn("call", "callsign"));
-        ui->tableWidgetCalls->setColumnHidden(2, !showColumn("call", "flag"));
-        ui->tableWidgetCalls->setColumnHidden(3, !showColumn("call", "timestamp"));
-        ui->tableWidgetCalls->setColumnHidden(4, !showColumn("call", "snr"));
-        ui->tableWidgetCalls->setColumnHidden(5, !showColumn("call", "offset"));
-        ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "tdrift", false));
-        ui->tableWidgetCalls->setColumnHidden(7, !showColumn("call", "grid", false));
-        ui->tableWidgetCalls->setColumnHidden(8, !showColumn("call", "distance", false));
+        ui->tableWidgetCalls->setColumnHidden(2, !showColumn("call", "timestamp"));
+        ui->tableWidgetCalls->setColumnHidden(3, !showColumn("call", "snr"));
+        ui->tableWidgetCalls->setColumnHidden(4, !showColumn("call", "offset"));
+        ui->tableWidgetCalls->setColumnHidden(5, !showColumn("call", "tdrift", false));
+        ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "grid", false));
+        ui->tableWidgetCalls->setColumnHidden(7, !showColumn("call", "distance", false));
+        ui->tableWidgetCalls->setColumnHidden(8, !showColumn("call", "log"));
 
         // Resize the table columns
         ui->tableWidgetCalls->resizeColumnToContents(0);

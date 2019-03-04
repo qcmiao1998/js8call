@@ -1244,14 +1244,6 @@ QTextEdit[transmitting=&quot;true&quot;] {
          </column>
          <column>
           <property name="text">
-           <string>✓</string>
-          </property>
-          <property name="textAlignment">
-           <set>AlignCenter</set>
-          </property>
-         </column>
-         <column>
-          <property name="text">
            <string>Age</string>
           </property>
          </column>
@@ -1278,6 +1270,17 @@ QTextEdit[transmitting=&quot;true&quot;] {
          <column>
           <property name="text">
            <string>Distance</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Log Details</string>
+          </property>
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="textAlignment">
+           <set>AlignCenter</set>
           </property>
          </column>
         </widget>
