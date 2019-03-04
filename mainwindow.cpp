@@ -10289,6 +10289,14 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
+        // PROCESS NACKS
+        else if (d.cmd == " NACK" && !isAllCall){
+            qDebug() << "skipping incoming nack" << d.text;
+
+            // make sure this is explicit
+            continue;
+        }
+
         // PROCESS BUFFERED CMD
         else if (d.cmd == " CMD" && !isAllCall){
             qDebug() << "skipping incoming command" << d.text;
