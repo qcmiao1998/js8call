@@ -7735,6 +7735,20 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
 
         if(m_config.transmit_directed()) toggleTx(true);
     });
+
+
+    auto ditDitAction = menu->addAction(QString("%1 DIT DIT - End of contact / Two bits").arg(call).trimmed());
+    connect(ditDitAction, &QAction::triggered, this, [this](){
+
+        QString selectedCall = callsignSelected();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        addMessageText(QString("%1 DIT DIT").arg(selectedCall), true);
+
+        if(m_config.transmit_directed()) toggleTx(true);
+    });
 }
 
 void MainWindow::buildRelayMenu(QMenu *menu){
