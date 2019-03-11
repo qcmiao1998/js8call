@@ -1627,7 +1627,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
 
-QDate eol(2019, 3, 11);
+QDate eol(2019, 4, 1);
 
 void MainWindow::checkExpiryWarningMessage()
 {
