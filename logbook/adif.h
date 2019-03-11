@@ -21,10 +21,14 @@ class QDateTime;
 class ADIF
 {
 	public:
+
+    struct QSO;
+
 	void init(QString const& filename);
 	void load();
-    void add(QString const& call, QString const& band, QString const& mode, const QString &submode, QString const& date);
+    void add(QString const& call, QString const& band, QString const& mode, const QString &submode, QString const& date, const QString &name, const QString &comment);
     bool match(QString const& call, QString const& band) const;
+    QList<ADIF::QSO> find(QString const& call) const;
 	QList<QString> getCallList() const;
 	int getCount() const;
 		
@@ -38,12 +42,13 @@ class ADIF
                                              , QString const& operator_call);
 
 
-private:
+
 		struct QSO
 		{
-          QString call,band,mode,submode,date;
+          QString call,band,mode,submode,date,name,comment;
 		};		  
 
+    private:
 		QMultiHash<QString, QSO> _data;
 		QString _filename;
 		

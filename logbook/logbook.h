@@ -25,7 +25,14 @@ public:
               /*out*/ QString &countryName,
                       bool &callWorkedBefore,
                       bool &countryWorkedBefore) const;
-    void addAsWorked(const QString call, const QString band, const QString mode, const QString submode, const QString date);
+    bool findCallDetails(
+                        /*in*/
+                        const QString call,
+                        /*out*/
+                        QString &date,
+                        QString &name,
+                        QString &comment) const;
+    void addAsWorked(const QString call, const QString band, const QString mode, const QString submode, const QString date, const QString name, const QString comment);
 
 private:
    CountryDat _countries;

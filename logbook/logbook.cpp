@@ -59,25 +59,53 @@ void LogBook::match(/*in*/const QString call,
                     bool &callWorkedBefore,
                     bool &countryWorkedBefore) const
 {
-  if (call.length() > 0)
-    {
-      QString currentBand = "";  // match any band
-      callWorkedBefore = _log.match(call,currentBand);
-      countryName = _countries.find(call);
+    if(call.isEmpty()){
+        return;
+    }
 
-      if (countryName.length() > 0)  //  country was found
+    QString currentBand = "";  // match any band
+    callWorkedBefore = _log.match(call, currentBand);
+    countryName = _countries.find(call);
+
+    if (countryName.length() > 0){  //  country was found
         countryWorkedBefore = _worked.getHasWorked(countryName);
-      else
-        {
-          countryName = "where?"; //error: prefix not found
-          countryWorkedBefore = false;
-        }
+    } else {
+        countryName = "where?"; //error: prefix not found
+        countryWorkedBefore = false;
     }
 }
 
-void LogBook::addAsWorked(const QString call, const QString band, const QString mode, const QString submode, const QString date)
+bool LogBook::findCallDetails(
+                    /*in*/
+                    const QString call,
+                    /*out*/
+                    QString &date,
+                    QString &name,
+                    QString &comment) const
 {
-  _log.add(call,band,mode,submode,date);
+    qDebug() << "looking for call" << call;
+    if(call.isEmpty()){
+        return false;
+    }
+
+    auto qsos = _log.find(call);
+    qDebug() << "found" << qsos.length() << "qsos for call" << call;
+    if(qsos.isEmpty()){
+        return false;
+    }
+
+    foreach(auto qso, qsos){
+        if(date.isEmpty() && !qso.date.isEmpty()) date = qso.date;
+        if(name.isEmpty() && !qso.name.isEmpty()) name = qso.name;
+        if(comment.isEmpty() && !qso.comment.isEmpty()) comment = qso.comment;
+    }
+
+    return true;
+}
+
+void LogBook::addAsWorked(const QString call, const QString band, const QString mode, const QString submode, const QString date, const QString name, const QString comment)
+{
+  _log.add(call,band,mode,submode,date,name,comment);
   QString countryName = _countries.find(call);
   if (countryName.length() > 0)
     _worked.setAsWorked(countryName);

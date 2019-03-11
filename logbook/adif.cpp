@@ -101,14 +101,17 @@ void ADIF::load()
                , extractField (record, "BAND")
                , extractField (record, "MODE")
                , extractField (record, "SUBMODE")
-               , extractField (record, "QSO_DATE"));
+               , extractField (record, "QSO_DATE")
+               , extractField (record, "NAME")
+               , extractField (record, "COMMENT")
+               );
         }
         inputFile.close ();
     }
 }
 
 
-void ADIF::add(QString const& call, QString const& band, QString const& mode, QString const& submode, QString const& date)
+void ADIF::add(QString const& call, QString const& band, QString const& mode, QString const& submode, QString const& date, QString const& name, QString const& comment)
 {
     QSO q;
     q.call = call;
@@ -116,6 +119,9 @@ void ADIF::add(QString const& call, QString const& band, QString const& mode, QS
     q.mode = mode;
     q.submode = submode;
     q.date = date;
+    q.name = name;
+    q.comment = comment;
+
     if (q.call.size ())
       {
         _data.insert(q.call,q);
@@ -135,13 +141,18 @@ bool ADIF::match(QString const& call, QString const& band) const
             if (     (band.compare(q.band,Qt::CaseInsensitive) == 0)
                   || (band=="")
                   || (q.band==""))
-            {
+            {   
                 return true;
             }
         }
     }
     return false;
-}    
+}
+
+QList<ADIF::QSO> ADIF::find(QString const& call) const
+{
+    return _data.values(call);
+}
 
 QList<QString> ADIF::getCallList() const
 {
@@ -154,8 +165,6 @@ QList<QString> ADIF::getCallList() const
      }
     return p;
 }
-
-
     
 int ADIF::getCount() const
 {

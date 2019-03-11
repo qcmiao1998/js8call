@@ -1261,7 +1261,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->tableWidgetRXAll->horizontalHeader(), &QHeaderView::customContextMenuRequested, this, [this](QPoint const &point){
       QMenu * menu = new QMenu(ui->tableWidgetRXAll);
 
-      buildBandActivitySortByMenu(menu);
+      QMenu * sortByMenu = menu->addMenu("Sort By...");
+      buildBandActivitySortByMenu(sortByMenu);
+
+      QMenu * showColumnsMenu = menu->addMenu("Show Columns...");
+      buildShowColumnsMenu(showColumnsMenu, "band");
 
       menu->popup(ui->tableWidgetRXAll->horizontalHeader()->mapToGlobal(point));
   });
@@ -1475,7 +1479,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->tableWidgetCalls->horizontalHeader(), &QHeaderView::customContextMenuRequested, this, [this](QPoint const &point){
       QMenu * menu = new QMenu(ui->tableWidgetCalls);
 
-      buildCallActivitySortByMenu(menu);
+      QMenu * sortByMenu = menu->addMenu("Sort By...");
+      buildCallActivitySortByMenu(sortByMenu);
+
+      QMenu * showColumnsMenu = menu->addMenu("Show Columns...");
+      buildShowColumnsMenu(showColumnsMenu, "call");
 
       menu->popup(ui->tableWidgetCalls->horizontalHeader()->mapToGlobal(point));
   });
@@ -6414,7 +6422,7 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
                             , QString const& my_call, QString const& my_grid, QByteArray const& ADIF)
 {
   QString date = QSO_date_on.toString("yyyyMMdd");
-  m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), mode, submode, date);
+  m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), mode, submode, date, name, comments);
 
   sendNetworkMessage("LOG.QSO", QString(ADIF), {
       {"UTC.ON", QVariant(QSO_date_on.toMSecsSinceEpoch())},
@@ -7276,7 +7284,9 @@ void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
         columnKeys.append({
           {"Grid Locator", "grid"},
           {"Distance", "distance"},
-          {"Log Details", "log"}
+          {"Worked Before", "log"},
+          {"Logged Name", "logName"},
+          {"Logged Comment", "logComment"},
         });
     }
 
@@ -11262,7 +11272,7 @@ void MainWindow::displayCallActivity() {
             displayItem->setToolTip(generateCallDetail(displayCall));
             ui->tableWidgetCalls->setItem(row, col++, displayItem);
 
-            if(d.utcTimestamp.isValid()){
+            if(1){ //d.utcTimestamp.isValid()){
                 auto ageItem = new QTableWidgetItem(since(d.utcTimestamp));
                 ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
                 ageItem->setToolTip(d.utcTimestamp.toString());
@@ -11283,16 +11293,32 @@ void MainWindow::displayCallActivity() {
 
                 auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
                 distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-                ui->tableWidgetCalls->setItem(ui->tableWidgetCalls->rowCount() - 1, col++, distanceItem);
+                ui->tableWidgetCalls->setItem(row, col++, distanceItem);
 
                 QString flag;
                 if(m_logBook.hasWorkedBefore(d.call, "")){
                     // unicode checkmark
                     flag = "\u2713";
                 }
-                auto logDetailsItem = new QTableWidgetItem(flag);
-                logDetailsItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-                ui->tableWidgetCalls->setItem(row, col++, logDetailsItem);
+                auto workedBeforeItem = new QTableWidgetItem(flag);
+                workedBeforeItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                ui->tableWidgetCalls->setItem(row, col++, workedBeforeItem);
+
+                QString logDetailDate;
+                QString logDetailName;
+                QString logDetailComment;
+
+                if(showColumn("call", "log") || showColumn("call", "logName") || showColumn("call", "logComment")){
+                    m_logBook.findCallDetails(d.call, logDetailDate, logDetailName, logDetailComment);
+                }
+
+                auto logNameItem = new QTableWidgetItem(logDetailName);
+                logNameItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                ui->tableWidgetCalls->setItem(row, col++, logNameItem);
+
+                auto logCommentItem = new QTableWidgetItem(logDetailComment);
+                logCommentItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                ui->tableWidgetCalls->setItem(row, col++, logCommentItem);
 
             } else {
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // age
@@ -11301,7 +11327,9 @@ void MainWindow::displayCallActivity() {
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // tdrift
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // grid
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // distance
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // log details
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // worked before
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // log name
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // log comment
             }
 
             if (isCallSelected) {
@@ -11351,6 +11379,8 @@ void MainWindow::displayCallActivity() {
         ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "grid", false));
         ui->tableWidgetCalls->setColumnHidden(7, !showColumn("call", "distance", false));
         ui->tableWidgetCalls->setColumnHidden(8, !showColumn("call", "log"));
+        ui->tableWidgetCalls->setColumnHidden(9, !showColumn("call", "logName"));
+        ui->tableWidgetCalls->setColumnHidden(10, !showColumn("call", "logComment"));
 
         // Resize the table columns
         ui->tableWidgetCalls->resizeColumnToContents(0);
@@ -11361,6 +11391,8 @@ void MainWindow::displayCallActivity() {
         ui->tableWidgetCalls->resizeColumnToContents(5);
         ui->tableWidgetCalls->resizeColumnToContents(6);
         ui->tableWidgetCalls->resizeColumnToContents(7);
+        ui->tableWidgetCalls->resizeColumnToContents(8);
+        ui->tableWidgetCalls->resizeColumnToContents(9);
 
         // Reset the scroll position
         ui->tableWidgetCalls->verticalScrollBar()->setValue(currentScrollPos);

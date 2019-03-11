@@ -1274,13 +1274,20 @@ QTextEdit[transmitting=&quot;true&quot;] {
          </column>
          <column>
           <property name="text">
-           <string>Log Details</string>
+           <string>✓</string>
           </property>
           <property name="toolTip">
-           <string/>
+           <string>Worked Before</string>
           </property>
-          <property name="textAlignment">
-           <set>AlignCenter</set>
+         </column>
+         <column>
+          <property name="text">
+           <string>Name</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Comment</string>
           </property>
          </column>
         </widget>
