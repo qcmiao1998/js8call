@@ -35,7 +35,7 @@ subroutine genft8(msg,mygrid,bcontest,i3bit,msgsent,msgbits,itone)
 1000 format(12b6.6,b8.8)
   read(cbits,1001) i1Msg8BitBytes(1:10)
 1001 format(10b8)
-  i1Msg8BitBytes(10)=iand(i1Msg8BitBytes(10),128+64+32)
+  i1Msg8BitBytes(10)=iand(i1Msg8BitBytes(10),transfer(128+64+32,0_1))
   i1Msg8BitBytes(11)=0
   icrc12=crc12(c_loc(i1Msg8BitBytes),11)
   icrc12=xor(icrc12, 42) ! TODO: jsherer - could change the crc here

@@ -13,7 +13,7 @@ subroutine chkcrc12a(decoded,nbadcrc)
   read(cbits,1002) ncrc12                         !Received CRC12
 1002 format(75x,b12)
 
-  i1Dec8BitBytes(10)=iand(i1Dec8BitBytes(10),128+64+32)
+  i1Dec8BitBytes(10)=iand(i1Dec8BitBytes(10),transfer(128+64+32,0_1))
   i1Dec8BitBytes(11)=0
   icrc12=crc12(c_loc(i1Dec8BitBytes),11)          !CRC12 computed from 75 msg bits
   icrc12=xor(icrc12, 42) ! TODO: jsherer - could change the crc here

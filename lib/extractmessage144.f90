@@ -15,7 +15,7 @@ subroutine extractmessage144(decoded,msgreceived,nhashflag,recent_calls,nrecent)
   do ibyte=1,10
       itmp=0
     do ibit=1,8
-      itmp=ishft(itmp,1)+iand(1,decoded((ibyte-1)*8+ibit))
+      itmp=ishft(itmp,1)+iand(1_1,decoded((ibyte-1)*8+ibit))
     enddo
     i1Dec8BitBytes(ibyte)=itmp
   enddo
@@ -31,7 +31,7 @@ subroutine extractmessage144(decoded,msgreceived,nhashflag,recent_calls,nrecent)
     do ibyte=1,12
       itmp=0
       do ibit=1,6
-        itmp=ishft(itmp,1)+iand(1,decoded((ibyte-1)*6+ibit))
+        itmp=ishft(itmp,1)+iand(1_1,decoded((ibyte-1)*6+ibit))
       enddo
       i4Dec6BitWords(ibyte)=itmp
     enddo

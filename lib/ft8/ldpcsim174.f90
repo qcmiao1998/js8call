@@ -94,7 +94,7 @@ allocate ( rxdata(N), llr(N) )
   checksum = xor(checksum, 42) ! TODO: jsherer - could change the crc here
 ! For reference, the next 3 lines show how to check the CRC
   i1Msg8BitBytes(10)=checksum/256
-  i1Msg8BitBytes(11)=iand (checksum,255)
+  i1Msg8BitBytes(11)=iand(checksum,transfer(255,0_2))
   checksumok = crc12_check(c_loc (i1Msg8BitBytes), 11)
   if( checksumok ) write(*,*) 'Good checksum'
 
