@@ -83,13 +83,11 @@ bool LogBook::findCallDetails(
                     QString &name,
                     QString &comment) const
 {
-    qDebug() << "looking for call" << call;
     if(call.isEmpty()){
         return false;
     }
 
     auto qsos = _log.find(call);
-    qDebug() << "found" << qsos.length() << "qsos for call" << call;
     if(qsos.isEmpty()){
         return false;
     }
