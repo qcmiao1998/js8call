@@ -88,6 +88,16 @@
                   <string>Station Details</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_13">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="callsign_label">
+                    <property name="text">
+                     <string>My Callsign:</string>
+                    </property>
+                    <property name="buddy">
+                     <cstring>callsign_line_edit</cstring>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="1" column="0">
                    <widget class="QLabel" name="grid_label">
                     <property name="text">
@@ -118,16 +128,6 @@
                     </property>
                     <property name="placeholderText">
                      <string>@GROUP1, ...</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="callsign_label">
-                    <property name="text">
-                     <string>My Callsign:</string>
-                    </property>
-                    <property name="buddy">
-                     <cstring>callsign_line_edit</cstring>
                     </property>
                    </widget>
                   </item>
@@ -918,7 +918,7 @@ text message.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>718</width>
+                <width>264</width>
                 <height>435</height>
                </rect>
               </property>
@@ -1767,8 +1767,8 @@ radio interface behave as expected.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>760</width>
-            <height>502</height>
+            <width>266</width>
+            <height>329</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -2080,7 +2080,7 @@ both here.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>746</width>
+            <width>508</width>
             <height>525</height>
            </rect>
           </property>
@@ -2537,8 +2537,8 @@ for assessing propagation and system performance.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>760</width>
-            <height>502</height>
+            <width>487</width>
+            <height>341</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -3115,8 +3115,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>738</width>
-                <height>378</height>
+                <width>271</width>
+                <height>195</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_15">
@@ -3983,71 +3983,137 @@ soundcard changes</string>
  </widget>
  <tabstops>
   <tabstop>configuration_tabs</tabstop>
-  <tabstop>use_dynamic_grid</tabstop>
-  <tabstop>type_2_msg_gen_combo_box</tabstop>
-  <tabstop>monitor_last_used_check_box</tabstop>
-  <tabstop>quick_call_check_box</tabstop>
-  <tabstop>CW_id_after_73_check_box</tabstop>
-  <tabstop>enable_VHF_features_check_box</tabstop>
-  <tabstop>single_decode_check_box</tabstop>
-  <tabstop>decode_at_52s_check_box</tabstop>
-  <tabstop>CW_id_interval_spin_box</tabstop>
+  <tabstop>tabWidget_2</tabstop>
+  <tabstop>callsign_line_edit</tabstop>
+  <tabstop>grid_line_edit</tabstop>
+  <tabstop>groups_line_edit</tabstop>
+  <tabstop>avoid_allcall_checkbox</tabstop>
+  <tabstop>cq_message_line_edit</tabstop>
+  <tabstop>reply_message_line_edit</tabstop>
+  <tabstop>info_message_line_edit</tabstop>
+  <tabstop>scrollArea_2</tabstop>
+  <tabstop>miles_check_box</tabstop>
+  <tabstop>monitor_off_check_box</tabstop>
+  <tabstop>tx_qsy_check_box</tabstop>
+  <tabstop>transmit_directed_check_box</tabstop>
+  <tabstop>heartbeat_anywhere_check_box</tabstop>
+  <tabstop>heartbeat_qso_pause_check_box</tabstop>
+  <tabstop>spellcheck_check_box</tabstop>
+  <tabstop>autoreply_off_check_box</tabstop>
+  <tabstop>relay_disabled_check_box</tabstop>
+  <tabstop>auto_whitelist_line_edit</tabstop>
+  <tabstop>auto_blacklist_line_edit</tabstop>
+  <tabstop>scrollArea</tabstop>
+  <tabstop>callsign_aging_spin_box</tabstop>
+  <tabstop>activity_aging_spin_box</tabstop>
+  <tabstop>tx_watchdog_spin_box</tabstop>
   <tabstop>rig_combo_box</tabstop>
   <tabstop>CAT_poll_interval_spin_box</tabstop>
+  <tabstop>tabWidget_3</tabstop>
+  <tabstop>scrollArea_3</tabstop>
   <tabstop>CAT_port_combo_box</tabstop>
+  <tabstop>CAT_serial_baud_combo_box</tabstop>
+  <tabstop>CAT_default_bit_radio_button</tabstop>
   <tabstop>CAT_7_bit_radio_button</tabstop>
   <tabstop>CAT_8_bit_radio_button</tabstop>
+  <tabstop>CAT_default_stop_bit_radio_button</tabstop>
   <tabstop>CAT_one_stop_bit_radio_button</tabstop>
   <tabstop>CAT_two_stop_bit_radio_button</tabstop>
+  <tabstop>CAT_handshake_default_radio_button</tabstop>
   <tabstop>CAT_handshake_none_radio_button</tabstop>
   <tabstop>CAT_handshake_xon_radio_button</tabstop>
   <tabstop>CAT_handshake_hardware_radio_button</tabstop>
   <tabstop>force_DTR_combo_box</tabstop>
   <tabstop>force_RTS_combo_box</tabstop>
+  <tabstop>scrollArea_4</tabstop>
   <tabstop>PTT_VOX_radio_button</tabstop>
-  <tabstop>PTT_CAT_radio_button</tabstop>
   <tabstop>PTT_DTR_radio_button</tabstop>
+  <tabstop>PTT_CAT_radio_button</tabstop>
   <tabstop>PTT_RTS_radio_button</tabstop>
   <tabstop>PTT_port_combo_box</tabstop>
+  <tabstop>mode_USB_radio_button</tabstop>
+  <tabstop>mode_none_radio_button</tabstop>
+  <tabstop>mode_data_radio_button</tabstop>
   <tabstop>TX_source_data_radio_button</tabstop>
   <tabstop>TX_source_mic_radio_button</tabstop>
-  <tabstop>mode_none_radio_button</tabstop>
-  <tabstop>mode_USB_radio_button</tabstop>
-  <tabstop>mode_data_radio_button</tabstop>
-  <tabstop>split_none_radio_button</tabstop>
-  <tabstop>split_rig_radio_button</tabstop>
   <tabstop>split_emulate_radio_button</tabstop>
+  <tabstop>split_rig_radio_button</tabstop>
+  <tabstop>split_none_radio_button</tabstop>
+  <tabstop>sbTxDelay</tabstop>
+  <tabstop>ptt_command_line_edit</tabstop>
   <tabstop>test_CAT_push_button</tabstop>
   <tabstop>test_PTT_push_button</tabstop>
+  <tabstop>scrollArea_5</tabstop>
+  <tabstop>sound_output_combo_box</tabstop>
   <tabstop>sound_input_combo_box</tabstop>
   <tabstop>sound_input_channel_combo_box</tabstop>
-  <tabstop>sound_output_combo_box</tabstop>
   <tabstop>sound_output_channel_combo_box</tabstop>
   <tabstop>save_path_select_push_button</tabstop>
   <tabstop>azel_path_select_push_button</tabstop>
   <tabstop>checkBoxPwrBandTxMemory</tabstop>
   <tabstop>checkBoxPwrBandTuneMemory</tabstop>
-  <tabstop>add_macro_line_edit</tabstop>
-  <tabstop>add_macro_push_button</tabstop>
-  <tabstop>delete_macro_push_button</tabstop>
-  <tabstop>macros_list_view</tabstop>
-  <tabstop>prompt_to_log_check_box</tabstop>
+  <tabstop>scrollArea_6</tabstop>
+  <tabstop>opCallEntry</tabstop>
+  <tabstop>log_as_RTTY_check_box</tabstop>
   <tabstop>udp_server_line_edit</tabstop>
   <tabstop>udp_server_port_spin_box</tabstop>
+  <tabstop>udpEnable</tabstop>
   <tabstop>accept_udp_requests_check_box</tabstop>
-  <tabstop>udpWindowToFront</tabstop>
-  <tabstop>udpWindowRestore</tabstop>
+  <tabstop>use_dynamic_grid</tabstop>
+  <tabstop>psk_reporter_check_box</tabstop>
+  <tabstop>aprs_server_line_edit</tabstop>
+  <tabstop>aprs_server_port_spin_box</tabstop>
+  <tabstop>aprs_passcode_line_edit</tabstop>
+  <tabstop>enable_n1mm_broadcast_check_box</tabstop>
+  <tabstop>n1mm_server_name_line_edit</tabstop>
+  <tabstop>n1mm_server_port_spin_box</tabstop>
+  <tabstop>scrollArea_7</tabstop>
   <tabstop>calibration_slope_ppm_spin_box</tabstop>
   <tabstop>calibration_intercept_spin_box</tabstop>
   <tabstop>frequencies_table_view</tabstop>
+  <tabstop>auto_switch_bands_check_box</tabstop>
   <tabstop>stations_table_view</tabstop>
-  <tabstop>sbNtrials</tabstop>
-  <tabstop>sbAggressive</tabstop>
-  <tabstop>cbTwoPass</tabstop>
+  <tabstop>add_macro_push_button</tabstop>
+  <tabstop>add_macro_line_edit</tabstop>
+  <tabstop>delete_macro_push_button</tabstop>
+  <tabstop>macros_list_view</tabstop>
+  <tabstop>sound_am_path_test_push_button</tabstop>
+  <tabstop>sound_dm_path_reset_push_button</tabstop>
+  <tabstop>sound_am_path_reset_push_button</tabstop>
+  <tabstop>sound_dm_path_select_push_button</tabstop>
+  <tabstop>sound_am_path_select_push_button</tabstop>
+  <tabstop>sound_dm_path_test_push_button</tabstop>
+  <tabstop>sound_cq_path_select_push_button</tabstop>
+  <tabstop>sound_cq_path_test_push_button</tabstop>
+  <tabstop>sound_cq_path_reset_push_button</tabstop>
+  <tabstop>font_push_button</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>scrollArea_8</tabstop>
+  <tabstop>tableForegroundButton</tabstop>
+  <tabstop>pbCQmsg</tabstop>
+  <tabstop>tableFontButton</tabstop>
+  <tabstop>pbMyCall</tabstop>
+  <tabstop>tableSelectedRowBackgroundButton</tabstop>
+  <tabstop>tableBackgroundButton</tabstop>
+  <tabstop>scrollArea_9</tabstop>
+  <tabstop>txFontButton</tabstop>
+  <tabstop>rxFontButton</tabstop>
+  <tabstop>txForegroundButton</tabstop>
+  <tabstop>rxBackgroundButton</tabstop>
+  <tabstop>rxForegroundButton</tabstop>
+  <tabstop>scrollArea_10</tabstop>
+  <tabstop>composeBackgroundButton</tabstop>
+  <tabstop>composeForegroundButton</tabstop>
+  <tabstop>composeFontButton</tabstop>
   <tabstop>sbDegrade</tabstop>
   <tabstop>sbBandwidth</tabstop>
   <tabstop>cbx2ToneSpacing</tabstop>
   <tabstop>cbx4ToneSpacing</tabstop>
+  <tabstop>sbNtrials</tabstop>
+  <tabstop>sbAggressive</tabstop>
+  <tabstop>cbTwoPass</tabstop>
+  <tabstop>cbFox</tabstop>
+  <tabstop>cbHound</tabstop>
  </tabstops>
  <resources/>
  <connections>
@@ -4117,12 +4183,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="TX_mode_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
   <buttongroup name="split_mode_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="TX_mode_button_group"/>
  </buttongroups>
 </ui>
