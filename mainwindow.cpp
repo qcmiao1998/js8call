@@ -2123,7 +2123,7 @@ void MainWindow::readSettings()
 
   m_sortCache = m_settings->value("SortBy").toMap();
   m_showColumnsCache = m_settings->value("ShowColumns").toMap();
-  m_hbHidden = m_settings->value("HBHidden", false).toBool();
+  m_hbHidden = m_settings->value("HBHidden", true).toBool();
   m_hbInterval = m_settings->value("HBInterval", 0).toInt();
   m_cqInterval = m_settings->value("CQInterval", 0).toInt();
 
@@ -7135,7 +7135,11 @@ void MainWindow::sendHeartbeat(){
 }
 
 void MainWindow::sendHeartbeatAck(QString to, int snr, QString extra){
+#if SEND_SNR_IN_ACK
     auto message = QString("%1 ACK %2 %3").arg(to).arg(Varicode::formatSNR(snr)).arg(extra).trimmed();
+#else
+    auto message = QString("%1 ACK %2").arg(to).arg(extra).trimmed();
+#endif
 
     auto f = m_config.heartbeat_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
 
