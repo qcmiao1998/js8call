@@ -11243,7 +11243,11 @@ void MainWindow::displayCallActivity() {
 
             // icon flags (flag -> star -> empty)
             bool hasMessage = m_rxInboxCountCache.value(d.call, 0) > 0;
-            bool hasCQ = d.cqTimestamp.isValid();
+
+            // display telephone icon if called cq in the past 5 minutes
+            bool hasCQ = d.cqTimestamp.isValid() && d.cqTimestamp.secsTo(now) / 60 < 5;
+
+            // display star if they've acked a message from us
             bool hasACK = d.ackTimestamp.isValid();
 
             if (!isCallSelected && !hasMessage && callsignAging && d.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
