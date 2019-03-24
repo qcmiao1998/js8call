@@ -203,7 +203,7 @@
                  </size>
                 </property>
                 <property name="toolTip">
-                 <string>Current Frequency</string>
+                 <string>Set Current Frequency</string>
                 </property>
                 <property name="frameShape">
                  <enum>QFrame::NoFrame</enum>
@@ -297,7 +297,7 @@ QPushButton[oob=&quot;true&quot;] {
                  <bool>true</bool>
                 </property>
                 <property name="toolTip">
-                 <string>Current frequency offset</string>
+                 <string>Set Current Frequency Offset</string>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QLabel {
@@ -403,6 +403,9 @@ color : white;
                 </property>
                 <property name="mouseTracking">
                  <bool>true</bool>
+                </property>
+                <property name="toolTip">
+                 <string>Set Callsign and Grid</string>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QLabel {
