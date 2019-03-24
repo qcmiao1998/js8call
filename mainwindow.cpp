@@ -814,6 +814,15 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   });
   ui->labDialFreqOffset->installEventFilter(ldmp);
 
+  // Hook up callsign label click to open preferenses
+  ui->labCallsign->setCursor(QCursor(Qt::PointingHandCursor));
+  auto clmp = new MousePressEater();
+  connect(clmp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent * e, bool *pProcessed){
+      openSettings(0);
+      if(pProcessed) *pProcessed = true;
+  });
+  ui->labCallsign->installEventFilter(clmp);
+
   ui->bandComboBox->setVisible(false);
   ui->bandComboBox->setModel (m_config.frequencies ());
   ui->bandComboBox->setModelColumn (FrequencyList_v2::frequency_mhz_column);
