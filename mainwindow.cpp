@@ -8024,6 +8024,9 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
     } else {
         placeholderText = QString("Type your outgoing directed message to %1 here.").arg(selectedCall);
 
+        // when we select a callsign, use it as the qso start time
+        m_dateTimeQSOOn = DriftingDateTime::currentDateTimeUtc();
+
         // TODO: jsherer - move this to a generic "callsign changed" signal
         if(m_config.heartbeat_qso_pause()){
             // don't hb if we select a callsign... (but we should keep track so if we deselect, we restore our hb)
