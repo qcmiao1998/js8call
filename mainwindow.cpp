@@ -5605,22 +5605,32 @@ void MainWindow::on_tx6_editingFinished()                       //tx6 edited
 }
 
 void MainWindow::cacheActivity(QString key){
-    m_callActivityCache[key] = m_callActivity;
-    m_bandActivityCache[key] = m_bandActivity;
-    m_rxTextCache[key] = ui->textEditRX->toHtml();
+    m_callActivityBandCache[key] = m_callActivity;
+    m_bandActivityBandCache[key] = m_bandActivity;
+    m_rxTextBandCache[key] = ui->textEditRX->toHtml();
+    m_heardGraphIncomingBandCache[key] = m_heardGraphIncoming;
+    m_heardGraphOutgoingBandCache[key] = m_heardGraphOutgoing;
 }
 
 void MainWindow::restoreActivity(QString key){
-    if(m_callActivityCache.contains(key)){
-        m_callActivity = m_callActivityCache[key];
+    if(m_callActivityBandCache.contains(key)){
+        m_callActivity = m_callActivityBandCache[key];
     }
 
-    if(m_bandActivityCache.contains(key)){
-        m_bandActivity = m_bandActivityCache[key];
+    if(m_bandActivityBandCache.contains(key)){
+        m_bandActivity = m_bandActivityBandCache[key];
     }
 
-    if(m_rxTextCache.contains(key)){
-        ui->textEditRX->setHtml(m_rxTextCache[key]);
+    if(m_rxTextBandCache.contains(key)){
+        ui->textEditRX->setHtml(m_rxTextBandCache[key]);
+    }
+
+    if(m_heardGraphIncomingBandCache.contains(key)){
+        m_heardGraphIncoming = m_heardGraphIncomingBandCache[key];
+    }
+
+    if(m_heardGraphOutgoingBandCache.contains(key)){
+        m_heardGraphOutgoing = m_heardGraphOutgoingBandCache[key];
     }
 
     displayActivity(true);

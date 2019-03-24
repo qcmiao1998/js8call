@@ -828,9 +828,11 @@ private:
 
   QMap<QString, int> m_rxInboxCountCache; // call -> count
 
-  QMap<QString, QMap<QString, CallDetail>> m_callActivityCache; // band -> call activity
-  QMap<QString, QMap<int, QList<ActivityDetail>>> m_bandActivityCache; // band -> band activity
-  QMap<QString, QString> m_rxTextCache; // band -> rx text
+  QMap<QString, QMap<QString, CallDetail>> m_callActivityBandCache; // band -> call activity
+  QMap<QString, QMap<int, QList<ActivityDetail>>> m_bandActivityBandCache; // band -> band activity
+  QMap<QString, QString> m_rxTextBandCache; // band -> rx text
+  QMap<QString, QMap<QString, QSet<QString>>> m_heardGraphOutgoingBandCache; // band -> heard in
+  QMap<QString, QMap<QString, QSet<QString>>> m_heardGraphIncomingBandCache; // band -> heard out
 
   JSCChecker * m_checker;
 
