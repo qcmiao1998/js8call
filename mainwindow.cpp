@@ -569,6 +569,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_txFrameCountEstimate {0},
   m_previousFreq {0},
   m_hbPaused { false },
+  m_hbAutoAck { true },
   m_hbHidden { false },
   m_hbInterval {0},
   m_cqInterval {0},
@@ -1998,6 +1999,7 @@ void MainWindow::writeSettings()
   m_settings->setValue ("JT65AP", ui->actionEnable_AP_JT65->isChecked ());
   m_settings->setValue("SortBy", QVariant(m_sortCache));
   m_settings->setValue("ShowColumns", QVariant(m_showColumnsCache));
+  m_settings->setValue("HBAutoAck", m_hbAutoAck);
   m_settings->setValue("HBHidden", m_hbHidden);
   m_settings->setValue("HBInterval", m_hbInterval);
   m_settings->setValue("CQInterval", m_cqInterval);
@@ -2132,6 +2134,7 @@ void MainWindow::readSettings()
 
   m_sortCache = m_settings->value("SortBy").toMap();
   m_showColumnsCache = m_settings->value("ShowColumns").toMap();
+  m_hbAutoAck = m_settings->value("HBAutoAck", true).toBool();
   m_hbHidden = m_settings->value("HBHidden", true).toBool();
   m_hbInterval = m_settings->value("HBInterval", 0).toInt();
   m_cqInterval = m_settings->value("CQInterval", 0).toInt();
@@ -2988,6 +2991,9 @@ void MainWindow::on_autoButton_clicked (bool checked)
 
 void MainWindow::on_autoReplyButton_toggled(bool checked){
     resetPushButtonToggleText(ui->autoReplyButton);
+
+    // update the HB button immediately
+    updateRepeatButtonDisplay();
 }
 
 void MainWindow::on_monitorButton_toggled(bool checked){
@@ -7034,6 +7040,16 @@ void MainWindow::buildFrequencyMenu(QMenu *menu){
 }
 
 void MainWindow::buildHeartbeatMenu(QMenu *menu){
+    auto autoAckHB = menu->addAction(ui->autoReplyButton->isChecked() ? "Automatically ACK Heartbeats" : "Automatically ACK Heartbeats (AUTO disabled)");
+    autoAckHB->setEnabled(ui->autoReplyButton->isChecked());
+    autoAckHB->setCheckable(true);
+    autoAckHB->setChecked(m_hbAutoAck);
+    connect(autoAckHB, &QAction::triggered, this, [this, autoAckHB](){
+        m_hbAutoAck = autoAckHB->isChecked();
+        updateRepeatButtonDisplay();
+    });
+    menu->addSeparator();
+
     if(m_hbInterval > 0){
         auto startStop = menu->addAction(ui->hbMacroButton->isChecked() ? "Stop Heartbeat Timer" : "Start Heartbeat Timer");
         connect(startStop, &QAction::triggered, this, [this](){ ui->hbMacroButton->toggle(); });
@@ -9137,15 +9153,16 @@ void MainWindow::updateButtonDisplay(){
 }
 
 void MainWindow::updateRepeatButtonDisplay(){
+    auto hbBase = m_hbAutoAck && ui->autoReplyButton->isChecked() ? "HB + ACK" : "HB";
     if(ui->hbMacroButton->isChecked() && m_hbInterval > 0 && m_nextHeartbeat.isValid()){
         auto secs = DriftingDateTime::currentDateTimeUtc().secsTo(m_nextHeartbeat);
         if(secs > 0){
-            ui->hbMacroButton->setText(QString("HB (%1)").arg(secs));
+            ui->hbMacroButton->setText(QString("%1 (%2)").arg(hbBase).arg(secs));
         } else {
-            ui->hbMacroButton->setText(QString("HB (now)"));
+            ui->hbMacroButton->setText(QString("%1 (now)").arg(hbBase));
         }
     } else {
-        ui->hbMacroButton->setText("HB");
+        ui->hbMacroButton->setText(hbBase);
     }
 
     if(ui->cqMacroButton->isChecked() && m_cqInterval > 0 && m_nextCQ.isValid()){
@@ -10283,7 +10300,7 @@ void MainWindow::processCommandActivity() {
 
         // PROCESS ACTIVE HEARTBEAT
         // if we have auto reply enabled and we are heartbeating and selcall is not enabled
-        else if (d.cmd == " HB" && ui->autoReplyButton->isChecked() && ui->hbMacroButton->isChecked() && m_hbInterval > 0){
+        else if (d.cmd == " HB" && ui->autoReplyButton->isChecked() && m_hbAutoAck){
 
             // check to see if we have a message for a station who is heartbeating
             QString extra;
