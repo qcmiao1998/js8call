@@ -4153,8 +4153,9 @@ void MainWindow::readFromStdout()                             //readFromStdout
             // Only respond to HEARTBEATS...remember that CQ messages are "Alt" pings
             if(decodedtext.isHeartbeat()){
                 if(decodedtext.isAlt()){
+                    // this is a cq with a standard or compound call, ala "KN4CRD/P: CQCQCQ"
+                    cd.cqTimestamp = DriftingDateTime::currentDateTimeUtc();
 
-                    // this is a cq with a compound call, ala "KN4CRD/P: CQCQCQ"
                     // it is not processed elsewhere, so we need to just log it here.
                     logCallActivity(cd, true);
 
@@ -4456,6 +4457,9 @@ void MainWindow::logCallActivity(CallDetail d, bool spot){
         }
         if(!d.ackTimestamp.isValid() && old.ackTimestamp.isValid()){
             d.ackTimestamp = old.ackTimestamp;
+        }
+        if(!d.cqTimestamp.isValid() && old.cqTimestamp.isValid()){
+            d.cqTimestamp = old.cqTimestamp;
         }
         m_callActivity[d.call] = d;
     } else {
@@ -11239,7 +11243,8 @@ void MainWindow::displayCallActivity() {
 
             // icon flags (flag -> star -> empty)
             bool hasMessage = m_rxInboxCountCache.value(d.call, 0) > 0;
-            bool hasAck = d.ackTimestamp.isValid();
+            bool hasCQ = d.cqTimestamp.isValid();
+            bool hasACK = d.ackTimestamp.isValid();
 
             if (!isCallSelected && !hasMessage && callsignAging && d.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
                 continue;
@@ -11259,11 +11264,11 @@ void MainWindow::displayCallActivity() {
 
 
 
-            auto iconItem = new QTableWidgetItem(hasMessage ? "\u2691" : hasAck ? "\u2605" : "");
-            iconItem->setData(Qt::UserRole, QVariant((d.call)));
+            auto iconItem = new QTableWidgetItem(hasMessage ? "\u2691" : hasACK ? "\u2605" : hasCQ ? "\u260E" : "");
+            iconItem->setData(Qt::UserRole, QVariant(d.call));
             iconItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
             ui->tableWidgetCalls->setItem(row, col++, iconItem);
-            if(hasMessage || hasAck){
+            if(hasMessage || hasACK || hasCQ){
                 showIconColumn = true;
             }
 
@@ -11272,7 +11277,11 @@ void MainWindow::displayCallActivity() {
             displayItem->setToolTip(generateCallDetail(displayCall));
             ui->tableWidgetCalls->setItem(row, col++, displayItem);
 
-            if(1){ //d.utcTimestamp.isValid()){
+#if ONLY_SHOW_HEARD_CALLSIGNS
+            if(d.utcTimestamp.isValid()){
+#else
+            if(true){
+#endif
                 auto ageItem = new QTableWidgetItem(since(d.utcTimestamp));
                 ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
                 ageItem->setToolTip(d.utcTimestamp.toString());
@@ -11310,6 +11319,12 @@ void MainWindow::displayCallActivity() {
 
                 if(showColumn("call", "log") || showColumn("call", "logName") || showColumn("call", "logComment")){
                     m_logBook.findCallDetails(d.call, logDetailDate, logDetailName, logDetailComment);
+                }
+
+                if(!logDetailDate.isEmpty()){
+                    auto lastLogged = QDate::fromString(logDetailDate, "yyyyMMdd");
+
+                    workedBeforeItem->setToolTip(QString("Last Logged: %1").arg(lastLogged.toString()));
                 }
 
                 auto logNameItem = new QTableWidgetItem(logDetailName);

@@ -713,6 +713,7 @@ private:
     QString through;
     QString grid;
     int freq;
+    QDateTime cqTimestamp;
     QDateTime ackTimestamp;
     QDateTime utcTimestamp;
     int snr;
