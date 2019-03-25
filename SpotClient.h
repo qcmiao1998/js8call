@@ -25,6 +25,7 @@ public slots:
     void dnsLookupResult(QHostInfo);
 
 private:
+    int m_seq;
     QString m_call;
     QString m_grid;
     QString m_info;

@@ -52,8 +52,8 @@ void SpotClient::setLocalStation(QString callsign, QString grid, QString info, Q
         changed = true;
     }
 
-    if(changed){
-        // send local information to network
+    // send local information to network on change, or once every 5 minutes
+    if(changed || m_seq % 5 == 0){
         enqueueLocalSpot(callsign, grid, info, version);
     }
 }
@@ -91,6 +91,8 @@ void SpotClient::processSpots(){
     while(!m_queue.isEmpty()){
         sendRawSpot(m_queue.dequeue());
     }
+
+    m_seq++;
 }
 
 void SpotClient::sendRawSpot(QByteArray payload){
