@@ -17,6 +17,7 @@ public:
     void prepare();
     void setLocalStation(QString callsign, QString grid, QString info, QString version);
     void enqueueLocalSpot(QString callsign, QString grid, QString info, QString version);
+    void enqueueCmd(QString cmd, QString from, QString to, QString relayPath, QString text, QString grid, QString extra, int frequency, int snr);
     void enqueueSpot(QString callsign, QString grid, int frequency, int snr);
     void sendRawSpot(QByteArray payload);
 

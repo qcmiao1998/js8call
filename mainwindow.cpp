@@ -4543,6 +4543,17 @@ void MainWindow::spotReport(int offset, int snr, QString callsign, QString grid)
     m_spotClient->enqueueSpot(callsign, grid, frequency, snr);
 }
 
+void MainWindow::spotCmd(CommandDetail cmd){
+    if(!m_config.spot_to_reporting_networks()) return;
+
+    QString cmdStr = cmd.cmd;
+    if(!cmdStr.trimmed().isEmpty()){
+        cmdStr = Varicode::lstrip(cmd.cmd);
+    }
+
+    m_spotClient->enqueueCmd(cmdStr, cmd.from, cmd.to, cmd.relayPath, cmd.text, cmd.grid, cmd.extra, m_freqNominal + cmd.freq, cmd.snr);
+}
+
 void MainWindow::pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid){
     if(!m_config.spot_to_reporting_networks()) return;
 
@@ -9969,6 +9980,11 @@ void MainWindow::processCommandActivity() {
 
             // make sure this is explicit
             continue;
+        }
+
+        // PROCESS @JS8NET SPOTS FOR EVERYONE
+        if (d.to == "@JS8NET"){
+            spotCmd(d);
         }
 
         // we're only responding to allcall, groupcalls, and our callsign at this point, so we'll end after logging the callsigns we've heard

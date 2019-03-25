@@ -81,7 +81,26 @@ void SpotClient::enqueueSpot(QString callsign, QString grid, int frequency, int 
          {"SNR", QVariant(snr)},
     });
 
-    // queue these...
+    m_queue.enqueue(m.toJson());
+}
+
+void SpotClient::enqueueCmd(QString cmd, QString from, QString to, QString relayPath, QString text, QString grid, QString extra, int frequency, int snr){
+    auto m = Message("RX.DIRECTED", "", {
+         {"BY", QVariant(QMap<QString, QVariant>{
+              {"CALLSIGN", QVariant(m_call)},
+              {"GRID", QVariant(m_grid)},
+         })},
+         {"CMD", QVariant(cmd)},
+         {"FROM", QVariant(from)},
+         {"TO", QVariant(to)},
+         {"PATH", QVariant(relayPath)},
+         {"TEXT", QVariant(text)},
+         {"GRID", QVariant(grid)},
+         {"EXTRA", QVariant(extra)},
+         {"FREQ", QVariant(frequency)},
+         {"SNR", QVariant(snr)},
+    });
+
     m_queue.enqueue(m.toJson());
 }
 
