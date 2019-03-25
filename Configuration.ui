@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -278,7 +278,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>724</width>
+                <width>615</width>
                 <height>646</height>
                </rect>
               </property>
@@ -918,7 +918,7 @@ text message.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>264</width>
+                <width>718</width>
                 <height>435</height>
                </rect>
               </property>
@@ -1767,8 +1767,8 @@ radio interface behave as expected.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>266</width>
-            <height>329</height>
+            <width>760</width>
+            <height>502</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -2080,7 +2080,7 @@ both here.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>508</width>
+            <width>746</width>
             <height>525</height>
            </rect>
           </property>
@@ -2339,7 +2339,7 @@ This is used for reverse ping analysis which is very useful
 for assessing propagation and system performance.</string>
                 </property>
                 <property name="text">
-                 <string>Enable spotting to reporting networks (PSKReporter &amp;&amp; APRS-IS)</string>
+                 <string>Enable spotting to reporting networks (JS8 Network, PSKReporter, APRS-IS, etc)</string>
                 </property>
                 <property name="checked">
                  <bool>true</bool>
@@ -2537,8 +2537,8 @@ for assessing propagation and system performance.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>487</width>
-            <height>341</height>
+            <width>760</width>
+            <height>502</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -3115,8 +3115,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>271</width>
-                <height>195</height>
+                <width>738</width>
+                <height>378</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_15">
