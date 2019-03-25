@@ -7051,7 +7051,7 @@ void MainWindow::buildFrequencyMenu(QMenu *menu){
 }
 
 void MainWindow::buildHeartbeatMenu(QMenu *menu){
-    auto autoAckHB = menu->addAction(ui->autoReplyButton->isChecked() ? "Automatically ACK Heartbeats" : "Automatically ACK Heartbeats (AUTO disabled)");
+    auto autoAckHB = menu->addAction(ui->autoReplyButton->isChecked() ? "Send Heartbeat Acknowledgments (ACK)" : "Send Heartbeat Acknowledgments (ACK) (AUTO disabled)");
     autoAckHB->setEnabled(ui->autoReplyButton->isChecked());
     autoAckHB->setCheckable(true);
     autoAckHB->setChecked(m_hbAutoAck);
