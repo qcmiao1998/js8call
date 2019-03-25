@@ -44,6 +44,7 @@
 #include "qpriorityqueue.h"
 #include "varicode.h"
 #include "MessageClient.hpp"
+#include "SpotClient.h"
 #include "APRSISClient.h"
 #include "keyeater.h"
 
@@ -896,6 +897,7 @@ private:
   QProgressDialog m_optimizingProgress;
   MessageClient * m_messageClient;
   PSK_Reporter *psk_Reporter;
+  SpotClient *m_spotClient;
   APRSISClient * m_aprsClient;
   DisplayManual m_manual;
   QHash<QString, QVariant> m_pwrBandTxMemory; // Remembers power level by band
@@ -920,8 +922,10 @@ private:
   bool shortList(QString callsign);
   void transmit (double snr = 99.);
   void rigFailure (QString const& reason);
+  void spotSetLocal();
   void pskSetLocal ();
   void aprsSetLocal ();
+  void spotReport(int offset, int snr, QString callsign, QString grid);
   void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
   void aprsLogReport(int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();

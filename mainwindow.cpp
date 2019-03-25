@@ -560,6 +560,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         version (), revision (),
         m_config.udp_server_name (), m_config.udp_server_port (),
         this}},
+  m_spotClient { new SpotClient{m_messageClient, this}},
   m_aprsClient {new APRSISClient{"rotate.aprs2.net", 14580, this}},
   psk_Reporter {new PSK_Reporter {m_messageClient, this}},
   m_i3bit {0},
@@ -1622,6 +1623,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   gridButtonLayout->setColumnStretch(1, 1);
   gridButtonLayout->setColumnStretch(2, 1);
 
+  spotSetLocal();
   pskSetLocal();
   aprsSetLocal();
 
@@ -2896,6 +2898,7 @@ void MainWindow::openSettings(int tab){
 
 void MainWindow::prepareSpotting(){
     if(m_config.spot_to_reporting_networks ()){
+        spotSetLocal();
         pskSetLocal();
         aprsSetLocal();
         m_aprsClient->setServer(m_config.aprs_server_name(), m_config.aprs_server_port());
@@ -4530,6 +4533,14 @@ QString MainWindow::lookupCallInCompoundCache(QString const &call){
         return m_config.my_callsign();
     }
     return m_compoundCallCache.value(call, call);
+}
+
+void MainWindow::spotReport(int offset, int snr, QString callsign, QString grid){
+    if(!m_config.spot_to_reporting_networks()) return;
+
+    Frequency frequency = m_freqNominal + offset;
+
+    m_spotClient->enqueueSpot(callsign, grid, frequency, snr);
 }
 
 void MainWindow::pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid){
@@ -8593,6 +8604,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
             }
 
             if (m_config.spot_to_reporting_networks ()) {
+              spotSetLocal();
               pskSetLocal();
               aprsSetLocal();
             }
@@ -8841,6 +8853,16 @@ bool MainWindow::shortList(QString callsign)
   QString t2=callsign.mid(i1+1,n-i1-1);
   bool b=(m_pfx.contains(t1) or m_sfx.contains(t2));
   return b;
+}
+
+void MainWindow::spotSetLocal ()
+{
+    auto call = m_config.my_callsign();
+    auto grid = m_config.my_grid();
+    auto info = replaceMacros(m_config.my_info(), buildMacroValues(), true);
+    auto ver = QString {"JS8Call v" + version() }.simplified ();
+    qDebug() << "SpotClient Set Local Station:" << call << grid << info << ver;
+    m_spotClient->setLocalStation(call, grid, info, ver);
 }
 
 void MainWindow::pskSetLocal ()
@@ -10791,6 +10813,7 @@ void MainWindow::processSpots() {
     auto dial = dialFrequency();
 
     // Process spots to be sent...
+    spotSetLocal();
     pskSetLocal();
     aprsSetLocal();
 
@@ -10802,6 +10825,7 @@ void MainWindow::processSpots() {
 
         qDebug() << "spotting call to reporting networks" << d.call << d.snr << d.freq;
 
+        spotReport(d.freq, d.snr, d.call, d.grid);
         pskLogReport("JS8", d.freq, d.snr, d.call, d.grid);
         aprsLogReport(d.freq, d.snr, d.call, d.grid);
 

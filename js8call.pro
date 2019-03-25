@@ -81,7 +81,8 @@ SOURCES += \
     jsc_checker.cpp \
     Message.cpp \
     Inbox.cpp \
-    messagewindow.cpp
+    messagewindow.cpp \
+    SpotClient.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -113,7 +114,8 @@ HEADERS  += qt_helpers.hpp \
     jsc_checker.h \
     Message.h \
     Inbox.h \
-    messagewindow.h
+    messagewindow.h \
+    SpotClient.h
 
 
 INCLUDEPATH += qmake_only

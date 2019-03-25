@@ -243,6 +243,7 @@ set (wsjtx_CXXSRCS
   messagereplydialog.cpp
   keyeater.cpp
   APRSISClient.cpp
+  SpotClient.cpp
   Inbox.cpp
   messagewindow.cpp
   mainwindow.cpp
