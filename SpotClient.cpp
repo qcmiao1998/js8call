@@ -71,7 +71,10 @@ void SpotClient::enqueueLocalSpot(QString callsign, QString grid, QString info, 
 
 void SpotClient::enqueueSpot(QString callsign, QString grid, int frequency, int snr){
     auto m = Message("RX.SPOT", "", {
-         {"BY", QVariant(m_call)},
+         {"BY", QVariant(QMap<QString, QVariant>{
+              {"CALLSIGN", QVariant(m_call)},
+              {"GRID", QVariant(m_grid)},
+         })},
          {"CALLSIGN", QVariant(callsign)},
          {"GRID", QVariant(grid)},
          {"FREQ", QVariant(frequency)},
