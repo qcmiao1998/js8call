@@ -7062,8 +7062,17 @@ void MainWindow::buildFrequencyMenu(QMenu *menu){
 }
 
 void MainWindow::buildHeartbeatMenu(QMenu *menu){
-    auto autoAckHB = menu->addAction(ui->autoReplyButton->isChecked() ? "Send Heartbeat Acknowledgments (ACK)" : "Send Heartbeat Acknowledgments (ACK) (AUTO disabled)");
-    autoAckHB->setEnabled(ui->autoReplyButton->isChecked());
+    auto selectedCallsign = callsignSelected();
+    bool enabled = ui->autoReplyButton->isChecked() && selectedCallsign.isEmpty();
+    auto text = "Send Heartbeat Acknowledgments (ACK)";
+    if(!ui->autoReplyButton->isChecked()){
+        text = "Send Heartbeat Acknowledgments (ACK) (AUTO disabled)";
+    }
+    if(!selectedCallsign.isEmpty()){
+        text = "Send Heartbeat Acknowledgments (ACK) (Currently in QSO)";
+    }
+    auto autoAckHB = menu->addAction(text);
+    autoAckHB->setEnabled(enabled);
     autoAckHB->setCheckable(true);
     autoAckHB->setChecked(m_hbAutoAck);
     connect(autoAckHB, &QAction::triggered, this, [this, autoAckHB](){
@@ -8087,6 +8096,8 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
 
         // TODO: jsherer - move this to a generic "callsign changed" signal
         if(m_config.heartbeat_qso_pause()){
+
+            // TODO: jsherer - HB issue
             // don't hb if we select a callsign... (but we should keep track so if we deselect, we restore our hb)
             if(ui->hbMacroButton->isChecked()){
                 ui->hbMacroButton->setChecked(false);
@@ -9187,7 +9198,8 @@ void MainWindow::updateButtonDisplay(){
 }
 
 void MainWindow::updateRepeatButtonDisplay(){
-    auto hbBase = m_hbAutoAck && ui->autoReplyButton->isChecked() ? "HB + ACK" : "HB";
+    auto selectedCallsign = callsignSelected();
+    auto hbBase = m_hbAutoAck && ui->autoReplyButton->isChecked() && selectedCallsign.isEmpty() ? "HB + ACK" : "HB";
     if(ui->hbMacroButton->isChecked() && m_hbInterval > 0 && m_nextHeartbeat.isValid()){
         auto secs = DriftingDateTime::currentDateTimeUtc().secsTo(m_nextHeartbeat);
         if(secs > 0){
@@ -9913,6 +9925,7 @@ void MainWindow::processCommandActivity() {
     while (!m_rxCommandQueue.isEmpty()) {
         auto d = m_rxCommandQueue.dequeue();
 
+        auto selectedCallsign = callsignSelected();
         bool isAllCall = isAllCallIncluded(d.to);
         bool isGroupCall = isGroupCallIncluded(d.to);
 
@@ -10338,8 +10351,8 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS ACTIVE HEARTBEAT
-        // if we have auto reply enabled and we are heartbeating and selcall is not enabled
-        else if (d.cmd == " HB" && ui->autoReplyButton->isChecked() && m_hbAutoAck){
+        // if we have auto reply enabled and auto ack enabled and no callsign is selected
+        else if (d.cmd == " HB" && ui->autoReplyButton->isChecked() && m_hbAutoAck && selectedCallsign.isEmpty()){
 
             // check to see if we have a message for a station who is heartbeating
             QString extra;
@@ -10575,6 +10588,7 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
+        // TODO: jsherer - HB issue here
         // do not queue a reply if it's a HB and HB is not active
         if((!ui->hbMacroButton->isChecked() || m_hbInterval <= 0) && d.cmd.contains("HB")){
             continue;
