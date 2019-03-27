@@ -52,8 +52,8 @@ void SpotClient::setLocalStation(QString callsign, QString grid, QString info, Q
         changed = true;
     }
 
-    // send local information to network on change, or once every 5 minutes
-    if(changed || m_seq % 5 == 0){
+    // send local information to network on change, or once every 15 minutes
+    if(changed || m_seq % 15 == 0){
         enqueueLocalSpot(callsign, grid, info, version);
     }
 }
