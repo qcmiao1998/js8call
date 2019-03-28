@@ -6439,18 +6439,16 @@ void MainWindow::on_genStdMsgsPushButton_clicked()
 
 void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
 {
-  /*
-  if (!m_hisCall.size ()) {
-    MessageBox::warning_message (this, tr ("Warning:  DX Call field is empty."));
+  QString call = callsignSelected();
+  if(m_callSelectedTime.contains(call)){
+    m_dateTimeQSOOn = m_callSelectedTime[call];
   }
-  */
-  // m_dateTimeQSOOn should really already be set but we'll ensure it gets set to something just in case
   if (!m_dateTimeQSOOn.isValid ()) {
     m_dateTimeQSOOn = DriftingDateTime::currentDateTimeUtc();
   }
   auto dateTimeQSOOff = DriftingDateTime::currentDateTimeUtc();
   if (dateTimeQSOOff < m_dateTimeQSOOn) dateTimeQSOOff = m_dateTimeQSOOn;
-  QString call=callsignSelected();
+
   if(call.startsWith("@")){
       call = "";
   }
@@ -8080,47 +8078,10 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
 void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/){
     on_extFreeTextMsgEdit_currentTextChanged(ui->extFreeTextMsgEdit->toPlainText());
 
-    auto placeholderText = QString("Type your outgoing messages here.");
     auto selectedCall = callsignSelected();
-    if(selectedCall.isEmpty()){
-        // try to restore hb
-        if(m_hbPaused){
-            ui->hbMacroButton->setChecked(true);
-            m_hbPaused = false;
-        }
-    } else {
-        placeholderText = QString("Type your outgoing directed message to %1 here.").arg(selectedCall);
-
-        // when we select a callsign, use it as the qso start time
-        m_dateTimeQSOOn = DriftingDateTime::currentDateTimeUtc();
-
-        // TODO: jsherer - move this to a generic "callsign changed" signal
-        if(m_config.heartbeat_qso_pause()){
-
-            // TODO: jsherer - HB issue
-            // don't hb if we select a callsign... (but we should keep track so if we deselect, we restore our hb)
-            if(ui->hbMacroButton->isChecked()){
-                ui->hbMacroButton->setChecked(false);
-                m_hbPaused = true;
-            }
-
-            // don't cq if we select a callsign... (and it will not be restored otherwise)
-            if(ui->cqMacroButton->isChecked()){
-                ui->cqMacroButton->setChecked(false);
-            }
-        }
+    if(selectedCall != m_prevSelectedCallsign){
+        callsignSelectedChanged(m_prevSelectedCallsign, selectedCall);
     }
-    ui->extFreeTextMsgEdit->setPlaceholderText(placeholderText);
-
-#if SHOW_CALL_DETAIL_BROWSER
-    auto html = generateCallDetail(selectedCall);
-    ui->callDetailTextBrowser->setHtml(html);
-    ui->callDetailTextBrowser->setVisible(!selectedCall.isEmpty() && (!hearing.isEmpty() || !heardby.isEmpty()));
-#endif
-
-    // immediately update the display);
-    updateButtonDisplay();
-    updateTextDisplay();
 }
 
 QString MainWindow::generateCallDetail(QString selectedCall){
@@ -9416,7 +9377,56 @@ QString MainWindow::callsignSelected(bool useInputText){
     return QString();
 }
 
+void MainWindow::callsignSelectedChanged(QString /*old*/, QString selectedCall){
+    auto placeholderText = QString("Type your outgoing messages here.");
+    if(selectedCall.isEmpty()){
+        // try to restore hb
+        if(m_hbPaused){
+            ui->hbMacroButton->setChecked(true);
+            m_hbPaused = false;
+        }
+    } else {
+        placeholderText = QString("Type your outgoing directed message to %1 here.").arg(selectedCall);
+
+        // when we select a callsign, use it as the qso start time
+        if(!m_callSelectedTime.contains(selectedCall)){
+            m_callSelectedTime[selectedCall] = DriftingDateTime::currentDateTimeUtc();
+        }
+
+        if(m_config.heartbeat_qso_pause()){
+            // TODO: jsherer - HB issue
+            // don't hb if we select a callsign... (but we should keep track so if we deselect, we restore our hb)
+            if(ui->hbMacroButton->isChecked()){
+                ui->hbMacroButton->setChecked(false);
+                m_hbPaused = true;
+            }
+
+            // don't cq if we select a callsign... (and it will not be restored otherwise)
+            if(ui->cqMacroButton->isChecked()){
+                ui->cqMacroButton->setChecked(false);
+            }
+        }
+    }
+    ui->extFreeTextMsgEdit->setPlaceholderText(placeholderText);
+
+#if SHOW_CALL_DETAIL_BROWSER
+    auto html = generateCallDetail(selectedCall);
+    ui->callDetailTextBrowser->setHtml(html);
+    ui->callDetailTextBrowser->setVisible(!selectedCall.isEmpty() && (!hearing.isEmpty() || !heardby.isEmpty()));
+#endif
+
+    // immediately update the display);
+    updateButtonDisplay();
+    updateTextDisplay();
+
+    m_prevSelectedCallsign = selectedCall;
+}
+
 void MainWindow::clearCallsignSelected(){
+    // remove the date cache
+    m_callSelectedTime.remove(m_prevSelectedCallsign);
+
+    // remove the callsign selection
     ui->tableWidgetCalls->clearSelection();
     ui->tableWidgetRXAll->clearSelection();
 }

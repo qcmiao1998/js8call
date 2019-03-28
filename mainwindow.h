@@ -762,6 +762,7 @@ private:
     QList<ActivityDetail> msgs;
   };
 
+  QString m_prevSelectedCallsign;
   int m_bandActivityWidth;
   int m_callActivityWidth;
   int m_textActivityWidth;
@@ -837,6 +838,7 @@ private:
 
   JSCChecker * m_checker;
 
+  QMap<QString, QDateTime> m_callSelectedTime; // call -> timestamp when callsign was last selected
   QSet<QString> m_callSeenHeartbeat; // call
   int m_previousFreq;
   bool m_shouldRestoreFreq;
@@ -947,6 +949,7 @@ private:
   bool isAllCallIncluded(QString const &text);
   bool isGroupCallIncluded(const QString &text);
   QString callsignSelected(bool useInputText=false);
+  void callsignSelectedChanged(QString old, QString current);
   bool isRecentOffset(int offset);
   void markOffsetRecent(int offset);
   bool isDirectedOffset(int offset, bool *pIsAllCall);
