@@ -7043,10 +7043,10 @@ void MainWindow::buildHeartbeatMenu(QMenu *menu){
     bool enabled = ui->autoReplyButton->isChecked() && selectedCallsign.isEmpty();
     auto text = "Send Heartbeat Acknowledgments (ACK)";
     if(!ui->autoReplyButton->isChecked()){
-        text = "Send Heartbeat Acknowledgments (ACK) (AUTO disabled)";
+        text = "Send Heartbeat Acknowledgments (ACK) (Disabled: AUTO is off)";
     }
     if(!selectedCallsign.isEmpty()){
-        text = "Send Heartbeat Acknowledgments (ACK) (Currently in QSO)";
+        text = "Send Heartbeat Acknowledgments (ACK) (Disabled: Currently in QSO)";
     }
     auto autoAckHB = menu->addAction(text);
     autoAckHB->setEnabled(enabled);
