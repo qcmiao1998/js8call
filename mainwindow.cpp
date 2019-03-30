@@ -3419,7 +3419,7 @@ void MainWindow::on_actionCopyright_Notice_triggered()
                            "IV3NWV; Greg Beam, KI7MT; Michael Black, W9MDB; Edson Pereira, PY2SDR; "
                            "Philip Karn, KA9Q; and other members of the WSJT Development Group.\n\n"
                            "Further, the source code of JS8Call contains material Copyright (C) "
-                           "2018 by Jordan Sherer, KN4CRD.\"");
+                           "2018-2019 by Jordan Sherer, KN4CRD.\"");
   MessageBox::warning_message(this, message);
 }
 
