@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -278,7 +278,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>615</width>
+                <width>724</width>
                 <height>646</height>
                </rect>
               </property>
@@ -2108,7 +2108,7 @@ both here.</string>
                 <item row="0" column="3">
                  <widget class="QLabel" name="label_13">
                   <property name="text">
-                   <string>Op Call:</string>
+                   <string>Operator Callsign (if different than Station Callsign):</string>
                   </property>
                  </widget>
                 </item>
@@ -2153,6 +2153,9 @@ both here.</string>
                 </item>
                 <item row="0" column="1">
                  <widget class="QCheckBox" name="log_as_RTTY_check_box">
+                  <property name="visible">
+                   <bool>false</bool>
+                  </property>
                   <property name="toolTip">
                    <string>Some logging programs will not accept JT-65 or JT9 as a recognized mode.</string>
                   </property>
@@ -2182,6 +2185,9 @@ comments field.</string>
                 </item>
                 <item row="0" column="2">
                  <spacer name="horizontalSpacer">
+                  <property name="visible">
+                   <bool>false</bool>
+                  </property>
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
                   </property>
@@ -4184,11 +4190,11 @@ soundcard changes</string>
  </connections>
  <buttongroups>
   <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
-  <buttongroup name="PTT_method_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
  </buttongroups>
 </ui>

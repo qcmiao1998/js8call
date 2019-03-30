@@ -772,7 +772,7 @@ bool Configuration::heartbeat_qso_pause() const { return m_->heartbeat_qso_pause
 bool Configuration::relay_off() const { return m_->relay_disabled_; }
 bool Configuration::monitor_off_at_startup () const {return m_->monitor_off_at_startup_;}
 bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->monitor_last_used_;}
-bool Configuration::log_as_DATA () const {return m_->log_as_DATA_;}
+bool Configuration::log_as_DATA () const { return false; }
 bool Configuration::report_in_comments () const {return m_->report_in_comments_;}
 bool Configuration::prompt_to_log () const {return m_->prompt_to_log_;}
 bool Configuration::insert_blank () const {return m_->insert_blank_;}
