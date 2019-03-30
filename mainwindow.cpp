@@ -1639,27 +1639,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
 
-QDate eol(2019, 4, 1);
-
-void MainWindow::checkExpiryWarningMessage()
-{
-    if(QDateTime::currentDateTimeUtc().date() > eol){
-        MessageBox::critical_message (this, QString("This pre-release development build of JS8Call has reached its end-of-life. Please check for an upgrade to the latest version."));
-    }
-}
-
 void MainWindow::checkStartupWarnings ()
 {
-  MessageBox::critical_message (this,
-                                QString("This version of %1 is a pre-release development\n"
-                                "build and will expire after %2 (UTC), upon which you\n"
-                                "will need to upgrade to the latest version. \n\n"
-                                "Use of development versions of JS8Call are at your own risk \n"
-                                "and carry a responsiblity to report any problems to:\n"
-                                "Jordan Sherer (KN4CRD) kn4crd@gmail.com\n\n").arg(QApplication::applicationName()).arg(eol.toString()));
-
-  checkExpiryWarningMessage();
-
   ensureCallsignSet(false);
 }
 
@@ -6030,8 +6011,6 @@ bool MainWindow::ensureCreateMessageReady(const QString &text){
 }
 
 QString MainWindow::createMessage(QString const& text){
-    checkExpiryWarningMessage();
-
     return createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false), true);
 }
 
