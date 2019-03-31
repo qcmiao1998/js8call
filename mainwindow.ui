@@ -4613,7 +4613,7 @@ list. The list can be maintained in Settings (F2).</string>
      <x>0</x>
      <y>0</y>
      <width>994</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -4688,6 +4688,7 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionShort_list_of_add_on_prefixes_and_suffixes"/>
     <addaction name="actionCopyright_Notice"/>
     <addaction name="separator"/>
+    <addaction name="actionCheck_for_Updates"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuMode">
@@ -5675,6 +5676,11 @@ list. The list can be maintained in Settings (F2).</string>
   <action name="actionShow_Message_Inbox">
    <property name="text">
     <string>Show Message Inbox...</string>
+   </property>
+  </action>
+  <action name="actionCheck_for_Updates">
+   <property name="text">
+    <string>Check for Updates</string>
    </property>
   </action>
  </widget>

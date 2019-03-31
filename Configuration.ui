@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -63,7 +63,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>738</width>
-                <height>453</height>
+                <height>448</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -278,8 +278,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>615</width>
-                <height>646</height>
+                <width>726</width>
+                <height>631</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -391,6 +391,13 @@
                    <widget class="QCheckBox" name="spellcheck_check_box">
                     <property name="text">
                      <string>Suggest alternative word choices for more efficient message transmission</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkForUpdates_checkBox">
+                    <property name="text">
+                     <string>Check for software updates at startup</string>
                     </property>
                    </widget>
                   </item>
@@ -918,8 +925,8 @@ text message.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>718</width>
-                <height>435</height>
+                <width>285</width>
+                <height>397</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_27">
@@ -1339,8 +1346,8 @@ a few, particularly some Kenwood rigs, require it).</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>237</width>
-                <height>467</height>
+                <width>257</width>
+                <height>427</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_28">
@@ -1767,8 +1774,8 @@ radio interface behave as expected.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>760</width>
-            <height>502</height>
+            <width>267</width>
+            <height>302</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -2080,8 +2087,8 @@ both here.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>746</width>
-            <height>525</height>
+            <width>572</width>
+            <height>498</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_30">
@@ -2543,8 +2550,8 @@ for assessing propagation and system performance.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>760</width>
-            <height>502</height>
+            <width>498</width>
+            <height>321</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -3121,8 +3128,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>738</width>
-                <height>378</height>
+                <width>280</width>
+                <height>201</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_15">
@@ -3376,8 +3383,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>233</width>
-                <height>253</height>
+                <width>236</width>
+                <height>258</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_5">
@@ -3580,8 +3587,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>277</width>
-                <height>93</height>
+                <width>288</width>
+                <height>96</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_8">
@@ -4190,11 +4197,11 @@ soundcard changes</string>
  </connections>
  <buttongroups>
   <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
  </buttongroups>
 </ui>

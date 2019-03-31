@@ -12,6 +12,9 @@
 #include <QRegExp>
 #include <QRegularExpression>
 #include <QDesktopServices>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 #include <QUrl>
 #include <QStandardPaths>
 #include <QDir>
@@ -1638,15 +1641,81 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
 
-void MainWindow::checkVersion(){
-  auto m = new QNetworkAccessManager(this);
-  connect(m, &QNetworkAccessManager::finished, this, [this](QNetworkReply * reply){
-    if(reply->error()) return;
+QPair<QPair<int, int>, int> splitVersion(QString v){
+    int hyphenPos = v.lastIndexOf("-");
+    if(hyphenPos >= 0){
+        v = v.left(hyphenPos);
+    }
 
-    QString content = reply->readAll();
-    qDebug() << "version" << content;
+    QVector<int> intSegs;
+    foreach(QString seg, v.split(".")){
+        bool ok = false;
+        int i = seg.toInt(&ok);
+        if(!ok){
+            break;
+        }
+        intSegs.append(i);
+    }
+
+    int len = intSegs.count();
+    QPair<QPair<int, int>, int> tuple;
+    if(len > 0){
+        tuple.first.first = intSegs.at(0);
+    }
+    if(len > 1){
+        tuple.first.second = intSegs.at(1);
+    }
+    if(len > 2){
+        tuple.second = intSegs.at(2);
+    }
+    return tuple;
+}
+
+void MainWindow::checkVersion(bool alertOnUpToDate){
+  auto m = new QNetworkAccessManager(this);
+  connect(m, &QNetworkAccessManager::finished, this, [this, alertOnUpToDate](QNetworkReply * reply){
+    if(reply->error()){
+        qDebug() << "Checking for Updates Error:" << reply->errorString();
+        return;
+    }
+
+    QString content = reply->readAll().trimmed();
+
+    auto currentVersion = splitVersion(version());
+    auto networkVersion = splitVersion(content);
+
+    qDebug() << "Checking Version" << currentVersion << "with" << networkVersion;
+
+    if(currentVersion < networkVersion){
+
+        SelfDestructMessageBox * m = new SelfDestructMessageBox(60,
+          "New Updates Available",
+          QString("A new version (%1) of JS8Call is now available. Please see js8call.com for more details.").arg(content),
+          QMessageBox::Information,
+          QMessageBox::Ok,
+          QMessageBox::Ok,
+          false,
+          this);
+
+        m->show();
+
+    } else if(alertOnUpToDate){
+
+        SelfDestructMessageBox * m = new SelfDestructMessageBox(60,
+          "No Updates Available",
+          QString("Your version (%1) of JS8Call is up-to-date.").arg(version()),
+          QMessageBox::Information,
+          QMessageBox::Ok,
+          QMessageBox::Ok,
+          false,
+          this);
+
+        m->show();
+
+    }
   });
 
+  qDebug() << "Checking for Updates...";
   QUrl url("http://files.js8call.com/version.txt");
   QNetworkRequest r(url);
   m->get(r);
@@ -1654,7 +1723,9 @@ void MainWindow::checkVersion(){
 
 void MainWindow::checkStartupWarnings ()
 {
-  checkVersion();
+  if(m_config.check_for_updates()){
+      checkVersion(false);
+  }
   ensureCallsignSet(false);
 }
 
@@ -2596,6 +2667,10 @@ void MainWindow::on_menuControl_aboutToShow(){
 #if __APPLE__
     rebuildMacQAction(ui->menuControl, ui->actionCQ);
 #endif
+}
+
+void MainWindow::on_actionCheck_for_Updates_triggered(){
+    checkVersion(true);
 }
 
 void MainWindow::on_actionEnable_Spotting_toggled(bool checked){
