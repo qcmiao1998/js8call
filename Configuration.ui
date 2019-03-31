@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -278,7 +278,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>724</width>
+                <width>615</width>
                 <height>646</height>
                </rect>
               </property>
@@ -2345,7 +2345,7 @@ This is used for reverse ping analysis which is very useful
 for assessing propagation and system performance.</string>
                 </property>
                 <property name="text">
-                 <string>Enable spotting to reporting networks (JS8 Network, PSKReporter, APRS-IS, etc)</string>
+                 <string>Enable spotting to reporting networks (JS8NET, PSKReporter, APRS-IS, etc)</string>
                 </property>
                 <property name="checked">
                  <bool>true</bool>
