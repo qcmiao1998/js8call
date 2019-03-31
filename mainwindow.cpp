@@ -1116,7 +1116,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   //splashTimer.setSingleShot (true);
   //splashTimer.start (20 * 1000);
 
-  // TODO: jsherer - need to remove this eventually...
   QTimer::singleShot (0, this, SLOT (checkStartupWarnings ()));
 
   if(!ui->cbMenus->isChecked()) {
@@ -1639,8 +1638,23 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
 
+void MainWindow::checkVersion(){
+  auto m = new QNetworkAccessManager(this);
+  connect(m, &QNetworkAccessManager::finished, this, [this](QNetworkReply * reply){
+    if(reply->error()) return;
+
+    QString content = reply->readAll();
+    qDebug() << "version" << content;
+  });
+
+  QUrl url("http://files.js8call.com/version.txt");
+  QNetworkRequest r(url);
+  m->get(r);
+}
+
 void MainWindow::checkStartupWarnings ()
 {
+  checkVersion();
   ensureCallsignSet(false);
 }
 
