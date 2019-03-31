@@ -7064,7 +7064,7 @@ void MainWindow::buildHeartbeatMenu(QMenu *menu){
         menu->addSeparator();
     }
 
-    buildRepeatMenu(menu, ui->hbMacroButton, &m_hbInterval);
+    buildRepeatMenu(menu, ui->hbMacroButton, false, &m_hbInterval);
 
     menu->addSeparator();
     auto now = menu->addAction("Send Heartbeat Now");
@@ -7078,14 +7078,14 @@ void MainWindow::buildCQMenu(QMenu *menu){
         menu->addSeparator();
     }
 
-    buildRepeatMenu(menu, ui->cqMacroButton, &m_cqInterval);
+    buildRepeatMenu(menu, ui->cqMacroButton, true, &m_cqInterval);
 
     menu->addSeparator();
     auto now = menu->addAction("Send CQ Now");
     connect(now, &QAction::triggered, this, [this](){ sendCQ(true); });
 }
 
-void MainWindow::buildRepeatMenu(QMenu *menu, QPushButton * button, int * interval){
+void MainWindow::buildRepeatMenu(QMenu *menu, QPushButton * button, bool isLowInterval, int * interval){
     QList<QPair<QString, int>> items = {
         {"On demand / do not repeat",  0},
         {"Repeat every 1 minute",      1},
@@ -7096,6 +7096,14 @@ void MainWindow::buildRepeatMenu(QMenu *menu, QPushButton * button, int * interv
         {"Repeat every 60 minutes",   60},
         {"Repeat every N minutes (Custom Interval)", -1}, // this needs to be last because of isSet bool
     };
+
+    if(isLowInterval){
+        items.removeAt(5); // remove the thirty minute interval
+        items.removeAt(5); // remove the sixty minute interval
+    } else {
+        items.removeAt(1); // remove the one minute interval
+        items.removeAt(1); // remove the five minute interval
+    }
 
     auto customFormat = QString("Repeat every %1 minutes (Custom Interval)");
 
@@ -10101,7 +10109,7 @@ void MainWindow::processCommandActivity() {
 
         // if this is an allcall, check to make sure we haven't replied to their allcall recently (in the past ten minutes)
         // that way we never get spammed by allcalls at too high of a frequency
-        if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < 10) {
+        if (isAllCall && m_txAllcallCommandCache.contains(d.from) && m_txAllcallCommandCache[d.from]->secsTo(now) / 60 < 15) {
             qDebug() << "skipping command for allcall timeout" << d.from;
             continue;
         }
