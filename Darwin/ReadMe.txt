@@ -17,8 +17,8 @@ To install:
 3) Run these commands in the Terminal window to install the sysctl.conf
 
     sudo cp $HOME/Desktop/sysctl.conf /etc/sysctl.conf
-    sudo chmod 0664 /etc/sysctl.conf
     sudo chown root:wheel /etc/sysctl.conf
+    sudo chmod 0664 /etc/sysctl.conf
 
 4) Reboot your system. 
 
