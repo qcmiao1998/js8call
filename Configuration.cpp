@@ -2369,8 +2369,8 @@ void Configuration::impl::accept ()
   Q_ASSERT (audio_output_channel_ <= AudioDevice::Both);
 
   auto_switch_bands_ = ui_->auto_switch_bands_check_box->isChecked();
-  my_callsign_ = ui_->callsign_line_edit->text ().toUpper();
-  my_grid_ = ui_->grid_line_edit->text ().toUpper();
+  my_callsign_ = ui_->callsign_line_edit->text ().toUpper().trimmed();
+  my_grid_ = ui_->grid_line_edit->text ().toUpper().trimmed();
   my_groups_ = splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), true);
   auto_whitelist_ = splitCalls(ui_->auto_whitelist_line_edit->text().toUpper().trimmed());
   auto_blacklist_ = splitCalls(ui_->auto_blacklist_line_edit->text().toUpper().trimmed());
