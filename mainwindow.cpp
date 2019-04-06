@@ -4047,6 +4047,31 @@ void MainWindow::writeAllTxt(QString message, int bits)
       }
 }
 
+void MainWindow::writeMsgTxt(QString message, int snr)
+{
+  // Write decoded text to file "DIRECTED.TXT".
+  QFile f {m_config.writeable_data_dir ().absoluteFilePath ("DIRECTED.TXT")};
+  if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
+        QTextStream out(&f);
+
+        QStringList output = {
+            DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss"),
+            Radio::frequency_MHz_string(m_freqNominal),
+            QString::number(currentFreqOffset()),
+            Varicode::formatSNR(snr),
+            message
+        };
+
+        out << output.join("\t") << endl;
+
+        f.close();
+    } else {
+        MessageBox::warning_message (this, tr ("File Open Error")
+                                     , tr ("Cannot open \"%1\" for append: %2")
+                                    .arg (f.fileName ()).arg (f.errorString ()));
+    }
+}
+
 QDateTime MainWindow::nextTransmitCycle(){
     auto timestamp = DriftingDateTime::currentDateTimeUtc();
 
@@ -10086,6 +10111,30 @@ void MainWindow::processCommandActivity() {
             spotCmd(d);
         }
 
+        // PREPARE CMD TEXT STRING
+        QStringList textList = {
+            QString("%1: %2%3").arg(d.from).arg(d.to).arg(d.cmd)
+        };
+
+        if(!d.extra.isEmpty()){
+            textList.append(d.extra);
+        }
+
+        if(!d.text.isEmpty()){
+            textList.append(d.text);
+        }
+
+        QString text = textList.join(" ");
+        bool isLast = (d.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast;
+        if (isLast) {
+            // can also use \u0004 \u2666 \u2404
+            text = QString("%1 \u2301 ").arg(Varicode::rstrip(text));
+        }
+
+        // log the text to directed txt log
+        writeMsgTxt(text, d.snr);
+
+
         // we're only responding to allcall, groupcalls, and our callsign at this point, so we'll end after logging the callsigns we've heard
         if (!isAllCall && !toMe && !isGroupCall) {
             continue;
@@ -10097,7 +10146,6 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
-        // display the command activity
         ActivityDetail ad = {};
         ad.isLowConfidence = false;
         ad.isFree = true;
@@ -10105,23 +10153,7 @@ void MainWindow::processCommandActivity() {
         ad.bits = d.bits;
         ad.freq = d.freq;
         ad.snr = d.snr;
-
-        QStringList text;
-        text.append(QString("%1: %2%3").arg(d.from).arg(d.to).arg(d.cmd));
-
-        if(!d.extra.isEmpty()){
-            text.append(d.extra);
-        }
-        if(!d.text.isEmpty()){
-            text.append(d.text);
-        }
-        ad.text = text.join(" ");
-
-        bool isLast = (ad.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast;
-        if (isLast) {
-            // can also use \u0004 \u2666 \u2404
-            ad.text = QString("%1 \u2301 ").arg(Varicode::rstrip(ad.text));
-        }
+        ad.text = text;
         ad.utcTimestamp = d.utcTimestamp;
 
         // we'd be double printing here if were on frequency, so let's be "smart" about this...
