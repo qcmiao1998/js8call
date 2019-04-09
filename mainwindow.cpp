@@ -9916,7 +9916,12 @@ void MainWindow::processBufferedActivity() {
         if(!buffer.msgs.isEmpty()){
             dt = qMax(dt, buffer.msgs.last().utcTimestamp);
         }
-        if(dt.secsTo(DriftingDateTime::currentDateTimeUtc()) > 60){
+        if(dt.secsTo(DriftingDateTime::currentDateTimeUtc()) > 60 && !buffer.msgs.isEmpty()){
+            // if the buffer has messages older than 1 minute, and we still haven't closed it, let's just mark it as the last frame
+            buffer.msgs.last().bits |= Varicode::JS8CallLast;
+        }
+        if(dt.secsTo(DriftingDateTime::currentDateTimeUtc()) > 90){
+            // but, if the buffer is older than 2 minutes, and we still haven't closed it, just remove it
             m_messageBuffer.remove(freq);
             continue;
         }
