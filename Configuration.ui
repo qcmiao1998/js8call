@@ -63,7 +63,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>738</width>
-                <height>448</height>
+                <height>453</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -277,9 +277,9 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>0</y>
-                <width>726</width>
-                <height>631</height>
+                <y>-297</y>
+                <width>724</width>
+                <height>750</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -749,6 +749,32 @@ text message.</string>
                 </widget>
                </item>
                <item>
+                <widget class="QGroupBox" name="groupBox_12">
+                 <property name="title">
+                  <string>Characters</string>
+                 </property>
+                 <layout class="QFormLayout" name="formLayout_2">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_24">
+                    <property name="text">
+                     <string>End of Transmission Character:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLineEdit" name="eot_line_edit">
+                    <property name="text">
+                     <string>♢</string>
+                    </property>
+                    <property name="maxLength">
+                     <number>2</number>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
                 <spacer name="verticalSpacer_5">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
@@ -925,8 +951,8 @@ text message.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>285</width>
-                <height>397</height>
+                <width>718</width>
+                <height>435</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_27">
@@ -1346,8 +1372,8 @@ a few, particularly some Kenwood rigs, require it).</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>257</width>
-                <height>427</height>
+                <width>237</width>
+                <height>467</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_28">
@@ -1774,8 +1800,8 @@ radio interface behave as expected.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>267</width>
-            <height>302</height>
+            <width>760</width>
+            <height>502</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -2087,8 +2113,8 @@ both here.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>572</width>
-            <height>498</height>
+            <width>746</width>
+            <height>525</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_30">
@@ -2550,8 +2576,8 @@ for assessing propagation and system performance.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>498</width>
-            <height>321</height>
+            <width>760</width>
+            <height>502</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -3128,8 +3154,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>280</width>
-                <height>201</height>
+                <width>738</width>
+                <height>378</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_15">
@@ -3383,8 +3409,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>236</width>
-                <height>258</height>
+                <width>233</width>
+                <height>253</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_5">
@@ -3587,8 +3613,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>288</width>
-                <height>96</height>
+                <width>277</width>
+                <height>93</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_8">
@@ -4196,12 +4222,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
-  <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
  </buttongroups>
 </ui>

@@ -1829,19 +1829,21 @@ void MainWindow::initializeDummyData(){
     cmd.utcTimestamp = dt;
     addCommandToMyInbox(cmd);
 
-    displayTextForFreq("KN4CRD: @ALLCALL? \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-315), true, true, true);
-    displayTextForFreq("J1Y: KN4CRD SNR -05 \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
-    displayTextForFreq("HELLO BRAVE  NEW   WORLD    \u2301 ", 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
+    QString eot = m_config.eot();
+
+    displayTextForFreq(QString("KN4CRD: @ALLCALL? %1 ").arg(eot), 42, DriftingDateTime::currentDateTimeUtc().addSecs(-315), true, true, true);
+    displayTextForFreq(QString("J1Y: KN4CRD SNR -05 %1 ").arg(eot), 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
+    displayTextForFreq(QString("HELLO BRAVE  NEW   WORLD    %1 ").arg(eot), 42, DriftingDateTime::currentDateTimeUtc().addSecs(-300), false, true, true);
 
     auto now = DriftingDateTime::currentDateTimeUtc();
-    displayTextForFreq("KN4CRD: JY1 ACK -12 \u2301 ", 780, now, false, true, true);
-    displayTextForFreq("KN4CRD: JY1 ACK -12 \u2301 ", 780, now, false, true, true); // should be hidden (duplicate)
-    displayTextForFreq("OH8STN: JY1 ACK -12 \u2301 ", 780, now, false, true, true);
+    displayTextForFreq(QString("KN4CRD: JY1 ACK -12 %1 ").arg(eot), 780, now, false, true, true);
+    displayTextForFreq(QString("KN4CRD: JY1 ACK -12 %1 ").arg(eot), 780, now, false, true, true); // should be hidden (duplicate)
+    displayTextForFreq(QString("OH8STN: JY1 ACK -12 %1 ").arg(eot), 780, now, false, true, true);
 
-    displayTextForFreq("KN4CRD: JY1 ACK -10 \u2301 ", 800, now, false, true, true);
-    displayTextForFreq("KN4CRD: JY1 ACK -12 \u2301 ", 780, now.addSecs(120), false, true, true);
+    displayTextForFreq(QString("KN4CRD: JY1 ACK -10 %1 ").arg(eot), 800, now, false, true, true);
+    displayTextForFreq(QString("KN4CRD: JY1 ACK -12 %1 ").arg(eot), 780, now.addSecs(120), false, true, true);
 
-    displayTextForFreq("HELLO\\nBRAVE\\nNEW\\nWORLD \u2301 ", 1500, now, false, true, true);
+    displayTextForFreq(QString("HELLO\\nBRAVE\\nNEW\\nWORLD %1 ").arg(eot), 1500, now, false, true, true);
 
     displayActivity(true);
 }
@@ -5920,7 +5922,7 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
         c.clearSelection();
         c.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
 
-        if(!blockText.contains("\u2301")){
+        if(!blockText.contains(m_config.eot())){
             found = true;
         }
     }
@@ -6150,7 +6152,7 @@ QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
   // TODO: jsherer - parse outgoing message so we can add it to the inbox as an outgoing message
 
   auto joined = Varicode::rstrip(lines.join(""));
-  displayTextForFreq(QString("%1 \u2301 ").arg(joined), freq, DriftingDateTime::currentDateTimeUtc(), true, true, true);
+  displayTextForFreq(QString("%1 %2 ").arg(joined).arg(m_config.eot()), freq, DriftingDateTime::currentDateTimeUtc(), true, true, true);
 
   // if we're transmitting a message to be displayed, we should bump the repeat buttons...
   resetAutomaticIntervalTransmissions(false, false);
@@ -8167,8 +8169,7 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
 
         isLast = (d.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast;
         if(isLast){
-            // can also use \u0004 \u2666 \u2404
-            activityText = QString("%1 \u2301 ").arg(Varicode::rstrip(activityText));
+            activityText = QString("%1 %2 ").arg(Varicode::rstrip(activityText)).arg(m_config.eot());
         }
     }
     if(!activityText.isEmpty()){
@@ -9753,8 +9754,7 @@ void MainWindow::processRxActivity() {
 
         // if we're the last message, let's display our EOT character
         if (isLast) {
-            // can also use \u0004 \u2666 \u2404
-            d.text = QString("%1 \u2301 ").arg(Varicode::rstrip(d.text));
+            d.text = QString("%1 %2 ").arg(Varicode::rstrip(d.text).arg(m_config.eot()));
         }
 
         // log it to the display!
@@ -10132,8 +10132,8 @@ void MainWindow::processCommandActivity() {
         QString text = textList.join(" ");
         bool isLast = (d.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast;
         if (isLast) {
-            // can also use \u0004 \u2666 \u2404
-            text = QString("%1 \u2301 ").arg(Varicode::rstrip(text));
+            // append the eot character to the text
+            text = QString("%1 %2 ").arg(Varicode::rstrip(text)).arg(m_config.eot());
         }
 
         // log the text to directed txt log
@@ -11210,8 +11210,8 @@ void MainWindow::displayBandActivity() {
                     }
 
                     if ((item.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast) {
-                        // can also use \u0004 \u2666 \u2404
-                        item.text = QString("%1 \u2301 ").arg(Varicode::rstrip(item.text));
+                        // append the eot character to the text
+                        item.text = QString("%1 %2 ").arg(Varicode::rstrip(item.text)).arg(m_config.eot());
                     }
                     text.append(item.text);
                     snr = item.snr;
@@ -11251,7 +11251,7 @@ void MainWindow::displayBandActivity() {
                 int colWidth = ui->tableWidgetRXAll->columnWidth(3);
                 auto textItem = new QTableWidgetItem(joined);
                 auto html = QString("<qt/>%1").arg(joined.toHtmlEscaped());
-                html = html.replace("\u2301", "\u2301<br/><br/>");
+                html = html.replace(m_config.eot(), m_config.eot() + "<br/><br/>");
                 html = html.replace(QRegularExpression("([<]br[/][>])+$"), "");
                 textItem->setToolTip(html);
 

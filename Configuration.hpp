@@ -104,6 +104,7 @@ public:
   QSet<QString> auto_blacklist() const;
   int activity_aging() const;
   int callsign_aging() const;
+  QString eot() const;
   QString my_info () const;
   QString cq_message () const;
   QString reply_message () const;

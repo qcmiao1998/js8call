@@ -591,6 +591,7 @@ private:
   QStringList my_groups_;
   QStringList auto_whitelist_;
   QStringList auto_blacklist_;
+  QString eot_;
   QString my_info_;
   QString cq_;
   QString reply_;
@@ -986,6 +987,10 @@ QSet<QString> Configuration::auto_blacklist() const {
     return QSet<QString>::fromList(m_->auto_blacklist_);
 }
 
+QString Configuration::eot() const {
+    return m_->eot_;
+}
+
 QString Configuration::my_info() const
 {
     auto info = m_->my_info_;
@@ -1375,6 +1380,7 @@ void Configuration::impl::initialize_models ()
   ui_->groups_line_edit->setText(my_groups_.join(", "));
   ui_->auto_whitelist_line_edit->setText(auto_whitelist_.join(", "));
   ui_->auto_blacklist_line_edit->setText(auto_blacklist_.join(", "));
+  ui_->eot_line_edit->setText(eot_.trimmed().left(2));
   ui_->info_message_line_edit->setText (my_info_.toUpper());
   ui_->cq_message_line_edit->setText(cq_.toUpper());
   ui_->reply_message_line_edit->setText (reply_.toUpper());
@@ -1524,6 +1530,7 @@ void Configuration::impl::read_settings ()
   auto_blacklist_ = settings_->value("AutoBlacklist", QStringList{}).toStringList();
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
+  eot_ = settings_->value("EOTCharacter", QString{"\u2662"}).toString().trimmed().left(2);
   my_info_ = settings_->value("MyInfo", QString {}).toString();
   cq_ = settings_->value("CQMessage", QString {"CQCQCQ <MYGRID4>"}).toString();
   reply_ = settings_->value("Reply", QString {"HW CPY?"}).toString();
@@ -1785,6 +1792,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MyGroups", my_groups_);
   settings_->setValue ("AutoWhitelist", auto_whitelist_);
   settings_->setValue ("AutoBlacklist", auto_blacklist_);
+  settings_->setValue ("EOTCharacter", eot_);
   settings_->setValue ("MyInfo", my_info_);
   settings_->setValue ("CQMessage", cq_);
   settings_->setValue ("Reply", reply_);
@@ -2376,6 +2384,7 @@ void Configuration::impl::accept ()
   auto_blacklist_ = splitCalls(ui_->auto_blacklist_line_edit->text().toUpper().trimmed());
   cq_ = ui_->cq_message_line_edit->text().toUpper();
   reply_ = ui_->reply_message_line_edit->text().toUpper();
+  eot_ = ui_->eot_line_edit->text().trimmed().left(2);
   my_info_ = ui_->info_message_line_edit->text().toUpper();
   callsign_aging_ = ui_->callsign_aging_spin_box->value();
   activity_aging_ = ui_->activity_aging_spin_box->value();
