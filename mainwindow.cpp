@@ -9754,7 +9754,7 @@ void MainWindow::processRxActivity() {
 
         // if we're the last message, let's display our EOT character
         if (isLast) {
-            d.text = QString("%1 %2 ").arg(Varicode::rstrip(d.text).arg(m_config.eot()));
+            d.text = QString("%1 %2 ").arg(Varicode::rstrip(d.text)).arg(m_config.eot());
         }
 
         // log it to the display!
