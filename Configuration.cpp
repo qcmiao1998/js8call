@@ -2097,6 +2097,11 @@ QStringList splitCalls(QString callsString){
 
 bool Configuration::impl::validate ()
 {
+  if(ui_->eot_line_edit->text().trimmed().left(2).isEmpty()){
+      MessageBox::critical_message (this, tr ("Please enter an end of transmission character"));
+      return false;
+  }
+
   auto callsign = ui_->callsign_line_edit->text().toUpper().trimmed();
   if(!Varicode::isValidCallsign(callsign, nullptr) || callsign.startsWith("@")){
       MessageBox::critical_message (this, tr ("The callsign format you provided is not supported"));
