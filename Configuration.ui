@@ -751,7 +751,7 @@ text message.</string>
                <item>
                 <widget class="QGroupBox" name="groupBox_12">
                  <property name="title">
-                  <string>Characters</string>
+                  <string>Customization</string>
                  </property>
                  <layout class="QFormLayout" name="formLayout_2">
                   <item row="0" column="0">
@@ -4022,7 +4022,6 @@ soundcard changes</string>
  </widget>
  <tabstops>
   <tabstop>configuration_tabs</tabstop>
-  <tabstop>tabWidget_2</tabstop>
   <tabstop>callsign_line_edit</tabstop>
   <tabstop>grid_line_edit</tabstop>
   <tabstop>groups_line_edit</tabstop>
