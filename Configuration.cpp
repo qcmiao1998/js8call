@@ -769,7 +769,13 @@ void Configuration::set_spot_to_reporting_networks (bool spot)
 }
 
 bool Configuration::transmit_directed() const { return m_->transmit_directed_; }
-bool Configuration::autoreply_off_at_startup () const {return m_->autoreply_off_at_startup_;}
+bool Configuration::autoreply_off_at_startup () const {
+    // auto-reply cannot be on at startup if the callsign or grid is empty
+    if(my_callsign().isEmpty() || my_grid().isEmpty()){
+        return true;
+    }
+    return m_->autoreply_off_at_startup_;
+}
 bool Configuration::heartbeat_anywhere() const { return m_->heartbeat_anywhere_;}
 bool Configuration::heartbeat_qso_pause() const { return m_->heartbeat_qso_pause_;}
 bool Configuration::relay_off() const { return m_->relay_disabled_; }
