@@ -139,6 +139,7 @@ public:
   bool ppfx() const;
   bool clear_callsign () const;
   bool miles () const;
+  bool hold_ptt() const;
   bool avoid_allcall () const;
   bool set_avoid_allcall (bool avoid);
   bool spellcheck() const;

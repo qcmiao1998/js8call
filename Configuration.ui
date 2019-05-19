@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -277,8 +277,8 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-297</y>
-                <width>724</width>
+                <y>0</y>
+                <width>615</width>
                 <height>750</height>
                </rect>
               </property>
@@ -922,10 +922,68 @@ text message.</string>
          </item>
         </layout>
        </item>
+       <item row="3" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_11">
+         <item>
+          <widget class="QPushButton" name="test_CAT_push_button">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Attempt to connect to the radio with these settings.&lt;/p&gt;&lt;p&gt;The button will turn green if the connection is successful or red if there is a problem.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Test CAT</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Preferred</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="test_PTT_push_button">
+           <property name="toolTip">
+            <string>Attempt to activate the transmitter.
+Click again to deactivate. Normally no power should be
+output since there is no audio being generated at this time.
+Check that any Tx indication on your radio and/or your
+radio interface behave as expected.</string>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton:checked {
+	background-color: red;
+	border-style	: outset;
+	border-width: 1px;
+	border-radius: 5px;
+	border-color: black;
+	min-width: 5em;
+	padding: 3px;
+}</string>
+           </property>
+           <property name="text">
+            <string>Test PTT</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
        <item row="1" column="0" rowspan="2">
         <widget class="QTabWidget" name="tabWidget_3">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="catTab">
           <attribute name="title">
@@ -951,7 +1009,7 @@ text message.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>718</width>
+                <width>264</width>
                 <height>435</height>
                </rect>
               </property>
@@ -1371,9 +1429,9 @@ a few, particularly some Kenwood rigs, require it).</string>
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>0</y>
-                <width>237</width>
-                <height>467</height>
+                <y>-102</y>
+                <width>718</width>
+                <height>496</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_28">
@@ -1642,52 +1700,86 @@ this setting allows you to select which audio input will be used
                 </widget>
                </item>
                <item>
-                <widget class="QGroupBox" name="groupBox_11">
+                <widget class="QGroupBox" name="groupBox_14">
                  <property name="title">
                   <string>Advanced</string>
                  </property>
-                 <layout class="QFormLayout" name="formLayout_18">
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="label_11">
+                 <layout class="QVBoxLayout" name="verticalLayout_33">
+                  <item>
+                   <widget class="QFrame" name="frame">
+                    <property name="frameShape">
+                     <enum>QFrame::NoFrame</enum>
+                    </property>
+                    <property name="frameShadow">
+                     <enum>QFrame::Plain</enum>
+                    </property>
+                    <property name="lineWidth">
+                     <number>0</number>
+                    </property>
+                    <layout class="QFormLayout" name="formLayout_3">
+                     <property name="leftMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="label_11">
+                       <property name="text">
+                        <string>Tx delay:</string>
+                       </property>
+                       <property name="buddy">
+                        <cstring>sbTxDelay</cstring>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QDoubleSpinBox" name="sbTxDelay">
+                       <property name="toolTip">
+                        <string>Minimum delay between assertion of PTT and start of Tx audio.</string>
+                       </property>
+                       <property name="suffix">
+                        <string>  s</string>
+                       </property>
+                       <property name="decimals">
+                        <number>1</number>
+                       </property>
+                       <property name="minimum">
+                        <double>0.000000000000000</double>
+                       </property>
+                       <property name="maximum">
+                        <double>0.500000000000000</double>
+                       </property>
+                       <property name="singleStep">
+                        <double>0.100000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="label_12">
+                       <property name="text">
+                        <string>PTT command:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QLineEdit" name="ptt_command_line_edit"/>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="hold_ptt_check_box">
                     <property name="text">
-                     <string>Tx delay:</string>
-                    </property>
-                    <property name="buddy">
-                     <cstring>sbTxDelay</cstring>
+                     <string>Hold PTT between frames while there are more to be transmitted</string>
                     </property>
                    </widget>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="QDoubleSpinBox" name="sbTxDelay">
-                    <property name="toolTip">
-                     <string>Minimum delay between assertion of PTT and start of Tx audio.</string>
-                    </property>
-                    <property name="suffix">
-                     <string>  s</string>
-                    </property>
-                    <property name="decimals">
-                     <number>1</number>
-                    </property>
-                    <property name="minimum">
-                     <double>0.000000000000000</double>
-                    </property>
-                    <property name="maximum">
-                     <double>0.500000000000000</double>
-                    </property>
-                    <property name="singleStep">
-                     <double>0.100000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="label_12">
-                    <property name="text">
-                     <string>PTT command:</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QLineEdit" name="ptt_command_line_edit"/>
                   </item>
                  </layout>
                 </widget>
@@ -1712,64 +1804,6 @@ this setting allows you to select which audio input will be used
           </layout>
          </widget>
         </widget>
-       </item>
-       <item row="3" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_11">
-         <item>
-          <widget class="QPushButton" name="test_CAT_push_button">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Attempt to connect to the radio with these settings.&lt;/p&gt;&lt;p&gt;The button will turn green if the connection is successful or red if there is a problem.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Test CAT</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QPushButton" name="test_PTT_push_button">
-           <property name="toolTip">
-            <string>Attempt to activate the transmitter.
-Click again to deactivate. Normally no power should be
-output since there is no audio being generated at this time.
-Check that any Tx indication on your radio and/or your
-radio interface behave as expected.</string>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QPushButton:checked {
-	background-color: red;
-	border-style	: outset;
-	border-width: 1px;
-	border-radius: 5px;
-	border-color: black;
-	min-width: 5em;
-	padding: 3px;
-}</string>
-           </property>
-           <property name="text">
-            <string>Test PTT</string>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </item>
       </layout>
      </widget>
@@ -4077,8 +4111,6 @@ soundcard changes</string>
   <tabstop>split_emulate_radio_button</tabstop>
   <tabstop>split_rig_radio_button</tabstop>
   <tabstop>split_none_radio_button</tabstop>
-  <tabstop>sbTxDelay</tabstop>
-  <tabstop>ptt_command_line_edit</tabstop>
   <tabstop>test_CAT_push_button</tabstop>
   <tabstop>test_PTT_push_button</tabstop>
   <tabstop>scrollArea_5</tabstop>
@@ -4221,12 +4253,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="TX_mode_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
-  <buttongroup name="PTT_method_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
+  <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
  </buttongroups>
 </ui>
