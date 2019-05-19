@@ -5302,27 +5302,21 @@ void MainWindow::stopTx()
   statusUpdate ();
 }
 
-/* Original stopTx2
+/**
+ *  stopTx2 is called from stopTx to open the PTT
+ */
 void MainWindow::stopTx2(){
-
-  emitPTT(false);
-}
-*/
-
-/*  GM8JCF
- *  StopTx2 is called to stop transmission, eg Open PTT
-*/
-void MainWindow::stopTx2(){
-    qDebug() << "**** GM8JCF **** MainWindow::stopTx2 m_txFrameCount : " << m_txFrameCount;
-
-    // m_txFrameCount is set to the number of frames to be transmitted when the send button is pressed
+    // GM8JCF: m_txFrameCount is set to the number of frames to be transmitted when the send button is pressed
     // and remains at that count until the last frame is transmitted.
     // So, we keep the PTT ON so long as m_txFrameCount is non-zero
 
-    // If frames to be transmitted has hit zero then open PTT
-    if (m_txFrameCount == 0){
-        emitPTT(false);
+    // If we're holding the PTT and there are more frames to transmit, do not emit the PTT signal
+    if(m_config.hold_ptt() && m_txFrameCount > 0){
+        return;
     }
+
+    // Otherwise, emit the PTT signal
+    emitPTT(false);
 }
 
 void MainWindow::ba2msg(QByteArray ba, char message[])             //ba2msg()
@@ -8640,23 +8634,17 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
 {
   //qDebug () << "MainWindow::handle_transceiver_update:" << s;
   Transceiver::TransceiverState old_state {m_rigState};
-  //transmitDisplay (s.ptt ());
 
-  // GM8JCF
-  // in stopTx2 we maintain PTT if there are still untransmitted JS8 frames
-  // so we need to remove the check which prevents modulation generation when PTT is closed
-  // If the check is left inline, then PTT will stay closed, but no modulation will occur
-  // if PTT is closed. Hence we comment out the test below
-
-  //if (s.ptt () && !m_rigState.ptt ()) // safe to start audio
-                                      // (caveat - DX Lab Suite Commander)
-    {
+  // GM8JCF: in stopTx2 we maintain PTT if there are still untransmitted JS8 frames and we are holding the PTT
+  // KN4CRD: if we're not holding the PTT we need to check to ensure it's safe to transmit
+  if (m_config.hold_ptt() || (s.ptt () && !m_rigState.ptt())) // safe to start audio (caveat - DX Lab Suite Commander)
+  {
       if (m_tx_when_ready && g_iptt) // waiting to Tx and still needed
-        {
+      {
           ptt1Timer.start(1000 * m_config.txDelay ()); //Start-of-transmission sequencer delay
-        }
+      }
       m_tx_when_ready = false;
-    }
+  }
   m_rigState = s;
   auto old_freqNominal = m_freqNominal;
   if (!old_freqNominal)
@@ -11682,6 +11670,8 @@ void MainWindow::postWSPRDecode (bool is_new, QStringList parts)
 }
 
 void MainWindow::emitPTT(bool on){
+    qDebug() << "PTT:" << on;
+
     Q_EMIT m_config.transceiver_ptt(on);
 
     // emit to network
