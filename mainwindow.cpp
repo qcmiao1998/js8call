@@ -244,6 +244,19 @@ namespace
       return QString {};
   }
 
+  QString timeSince(int delta){
+      int seconds = delta % 60;
+      delta = delta / 60;
+      int minutes = delta;
+      if(minutes && seconds){
+          return QString("%1m %2s").arg(minutes).arg(seconds);
+      } else if(minutes){
+          return QString("%1m").arg(minutes);
+      } else {
+          return QString("%1s").arg(seconds);
+      }
+  }
+
   void clearTableWidget(QTableWidget *widget){
       if(!widget){
           return;
@@ -5110,6 +5123,7 @@ void MainWindow::guiUpdate()
           tx_status_label.setText(t.trimmed());
         }
       }
+      transmitDisplay(true);
 
     } else if(m_monitoring) {
       if (m_tx_watchdog) {
@@ -5309,6 +5323,8 @@ void MainWindow::stopTx2(){
     // GM8JCF: m_txFrameCount is set to the number of frames to be transmitted when the send button is pressed
     // and remains at that count until the last frame is transmitted.
     // So, we keep the PTT ON so long as m_txFrameCount is non-zero
+
+    qDebug() << "stopTx2 frames left" << m_txFrameCount;
 
     // If we're holding the PTT and there are more frames to transmit, do not emit the PTT signal
     if(m_config.hold_ptt() && m_txFrameCount > 0){
@@ -6510,8 +6526,8 @@ void MainWindow::on_startTxButton_toggled(bool checked)
         }
     } else {
         resetMessage();
-        stopTx();
         on_stopTxButton_clicked();
+        stopTx();
     }
 }
 
@@ -9433,14 +9449,37 @@ void MainWindow::updateTxButtonDisplay(){
         int sent = qMax(1, count - left);
         ui->startTxButton->setText(m_tune ? "Tuning" : QString("%1 (%2/%3)").arg(ui->turboButton->isChecked() ? "Turbo" : "Send").arg(sent).arg(count));
 #else
-        int sent = count - m_txFrameQueue.count();
-        ui->startTxButton->setText(
-            m_tune ? "Tuning" : QString("%1 (%2/%3)").arg(m_transmitting ? "Sending" : "Ready").arg(sent).arg(count));
+        int left = m_txFrameQueue.count();
+        int sent = count - left;
+
+        QString buttonText;
+        if(m_tune){
+            buttonText = "Tuning";
+        } else if(m_transmitting){
+            auto secondsLeft = (((left + 1) * m_TRperiod) - ((m_sec0 + 1) % m_TRperiod));
+            auto timeLeft = timeSince(secondsLeft);
+            buttonText = QString("Sending (%1)").arg(timeLeft);
+        } else {
+            auto secondsLeft = sent == 1 ? ((left + 1) * m_TRperiod) :
+                (((left + 2) * m_TRperiod) - ((m_sec0 + 1) % m_TRperiod));
+            auto timeLeft = timeSince(secondsLeft);
+            buttonText = QString("Ready (%1)").arg(timeLeft);
+        }
+        ui->startTxButton->setText(buttonText);
 #endif
         ui->startTxButton->setEnabled(false);
         ui->startTxButton->setFlat(true);
     } else {
-        ui->startTxButton->setText(m_txFrameCountEstimate <= 0 ? QString("Send") : QString("Send (%1)").arg(m_txFrameCountEstimate));
+        QString buttonText;
+        if(m_txFrameCountEstimate > 0){
+            auto secondsLeft = m_txFrameCountEstimate * m_TRperiod;
+            auto timeLeft = timeSince(secondsLeft);
+            buttonText = QString("Send (%1)").arg(timeLeft);
+        } else {
+            buttonText = "Send";
+        }
+        ui->startTxButton->setText(buttonText);
+
         ui->startTxButton->setEnabled(m_txFrameCountEstimate > 0);
         ui->startTxButton->setFlat(false);
     }
