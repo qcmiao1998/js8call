@@ -36,7 +36,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget_2">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="stationTab">
           <attribute name="title">
@@ -367,9 +367,9 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QCheckBox" name="transmit_directed_check_box">
+                   <widget class="QCheckBox" name="avoid_forced_identify_check_box">
                     <property name="text">
-                     <string>Immediately transmit CQ, Reply, Info, Saved, and Directed messages from the menu</string>
+                     <string>Allow sending standard messages without callsign</string>
                     </property>
                    </widget>
                   </item>
@@ -388,9 +388,9 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QCheckBox" name="avoid_forced_identify_check_box">
+                   <widget class="QCheckBox" name="transmit_directed_check_box">
                     <property name="text">
-                     <string>Allow sending standard messages without callsign</string>
+                     <string>Immediately transmit CQ, Reply, Info, Saved, and Directed messages from the menu</string>
                     </property>
                    </widget>
                   </item>
@@ -4075,8 +4075,6 @@ soundcard changes</string>
   <tabstop>monitor_off_check_box</tabstop>
   <tabstop>tx_qsy_check_box</tabstop>
   <tabstop>transmit_directed_check_box</tabstop>
-  <tabstop>heartbeat_anywhere_check_box</tabstop>
-  <tabstop>heartbeat_qso_pause_check_box</tabstop>
   <tabstop>spellcheck_check_box</tabstop>
   <tabstop>autoreply_off_check_box</tabstop>
   <tabstop>relay_disabled_check_box</tabstop>

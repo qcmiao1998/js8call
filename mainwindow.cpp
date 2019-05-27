@@ -9783,16 +9783,32 @@ void MainWindow::processRxActivity() {
             }
 
 
-        } else {
+        } else if(d.isDirected && d.text.contains("<....>")){
             // if this is a _partial_ directed message, skip until the complete call comes through.
-            if(d.isDirected && d.text.contains("<....>")){
-                continue;
-            }
+            continue;
+        } else if(d.isDirected && d.text.contains(": HB ")){ // TODO: HEARTBEAT
+            // if this is a heartbeat, process elsewhere...
+            continue;
+        }
 
-            if(d.isDirected && d.text.contains(": HB ")){ // TODO: HEARTBEAT
-                continue;
+        // if this is the first data frame of a standard message, parse the first word callsigns and spot them :)
+        if((d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst && !d.isDirected && !d.isCompound){
+            auto calls = Varicode::parseCallsigns(d.text);
+            if(!calls.isEmpty()){
+                auto theirCall = calls.first();
+                if(d.text.startsWith(theirCall) && d.text.mid(theirCall.length(), 1) == ":"){
+                    CallDetail cd = {};
+                    cd.call = theirCall;
+                    cd.freq = d.freq;
+                    cd.snr = d.snr;
+                    cd.bits = d.bits;
+                    cd.tdrift = d.tdrift;
+                    cd.utcTimestamp = d.utcTimestamp;
+                    logCallActivity(cd, true);
+                }
             }
         }
+
 
         // TODO: incremental printing of directed messages
         // Display if:
