@@ -5,6 +5,19 @@
 #define NTMAX 300
 #define RX_SAMPLE_RATE 12000
 
+
+#ifndef TEST_FOX_WAVE_GEN
+#define TEST_FOX_WAVE_GEN 0
+#endif
+
+#ifndef TEST_FOX_WAVE_GEN_SLOTS
+#if TEST_FOX_WAVE_GEN
+    #define TEST_FOX_WAVE_GEN_SLOTS 2
+#else
+    #define TEST_FOX_WAVE_GEN_SLOTS 1
+#endif
+#endif
+
 #ifdef __cplusplus
 #include <cstdbool>
 extern "C" {

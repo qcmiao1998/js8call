@@ -157,18 +157,6 @@ extern "C" {
   void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
-#ifndef TEST_FOX_WAVE_GEN
-#define TEST_FOX_WAVE_GEN 0
-#endif
-
-#ifndef TEST_FOX_WAVE_GEN_SLOTS
-#if TEST_FOX_WAVE_GEN
-    #define TEST_FOX_WAVE_GEN_SLOTS 2
-#else
-    #define TEST_FOX_WAVE_GEN_SLOTS 1
-#endif
-#endif
-
 const int NEAR_THRESHOLD_RX = 10;
 
 int volatile itone[NUM_ISCAT_SYMBOLS];  //Audio tones for all Tx symbols
@@ -1644,6 +1632,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   clearActivity();
   displayActivity(true);
+
+#if TEST_FOX_WAVE_GEN
+  ui->turboButton->setVisible(true);
+  ui->turboButton->setEnabled(true);
+#endif
 
   m_txTextDirtyDebounce.setSingleShot(true);
   connect(&m_txTextDirtyDebounce, &QTimer::timeout, this, &MainWindow::refreshTextDisplay);
@@ -4943,12 +4936,12 @@ void MainWindow::guiUpdate()
         foxcom_.nfreq=ui->TxFreqSpinBox->value();
         if(m_config.split_mode()) foxcom_.nfreq = foxcom_.nfreq - m_XIT;  //Fox Tx freq
         strncpy(&foxcom_.cmsg[0][0], QString::fromStdString(message).toLatin1(), 12);
-        foxcom_.i3bit[0] = m_i3bit | Varicode::JS8CallExtended;
+        foxcom_.i3bit[0] = m_i3bit | Varicode::JS8CallFlag;
         int i = 1;
         while(!m_txFrameQueue.isEmpty() && foxcom_.nslots < TEST_FOX_WAVE_GEN_SLOTS){
             auto pair = m_txFrameQueue.dequeue();
             strncpy(&foxcom_.cmsg[i][0], pair.first.toLatin1(), 12);
-            foxcom_.i3bit[i] = pair.second | Varicode::JS8CallExtended;
+            foxcom_.i3bit[i] = pair.second | Varicode::JS8CallFlag;
             foxcom_.nslots += 1;
 
             //m_currentMessage.append(pair.first);
