@@ -181,6 +181,9 @@ private slots:
   void on_actionEnable_Spotting_toggled(bool checked);
   void on_actionEnable_Auto_Reply_toggled(bool checked);
   void on_menuWindow_aboutToShow();
+  void on_actionFocus_Message_Reply_Area_triggered();
+  void on_actionFocus_Band_Activity_Table_triggered();
+  void on_actionFocus_Call_Activity_Table_triggered();
   void on_actionSetOffset_triggered();
   void on_actionShow_Fullscreen_triggered(bool checked);
   void on_actionShow_Statusbar_triggered(bool checked);

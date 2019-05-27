@@ -2749,6 +2749,18 @@ void MainWindow::on_menuWindow_aboutToShow(){
     ui->actionShow_Band_Heartbeats_and_ACKs->setEnabled(ui->actionShow_Band_Activity->isChecked());
 }
 
+void MainWindow::on_actionFocus_Message_Reply_Area_triggered(){
+    ui->extFreeTextMsgEdit->setFocus();
+}
+
+void MainWindow::on_actionFocus_Band_Activity_Table_triggered(){
+    ui->tableWidgetRXAll->setFocus();
+}
+
+void MainWindow::on_actionFocus_Call_Activity_Table_triggered(){
+    ui->tableWidgetCalls->setFocus();
+}
+
 void MainWindow::on_actionSetOffset_triggered(){
     bool ok = false;
     auto currentFreq = currentFreqOffset();

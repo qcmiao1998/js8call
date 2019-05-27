@@ -1982,14 +1982,14 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
            </property>
            <item>
             <widget class="QLabel" name="driftAvgLabel">
-             <property name="visible">
-               <bool>false</bool>
-             </property>
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
+             </property>
+             <property name="visible">
+              <bool>false</bool>
              </property>
              <property name="text">
               <string>Avg Time Delta: 0 ms</string>
@@ -4616,7 +4616,7 @@ list. The list can be maintained in Settings (F2).</string>
      <x>0</x>
      <y>0</y>
      <width>994</width>
-     <height>25</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -4778,8 +4778,17 @@ list. The list can be maintained in Settings (F2).</string>
     <property name="title">
      <string>C&amp;ontrol</string>
     </property>
+    <widget class="QMenu" name="menuFocus">
+     <property name="title">
+      <string>Set Focus...</string>
+     </property>
+     <addaction name="actionFocus_Message_Reply_Area"/>
+     <addaction name="actionFocus_Band_Activity_Table"/>
+     <addaction name="actionFocus_Call_Activity_Table"/>
+    </widget>
     <addaction name="actionSetFrequency"/>
     <addaction name="actionSetOffset"/>
+    <addaction name="menuFocus"/>
     <addaction name="separator"/>
     <addaction name="actionEnable_Spotting"/>
     <addaction name="actionEnable_Auto_Reply"/>
@@ -5684,6 +5693,30 @@ list. The list can be maintained in Settings (F2).</string>
   <action name="actionCheck_for_Updates">
    <property name="text">
     <string>Check for Updates</string>
+   </property>
+  </action>
+  <action name="actionFocus_Message_Reply_Area">
+   <property name="text">
+    <string>Message Reply Area</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+M</string>
+   </property>
+  </action>
+  <action name="actionFocus_Band_Activity_Table">
+   <property name="text">
+    <string>Band Activity Table</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+B</string>
+   </property>
+  </action>
+  <action name="actionFocus_Call_Activity_Table">
+   <property name="text">
+    <string>Call Activity Table</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+A</string>
    </property>
   </action>
  </widget>
