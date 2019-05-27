@@ -209,6 +209,9 @@
         </item>
         <item>
          <widget class="QCheckBox" name="cbRef">
+          <property name="visible">
+            <bool>false</bool>
+          </property>
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Compute and save a reference spectrum.  (Not yet fully implemented.)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
