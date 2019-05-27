@@ -1733,19 +1733,23 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(
     QString const& mycall,
     QString const& mygrid,
     QString const& selectedCall,
-    QString const& text
+    QString const& text,
+    bool forceIdentify
 ){
     #define ALLOW_SEND_COMPOUND 1
     #define ALLOW_SEND_COMPOUND_DIRECTED 1
     #define AUTO_PREPEND_DIRECTED 1
     #define AUTO_REMOVE_MYCALL 1
     #define AUTO_PREPEND_DIRECTED_ALLOW_TEXT_CALLSIGNS 1
+    #define ALLOW_FORCE_IDENTIFY 1
 
     bool mycallCompound = Varicode::isCompoundCallsign(mycall);
 
-    QList<QPair<QString, int>> frames;
+    QList<QPair<QString, int>> allFrames;
 
     foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
+        QList<QPair<QString, int>> lineFrames;
+
         // once we find a directed call, data encode the rest of the line.
         bool hasDirected = false;
 
@@ -1824,6 +1828,13 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(
               qDebug() << "directed message to field is compound" << dirTo;
           }
 
+#if ALLOW_FORCE_IDENTIFY
+          // if we're sending a data message, then ensure our callsign is included automatically
+          bool isLikelyDataFrame = lineFrames.isEmpty() && selectedCall.isEmpty() && dirTo.isEmpty() && l == 0 && o == 0;
+          if(forceIdentify && isLikelyDataFrame && !line.contains(mycall)){
+              line = QString("%1: %2").arg(mycall).arg(line);
+          }
+#endif
           int m = 0;
           QString datFrame = Varicode::packDataMessage(line, &m);
 
@@ -1857,13 +1868,13 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(
           }
 
           if(useBcn){
-              frames.append({ frame, Varicode::JS8Call });
+              lineFrames.append({ frame, Varicode::JS8Call });
               line = line.mid(l);
           }
 
 #if ALLOW_SEND_COMPOUND
           if(useCmp){
-              frames.append({ frame, Varicode::JS8Call });
+              lineFrames.append({ frame, Varicode::JS8Call });
               line = line.mid(o);
           }
 #endif
@@ -1897,14 +1908,14 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(
                   QString deCompoundMessage = QString("`%1 %2").arg(mycall).arg(mygrid);
                   QString deCompoundFrame = Varicode::packCompoundMessage(deCompoundMessage, nullptr);
                   if(!deCompoundFrame.isEmpty()){
-                      frames.append({ deCompoundFrame, Varicode::JS8Call });
+                      lineFrames.append({ deCompoundFrame, Varicode::JS8Call });
                   }
 
                   // Followed, by a standard OR compound directed message...
                   QString dirCompoundMessage = QString("`%1%2%3").arg(dirTo).arg(dirCmd).arg(dirNum);
                   QString dirCompoundFrame = Varicode::packCompoundMessage(dirCompoundMessage, nullptr);
                   if(!dirCompoundFrame.isEmpty()){
-                      frames.append({ dirCompoundFrame, Varicode::JS8Call });
+                      lineFrames.append({ dirCompoundFrame, Varicode::JS8Call });
                   }
                   shouldUseStandardFrame = false;
               }
@@ -1912,7 +1923,7 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(
 
               if(shouldUseStandardFrame) {
                   // otherwise, just send the standard directed frame
-                  frames.append({ frame, Varicode::JS8Call });
+                  lineFrames.append({ frame, Varicode::JS8Call });
               }
 
               line = line.mid(n);
@@ -1940,30 +1951,34 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(
           }
 
           if(useDat){
-              frames.append({ frame, Varicode::JS8Call });
+              lineFrames.append({ frame, Varicode::JS8Call });
               line = line.mid(m);
           }
         }
+
+        if(!lineFrames.isEmpty()){
+            lineFrames.first().second |= Varicode::JS8CallFirst;
+            lineFrames.last().second |= Varicode::JS8CallLast;
+        }
+
+        allFrames.append(lineFrames);
     }
 
-    if(!frames.isEmpty()){
-        frames.first().second |= Varicode::JS8CallFirst;
-        frames.last().second |= Varicode::JS8CallLast;
-    }
-
-    return frames;
+    return allFrames;
 }
 
-BuildMessageFramesThread::BuildMessageFramesThread(
-    const QString &mycall,
+BuildMessageFramesThread::BuildMessageFramesThread(const QString &mycall,
     const QString &mygrid,
     const QString &selectedCall,
-    const QString &text, QObject *parent):
+    const QString &text,
+    bool forceIdentify,
+    QObject *parent):
     QThread(parent),
     m_mycall{mycall},
     m_mygrid{mygrid},
     m_selectedCall{selectedCall},
-    m_text{text}
+    m_text{text},
+    m_forceIdentify{forceIdentify}
 {
 }
 
@@ -1972,7 +1987,8 @@ void BuildMessageFramesThread::run(){
         m_mycall,
         m_mygrid,
         m_selectedCall,
-        m_text
+        m_text,
+        m_forceIdentify
     );
 
     // TODO: jsherer - we wouldn't normally use decodedtext.h here... but it's useful for computing the actual frames transmitted.

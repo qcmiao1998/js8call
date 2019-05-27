@@ -156,12 +156,11 @@ public:
     static QString packDataMessage(QString const& text, int *n);
     static QString unpackDataMessage(QString const& text);
 
-    static QList<QPair<QString, int>> buildMessageFrames(
-        QString const& mycall,
+    static QList<QPair<QString, int>> buildMessageFrames(QString const& mycall,
         QString const& mygrid,
         QString const& selectedCall,
-        QString const& text
-    );
+        QString const& text,
+        bool forceIdentify);
 };
 
 
@@ -173,6 +172,7 @@ public:
                              QString const& mygrid,
                              QString const& selectedCall,
                              QString const& text,
+                             bool forceIdentify,
                              QObject *parent=nullptr);
     void run() override;
 signals:
@@ -183,6 +183,7 @@ private:
     QString m_mygrid;
     QString m_selectedCall;
     QString m_text;
+    bool m_forceIdentify;
 };
 
 #endif // VARICODE_H

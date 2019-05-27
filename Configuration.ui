@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -146,7 +146,7 @@
                    </widget>
                   </item>
                   <item row="4" column="1">
-                   <widget class="QCheckBox" name="avoid_allcall_checkbox">
+                   <widget class="QCheckBox" name="avoid_allcall_check_box">
                     <property name="text">
                      <string>Do not participate in the @ALLCALL group</string>
                     </property>
@@ -278,8 +278,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>615</width>
-                <height>750</height>
+                <width>724</width>
+                <height>779</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -384,6 +384,13 @@
                    <widget class="QCheckBox" name="heartbeat_qso_pause_check_box">
                     <property name="text">
                      <string>Pause heartbeat transmissions while in a QSO (i.e., callsign is selected)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="avoid_forced_identify_check_box">
+                    <property name="text">
+                     <string>Allow sending standard messages without callsign</string>
                     </property>
                    </widget>
                   </item>
@@ -1429,9 +1436,9 @@ a few, particularly some Kenwood rigs, require it).</string>
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-102</y>
+                <y>0</y>
                 <width>718</width>
-                <height>496</height>
+                <height>490</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_28">
@@ -4059,7 +4066,7 @@ soundcard changes</string>
   <tabstop>callsign_line_edit</tabstop>
   <tabstop>grid_line_edit</tabstop>
   <tabstop>groups_line_edit</tabstop>
-  <tabstop>avoid_allcall_checkbox</tabstop>
+  <tabstop>avoid_allcall_check_box</tabstop>
   <tabstop>cq_message_line_edit</tabstop>
   <tabstop>reply_message_line_edit</tabstop>
   <tabstop>info_message_line_edit</tabstop>

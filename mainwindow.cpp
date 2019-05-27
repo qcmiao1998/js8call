@@ -6279,11 +6279,14 @@ QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text){
     QString mycall = m_config.my_callsign();
     QString mygrid = m_config.my_grid().left(4);
 
+    bool forceIdentify = !m_config.avoid_forced_identify();
+
     auto frames = Varicode::buildMessageFrames(
         mycall,
         mygrid,
         selectedCall,
-        text);
+        text,
+        forceIdentify);
 
 #if 0
     qDebug() << "frames:";
@@ -9382,24 +9385,18 @@ void MainWindow::refreshTextDisplay(){
 #else
     // prepare selected callsign for directed message
     QString selectedCall = callsignSelected();
-    //qDebug() << "selected callsign for directed" << selectedCall;
 
     // prepare compound
-    //bool compound = Varicode::isCompoundCallsign(/*Radio::is_compound_callsign(*/m_config.my_callsign());
     QString mycall = m_config.my_callsign();
     QString mygrid = m_config.my_grid().left(4);
-    //QString basecall = Radio::base_callsign(m_config.my_callsign());
-    //if(basecall != mycall){
-    //    basecall = "<....>";
-    //}
+    bool forceIdentify = !m_config.avoid_forced_identify();
 
     BuildMessageFramesThread *t = new BuildMessageFramesThread(
         mycall,
-        //basecall,
         mygrid,
-        //compound,
         selectedCall,
-        text
+        text,
+        forceIdentify
     );
 
     connect(t, &BuildMessageFramesThread::finished, t, &QObject::deleteLater);
