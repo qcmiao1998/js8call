@@ -176,6 +176,10 @@ public:
   port_type n1mm_server_port () const;
   bool valid_n1mm_info () const;
   bool broadcast_to_n1mm() const;
+  QString n3fjp_server_name () const;
+  port_type n3fjp_server_port () const;
+  bool valid_n3fjp_info () const;
+  bool broadcast_to_n3fjp() const;
   bool accept_udp_requests () const;
   bool udpWindowToFront () const;
   bool udpWindowRestore () const;

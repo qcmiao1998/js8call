@@ -564,6 +564,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         version (), revision (),
         m_config.udp_server_name (), m_config.udp_server_port (),
         this}},
+  m_n3fjpClient { new TCPClient{this}},
   m_spotClient { new SpotClient{m_messageClient, this}},
   m_aprsClient {new APRSISClient{"rotate.aprs2.net", 14580, this}},
   psk_Reporter {new PSK_Reporter {m_messageClient, this}},
@@ -6587,11 +6588,13 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   if(m_callActivity.contains(call)){
       grid = m_callActivity[call].grid;
   }
+
+  QString comments = ui->textEditRX->textCursor().selectedText();
   m_logDlg->initLogQSO (call.trimmed(), grid.trimmed(), m_modeTx == "FT8" ? "JS8" : m_modeTx, m_rptSent, m_rptRcvd,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),
                         m_config.my_callsign(), m_config.my_grid(),
                         m_config.log_as_DATA(), m_config.report_in_comments(),
-                        m_config.bFox(), m_opCall);
+                        m_config.bFox(), m_opCall, comments);
 }
 
 void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, QString const& grid
@@ -6604,23 +6607,64 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
   QString date = QSO_date_on.toString("yyyyMMdd");
   m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), mode, submode, date, name, comments);
 
-  sendNetworkMessage("LOG.QSO", QString(ADIF), {
-      {"UTC.ON", QVariant(QSO_date_on.toMSecsSinceEpoch())},
-      {"UTC.OFF", QVariant(QSO_date_off.toMSecsSinceEpoch())},
-      {"CALL", QVariant(call)},
-      {"GRID", QVariant(grid)},
-      {"FREQ", QVariant(dial_freq)},
-      {"MODE", QVariant(mode)},
-      {"SUBMODE", QVariant(submode)},
-      {"RPT.SENT", QVariant(rpt_sent)},
-      {"RPT.RECV", QVariant(rpt_received)},
-      {"NAME", QVariant(name)},
-      {"COMMENTS", QVariant(comments)},
-      {"STATION.OP", QVariant(operator_call)},
-      {"STATION.CALL", QVariant(my_call)},
-      {"STATION.GRID", QVariant(my_grid)}
-  });
+  if(m_config.udpEnabled()){
+      sendNetworkMessage("LOG.QSO", QString(ADIF), {
+          {"UTC.ON", QVariant(QSO_date_on.toMSecsSinceEpoch())},
+          {"UTC.OFF", QVariant(QSO_date_off.toMSecsSinceEpoch())},
+          {"CALL", QVariant(call)},
+          {"GRID", QVariant(grid)},
+          {"FREQ", QVariant(dial_freq)},
+          {"MODE", QVariant(mode)},
+          {"SUBMODE", QVariant(submode)},
+          {"RPT.SENT", QVariant(rpt_sent)},
+          {"RPT.RECV", QVariant(rpt_received)},
+          {"NAME", QVariant(name)},
+          {"COMMENTS", QVariant(comments)},
+          {"STATION.OP", QVariant(operator_call)},
+          {"STATION.CALL", QVariant(my_call)},
+          {"STATION.GRID", QVariant(my_grid)}
+      });
+  }
 
+  if(m_config.broadcast_to_n3fjp() && m_config.valid_n3fjp_info()){
+      QString data = QString(
+        "<CMD>"
+        "<ADDDIRECT>"
+        "<EXCLUDEDUPES>TRUE</EXCLUDEDUPES>"
+        "<STAYOPEN>FALSE</STAYOPEN>"
+        "<fldDateStr>%1</fldDateStr>"
+        "<fldTimeOnStr>%2</fldTimeOnStr>"
+        "<fldCall>%3</fldCall>"
+        "<fldGrid>%4</fldGrid>"
+        "<fldBand>%5</fldBand>"
+        "<fldFrequency>%6</fldFrequency>"
+        "<fldMode>JS8</fldMode>"
+        "<fldOperator>%7</fldOperator>"
+        "<fldNameR>%8</fldNameR>"
+        "<fldComments>%9</fldComments>"
+        "</CMD>");
+
+      data = data.arg(QSO_date_on.toString("yyyy/MM/dd"));
+      data = data.arg(QSO_date_on.toString("H:mm"));
+      data = data.arg(call);
+      data = data.arg(grid);
+      data = data.arg(m_config.bands ()->find(dial_freq).replace("m", ""));
+      data = data.arg(Radio::frequency_MHz_string(dial_freq));
+      data = data.arg(operator_call);
+      data = data.arg(name);
+      data = data.arg(comments);
+
+      auto host = m_config.n3fjp_server_name();
+      auto port = m_config.n3fjp_server_port();
+
+      m_n3fjpClient->sendNetworkMessage(host, port, data.toLocal8Bit());
+
+      QTimer::singleShot(1000, this, [this, host, port](){
+        m_n3fjpClient->sendNetworkMessage(host, port, "<CMD><CHECKLOG></CMD>");
+      });
+  }
+
+  // reload the logbook data
   m_logBook.init();
 
   if (m_config.clear_callsign ()){

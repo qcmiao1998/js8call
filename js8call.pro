@@ -82,7 +82,8 @@ SOURCES += \
     Message.cpp \
     Inbox.cpp \
     messagewindow.cpp \
-    SpotClient.cpp
+    SpotClient.cpp \
+    TCPClient.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -115,7 +116,8 @@ HEADERS  += qt_helpers.hpp \
     Message.h \
     Inbox.h \
     messagewindow.h \
-    SpotClient.h
+    SpotClient.h \
+    TCPClient.h
 
 
 INCLUDEPATH += qmake_only

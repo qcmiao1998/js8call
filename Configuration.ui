@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -62,8 +62,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>738</width>
-                <height>453</height>
+                <width>587</width>
+                <height>303</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -2155,7 +2155,7 @@ both here.</string>
             <x>0</x>
             <y>0</y>
             <width>746</width>
-            <height>525</height>
+            <height>663</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_30">
@@ -2179,7 +2179,42 @@ both here.</string>
              <layout class="QVBoxLayout" name="verticalLayout_7">
               <item>
                <layout class="QGridLayout" name="gridLayout_14">
-                <item row="0" column="3">
+                <item row="2" column="1">
+                 <widget class="QCheckBox" name="report_in_comments_check_box">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="visible">
+                   <bool>false</bool>
+                  </property>
+                  <property name="toolTip">
+                   <string>Some logging programs will not accept the type of reports
+saved by this program.
+Check this option to save the sent and received reports in the
+comments field.</string>
+                  </property>
+                  <property name="text">
+                   <string>d&amp;B reports to comments</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QCheckBox" name="clear_callsign_check_box">
+                  <property name="enabled">
+                   <bool>true</bool>
+                  </property>
+                  <property name="visible">
+                   <bool>false</bool>
+                  </property>
+                  <property name="toolTip">
+                   <string>Check this option to force deselect callsign after logging.</string>
+                  </property>
+                  <property name="text">
+                   <string>Deselect callsign after logging</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
                  <widget class="QLabel" name="label_13">
                   <property name="text">
                    <string>Operator Callsign (if different than Station Callsign):</string>
@@ -2202,23 +2237,7 @@ both here.</string>
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="1">
-                 <widget class="QCheckBox" name="clear_callsign_check_box">
-                  <property name="enabled">
-                   <bool>true</bool>
-                  </property>
-                  <property name="visible">
-                   <bool>false</bool>
-                  </property>
-                  <property name="toolTip">
-                   <string>Check this option to force deselect callsign after logging.</string>
-                  </property>
-                  <property name="text">
-                   <string>Deselect callsign after logging</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="4">
+                <item row="0" column="3">
                  <widget class="QLineEdit" name="opCallEntry">
                   <property name="toolTip">
                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The callsign of the operator, if different from the station callsign.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -2237,41 +2256,6 @@ both here.</string>
                    <string>Con&amp;vert mode to DATA</string>
                   </property>
                  </widget>
-                </item>
-                <item row="2" column="1">
-                 <widget class="QCheckBox" name="report_in_comments_check_box">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="visible">
-                   <bool>false</bool>
-                  </property>
-                  <property name="toolTip">
-                   <string>Some logging programs will not accept the type of reports
-saved by this program.
-Check this option to save the sent and received reports in the
-comments field.</string>
-                  </property>
-                  <property name="text">
-                   <string>d&amp;B reports to comments</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="2">
-                 <spacer name="horizontalSpacer">
-                  <property name="visible">
-                   <bool>false</bool>
-                  </property>
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
                 </item>
                </layout>
               </item>
@@ -2409,8 +2393,8 @@ comments field.</string>
              <property name="title">
               <string>Network Services</string>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_14">
-              <item>
+             <layout class="QFormLayout" name="formLayout_5">
+              <item row="0" column="0">
                <widget class="QCheckBox" name="psk_reporter_check_box">
                 <property name="toolTip">
                  <string>The program can send your station details and all
@@ -2426,7 +2410,7 @@ for assessing propagation and system performance.</string>
                 </property>
                </widget>
               </item>
-              <item>
+              <item row="1" column="0">
                <layout class="QFormLayout" name="formLayout_17">
                 <property name="fieldGrowthPolicy">
                  <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
@@ -2505,9 +2489,57 @@ for assessing propagation and system performance.</string>
             </widget>
            </item>
            <item>
+            <widget class="QGroupBox" name="groupBox_11">
+             <property name="title">
+              <string>N3FJP Logger</string>
+             </property>
+             <layout class="QFormLayout" name="formLayout_12">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="enable_n3fjp_broadcast_check_box">
+                <property name="text">
+                 <string>Enable sending logged contacts to N3FJP logging software</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <layout class="QFormLayout" name="formLayout_20">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="n3fjp_server_name_label">
+                  <property name="text">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;N3FJP Server:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLineEdit" name="n3fjp_server_name_line_edit">
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Optional host name of N3FJP software to receive logged contacts. This is usually 'localhost' or ip address 127.0.0.1&lt;/p&gt;&lt;p&gt;Formats:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;hostname&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;IPv4 address&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;IPv6 address&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;IPv4 multicast group address&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;IPv6 multicast group address&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Clearing this field will disable broadcasting of ADIF information via UDP.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="n3fjp_server_port_label">
+                  <property name="text">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;N3FJP Server Port:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QSpinBox" name="n3fjp_server_port_spin_box">
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter the port number that should be used for N3FJP log information. For N3FJP, this value should be 1100. If this is zero, no contacts will be sent.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
             <widget class="QGroupBox" name="n1mm_group_box">
              <property name="title">
-              <string>N1MM Logger+  Broadcasts</string>
+              <string>N1MM Logger</string>
              </property>
              <layout class="QFormLayout" name="formLayout_15">
               <property name="fieldGrowthPolicy">
@@ -2519,7 +2551,7 @@ for assessing propagation and system performance.</string>
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When checked, the app will broadcast a logged contact in ADIF format to the configured hostname and port. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="text">
-                 <string>Enable logged contact ADIF broadcast</string>
+                 <string>Enable sending logged contacts to N1MM logging software</string>
                 </property>
                </widget>
               </item>
@@ -4258,12 +4290,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="TX_mode_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="TX_mode_button_group"/>
  </buttongroups>
 </ui>

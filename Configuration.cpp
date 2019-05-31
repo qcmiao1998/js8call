@@ -674,13 +674,12 @@ private:
 
   QString udp_server_name_;
   port_type udp_server_port_;
-//  QString n1mm_server_name () const;
+  QString n3fjp_server_name_;
+  port_type n3fjp_server_port_;
+  bool broadcast_to_n3fjp_;
   QString n1mm_server_name_;
   port_type n1mm_server_port_;
   bool broadcast_to_n1mm_;
-//  port_type n1mm_server_port () const;
-//  bool valid_n1mm_info () const;
-//  bool broadcast_to_n1mm() const;
   bool accept_udp_requests_;
   bool udpWindowToFront_;
   bool udpWindowRestore_;
@@ -823,6 +822,9 @@ QString Configuration::aprs_passcode() const { return m_->aprs_passcode_; }
 QString Configuration::udp_server_name () const {return m_->udp_server_name_;}
 auto Configuration::udp_server_port () const -> port_type {return m_->udp_server_port_;}
 bool Configuration::accept_udp_requests () const {return m_->accept_udp_requests_;}
+QString Configuration::n3fjp_server_name () const {return m_->n3fjp_server_name_;}
+auto Configuration::n3fjp_server_port () const -> port_type {return m_->n3fjp_server_port_;}
+bool Configuration::broadcast_to_n3fjp () const {return m_->broadcast_to_n3fjp_;}
 QString Configuration::n1mm_server_name () const {return m_->n1mm_server_name_;}
 auto Configuration::n1mm_server_port () const -> port_type {return m_->n1mm_server_port_;}
 bool Configuration::broadcast_to_n1mm () const {return m_->broadcast_to_n1mm_;}
@@ -951,6 +953,15 @@ void Configuration::sync_transceiver (bool force_signal, bool enforce_mode_and_s
     {
       m_->transceiver_tx_frequency (0);
     }
+}
+
+bool Configuration::valid_n3fjp_info () const
+{
+  // do very rudimentary checking on the n3fjp server name and port number.
+  //
+  auto server_name = m_->n3fjp_server_name_;
+  auto port_number = m_->n3fjp_server_port_;
+  return(!(server_name.trimmed().isEmpty() || port_number == 0));
 }
 
 bool Configuration::valid_n1mm_info () const
@@ -1200,10 +1211,13 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   setUppercase(ui_->groups_line_edit);
   setUppercase(ui_->auto_whitelist_line_edit);
 
-  ui_->udp_server_port_spin_box->setMinimum (1);
+  ui_->udp_server_port_spin_box->setMinimum (0);
   ui_->udp_server_port_spin_box->setMaximum (std::numeric_limits<port_type>::max ());
 
-  ui_->n1mm_server_port_spin_box->setMinimum (1);
+  ui_->n3fjp_server_port_spin_box->setMinimum (0);
+  ui_->n3fjp_server_port_spin_box->setMaximum (std::numeric_limits<port_type>::max ());
+
+  ui_->n1mm_server_port_spin_box->setMinimum (0);
   ui_->n1mm_server_port_spin_box->setMaximum (std::numeric_limits<port_type>::max ());
 
   //
@@ -1487,6 +1501,9 @@ void Configuration::impl::initialize_models ()
   ui_->udp_server_line_edit->setText (udp_server_name_);
   ui_->udp_server_port_spin_box->setValue (udp_server_port_);
   ui_->accept_udp_requests_check_box->setChecked (accept_udp_requests_);
+  ui_->n3fjp_server_name_line_edit->setText (n3fjp_server_name_);
+  ui_->n3fjp_server_port_spin_box->setValue (n3fjp_server_port_);
+  ui_->enable_n3fjp_broadcast_check_box->setChecked (broadcast_to_n3fjp_);
   ui_->n1mm_server_name_line_edit->setText (n1mm_server_name_);
   ui_->n1mm_server_port_spin_box->setValue (n1mm_server_port_);
   ui_->enable_n1mm_broadcast_check_box->setChecked (broadcast_to_n1mm_);
@@ -1783,6 +1800,9 @@ void Configuration::impl::read_settings ()
   aprs_passcode_ = settings_->value ("aprsPasscode", "").toString();
   udp_server_name_ = settings_->value ("UDPServer", "127.0.0.1").toString ();
   udp_server_port_ = settings_->value ("UDPServerPort", 2237).toUInt ();
+  n3fjp_server_name_ = settings_->value ("N3FJPServer", "127.0.0.1").toString ();
+  n3fjp_server_port_ = settings_->value ("N3FJPServerPort", 1100).toUInt ();
+  broadcast_to_n3fjp_ = settings_->value ("BroadcastToN3FJP", false).toBool ();
   n1mm_server_name_ = settings_->value ("N1MMServer", "127.0.0.1").toString ();
   n1mm_server_port_ = settings_->value ("N1MMServerPort", 2333).toUInt ();
   broadcast_to_n1mm_ = settings_->value ("BroadcastToN1MM", false).toBool ();
@@ -1929,6 +1949,9 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("aprsPasscode", aprs_passcode_);
   settings_->setValue ("UDPServer", udp_server_name_);
   settings_->setValue ("UDPServerPort", udp_server_port_);
+  settings_->setValue ("N3FJPServer", n3fjp_server_name_);
+  settings_->setValue ("N3FJPServerPort", n3fjp_server_port_);
+  settings_->setValue ("BroadcastToN3FJP", broadcast_to_n3fjp_);
   settings_->setValue ("N1MMServer", n1mm_server_name_);
   settings_->setValue ("N1MMServerPort", n1mm_server_port_);
   settings_->setValue ("BroadcastToN1MM", broadcast_to_n1mm_);
@@ -2482,6 +2505,12 @@ void Configuration::impl::accept ()
     }
 
   accept_udp_requests_ = ui_->accept_udp_requests_check_box->isChecked ();
+  auto new_n3fjp_server = ui_->n3fjp_server_name_line_edit->text ();
+  n3fjp_server_name_ = new_n3fjp_server;
+  auto new_n3fjp_port = ui_->n3fjp_server_port_spin_box->value ();
+  n3fjp_server_port_ = new_n3fjp_port;
+  broadcast_to_n3fjp_ = ui_->enable_n3fjp_broadcast_check_box->isChecked ();
+
   auto new_n1mm_server = ui_->n1mm_server_name_line_edit->text ();
   n1mm_server_name_ = new_n1mm_server;
   auto new_n1mm_port = ui_->n1mm_server_port_spin_box->value ();

@@ -44,6 +44,7 @@
 #include "qpriorityqueue.h"
 #include "varicode.h"
 #include "MessageClient.hpp"
+#include "TCPClient.h"
 #include "SpotClient.h"
 #include "APRSISClient.h"
 #include "keyeater.h"
@@ -903,6 +904,7 @@ private:
   int m_firstDecode;
   QProgressDialog m_optimizingProgress;
   MessageClient * m_messageClient;
+  TCPClient * m_n3fjpClient;
   PSK_Reporter *psk_Reporter;
   SpotClient *m_spotClient;
   APRSISClient * m_aprsClient;
