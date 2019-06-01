@@ -6588,13 +6588,17 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   if(m_callActivity.contains(call)){
       grid = m_callActivity[call].grid;
   }
+  QString opCall=m_opCall;
+  if(opCall.isEmpty()){
+      opCall = m_config.my_callsign();
+  }
 
   QString comments = ui->textEditRX->textCursor().selectedText();
   m_logDlg->initLogQSO (call.trimmed(), grid.trimmed(), m_modeTx == "FT8" ? "JS8" : m_modeTx, m_rptSent, m_rptRcvd,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),
                         m_config.my_callsign(), m_config.my_grid(),
                         m_config.log_as_DATA(), m_config.report_in_comments(),
-                        m_config.bFox(), m_opCall, comments);
+                        m_config.bFox(), opCall, comments);
 }
 
 void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, QString const& grid
@@ -6661,6 +6665,7 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
 
       QTimer::singleShot(1000, this, [this, host, port](){
         m_n3fjpClient->sendNetworkMessage(host, port, "<CMD><CHECKLOG></CMD>");
+        m_n3fjpClient->sendNetworkMessage(host, port, "\r\n");
       });
   }
 
