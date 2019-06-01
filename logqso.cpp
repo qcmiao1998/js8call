@@ -12,6 +12,7 @@
 #include "Configuration.hpp"
 #include "Bands.hpp"
 #include "MaidenheadLocatorValidator.hpp"
+#include "DriftingDateTime.h"
 
 #include "ui_logqso.h"
 #include "moc_logqso.cpp"
@@ -31,6 +32,14 @@ LogQSO::LogQSO(QString const& programTitle, QSettings * settings
 
 LogQSO::~LogQSO ()
 {
+}
+
+void LogQSO::on_start_now_button_pressed(){
+  ui->start_date_time->setDateTime(DriftingDateTime::currentDateTimeUtc());
+}
+
+void LogQSO::on_end_now_button_pressed(){
+  ui->end_date_time->setDateTime(DriftingDateTime::currentDateTimeUtc());
 }
 
 void LogQSO::loadSettings ()

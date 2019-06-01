@@ -49,6 +49,10 @@ signals:
 protected:
   void hideEvent (QHideEvent *);
 
+private slots:
+  void on_start_now_button_pressed();
+  void on_end_now_button_pressed();
+
 private:
   void loadSettings ();
   void storeSettings () const;
