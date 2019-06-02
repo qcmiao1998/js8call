@@ -44,7 +44,19 @@ public:
     Q_SIGNAL void mousePressed(QObject *obj, QMouseEvent *evt, bool *pProcessed);
 };
 
+class MouseDoubleClickEater : public QObject
+{
+    Q_OBJECT
+public:
+    MouseDoubleClickEater(){}
+    virtual ~MouseDoubleClickEater(){}
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *event);
+
+public:
+    Q_SIGNAL void mouseDoubleClicked(QObject *obj, QMouseEvent *evt, bool *pProcessed);
+};
 
 
 

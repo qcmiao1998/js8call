@@ -34,6 +34,26 @@ LogQSO::~LogQSO ()
 {
 }
 
+bool LogQSO::acceptText(QString text){
+    auto w = focusWidget();
+    if(!w){
+        return false;
+    }
+
+    auto name = QString(w->metaObject()->className());
+    if(name != "QLineEdit"){
+        return false;
+    }
+
+    auto l = static_cast<QLineEdit*>(w);
+    if(!l->text().isEmpty()){
+        return false;
+    }
+
+    l->setText(text);
+    return true;
+}
+
 void LogQSO::on_start_now_button_pressed(){
   ui->start_date_time->setDateTime(DriftingDateTime::currentDateTimeUtc());
 }

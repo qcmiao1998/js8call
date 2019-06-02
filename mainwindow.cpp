@@ -1176,6 +1176,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   });
   ui->extFreeTextMsgEdit->installEventFilter(enterFilter);
 
+  auto doubleClickFilter = new MouseDoubleClickEater();
+  connect(doubleClickFilter, &MouseDoubleClickEater::mouseDoubleClicked, this, [this](QObject *, QMouseEvent *, bool *){
+      QTimer::singleShot(150, this, &MainWindow::on_textEditRX_mouseDoubleClicked);
+  });
+  ui->textEditRX->viewport()->installEventFilter(doubleClickFilter);
+
   auto clearActionSep = new QAction(nullptr);
   clearActionSep->setSeparator(true);
 
@@ -6215,6 +6221,30 @@ QPair<QString, int> MainWindow::popMessageFrame(){
       return QPair<QString, int>{};
   }
   return m_txFrameQueue.dequeue();
+}
+
+void MainWindow::on_textEditRX_mouseDoubleClicked(){
+  auto c = ui->textEditRX->textCursor();
+  auto text = c.selectedText();
+  if(text.isEmpty()){
+      return;
+  }
+
+  int start = c.selectionStart();
+  int end = c.selectionEnd();
+
+  c.clearSelection();
+  c.setPosition(start);
+  c.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveAnchor);
+  c.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, 1 + end-start);
+
+  auto prev = c.selectedText();
+  if(prev.startsWith("-") || prev.startsWith("+")){
+      ui->textEditRX->setTextCursor(c);
+      text = prev;
+  }
+
+  m_logDlg->acceptText(text);
 }
 
 void MainWindow::on_nextFreeTextMsg_currentTextChanged (QString const& text)

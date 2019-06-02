@@ -42,3 +42,16 @@ bool MousePressEater::eventFilter(QObject *obj, QEvent *event){
     return QObject::eventFilter(obj, event);
 }
 
+bool MouseDoubleClickEater::eventFilter(QObject *obj, QEvent *event){
+    if (event->type() == QEvent::MouseButtonDblClick) {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+        bool processed = false;
+        emit this->mouseDoubleClicked(obj, mouseEvent, &processed);
+        if(processed){
+            return true;
+        }
+    }
+
+    // standard event processing
+    return QObject::eventFilter(obj, event);
+}
