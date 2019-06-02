@@ -6669,13 +6669,15 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
         "<fldDateStr>%1</fldDateStr>"
         "<fldTimeOnStr>%2</fldTimeOnStr>"
         "<fldCall>%3</fldCall>"
-        "<fldGrid>%4</fldGrid>"
+        "<fldGridR>%4</fldGridR>"
         "<fldBand>%5</fldBand>"
         "<fldFrequency>%6</fldFrequency>"
         "<fldMode>JS8</fldMode>"
         "<fldOperator>%7</fldOperator>"
         "<fldNameR>%8</fldNameR>"
         "<fldComments>%9</fldComments>"
+        "<fldRstS>%10</fldRstS>"
+        "<fldRstR>%11</fldRstR>"
         "</CMD>");
 
       data = data.arg(QSO_date_on.toString("yyyy/MM/dd"));
@@ -6687,13 +6689,15 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
       data = data.arg(operator_call);
       data = data.arg(name);
       data = data.arg(comments);
+      data = data.arg(rpt_sent);
+      data = data.arg(rpt_received);
 
       auto host = m_config.n3fjp_server_name();
       auto port = m_config.n3fjp_server_port();
 
       m_n3fjpClient->sendNetworkMessage(host, port, data.toLocal8Bit());
 
-      QTimer::singleShot(1000, this, [this, host, port](){
+      QTimer::singleShot(300, this, [this, host, port](){
         m_n3fjpClient->sendNetworkMessage(host, port, "<CMD><CHECKLOG></CMD>");
         m_n3fjpClient->sendNetworkMessage(host, port, "\r\n");
       });

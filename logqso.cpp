@@ -87,6 +87,7 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
                         bool toDATA, bool dBtoComments, bool bFox, QString const& opCall, QString const& comments)
 {
   if(!isHidden()) return;
+  ui->call->setFocus();
   ui->call->setText(hisCall);
   ui->grid->setText(hisGrid);
   ui->name->setText("");
