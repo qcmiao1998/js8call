@@ -46,11 +46,14 @@ bool LogQSO::acceptText(QString text){
     }
 
     auto l = static_cast<QLineEdit*>(w);
-    if(!l->text().isEmpty()){
-        return false;
+    if(l->text().isEmpty()){
+        // set
+        l->setText(text);
+    } else {
+        // append
+        l->setText(QString("%1 %2").arg(l->text()).arg(text));
     }
 
-    l->setText(text);
     return true;
 }
 
