@@ -51,6 +51,9 @@ protected:
   void hideEvent (QHideEvent *);
 
 private slots:
+  void createAdditionalField(QString key={}, QString value={});
+  void resetAdditionalFields();
+  void on_add_new_field_button_pressed();
   void on_start_now_button_pressed();
   void on_end_now_button_pressed();
 
@@ -67,6 +70,7 @@ private:
   QString m_myGrid;
   QDateTime m_dateTimeOn;
   QDateTime m_dateTimeOff;
+  QList<QLineEdit*> m_additionalFieldsControls;
 };
 
 #endif // LogQSO_H

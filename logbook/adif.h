@@ -11,12 +11,15 @@
 #if defined (QT5)
 #include <QList>
 #include <QString>
+#include <QStringList>
 #include <QMultiHash>
 #else
 #include <QtGui>
 #endif
 
 class QDateTime;
+
+extern const QStringList ADIF_FIELDS;
 
 class ADIF
 {
@@ -35,18 +38,17 @@ class ADIF
         // open ADIF file and append the QSO details. Return true on success
 	bool addQSOToFile(QByteArray const& ADIF_record);
 
-  QByteArray QSOToADIF(QString const& hisCall, QString const& hisGrid, QString const& mode, QString const& submode, QString const& rptSent
+    QByteArray QSOToADIF(QString const& hisCall, QString const& hisGrid, QString const& mode, QString const& submode, QString const& rptSent
                                              , QString const& rptRcvd, QDateTime const& dateTimeOn, QDateTime const& dateTimeOff
                                              , QString const& band, QString const& comments, QString const& name
                                              , QString const& strDialFreq, QString const& m_myCall, QString const& m_myGrid
                                              , QString const& operator_call);
 
 
-
-		struct QSO
-		{
-          QString call,band,mode,submode,date,name,comment;
-		};		  
+    struct QSO
+    {
+      QString call,band,mode,submode,date,name,comment;
+    };
 
     private:
 		QMultiHash<QString, QSO> _data;

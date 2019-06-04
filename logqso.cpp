@@ -26,7 +26,6 @@ LogQSO::LogQSO(QString const& programTitle, QSettings * settings
 {
   ui->setupUi(this);
   setWindowTitle(programTitle + " - Log QSO");
-  loadSettings ();
   ui->grid->setValidator (new MaidenheadLocatorValidator {this});
 }
 
@@ -65,12 +64,61 @@ void LogQSO::on_end_now_button_pressed(){
   ui->end_date_time->setDateTime(DriftingDateTime::currentDateTimeUtc());
 }
 
+void LogQSO::on_add_new_field_button_pressed(){
+    createAdditionalField();
+}
+
+void LogQSO::createAdditionalField(QString key, QString value){
+    QLineEdit * l = new QLineEdit(this);
+    if(!value.isEmpty()){
+        l->setText(value);
+    }
+
+    QComboBox * c = new QComboBox(this);
+    c->insertItem(0, "");
+    c->insertItems(0, ADIF_FIELDS);
+    c->setEditable(false);
+    connect(c, &QComboBox::currentTextChanged, this, [this, l](const QString &text){
+       l->setProperty("fieldKey", QVariant(text));
+    });
+    if(!key.isEmpty()){
+        c->setCurrentText(key);
+    }
+
+    auto layout = static_cast<QFormLayout*>(ui->additionalFields->layout());
+    layout->removeItem(ui->field_button_layout);
+    layout->addRow(c, l);
+    layout->addItem(ui->field_button_layout);
+    m_additionalFieldsControls.append(l);
+}
+
+void LogQSO::resetAdditionalFields(){
+    if(m_additionalFieldsControls.isEmpty()){
+        return;
+    }
+
+    auto layout = static_cast<QFormLayout*>(ui->additionalFields->layout());
+    layout->removeItem(ui->field_button_layout);
+    for(int i = 0, count = layout->rowCount(); i < count; i++){
+        layout->removeRow(0);
+    }
+    layout->addItem(ui->field_button_layout);
+    m_additionalFieldsControls.clear();
+}
+
 void LogQSO::loadSettings ()
 {
   m_settings->beginGroup ("LogQSO");
   restoreGeometry (m_settings->value ("geometry", saveGeometry ()).toByteArray ());
   ui->cbComments->setChecked (m_settings->value ("SaveComments", false).toBool ());
   m_comments = m_settings->value ("LogComments", "").toString();
+
+  resetAdditionalFields();
+  auto additionalFields = QSet<QString>::fromList(m_settings->value("AdditionalFields", {}).toStringList());
+  foreach(auto key, additionalFields){
+      createAdditionalField(key);
+  }
+
   m_settings->endGroup ();
 }
 
@@ -80,6 +128,13 @@ void LogQSO::storeSettings () const
   m_settings->setValue ("geometry", saveGeometry ());
   m_settings->setValue ("SaveComments", ui->cbComments->isChecked ());
   m_settings->setValue ("LogComments", m_comments);
+
+  auto additionalFields = QStringList{};
+  foreach(auto field, m_additionalFieldsControls){
+      additionalFields.append(field->property("fieldKey").toString());
+  }
+  m_settings->setValue ("AdditionalFields", additionalFields);
+
   m_settings->endGroup ();
 }
 
@@ -90,32 +145,43 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
                         bool toDATA, bool dBtoComments, bool bFox, QString const& opCall, QString const& comments)
 {
   if(!isHidden()) return;
+
+  loadSettings();
+
   ui->call->setFocus();
   ui->call->setText(hisCall);
   ui->grid->setText(hisGrid);
   ui->name->setText("");
   ui->comments->setText("");
+
   if (ui->cbComments->isChecked ()) ui->comments->setText(m_comments);
+
   if(dBtoComments) {
     QString t=mode;
     if(rptSent!="") t+="  Sent: " + rptSent;
     if(rptRcvd!="") t+="  Rcvd: " + rptRcvd;
     ui->comments->setText(t);
   }
+
   if(!comments.isEmpty()){
     ui->comments->setText(comments);
   }
+
   if(toDATA) mode="DATA";
+
   ui->mode->setText(mode);
   ui->sent->setText(rptSent);
   ui->rcvd->setText(rptRcvd);
   ui->start_date_time->setDateTime (dateTimeOn);
   ui->end_date_time->setDateTime (dateTimeOff);
+
   m_dialFreq=dialFreq;
   m_myCall=myCall;
   m_myGrid=myGrid;
+
   ui->band->setText (m_config->bands ()->find (dialFreq));
   ui->loggedOperator->setText(opCall);
+
   if(bFox) {
     accept();
   } else {
