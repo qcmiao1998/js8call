@@ -92,6 +92,18 @@ void LogQSO::createAdditionalField(QString key, QString value){
     m_additionalFieldsControls.append(l);
 }
 
+QMap<QString, QVariant> LogQSO::collectAdditionalFields(){
+    QMap<QString, QVariant> additionalFields;
+    foreach(auto field, m_additionalFieldsControls){
+        auto key = field->property("fieldKey").toString();
+        if(key.isEmpty()){
+            continue;
+        }
+        additionalFields[key] = QVariant(field->text());
+    }
+    return additionalFields;
+}
+
 void LogQSO::resetAdditionalFields(){
     if(m_additionalFieldsControls.isEmpty()){
         return;
@@ -207,15 +219,6 @@ void LogQSO::accept()
   QString hisCall,hisGrid,mode,submode,rptSent,rptRcvd,dateOn,dateOff,timeOn,timeOff,band,operator_call;
   QString comments,name;
 
-  QMap<QString, QString> additionalFields;
-  foreach(auto field, m_additionalFieldsControls){
-      auto key = field->property("fieldKey").toString();
-      if(key.isEmpty()){
-          continue;
-      }
-      additionalFields[key] = field->text();
-  }
-
   hisCall=ui->call->text().toUpper();
   hisGrid=ui->grid->text().toUpper();
   mode = ui->mode->text().toUpper();
@@ -239,6 +242,8 @@ void LogQSO::accept()
   auto adifilePath = QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath (filename);
   adifile.init(adifilePath);
 
+  auto additionalFields = collectAdditionalFields();
+
   QByteArray ADIF {adifile.QSOToADIF (hisCall, hisGrid, mode, submode, rptSent, rptRcvd, m_dateTimeOn, m_dateTimeOff, band
                                       , comments, name, strDialFreq, m_myCall, m_myGrid, operator_call, additionalFields)};
 
@@ -248,38 +253,42 @@ void LogQSO::accept()
                                  tr ("Cannot open \"%1\"").arg (adifilePath));
   }
 
-  // Log to N1MM Logger
-  if (m_config->broadcast_to_n1mm() && m_config->valid_n1mm_info())  {
-    const QHostAddress n1mmhost = QHostAddress(m_config->n1mm_server_name());
-    QUdpSocket _sock;
-    auto rzult = _sock.writeDatagram (ADIF + " <eor>", n1mmhost, quint16(m_config->n1mm_server_port()));
-    if (rzult == -1) {
-      MessageBox::warning_message (this, tr ("Error sending log to N1MM"),
-                                   tr ("Write returned \"%1\"").arg (rzult));
-    }
-  }
-
-//Log this QSO to file "js8call.log"
+  //Log this QSO to file "js8call.log"
   static QFile f {QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath ("js8call.log")};
   if(!f.open(QIODevice::Text | QIODevice::Append)) {
     MessageBox::warning_message (this, tr ("Log file error"),
                                  tr ("Cannot open \"%1\" for append").arg (f.fileName ()),
                                  tr ("Error: %1").arg (f.errorString ()));
   } else {
-    QString logEntry=m_dateTimeOn.date().toString("yyyy-MM-dd,") +
-      m_dateTimeOn.time().toString("hh:mm:ss,") +
-      m_dateTimeOff.date().toString("yyyy-MM-dd,") +
-      m_dateTimeOff.time().toString("hh:mm:ss,") + hisCall + "," +
-      hisGrid + "," + strDialFreq + "," + (mode == "MFSK" ? "JS8" : mode) +
-      "," + rptSent + "," + rptRcvd +
-      "," + comments + "," + name;
+    QStringList logEntryItems = {
+      m_dateTimeOn.date().toString("yyyy-MM-dd"),
+      m_dateTimeOn.time().toString("hh:mm:ss"),
+      m_dateTimeOff.date().toString("yyyy-MM-dd"),
+      m_dateTimeOff.time().toString("hh:mm:ss"),
+      hisCall,
+      hisGrid,
+      strDialFreq,
+      (mode == "MFSK" ? "JS8" : mode),
+      rptSent,
+      rptRcvd,
+      comments,
+      name
+    };
+
+    if(!additionalFields.isEmpty()){
+        foreach(auto value, additionalFields.values()){
+            logEntryItems.append(value.toString());
+        }
+    }
+
     QTextStream out(&f);
-    out << logEntry << endl;
+    out << logEntryItems.join(",") << endl;
     f.close();
   }
 
-//Clean up and finish logging
-  Q_EMIT acceptQSO (m_dateTimeOff, hisCall, hisGrid, m_dialFreq, mode, submode, rptSent, rptRcvd, comments, name,m_dateTimeOn, operator_call, m_myCall, m_myGrid, ADIF);
+  //Clean up and finish logging
+  Q_EMIT acceptQSO (m_dateTimeOff, hisCall, hisGrid, m_dialFreq, mode, submode, rptSent, rptRcvd, comments, name,m_dateTimeOn, operator_call, m_myCall, m_myGrid, ADIF, additionalFields);
+
   QDialog::accept();
 }
 

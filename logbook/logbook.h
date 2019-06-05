@@ -13,6 +13,7 @@
 #include "countrydat.h"
 #include "countriesworked.h"
 #include "adif.h"
+#include "n3fjp.h"
 
 class QDir;
 

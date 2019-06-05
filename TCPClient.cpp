@@ -58,24 +58,21 @@ TCPClient::TCPClient(QObject *parent) : QObject(parent)
 
 bool TCPClient::ensureConnected(QString host, port_type port, int msecs){
     if(!m_->isConnected(host, port)){
-        //qDebug() << "connecting to" << host << port;
         m_->connectToHost(host, port);
     }
 
     return m_->waitForConnected(msecs);
 }
 
-bool TCPClient::sendNetworkMessage(QString host, port_type port, QByteArray const &message, bool crlf){
-    if(!ensureConnected(host, port)){
+bool TCPClient::sendNetworkMessage(QString host, port_type port, QByteArray const &message, bool crlf, int msecs){
+    if(!ensureConnected(host, port, msecs)){
         return false;
     }
 
-    //qDebug() << "connecting to" << host << port;
     qint64 n = m_->send(message, crlf);
     if(n <= 0){
         return false;
     }
 
-    //qDebug() << "sent" << n << "bytes" << message;
     return m_->flush();
 }

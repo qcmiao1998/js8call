@@ -117,7 +117,8 @@ HEADERS  += qt_helpers.hpp \
     Inbox.h \
     messagewindow.h \
     SpotClient.h \
-    TCPClient.h
+    TCPClient.h \
+    logbook/n3fjp.h
 
 
 INCLUDEPATH += qmake_only

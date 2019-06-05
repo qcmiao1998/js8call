@@ -29,6 +29,8 @@
 #include <QActionGroup>
 #include <QSplashScreen>
 #include <QSound>
+#include <QUdpSocket>
+#include <QVariant>
 
 #include "APRSISClient.h"
 #include "revision_utils.hpp"
@@ -6624,6 +6626,7 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   }
 
   QString comments = ui->textEditRX->textCursor().selectedText();
+
   m_logDlg->initLogQSO (call.trimmed(), grid.trimmed(), m_modeTx == "FT8" ? "JS8" : m_modeTx, m_rptSent, m_rptRcvd,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),
                         m_config.my_callsign(), m_config.my_grid(),
@@ -6636,11 +6639,12 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
                             , QString const& rpt_sent, QString const& rpt_received
                             , QString const& comments
                             , QString const& name, QDateTime const& QSO_date_on, QString const& operator_call
-                            , QString const& my_call, QString const& my_grid, QByteArray const& ADIF)
+                            , QString const& my_call, QString const& my_grid, QByteArray const& ADIF, QMap<QString, QVariant> const &additionalFields)
 {
   QString date = QSO_date_on.toString("yyyyMMdd");
   m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), mode, submode, date, name, comments);
 
+  // Log to JS8Call API
   if(m_config.udpEnabled()){
       sendNetworkMessage("LOG.QSO", QString(ADIF), {
           {"UTC.ON", QVariant(QSO_date_on.toMSecsSinceEpoch())},
@@ -6656,10 +6660,23 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
           {"COMMENTS", QVariant(comments)},
           {"STATION.OP", QVariant(operator_call)},
           {"STATION.CALL", QVariant(my_call)},
-          {"STATION.GRID", QVariant(my_grid)}
+          {"STATION.GRID", QVariant(my_grid)},
+          {"EXTRA", additionalFields}
       });
   }
 
+  // Log to N1MM Logger
+  if (m_config.broadcast_to_n1mm() && m_config.valid_n1mm_info())  {
+    const QHostAddress n1mmhost = QHostAddress(m_config.n1mm_server_name());
+    QUdpSocket _sock;
+    auto rzult = _sock.writeDatagram (ADIF + " <eor>", n1mmhost, quint16(m_config.n1mm_server_port()));
+    if (rzult == -1) {
+      MessageBox::warning_message (this, tr ("Error sending log to N1MM"),
+                                   tr ("Write returned \"%1\"").arg (rzult));
+    }
+  }
+
+  // Log to N3FJP Logger
   if(m_config.broadcast_to_n3fjp() && m_config.valid_n3fjp_info()){
       QString data = QString(
         "<CMD>"
@@ -6678,6 +6695,7 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
         "<fldComments>%9</fldComments>"
         "<fldRstS>%10</fldRstS>"
         "<fldRstR>%11</fldRstR>"
+        "%12"
         "</CMD>");
 
       data = data.arg(QSO_date_on.toString("yyyy/MM/dd"));
@@ -6692,15 +6710,36 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
       data = data.arg(rpt_sent);
       data = data.arg(rpt_received);
 
+      int other = 0;
+      QStringList additional;
+      if(!additionalFields.isEmpty()){
+          foreach(auto key, additionalFields.keys()){
+              QString n3key;
+              if(N3FJP_ADIF_MAP.contains(key)){
+                  n3key = N3FJP_ADIF_MAP.value(key);
+              } else {
+                  other++;
+                  n3key = N3FJP_ADIF_MAP.value(QString("*%1").arg(other));
+              }
+
+              if(n3key.isEmpty()){
+                  break;
+              }
+              auto value = additionalFields[key].toString();
+              additional.append(QString("<%1>%2</%1>").arg(n3key).arg(value));
+          }
+      }
+      data = data.arg(additional.join(""));
+
       auto host = m_config.n3fjp_server_name();
       auto port = m_config.n3fjp_server_port();
 
-      m_n3fjpClient->sendNetworkMessage(host, port, data.toLocal8Bit());
-
-      QTimer::singleShot(300, this, [this, host, port](){
-        m_n3fjpClient->sendNetworkMessage(host, port, "<CMD><CHECKLOG></CMD>");
-        m_n3fjpClient->sendNetworkMessage(host, port, "\r\n");
-      });
+      if(m_n3fjpClient->sendNetworkMessage(host, port, data.toLocal8Bit(), 100)){
+          QTimer::singleShot(300, this, [this, host, port](){
+            m_n3fjpClient->sendNetworkMessage(host, port, "<CMD><CHECKLOG></CMD>", 100);
+            m_n3fjpClient->sendNetworkMessage(host, port, "\r\n", 100);
+          });
+      }
   }
 
   // reload the logbook data

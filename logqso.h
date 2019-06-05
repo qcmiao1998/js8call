@@ -45,7 +45,7 @@ signals:
                   , QString const& rpt_sent, QString const& rpt_received
                   , QString const& comments
                   , QString const& name, QDateTime const& QSO_date_on,  QString const& operator_call
-                  , QString const& my_call, QString const& my_grid, QByteArray const& ADIF);
+                  , QString const& my_call, QString const& my_grid, QByteArray const& ADIF, QMap<QString, QVariant> const &additionalFields);
 
 protected:
   void hideEvent (QHideEvent *);
@@ -53,6 +53,7 @@ protected:
 private slots:
   void createAdditionalField(QString key={}, QString value={});
   void resetAdditionalFields();
+  QMap<QString, QVariant> collectAdditionalFields();
   void on_add_new_field_button_pressed();
   void on_start_now_button_pressed();
   void on_end_now_button_pressed();
