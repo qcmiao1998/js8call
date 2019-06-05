@@ -75,8 +75,8 @@ void LogQSO::createAdditionalField(QString key, QString value){
     }
 
     QComboBox * c = new QComboBox(this);
-    c->insertItem(0, "");
     c->insertItems(0, ADIF_FIELDS);
+    c->insertItem(0, "");
     c->setEditable(false);
     connect(c, &QComboBox::currentTextChanged, this, [this, l](const QString &text){
        l->setProperty("fieldKey", QVariant(text));
