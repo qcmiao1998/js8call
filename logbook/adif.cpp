@@ -333,7 +333,7 @@ QByteArray ADIF::QSOToADIF(QString const& hisCall, QString const& hisGrid, QStri
                            , QString const& rptSent, QString const& rptRcvd, QDateTime const& dateTimeOn
                            , QDateTime const& dateTimeOff, QString const& band, QString const& comments
                            , QString const& name, QString const& strDialFreq, QString const& m_myCall
-                           , QString const& m_myGrid, QString const& operator_call)
+                           , QString const& m_myGrid, QString const& operator_call, QMap<QString, QString> const &additionalFields)
 {
   QString t;
   t = "<call:" + QString::number(hisCall.length()) + ">" + hisCall;
@@ -363,6 +363,12 @@ QByteArray ADIF::QSOToADIF(QString const& hisCall, QString const& hisGrid, QStri
   if (operator_call!="")
       t+=" <operator:" + QString::number(operator_call.length()) +
               ">" + operator_call;
+
+  foreach(auto key, additionalFields.keys()){
+      auto value = additionalFields[key];
+      t += QString(" <%1:%2>%3").arg(key).arg(value.length()).arg(value);
+  }
+
   return t.toLatin1 ();
 }
 

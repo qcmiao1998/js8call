@@ -114,9 +114,18 @@ void LogQSO::loadSettings ()
   m_comments = m_settings->value ("LogComments", "").toString();
 
   resetAdditionalFields();
-  auto additionalFields = QSet<QString>::fromList(m_settings->value("AdditionalFields", {}).toStringList());
+  auto additionalFields = m_settings->value("AdditionalFields", {}).toStringList();
+  QSet<QString> additionalFieldsSet;
   foreach(auto key, additionalFields){
+      if(key.isEmpty()){
+          continue;
+      }
+      if(additionalFieldsSet.contains(key)){
+          continue;
+      }
+
       createAdditionalField(key);
+      additionalFieldsSet.insert(key);
   }
 
   m_settings->endGroup ();
@@ -131,7 +140,11 @@ void LogQSO::storeSettings () const
 
   auto additionalFields = QStringList{};
   foreach(auto field, m_additionalFieldsControls){
-      additionalFields.append(field->property("fieldKey").toString());
+      auto key = field->property("fieldKey").toString();
+      if(key.isEmpty()){
+          continue;
+      }
+      additionalFields.append(key);
   }
   m_settings->setValue ("AdditionalFields", additionalFields);
 
@@ -194,6 +207,15 @@ void LogQSO::accept()
   QString hisCall,hisGrid,mode,submode,rptSent,rptRcvd,dateOn,dateOff,timeOn,timeOff,band,operator_call;
   QString comments,name;
 
+  QMap<QString, QString> additionalFields;
+  foreach(auto field, m_additionalFieldsControls){
+      auto key = field->property("fieldKey").toString();
+      if(key.isEmpty()){
+          continue;
+      }
+      additionalFields[key] = field->text();
+  }
+
   hisCall=ui->call->text().toUpper();
   hisGrid=ui->grid->text().toUpper();
   mode = ui->mode->text().toUpper();
@@ -218,7 +240,8 @@ void LogQSO::accept()
   adifile.init(adifilePath);
 
   QByteArray ADIF {adifile.QSOToADIF (hisCall, hisGrid, mode, submode, rptSent, rptRcvd, m_dateTimeOn, m_dateTimeOff, band
-                                      , comments, name, strDialFreq, m_myCall, m_myGrid, operator_call)};
+                                      , comments, name, strDialFreq, m_myCall, m_myGrid, operator_call, additionalFields)};
+
   if (!adifile.addQSOToFile (ADIF))
   {
     MessageBox::warning_message (this, tr ("Log file error"),

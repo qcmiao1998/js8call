@@ -42,7 +42,7 @@ class ADIF
                                              , QString const& rptRcvd, QDateTime const& dateTimeOn, QDateTime const& dateTimeOff
                                              , QString const& band, QString const& comments, QString const& name
                                              , QString const& strDialFreq, QString const& m_myCall, QString const& m_myGrid
-                                             , QString const& operator_call);
+                                             , QString const& operator_call, const QMap<QString, QString> &additionalFields);
 
 
     struct QSO
