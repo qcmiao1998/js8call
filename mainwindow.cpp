@@ -6734,11 +6734,14 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
       auto host = m_config.n3fjp_server_name();
       auto port = m_config.n3fjp_server_port();
 
-      if(m_n3fjpClient->sendNetworkMessage(host, port, data.toLocal8Bit(), 100)){
+      if(m_n3fjpClient->sendNetworkMessage(host, port, data.toLocal8Bit(), true, 500)){
           QTimer::singleShot(300, this, [this, host, port](){
-            m_n3fjpClient->sendNetworkMessage(host, port, "<CMD><CHECKLOG></CMD>", 100);
-            m_n3fjpClient->sendNetworkMessage(host, port, "\r\n", 100);
+            m_n3fjpClient->sendNetworkMessage(host, port, "<CMD><CHECKLOG></CMD>", true, 100);
+            m_n3fjpClient->sendNetworkMessage(host, port, "\r\n", true, 100);
           });
+      } else {
+          MessageBox::warning_message (this, tr ("Error sending log to N3FJP"),
+                                       tr ("Write failed for \"%1:%2\"").arg (host).arg(port));
       }
   }
 
