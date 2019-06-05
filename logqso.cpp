@@ -56,6 +56,10 @@ bool LogQSO::acceptText(QString text){
     return true;
 }
 
+QString LogQSO::currentCall(){
+    return ui->call->text().trimmed();
+}
+
 void LogQSO::on_start_now_button_pressed(){
   ui->start_date_time->setDateTime(DriftingDateTime::currentDateTimeUtc());
 }
@@ -296,6 +300,8 @@ void LogQSO::accept()
   }
 
   //Clean up and finish logging
+  ui->call->clear();
+
   Q_EMIT acceptQSO (m_dateTimeOff, hisCall, hisGrid, m_dialFreq, mode, submode, rptSent, rptRcvd, comments, name,m_dateTimeOn, operator_call, m_myCall, m_myGrid, ADIF, additionalFields);
 
   QDialog::accept();

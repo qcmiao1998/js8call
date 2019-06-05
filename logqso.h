@@ -38,6 +38,7 @@ public:
 public slots:
   void accept();
   bool acceptText(QString text);
+  QString currentCall();
 
 signals:
   void acceptQSO (QDateTime const& QSO_date_off, QString const& call, QString const& grid

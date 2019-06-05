@@ -6627,6 +6627,12 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
 
   QString comments = ui->textEditRX->textCursor().selectedText();
 
+  // don't reset the log window if the call hasn't changed.
+  if(!m_logDlg->currentCall().isEmpty() && call.trimmed() == m_logDlg->currentCall()){
+      m_logDlg->show();
+      return;
+  }
+
   m_logDlg->initLogQSO (call.trimmed(), grid.trimmed(), m_modeTx == "FT8" ? "JS8" : m_modeTx, m_rptSent, m_rptRcvd,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),
                         m_config.my_callsign(), m_config.my_grid(),
