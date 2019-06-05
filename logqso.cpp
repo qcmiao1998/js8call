@@ -81,14 +81,23 @@ void LogQSO::createAdditionalField(QString key, QString value){
     connect(c, &QComboBox::currentTextChanged, this, [this, l](const QString &text){
        l->setProperty("fieldKey", QVariant(text));
     });
-    if(!key.isEmpty()){
-        c->setCurrentText(key);
-    }
+    c->setCurrentText(key);
 
     auto layout = static_cast<QFormLayout*>(ui->additionalFields->layout());
     layout->removeItem(ui->field_button_layout);
     layout->addRow(c, l);
     layout->addItem(ui->field_button_layout);
+
+    // set tab ordering
+    if(m_additionalFieldsControls.isEmpty()){
+        setTabOrder(ui->cbComments, c);
+    } else {
+        setTabOrder(m_additionalFieldsControls.last(), c);
+    }
+    setTabOrder(c, l);
+    setTabOrder(l, ui->add_new_field_button);
+    c->setFocus();
+
     m_additionalFieldsControls.append(l);
 }
 
