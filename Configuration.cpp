@@ -1024,7 +1024,7 @@ QString Configuration::my_info() const
 
 QString Configuration::cq_message() const
 {
-    return m_->cq_.trimmed();
+    return m_->cq_.trimmed().replace("CQCQCQ", "CQ CQ CQ"); // deprecate legacy
 }
 
 QString Configuration::reply_message() const
@@ -1406,7 +1406,7 @@ void Configuration::impl::initialize_models ()
   ui_->auto_blacklist_line_edit->setText(auto_blacklist_.join(", "));
   ui_->eot_line_edit->setText(eot_.trimmed().left(2));
   ui_->info_message_line_edit->setText (my_info_.toUpper());
-  ui_->cq_message_line_edit->setText(cq_.toUpper());
+  ui_->cq_message_line_edit->setText(cq_.toUpper().replace("CQCQCQ", "CQ CQ CQ"));
   ui_->reply_message_line_edit->setText (reply_.toUpper());
   ui_->use_dynamic_grid->setChecked(use_dynamic_info_);
 
@@ -1561,7 +1561,7 @@ void Configuration::impl::read_settings ()
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
   eot_ = settings_->value("EOTCharacter", QString{"\u2662"}).toString().trimmed().left(2);
   my_info_ = settings_->value("MyInfo", QString {}).toString();
-  cq_ = settings_->value("CQMessage", QString {"CQCQCQ <MYGRID4>"}).toString();
+  cq_ = settings_->value("CQMessage", QString {"CQ CQ CQ <MYGRID4>"}).toString();
   reply_ = settings_->value("Reply", QString {"HW CPY?"}).toString();
   next_color_cq_ = color_cq_ = settings_->value("colorCQ","#66ff66").toString();
   next_color_mycall_ = color_mycall_ = settings_->value("colorMyCall","#ff6666").toString();
