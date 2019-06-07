@@ -88,9 +88,7 @@ void LogQSO::createAdditionalField(QString key, QString value){
     c->setCurrentText(key);
 
     auto layout = static_cast<QFormLayout*>(ui->additionalFields->layout());
-    layout->removeItem(ui->field_button_layout);
     layout->addRow(c, l);
-    layout->addItem(ui->field_button_layout);
 
     // set tab ordering
     if(m_additionalFieldsControls.isEmpty()){
@@ -103,6 +101,7 @@ void LogQSO::createAdditionalField(QString key, QString value){
     c->setFocus();
 
     m_additionalFieldsControls.append(l);
+    ui->additionalFields->setVisible(true);
 }
 
 QMap<QString, QVariant> LogQSO::collectAdditionalFields(){
@@ -118,26 +117,25 @@ QMap<QString, QVariant> LogQSO::collectAdditionalFields(){
 }
 
 void LogQSO::resetAdditionalFields(){
-    if(m_additionalFieldsControls.isEmpty()){
-        return;
-    }
-
-    auto layout = static_cast<QFormLayout*>(ui->additionalFields->layout());
-    layout->removeItem(ui->field_button_layout);
+    if(!m_additionalFieldsControls.isEmpty()){
+        auto layout = static_cast<QFormLayout*>(ui->additionalFields->layout());
 
 #if QT_VERSION >= 0x050800
-    for(int i = 0, count = layout->rowCount(); i < count; i++){
-        layout->removeRow(0);
-    }
+        for(int i = 0, count = layout->rowCount(); i < count; i++){
+            layout->removeRow(0);
+        }
 #else
-    QLayoutItem *child;
-    while((child = layout->takeAt(0)) != 0){
-        delete child;
-    }
+        QLayoutItem *child;
+        while((child = layout->takeAt(0)) != 0){
+            delete child;
+        }
 #endif
 
-    layout->addItem(ui->field_button_layout);
-    m_additionalFieldsControls.clear();
+        m_additionalFieldsControls.clear();
+    }
+
+    setTabOrder(ui->cbComments, ui->add_new_field_button);
+    ui->additionalFields->setVisible(false);
 }
 
 void LogQSO::loadSettings ()

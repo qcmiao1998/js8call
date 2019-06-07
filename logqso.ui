@@ -41,9 +41,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>0</y>
+        <y>-53</y>
         <width>568</width>
-        <height>473</height>
+        <height>485</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -308,6 +308,19 @@
            </property>
           </layout>
          </item>
+         <item row="7" column="1">
+          <widget class="QLineEdit" name="sent">
+           <property name="maximumSize">
+            <size>
+             <width>75</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
          <item row="8" column="0">
           <widget class="QLabel" name="lab7">
            <property name="font">
@@ -439,20 +452,28 @@
            </property>
           </widget>
          </item>
-         <item row="7" column="1">
-          <widget class="QLineEdit" name="sent">
-           <property name="maximumSize">
-            <size>
-             <width>75</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="additionalFields">
+         <property name="title">
+          <string>Additional Fields</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_2"/>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="add_new_field_button">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Add New Field</string>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer">
@@ -468,40 +489,11 @@
         </spacer>
        </item>
        <item>
-        <widget class="QGroupBox" name="additionalFields">
-         <property name="title">
-          <string>Additional Fields</string>
+        <layout class="QHBoxLayout" name="field_button_layout" stretch="">
+         <property name="topMargin">
+          <number>0</number>
          </property>
-         <layout class="QFormLayout" name="formLayout_2">
-          <item row="0" column="1">
-           <layout class="QHBoxLayout" name="field_button_layout">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <spacer name="horizontalSpacer_5">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QPushButton" name="add_new_field_button">
-              <property name="text">
-               <string>Add New Field</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
+        </layout>
        </item>
       </layout>
      </widget>
