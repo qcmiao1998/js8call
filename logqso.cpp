@@ -106,6 +106,9 @@ void LogQSO::createAdditionalField(QString key, QString value){
     m_additionalFieldsControls.append(l);
     ui->additionalFields->setVisible(true);
     ui->additionalFields->adjustSize();
+
+    // update the window layout
+    updateGeometry();
 }
 
 QMap<QString, QVariant> LogQSO::collectAdditionalFields(){
@@ -121,6 +124,8 @@ QMap<QString, QVariant> LogQSO::collectAdditionalFields(){
 }
 
 void LogQSO::resetAdditionalFields(){
+    ui->additionalFields->setVisible(false);
+
     if(!m_additionalFieldsControls.isEmpty()){
         auto layout = static_cast<QFormLayout*>(ui->additionalFields->layout());
 
@@ -139,7 +144,7 @@ void LogQSO::resetAdditionalFields(){
     }
 
     setTabOrder(ui->cbComments, ui->add_new_field_button);
-    ui->additionalFields->setVisible(false);
+    updateGeometry();
 }
 
 void LogQSO::loadSettings ()
