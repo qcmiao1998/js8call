@@ -7,7 +7,6 @@
 
 const QStringList ADIF_FIELDS = {
     // ADIF 3.1.0 - pulled from http://www.adif.org/310/adx310.xsd on 2019-06-04
-    "USERDEF",
     "APP",
     "ADDRESS",
     "ADDRESS_INTL",
@@ -365,8 +364,14 @@ QByteArray ADIF::QSOToADIF(QString const& hisCall, QString const& hisGrid, QStri
               ">" + operator_call;
 
   foreach(auto key, additionalFields.keys()){
-      auto value = additionalFields[key].toString();
-      t += QString(" <%1:%2>%3").arg(key).arg(value.length()).arg(value);
+      auto k = key.toUpper();
+      auto value = additionalFields[k].toString();
+
+      if(ADIF_FIELDS.contains(k)){
+        t += QString(" <%1:%2>%3").arg(k).arg(value.length()).arg(value);
+      } else {
+        t += QString(" <APP_JS8CALL_%1:%2>%3").arg(k).arg(value.length()).arg(value);
+      }
   }
 
   return t.toLatin1 ();
