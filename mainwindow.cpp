@@ -967,6 +967,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto t = "UTC   dB   DT Freq    Message";
   ui->decodedTextLabel->setText(t);
   ui->decodedTextLabel2->setText(t);
+
+  displayDialFrequency();
   readSettings();            //Restore user's setup params
   m_audioThread.start (m_audioThreadPriority);
 
@@ -1639,7 +1641,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   pskSetLocal();
   aprsSetLocal();
 
-  clearActivity();
   displayActivity(true);
 
 #if TEST_FOX_WAVE_GEN
@@ -2041,6 +2042,7 @@ void MainWindow::writeSettings()
   m_settings->setValue("TimeDrift", ui->driftSpinBox->value());
   m_settings->setValue("ShowTooltips", ui->actionShow_Tooltips->isChecked());
   m_settings->setValue("ShowStatusbar", ui->statusBar->isVisible());
+  m_settings->setValue("RXActivity", ui->textEditRX->toHtml());
 
   m_settings->endGroup();
 
@@ -2091,6 +2093,8 @@ void MainWindow::writeSettings()
 
 
 
+
+
   // TODO: jsherer - need any other customizations?
   /*m_settings->setValue("PanelLeftGeometry", ui->tableWidgetRXAll->geometry());
   m_settings->setValue("PanelRightGeometry", ui->tableWidgetCalls->geometry());
@@ -2106,6 +2110,34 @@ void MainWindow::writeSettings()
         coeffs << coeff;
       }
     m_settings->setValue ("PhaseEqualizationCoefficients", QVariant {coeffs});
+  }
+  m_settings->endGroup();
+
+
+  auto now = DriftingDateTime::currentDateTimeUtc();
+  int callsignAging = m_config.callsign_aging();
+
+  m_settings->beginGroup("CallActivity");
+  m_settings->remove(""); // remove all keys in current group
+  foreach(auto cd, m_callActivity.values()){
+      if (cd.call.trimmed().isEmpty()){
+          continue;
+      }
+      if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
+          continue;
+      }
+      m_settings->setValue(cd.call.trimmed(), QVariantMap{
+        {"snr", QVariant(cd.snr)},
+        {"grid", QVariant(cd.grid)},
+        {"freq", QVariant(cd.freq)},
+#if CACHE_CALL_DATETIME_AS_STRINGS
+        {"ackTimestamp", QVariant(cd.ackTimestamp.toString("yyyy-MM-dd hh:mm:ss"))},
+        {"utcTimestamp", QVariant(cd.utcTimestamp.toString("yyyy-MM-dd hh:mm:ss"))},
+#else
+        {"ackTimestamp", QVariant(cd.ackTimestamp)},
+        {"utcTimestamp", QVariant(cd.utcTimestamp)},
+#endif
+      });
   }
   m_settings->endGroup();
 }
@@ -2158,6 +2190,7 @@ void MainWindow::readSettings()
   ui->actionShow_Tooltips->setChecked(m_settings->value("ShowTooltips", true).toBool());
   ui->actionShow_Statusbar->setChecked(m_settings->value("ShowStatusbar",true).toBool());
   ui->statusBar->setVisible(ui->actionShow_Statusbar->isChecked());
+  ui->textEditRX->setHtml(m_settings->value("RXActivity", "").toString());
 
   m_settings->endGroup();
 
@@ -2254,6 +2287,40 @@ void MainWindow::readSettings()
   m_framesAudioInputBuffered = m_settings->value ("Audio/InputBufferFrames", RX_SAMPLE_RATE / 10).toInt ();
   m_audioThreadPriority = static_cast<QThread::Priority> (m_settings->value ("Audio/ThreadPriority", QThread::HighPriority).toInt () % 8);
   m_settings->endGroup ();
+
+  m_settings->beginGroup("CallActivity");
+  foreach(auto call, m_settings->allKeys()){
+
+      auto values = m_settings->value(call).toMap();
+
+      auto snr = values.value("snr", -64).toInt();
+      auto grid = values.value("grid", "").toString();
+      auto freq = values.value("freq", 0).toInt();
+
+#if CACHE_CALL_DATETIME_AS_STRINGS
+      auto ackTimestampStr = values.value("ackTimestamp", "").toString();
+      auto ackTimestamp = QDateTime::fromString(ackTimestampStr, "yyyy-MM-dd hh:mm:ss");
+      ackTimestamp.setUtcOffset(0);
+
+      auto utcTimestampStr = values.value("utcTimestamp", "").toString();
+      auto utcTimestamp = QDateTime::fromString(utcTimestampStr, "yyyy-MM-dd hh:mm:ss");
+      utcTimestamp.setUtcOffset(0);
+#else
+      auto ackTimestamp = values.value("ackTimestamp").toDateTime();
+      auto utcTimestamp = values.value("utcTimestamp").toDateTime();
+#endif
+
+      CallDetail cd = {};
+      cd.call = call;
+      cd.snr = snr;
+      cd.grid = grid;
+      cd.freq = freq;
+      cd.ackTimestamp = ackTimestamp;
+      cd.utcTimestamp = utcTimestamp;
+
+      logCallActivity(cd, false);
+  }
+  m_settings->endGroup();
 
   if (displayMsgAvg) on_actionMessage_averaging_triggered();
 }
@@ -3176,14 +3243,17 @@ void MainWindow::displayDialFrequency (){
     if (m_lastBand != band_name){
         cacheActivity(m_lastBand);
 
+        // don't clear activity on startup
+        if(!m_lastBand.isEmpty()){
+            clearActivity();
+        }
+
         // only change this when necessary as we get called a lot and it
         // would trash any user input to the band combo box line edit
         ui->bandComboBox->setCurrentText (band_name);
         m_wideGraph->setRxBand (band_name);
         m_lastBand = band_name;
         band_changed(dial_frequency);
-
-        clearActivity();
 
         restoreActivity(m_lastBand);
     }
