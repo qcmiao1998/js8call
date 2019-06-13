@@ -462,6 +462,7 @@ private:
   MultiSettings * m_multi_settings;
   QPushButton * m_configurations_button;
   QSettings * m_settings;
+  bool m_settings_read;
   QScopedPointer<Ui::MainWindow> ui;
 
   // other windows
@@ -940,6 +941,7 @@ private:
   void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
   void aprsLogReport(int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
+  void updateCurrentBand();
   void displayDialFrequency ();
   void transmitDisplay (bool);
   void locationChange(QString const& location);

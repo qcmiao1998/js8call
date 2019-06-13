@@ -392,6 +392,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_multi_settings {multi_settings},
   m_configurations_button {0},
   m_settings {multi_settings->settings ()},
+  m_settings_read {false},
   ui(new Ui::MainWindow),
   m_config {temp_directory, m_settings, this},
   m_WSPR_band_hopping {m_settings, &m_config, this},
@@ -1651,7 +1652,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_txTextDirtyDebounce.setSingleShot(true);
   connect(&m_txTextDirtyDebounce, &QTimer::timeout, this, &MainWindow::refreshTextDisplay);
 
-  QTimer::singleShot(0, this, &MainWindow::initializeDummyData);
+  QTimer::singleShot(500, this, &MainWindow::initializeDummyData);
 
   // this must be the last statement of constructor
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
@@ -2190,8 +2191,7 @@ void MainWindow::readSettings()
   ui->actionShow_Tooltips->setChecked(m_settings->value("ShowTooltips", true).toBool());
   ui->actionShow_Statusbar->setChecked(m_settings->value("ShowStatusbar",true).toBool());
   ui->statusBar->setVisible(ui->actionShow_Statusbar->isChecked());
-  ui->textEditRX->setHtml(m_settings->value("RXActivity", "").toString());
-
+  ui->textEditRX->setHtml(m_config.reset_activity() ? "" : m_settings->value("RXActivity", "").toString());
   m_settings->endGroup();
 
   // do this outside of settings group because it uses groups internally
@@ -2288,41 +2288,47 @@ void MainWindow::readSettings()
   m_audioThreadPriority = static_cast<QThread::Priority> (m_settings->value ("Audio/ThreadPriority", QThread::HighPriority).toInt () % 8);
   m_settings->endGroup ();
 
-  m_settings->beginGroup("CallActivity");
-  foreach(auto call, m_settings->allKeys()){
+  if(m_config.reset_activity()){
+      // NOOP
+  } else {
+      m_settings->beginGroup("CallActivity");
+      foreach(auto call, m_settings->allKeys()){
 
-      auto values = m_settings->value(call).toMap();
+          auto values = m_settings->value(call).toMap();
 
-      auto snr = values.value("snr", -64).toInt();
-      auto grid = values.value("grid", "").toString();
-      auto freq = values.value("freq", 0).toInt();
+          auto snr = values.value("snr", -64).toInt();
+          auto grid = values.value("grid", "").toString();
+          auto freq = values.value("freq", 0).toInt();
 
 #if CACHE_CALL_DATETIME_AS_STRINGS
-      auto ackTimestampStr = values.value("ackTimestamp", "").toString();
-      auto ackTimestamp = QDateTime::fromString(ackTimestampStr, "yyyy-MM-dd hh:mm:ss");
-      ackTimestamp.setUtcOffset(0);
+          auto ackTimestampStr = values.value("ackTimestamp", "").toString();
+          auto ackTimestamp = QDateTime::fromString(ackTimestampStr, "yyyy-MM-dd hh:mm:ss");
+          ackTimestamp.setUtcOffset(0);
 
-      auto utcTimestampStr = values.value("utcTimestamp", "").toString();
-      auto utcTimestamp = QDateTime::fromString(utcTimestampStr, "yyyy-MM-dd hh:mm:ss");
-      utcTimestamp.setUtcOffset(0);
+          auto utcTimestampStr = values.value("utcTimestamp", "").toString();
+          auto utcTimestamp = QDateTime::fromString(utcTimestampStr, "yyyy-MM-dd hh:mm:ss");
+          utcTimestamp.setUtcOffset(0);
 #else
-      auto ackTimestamp = values.value("ackTimestamp").toDateTime();
-      auto utcTimestamp = values.value("utcTimestamp").toDateTime();
+          auto ackTimestamp = values.value("ackTimestamp").toDateTime();
+          auto utcTimestamp = values.value("utcTimestamp").toDateTime();
 #endif
 
-      CallDetail cd = {};
-      cd.call = call;
-      cd.snr = snr;
-      cd.grid = grid;
-      cd.freq = freq;
-      cd.ackTimestamp = ackTimestamp;
-      cd.utcTimestamp = utcTimestamp;
+          CallDetail cd = {};
+          cd.call = call;
+          cd.snr = snr;
+          cd.grid = grid;
+          cd.freq = freq;
+          cd.ackTimestamp = ackTimestamp;
+          cd.utcTimestamp = utcTimestamp;
 
-      logCallActivity(cd, false);
+          logCallActivity(cd, false);
+      }
+      m_settings->endGroup();
   }
-  m_settings->endGroup();
 
   if (displayMsgAvg) on_actionMessage_averaging_triggered();
+
+  m_settings_read = true;
 }
 
 void MainWindow::set_application_font (QFont const& font)
@@ -3228,6 +3234,38 @@ Radio::Frequency MainWindow::dialFrequency() {
         m_rigState.tx_frequency () : m_rigState.frequency ()};
 }
 
+void MainWindow::updateCurrentBand(){
+    QVariant state = ui->readFreq->property("state");
+    if(!state.isValid()){
+        return;
+    }
+
+    auto dial_frequency = dialFrequency();
+    auto const& band_name = m_config.bands ()->find(dial_frequency);
+
+    if (m_lastBand == band_name){
+        return;
+    }
+
+    cacheActivity(m_lastBand);
+
+    // clear activity on startup if asked or on when the previous band is not empty
+    if(m_config.reset_activity() || !m_lastBand.isEmpty()){
+        clearActivity();
+    }
+
+    // only change this when necessary as we get called a lot and it
+    // would trash any user input to the band combo box line edit
+    ui->bandComboBox->setCurrentText (band_name);
+    m_wideGraph->setRxBand (band_name);
+
+    qDebug() << "setting band" << band_name;
+    m_lastBand = band_name;
+
+    band_changed(dial_frequency);
+    restoreActivity(m_lastBand);
+}
+
 void MainWindow::displayDialFrequency (){
 #if 0
     qDebug() << "rx nominal" << m_freqNominal;
@@ -3240,48 +3278,6 @@ void MainWindow::displayDialFrequency (){
 
     // lookup band
     auto const& band_name = m_config.bands ()->find (dial_frequency);
-    if (m_lastBand != band_name){
-        cacheActivity(m_lastBand);
-
-        // don't clear activity on startup
-        if(!m_lastBand.isEmpty()){
-            clearActivity();
-        }
-
-        // only change this when necessary as we get called a lot and it
-        // would trash any user input to the band combo box line edit
-        ui->bandComboBox->setCurrentText (band_name);
-        m_wideGraph->setRxBand (band_name);
-        m_lastBand = band_name;
-        band_changed(dial_frequency);
-
-        restoreActivity(m_lastBand);
-    }
-
-    // TODO: jsherer - this doesn't validate anything else right? we are disabling this because as long as you're in a band, it's valid.
-    /*
-    // search working frequencies for one we are within 10kHz of (1 Mhz
-    // of on VHF and up)
-    bool valid {false};
-    quint64 min_offset {99999999};
-    for (auto const& item : *m_config.frequencies ())
-      {
-        // we need to do specific checks for above and below here to
-        // ensure that we can use unsigned Radio::Frequency since we
-        // potentially use the full 64-bit unsigned range.
-        auto const& working_frequency = item.frequency_;
-        auto const& offset = dial_frequency > working_frequency ?
-          dial_frequency - working_frequency :
-          working_frequency - dial_frequency;
-        if (offset < min_offset) {
-          min_offset = offset;
-        }
-      }
-    if (min_offset < 10000u || (m_config.enable_VHF_features() && min_offset < 1000000u)) {
-      valid = true;
-    }
-    */
-
     bool valid = !band_name.isEmpty();
 
     update_dynamic_property (ui->labDialFreq, "oob", !valid);
@@ -5874,6 +5870,7 @@ void MainWindow::restoreActivity(QString key){
 }
 
 void MainWindow::clearActivity(){
+    qDebug() << "clear activity";
     m_bandActivity.clear();
     m_callActivity.clear();
     m_callSeenHeartbeat.clear();
@@ -8871,6 +8868,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
       m_tx_when_ready = false;
   }
   m_rigState = s;
+
   auto old_freqNominal = m_freqNominal;
   if (!old_freqNominal)
     {
@@ -8878,6 +8876,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
       // with bogus Tx frequencies
       m_freqNominal = s.frequency ();
     }
+
   if (old_state.online () == false && s.online () == true)
     {
       // initializing
@@ -8885,6 +8884,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
 
       ui->autoReplyButton->setChecked(!m_config.autoreply_off_at_startup());
     }
+
   if (s.frequency () != old_state.frequency () || s.split () != m_splitMode)
     {
       m_splitMode = s.split ();
@@ -8943,6 +8943,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
   // ensure frequency display is correct
   if (m_astroWidget && old_state.ptt () != s.ptt ()) setRig ();
 
+  updateCurrentBand();
   displayDialFrequency ();
   update_dynamic_property (ui->readFreq, "state", "ok");
   ui->readFreq->setEnabled (false);

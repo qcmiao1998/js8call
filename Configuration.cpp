@@ -629,6 +629,7 @@ private:
   qint32 RxBandwidth_;
   double degrade_;
   double txDelay_;
+  bool reset_activity_;
   bool check_for_updates_;
   bool id_after_73_;
   bool tx_qsy_allowed_;
@@ -753,6 +754,7 @@ qint32 Configuration::aggressive() const {return m_->aggressive_;}
 double Configuration::degrade() const {return m_->degrade_;}
 double Configuration::txDelay() const {return m_->txDelay_;}
 qint32 Configuration::RxBandwidth() const {return m_->RxBandwidth_;}
+bool Configuration::reset_activity() const { return m_->reset_activity_;}
 bool Configuration::check_for_updates() const { return m_->check_for_updates_; }
 bool Configuration::id_after_73 () const {return m_->id_after_73_;}
 bool Configuration::tx_qsy_allowed () const {return m_->tx_qsy_allowed_;}
@@ -1432,6 +1434,7 @@ void Configuration::impl::initialize_models ()
   ui_->sound_cq_path_display_label->setText(sound_cq_path_);
   ui_->sound_dm_path_display_label->setText(sound_dm_path_);
   ui_->sound_am_path_display_label->setText(sound_am_path_);
+  ui_->reset_activity_check_box->setChecked (reset_activity_);
   ui_->checkForUpdates_checkBox->setChecked (check_for_updates_);
   ui_->CW_id_after_73_check_box->setChecked (id_after_73_);
   ui_->tx_qsy_check_box->setChecked (tx_qsy_allowed_);
@@ -1716,6 +1719,7 @@ void Configuration::impl::read_settings ()
   monitor_off_at_startup_ = settings_->value ("MonitorOFF", false).toBool ();
   monitor_last_used_ = settings_->value ("MonitorLastUsed", false).toBool ();
   spot_to_reporting_networks_ = settings_->value ("PSKReporter", true).toBool ();
+  reset_activity_ = settings_->value("ResetActivity", false).toBool();
   check_for_updates_ = settings_->value("CheckForUpdates", true).toBool();
   id_after_73_ = settings_->value ("After73", false).toBool ();
   tx_qsy_allowed_ = settings_->value ("TxQSYAllowed", false).toBool ();
@@ -1895,6 +1899,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MonitorOFF", monitor_off_at_startup_);
   settings_->setValue ("MonitorLastUsed", monitor_last_used_);
   settings_->setValue ("PSKReporter", spot_to_reporting_networks_);
+  settings_->setValue ("ResetActivity", reset_activity_);
   settings_->setValue ("CheckForUpdates", check_for_updates_);
   settings_->setValue ("After73", id_after_73_);
   settings_->setValue ("TxQSYAllowed", tx_qsy_allowed_);
@@ -2439,6 +2444,7 @@ void Configuration::impl::accept ()
   aggressive_ = ui_->sbAggressive->value ();
   degrade_ = ui_->sbDegrade->value ();
   RxBandwidth_ = ui_->sbBandwidth->value ();
+  reset_activity_ = ui_->reset_activity_check_box->isChecked();
   check_for_updates_ = ui_->checkForUpdates_checkBox->isChecked();
   id_after_73_ = ui_->CW_id_after_73_check_box->isChecked ();
   tx_qsy_allowed_ = ui_->tx_qsy_check_box->isChecked ();

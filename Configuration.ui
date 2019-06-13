@@ -36,7 +36,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget_2">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="stationTab">
           <attribute name="title">
@@ -279,7 +279,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>724</width>
-                <height>779</height>
+                <height>808</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -398,6 +398,13 @@
                    <widget class="QCheckBox" name="spellcheck_check_box">
                     <property name="text">
                      <string>Suggest alternative word choices for more efficient message transmission</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="reset_activity_check_box">
+                    <property name="text">
+                     <string>Reset the Band Activity, Call Activity, and RX history at startup</string>
                     </property>
                    </widget>
                   </item>
