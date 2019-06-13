@@ -79,6 +79,7 @@ bool LogBook::findCallDetails(
                     /*in*/
                     const QString call,
                     /*out*/
+                    QString &grid,
                     QString &date,
                     QString &name,
                     QString &comment) const
@@ -93,6 +94,7 @@ bool LogBook::findCallDetails(
     }
 
     foreach(auto qso, qsos){
+        if(grid.isEmpty() && !qso.grid.isEmpty()) grid = qso.grid;
         if(date.isEmpty() && !qso.date.isEmpty()) date = qso.date;
         if(name.isEmpty() && !qso.name.isEmpty()) name = qso.name;
         if(comment.isEmpty() && !qso.comment.isEmpty()) comment = qso.comment;
@@ -101,9 +103,9 @@ bool LogBook::findCallDetails(
     return true;
 }
 
-void LogBook::addAsWorked(const QString call, const QString band, const QString mode, const QString submode, const QString date, const QString name, const QString comment)
+void LogBook::addAsWorked(const QString call, const QString band, const QString mode, const QString submode, const QString grid, const QString date, const QString name, const QString comment)
 {
-  _log.add(call,band,mode,submode,date,name,comment);
+  _log.add(call,band,mode,submode,grid,date,name,comment);
   QString countryName = _countries.find(call);
   if (countryName.length() > 0)
     _worked.setAsWorked(countryName);

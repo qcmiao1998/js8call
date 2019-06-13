@@ -30,7 +30,7 @@ class ADIF
 
 	void init(QString const& filename);
 	void load();
-    void add(QString const& call, QString const& band, QString const& mode, const QString &submode, QString const& date, const QString &name, const QString &comment);
+    void add(QString const& call, QString const& band, QString const& mode, const QString &submode, QString const& grid, QString const& date, const QString &name, const QString &comment);
     bool match(QString const& call, QString const& band) const;
     QList<ADIF::QSO> find(QString const& call) const;
 	QList<QString> getCallList() const;
@@ -48,7 +48,7 @@ class ADIF
 
     struct QSO
     {
-      QString call,band,mode,submode,date,name,comment;
+      QString call,band,mode,submode,grid,date,name,comment;
     };
 
     private:

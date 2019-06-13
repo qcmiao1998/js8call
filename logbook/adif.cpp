@@ -258,6 +258,7 @@ void ADIF::load()
                , extractField (record, "BAND")
                , extractField (record, "MODE")
                , extractField (record, "SUBMODE")
+               , extractField (record, "GRIDSQUARE")
                , extractField (record, "QSO_DATE")
                , extractField (record, "NAME")
                , extractField (record, "COMMENT")
@@ -268,13 +269,14 @@ void ADIF::load()
 }
 
 
-void ADIF::add(QString const& call, QString const& band, QString const& mode, QString const& submode, QString const& date, QString const& name, QString const& comment)
+void ADIF::add(QString const& call, QString const& band, QString const& mode, QString const& submode, QString const &grid, QString const& date, QString const& name, QString const& comment)
 {
     QSO q;
     q.call = call;
     q.band = band;
     q.mode = mode;
     q.submode = submode;
+    q.grid = grid;
     q.date = date;
     q.name = name;
     q.comment = comment;

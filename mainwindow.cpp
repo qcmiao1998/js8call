@@ -6715,7 +6715,7 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
                             , QString const& my_call, QString const& my_grid, QByteArray const& ADIF, QMap<QString, QVariant> const &additionalFields)
 {
   QString date = QSO_date_on.toString("yyyyMMdd");
-  m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), mode, submode, date, name, comments);
+  m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), mode, submode, grid, date, name, comments);
 
   // Log to JS8Call API
   if(m_config.udpEnabled()){
@@ -11811,12 +11811,19 @@ void MainWindow::displayCallActivity() {
                 workedBeforeItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
                 ui->tableWidgetCalls->setItem(row, col++, workedBeforeItem);
 
+                QString logDetailGrid;
                 QString logDetailDate;
                 QString logDetailName;
                 QString logDetailComment;
 
-                if(showColumn("call", "log") || showColumn("call", "logName") || showColumn("call", "logComment")){
-                    m_logBook.findCallDetails(d.call, logDetailDate, logDetailName, logDetailComment);
+                if(showColumn("call", "grid") || showColumn("call", "log") || showColumn("call", "logName") || showColumn("call", "logComment")){
+                    m_logBook.findCallDetails(d.call, logDetailGrid, logDetailDate, logDetailName, logDetailComment);
+                }
+
+                if(gridItem->text().isEmpty() || !logDetailGrid.isEmpty()){
+                    gridItem->setText(logDetailGrid.trimmed().left(4));
+                    gridItem->setToolTip(logDetailGrid.trimmed());
+                    distanceItem->setText(calculateDistance(logDetailGrid.trimmed()));
                 }
 
                 if(!logDetailDate.isEmpty()){
