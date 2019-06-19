@@ -11815,15 +11815,21 @@ void MainWindow::displayCallActivity() {
                 QString logDetailDate;
                 QString logDetailName;
                 QString logDetailComment;
+                bool gridItemEmpty = gridItem->text().isEmpty();
 
-                if(showColumn("call", "grid") || showColumn("call", "log") || showColumn("call", "logName") || showColumn("call", "logComment")){
+                if((gridItemEmpty && showColumn("call", "grid")) || showColumn("call", "log") || showColumn("call", "logName") || showColumn("call", "logComment")){
                     m_logBook.findCallDetails(d.call, logDetailGrid, logDetailDate, logDetailName, logDetailComment);
                 }
 
-                if(gridItem->text().isEmpty() || !logDetailGrid.isEmpty()){
+                if(gridItemEmpty && !logDetailGrid.isEmpty()){
                     gridItem->setText(logDetailGrid.trimmed().left(4));
                     gridItem->setToolTip(logDetailGrid.trimmed());
                     distanceItem->setText(calculateDistance(logDetailGrid.trimmed()));
+
+                    // update the call activity cache with the loaded grid
+                    if(m_callActivity.contains(d.call)){
+                        m_callActivity[call].grid = logDetailGrid.trimmed();
+                    }
                 }
 
                 if(!logDetailDate.isEmpty()){
