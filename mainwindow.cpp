@@ -4367,8 +4367,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                     // it is not processed elsewhere, so we need to just log it here.
                     logCallActivity(cd, true);
 
-                    // play cq notification
-                    playSoundNotification(m_config.sound_cq_path());
+                    // TODO: jsherer - notification for cq?
 
                 } else {
                     // convert HEARTBEAT to a directed command and process...
@@ -4595,7 +4594,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
   // See MainWindow::postDecode for displaying the latest decodes
 }
 
-void MainWindow::playSoundNotification(const QString &path){
+void MainWindow::playSoundFile(const QString &path){
     if(path.isEmpty()){
         return;
     }
@@ -10485,8 +10484,7 @@ void MainWindow::processCommandActivity() {
                 // if we've received a message to be displayed, we should bump the repeat buttons...
                 resetAutomaticIntervalTransmissions(true, false);
 
-                // and we should play the sound notification if there is one...
-                playSoundNotification(m_config.sound_dm_path());
+                // TODO: jsherer - notification for direct message?
             }
         }
 
@@ -11212,7 +11210,7 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
         }
     });
 
-    playSoundNotification(m_config.sound_am_path());
+    // TODO: jsherer - notification for alert?
 
     msgBox->setModal(false);
     msgBox->show();
