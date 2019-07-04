@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>7</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -3291,7 +3291,7 @@ QListView::item:hover {
                <item>
                 <widget class="QLabel" name="label_25">
                  <property name="text">
-                  <string>Highlight Activity Containing These Words (comma separated):</string>
+                  <string>Highlight Activity Containing These Words or Callsigns (comma separated):</string>
                  </property>
                 </widget>
                </item>
