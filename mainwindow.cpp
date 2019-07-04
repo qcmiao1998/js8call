@@ -11536,35 +11536,26 @@ void MainWindow::displayBandActivity() {
                 }
                 textItem->setTextAlignment(flag);
 
-                if (
-                    Varicode::startsWithCQ(text.last()) ||
-                    text.last().contains(QRegularExpression {"\\b(CQCQCQ|CQ)\\b"})
-                ){
-                    offsetItem->setBackground(QBrush(m_config.color_CQ()));
-                    tdriftItem->setBackground(QBrush(m_config.color_CQ()));
-                    ageItem->setBackground(QBrush(m_config.color_CQ()));
-                    snrItem->setBackground(QBrush(m_config.color_CQ()));
-                    textItem->setBackground(QBrush(m_config.color_CQ()));
-                }
-
-                bool isDirectedAllCall = false;
-
-                // TODO: jsherer - there's a potential here for a previous allcall to poison the highlight.
-                if (
-                    (isDirectedOffset(offset, &isDirectedAllCall) && !isDirectedAllCall) || isMyCallIncluded(text.last())
-                ) {
-                    offsetItem->setBackground(QBrush(m_config.color_MyCall()));
-                    tdriftItem->setBackground(QBrush(m_config.color_MyCall()));
-                    ageItem->setBackground(QBrush(m_config.color_MyCall()));
-                    snrItem->setBackground(QBrush(m_config.color_MyCall()));
-                    textItem->setBackground(QBrush(m_config.color_MyCall()));
-                }
-
                 ui->tableWidgetRXAll->setItem(row, col++, textItem);
 
                 if (isOffsetSelected) {
                     for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
                         ui->tableWidgetRXAll->item(row, i)->setSelected(true);
+                    }
+                }
+
+                bool isDirectedAllCall = false;
+                if(
+                    (isDirectedOffset(offset, &isDirectedAllCall) && !isDirectedAllCall) || isMyCallIncluded(text.last())
+                ){
+                    for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
+                        ui->tableWidgetRXAll->item(row, i)->setBackground(QBrush(m_config.color_MyCall()));
+                    }
+                }
+
+                if (!text.isEmpty() && m_config.highlight_words().intersects(QSet<QString>::fromList(text.last().replace(":", " ").replace(">"," ").split(" ")))){
+                    for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
+                        ui->tableWidgetRXAll->item(row, i)->setBackground(QBrush(m_config.color_CQ()));
                     }
                 }
             }
@@ -11861,6 +11852,12 @@ void MainWindow::displayCallActivity() {
             if (isCallSelected) {
                 for(int i = 0; i < ui->tableWidgetCalls->columnCount(); i++){
                     ui->tableWidgetCalls->item(row, i)->setSelected(true);
+                }
+            }
+
+            if (m_config.highlight_words().contains(call)){
+                for(int i = 0; i < ui->tableWidgetCalls->columnCount(); i++){
+                    ui->tableWidgetCalls->item(row, i)->setBackground(QBrush(m_config.color_CQ()));
                 }
             }
         }

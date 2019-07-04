@@ -591,6 +591,7 @@ private:
   QStringList my_groups_;
   QStringList auto_whitelist_;
   QStringList auto_blacklist_;
+  QStringList highlight_words_;
   QString eot_;
   QString my_info_;
   QString cq_;
@@ -1010,6 +1011,10 @@ QSet<QString> Configuration::auto_blacklist() const {
     return QSet<QString>::fromList(m_->auto_blacklist_);
 }
 
+QSet<QString> Configuration::highlight_words() const {
+    return QSet<QString>::fromList(m_->highlight_words_);
+}
+
 QString Configuration::eot() const {
     return m_->eot_;
 }
@@ -1406,6 +1411,7 @@ void Configuration::impl::initialize_models ()
   ui_->groups_line_edit->setText(my_groups_.join(", "));
   ui_->auto_whitelist_line_edit->setText(auto_whitelist_.join(", "));
   ui_->auto_blacklist_line_edit->setText(auto_blacklist_.join(", "));
+  ui_->highlightTextEdit->setText(highlight_words_.join(", "));
   ui_->eot_line_edit->setText(eot_.trimmed().left(2));
   ui_->info_message_line_edit->setText (my_info_.toUpper());
   ui_->cq_message_line_edit->setText(cq_.toUpper().replace("CQCQCQ", "CQ CQ CQ"));
@@ -1560,6 +1566,7 @@ void Configuration::impl::read_settings ()
   my_groups_ = settings_->value("MyGroups", QStringList{}).toStringList();
   auto_whitelist_ = settings_->value("AutoWhitelist", QStringList{}).toStringList();
   auto_blacklist_ = settings_->value("AutoBlacklist", QStringList{}).toStringList();
+  highlight_words_ = settings_->value("HighlightWords", QStringList{"CQ"}).toStringList();
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
   eot_ = settings_->value("EOTCharacter", QString{"\u2662"}).toString().trimmed().left(2);
@@ -1830,6 +1837,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MyGroups", my_groups_);
   settings_->setValue ("AutoWhitelist", auto_whitelist_);
   settings_->setValue ("AutoBlacklist", auto_blacklist_);
+  settings_->setValue ("HighlightWords", highlight_words_);
   settings_->setValue ("EOTCharacter", eot_);
   settings_->setValue ("MyInfo", my_info_);
   settings_->setValue ("CQMessage", cq_);
@@ -2125,7 +2133,7 @@ QStringList splitGroups(QString groupsString, bool filter){
     return groups;
 }
 
-QStringList splitCalls(QString callsString){
+QStringList splitWords(QString callsString){
     QStringList calls;
     if(callsString.isEmpty()){
         return calls;
@@ -2159,7 +2167,7 @@ bool Configuration::impl::validate ()
       }
   }
 
-  foreach(auto call, splitCalls(ui_->auto_whitelist_line_edit->text().toUpper().trimmed())){
+  foreach(auto call, splitWords(ui_->auto_whitelist_line_edit->text().toUpper().trimmed())){
       if(!Varicode::isValidCallsign(call, nullptr)){
           MessageBox::critical_message (this, QString("%1 is not a valid callsign to whitelist").arg(call));
           return false;
@@ -2429,8 +2437,9 @@ void Configuration::impl::accept ()
   my_callsign_ = ui_->callsign_line_edit->text ().toUpper().trimmed();
   my_grid_ = ui_->grid_line_edit->text ().toUpper().trimmed();
   my_groups_ = splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), true);
-  auto_whitelist_ = splitCalls(ui_->auto_whitelist_line_edit->text().toUpper().trimmed());
-  auto_blacklist_ = splitCalls(ui_->auto_blacklist_line_edit->text().toUpper().trimmed());
+  auto_whitelist_ = splitWords(ui_->auto_whitelist_line_edit->text().toUpper().trimmed());
+  auto_blacklist_ = splitWords(ui_->auto_blacklist_line_edit->text().toUpper().trimmed());
+  highlight_words_ = splitWords(ui_->highlightTextEdit->toPlainText().toUpper().trimmed());
   cq_ = ui_->cq_message_line_edit->text().toUpper();
   reply_ = ui_->reply_message_line_edit->text().toUpper();
   eot_ = ui_->eot_line_edit->text().trimmed().left(2);
