@@ -11551,7 +11551,8 @@ void MainWindow::displayBandActivity() {
                     }
                 }
 
-                if (!text.isEmpty() && m_config.highlight_words().intersects(QSet<QString>::fromList(text.last().replace(":", " ").replace(">"," ").split(" ")))){
+                auto matchingWords = m_config.highlight_words() & QSet<QString>::fromList(joined.replace(":", " ").replace(">"," ").split(" "));
+                if (!text.isEmpty() && !matchingWords.isEmpty()){
                     for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
                         ui->tableWidgetRXAll->item(row, i)->setBackground(QBrush(m_config.color_CQ()));
                     }
