@@ -467,7 +467,8 @@ private:
   Q_SLOT void on_calibration_slope_ppm_spin_box_valueChanged (double);
   Q_SLOT void handle_transceiver_update (TransceiverState const&, unsigned sequence_number);
   Q_SLOT void handle_transceiver_failure (QString const& reason);
-  Q_SLOT void on_pbCQmsg_clicked();
+  Q_SLOT void on_primaryHighlightButton_clicked();
+  Q_SLOT void on_secondaryHighlightButton_clicked();
   Q_SLOT void on_pbMyCall_clicked();
   Q_SLOT void on_tableBackgroundButton_clicked();
   Q_SLOT void on_tableSelectedRowBackgroundButton_clicked();
@@ -578,15 +579,18 @@ private:
   QStringList my_groups_;
   QStringList auto_whitelist_;
   QStringList auto_blacklist_;
-  QStringList highlight_words_;
+  QStringList primary_highlight_words_;
+  QStringList secondary_highlight_words_;
   QString eot_;
   QString my_info_;
   QString cq_;
   QString reply_;
   int callsign_aging_;
   int activity_aging_;
-  QColor color_cq_;
-  QColor next_color_cq_;
+  QColor color_primary_highlight_;
+  QColor next_color_primary_highlight_;
+  QColor color_secondary_highlight_;
+  QColor next_color_secondary_highlight_;
   QColor color_mycall_;
   QColor next_color_mycall_;
 
@@ -722,7 +726,8 @@ QString Configuration::my_callsign () const {return m_->my_callsign_;}
 QColor Configuration::color_table_background() const { return m_->color_table_background_; }
 QColor Configuration::color_table_highlight() const  { return m_->color_table_highlight_; }
 QColor Configuration::color_table_foreground() const { return m_->color_table_foreground_; }
-QColor Configuration::color_CQ () const {return m_->color_cq_;}
+QColor Configuration::color_primary_highlight () const {return m_->color_primary_highlight_;}
+QColor Configuration::color_secondary_highlight () const {return m_->color_secondary_highlight_;}
 QColor Configuration::color_MyCall () const {return m_->color_mycall_;}
 QColor Configuration::color_rx_background () const {return m_->color_rx_background_;}
 QColor Configuration::color_rx_foreground () const {return m_->color_rx_foreground_;}
@@ -995,8 +1000,12 @@ QSet<QString> Configuration::auto_blacklist() const {
     return QSet<QString>::fromList(m_->auto_blacklist_);
 }
 
-QSet<QString> Configuration::highlight_words() const {
-    return QSet<QString>::fromList(m_->highlight_words_);
+QSet<QString> Configuration::primary_highlight_words() const {
+    return QSet<QString>::fromList(m_->primary_highlight_words_);
+}
+
+QSet<QString> Configuration::secondary_highlight_words() const {
+    return QSet<QString>::fromList(m_->secondary_highlight_words_);
 }
 
 QString Configuration::eot() const {
@@ -1395,16 +1404,19 @@ void Configuration::impl::initialize_models ()
   ui_->groups_line_edit->setText(my_groups_.join(", "));
   ui_->auto_whitelist_line_edit->setText(auto_whitelist_.join(", "));
   ui_->auto_blacklist_line_edit->setText(auto_blacklist_.join(", "));
-  ui_->highlightTextEdit->setText(highlight_words_.join(", "));
+  ui_->primaryHighlightLineEdit->setText(primary_highlight_words_.join(", "));
+  ui_->secondaryHighlightLineEdit->setText(secondary_highlight_words_.join(", "));
   ui_->eot_line_edit->setText(eot_.trimmed().left(2));
   ui_->info_message_line_edit->setText (my_info_.toUpper());
   ui_->cq_message_line_edit->setText(cq_.toUpper().replace("CQCQCQ", "CQ CQ CQ"));
   ui_->reply_message_line_edit->setText (reply_.toUpper());
   ui_->use_dynamic_grid->setChecked(use_dynamic_info_);
 
+  ui_->tableForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_background_.name()).arg(next_color_table_foreground_.name()));
   ui_->tableBackgroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_background_.name()).arg(next_color_table_foreground_.name()));
   ui_->tableSelectionBackgroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_highlight_.name()).arg(next_color_table_foreground_.name()));
-  ui_->labCQ->setStyleSheet(QString("background: %1; color: %2").arg(next_color_cq_.name()).arg(next_color_table_foreground_.name()));
+  ui_->primaryHighlightLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_primary_highlight_.name()).arg(next_color_table_foreground_.name()));
+  ui_->secondaryHighlightLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_secondary_highlight_.name()).arg(next_color_table_foreground_.name()));
   ui_->labMyCall->setStyleSheet(QString("background: %1; color: %2").arg(next_color_mycall_.name()).arg(next_color_table_foreground_.name()));
 
   ui_->rxLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_rx_background_.name()).arg(color_rx_foreground_.name()));
@@ -1547,14 +1559,16 @@ void Configuration::impl::read_settings ()
   my_groups_ = settings_->value("MyGroups", QStringList{}).toStringList();
   auto_whitelist_ = settings_->value("AutoWhitelist", QStringList{}).toStringList();
   auto_blacklist_ = settings_->value("AutoBlacklist", QStringList{}).toStringList();
-  highlight_words_ = settings_->value("HighlightWords", QStringList{"CQ"}).toStringList();
+  primary_highlight_words_ = settings_->value("PrimaryHighlightWords", QStringList{"CQ"}).toStringList();
+  secondary_highlight_words_ = settings_->value("SecondaryHighlightWords", QStringList{}).toStringList();
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
   eot_ = settings_->value("EOTCharacter", QString{"\u2662"}).toString().trimmed().left(2);
   my_info_ = settings_->value("MyInfo", QString {}).toString();
   cq_ = settings_->value("CQMessage", QString {"CQ CQ CQ <MYGRID4>"}).toString();
   reply_ = settings_->value("Reply", QString {"HW CPY?"}).toString();
-  next_color_cq_ = color_cq_ = settings_->value("colorCQ","#66ff66").toString();
+  next_color_primary_highlight_ = color_primary_highlight_ = settings_->value("colorPrimary", settings_->value("colorCQ","#66ff66").toString()).toString();
+  next_color_secondary_highlight_ = color_secondary_highlight_ = settings_->value("colorSecondary","#ffff66").toString();
   next_color_mycall_ = color_mycall_ = settings_->value("colorMyCall","#ff6666").toString();
   next_color_rx_background_ = color_rx_background_ = settings_->value("color_rx_background","#ffeaa7").toString();
   next_color_rx_foreground_ = color_rx_foreground_ = settings_->value("color_rx_foreground","#000000").toString();
@@ -1815,14 +1829,16 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MyGroups", my_groups_);
   settings_->setValue ("AutoWhitelist", auto_whitelist_);
   settings_->setValue ("AutoBlacklist", auto_blacklist_);
-  settings_->setValue ("HighlightWords", highlight_words_);
+  settings_->setValue ("PrimaryHighlightWords", primary_highlight_words_);
+  settings_->setValue ("SecondaryHighlightWords", secondary_highlight_words_);
   settings_->setValue ("EOTCharacter", eot_);
   settings_->setValue ("MyInfo", my_info_);
   settings_->setValue ("CQMessage", cq_);
   settings_->setValue ("Reply", reply_);
   settings_->setValue ("CallsignAging", callsign_aging_);
   settings_->setValue ("ActivityAging", activity_aging_);
-  settings_->setValue("colorCQ",color_cq_);
+  settings_->setValue("colorCQ",color_primary_highlight_);
+  settings_->setValue("colorSecondary",color_secondary_highlight_);
   settings_->setValue("colorMyCall",color_mycall_);
   settings_->setValue("color_rx_background",color_rx_background_);
   settings_->setValue("color_rx_foreground",color_rx_foreground_);
@@ -2315,7 +2331,8 @@ void Configuration::impl::accept ()
       Q_EMIT self_->table_font_changed (table_font_);
     }
 
-  color_cq_ = next_color_cq_;
+  color_primary_highlight_ = next_color_primary_highlight_;
+  color_secondary_highlight_ = next_color_secondary_highlight_;
   color_mycall_ = next_color_mycall_;
   color_rx_background_ = next_color_rx_background_;
   color_rx_foreground_ = next_color_rx_foreground_;
@@ -2414,7 +2431,8 @@ void Configuration::impl::accept ()
   my_groups_ = splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), true);
   auto_whitelist_ = splitWords(ui_->auto_whitelist_line_edit->text().toUpper().trimmed());
   auto_blacklist_ = splitWords(ui_->auto_blacklist_line_edit->text().toUpper().trimmed());
-  highlight_words_ = splitWords(ui_->highlightTextEdit->toPlainText().toUpper().trimmed());
+  primary_highlight_words_ = splitWords(ui_->primaryHighlightLineEdit->text().toUpper().trimmed());
+  secondary_highlight_words_ = splitWords(ui_->secondaryHighlightLineEdit->text().toUpper().trimmed());
   cq_ = ui_->cq_message_line_edit->text().toUpper();
   reply_ = ui_->reply_message_line_edit->text().toUpper();
   eot_ = ui_->eot_line_edit->text().trimmed().left(2);
@@ -2581,7 +2599,8 @@ void Configuration::impl::on_tableFontButton_clicked ()
                                            , QFontDialog::DontUseNativeDialog
 #endif
                                            );
-  ui_->tableFontButton->setText(QString("Table Font (%1 %2)").arg(next_table_font_.family()).arg(next_table_font_.pointSize()));
+
+  ui_->tableFontButton->setText(QString("Font (%1 %2)").arg(next_table_font_.family()).arg(next_table_font_.pointSize()));
 }
 
 
@@ -2606,13 +2625,23 @@ QColor getColor(QColor initial, QWidget *parent, QString title){
     }
 }
 
-void Configuration::impl::on_pbCQmsg_clicked()
+void Configuration::impl::on_primaryHighlightButton_clicked()
 {
-  auto new_color = getColor(next_color_cq_, this, "CQ Messages Color");
+  auto new_color = getColor(next_color_primary_highlight_, this, "Primary Highlight Color");
   if (new_color.isValid ())
     {
-      next_color_cq_ = new_color;
-      ui_->labCQ->setStyleSheet(QString("background: %1; color: %2").arg(next_color_cq_.name()).arg(next_color_table_foreground_.name()));
+      next_color_primary_highlight_ = new_color;
+      ui_->primaryHighlightLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_primary_highlight_.name()).arg(next_color_table_foreground_.name()));
+    }
+}
+
+void Configuration::impl::on_secondaryHighlightButton_clicked()
+{
+  auto new_color = getColor(next_color_secondary_highlight_, this, "Secondary Highlight Color");
+  if (new_color.isValid ())
+    {
+      next_color_secondary_highlight_ = new_color;
+      ui_->secondaryHighlightLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_secondary_highlight_.name()).arg(next_color_table_foreground_.name()));
     }
 }
 
@@ -2632,6 +2661,7 @@ void Configuration::impl::on_tableBackgroundButton_clicked()
   if (new_color.isValid ())
     {
       next_color_table_background_ = new_color;
+      ui_->tableForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_background_.name()).arg(next_color_table_foreground_.name()));
       ui_->tableBackgroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_background_.name()).arg(next_color_table_foreground_.name()));
     }
 }
@@ -2652,9 +2682,11 @@ void Configuration::impl::on_tableForegroundButton_clicked()
   if (new_color.isValid ())
     {
       next_color_table_foreground_ = new_color;
+      ui_->tableForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_background_.name()).arg(next_color_table_foreground_.name()));
       ui_->tableBackgroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_background_.name()).arg(next_color_table_foreground_.name()));
       ui_->tableSelectionBackgroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_table_highlight_.name()).arg(next_color_table_foreground_.name()));
-      ui_->labCQ->setStyleSheet(QString("background: %1; color: %2").arg(next_color_cq_.name()).arg(next_color_table_foreground_.name()));
+      ui_->primaryHighlightLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_primary_highlight_.name()).arg(next_color_table_foreground_.name()));
+      ui_->secondaryHighlightLabel->setStyleSheet(QString("background: %1; color: %2").arg(next_color_secondary_highlight_.name()).arg(next_color_table_foreground_.name()));
       ui_->labMyCall->setStyleSheet(QString("background: %1; color: %2").arg(next_color_mycall_.name()).arg(next_color_table_foreground_.name()));
     }
 }

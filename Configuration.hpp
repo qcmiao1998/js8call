@@ -102,7 +102,8 @@ public:
   void removeGroup(QString const &group);
   QSet<QString> auto_whitelist() const;
   QSet<QString> auto_blacklist() const;
-  QSet<QString> highlight_words() const;
+  QSet<QString> primary_highlight_words() const;
+  QSet<QString> secondary_highlight_words() const;
   int activity_aging() const;
   int callsign_aging() const;
   QString eot() const;
@@ -203,7 +204,8 @@ public:
   QColor color_table_background() const;
   QColor color_table_highlight() const;
   QColor color_table_foreground() const;
-  QColor color_CQ () const;
+  QColor color_primary_highlight () const;
+  QColor color_secondary_highlight () const;
   QColor color_MyCall () const;
   QColor color_rx_background () const;
   QColor color_rx_foreground () const;

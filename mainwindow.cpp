@@ -2444,7 +2444,7 @@ void MainWindow::dataSink(qint64 frames)
     QString t=QString::fromLatin1(line);
     DecodedText decodedtext {t, false, m_config.my_grid ()};
     ui->decodedTextBrowser->displayDecodedText (decodedtext,m_baseCall,m_config.DXCC(),
-                                                m_logBook,m_config.color_CQ(),m_config.color_MyCall(),m_config.color_DXCC(),
+                                                m_logBook,m_config.color_primary_highlight(),m_config.color_MyCall(),m_config.color_DXCC(),
                                                 m_config.color_NewCall(),m_config.ppfx());
     if (ui->measure_check_box->isChecked ()) {
       // Append results text to file "fmt.all".
@@ -2643,7 +2643,7 @@ void MainWindow::fastSink(qint64 frames)
     QString message {QString::fromLatin1 (line)};
     DecodedText decodedtext {message.replace (QChar::LineFeed, ""), bcontest, m_config.my_grid ()};
     ui->decodedTextBrowser->displayDecodedText (decodedtext,m_baseCall,m_config.DXCC(),
-         m_logBook,m_config.color_CQ(),m_config.color_MyCall(),m_config.color_DXCC(),
+         m_logBook,m_config.color_primary_highlight(),m_config.color_MyCall(),m_config.color_DXCC(),
          m_config.color_NewCall(),m_config.ppfx());
     m_bDecoded=true;
     if (m_mode != "ISCAT") postDecode (true, decodedtext.string ());
@@ -4093,7 +4093,7 @@ void::MainWindow::fast_decode_done()
           ui->cbVHFcontest->isChecked(), m_config.my_grid ()};
     if(!m_bFastDone) {
       ui->decodedTextBrowser->displayDecodedText (decodedtext,m_baseCall,m_config.DXCC(),
-         m_logBook,m_config.color_CQ(),m_config.color_MyCall(),m_config.color_DXCC(),
+         m_logBook,m_config.color_primary_highlight(),m_config.color_MyCall(),m_config.color_DXCC(),
          m_config.color_NewCall(),m_config.ppfx());
     }
 
@@ -11551,10 +11551,21 @@ void MainWindow::displayBandActivity() {
                     }
                 }
 
-                auto matchingWords = m_config.highlight_words() & QSet<QString>::fromList(joined.replace(":", " ").replace(">"," ").split(" "));
-                if (!text.isEmpty() && !matchingWords.isEmpty()){
-                    for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
-                        ui->tableWidgetRXAll->item(row, i)->setBackground(QBrush(m_config.color_CQ()));
+                if(!text.isEmpty()){
+                    auto words = QSet<QString>::fromList(joined.replace(":", " ").replace(">"," ").split(" "));
+
+                    auto matchingSecondaryWords = m_config.secondary_highlight_words() & words;
+                    if (!matchingSecondaryWords.isEmpty()){
+                        for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
+                            ui->tableWidgetRXAll->item(row, i)->setBackground(QBrush(m_config.color_secondary_highlight()));
+                        }
+                    }
+
+                    auto matchingPrimaryWords = m_config.primary_highlight_words() & words;
+                    if (!matchingPrimaryWords.isEmpty()){
+                        for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
+                            ui->tableWidgetRXAll->item(row, i)->setBackground(QBrush(m_config.color_primary_highlight()));
+                        }
                     }
                 }
             }
@@ -11854,9 +11865,15 @@ void MainWindow::displayCallActivity() {
                 }
             }
 
-            if (m_config.highlight_words().contains(call)){
+            if (m_config.secondary_highlight_words().contains(call)){
                 for(int i = 0; i < ui->tableWidgetCalls->columnCount(); i++){
-                    ui->tableWidgetCalls->item(row, i)->setBackground(QBrush(m_config.color_CQ()));
+                    ui->tableWidgetCalls->item(row, i)->setBackground(QBrush(m_config.color_secondary_highlight()));
+                }
+            }
+
+            if (m_config.primary_highlight_words().contains(call)){
+                for(int i = 0; i < ui->tableWidgetCalls->columnCount(); i++){
+                    ui->tableWidgetCalls->item(row, i)->setBackground(QBrush(m_config.color_primary_highlight()));
                 }
             }
         }

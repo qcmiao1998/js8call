@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>6</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -3037,8 +3037,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>738</width>
-                <height>378</height>
+                <width>724</width>
+                <height>387</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_14">
@@ -3065,149 +3065,17 @@ QListView::item:hover {
                  <property name="bottomMargin">
                   <number>0</number>
                  </property>
-                 <item row="6" column="1">
+                 <item row="11" column="1">
+                  <widget class="QLineEdit" name="secondaryHighlightLineEdit"/>
+                 </item>
+                 <item row="1" column="1">
                   <widget class="QPushButton" name="tableFontButton">
                    <property name="text">
                     <string>Font</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="0">
-                  <widget class="QLabel" name="labCQ">
-                   <property name="minimumSize">
-                    <size>
-                     <width>80</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">QLabel{background-color: #66ff66}</string>
-                   </property>
-                   <property name="text">
-                    <string>K1ABC</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="7" column="1">
-                  <spacer name="verticalSpacer">
-                   <property name="orientation">
-                    <enum>Qt::Vertical</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>20</width>
-                     <height>40</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item row="4" column="1">
-                  <widget class="QPushButton" name="tableForegroundButton">
-                   <property name="text">
-                    <string>Foreground Color</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QPushButton" name="tableSelectedRowBackgroundButton">
-                   <property name="text">
-                    <string>Selected Row Background</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="tableSelectionBackgroundLabel">
-                   <property name="minimumSize">
-                    <size>
-                     <width>80</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">QLabel{background-color: #3498db}&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;ui version=&quot;4.0&quot;&gt;
-&lt;widget name=&quot;__qt_fake_top_level&quot;&gt;
-&lt;widget class=&quot;QLabel&quot; name=&quot;labCQ&quot;&gt;
-&lt;property name=&quot;geometry&quot;&gt;
-&lt;rect&gt;
-&lt;x&gt;12&lt;/x&gt;
-&lt;y&gt;32&lt;/y&gt;
-&lt;width&gt;302&lt;/width&gt;
-&lt;height&gt;25&lt;/height&gt;
-&lt;/rect&gt;
-&lt;/property&gt;
-&lt;property name=&quot;minimumSize&quot;&gt;
-&lt;size&gt;
-&lt;width&gt;80&lt;/width&gt;
-&lt;height&gt;20&lt;/height&gt;
-&lt;/size&gt;
-&lt;/property&gt;
-&lt;property name=&quot;styleSheet&quot;&gt;
-&lt;string notr=&quot;true&quot;&gt;QLabel{background-color: #66ff66}&lt;/string&gt;
-&lt;/property&gt;
-&lt;property name=&quot;text&quot;&gt;
-&lt;string&gt;K1ABC&lt;/string&gt;
-&lt;/property&gt;
-&lt;property name=&quot;alignment&quot;&gt;
-&lt;set&gt;Qt::AlignCenter&lt;/set&gt;
-&lt;/property&gt;
-&lt;/widget&gt;
-&lt;/widget&gt;
-&lt;resources/&gt;
-&lt;/ui&gt;
-</string>
-                   </property>
-                   <property name="text">
-                    <string>K1ABC</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="1">
-                  <widget class="QPushButton" name="pbMyCall">
-                   <property name="minimumSize">
-                    <size>
-                     <width>140</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>Directed Messages Background</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QPushButton" name="tableBackgroundButton">
-                   <property name="text">
-                    <string>Table Background</string>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="3" column="0">
-                  <widget class="QLabel" name="labMyCall">
-                   <property name="minimumSize">
-                    <size>
-                     <width>80</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">QLabel{background-color: #ff6666}</string>
-                   </property>
-                   <property name="text">
-                    <string>K1ABC</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="0">
                   <widget class="QLabel" name="tableBackgroundLabel">
                    <property name="minimumSize">
                     <size>
@@ -3257,8 +3125,8 @@ QListView::item:hover {
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="1">
-                  <widget class="QPushButton" name="pbCQmsg">
+                 <item row="5" column="1">
+                  <widget class="QPushButton" name="pbMyCall">
                    <property name="minimumSize">
                     <size>
                      <width>140</width>
@@ -3266,55 +3134,290 @@ QListView::item:hover {
                     </size>
                    </property>
                    <property name="text">
-                    <string>Highlight Background</string>
+                    <string>Directed Messages Background</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <spacer name="verticalSpacer">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="7" column="0">
+                  <widget class="QLabel" name="primaryHighlightLabel">
+                   <property name="minimumSize">
+                    <size>
+                     <width>80</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QLabel{background-color: #66ff66}</string>
+                   </property>
+                   <property name="text">
+                    <string>K1ABC</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="8" column="0">
+                  <widget class="QLabel" name="label_25">
+                   <property name="text">
+                    <string>Highlight these words or callsigns with the primary background color (comma separated):</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QPushButton" name="tableForegroundButton">
+                   <property name="text">
+                    <string>Foreground Color</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="7" column="1">
+                  <widget class="QPushButton" name="primaryHighlightButton">
+                   <property name="minimumSize">
+                    <size>
+                     <width>140</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>Primary Highlight Background</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QPushButton" name="tableBackgroundButton">
+                   <property name="text">
+                    <string>Table Background</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="tableForegroundLabel">
+                   <property name="minimumSize">
+                    <size>
+                     <width>80</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QLabel{background-color: white}&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;ui version=&quot;4.0&quot;&gt;
+&lt;widget name=&quot;__qt_fake_top_level&quot;&gt;
+&lt;widget class=&quot;QLabel&quot; name=&quot;labCQ&quot;&gt;
+&lt;property name=&quot;geometry&quot;&gt;
+&lt;rect&gt;
+&lt;x&gt;12&lt;/x&gt;
+&lt;y&gt;32&lt;/y&gt;
+&lt;width&gt;302&lt;/width&gt;
+&lt;height&gt;25&lt;/height&gt;
+&lt;/rect&gt;
+&lt;/property&gt;
+&lt;property name=&quot;minimumSize&quot;&gt;
+&lt;size&gt;
+&lt;width&gt;80&lt;/width&gt;
+&lt;height&gt;20&lt;/height&gt;
+&lt;/size&gt;
+&lt;/property&gt;
+&lt;property name=&quot;styleSheet&quot;&gt;
+&lt;string notr=&quot;true&quot;&gt;QLabel{background-color: #66ff66}&lt;/string&gt;
+&lt;/property&gt;
+&lt;property name=&quot;text&quot;&gt;
+&lt;string&gt;K1ABC&lt;/string&gt;
+&lt;/property&gt;
+&lt;property name=&quot;alignment&quot;&gt;
+&lt;set&gt;Qt::AlignCenter&lt;/set&gt;
+&lt;/property&gt;
+&lt;/widget&gt;
+&lt;/widget&gt;
+&lt;resources/&gt;
+&lt;/ui&gt;
+</string>
+                   </property>
+                   <property name="text">
+                    <string>K1ABC</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1">
+                  <widget class="QPushButton" name="tableSelectedRowBackgroundButton">
+                   <property name="text">
+                    <string>Selected Row Background</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="6" column="1">
+                  <spacer name="verticalSpacer_11">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="10" column="1">
+                  <widget class="QPushButton" name="secondaryHighlightButton">
+                   <property name="minimumSize">
+                    <size>
+                     <width>140</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>Secondary Highlight Background</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="9" column="1">
+                  <spacer name="verticalSpacer_17">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="10" column="0">
+                  <widget class="QLabel" name="secondaryHighlightLabel">
+                   <property name="minimumSize">
+                    <size>
+                     <width>80</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QLabel{background-color: #ffff66}</string>
+                   </property>
+                   <property name="text">
+                    <string>K1ABC</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="0">
+                  <widget class="QLabel" name="labMyCall">
+                   <property name="minimumSize">
+                    <size>
+                     <width>80</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QLabel{background-color: #ff6666}</string>
+                   </property>
+                   <property name="text">
+                    <string>K1ABC</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="8" column="1">
+                  <widget class="QLineEdit" name="primaryHighlightLineEdit"/>
+                 </item>
+                 <item row="11" column="0">
+                  <widget class="QLabel" name="label_20">
+                   <property name="text">
+                    <string>Highlight these words or callsigns with the secondary background color (comma separated):</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0">
+                  <widget class="QLabel" name="tableSelectionBackgroundLabel">
+                   <property name="minimumSize">
+                    <size>
+                     <width>80</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QLabel{background-color: #3498db}&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;ui version=&quot;4.0&quot;&gt;
+&lt;widget name=&quot;__qt_fake_top_level&quot;&gt;
+&lt;widget class=&quot;QLabel&quot; name=&quot;labCQ&quot;&gt;
+&lt;property name=&quot;geometry&quot;&gt;
+&lt;rect&gt;
+&lt;x&gt;12&lt;/x&gt;
+&lt;y&gt;32&lt;/y&gt;
+&lt;width&gt;302&lt;/width&gt;
+&lt;height&gt;25&lt;/height&gt;
+&lt;/rect&gt;
+&lt;/property&gt;
+&lt;property name=&quot;minimumSize&quot;&gt;
+&lt;size&gt;
+&lt;width&gt;80&lt;/width&gt;
+&lt;height&gt;20&lt;/height&gt;
+&lt;/size&gt;
+&lt;/property&gt;
+&lt;property name=&quot;styleSheet&quot;&gt;
+&lt;string notr=&quot;true&quot;&gt;QLabel{background-color: #66ff66}&lt;/string&gt;
+&lt;/property&gt;
+&lt;property name=&quot;text&quot;&gt;
+&lt;string&gt;K1ABC&lt;/string&gt;
+&lt;/property&gt;
+&lt;property name=&quot;alignment&quot;&gt;
+&lt;set&gt;Qt::AlignCenter&lt;/set&gt;
+&lt;/property&gt;
+&lt;/widget&gt;
+&lt;/widget&gt;
+&lt;resources/&gt;
+&lt;/ui&gt;
+</string>
+                   </property>
+                   <property name="text">
+                    <string>K1ABC</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
                 </layout>
                </item>
                <item>
-                <spacer name="verticalSpacer_11">
+                <spacer name="verticalSpacer_6">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
                  </property>
                  <property name="sizeType">
-                  <enum>QSizePolicy::Fixed</enum>
+                  <enum>QSizePolicy::Expanding</enum>
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
                    <width>20</width>
                    <height>10</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_25">
-                 <property name="text">
-                  <string>Highlight Activity Containing These Words or Callsigns (comma separated):</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QTextEdit" name="highlightTextEdit">
-                 <property name="html">
-                  <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;CQ&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="verticalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>348</height>
                   </size>
                  </property>
                 </spacer>
