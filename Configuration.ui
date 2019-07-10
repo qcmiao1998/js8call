@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>6</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -277,8 +277,8 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>0</y>
-                <width>615</width>
+                <y>-355</y>
+                <width>724</width>
                 <height>808</height>
                </rect>
               </property>
@@ -1022,8 +1022,8 @@ radio interface behave as expected.</string>
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>0</y>
-                <width>264</width>
+                <y>-49</y>
+                <width>718</width>
                 <height>435</height>
                </rect>
               </property>
@@ -1443,7 +1443,7 @@ a few, particularly some Kenwood rigs, require it).</string>
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>0</y>
+                <y>-104</y>
                 <width>718</width>
                 <height>490</height>
                </rect>
@@ -3002,7 +3002,7 @@ QListView::item:hover {
        <item>
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <property name="tabBarAutoHide">
           <bool>false</bool>
@@ -3458,8 +3458,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>233</width>
-                <height>253</height>
+                <width>738</width>
+                <height>378</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_5">
@@ -3662,8 +3662,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>277</width>
-                <height>93</height>
+                <width>738</width>
+                <height>378</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_8">
@@ -4070,7 +4070,8 @@ soundcard changes</string>
   </layout>
  </widget>
  <tabstops>
-  <tabstop>configuration_tabs</tabstop>
+  <tabstop>tabWidget_2</tabstop>
+  <tabstop>scrollArea</tabstop>
   <tabstop>callsign_line_edit</tabstop>
   <tabstop>grid_line_edit</tabstop>
   <tabstop>groups_line_edit</tabstop>
@@ -4082,16 +4083,21 @@ soundcard changes</string>
   <tabstop>miles_check_box</tabstop>
   <tabstop>monitor_off_check_box</tabstop>
   <tabstop>tx_qsy_check_box</tabstop>
+  <tabstop>avoid_forced_identify_check_box</tabstop>
+  <tabstop>heartbeat_anywhere_check_box</tabstop>
+  <tabstop>heartbeat_qso_pause_check_box</tabstop>
   <tabstop>transmit_directed_check_box</tabstop>
   <tabstop>spellcheck_check_box</tabstop>
+  <tabstop>reset_activity_check_box</tabstop>
+  <tabstop>checkForUpdates_checkBox</tabstop>
   <tabstop>autoreply_off_check_box</tabstop>
   <tabstop>relay_disabled_check_box</tabstop>
   <tabstop>auto_whitelist_line_edit</tabstop>
   <tabstop>auto_blacklist_line_edit</tabstop>
-  <tabstop>scrollArea</tabstop>
   <tabstop>callsign_aging_spin_box</tabstop>
   <tabstop>activity_aging_spin_box</tabstop>
   <tabstop>tx_watchdog_spin_box</tabstop>
+  <tabstop>eot_line_edit</tabstop>
   <tabstop>rig_combo_box</tabstop>
   <tabstop>CAT_poll_interval_spin_box</tabstop>
   <tabstop>tabWidget_3</tabstop>
@@ -4116,20 +4122,23 @@ soundcard changes</string>
   <tabstop>PTT_CAT_radio_button</tabstop>
   <tabstop>PTT_RTS_radio_button</tabstop>
   <tabstop>PTT_port_combo_box</tabstop>
-  <tabstop>mode_USB_radio_button</tabstop>
   <tabstop>mode_none_radio_button</tabstop>
+  <tabstop>mode_USB_radio_button</tabstop>
   <tabstop>mode_data_radio_button</tabstop>
   <tabstop>TX_source_data_radio_button</tabstop>
   <tabstop>TX_source_mic_radio_button</tabstop>
-  <tabstop>split_emulate_radio_button</tabstop>
-  <tabstop>split_rig_radio_button</tabstop>
   <tabstop>split_none_radio_button</tabstop>
+  <tabstop>split_rig_radio_button</tabstop>
+  <tabstop>split_emulate_radio_button</tabstop>
+  <tabstop>ptt_command_line_edit</tabstop>
+  <tabstop>sbTxDelay</tabstop>
+  <tabstop>hold_ptt_check_box</tabstop>
   <tabstop>test_CAT_push_button</tabstop>
   <tabstop>test_PTT_push_button</tabstop>
   <tabstop>scrollArea_5</tabstop>
-  <tabstop>sound_output_combo_box</tabstop>
   <tabstop>sound_input_combo_box</tabstop>
   <tabstop>sound_input_channel_combo_box</tabstop>
+  <tabstop>sound_output_combo_box</tabstop>
   <tabstop>sound_output_channel_combo_box</tabstop>
   <tabstop>save_path_select_push_button</tabstop>
   <tabstop>azel_path_select_push_button</tabstop>
@@ -4137,7 +4146,6 @@ soundcard changes</string>
   <tabstop>checkBoxPwrBandTuneMemory</tabstop>
   <tabstop>scrollArea_6</tabstop>
   <tabstop>opCallEntry</tabstop>
-  <tabstop>log_as_RTTY_check_box</tabstop>
   <tabstop>udp_server_line_edit</tabstop>
   <tabstop>udp_server_port_spin_box</tabstop>
   <tabstop>udpEnable</tabstop>
@@ -4147,6 +4155,9 @@ soundcard changes</string>
   <tabstop>aprs_server_line_edit</tabstop>
   <tabstop>aprs_server_port_spin_box</tabstop>
   <tabstop>aprs_passcode_line_edit</tabstop>
+  <tabstop>enable_n3fjp_broadcast_check_box</tabstop>
+  <tabstop>n3fjp_server_name_line_edit</tabstop>
+  <tabstop>n3fjp_server_port_spin_box</tabstop>
   <tabstop>enable_n1mm_broadcast_check_box</tabstop>
   <tabstop>n1mm_server_name_line_edit</tabstop>
   <tabstop>n1mm_server_port_spin_box</tabstop>
@@ -4156,32 +4167,42 @@ soundcard changes</string>
   <tabstop>frequencies_table_view</tabstop>
   <tabstop>auto_switch_bands_check_box</tabstop>
   <tabstop>stations_table_view</tabstop>
-  <tabstop>add_macro_push_button</tabstop>
   <tabstop>add_macro_line_edit</tabstop>
+  <tabstop>add_macro_push_button</tabstop>
   <tabstop>delete_macro_push_button</tabstop>
   <tabstop>macros_list_view</tabstop>
   <tabstop>font_push_button</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>scrollArea_8</tabstop>
+  <tabstop>tableForegroundButton</tabstop>
+  <tabstop>tableFontButton</tabstop>
+  <tabstop>tableBackgroundButton</tabstop>
+  <tabstop>tableSelectedRowBackgroundButton</tabstop>
+  <tabstop>pbMyCall</tabstop>
+  <tabstop>primaryHighlightButton</tabstop>
+  <tabstop>primaryHighlightLineEdit</tabstop>
+  <tabstop>secondaryHighlightButton</tabstop>
+  <tabstop>secondaryHighlightLineEdit</tabstop>
   <tabstop>scrollArea_9</tabstop>
-  <tabstop>txFontButton</tabstop>
-  <tabstop>rxFontButton</tabstop>
-  <tabstop>txForegroundButton</tabstop>
   <tabstop>rxBackgroundButton</tabstop>
   <tabstop>rxForegroundButton</tabstop>
+  <tabstop>rxFontButton</tabstop>
+  <tabstop>txForegroundButton</tabstop>
+  <tabstop>txFontButton</tabstop>
   <tabstop>scrollArea_10</tabstop>
   <tabstop>composeBackgroundButton</tabstop>
   <tabstop>composeForegroundButton</tabstop>
   <tabstop>composeFontButton</tabstop>
-  <tabstop>sbDegrade</tabstop>
-  <tabstop>sbBandwidth</tabstop>
+  <tabstop>configuration_tabs</tabstop>
   <tabstop>cbx2ToneSpacing</tabstop>
-  <tabstop>cbx4ToneSpacing</tabstop>
-  <tabstop>sbNtrials</tabstop>
   <tabstop>sbAggressive</tabstop>
   <tabstop>cbTwoPass</tabstop>
   <tabstop>cbFox</tabstop>
   <tabstop>cbHound</tabstop>
+  <tabstop>sbDegrade</tabstop>
+  <tabstop>sbBandwidth</tabstop>
+  <tabstop>cbx4ToneSpacing</tabstop>
+  <tabstop>sbNtrials</tabstop>
  </tabstops>
  <resources/>
  <connections>
