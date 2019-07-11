@@ -1203,8 +1203,34 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto clearAction1 = new QAction(QString("Clear"), ui->textEditRX);
   connect(clearAction1, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->textEditRX); });
 
+  auto saveAction = new QAction(QString("Save As..."), ui->textEditRX);
+  connect(saveAction, &QAction::triggered, this, [this](){
+    auto writePath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    auto writeDir = QDir(writePath);
+    auto defaultFilename = writeDir.absoluteFilePath(QString("js8call-%1.txt").arg(DriftingDateTime::currentDateTimeUtc().toString("yyyyMMdd")));
+
+    QString selectedFilter = "*.txt";
+
+    auto filename = QFileDialog::getSaveFileName(this,
+        "Save As...",
+        defaultFilename,
+        "Text files (*.txt);; All files (*)",
+        &selectedFilter
+    );
+    if(filename.isEmpty()){
+        return;
+    }
+
+    auto text = ui->textEditRX->toPlainText();
+    QFile f(filename);
+    if (f.open(QIODevice::Truncate | QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream stream(&f);
+        stream << text;
+    }
+  });
+
   ui->textEditRX->setContextMenuPolicy(Qt::CustomContextMenu);
-  connect(ui->textEditRX, &QTableWidget::customContextMenuRequested, this, [this, clearAction1, clearActionAll](QPoint const &point){
+  connect(ui->textEditRX, &QTableWidget::customContextMenuRequested, this, [this, clearAction1, clearActionAll, saveAction](QPoint const &point){
       QMenu * menu = new QMenu(ui->textEditRX);
 
       buildEditMenu(menu, ui->textEditRX);
@@ -1213,6 +1239,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
       menu->addAction(clearAction1);
       menu->addAction(clearActionAll);
+
+      menu->addSeparator();
+      menu->addAction(saveAction);
 
       menu->popup(ui->textEditRX->mapToGlobal(point));
 
