@@ -8659,6 +8659,7 @@ void MainWindow::stop_tuning ()
   ui->tuneButton->setChecked (false);
   m_bTxTime=false;
   m_tune=false;
+  on_stopTxButton_clicked();
 }
 
 void MainWindow::stopTuneATU()
