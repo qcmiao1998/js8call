@@ -5435,7 +5435,7 @@ void MainWindow::stopTx2(){
     qDebug() << "stopTx2 frames left" << m_txFrameCount;
 
     // If we're holding the PTT and there are more frames to transmit, do not emit the PTT signal
-    if(m_config.hold_ptt() && m_txFrameCount > 0){
+    if(!m_tune && m_config.hold_ptt() && m_txFrameCount > 0){
         return;
     }
 
@@ -11901,7 +11901,7 @@ void MainWindow::displayCallActivity() {
             }
 
             if(hasCQ){
-                for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
+                for(int i = 0; i < ui->tableWidgetCalls->columnCount(); i++){
                     ui->tableWidgetCalls->item(row, i)->setBackground(QBrush(m_config.color_CQ()));
                 }
             }
