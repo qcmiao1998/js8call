@@ -206,6 +206,7 @@ public:
   QColor color_table_foreground() const;
   QColor color_primary_highlight () const;
   QColor color_secondary_highlight () const;
+  QColor color_CQ () const;
   QColor color_MyCall () const;
   QColor color_rx_background () const;
   QColor color_rx_foreground () const;

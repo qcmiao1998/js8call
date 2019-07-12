@@ -11583,6 +11583,12 @@ void MainWindow::displayBandActivity() {
                 if(!text.isEmpty()){
                     auto words = QSet<QString>::fromList(joined.replace(":", " ").replace(">"," ").split(" "));
 
+                    if(words.contains("CQ")){
+                        for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
+                            ui->tableWidgetRXAll->item(row, i)->setBackground(QBrush(m_config.color_CQ()));
+                        }
+                    }
+
                     auto matchingSecondaryWords = m_config.secondary_highlight_words() & words;
                     if (!matchingSecondaryWords.isEmpty()){
                         for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
@@ -11891,6 +11897,12 @@ void MainWindow::displayCallActivity() {
             if (isCallSelected) {
                 for(int i = 0; i < ui->tableWidgetCalls->columnCount(); i++){
                     ui->tableWidgetCalls->item(row, i)->setSelected(true);
+                }
+            }
+
+            if(hasCQ){
+                for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
+                    ui->tableWidgetCalls->item(row, i)->setBackground(QBrush(m_config.color_CQ()));
                 }
             }
 
