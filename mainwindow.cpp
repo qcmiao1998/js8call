@@ -10777,6 +10777,11 @@ void MainWindow::processCommandActivity() {
         // if we have auto reply enabled and auto ack enabled and no callsign is selected
         else if (d.cmd == " HB" && ui->autoReplyButton->isChecked() && m_hbAutoAck && selectedCallsign.isEmpty()){
 
+            // check to make sure this callsign isn't blacklisted
+            if(m_config.hb_blacklist().contains(d.from) || m_config.hb_blacklist().contains(Radio::base_callsign(d.from))){
+                continue;
+            }
+
             // check to see if we have a message for a station who is heartbeating
             QString extra;
             auto mid = getNextMessageIdForCallsign(d.from);

@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>6</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -277,9 +277,9 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>0</y>
-                <width>615</width>
-                <height>808</height>
+                <y>-266</y>
+                <width>724</width>
+                <height>839</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -604,6 +604,16 @@ text message.</string>
                   </item>
                   <item row="3" column="1">
                    <widget class="QLineEdit" name="auto_blacklist_line_edit"/>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="label_26">
+                    <property name="text">
+                     <string>Never ACK HBs from these callsigns (comman separated):</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1">
+                   <widget class="QLineEdit" name="hb_blacklist_line_edit"/>
                   </item>
                  </layout>
                 </widget>
@@ -3694,8 +3704,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>738</width>
-                <height>378</height>
+                <width>277</width>
+                <height>93</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_8">
