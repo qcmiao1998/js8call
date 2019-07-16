@@ -36,7 +36,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget_2">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="stationTab">
           <attribute name="title">
@@ -277,7 +277,7 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-266</y>
+                <y>-63</y>
                 <width>724</width>
                 <height>839</height>
                </rect>
@@ -608,7 +608,7 @@ text message.</string>
                   <item row="4" column="0">
                    <widget class="QLabel" name="label_26">
                     <property name="text">
-                     <string>Never ACK HBs from these callsigns (comman separated):</string>
+                     <string>Never ACK HBs from these callsigns (comma separated):</string>
                     </property>
                    </widget>
                   </item>
