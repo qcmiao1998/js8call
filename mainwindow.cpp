@@ -11272,9 +11272,7 @@ void MainWindow::processSpots() {
     auto dial = dialFrequency();
 
     // Process spots to be sent...
-    spotSetLocal();
-    pskSetLocal();
-    aprsSetLocal();
+    prepareSpotting();
 
     while(!m_rxCallQueue.isEmpty()){
         CallDetail d = m_rxCallQueue.dequeue();
