@@ -27,6 +27,11 @@ LogQSO::LogQSO(QString const& programTitle, QSettings * settings
   ui->setupUi(this);
   setWindowTitle(programTitle + " - Log QSO");
   ui->grid->setValidator (new MaidenheadLocatorValidator {this});
+
+  auto b = ui->buttonBox->button(QDialogButtonBox::Save);
+  if(b){
+      b->setText("Add to Log");
+  }
 }
 
 LogQSO::~LogQSO ()
