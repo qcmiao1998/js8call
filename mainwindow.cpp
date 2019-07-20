@@ -1667,9 +1667,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   gridButtonLayout->setColumnStretch(1, 1);
   gridButtonLayout->setColumnStretch(2, 1);
 
-  spotSetLocal();
-  pskSetLocal();
-  aprsSetLocal();
+
+  // Prepare spotting configuration...
+  prepareSpotting();
 
   displayActivity(true);
 
@@ -11270,9 +11270,6 @@ void MainWindow::processSpots() {
 
     // Get the dial frequency to report
     auto dial = dialFrequency();
-
-    // Process spots to be sent...
-    prepareSpotting();
 
     while(!m_rxCallQueue.isEmpty()){
         CallDetail d = m_rxCallQueue.dequeue();
