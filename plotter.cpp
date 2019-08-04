@@ -457,7 +457,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   if(m_mode=="FT8"){
       int fwidth=XfromFreq(m_rxFreq+bw)-XfromFreq(m_rxFreq);
 #if TEST_FOX_WAVE_GEN
-      int offset=XfromFreq(m_rxFreq+bw+10)-XfromFreq(m_rxFreq+bw);
+      int offset=XfromFreq(m_rxFreq+bw+TEST_FOX_WAVE_GEN_OFFSET)-XfromFreq(m_rxFreq+bw) + 4; // + 4 for the line padding
 #endif
       QPainter overPainter(&m_DialOverlayPixmap);
       overPainter.initFrom(this);
@@ -465,22 +465,26 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       overPainter.fillRect(0, 0, m_Size.width(), m_h, Qt::transparent);
       QPen thinRed(Qt::red, 1);
       overPainter.setPen(thinRed);
-      overPainter.drawLine(0, 30, 0, m_h);
-      overPainter.drawLine(fwidth+1, 30, fwidth+1, m_h);
+      overPainter.drawLine(0, 30, 0, m_h); // first slot, left line
+      overPainter.drawLine(fwidth + 1, 30, fwidth + 1, m_h); // first slot, right line
 #if TEST_FOX_WAVE_GEN
       if(m_turbo){
-        overPainter.drawLine(offset+fwidth+1, 30, offset+fwidth+1, m_h);
-        overPainter.drawLine(offset+2*fwidth+1, 30, offset+2*fwidth+1, m_h);
+        for(int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++){
+            overPainter.drawLine(i*(fwidth + offset), 30, i*(fwidth + offset), m_h); // n slot, left line
+            overPainter.drawLine(i*(fwidth + offset) + fwidth + 2, 30, i*(fwidth + offset) + fwidth + 2, m_h); // n slot, right line
+        }
       }
 #endif
 
       overPainter.setPen(penRed);
-      overPainter.drawLine(0, 26, fwidth, 26);
-      overPainter.drawLine(0, 28, fwidth, 28);
+      overPainter.drawLine(0, 26, fwidth, 26); // first slot, top bar
+      overPainter.drawLine(0, 28, fwidth, 28); // first slot, top bar 2
 #if TEST_FOX_WAVE_GEN
       if(m_turbo){
-        overPainter.drawLine(offset+fwidth, 26, offset+2*fwidth, 26);
-        overPainter.drawLine(offset+fwidth, 28, offset+2*fwidth, 28);
+        for(int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++){
+            overPainter.drawLine(i*(fwidth + offset) + 1, 26, i*(fwidth + offset) + fwidth + 1, 26); // n slot, top bar
+            overPainter.drawLine(i*(fwidth + offset) + 1, 28, i*(fwidth + offset) + fwidth + 1, 28); // n slot, top bar 2
+        }
       }
 #endif
 
@@ -489,12 +493,14 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       hoverPainter.setCompositionMode(QPainter::CompositionMode_Source);
       hoverPainter.fillRect(0, 0, m_Size.width(), m_h, Qt::transparent);
       hoverPainter.setPen(QPen(Qt::white));
-      hoverPainter.drawLine(0, 30, 0, m_h);
-      hoverPainter.drawLine(fwidth+1, 30, fwidth+1, m_h);
+      hoverPainter.drawLine(0, 30, 0, m_h); // first slot, left line hover
+      hoverPainter.drawLine(fwidth, 30, fwidth, m_h); // first slot, right line hover
 #if TEST_FOX_WAVE_GEN
       if(m_turbo){
-        hoverPainter.drawLine(offset+fwidth+1, 30, offset+fwidth+1, m_h);
-        hoverPainter.drawLine(offset+2*fwidth+1, 30, offset+2*fwidth+1, m_h);
+          for(int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++){
+              hoverPainter.drawLine(i*(fwidth + offset), 30, i*(fwidth + offset), m_h); // n slot, left line
+              hoverPainter.drawLine(i*(fwidth + offset) + fwidth + 2, 30, i*(fwidth + offset) + fwidth + 2, m_h); // n slot, right line
+          }
       }
 #endif
 

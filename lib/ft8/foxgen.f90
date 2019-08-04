@@ -17,6 +17,7 @@ subroutine foxgen()
   use crc
   parameter (NN=79,ND=58,KK=87,NSPS=4*1920)
   parameter (NWAVE=NN*NSPS,NFFT=614400,NH=NFFT/2)
+  parameter (OFFSET=25)
   character*40 cmsg
   character*22 msg,msgsent
   character*6 mygrid
@@ -36,8 +37,9 @@ subroutine foxgen()
   equivalence (x,cx),(y,cy)
   data icos7/4,2,5,6,1,3,0/                   !Costas 7x7 tone pattern
 
+  width=50.0
   bcontest=.false.
-  fstep=60.d0
+  fstep=width+OFFSET
   dfreq=6.25d0
   dt=1.d0/48000.d0
   twopi=8.d0*atan(1.d0)
@@ -127,7 +129,6 @@ subroutine foxgen()
   
 !  call plotspec(2,wave)          !Plot the spectrum
 
-  width=50.0
   call foxfilt(nslots,nfreq,width,wave)
   peak3=maxval(abs(wave))
   wave=wave/peak3

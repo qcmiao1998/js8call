@@ -2,6 +2,7 @@ subroutine foxfilt(nslots,nfreq,width,wave)
 
   parameter (NN=79,ND=58,KK=87,NSPS=4*1920)
   parameter (NWAVE=NN*NSPS,NFFT=614400,NH=NFFT/2)
+  parameter (OFFSET=25)
   real wave(NWAVE)
   real x(NFFT)
   complex cx(0:NH)
@@ -12,7 +13,7 @@ subroutine foxfilt(nslots,nfreq,width,wave)
   call four2a(x,NFFT,1,-1,0)              !r2c
   df=48000.0/NFFT
   fa=nfreq - 0.5*6.25
-  fb=nfreq + 7.5*6.25 + (nslots-1)*60.0
+  fb=nfreq + 7.5*6.25 + (nslots-1)*(width+OFFSET)
   ia2=nint(fa/df)
   ib1=nint(fb/df)
   ia1=nint(ia2-width/df)

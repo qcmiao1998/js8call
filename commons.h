@@ -18,6 +18,14 @@
 #endif
 #endif
 
+#ifndef TEST_FOX_WAVE_GEN_OFFSET
+#if TEST_FOX_WAVE_GEN
+    #define TEST_FOX_WAVE_GEN_OFFSET 25
+#else
+    #define TEST_FOX_WAVE_GEN_OFFSET 0
+#endif
+#endif
+
 #ifdef __cplusplus
 #include <cstdbool>
 extern "C" {
