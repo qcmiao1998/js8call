@@ -9680,10 +9680,10 @@ void MainWindow::updateTxButtonDisplay(){
             left = (int)ceil(float(left)/TEST_FOX_WAVE_GEN_SLOTS);
         }
         int sent = qMax(1, count - left);
-        ui->startTxButton->setText(m_tune ? "Tuning" : QString("%1 (%2/%3)").arg(ui->turboButton->isChecked() ? "Turbo" : "Send").arg(sent).arg(count));
 #else
         int left = m_txFrameQueue.count();
         int sent = count - left;
+#endif
 
         QString buttonText;
         if(m_tune){
@@ -9699,7 +9699,6 @@ void MainWindow::updateTxButtonDisplay(){
             buttonText = QString("Ready (%1)").arg(timeLeft);
         }
         ui->startTxButton->setText(buttonText);
-#endif
         ui->startTxButton->setEnabled(false);
         ui->startTxButton->setFlat(true);
     } else {
