@@ -3,6 +3,8 @@ program ldpcsim174
 use crc
 use packjt
 
+include 'ft8_params.f90'
+
 character*22 msg,msgsent,msgreceived
 character*8 arg
 character*6 grid
@@ -75,10 +77,10 @@ allocate ( rxdata(N), llr(N) )
   ik=0
   im=0
   do i=1,12
-    nn=i4Msg6BitWords(i)
+    nna=i4Msg6BitWords(i)
     do j=1, 6
       ik=ik+1
-      i4=i4+i4+iand(1,ishft(nn,j-6))
+      i4=i4+i4+iand(1,ishft(nna,j-6))
       i4=iand(i4,255)
       if(ik.eq.8) then
         im=im+1
@@ -214,7 +216,7 @@ do idb = 20,-10,-1
       endif
     endif
   enddo
-  baud=12000/1920
+  baud=12000.0/NSPS
   snr2500=db+10.0*log10((baud/2500.0))
   pberr=real(nberr)/(real(ntrials*N))
   write(*,"(f4.1,4x,f5.1,1x,i8,1x,i8,1x,i8,8x,f5.2,8x,e10.3)") db,snr2500,ngood,nue,nbadcrc,ss,pberr

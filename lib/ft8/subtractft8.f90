@@ -9,11 +9,13 @@ subroutine subtractft8(dd,itone,f0,dt)
 
   use timer_module, only: timer
 
-  parameter (NMAX=15*12000,NFRAME=1920*79)
-  parameter (NFFT=NMAX,NFILT=1400)
+  include 'ft8_params.f90'
+  parameter (NFRAME=NSPS*NN)
+  parameter (NFFT=NMAX, NFILT=1400)
+
   real*4  dd(NMAX), window(-NFILT/2:NFILT/2)
   complex cref,camp,cfilt,cw
-  integer itone(79)
+  integer itone(NN)
   logical first
   data first/.true./
   common/heap8/cref(NFRAME),camp(NMAX),cfilt(NMAX),cw(NMAX)

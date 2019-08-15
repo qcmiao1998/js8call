@@ -71,7 +71,7 @@ void Modulator::start (unsigned symbolsLength, double framesPerSymbol,
   m_toneSpacing = toneSpacing;
   m_bFastMode=fastMode;
   m_TRperiod=TRperiod;
-  unsigned delay_ms = 1920 == m_nsps && 15 == m_period ? 500 : 1000;
+  unsigned delay_ms = 1920 == m_nsps && 15 == m_period ? 500 : 250; // 1000;
 
   // noise generator parameters
   if (m_addNoise) {

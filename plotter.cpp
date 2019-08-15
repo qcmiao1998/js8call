@@ -411,9 +411,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     }
   }
 
-  float bw=9.0*12000.0/m_nsps;               //JT9
-
-  if(m_mode=="FT8") bw=7*12000.0/1920.0;     //FT8
+  float bw=7.0*(double)RX_SAMPLE_RATE/(double)JS8_SYMBOL_SAMPLES;     //JS8
 
   painter0.setPen(penGreen);
 

@@ -17,7 +17,7 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   real ps(0:7),psl(0:7)
   real bmeta(3*ND),bmetb(3*ND),bmetap(3*ND)
   real llr(3*ND),llra(3*ND),llr0(3*ND),llr1(3*ND),llrap(3*ND)           !Soft symbols
-  real dd0(15*12000)
+  real dd0(NMAX)
   integer*1 decoded(KK),decoded0(KK),apmask(3*ND),cw(3*ND)
   integer*1 msgbits(KK)
   integer apsym(KK)
@@ -29,8 +29,8 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   integer naptypes(0:5,4) ! (nQSOProgress, decoding pass)  maximum of 4 passes for now
   integer*1, target:: i1hiscall(12)
   complex cd0(0:3199)
-  complex ctwk(32)
-  complex csymb(32)
+  complex ctwk(NDOWNSPS)
+  complex csymb(NDOWNSPS)
   logical first,newdat,lsubtract,lapon,lapcqonly,nagain
   equivalence (s1,s1sort)
   data icos7/4,2,5,6,1,3,0/
@@ -104,7 +104,7 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
     delf=ifr*0.5
     dphi=twopi*delf*dt2
     phi=0.0
-    do i=1,32
+    do i=1,NDOWNSPS
       ctwk(i)=cmplx(cos(phi),sin(phi))
       phi=mod(phi+dphi,twopi)
     enddo
@@ -124,11 +124,11 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
 
   j=0
   do k=1,NN
-    i1=ibest+(k-1)*32
+    i1=ibest+(k-1)*NDOWNSPS
     csymb=cmplx(0.0,0.0)
     !if( i1.ge.1 .and. i1+31 .le. NP2 ) csymb=cd0(i1:i1+31)
-    if( i1.ge.0 .and. i1+31 .le. NP2-1 ) csymb=cd0(i1:i1+31)
-    call four2a(csymb,32,1,-1,1)
+    if( i1.ge.0 .and. i1+(NDOWNSPS-1) .le. NP2-1 ) csymb=cd0(i1:i1+(NDOWNSPS-1))
+    call four2a(csymb,NDOWNSPS,1,-1,1)
     s2(0:7,k)=abs(csymb(1:8))/1e3
   enddo  
 
@@ -146,6 +146,12 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   enddo
 ! hard sync sum - max is 21
   nsync=is1+is2+is3
+
+  ! debug
+  !open(99, file="./js8.log", status="old", position="append", action="write")
+  !write(99,*) ibest, nsync   
+  !close(99) 
+
   if(nsync .le. 6) then ! bail out
     call timer('badnsync', 0)
     nbadcrc=1
@@ -387,7 +393,7 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
         if(lsubtract) call subtractft8(dd0,itone,f1,xdt2)
         xsig=0.0
         xnoi=0.0
-        do i=1,79
+        do i=1,NN
            xsig=xsig+s2(itone(i),i)**2
            ios=mod(itone(i)+4,7)
            xnoi=xnoi+s2(ios,i)**2

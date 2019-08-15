@@ -1,8 +1,6 @@
 subroutine sync8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
 
   include 'ft8_params.f90'
-! Search over +/- 2.5s relative to 0.5s TX start time. 
-  parameter (JZ=62)                        
   complex cx(0:NH1)
   real s(NH1,NHSYM)
   real savg(NH1)
@@ -114,7 +112,7 @@ subroutine sync8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
      if(i.ge.2) then
         do j=1,i-1
            fdiff=abs(candidate0(1,i))-abs(candidate0(1,j))
-           if(abs(fdiff).lt.4.0) then
+           if(abs(fdiff).lt.AZ) then                                     ! note: this dedupe difference is dependent on symbol spacing
               if(candidate0(3,i).ge.candidate0(3,j)) candidate0(3,j)=0.
               if(candidate0(3,i).lt.candidate0(3,j)) candidate0(3,i)=0.
            endif

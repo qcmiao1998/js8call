@@ -3,8 +3,24 @@
 
 #define NSMAX 6827
 #define NTMAX 300
+
 #define RX_SAMPLE_RATE 12000
 
+#define JS8_NUM_SYMBOLS    79
+
+#ifndef JS8_80HZ
+#define JS8_80HZ 0
+#endif
+
+#if JS8_80HZ
+#define JS8_SYMBOL_SAMPLES 1200 // 480 // 600 // 1200 // 1920
+#define JS8_TX_SECONDS     10 // 5 // 6 // 10 // 15
+#define JS8_SYMBOL_STOP    32 // 12 // 16 // 32   // 50 // ??? no idea why this works...
+#else
+#define JS8_SYMBOL_SAMPLES 1920
+#define JS8_TX_SECONDS     15
+#define JS8_SYMBOL_STOP    50
+#endif
 
 #ifndef TEST_FOX_WAVE_GEN
 #define TEST_FOX_WAVE_GEN 0

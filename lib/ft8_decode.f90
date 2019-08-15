@@ -45,12 +45,12 @@ contains
     real s(NH1,NHSYM)
     real sbase(NH1)
     real candidate(3,200)
-    real dd(15*12000)
+    real dd(NMAX)
     logical, intent(in) :: lft8apon,lapcqonly,nagain
     logical newdat,lsubtract,ldupe,bcontest
     character*12 mycall12, hiscall12
     character*6 mygrid6,hisgrid6
-    integer*2 iwave(15*12000)
+    integer*2 iwave(NMAX)
     integer apsym(KK)
     character datetime*13,message*22,msg37*37
     character*22 allmessages(100)
@@ -99,11 +99,16 @@ contains
       call timer('sync8   ',0)
       call sync8(dd,ifa,ifb,syncmin,nfqso,s,candidate,ncand,sbase)
       call timer('sync8   ',1)
+
+      !open(99, file="./js8.log", status="old", position="append", action="write")
+      !write(99,*) ncand, "candidates"   
+      !close(99) 
+
       do icand=1,ncand
         sync=candidate(3,icand)
         f1=candidate(1,icand)
         xdt=candidate(2,icand)
-        xbase=10.0**(0.1*(sbase(nint(f1/3.125))-40.0))
+        xbase=10.0**(0.1*(sbase(nint(f1/(12000.0/NFFT1)))-40.0)) ! 3.125Hz
         nsnr0=min(99,nint(10.0*log10(sync) - 25.5))    !### empirical ###
         call timer('ft8b    ',0)
         call ft8b(dd,newdat,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &

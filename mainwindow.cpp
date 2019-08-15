@@ -2412,7 +2412,7 @@ void MainWindow::fixStop()
   } else if (m_mode=="FreqCal"){
     m_hsymStop=((int(m_TRperiod/0.288))/8)*8;
   } else if (m_mode=="FT8") {
-    m_hsymStop=50;
+    m_hsymStop=JS8_SYMBOL_STOP;
   }
 }
 
@@ -2497,6 +2497,7 @@ void MainWindow::dataSink(qint64 frames)
     m_dialFreqRxWSPR=m_freqNominal;
   }
 
+  //qDebug() << m_ihsym << m_hsymStop;
   if(m_ihsym == m_hsymStop) {
     if(m_mode=="Echo") {
       float snr=0;
@@ -4875,7 +4876,7 @@ void MainWindow::guiUpdate()
 
   if(m_TRperiod==0) m_TRperiod=60;
   txDuration=0.0;
-  if(m_modeTx=="FT8")  txDuration=1.0 + NUM_FT8_SYMBOLS*1920/12000.0;      // FT8
+  if(m_modeTx=="FT8")  txDuration=1.0 + JS8_NUM_SYMBOLS * (double)JS8_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE;      // FT8
 
   double tx1=0.0;
   double tx2=txDuration;
@@ -6937,7 +6938,7 @@ void MainWindow::on_actionFT8_triggered()
   m_nsps=6912;
   m_FFTSize = m_nsps / 2;
   Q_EMIT FFTSize (m_FFTSize);
-  m_hsymStop=50;
+  m_hsymStop=JS8_SYMBOL_STOP;
   setup_status_bar (bVHF);
   m_toneSpacing=0.0;                   //???
   ui->actionFT8->setChecked(true);     //???
@@ -6945,7 +6946,7 @@ void MainWindow::on_actionFT8_triggered()
   m_wideGraph->setModeTx(m_modeTx);
   VHF_features_enabled(bVHF);
   ui->cbAutoSeq->setChecked(true);
-  m_TRperiod=15;
+  m_TRperiod=JS8_TX_SECONDS;
   m_fastGraph->hide();
   m_wideGraph->show();
   ui->decodedTextLabel2->setText("  UTC   dB   DT Freq    Message");
@@ -9045,129 +9046,16 @@ void MainWindow::transmit (double snr)
   }
 
   if (m_modeTx == "FT8") {
-    toneSpacing=12000.0/1920.0;
-    if(m_config.x2ToneSpacing()) toneSpacing=2*12000.0/1920.0;
-    if(m_config.x4ToneSpacing()) toneSpacing=4*12000.0/1920.0;
+    toneSpacing=(double)RX_SAMPLE_RATE/(double)JS8_SYMBOL_SAMPLES;
+    //if(m_config.x2ToneSpacing()) toneSpacing=2.0*(double)RX_SAMPLE_RATE/(double)JS8_SYMBOL_SAMPLES;
+    //if(m_config.x4ToneSpacing()) toneSpacing=4.0*(double)RX_SAMPLE_RATE/(double)JS8_SYMBOL_SAMPLES;
     if(m_config.bFox() and !m_tune) toneSpacing=-1;
     if(TEST_FOX_WAVE_GEN && ui->turboButton->isChecked() && !m_tune) toneSpacing=-1;
 
-    Q_EMIT sendMessage (NUM_FT8_SYMBOLS,
-           1920.0, ui->TxFreqSpinBox->value () - m_XIT,
+    Q_EMIT sendMessage (JS8_NUM_SYMBOLS,
+           (double)JS8_SYMBOL_SAMPLES, ui->TxFreqSpinBox->value () - m_XIT,
            toneSpacing, m_soundOutput, m_config.audio_output_channel (),
            true, false, snr, m_TRperiod);
-  }
-
-  if (m_modeTx == "QRA64") {
-    if(m_nSubMode==0) toneSpacing=12000.0/6912.0;
-    if(m_nSubMode==1) toneSpacing=2*12000.0/6912.0;
-    if(m_nSubMode==2) toneSpacing=4*12000.0/6912.0;
-    if(m_nSubMode==3) toneSpacing=8*12000.0/6912.0;
-    if(m_nSubMode==4) toneSpacing=16*12000.0/6912.0;
-    Q_EMIT sendMessage (NUM_QRA64_SYMBOLS,
-           6912.0, ui->TxFreqSpinBox->value () - m_XIT,
-           toneSpacing, m_soundOutput, m_config.audio_output_channel (),
-           true, false, snr, m_TRperiod);
-  }
-
-  if (m_modeTx == "JT9") {
-    int nsub=pow(2,m_nSubMode);
-    int nsps[]={480,240,120,60};
-    double sps=m_nsps;
-    m_toneSpacing=nsub*12000.0/6912.0;
-    if(m_config.x2ToneSpacing()) m_toneSpacing=2.0*m_toneSpacing;
-    if(m_config.x4ToneSpacing()) m_toneSpacing=4.0*m_toneSpacing;
-    bool fastmode=false;
-    if(m_bFast9 and (m_nSubMode>=4)) {
-      fastmode=true;
-      sps=nsps[m_nSubMode-4];
-      m_toneSpacing=12000.0/sps;
-    }
-    Q_EMIT sendMessage (NUM_JT9_SYMBOLS, sps,
-                        ui->TxFreqSpinBox->value() - m_XIT, m_toneSpacing,
-                        m_soundOutput, m_config.audio_output_channel (),
-                        true, fastmode, snr, m_TRperiod);
-  }
-
-  if (m_modeTx == "MSK144") {
-    m_nsps=6;
-    double f0=1000.0;
-    if(!m_bFastMode) {
-      m_nsps=192;
-      f0=ui->TxFreqSpinBox->value () - m_XIT - 0.5*m_toneSpacing;
-    }
-    m_toneSpacing=6000.0/m_nsps;
-    m_FFTSize = 7 * 512;
-    Q_EMIT FFTSize (m_FFTSize);
-    int nsym;
-    nsym=NUM_MSK144_SYMBOLS;
-    if(itone[40] < 0) nsym=40;
-    Q_EMIT sendMessage (nsym, double(m_nsps), f0, m_toneSpacing,
-                        m_soundOutput, m_config.audio_output_channel (),
-                        true, true, snr, m_TRperiod);
-  }
-
-  if (m_modeTx == "JT4") {
-    if(m_nSubMode==0) toneSpacing=4.375;
-    if(m_nSubMode==1) toneSpacing=2*4.375;
-    if(m_nSubMode==2) toneSpacing=4*4.375;
-    if(m_nSubMode==3) toneSpacing=9*4.375;
-    if(m_nSubMode==4) toneSpacing=18*4.375;
-    if(m_nSubMode==5) toneSpacing=36*4.375;
-    if(m_nSubMode==6) toneSpacing=72*4.375;
-    Q_EMIT sendMessage (NUM_JT4_SYMBOLS,
-           2520.0*12000.0/11025.0, ui->TxFreqSpinBox->value () - m_XIT,
-           toneSpacing, m_soundOutput, m_config.audio_output_channel (),
-           true, false, snr, m_TRperiod);
-  }
-  if (m_mode=="WSPR") {
-    int nToneSpacing=1;
-    if(m_config.x2ToneSpacing()) nToneSpacing=2;
-    if(m_config.x4ToneSpacing()) nToneSpacing=4;
-    Q_EMIT sendMessage (NUM_WSPR_SYMBOLS, 8192.0,
-                        ui->TxFreqSpinBox->value() - 1.5 * 12000 / 8192,
-                        m_toneSpacing*nToneSpacing, m_soundOutput,
-                        m_config.audio_output_channel(),true, false, snr,
-                        m_TRperiod);
-  }
-  if (m_mode=="WSPR-LF") {
-    Q_EMIT sendMessage (NUM_WSPR_LF_SYMBOLS, 24576.0,
-                        ui->TxFreqSpinBox->value(),
-                        m_toneSpacing, m_soundOutput,
-                        m_config.audio_output_channel(),true, false, snr,
-                        m_TRperiod);
-  }
-  if(m_mode=="Echo") {
-    //??? should use "fastMode = true" here ???
-    Q_EMIT sendMessage (27, 1024.0, 1500.0, 0.0, m_soundOutput,
-                        m_config.audio_output_channel(),
-                        false, false, snr, m_TRperiod);
-  }
-
-  if(m_mode=="ISCAT") {
-    double sps,f0;
-    if(m_nSubMode==0) {
-      sps=512.0*12000.0/11025.0;
-      toneSpacing=11025.0/512.0;
-      f0=47*toneSpacing;
-    } else {
-      sps=256.0*12000.0/11025.0;
-      toneSpacing=11025.0/256.0;
-      f0=13*toneSpacing;
-    }
-    Q_EMIT sendMessage (NUM_ISCAT_SYMBOLS, sps, f0, toneSpacing, m_soundOutput,
-                        m_config.audio_output_channel(),
-                        true, true, snr, m_TRperiod);
-  }
-
-// In auto-sequencing mode, stop after 5 transmissions of "73" message.
-  if (m_bFastMode || m_bFast9) {
-    if (ui->cbAutoSeq->isVisible () && ui->cbAutoSeq->isChecked ()) {
-      if(m_ntx==5) {
-        m_nTx73 += 1;
-      } else {
-        m_nTx73=0;
-      }
-    }
   }
 }
 
@@ -9653,10 +9541,11 @@ void MainWindow::updateTextWordCheckerDisplay(){
 }
 
 void MainWindow::updateTextStatsDisplay(QString text, int count){
+    const double fpm = 60.0/JS8_TX_SECONDS;
     if(count > 0){
         auto words = text.split(" ", QString::SkipEmptyParts).length();
-        auto wpm = QString::number(words/(count/4.0), 'f', 1);
-        auto cpm = QString::number(text.length()/(count/4.0), 'f', 1);
+        auto wpm = QString::number(words/(count/fpm), 'f', 1);
+        auto cpm = QString::number(text.length()/(count/fpm), 'f', 1);
         wpm_label.setText(QString("%1wpm / %2cpm").arg(wpm).arg(cpm));
         wpm_label.setVisible(true);
     } else {
@@ -12014,7 +11903,7 @@ void MainWindow::emitTones(){
 
     // emit tone numbers to network
     QVariantList t;
-    for(int i = 0; i < NUM_FT8_SYMBOLS; i++){
+    for(int i = 0; i < JS8_NUM_SYMBOLS; i++){
         t.append(QVariant((int)itone[i]));
     }
 
