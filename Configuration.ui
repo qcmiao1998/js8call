@@ -36,7 +36,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget_2">
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="stationTab">
           <attribute name="title">
@@ -63,7 +63,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>738</width>
-                <height>453</height>
+                <height>447</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -277,9 +277,9 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-63</y>
+                <y>0</y>
                 <width>724</width>
-                <height>839</height>
+                <height>789</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -1033,8 +1033,8 @@ radio interface behave as expected.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>264</width>
-                <height>435</height>
+                <width>283</width>
+                <height>397</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_27">
@@ -1455,7 +1455,7 @@ a few, particularly some Kenwood rigs, require it).</string>
                 <x>0</x>
                 <y>0</y>
                 <width>718</width>
-                <height>490</height>
+                <height>449</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_28">
@@ -1859,7 +1859,7 @@ this setting allows you to select which audio input will be used
             <x>0</x>
             <y>0</y>
             <width>760</width>
-            <height>502</height>
+            <height>498</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -2172,7 +2172,7 @@ both here.</string>
             <x>0</x>
             <y>0</y>
             <width>746</width>
-            <height>663</height>
+            <height>630</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_30">
@@ -2667,7 +2667,7 @@ for assessing propagation and system performance.</string>
             <x>0</x>
             <y>0</y>
             <width>760</width>
-            <height>502</height>
+            <height>498</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -2871,11 +2871,11 @@ Right click for insert and delete options.</string>
                 <attribute name="horizontalHeaderCascadingSectionResizes">
                  <bool>true</bool>
                 </attribute>
-                <attribute name="horizontalHeaderDefaultSectionSize">
-                 <number>120</number>
-                </attribute>
                 <attribute name="horizontalHeaderMinimumSectionSize">
                  <number>100</number>
+                </attribute>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>120</number>
                 </attribute>
                 <attribute name="horizontalHeaderStretchLastSection">
                  <bool>true</bool>
@@ -2883,11 +2883,11 @@ Right click for insert and delete options.</string>
                 <attribute name="verticalHeaderVisible">
                  <bool>false</bool>
                 </attribute>
-                <attribute name="verticalHeaderDefaultSectionSize">
-                 <number>30</number>
-                </attribute>
                 <attribute name="verticalHeaderMinimumSectionSize">
                  <number>24</number>
+                </attribute>
+                <attribute name="verticalHeaderDefaultSectionSize">
+                 <number>30</number>
                 </attribute>
                </widget>
               </item>
@@ -3048,7 +3048,7 @@ QListView::item:hover {
                 <x>0</x>
                 <y>0</y>
                 <width>724</width>
-                <height>418</height>
+                <height>434</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_14">
@@ -3501,7 +3501,7 @@ QListView::item:hover {
                 <x>0</x>
                 <y>0</y>
                 <width>233</width>
-                <height>253</height>
+                <height>263</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_5">
@@ -3704,8 +3704,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>277</width>
-                <height>93</height>
+                <width>287</width>
+                <height>99</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_8">
@@ -4314,12 +4314,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="split_mode_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
   <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
  </buttongroups>
 </ui>
