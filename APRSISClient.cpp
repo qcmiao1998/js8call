@@ -242,6 +242,13 @@ void APRSISClient::processQueue(bool disconnect){
     // don't process queue if there's nothing to process
     if(m_frameQueue.isEmpty()) return;
 
+    // don't process queue if there's no host
+    if(m_host.isEmpty() || m_port == 0){
+        // no host, so let's clear the queue and exit
+        m_frameQueue.clear();
+        return;
+    }
+
     // 1. connect (and read)
     // 2. login (and read)
     // 3. for each raw frame in queue, send
