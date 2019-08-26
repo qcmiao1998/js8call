@@ -129,7 +129,7 @@ public:
   bool spot_to_reporting_networks () const;
   void set_spot_to_reporting_networks (bool);
   bool transmit_directed() const;
-  bool autoreply_off_at_startup () const;
+  bool autoreply_on_at_startup () const;
   bool heartbeat_anywhere() const;
   bool heartbeat_qso_pause() const;
   bool relay_off() const;

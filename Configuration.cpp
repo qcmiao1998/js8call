@@ -631,7 +631,7 @@ private:
   bool tx_qsy_allowed_;
   bool spot_to_reporting_networks_;
   bool transmit_directed_;
-  bool autoreply_off_at_startup_;
+  bool autoreply_on_at_startup_;
   bool heartbeat_anywhere_;
   bool heartbeat_qso_pause_;
   bool relay_disabled_;
@@ -770,12 +770,12 @@ void Configuration::set_spot_to_reporting_networks (bool spot)
 }
 
 bool Configuration::transmit_directed() const { return m_->transmit_directed_; }
-bool Configuration::autoreply_off_at_startup () const {
+bool Configuration::autoreply_on_at_startup () const {
     // auto-reply cannot be on at startup if the callsign or grid is empty
     if(my_callsign().isEmpty() || my_grid().isEmpty()){
-        return true;
+        return false;
     }
-    return m_->autoreply_off_at_startup_;
+    return m_->autoreply_on_at_startup_;
 }
 bool Configuration::heartbeat_anywhere() const { return m_->heartbeat_anywhere_;}
 bool Configuration::heartbeat_qso_pause() const { return m_->heartbeat_qso_pause_;}
@@ -1451,7 +1451,7 @@ void Configuration::impl::initialize_models ()
   ui_->tx_qsy_check_box->setChecked (tx_qsy_allowed_);
   ui_->psk_reporter_check_box->setChecked (spot_to_reporting_networks_);
   ui_->transmit_directed_check_box->setChecked(transmit_directed_);
-  ui_->autoreply_off_check_box->setChecked (autoreply_off_at_startup_);
+  ui_->autoreply_on_check_box->setChecked (autoreply_on_at_startup_);
   ui_->heartbeat_anywhere_check_box->setChecked(heartbeat_anywhere_);
   ui_->heartbeat_qso_pause_check_box->setChecked(heartbeat_qso_pause_);
   ui_->relay_disabled_check_box->setChecked(relay_disabled_);
@@ -1725,7 +1725,7 @@ void Configuration::impl::read_settings ()
   type_2_msg_gen_ = settings_->value ("Type2MsgGen", QVariant::fromValue (Configuration::type_2_msg_3_full)).value<Configuration::Type2MsgGen> ();
 
   transmit_directed_ = settings_->value ("TransmitDirected", true).toBool();
-  autoreply_off_at_startup_ = settings_->value ("AutoreplyOFF", false).toBool ();
+  autoreply_on_at_startup_ = settings_->value ("AutoreplyOnAtStartup", false).toBool ();
   heartbeat_anywhere_ = settings_->value("BeaconAnywhere", false).toBool();
   heartbeat_qso_pause_ = settings_->value("HeartbeatQSOPause", true).toBool();
   relay_disabled_ = settings_->value ("RelayOFF", false).toBool ();
@@ -1907,7 +1907,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("AudioOutputChannel", AudioDevice::toString (audio_output_channel_));
   settings_->setValue ("Type2MsgGen", QVariant::fromValue (type_2_msg_gen_));
   settings_->setValue ("TransmitDirected", transmit_directed_);
-  settings_->setValue ("AutoreplyOFF", autoreply_off_at_startup_);
+  settings_->setValue ("AutoreplyOnAtStartup", autoreply_on_at_startup_);
   settings_->setValue ("BeaconAnywhere", heartbeat_anywhere_);
   settings_->setValue ("HeartbeatQSOPause", heartbeat_qso_pause_);
   settings_->setValue ("RelayOFF", relay_disabled_);
@@ -2469,7 +2469,7 @@ void Configuration::impl::accept ()
   id_after_73_ = ui_->CW_id_after_73_check_box->isChecked ();
   tx_qsy_allowed_ = ui_->tx_qsy_check_box->isChecked ();
   transmit_directed_ = ui_->transmit_directed_check_box->isChecked();
-  autoreply_off_at_startup_ = ui_->autoreply_off_check_box->isChecked ();
+  autoreply_on_at_startup_ = ui_->autoreply_on_check_box->isChecked ();
   heartbeat_anywhere_ = ui_->heartbeat_anywhere_check_box->isChecked();
   heartbeat_qso_pause_ = ui_->heartbeat_qso_pause_check_box->isChecked();
   relay_disabled_ = ui_->relay_disabled_check_box->isChecked();

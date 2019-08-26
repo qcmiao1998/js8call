@@ -180,7 +180,6 @@ private slots:
   void on_menuControl_aboutToShow();
   void on_actionCheck_for_Updates_triggered();
   void on_actionEnable_Spotting_toggled(bool checked);
-  void on_actionEnable_Auto_Reply_toggled(bool checked);
   void on_menuWindow_aboutToShow();
   void on_actionFocus_Message_Reply_Area_triggered();
   void on_actionFocus_Band_Activity_Table_triggered();
@@ -260,6 +259,9 @@ private slots:
   void on_dxCallEntry_returnPressed ();
   void on_genStdMsgsPushButton_clicked();
   void on_logQSOButton_clicked();
+  void on_actionModeJS8_triggered();
+  void on_actionModeAutoreply_toggled(bool checked);
+  void prepareAutoreplyMode(bool enabled);
   void on_actionFT8_triggered();
   void on_TxFreqSpinBox_valueChanged(int arg1);
   void on_actionSave_decoded_triggered();
@@ -369,7 +371,6 @@ private slots:
   void stop_tuning ();
   void stopTuneATU();
   void auto_tx_mode(bool);
-  void on_autoReplyButton_toggled(bool checked);
   void on_monitorButton_toggled(bool checked);
   void on_monitorTxButton_toggled(bool checked);
   void on_tuneButton_toggled(bool checked);

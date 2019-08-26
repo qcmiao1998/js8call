@@ -1152,9 +1152,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   setFreqOffsetForRestore(f, false);
   ui->cbVHFcontest->setChecked(false); // this needs to always be false
 
+  ui->actionModeAutoreply->setChecked(m_config.autoreply_on_at_startup());
   ui->spotButton->setChecked(m_config.spot_to_reporting_networks());
 
-  //m_checker = new JSCChecker(ui->extFreeTextMsgEdit, this);
+  // prep
+  prepareAutoreplyMode(ui->actionModeAutoreply->isChecked());
+  prepareSpotting();
 
   auto enterFilter = new EnterKeyPressEater();
   connect(enterFilter, &EnterKeyPressEater::enterKeyPressed, this, [this](QObject *, QKeyEvent *, bool *pProcessed){
@@ -2772,7 +2775,6 @@ void MainWindow::on_menuControl_aboutToShow(){
 #endif
 
     ui->actionEnable_Spotting->setChecked(ui->spotButton->isChecked());
-    ui->actionEnable_Auto_Reply->setChecked(ui->autoReplyButton->isChecked());
 
     QMenu * heartbeatMenu = new QMenu(this->menuBar());
     buildHeartbeatMenu(heartbeatMenu);
@@ -2795,10 +2797,6 @@ void MainWindow::on_actionCheck_for_Updates_triggered(){
 
 void MainWindow::on_actionEnable_Spotting_toggled(bool checked){
     ui->spotButton->setChecked(checked);
-}
-
-void MainWindow::on_actionEnable_Auto_Reply_toggled(bool checked){
-    ui->autoReplyButton->setChecked(checked);
 }
 
 void MainWindow::on_menuWindow_aboutToShow(){
@@ -3192,13 +3190,6 @@ void MainWindow::on_autoButton_clicked (bool checked)
   if(!checked){
       on_stopTxButton_clicked();
   }
-}
-
-void MainWindow::on_autoReplyButton_toggled(bool checked){
-    resetPushButtonToggleText(ui->autoReplyButton);
-
-    // update the HB button immediately
-    updateRepeatButtonDisplay();
 }
 
 void MainWindow::on_monitorButton_toggled(bool checked){
@@ -6926,6 +6917,23 @@ void MainWindow::displayWidgets(qint64 n)
   m_lastCallsign.clear ();     // ensures Tx5 is updated for new modes
 }
 
+void MainWindow::on_actionModeJS8_triggered(){
+    // TODO: uncheck all other modes
+}
+
+void MainWindow::on_actionModeAutoreply_toggled(bool checked){
+    prepareAutoreplyMode(checked);
+}
+
+void MainWindow::prepareAutoreplyMode(bool enabled){
+    // heartbeat is now only available in autoreply mode
+    ui->hbMacroButton->setVisible(enabled);
+    ui->actionHeartbeat->setVisible(enabled);
+
+    // update the HB button immediately
+    updateRepeatButtonDisplay();
+}
+
 void MainWindow::on_actionFT8_triggered()
 {
   m_mode="FT8";
@@ -7419,10 +7427,10 @@ void MainWindow::buildFrequencyMenu(QMenu *menu){
 
 void MainWindow::buildHeartbeatMenu(QMenu *menu){
     auto selectedCallsign = callsignSelected();
-    bool enabled = ui->autoReplyButton->isChecked() && selectedCallsign.isEmpty();
+    bool enabled = ui->actionModeAutoreply->isChecked() && selectedCallsign.isEmpty();
     auto text = "Send Heartbeat Acknowledgments (ACK)";
-    if(!ui->autoReplyButton->isChecked()){
-        text = "Send Heartbeat Acknowledgments (ACK) (Disabled: AUTO is off)";
+    if(!ui->actionModeAutoreply->isChecked()){
+        text = "Send Heartbeat Acknowledgments (ACK) (Disabled: Autoreply is off)";
     }
     if(!selectedCallsign.isEmpty()){
         text = "Send Heartbeat Acknowledgments (ACK) (Disabled: Currently in QSO)";
@@ -8911,8 +8919,6 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
     {
       // initializing
       on_monitorButton_clicked (!m_config.monitor_off_at_startup ());
-
-      ui->autoReplyButton->setChecked(!m_config.autoreply_off_at_startup());
     }
 
   if (s.frequency () != old_state.frequency () || s.split () != m_splitMode)
@@ -9418,7 +9424,7 @@ void MainWindow::updateButtonDisplay(){
 
 void MainWindow::updateRepeatButtonDisplay(){
     auto selectedCallsign = callsignSelected();
-    auto hbBase = m_hbAutoAck && ui->autoReplyButton->isChecked() && selectedCallsign.isEmpty() ? "HB + ACK" : "HB";
+    auto hbBase = m_hbAutoAck && ui->actionModeAutoreply->isChecked() && selectedCallsign.isEmpty() ? "HB + ACK" : "HB";
     if(ui->hbMacroButton->isChecked() && m_hbInterval > 0 && m_nextHeartbeat.isValid()){
         auto secs = DriftingDateTime::currentDateTimeUtc().secsTo(m_nextHeartbeat);
         if(secs > 0){
@@ -10193,15 +10199,15 @@ QStringList MainWindow::generateStatusFlags() {
         flags.append("HB");
     }
 
-    if(ui->autoReplyButton->isChecked()){
+    if(ui->actionModeAutoreply->isChecked()){
         flags.append("AUTO");
     }
 
-    if(ui->autoReplyButton->isChecked() && !m_config.relay_off()){
+    if(ui->actionModeAutoreply->isChecked() && !m_config.relay_off()){
         flags.append("RELAY");
     }
 
-    if(ui->spotButton->isChecked()){
+    if(m_config.spot_to_reporting_networks()){
         flags.append("SPOT");
     }
 
@@ -10663,7 +10669,7 @@ void MainWindow::processCommandActivity() {
 
         // PROCESS ACTIVE HEARTBEAT
         // if we have auto reply enabled and auto ack enabled and no callsign is selected
-        else if (d.cmd == " HB" && ui->autoReplyButton->isChecked() && m_hbAutoAck && selectedCallsign.isEmpty()){
+        else if (d.cmd == " HB" && ui->actionModeAutoreply->isChecked() && m_hbAutoAck && selectedCallsign.isEmpty()){
 
             // check to make sure this callsign isn't blacklisted
             if(m_config.hb_blacklist().contains(d.from) || m_config.hb_blacklist().contains(Radio::base_callsign(d.from))){
@@ -10806,7 +10812,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS BUFFERED QUERY MSGS
-        else if (d.cmd == " QUERY MSGS" && ui->autoReplyButton->isChecked()){
+        else if (d.cmd == " QUERY MSGS" && ui->actionModeAutoreply->isChecked()){
             auto who = d.from; // keep in mind, this is the sender, not the original requestor if relayed
             auto replyPath = d.from;
 
@@ -10830,7 +10836,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // PROCESS BUFFERED QUERY CALL
-        else if (d.cmd == " QUERY CALL" && ui->autoReplyButton->isChecked()){
+        else if (d.cmd == " QUERY CALL" && ui->actionModeAutoreply->isChecked()){
             auto replyPath = d.from;
             if(d.relayPath.contains(">")){
                 replyPath = d.relayPath;
@@ -10900,7 +10906,7 @@ void MainWindow::processCommandActivity() {
         }
 
         // do not queue @ALLCALL replies if auto-reply is not checked
-        if(!ui->autoReplyButton->isChecked() && isAllCall){
+        if(!ui->actionModeAutoreply->isChecked() && isAllCall){
             continue;
         }
 
@@ -11140,7 +11146,7 @@ void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QStr
 }
 
 void MainWindow::processSpots() {
-    if(!ui->spotButton->isChecked()){
+    if(!m_config.spot_to_reporting_networks()){
         m_rxCallQueue.clear();
         return;
     }
@@ -11231,7 +11237,7 @@ void MainWindow::processTxQueue(){
     if(message.priority >= PriorityHigh   ||
        message.message.contains(" HB ")   ||
        message.message.contains(" ACK ")  ||
-       ui->autoReplyButton->isChecked()
+       ui->actionModeAutoreply->isChecked()
     ){
         // then try to set the frequency...
         setFreqOffsetForRestore(f, true);
@@ -12652,12 +12658,12 @@ void MainWindow::tx_watchdog (bool triggered)
       tx_status_label.setText ("Idle timeout");
 
       // if the watchdog is triggered...we're no longer active
-      bool wasAuto = ui->autoReplyButton->isChecked();
+      bool wasAuto = ui->actionModeAutoreply->isChecked();
       bool wasHB = ui->hbMacroButton->isChecked();
       bool wasCQ = ui->cqMacroButton->isChecked();
 
       // save the button states
-      ui->autoReplyButton->setChecked(false);
+      ui->actionModeAutoreply->setChecked(false);
       ui->hbMacroButton->setChecked(false);
       ui->cqMacroButton->setChecked(false);
 
@@ -12672,7 +12678,7 @@ void MainWindow::tx_watchdog (bool triggered)
 
       connect(msgBox, &QMessageBox::finished, this, [this, wasAuto, wasHB, wasCQ](int /*result*/) {
           // restore the button states
-          ui->autoReplyButton->setChecked(wasAuto);
+          ui->actionModeAutoreply->setChecked(wasAuto);
           ui->hbMacroButton->setChecked(wasHB);
           ui->cqMacroButton->setChecked(wasCQ);
 
@@ -12690,7 +12696,7 @@ void MainWindow::tx_watchdog (bool triggered)
       resetMessageTransmitQueue();
 
       // restore the button states
-      ui->autoReplyButton->setChecked(wasAuto);
+      ui->actionModeAutoreply->setChecked(wasAuto);
       ui->hbMacroButton->setChecked(wasHB);
       ui->cqMacroButton->setChecked(wasCQ);
 #endif
