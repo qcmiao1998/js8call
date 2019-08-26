@@ -4797,8 +4797,15 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionCQ"/>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menuModeJS8">
+    <property name="title">
+     <string>Mode</string>
+    </property>
+    <addaction name="actionModeJS8"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
+   <addaction name="menuModeJS8"/>
    <addaction name="menuDecode"/>
    <addaction name="menuSave"/>
    <addaction name="menu_Log"/>
@@ -4916,7 +4923,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Save all</string>
+    <string>Save audio for all</string>
    </property>
   </action>
   <action name="actionOnline_User_Guide">
@@ -4980,7 +4987,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Save decoded</string>
+    <string>Save audio for decoded</string>
    </property>
   </action>
   <action name="actionMediumDecode">
@@ -5717,6 +5724,25 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+A</string>
+   </property>
+  </action>
+  <action name="actionModeJS8">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>JS8</string>
+   </property>
+  </action>
+  <action name="actionAUTO">
+   <property name="text">
+    <string>AUTO</string>
    </property>
   </action>
  </widget>
