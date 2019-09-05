@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "DriftingDateTime.h"
+#include "varicode.h"
 
 #define MAX_SCREENSIZE 2048
 
@@ -411,7 +412,19 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     }
   }
 
-  float bw=7.0*(double)RX_SAMPLE_RATE/(double)JS8_SYMBOL_SAMPLES;     //JS8
+  float bw = 0;
+  if(m_nSubMode == Varicode::JS8CallNormal){
+      bw = 8.0*(double)RX_SAMPLE_RATE/(double)JS8A_SYMBOL_SAMPLES;
+  }
+  else if(m_nSubMode == Varicode::JS8CallFast){
+      bw = 8.0*(double)RX_SAMPLE_RATE/(double)JS8B_SYMBOL_SAMPLES;
+  }
+  else if(m_nSubMode == Varicode::JS8CallTurbo){
+      bw = 8.0*(double)RX_SAMPLE_RATE/(double)JS8C_SYMBOL_SAMPLES;
+  }
+  else if(m_nSubMode == Varicode::JS8CallUltra){
+      bw = 8.0*(double)RX_SAMPLE_RATE/(double)JS8D_SYMBOL_SAMPLES;
+  }
 
   painter0.setPen(penGreen);
 

@@ -694,7 +694,7 @@ QPushButton:checked {
                 </property>
                </spacer>
               </item>
-              <item row="2" column="2">
+              <item row="2" column="1">
                <widget class="QPushButton" name="logQSOButton">
                 <property name="enabled">
                  <bool>true</bool>
@@ -749,7 +749,7 @@ QPushButton:checked {
                 </property>
                </widget>
               </item>
-              <item row="1" column="2">
+              <item row="2" column="2">
                <widget class="QPushButton" name="tuneButton">
                 <property name="enabled">
                  <bool>true</bool>
@@ -804,8 +804,8 @@ QPushButton:checked {
                 </property>
                </widget>
               </item>
-              <item row="2" column="1">
-               <widget class="QPushButton" name="miscButton">
+              <item row="1" column="2">
+               <widget class="QPushButton" name="modeButton">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
@@ -829,19 +829,20 @@ QPushButton:checked {
                 </property>
                 <property name="font">
                  <font>
-                  <pointsize>9</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
                  </font>
                 </property>
                 <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set the JS8 mode settings&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
-background-color:lightgray;
-padding:0.25em 0.25em; font-weight:normal;
+padding:0.25em 0.25em; font-weight:bold;
 border-style:solid;
 border-width:0px;
 border-radius:2px;
+background-color:#6699ff;
 }
 
 QPushButton:checked {
@@ -849,7 +850,7 @@ background-color:#6699ff;
 }</string>
                 </property>
                 <property name="text">
-                 <string>...</string>
+                 <string>JS8</string>
                 </property>
                 <property name="checkable">
                  <bool>true</bool>
@@ -888,7 +889,7 @@ background-color:#6699ff;
                  </font>
                 </property>
                 <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Transmit a tuning tone&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Spot to reporting networks&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
@@ -1077,6 +1078,11 @@ background-color:#6699ff;
         <column>
          <property name="text">
           <string>Time Delta</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Speed</string>
          </property>
         </column>
         <column>
@@ -1270,6 +1276,11 @@ QTextEdit[transmitting=&quot;true&quot;] {
          </column>
          <column>
           <property name="text">
+           <string>Speed</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
            <string>Grid</string>
           </property>
          </column>
@@ -1331,24 +1342,8 @@ QTextEdit[transmitting=&quot;true&quot;] {
         <property name="bottomMargin">
          <number>0</number>
         </property>
-        <item row="1" column="17">
-         <widget class="QPushButton" name="stopTxButton">
-          <property name="minimumSize">
-           <size>
-            <width>75</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Stop transmitting&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Halt</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QPushButton" name="cqMacroButton">
+        <item row="1" column="0">
+         <widget class="QPushButton" name="hbMacroButton">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -1356,7 +1351,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
            </size>
           </property>
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send a CQ message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;Send a Heartbeat message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="autoFillBackground">
            <bool>true</bool>
@@ -1368,31 +1363,12 @@ QTextEdit[transmitting=&quot;true&quot;] {
 }</string>
           </property>
           <property name="text">
-           <string>CQ</string>
+           <string>HB</string>
           </property>
           <property name="checkable">
            <bool>true</bool>
           </property>
-          <property name="flat">
-           <bool>false</bool>
-          </property>
          </widget>
-        </item>
-        <item row="1" column="15">
-         <spacer name="horizontalSpacer_5">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Preferred</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>10</height>
-           </size>
-          </property>
-         </spacer>
         </item>
         <item row="1" column="16">
          <widget class="QPushButton" name="startTxButton">
@@ -1429,8 +1405,8 @@ color:#222;
           </property>
          </widget>
         </item>
-        <item row="1" column="12">
-         <widget class="QPushButton" name="queryButton">
+        <item row="1" column="1">
+         <widget class="QPushButton" name="cqMacroButton">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -1438,10 +1414,25 @@ color:#222;
            </size>
           </property>
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send a directed message to another station&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send a CQ message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="autoFillBackground">
+           <bool>true</bool>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:checked { 
+  font-weight:bold;
+  color:black;
+}</string>
           </property>
           <property name="text">
-           <string>Directed</string>
+           <string>CQ</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -1461,68 +1452,40 @@ color:#222;
           </property>
          </widget>
         </item>
-        <item row="1" column="7">
-         <widget class="QPushButton" name="macrosMacroButton">
-          <property name="minimumSize">
+        <item row="1" column="6">
+         <spacer name="horizontalSpacer_11">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Preferred</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
            <size>
-            <width>0</width>
-            <height>30</height>
+            <width>20</width>
+            <height>10</height>
            </size>
           </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send a saved message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Saved</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QPushButton" name="replyMacroButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reply to a CQ&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>REPLY</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QPushButton" name="hbMacroButton">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;Send a Heartbeat message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="autoFillBackground">
-           <bool>true</bool>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">QPushButton:checked { 
-  font-weight:bold;
-  color:black;
-}</string>
-          </property>
-          <property name="text">
-           <string>HB</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
+         </spacer>
         </item>
         <item row="1" column="8">
-         <spacer name="horizontalSpacer_8">
+         <spacer name="horizontalSpacerSavedDirected">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Preferred</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>10</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="15">
+         <spacer name="horizontalSpacer_5">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -1553,6 +1516,70 @@ color:#222;
           </property>
          </widget>
         </item>
+        <item row="1" column="3">
+         <widget class="QPushButton" name="replyMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reply to a CQ&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>REPLY</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="17">
+         <widget class="QPushButton" name="stopTxButton">
+          <property name="minimumSize">
+           <size>
+            <width>75</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Stop transmitting&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Halt</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="7">
+         <widget class="QPushButton" name="macrosMacroButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send a saved message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Saved</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="12">
+         <widget class="QPushButton" name="queryButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send a directed message to another station&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Directed</string>
+          </property>
+         </widget>
+        </item>
         <item row="1" column="13">
          <widget class="QPushButton" name="deselectButton">
           <property name="sizePolicy">
@@ -1574,22 +1601,6 @@ color:#222;
            <string>Deselect</string>
           </property>
          </widget>
-        </item>
-        <item row="1" column="6">
-         <spacer name="horizontalSpacer_11">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Preferred</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>10</height>
-           </size>
-          </property>
-         </spacer>
         </item>
        </layout>
       </widget>
@@ -4798,9 +4809,14 @@ list. The list can be maintained in Settings (F2).</string>
     <property name="title">
      <string>Mode</string>
     </property>
-    <addaction name="actionModeJS8"/>
+    <addaction name="actionModeJS8Normal"/>
+    <addaction name="actionModeJS8Fast"/>
+    <addaction name="actionModeJS8Turbo"/>
+    <addaction name="actionModeJS8Ultra"/>
     <addaction name="separator"/>
     <addaction name="actionModeAutoreply"/>
+    <addaction name="actionModeJS8HB"/>
+    <addaction name="actionHeartbeatAcknowledgements"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
@@ -5725,23 +5741,15 @@ list. The list can be maintained in Settings (F2).</string>
     <string>Ctrl+Alt+A</string>
    </property>
   </action>
-  <action name="actionModeJS8">
+  <action name="actionModeJS8Normal">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="checked">
     <bool>true</bool>
    </property>
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
    <property name="text">
-    <string>JS8</string>
-   </property>
-  </action>
-  <action name="actionAUTO">
-   <property name="text">
-    <string>AUTO</string>
+    <string>JS8 (Normal, 15s, 50Hz, ~16 WPM)</string>
    </property>
   </action>
   <action name="actionModeAutoreply">
@@ -5749,23 +5757,47 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Enable Networking &amp;&amp; Autoreply</string>
+    <string>Enable Autoreply (AUTO)</string>
    </property>
   </action>
-  <action name="actionModeRelay">
+  <action name="actionModeJS8Fast">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Messaging</string>
+    <string>JS8 (Fast, 10s, 80Hz, ~24 WPM)</string>
    </property>
   </action>
-  <action name="actionModeHeartbeat">
+  <action name="actionModeJS8Turbo">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Heartbeat</string>
+    <string>JS8 (Turbo, 6s, 160Hz, ~40 WPM)</string>
+   </property>
+  </action>
+  <action name="actionModeJS8Ultra">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>JS8 (Ultra, 4s, 250Hz, ~60WPM)</string>
+   </property>
+  </action>
+  <action name="actionModeJS8HB">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Heartbeat Networking (HB)</string>
+   </property>
+  </action>
+  <action name="actionHeartbeatAcknowledgements">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Heartbeat Acknowledgments (ACK)</string>
    </property>
   </action>
  </widget>

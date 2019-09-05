@@ -81,7 +81,6 @@ program ft8code
      call extractmessage174(decoded,message,ncrcflag)
      decoded=decoded0
 
-    if(bcontest) call fix_contest_msg(mygrid6,message)
     bad=" "
     comment='         '
     if(itype.ne.6 .and. message.ne.msgchk) bad="*"

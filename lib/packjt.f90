@@ -660,8 +660,6 @@ subroutine packbits(dbits,nsymd,m0,sym)
         msg(4:4).ge.'A' .and. msg(4:4).le.'Z' .and.                   &
         msg(5:5).eq.' ') msg='CQ '//msg(3:)
 
-   if(bcontest) call fix_contest_msg(mygrid,msg)
-
    if(msg(1:5).eq.'CQ 00' .and. msg(6:6).ge.'0' .and.                 &
         msg(6:6).le.'9') msg='CQ '//msg(6:)
 

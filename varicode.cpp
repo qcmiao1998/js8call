@@ -499,7 +499,7 @@ QList<QPair<int, QVector<bool>>> Varicode::huffEncode(const QMap<QString, QStrin
 QString Varicode::huffDecode(QMap<QString, QString> const &huff, QVector<bool> const& bitvec){
     QString text;
 
-    QString bits = Varicode::bitsToStr(bitvec); //.mid(0, bitvec.length()-pad);
+    QString bits = Varicode::bitsToStr(bitvec);
 
     // TODO: jsherer - this is naive...
     while(bits.length() > 0){
@@ -1570,7 +1570,7 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
     return unpacked;
 }
 
-QString packHuffMessage(const QString &input, int *n){
+QString packHuffMessage(const QString &input, const QVector<bool> prefix, int *n){
     static const int frameSize = 72;
 
     QString frame;
@@ -1580,7 +1580,10 @@ QString packHuffMessage(const QString &input, int *n){
     // but, since none of the other frame types start with a 0, we can drop the two zeros and use
     // them for encoding the first two bits of the actuall data sent. boom!
     // The second bit is a flag that indicates this is not compressed frame (huffman coding)
-    QVector<bool> frameBits = {true, false};
+    QVector<bool> frameBits;
+    if(!prefix.isEmpty()){
+        frameBits << prefix;
+    }
 
     int i = 0;
 
@@ -1628,7 +1631,7 @@ QString packHuffMessage(const QString &input, int *n){
     return frame;
 }
 
-QString packCompressedMessage(const QString &input, int *n){
+QString packCompressedMessage(const QString &input, QVector<bool> prefix, int *n){
     static const int frameSize = 72;
 
     QString frame;
@@ -1638,7 +1641,11 @@ QString packCompressedMessage(const QString &input, int *n){
     // but, since none of the other frame types start with a 1, we can drop the two zeros and use
     // them for encoding the first two bits of the actuall data sent. boom!
     // The second bit is a flag that indicates this is a compressed frame (dense coding)
-    QVector<bool> frameBits = {true, true};
+    // For fast modes, we don't use the prefix since it is indicated by the JS8CallData flag.
+    QVector<bool> frameBits;
+    if(!prefix.isEmpty()){
+        frameBits << prefix;
+    }
 
     int i = 0;
     foreach(auto pair, JSC::compress(input)){
@@ -1675,14 +1682,15 @@ QString packCompressedMessage(const QString &input, int *n){
     return frame;
 }
 
+// pack data message using 70 bits available flagged as data by the first 2 bits
 QString Varicode::packDataMessage(const QString &input, int *n){
    QString huffFrame;
    int huffChars = 0;
-   huffFrame = packHuffMessage(input, &huffChars);
+   huffFrame = packHuffMessage(input, {true, false}, &huffChars);
 
    QString compressedFrame;
    int compressedChars = 0;
-   compressedFrame = packCompressedMessage(input, &compressedChars);
+   compressedFrame = packCompressedMessage(input, {true, true}, &compressedChars);
 
    if(huffChars > compressedChars){
        if(n) *n = huffChars;
@@ -1693,7 +1701,7 @@ QString Varicode::packDataMessage(const QString &input, int *n){
    }
 }
 
-
+// unpack data message using 70 bits available flagged as data by the first 2 bits
 QString Varicode::unpackDataMessage(const QString &text){
     QString unpacked;
 
@@ -1713,8 +1721,9 @@ QString Varicode::unpackDataMessage(const QString &text){
     bits = bits.mid(1);
 
     bool compressed = bits.at(0);
-
     int n = bits.lastIndexOf(0);
+
+    // trim off the pad bits
     bits = bits.mid(1, n-1);
 
     if(compressed){
@@ -1728,14 +1737,82 @@ QString Varicode::unpackDataMessage(const QString &text){
     return unpacked;
 }
 
+#define JS8_FAST_DATA_CAN_USE_HUFF 0
+
+// pack data message using the full 72 bits available (with the data flag in the i3bit header)
+QString Varicode::packFastDataMessage(const QString &input, int *n){
+#if JS8_FAST_DATA_CAN_USE_HUFF
+    QString huffFrame;
+    int huffChars = 0;
+    huffFrame = packHuffMessage(input, {false}, &huffChars);
+
+    QString compressedFrame;
+    int compressedChars = 0;
+    compressedFrame = packCompressedMessage(input, {true}, &compressedChars);
+
+    if(huffChars > compressedChars){
+        if(n) *n = huffChars;
+        return huffFrame;
+    } else {
+        if(n) *n = compressedChars;
+        return compressedFrame;
+    }
+#else
+   QString compressedFrame;
+   int compressedChars = 0;
+   compressedFrame = packCompressedMessage(input, {}, &compressedChars);
+
+   if(n) *n = compressedChars;
+   return compressedFrame;
+#endif
+}
+
+// unpack data message using the full 72 bits available (with the data flag in the i3bit header)
+QString Varicode::unpackFastDataMessage(const QString &text){
+    QString unpacked;
+
+    if(text.length() < 12 || text.contains(" ")){
+        return unpacked;
+    }
+
+    quint8 rem = 0;
+    quint64 value = Varicode::unpack72bits(text, &rem);
+    auto bits = Varicode::intToBits(value, 64) + Varicode::intToBits(rem, 8);
+
+#if JS8_FAST_DATA_CAN_USE_HUFF
+    bool compressed = bits.at(0);
+    int n = bits.lastIndexOf(0);
+
+    // trim off the pad bits
+    bits = bits.mid(1, n-1);
+
+    if(compressed){
+        // partial word (s,c)-dense coding with code tables
+        unpacked = JSC::decompress(bits);
+    } else {
+        // huff decode the bits (without escapes)
+        unpacked = Varicode::huffDecode(Varicode::defaultHuffTable(), bits);
+    }
+#else
+    int n = bits.lastIndexOf(0);
+
+    // trim off the pad bits
+    bits = bits.mid(0, n);
+
+    // partial word (s,c)-dense coding with code tables
+    unpacked = JSC::decompress(bits);
+#endif
+
+    return unpacked;
+}
+
 // TODO: remove the dependence on providing all this data?
-QList<QPair<QString, int>> Varicode::buildMessageFrames(
-    QString const& mycall,
+QList<QPair<QString, int>> Varicode::buildMessageFrames(QString const& mycall,
     QString const& mygrid,
     QString const& selectedCall,
     QString const& text,
-    bool forceIdentify
-){
+    bool forceIdentify,
+    int submode){
     #define ALLOW_SEND_COMPOUND 1
     #define ALLOW_SEND_COMPOUND_DIRECTED 1
     #define AUTO_PREPEND_DIRECTED 1
@@ -1836,7 +1913,15 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(
           }
 #endif
           int m = 0;
-          QString datFrame = Varicode::packDataMessage(line, &m);
+          bool fastDataFrame = false;
+          QString datFrame;
+          if(submode == Varicode::JS8CallNormal){
+              datFrame = Varicode::packDataMessage(line, &m);
+              fastDataFrame = false;
+          } else {
+              datFrame = Varicode::packFastDataMessage(line, &m);
+              fastDataFrame = true;
+          }
 
           // if this parses to a standard FT8 free text message
           // but it can be parsed as a directed message, then we
@@ -1951,7 +2036,8 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(
           }
 
           if(useDat){
-              lineFrames.append({ frame, Varicode::JS8Call });
+              // use the standard data frame
+              lineFrames.append({ frame, fastDataFrame ? Varicode::JS8CallData : Varicode::JS8Call });
               line = line.mid(m);
           }
         }
@@ -1972,13 +2058,15 @@ BuildMessageFramesThread::BuildMessageFramesThread(const QString &mycall,
     const QString &selectedCall,
     const QString &text,
     bool forceIdentify,
+    int submode,
     QObject *parent):
     QThread(parent),
     m_mycall{mycall},
     m_mygrid{mygrid},
     m_selectedCall{selectedCall},
     m_text{text},
-    m_forceIdentify{forceIdentify}
+    m_forceIdentify{forceIdentify},
+    m_submode{submode}
 {
 }
 
@@ -1988,15 +2076,16 @@ void BuildMessageFramesThread::run(){
         m_mygrid,
         m_selectedCall,
         m_text,
-        m_forceIdentify
+        m_forceIdentify,
+        m_submode
     );
 
     // TODO: jsherer - we wouldn't normally use decodedtext.h here... but it's useful for computing the actual frames transmitted.
     QStringList textList;
     qDebug() << "frames:";
     foreach(auto frame, results){
-        auto dt = DecodedText(frame.first, frame.second);
-        qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType());
+        auto dt = DecodedText(frame.first, frame.second, m_submode);
+        qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType()) << m_submode;
         textList.append(dt.message());
     }
 

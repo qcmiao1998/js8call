@@ -15,7 +15,7 @@ namespace
   QRegularExpression words_re {R"(^(?:(?<word1>(?:CQ|DE|QRZ)(?:\s?DX|\s(?:[A-Z]{2}|\d{3}))|[A-Z0-9/]+)\s)(?:(?<word2>[A-Z0-9/]+)(?:\s(?<word3>[-+A-Z0-9]+)(?:\s(?<word4>(?:OOO|(?!RR73)[A-R]{2}[0-9]{2})))?)?)?)"};
 }
 
-DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString const& my_grid)
+DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString const& my_grid, int submode)
   : string_ {the_string.left (the_string.indexOf (QChar::Nbsp))} // discard appended info
   , padding_ {string_.indexOf (" ") > 4 ? 2 : 0} // allow for seconds
   , contest_mode_ {contest_mode}
@@ -25,6 +25,7 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
   , isHeartbeat_(false)
   , isAlt_(false)
   , bits_{0}
+  , submode_{submode}
 {
     if(message_.length() >= 1) {
         message_ = message_.left (21).remove (QRegularExpression {"[<>]"});
@@ -69,12 +70,13 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
     tryUnpack();
 }
 
-DecodedText::DecodedText (QString const& js8callmessage, int bits):
+DecodedText::DecodedText (QString const& js8callmessage, int bits, int submode):
     frameType_(Varicode::FrameUnknown),
     message_(js8callmessage),
     isHeartbeat_(false),
     isAlt_(false),
-    bits_(bits)
+    bits_(bits),
+    submode_(submode)
 {
     is_standard_ = QRegularExpression("^(CQ|DE|QRZ)\\s").match(message_).hasMatch();
 
@@ -89,8 +91,12 @@ bool DecodedText::tryUnpack(){
 
     bool unpacked = false;
     if(!unpacked){
-        unpacked = tryUnpackData();
+        unpacked = tryUnpackFastData();
     }
+
+     if(!unpacked){
+        unpacked = tryUnpackData();
+     }
 
     if(!unpacked){
         unpacked = tryUnpackHeartbeat();
@@ -113,6 +119,10 @@ bool DecodedText::tryUnpackHeartbeat(){
     // directed calls will always be 12+ chars and contain no spaces.
     if(m.length() < 12 || m.contains(' ')){
       return false;
+    }
+
+    if((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData){
+            return false;
     }
 
     bool isAlt = false;
@@ -159,6 +169,10 @@ bool DecodedText::tryUnpackCompound(){
         return false;
     }
 
+    if((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData){
+        return false;
+    }
+
     QStringList cmp;
     if(!parts.at(0).isEmpty()){
         cmp.append(parts.at(0));
@@ -186,6 +200,10 @@ bool DecodedText::tryUnpackDirected(){
     // directed calls will always be 12+ chars and contain no spaces.
     if(m.length() < 12 || m.contains(' ')){
       return false;
+    }
+
+    if((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData){
+        return false;
     }
 
     quint8 type = Varicode::FrameUnknown;
@@ -218,10 +236,41 @@ bool DecodedText::tryUnpackData(){
 
     // data frames calls will always be 12+ chars and contain no spaces.
     if(m.length() < 12 || m.contains(' ')){
-      return false;
+        return false;
+    }
+
+    if((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData){
+        return false;
     }
 
     QString data = Varicode::unpackDataMessage(m);
+
+    if(data.isEmpty()){
+      return false;
+    }
+
+    message_ = data;
+    frameType_ = Varicode::FrameData;
+    return true;
+}
+
+bool DecodedText::tryUnpackFastData(){
+    QString m = message().trimmed();
+
+    // data frames calls will always be 12+ chars and contain no spaces.
+    if(m.length() < 12 || m.contains(' ')){
+        return false;
+    }
+
+    if((bits_ & Varicode::JS8CallData) != Varicode::JS8CallData){
+        return false;
+    }
+
+    if(submode_ != Varicode::JS8CallFast && submode_ != Varicode::JS8CallTurbo && submode_ != Varicode::JS8CallUltra){
+        return false;
+    }
+
+    QString data = Varicode::unpackFastDataMessage(m);
 
     if(data.isEmpty()){
       return false;

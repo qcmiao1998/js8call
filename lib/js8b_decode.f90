@@ -1,25 +1,16 @@
-module ft8_decode
+module js8b_decode
 
-  parameter (MAXFOX=1000)
-  character*12 c2fox(MAXFOX)
-  character*4  g2fox(MAXFOX)
-  integer nsnrfox(MAXFOX)
-  integer nfreqfox(MAXFOX)
-  integer n30fox(MAXFOX)
-  integer n30z
-  integer nfox
-  
-  type :: ft8_decoder
-     procedure(ft8_decode_callback), pointer :: callback
+  type :: js8b_decoder
+     procedure(js8b_decode_callback), pointer :: callback
    contains
      procedure :: decode
-  end type ft8_decoder
+  end type js8b_decoder
 
   abstract interface
-     subroutine ft8_decode_callback (this,sync,snr,dt,freq,decoded,nap,qual)
-       import ft8_decoder
+     subroutine js8b_decode_callback (this,sync,snr,dt,freq,decoded,nap,qual)
+       import js8b_decoder
        implicit none
-       class(ft8_decoder), intent(inout) :: this
+       class(js8b_decoder), intent(inout) :: this
        real, intent(in) :: sync
        integer, intent(in) :: snr
        real, intent(in) :: dt
@@ -27,7 +18,7 @@ module ft8_decode
        character(len=37), intent(in) :: decoded
        integer, intent(in) :: nap 
        real, intent(in) :: qual 
-     end subroutine ft8_decode_callback
+     end subroutine js8b_decode_callback
   end interface
 
 contains
@@ -37,11 +28,11 @@ contains
        mycall12,mygrid6,hiscall12,hisgrid6)
 !    use wavhdr
     use timer_module, only: timer
-    include 'ft8/ft8_params.f90'
 !    type(hdr) h
+    use js8b_module
 
-    class(ft8_decoder), intent(inout) :: this
-    procedure(ft8_decode_callback) :: callback
+    class(js8b_decoder), intent(inout) :: this
+    procedure(js8b_decode_callback) :: callback
     real s(NH1,NHSYM)
     real sbase(NH1)
     real candidate(3,200)
@@ -83,7 +74,7 @@ contains
     if(ndepth.ge.2) npass=3
     do ipass=1,npass
       newdat=.true.  ! Is this a problem? I hijacked newdat.
-      syncmin=1.5
+      syncmin=ASYNCMIN
       if(ipass.eq.1) then
         lsubtract=.true.
         if(ndepth.eq.1) lsubtract=.false.
@@ -96,13 +87,16 @@ contains
         lsubtract=.false. 
       endif 
 
-      call timer('sync8   ',0)
-      call sync8(dd,ifa,ifb,syncmin,nfqso,s,candidate,ncand,sbase)
-      call timer('sync8   ',1)
+      call timer('syncjs8 ',0)
+      call syncjs8(dd,ifa,ifb,syncmin,nfqso,s,candidate,ncand,sbase)
+      call timer('syncjs8 ',1)
 
-      !open(99, file="./js8.log", status="old", position="append", action="write")
-      !write(99,*) ncand, "candidates"   
-      !close(99) 
+      if(NWRITELOG.eq.1) then
+        open(99, file="./js8.log", status="old", position="append", action="write")
+        write(99,*) ncand, "candidates"   
+        write(99,*) "---"
+        close(99) 
+      endif
 
       do icand=1,ncand
         sync=candidate(3,icand)
@@ -110,16 +104,30 @@ contains
         xdt=candidate(2,icand)
         xbase=10.0**(0.1*(sbase(nint(f1/(12000.0/NFFT1)))-40.0)) ! 3.125Hz
         nsnr0=min(99,nint(10.0*log10(sync) - 25.5))    !### empirical ###
-        call timer('ft8b    ',0)
-        call ft8b(dd,newdat,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &
+
+        if(NWRITELOG.eq.1) then
+          open(99, file="./js8.log", status="old", position="append", action="write")
+          write(99,*) 'icand', icand, f1, sync, xdt, xbase
+          close(99) 
+        endif
+
+        call timer('js8dec  ',0)
+        call js8dec(dd,newdat,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &
              lapcqonly,napwid,lsubtract,nagain,iaptype,mycall12,mygrid6,   &
              hiscall12,bcontest,sync,f1,xdt,xbase,apsym,nharderrors,dmin,  &
              nbadcrc,iappass,iera,msg37,xsnr)
         message=msg37(1:22)   !###
         nsnr=nint(xsnr) 
-        xdt=xdt-0.5
+        xdt=xdt-ASTART
         hd=nharderrors+dmin
-        call timer('ft8b    ',1)
+
+        if(NWRITELOG.eq.1) then
+          open(99, file="./js8.log", status="old", position="append", action="write")
+          write(99,*) 'icand', icand, hd, nbadcrc
+          close(99) 
+        endif
+        
+        call timer('js8dec  ',1)
         if(nbadcrc.eq.0) then
            ldupe=.false.
            do id=1,ndecodes
@@ -135,9 +143,15 @@ contains
               call this%callback(sync,nsnr,xdt,f1,msg37,iaptype,qual)
            endif
         endif
+
+        if(NWRITELOG.eq.1) then
+          open(99, file="./js8.log", status="old", position="append", action="write")
+          write(99,*) '---'
+          close(99) 
+        endif
       enddo
   enddo
   return
   end subroutine decode
 
-end module ft8_decode
+end module js8b_decode

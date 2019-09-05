@@ -5,6 +5,20 @@
 #include <QKeyEvent>
 #include <QMouseEvent>
 
+class KeyPressEater : public QObject
+{
+    Q_OBJECT
+public:
+    KeyPressEater(){}
+    virtual ~KeyPressEater(){}
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event);
+
+public:
+    Q_SIGNAL void keyPressed(QObject *obj, QKeyEvent *evt, bool *pProcessed);
+};
+
 class EscapeKeyPressEater : public QObject
 {
     Q_OBJECT

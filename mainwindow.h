@@ -177,6 +177,7 @@ private slots:
   void on_tx4_editingFinished();
   void on_tx5_currentTextChanged (QString const&);
   void on_tx6_editingFinished();
+  void on_menuModeJS8_aboutToShow();
   void on_menuControl_aboutToShow();
   void on_actionCheck_for_Updates_triggered();
   void on_actionEnable_Spotting_toggled(bool checked);
@@ -259,10 +260,15 @@ private slots:
   void on_dxCallEntry_returnPressed ();
   void on_genStdMsgsPushButton_clicked();
   void on_logQSOButton_clicked();
-  void on_actionModeJS8_triggered();
+  void on_actionModeJS8HB_toggled(bool checked);
+  void on_actionModeJS8Normal_triggered();
+  void on_actionModeJS8Fast_triggered();
+  void on_actionModeJS8Turbo_triggered();
+  void on_actionModeJS8Ultra_triggered();
+  void on_actionHeartbeatAcknowledgements_toggled(bool checked);
   void on_actionModeAutoreply_toggled(bool checked);
-  void prepareAutoreplyMode(bool enabled);
-  void on_actionFT8_triggered();
+  void prepareHeartbeatMode(bool enabled);
+  void on_actionJS8_triggered();
   void on_TxFreqSpinBox_valueChanged(int arg1);
   void on_actionSave_decoded_triggered();
   void on_actionQuickDecode_toggled (bool);
@@ -409,7 +415,6 @@ private slots:
   void on_pbTxNext_clicked(bool b);
   void on_actionEcho_Graph_triggered();
   void on_actionFast_Graph_triggered();
-  void fast_decode_done();
   void on_actionMeasure_reference_spectrum_triggered();
   void on_actionErase_reference_spectrum_triggered();
   void on_actionMeasure_phase_response_triggered();
@@ -729,6 +734,7 @@ private:
     int snr;
     int bits;
     float tdrift;
+    QString mode;
   };
 
   struct CommandDetail
@@ -746,6 +752,7 @@ private:
     QString text;
     QString extra;
     float tdrift;
+    QString mode;
     QString relayPath;
   };
 
@@ -763,6 +770,7 @@ private:
     int snr;
     bool shouldDisplay;
     float tdrift;
+    QString mode;
   };
 
   struct MessageBuffer {
@@ -872,8 +880,6 @@ private:
   QQueue<QString> m_foxQSOinProgress;  //QSOs in progress: Fox has sent a report
   QQueue<qint64>  m_foxRateQueue;
 
-  bool m_hbAutoAck;
-  bool m_hbHidden;
   int m_hbInterval;
   int m_cqInterval;
   bool m_hbPaused;
@@ -942,6 +948,7 @@ private:
   void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
   void aprsLogReport(int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
+  QString currentMode();
   void updateCurrentBand();
   void displayDialFrequency ();
   void transmitDisplay (bool);

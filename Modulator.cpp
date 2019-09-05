@@ -71,7 +71,19 @@ void Modulator::start (unsigned symbolsLength, double framesPerSymbol,
   m_toneSpacing = toneSpacing;
   m_bFastMode=fastMode;
   m_TRperiod=TRperiod;
-  unsigned delay_ms = 1920 == m_nsps && 15 == m_period ? 500 : 250; // 1000;
+  unsigned delay_ms = 0;
+  if(m_TRperiod == JS8A_TX_SECONDS){
+      delay_ms = JS8A_START_DELAY_MS;
+  }
+  else if(m_TRperiod == JS8B_TX_SECONDS){
+      delay_ms = JS8B_START_DELAY_MS;
+  }
+  else if(m_TRperiod == JS8C_TX_SECONDS){
+      delay_ms = JS8C_START_DELAY_MS;
+  }
+  else if(m_TRperiod == JS8D_TX_SECONDS){
+      delay_ms = JS8D_START_DELAY_MS;
+  }
 
   // noise generator parameters
   if (m_addNoise) {

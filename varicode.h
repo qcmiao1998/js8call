@@ -16,12 +16,20 @@
 class Varicode
 {
 public:
+    // submode types
+    enum SubmodeType {
+        JS8CallNormal   = 0,
+        JS8CallFast     = 1,
+        JS8CallTurbo    = 2,
+        JS8CallUltra    = 3
+    };
+
     // frame type transmitted via itype and decoded by the ft8 decoded
     enum TransmissionType {
         JS8Call          = 0, // [000] <- any other frame of the message
         JS8CallFirst     = 1, // [001] <- the first frame of a message
         JS8CallLast      = 2, // [010] <- the last frame of a message
-        JS8CallFlag      = 4, // [100] <- flagged frame (no frame type header)
+        JS8CallData      = 4, // [100] <- flagged frame (no frame type header)
     };
 
     /*
@@ -156,11 +164,15 @@ public:
     static QString packDataMessage(QString const& text, int *n);
     static QString unpackDataMessage(QString const& text);
 
+    static QString packFastDataMessage(QString const& text, int *n);
+    static QString unpackFastDataMessage(QString const& text);
+
     static QList<QPair<QString, int>> buildMessageFrames(QString const& mycall,
         QString const& mygrid,
         QString const& selectedCall,
         QString const& text,
-        bool forceIdentify);
+        bool forceIdentify,
+        int submode);
 };
 
 
@@ -173,6 +185,7 @@ public:
                              QString const& selectedCall,
                              QString const& text,
                              bool forceIdentify,
+                             int submode,
                              QObject *parent=nullptr);
     void run() override;
 signals:
@@ -184,6 +197,7 @@ private:
     QString m_selectedCall;
     QString m_text;
     bool m_forceIdentify;
+    int m_submode;
 };
 
 #endif // VARICODE_H

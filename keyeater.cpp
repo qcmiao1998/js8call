@@ -1,5 +1,20 @@
 #include "keyeater.h"
 
+
+bool KeyPressEater::eventFilter(QObject *obj, QEvent *event){
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        bool processed = false;
+        emit this->keyPressed(obj, keyEvent, &processed);
+        if(processed){
+            return true;
+        }
+    }
+
+    // standard event processing
+    return QObject::eventFilter(obj, event);
+}
+
 bool EscapeKeyPressEater::eventFilter(QObject *obj, QEvent *event){
     if (event->type() == QEvent::KeyPress) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);

@@ -7,19 +7,31 @@
 #define RX_SAMPLE_RATE 12000
 
 #define JS8_NUM_SYMBOLS    79
+#define JS8_ENABLE_JS8B    1
+#define JS8_ENABLE_JS8C    1
+#define JS8_ENABLE_JS8D    0
 
-#ifndef JS8_80HZ
-#define JS8_80HZ 0
-#endif
+#define JS8A_SYMBOL_SAMPLES 1920
+#define JS8A_TX_SECONDS     15
+#define JS8A_START_DELAY_MS 500
 
-#if JS8_80HZ
-#define JS8_SYMBOL_SAMPLES 1200 // 480 // 600 // 1200 // 1920
-#define JS8_TX_SECONDS     10 // 5 // 6 // 10 // 15
-#define JS8_SYMBOL_STOP    32 // 12 // 16 // 32   // 50 // ??? no idea why this works...
+#define JS8B_SYMBOL_SAMPLES 1200
+#define JS8B_TX_SECONDS     10
+#define JS8B_START_DELAY_MS 200
+
+#define JS8C_SYMBOL_SAMPLES 600
+#define JS8C_TX_SECONDS     6
+#define JS8C_START_DELAY_MS 100
+
+#define JS8D_IS_ULTRA 1
+#if JS8D_IS_ULTRA
+#define JS8D_SYMBOL_SAMPLES 384
+#define JS8D_TX_SECONDS     4
+#define JS8D_START_DELAY_MS 100
 #else
-#define JS8_SYMBOL_SAMPLES 1920
-#define JS8_TX_SECONDS     15
-#define JS8_SYMBOL_STOP    50
+#define JS8D_SYMBOL_SAMPLES 4000
+#define JS8D_TX_SECONDS     30
+#define JS8D_START_DELAY_MS 100
 #endif
 
 #ifndef TEST_FOX_WAVE_GEN

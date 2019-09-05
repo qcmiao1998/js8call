@@ -295,6 +295,12 @@ set (wsjt_FSRCS
   lib/timer_impl.f90
   lib/timer_module.f90
   lib/wavhdr.f90
+  lib/js8b_module.f90
+  lib/js8b_decode.f90
+  lib/js8c_module.f90
+  lib/js8c_decode.f90
+  lib/js8d_module.f90
+  lib/js8d_decode.f90
 
   # remaining non-module sources
   lib/addit.f90
@@ -311,6 +317,7 @@ set (wsjt_FSRCS
   lib/azdist.f90
   lib/badmsg.f90
   lib/ft8/baseline.f90
+  # lib/js8/baselinejs8.f90
   lib/bpdecode40.f90
   lib/bpdecode144.f90
   lib/ft8/bpdecode174.f90
@@ -350,7 +357,6 @@ set (wsjt_FSRCS
   lib/ft8/extractmessage174.f90
   lib/fano232.f90
   lib/fast9.f90
-  lib/fast_decode.f90
   lib/fchisq.f90
   lib/fchisq0.f90
   lib/fchisq65.f90
@@ -361,7 +367,6 @@ set (wsjt_FSRCS
   lib/filbig.f90
   lib/ft8/filt8.f90
   lib/fitcal.f90
-  lib/fix_contest_msg.f90
   lib/flat1.f90
   lib/flat1a.f90
   lib/flat1b.f90
@@ -378,19 +383,16 @@ set (wsjt_FSRCS
   lib/freqcal.f90
   lib/ft8/ft8apset.f90
   lib/ft8/ft8b.f90
+  # lib/js8/js8params.f90
+  # lib/js8/js8b.f90
   lib/ft8/ft8code.f90
   lib/ft8/ft8_downsample.f90
+  # lib/js8/js8_downsample.f90
   lib/ft8/ft8sim.f90
-  lib/gen4.f90
-  lib/gen65.f90
-  lib/gen9.f90
-  lib/geniscat.f90
   lib/ft8/genft8.f90
-  lib/genmsk144.f90
-  lib/genmsk40.f90
-  lib/genqra64.f90
+  lib/js8/genjs8.f90
   lib/ft8/genft8refsig.f90
-  lib/genwspr.f90
+  # lib/js8/genjs8refsig.f90
   lib/geodist.f90
   lib/getlags.f90
   lib/getmet4.f90
@@ -401,7 +403,6 @@ set (wsjt_FSRCS
   lib/ft8/h1.f90
   lib/hash.f90
   lib/hint65.f90
-  lib/hspec.f90
   lib/indexx.f90
   lib/init_random_seed.f90
   lib/interleave4.f90
@@ -414,6 +415,9 @@ set (wsjt_FSRCS
   lib/jtmsg.f90
   lib/ldpcsim144.f90
   lib/ft8/ldpcsim174.f90
+  lib/js8/ldpcsim174js8b.f90
+  lib/js8/ldpcsim174js8c.f90
+  lib/js8/ldpcsim174js8d.f90
   lib/ldpcsim40.f90
   lib/libration.f90
   lib/lorentzian.f90
@@ -423,20 +427,6 @@ set (wsjt_FSRCS
   lib/moondopjpl.f90
   lib/morse.f90
   lib/move.f90
-  lib/msk144d2.f90
-  lib/msk40decodeframe.f90
-  lib/msk144decodeframe.f90
-  lib/msk144sd.f90
-  lib/msk40spd.f90
-  lib/msk144spd.f90
-  lib/msk40sync.f90
-  lib/msk144sync.f90
-  lib/msk40_freq_search.f90
-  lib/msk144_freq_search.f90
-  lib/mskrtd.f90
-  lib/msk144signalquality.f90
-  lib/msk144sim.f90
-  lib/mskrtd.f90
   lib/ft8/osd174.f90
   lib/pctile.f90
   lib/peakdt9.f90
@@ -466,6 +456,7 @@ set (wsjt_FSRCS
   lib/stdmsg.f90
   lib/subtract65.f90
   lib/ft8/subtractft8.f90
+  # lib/js8/subtractjs8.f90
   lib/sun.f90
   lib/symspec.f90
   lib/symspec2.f90
@@ -474,7 +465,9 @@ set (wsjt_FSRCS
   lib/sync64.f90
   lib/sync65.f90
   lib/ft8/sync8.f90
+  # lib/js8/syncjs8.f90
   lib/ft8/sync8d.f90
+  # lib/js8/syncjs8d.f90
   lib/sync9.f90
   lib/sync9f.f90
   lib/sync9w.f90
@@ -502,46 +495,24 @@ set (wsjt_FSRCS
 # temporary workaround for a gfortran v7.3 ICE on Fedora 27 64-bit
 set_source_files_properties (lib/slasubs.f PROPERTIES COMPILE_FLAGS -O2)
 
-set (ka9q_CSRCS
-  lib/ftrsd/decode_rs.c
-  lib/ftrsd/encode_rs.c
-  lib/ftrsd/init_rs.c
-  )
-set_source_files_properties (${ka9q_CSRCS} PROPERTIES COMPILE_FLAGS -Wno-sign-compare)
-
-set (qra_CSRCS
-  lib/qra/qra64/qra64.c
-  lib/qra/qra64/qra64_subs.c
-  lib/qra/qracodes/npfwht.c
-  lib/qra/qracodes/pdmath.c 
-  lib/qra/qracodes/qra12_63_64_irr_b.c
-  lib/qra/qracodes/qra13_64_64_irr_e.c
-  lib/qra/qracodes/qracodes.c
-  lib/qra/qracodes/normrnd.c
-  )
-
 set (sqlite3_CSRCS
   vendor/sqlite3/sqlite3.c
   )
 
 set (wsjt_CSRCS
-  ${ka9q_CSRCS}
-  lib/ftrsd/ftrsdap.c
   lib/sgran.c
   lib/golay24_table.c
   lib/gran.c
   lib/igray.c
   lib/init_random_seed.c
   lib/ldpc32_table.c
-  lib/wsprd/nhash.c
+  lib/nhash.c
   lib/tab.c
   lib/tmoonsub.c
   lib/usleep.c
   lib/vit213.c
   lib/wisdom.c
-  lib/wrapkarn.c
   ${ldpc_CSRCS}
-  ${qra_CSRCS}
   )
 
 set (wsjt_qt_UISRCS
@@ -1025,6 +996,15 @@ target_link_libraries (wsjt_qtmm Qt5::Multimedia)
 
 add_executable (ldpcsim174 lib/ft8/ldpcsim174.f90 wsjtx.rc)
 target_link_libraries (ldpcsim174 wsjt_fort wsjt_cxx)
+
+add_executable (ldpcsim174js8b lib/js8/ldpcsim174js8b.f90 wsjtx.rc)
+target_link_libraries (ldpcsim174js8b wsjt_fort wsjt_cxx)
+
+add_executable (ldpcsim174js8c lib/js8/ldpcsim174js8c.f90 wsjtx.rc)
+target_link_libraries (ldpcsim174js8c wsjt_fort wsjt_cxx)
+
+add_executable (ldpcsim174js8d lib/js8/ldpcsim174js8d.f90 wsjtx.rc)
+target_link_libraries (ldpcsim174js8d wsjt_fort wsjt_cxx)
 
 add_executable (js8 ${js8_FSRCS} ${js8_CXXSRCS} wsjtx.rc)
 if (${OPENMP_FOUND} OR APPLE)
