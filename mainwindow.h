@@ -945,6 +945,7 @@ private:
   void aprsSetLocal ();
   void spotReport(int offset, int snr, QString callsign, QString grid);
   void spotCmd(CommandDetail cmd);
+  void spotAPRSCmd(CommandDetail d);
   void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
   void aprsLogReport(int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();

@@ -77,7 +77,7 @@ QMap<QString, int> directed_cmds = {
 
     {" QUERY CALL",   13  }, // can you transmit a ping to callsign?
 
-    {" APRS:",        14  }, // send an aprs packet
+    // {" ",          14  }, // reserved
 
     {" GRID",         15  }, // this is my current grid locator
 
@@ -105,13 +105,13 @@ QMap<QString, int> directed_cmds = {
 };
 
 // commands allowed to be processed
-QSet<int> allowed_cmds = {-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+QSet<int> allowed_cmds = {-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, /*14,*/ 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 // commands that result in an autoreply (which can be relayed)
 QSet<int> autoreply_cmds = {0, 3, 4, 6, 9, 10, 11, 12, 13, 16, 30};
 
 // commands that should be buffered
-QSet<int> buffered_cmds = {5, 9, 10, 11, 12, 13, 14, 15, 24};
+QSet<int> buffered_cmds = {5, 9, 10, 11, 12, 13, 15, 24};
 
 // commands that may include an SNR value
 QSet<int> snr_cmds = {25, 29};
@@ -124,13 +124,12 @@ QMap<int, int> checksum_cmds = {
     { 11, 16 },
     { 12, 16 },
     { 13, 16 },
-    { 14, 16 },
     { 15,  0 },
     { 24, 16 }
 };
 
 QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|APRS[:]|MSG TO[:]|SNR[?]|INFO[?]|GRID[?]|STATUS[?]|QUERY MSGS[?]|HEARING[?]|(?:(?:STATUS|HEARING|QUERY CALL|QUERY MSGS|QUERY|CMD|MSG|NACK|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|INFO|GRID|DIT DIT)(?=[ ]|$))|[?> ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|MSG TO[:]|SNR[?]|INFO[?]|GRID[?]|STATUS[?]|QUERY MSGS[?]|HEARING[?]|(?:(?:STATUS|HEARING|QUERY CALL|QUERY MSGS|QUERY|CMD|MSG|NACK|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|INFO|GRID|DIT DIT)(?=[ ]|$))|[?> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR|\\bACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
@@ -242,6 +241,16 @@ QMap<QString, quint32> basecalls = {
     { "@CONTROL",  nbasecall + 25 }, // Control group
     { "@NET",      nbasecall + 26 }, // Net group
     { "@NTS",      nbasecall + 27 }, // NTS group
+
+    // reserved groups
+    { "@RESERVE/0", nbasecall + 28 }, // Reserved
+    { "@RESERVE/1", nbasecall + 29 }, // Reserved
+    { "@RESERVE/2", nbasecall + 30 }, // Reserved
+    { "@RESERVE/3", nbasecall + 31 }, // Reserved
+    { "@RESERVE/4", nbasecall + 32 }, // Reserved
+
+    // special groups
+    { "@APRSIS",    nbasecall + 33 }, // APRS GROUP
 };
 
 QMap<quint32, QString> cqs = {
@@ -1036,7 +1045,7 @@ QPair<float, float> Varicode::grid2deg(QString const &grid){
 // pack a 4-digit maidenhead grid locator into a 15-bit value
 quint16 Varicode::packGrid(QString const& value){
     QString grid = QString(value).trimmed();
-    if(grid.length() < 4){      
+    if(grid.length() < 4){
         return (1<<15)-1;
     }
 

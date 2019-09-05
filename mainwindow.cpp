@@ -4713,6 +4713,37 @@ void MainWindow::spotCmd(CommandDetail cmd){
     m_spotClient->enqueueCmd(cmdStr, cmd.from, cmd.to, cmd.relayPath, cmd.text, cmd.grid, cmd.extra, m_freqNominal + cmd.freq, cmd.snr);
 }
 
+void MainWindow::spotAPRSCmd(CommandDetail d){
+    if(!m_config.spot_to_reporting_networks()) return;
+
+    if(d.cmd == " GRID"){
+        auto grids = Varicode::parseGrids(d.text);
+        foreach(auto grid, grids){
+            CallDetail cd = {};
+            cd.bits = d.bits;
+            cd.call = d.from;
+            cd.freq = d.freq;
+            cd.grid = grid;
+            cd.snr = d.snr;
+            cd.utcTimestamp = d.utcTimestamp;
+            cd.tdrift = d.tdrift;
+            cd.mode = currentMode();
+
+            m_aprsCallCache.remove(cd.call);
+            m_aprsCallCache.remove(APRSISClient::replaceCallsignSuffixWithSSID(cd.call, Radio::base_callsign(cd.call)));
+
+            logCallActivity(cd, true);
+        }
+
+        return;
+    }
+
+    // for raw messages, ensure the passcode is valid first
+    if(!m_aprsClient->isPasscodeValid()) return;
+    qDebug() << "enqueueing third party text" << d.from << d.text;
+    m_aprsClient->enqueueThirdParty(Radio::base_callsign(d.from), d.text);
+}
+
 void MainWindow::pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid){
     if(!m_config.spot_to_reporting_networks()) return;
 
@@ -6185,8 +6216,8 @@ bool MainWindow::ensureCreateMessageReady(const QString &text){
         return false;
     }
 
-    if(text.contains("APRS:") && !m_aprsClient->isPasscodeValid()){
-        MessageBox::warning_message(this, tr ("Please ensure a valid APRS passcode is set in the settings when sending an APRS packet."));
+    if(text.contains("@APRSIS") && !m_aprsClient->isPasscodeValid()){
+        MessageBox::warning_message(this, tr ("Please ensure a valid APRS passcode is set in the settings when sending to the @APRSIS group."));
         return false;
     }
 
@@ -10310,32 +10341,6 @@ void MainWindow::processCommandActivity() {
         logCallActivity(cd, true);
         logHeardGraph(d.from, d.to);
 
-        // PROCESS BUFFERED GRID FOR EVERYONE
-        if (d.cmd == " GRID"){
-           // 1. parse grids
-           // 2. log it to reporting networks
-           auto grids = Varicode::parseGrids(d.text);
-           foreach(auto grid, grids){
-               CallDetail cd = {};
-               cd.bits = d.bits;
-               cd.call = d.from;
-               cd.freq = d.freq;
-               cd.grid = grid;
-               cd.snr = d.snr;
-               cd.utcTimestamp = d.utcTimestamp;
-               cd.tdrift = d.tdrift;
-               cd.mode = currentMode();
-
-               m_aprsCallCache.remove(cd.call);
-               m_aprsCallCache.remove(APRSISClient::replaceCallsignSuffixWithSSID(cd.call, Radio::base_callsign(cd.call)));
-
-               logCallActivity(cd, true);
-           }
-
-           // make sure this is explicit
-           continue;
-        }
-
         // PROCESS BUFFERED HEARING FOR EVERYONE
         if (d.cmd == " HEARING"){
             // 1. parse callsigns
@@ -10352,6 +10357,11 @@ void MainWindow::processCommandActivity() {
         // PROCESS @JS8NET SPOTS FOR EVERYONE
         if (d.to == "@JS8NET"){
             spotCmd(d);
+        }
+
+        // PROCESS @APRSIS SPOTS FOR EVERYONE
+        if (d.to == "@APRSIS"){
+            spotAPRSCmd(d);
         }
 
         // PREPARE CMD TEXT STRING
@@ -10928,14 +10938,6 @@ void MainWindow::processCommandActivity() {
                     m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 25);
                 }
             }
-        }
-
-        // PROCESS BUFFERED APRS:
-        else if(d.cmd == " APRS:" && m_config.spot_to_reporting_networks() && m_aprsClient->isPasscodeValid()){
-            m_aprsClient->enqueueThirdParty(Radio::base_callsign(d.from), d.text);
-
-            // make sure this is explicit
-            continue;
         }
 
 #if 0
