@@ -2003,6 +2003,24 @@ void MainWindow::initializeDummyData(){
         i++;
     }
 
+    ActivityDetail adHB1 = {};
+    adHB1.bits = Varicode::JS8CallFirst;
+    adHB1.snr = 0;
+    adHB1.freq = 750;
+    adHB1.text = QString("KN4CRD: HB AUTO EM73");
+    adHB1.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+    adHB1.mode = "NORMAL";
+    m_bandActivity[750].append(adHB1);
+
+    ActivityDetail adHB2 = {};
+    adHB2.bits = Varicode::JS8CallLast;
+    adHB2.snr = 0;
+    adHB2.freq = 750;
+    adHB2.text = QString(" MSG ID 1");
+    adHB2.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+    adHB2.mode = "NORMAL";
+    m_bandActivity[750].append(adHB2);
+
     CommandDetail cmd = {};
     cmd.cmd = ">";
     cmd.to = m_config.my_callsign();
@@ -2833,7 +2851,6 @@ void MainWindow::on_menuWindow_aboutToShow(){
     rebuildMacQAction(ui->menuWindow, ui->actionShow_Call_Activity_Columns);
 #endif
 
-    ui->actionShow_Band_Heartbeats_and_ACKs->setChecked(ui->actionModeJS8HB->isChecked());
     ui->actionShow_Band_Heartbeats_and_ACKs->setEnabled(ui->actionShow_Band_Activity->isChecked());
 }
 
@@ -10696,7 +10713,12 @@ void MainWindow::processCommandActivity() {
 
         // PROCESS ACTIVE HEARTBEAT
         // if we have hb mode enabled and auto reply enabled <del>and auto ack enabled and no callsign is selected</del> update: if we're in HB mode, doesn't matter if a callsign is selected.
-        else if (d.cmd == " HB" && ui->actionModeJS8HB->isChecked() && ui->actionModeAutoreply->isChecked() && ui->actionHeartbeatAcknowledgements->isChecked() && selectedCallsign.isEmpty()){
+        else if (d.cmd == " HB" && ui->actionModeJS8HB->isChecked() && ui->actionModeAutoreply->isChecked() && ui->actionHeartbeatAcknowledgements->isChecked()){
+            // check to make sure we aren't pausing HB transmissions (ACKs) while a callsign is selected
+            if(m_config.heartbeat_qso_pause() && !selectedCallsign.isEmpty()){
+                qDebug() << "hb paused during qso";
+                continue;
+            }
 
             // check to make sure this callsign isn't blacklisted
             if(m_config.hb_blacklist().contains(d.from) || m_config.hb_blacklist().contains(Radio::base_callsign(d.from))){
@@ -11399,6 +11421,7 @@ void MainWindow::displayBandActivity() {
                 int activityAging = m_config.activity_aging();
 
                 // hide items that shouldn't appear
+
                 for(int i = 0; i < items.length(); i++){
                     auto item = items[i];
 
@@ -11413,7 +11436,11 @@ void MainWindow::displayBandActivity() {
                     if (!ui->actionShow_Band_Heartbeats_and_ACKs->isChecked()){
                         // hide heartbeats and acks if we have heartbeating hidden
                         if(item.text.contains(" HB ") || item.text.contains(" ACK ")){
-                            // TODO: if text contains MSG ID and previous frame was hidden, hide this one too
+                            shouldDisplay = false;
+                        }
+
+                        // if our previous item should not be displayed and we have a MSG ID, then don't display it either.
+                        if(i > 0 && !items[i-1].shouldDisplay && item.text.contains(" MSG ID ")){
                             shouldDisplay = false;
                         }
                     }

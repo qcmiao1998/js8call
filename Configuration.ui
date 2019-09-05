@@ -278,7 +278,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>724</width>
+                <width>615</width>
                 <height>508</height>
                </rect>
               </property>
@@ -838,7 +838,7 @@ text message.</string>
                     <item row="0" column="0">
                      <widget class="QLabel" name="label_26">
                       <property name="text">
-                       <string>Never ACK HBs from these callsigns (comma separated):</string>
+                       <string>Never ACK heartbeats from these callsigns (comma separated):</string>
                       </property>
                      </widget>
                     </item>
@@ -1517,7 +1517,7 @@ a few, particularly some Kenwood rigs, require it).</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>718</width>
+                <width>494</width>
                 <height>490</height>
                </rect>
               </property>
@@ -1921,8 +1921,8 @@ this setting allows you to select which audio input will be used
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>760</width>
-            <height>502</height>
+            <width>266</width>
+            <height>329</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -2234,7 +2234,7 @@ both here.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>746</width>
+            <width>562</width>
             <height>663</height>
            </rect>
           </property>
@@ -2729,8 +2729,8 @@ for assessing propagation and system performance.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>760</width>
-            <height>502</height>
+            <width>487</width>
+            <height>341</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -3110,8 +3110,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>724</width>
-                <height>418</height>
+                <width>274</width>
+                <height>690</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_14">
