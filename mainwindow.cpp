@@ -2222,6 +2222,7 @@ void MainWindow::writeSettings()
   m_settings->setValue("MainSplitter", ui->mainSplitter->saveState());
   m_settings->setValue("TextHorizontalSplitter", ui->textHorizontalSplitter->saveState());
   m_settings->setValue("BandActivityVisible", ui->tableWidgetRXAll->isVisible());
+  m_settings->setValue("BandHBActivityVisible", ui->actionShow_Band_Heartbeats_and_ACKs->isChecked());
   m_settings->setValue("TextVerticalSplitter", ui->textVerticalSplitter->saveState());
   m_settings->setValue("ShowTimeDrift", ui->driftSyncFrame->isVisible());
   m_settings->setValue("TimeDrift", ui->driftSpinBox->value());
@@ -2273,6 +2274,7 @@ void MainWindow::writeSettings()
   m_settings->setValue ("JT65AP", ui->actionEnable_AP_JT65->isChecked ());
   m_settings->setValue("SortBy", QVariant(m_sortCache));
   m_settings->setValue("ShowColumns", QVariant(m_showColumnsCache));
+  m_settings->setValue("ShowHBBandActivity", m_hbInterval);
   m_settings->setValue("HBInterval", m_hbInterval);
   m_settings->setValue("CQInterval", m_cqInterval);
 
@@ -2378,6 +2380,7 @@ void MainWindow::readSettings()
   ui->actionShow_Statusbar->setChecked(m_settings->value("ShowStatusbar",true).toBool());
   ui->statusBar->setVisible(ui->actionShow_Statusbar->isChecked());
   ui->textEditRX->setHtml(m_config.reset_activity() ? "" : m_settings->value("RXActivity", "").toString());
+  ui->actionShow_Band_Heartbeats_and_ACKs->setChecked(m_settings->value("BandHBActivityVisible", false).toBool());
   m_settings->endGroup();
 
   // do this outside of settings group because it uses groups internally
