@@ -2168,6 +2168,10 @@ bool Configuration::impl::validate ()
   }
 
   foreach(auto group, splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), false)){
+      if(!Varicode::isGroupAllowed(group)){
+          MessageBox::critical_message (this, QString("%1 is not an available group").arg(group));
+          return false;
+      }
       if(!Varicode::isCompoundCallsign(group)){
           MessageBox::critical_message (this, QString("%1 is not a valid group").arg(group));
           return false;

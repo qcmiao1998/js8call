@@ -1217,6 +1217,13 @@ bool Varicode::isCompoundCallsign(const QString &callsign){
     return isValid;
 }
 
+bool Varicode::isGroupAllowed(const QString &group){
+    const QSet<QString> disallowed = {
+        "@APRSIS"
+    };
+    return !disallowed.contains(group);
+}
+
 // CQCQCQ EM73
 // CQ DX EM73
 // CQ QRP EM73

@@ -4713,33 +4713,14 @@ void MainWindow::spotCmd(CommandDetail cmd){
     m_spotClient->enqueueCmd(cmdStr, cmd.from, cmd.to, cmd.relayPath, cmd.text, cmd.grid, cmd.extra, m_freqNominal + cmd.freq, cmd.snr);
 }
 
-void MainWindow::spotAPRSCmd(CommandDetail d){
+void MainWindow::spotAPRSMsg(CommandDetail d){
     if(!m_config.spot_to_reporting_networks()) return;
-
-    if(d.cmd == " GRID"){
-        auto grids = Varicode::parseGrids(d.text);
-        foreach(auto grid, grids){
-            CallDetail cd = {};
-            cd.bits = d.bits;
-            cd.call = d.from;
-            cd.freq = d.freq;
-            cd.grid = grid;
-            cd.snr = d.snr;
-            cd.utcTimestamp = d.utcTimestamp;
-            cd.tdrift = d.tdrift;
-            cd.mode = currentMode();
-
-            m_aprsCallCache.remove(cd.call);
-            m_aprsCallCache.remove(APRSISClient::replaceCallsignSuffixWithSSID(cd.call, Radio::base_callsign(cd.call)));
-
-            logCallActivity(cd, true);
-        }
-
-        return;
-    }
-
-    // for raw messages, ensure the passcode is valid first
     if(!m_aprsClient->isPasscodeValid()) return;
+
+    // ONLY MSG IS APPROPRIATE HERE, e.g.,
+    // KN4CRD: @APRSIS MSG :EMAIL-2  :email@domain.com booya{
+    if(d.cmd != " MSG") return;
+
     qDebug() << "enqueueing third party text" << d.from << d.text;
     m_aprsClient->enqueueThirdParty(Radio::base_callsign(d.from), d.text);
 }
@@ -10349,9 +10330,31 @@ void MainWindow::processCommandActivity() {
             foreach(auto call, calls){
                 logHeardGraph(d.from, call);
             }
+        }
 
-            // make sure this is explicit
-            continue;
+        // PROCESS BUFFERED GRID FOR EVERYONE
+        if(d.cmd == " GRID"){
+            // 1. parse grids
+            // 2. log it to our call activity
+            auto grids = Varicode::parseGrids(d.text);
+            foreach(auto grid, grids){
+                CallDetail cd = {};
+                cd.bits = d.bits;
+                cd.call = d.from;
+                cd.freq = d.freq;
+                cd.grid = grid;
+                cd.snr = d.snr;
+                cd.utcTimestamp = d.utcTimestamp;
+                cd.tdrift = d.tdrift;
+                cd.mode = currentMode();
+
+                if(d.to == "@APRSIS"){
+                    m_aprsCallCache.remove(cd.call);
+                    m_aprsCallCache.remove(APRSISClient::replaceCallsignSuffixWithSSID(cd.call, Radio::base_callsign(cd.call)));
+                }
+
+                logCallActivity(cd, true);
+            }
         }
 
         // PROCESS @JS8NET SPOTS FOR EVERYONE
@@ -10359,9 +10362,9 @@ void MainWindow::processCommandActivity() {
             spotCmd(d);
         }
 
-        // PROCESS @APRSIS SPOTS FOR EVERYONE
+        // PROCESS @APRSIS MSG SPOTS FOR EVERYONE
         if (d.to == "@APRSIS"){
-            spotAPRSCmd(d);
+            spotAPRSMsg(d);
         }
 
         // PREPARE CMD TEXT STRING

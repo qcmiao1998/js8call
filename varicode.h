@@ -148,6 +148,7 @@ public:
     static bool isCommandAutoreply(const QString &cmd);
     static bool isValidCallsign(const QString &callsign, bool *pIsCompound);
     static bool isCompoundCallsign(const QString &callsign);
+    static bool isGroupAllowed(const QString &group);
 
     static QString packHeartbeatMessage(QString const &text, QString const&callsign, int *n);
     static QStringList unpackHeartbeatMessage(const QString &text, quint8 *pType, bool *isAlt, quint8 *pBits3);
