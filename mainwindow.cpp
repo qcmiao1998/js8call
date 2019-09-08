@@ -11448,7 +11448,10 @@ void MainWindow::displayBandActivity() {
                         }
 
                         // if our previous item should not be displayed and we have a MSG ID, then don't display it either.
-                        if(i > 0 && !items[i-1].shouldDisplay && item.text.contains(" MSG ID ")){
+                        if(
+                           (i == 0 || (i > 0 && !items[i-1].shouldDisplay)) &&
+                           (item.text.contains(" MSG ID "))
+                        ){
                             shouldDisplay = false;
                         }
                     }
