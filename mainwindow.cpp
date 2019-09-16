@@ -1150,7 +1150,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   }
 
   // prep
-  prepareHeartbeatMode(ui->actionModeJS8HB->isChecked());
+  prepareHeartbeatMode(ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked());
   prepareSpotting();
 
   auto enterFilter = new EnterKeyPressEater();
@@ -6876,7 +6876,8 @@ void MainWindow::displayWidgets(qint64 n)
 
 void MainWindow::on_actionModeJS8HB_toggled(bool checked){
     // prep hb mode
-    prepareHeartbeatMode(checked);
+
+    prepareHeartbeatMode(ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked());
     displayActivity(true);
 
     on_actionJS8_triggered();
@@ -6884,7 +6885,8 @@ void MainWindow::on_actionModeJS8HB_toggled(bool checked){
 
 void MainWindow::on_actionHeartbeatAcknowledgements_toggled(bool checked){
     // prep hb ack mode
-    prepareHeartbeatMode(ui->actionModeJS8HB->isChecked());
+
+    prepareHeartbeatMode(ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked());
     displayActivity(true);
 
     on_actionJS8_triggered();
@@ -6908,7 +6910,7 @@ void MainWindow::on_actionModeJS8Ultra_triggered(){
 
 void MainWindow::on_actionModeAutoreply_toggled(bool checked){
     // update the HB ack option (needs autoreply on)
-    prepareHeartbeatMode(ui->actionModeJS8HB->isChecked());
+    prepareHeartbeatMode(ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked());
 
     // then update the js8 mode
     on_actionJS8_triggered();
@@ -6924,6 +6926,7 @@ void MainWindow::prepareHeartbeatMode(bool enabled){
     ui->actionModeJS8HB->setEnabled(m_nSubMode == Varicode::JS8CallNormal);
     ui->actionHeartbeatAcknowledgements->setEnabled(ui->actionModeAutoreply->isChecked() && enabled);
 
+#if 0
     //ui->actionCQ->setEnabled(!enabled);
     //ui->actionFocus_Message_Reply_Area->setEnabled(!enabled);
 
@@ -6943,6 +6946,7 @@ void MainWindow::prepareHeartbeatMode(bool enabled){
     // ui->actionShow_Band_Heartbeats_and_ACKs->setChecked(enabled);
     // ui->actionShow_Band_Heartbeats_and_ACKs->setVisible(true);
     // ui->actionShow_Band_Heartbeats_and_ACKs->setEnabled(false);
+#endif
 
     // update the HB button immediately
     updateRepeatButtonDisplay();
@@ -6968,15 +6972,17 @@ void MainWindow::on_actionJS8_triggered()
 
   // Only enable heartbeat for normal mode
   ui->actionModeJS8HB->setEnabled(m_nSubMode == Varicode::JS8CallNormal);
-  if(m_nSubMode != Varicode::JS8CallNormal){
-    ui->actionModeJS8HB->setChecked(false);
-  }
+  prepareHeartbeatMode(ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked());
+
+  //if(m_nSubMode != Varicode::JS8CallNormal){
+  //  ui->actionModeJS8HB->setChecked(false);
+  //}
 
   auto modeText = currentMode();
   if(ui->actionModeAutoreply->isChecked()){
       modeText += QString("+AUTO");
   }
-  if(ui->actionModeJS8HB->isChecked()){
+  if(ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked()){
       if(ui->actionHeartbeatAcknowledgements->isChecked()){
           modeText += QString("+HB+ACK");
       } else {
@@ -10729,7 +10735,7 @@ void MainWindow::processCommandActivity() {
 
         // PROCESS ACTIVE HEARTBEAT
         // if we have hb mode enabled and auto reply enabled <del>and auto ack enabled and no callsign is selected</del> update: if we're in HB mode, doesn't matter if a callsign is selected.
-        else if (d.cmd == " HB" && ui->actionModeJS8HB->isChecked() && ui->actionModeAutoreply->isChecked() && ui->actionHeartbeatAcknowledgements->isChecked()){
+        else if (d.cmd == " HB" && ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked() && ui->actionModeAutoreply->isChecked() && ui->actionHeartbeatAcknowledgements->isChecked()){
             // check to make sure we aren't pausing HB transmissions (ACKs) while a callsign is selected
             if(m_config.heartbeat_qso_pause() && !selectedCallsign.isEmpty()){
                 qDebug() << "hb paused during qso";
