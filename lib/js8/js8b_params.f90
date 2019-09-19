@@ -15,7 +15,7 @@
 ! parameter (NSPS=768,  NTXDUR=8,  NDOWNSPS=24, NDD=125, JZ=116) ! 125 Hz 15.625 baud 32 wpm -21.0dB (1.0Eb/N0)  5.05s
 ! parameter (NSPS=800,  NTXDUR=8,  NDOWNSPS=24, NDD=100, JZ=116) ! 120 Hz     15 baud 32 wpm -21.2dB (1.0Eb/N0)  5.26s
 ! parameter (NSPS=960,  NTXDUR=8,  NDOWNSPS=24, NDD=100, JZ=116) ! 100 Hz  12.50 baud 32 wpm -22.0dB (1.0Eb/N0)  5.92s
-  parameter (NSPS=1200, NTXDUR=10, NDOWNSPS=20, NDD=100, JZ=172) !  80 Hz     10 baud 24 wpm -23.0dB (1.0Eb/N0)  7.90s
+  parameter (NSPS=1200, NTXDUR=10, NDOWNSPS=20, NDD=100, JZ=144) !  80 Hz     10 baud 24 wpm -23.0dB (1.0Eb/N0)  7.90s
 ! parameter (NSPS=1920, NTXDUR=15, NDOWNSPS=32, NDD=100, JZ=116) !  50 Hz  6.250 baud 16 wpm -25.0dB (1.0Eb/N0) 12.64s
 ! parameter (NSPS=4000, NTXDUR=30, NDOWNSPS=20, NDD=90,  JZ=62)  !  24 Hz      3 baud  8 wpm -28.2dB (1.0Eb/N0) 26.33s
 
