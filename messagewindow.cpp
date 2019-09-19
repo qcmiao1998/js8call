@@ -157,6 +157,8 @@ QString MessageWindow::prepareReplyMessage(QString path, QString text){
 
 void MessageWindow::on_messageTableWidget_selectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/){
     auto row = ui->messageTableWidget->currentRow();
+
+    // message column
     auto item = ui->messageTableWidget->item(row, ui->messageTableWidget->columnCount()-1);
     if(!item){
         return;
@@ -168,13 +170,15 @@ void MessageWindow::on_messageTableWidget_selectionChanged(const QItemSelection 
 
 void MessageWindow::on_replyPushButton_clicked(){
     auto row = ui->messageTableWidget->currentRow();
-    auto item = ui->messageTableWidget->item(row, ui->messageTableWidget->columnCount()-2);
+
+    // from column
+    auto item = ui->messageTableWidget->item(row, ui->messageTableWidget->columnCount()-3);
     if(!item){
         return;
     }
 
     auto path = item->data(Qt::UserRole).toString();
-    auto text = "[MESSAGE]"; // ui->replytextEdit->toPlainText();
+    auto text = "[MESSAGE]";
     auto message = prepareReplyMessage(path, text);
 
     emit replyMessage(message);
