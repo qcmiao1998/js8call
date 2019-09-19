@@ -2397,8 +2397,9 @@ void MainWindow::readSettings()
   ui->actionSave_decoded->setChecked(false);
   ui->actionSave_all->setChecked(false);
 
-  ui->RxFreqSpinBox->setValue(0); // ensure a change is signaled
-  ui->RxFreqSpinBox->setValue(m_settings->value("RxFreq",1500).toInt());
+  // set the frequency offset
+  setFreqOffsetForRestore(m_settings->value("RxFreq",1500).toInt(), false);
+
   m_nSubMode=m_settings->value("SubMode",0).toInt();
   ui->actionModeJS8HB->setChecked(m_nSubMode == Varicode::JS8CallNormal && m_settings->value("SubModeHB", false).toBool());
   ui->actionHeartbeatAcknowledgements->setChecked(m_settings->value("SubModeHBAck", false).toBool());
