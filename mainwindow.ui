@@ -4793,6 +4793,7 @@ list. The list can be maintained in Settings (F2).</string>
      <property name="title">
       <string>Set Focus...</string>
      </property>
+     <addaction name="actionFocus_Message_Receive_Area"/>
      <addaction name="actionFocus_Message_Reply_Area"/>
      <addaction name="actionFocus_Band_Activity_Table"/>
      <addaction name="actionFocus_Call_Activity_Table"/>
@@ -5798,6 +5799,14 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Enable Heartbeat Acknowledgments (ACK)</string>
+   </property>
+  </action>
+  <action name="actionFocus_Message_Receive_Area">
+   <property name="text">
+    <string>Message Receive Area</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+R</string>
    </property>
   </action>
  </widget>

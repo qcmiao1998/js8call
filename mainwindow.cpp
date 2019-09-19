@@ -2858,6 +2858,10 @@ void MainWindow::on_menuWindow_aboutToShow(){
     ui->actionShow_Band_Heartbeats_and_ACKs->setEnabled(ui->actionShow_Band_Activity->isChecked());
 }
 
+void MainWindow::on_actionFocus_Message_Receive_Area_triggered(){
+    ui->textEditRX->setFocus();
+}
+
 void MainWindow::on_actionFocus_Message_Reply_Area_triggered(){
     ui->extFreeTextMsgEdit->setFocus();
 }

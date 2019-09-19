@@ -182,6 +182,7 @@ private slots:
   void on_actionCheck_for_Updates_triggered();
   void on_actionEnable_Spotting_toggled(bool checked);
   void on_menuWindow_aboutToShow();
+  void on_actionFocus_Message_Receive_Area_triggered();
   void on_actionFocus_Message_Reply_Area_triggered();
   void on_actionFocus_Band_Activity_Table_triggered();
   void on_actionFocus_Call_Activity_Table_triggered();
