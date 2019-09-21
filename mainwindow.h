@@ -795,6 +795,7 @@ private:
   QString m_txTextDirtyLastText;
   QString m_txTextDirtyLastSelectedCall;
   QString m_lastTxMessage;
+  QString m_totalTxMessage;
   QDateTime m_lastTxTime;
   int m_timeDeltaMsMMA;
   int m_timeDeltaMsMMA_N;

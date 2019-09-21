@@ -1918,6 +1918,9 @@ void MainWindow::initializeDummyData(){
     c.setCharFormat(f);
 #endif
 
+    ui->extFreeTextMsgEdit->setPlainText("HELLO BRAVE NEW WORLD");
+    ui->extFreeTextMsgEdit->markCharsSent(6);
+
     logHeardGraph("KN4CRD", "OH8STN");
     logHeardGraph("KN4CRD", "K0OG");
     logHeardGraph("K0OG", "KN4CRD");
@@ -5397,8 +5400,17 @@ void MainWindow::startTx2()
 void MainWindow::stopTx()
 {
   Q_EMIT endTransmitMessage ();
+
   auto dt = DecodedText(m_currentMessage.trimmed(), m_currentMessageBits, m_nSubMode);
   last_tx_label.setText("Last Tx: " + dt.message()); //m_currentMessage.trimmed());
+
+
+  // start message marker
+  // - keep track of the total message sent so far, and mark it having been sent
+  m_totalTxMessage.append(dt.message());
+  ui->extFreeTextMsgEdit->markCharsSent(m_totalTxMessage.length());
+  qDebug() << "total sent:\n" << m_totalTxMessage;
+  // end message marker
 
   m_btxok = false;
   m_transmitting = false;
@@ -6224,17 +6236,17 @@ QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
 
   auto frames = buildMessageFrames(text);
 
-  m_txFrameQueue.append(frames);
-  m_txFrameCount = frames.length();
-
-  int freq = currentFreqOffset();
-  qDebug() << "creating message for freq" << freq;
-
   QStringList lines;
   foreach(auto frame, frames){
       auto dt = DecodedText(frame.first, frame.second, m_nSubMode);
       lines.append(dt.message());
   }
+
+  m_txFrameQueue.append(frames);
+  m_txFrameCount = frames.length();
+
+  int freq = currentFreqOffset();
+  qDebug() << "creating message for freq" << freq;
 
   // TODO: jsherer - parse outgoing message so we can add it to the inbox as an outgoing message
 
@@ -6265,6 +6277,9 @@ void MainWindow::resetMessageTransmitQueue(){
   m_txFrameCount = 0;
   m_txFrameQueue.clear();
   m_txMessageQueue.clear();
+
+  // reset the total message sent
+  m_totalTxMessage.clear();
 }
 
 QPair<QString, int> MainWindow::popMessageFrame(){
@@ -6381,6 +6396,11 @@ bool MainWindow::prepareNextMessageFrame()
   QPair<QString, int> f = popMessageFrame();
   auto frame = f.first;
   auto bits = f.second;
+
+  // append this frame to the total message sent so far
+  // auto dt = DecodedText(frame, bits, m_nSubMode);
+  // m_totalTxMessage.append(dt.message());
+  // qDebug() << "total sent" << m_totalTxMessage;
 
   if(frame.isEmpty()){
     ui->nextFreeTextMsg->clear();

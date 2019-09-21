@@ -83,7 +83,8 @@ SOURCES += \
     Inbox.cpp \
     messagewindow.cpp \
     SpotClient.cpp \
-    TCPClient.cpp
+    TCPClient.cpp \
+    TransmitTextEdit.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -118,7 +119,8 @@ HEADERS  += qt_helpers.hpp \
     messagewindow.h \
     SpotClient.h \
     TCPClient.h \
-    logbook/n3fjp.h
+    logbook/n3fjp.h \
+    TransmitTextEdit.h
 
 
 INCLUDEPATH += qmake_only

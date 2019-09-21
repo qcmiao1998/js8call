@@ -252,6 +252,7 @@ set (wsjtx_CXXSRCS
   main.cpp
   wsprnet.cpp
   WSPRBandHopping.cpp
+  TransmitTextEdit.cpp
   )
 
 set (wsjt_CXXSRCS
