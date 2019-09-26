@@ -12,7 +12,8 @@ bool KeyPressEater::eventFilter(QObject *obj, QEvent *event){
     }
 
     // standard event processing
-    return QObject::eventFilter(obj, event);
+    //return QObject::eventFilter(obj, event);
+    return false;
 }
 
 bool EscapeKeyPressEater::eventFilter(QObject *obj, QEvent *event){
@@ -24,7 +25,8 @@ bool EscapeKeyPressEater::eventFilter(QObject *obj, QEvent *event){
     }
 
     // standard event processing
-    return QObject::eventFilter(obj, event);
+    //return QObject::eventFilter(obj, event);
+    return false;
 }
 
 bool EnterKeyPressEater::eventFilter(QObject *obj, QEvent *event){
@@ -40,7 +42,8 @@ bool EnterKeyPressEater::eventFilter(QObject *obj, QEvent *event){
     }
 
     // standard event processing
-    return QObject::eventFilter(obj, event);
+    //return QObject::eventFilter(obj, event);
+    return false;
 }
 
 bool MousePressEater::eventFilter(QObject *obj, QEvent *event){
@@ -54,7 +57,8 @@ bool MousePressEater::eventFilter(QObject *obj, QEvent *event){
     }
 
     // standard event processing
-    return QObject::eventFilter(obj, event);
+    //return QObject::eventFilter(obj, event);
+    return false;
 }
 
 bool MouseDoubleClickEater::eventFilter(QObject *obj, QEvent *event){
@@ -68,5 +72,6 @@ bool MouseDoubleClickEater::eventFilter(QObject *obj, QEvent *event){
     }
 
     // standard event processing
-    return QObject::eventFilter(obj, event);
+    //return QObject::eventFilter(obj, event);
+    return false;
 }

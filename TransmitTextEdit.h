@@ -24,6 +24,14 @@ public:
     }
     void setCharsSent(int n);
 
+    QString sentText() const {
+        return m_textSent;
+    }
+
+    QString unsentText() const {
+        return toPlainText().mid(charsSent());
+    }
+
     QString toPlainText() const;
     void setPlainText(const QString &text);
     void setFont(QFont f);
@@ -34,9 +42,12 @@ public:
         return m_protected;
     }
     void setProtected(bool protect);
+    bool cursorShouldBeProtected(QTextCursor c);
     void highlightBase();
     void highlightCharsSent();
     void highlight();
+
+    bool eventFilter(QObject */*o*/, QEvent *e);
 
 public slots:
     void on_selectionChanged();

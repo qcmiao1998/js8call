@@ -92,6 +92,7 @@ TransmitTextEdit::TransmitTextEdit(QWidget *parent):
     connect(this, &QTextEdit::selectionChanged, this, &TransmitTextEdit::on_selectionChanged);
     connect(this, &QTextEdit::cursorPositionChanged, this, &TransmitTextEdit::on_selectionChanged);
     connect(this->document(), &QTextDocument::contentsChange, this, &TransmitTextEdit::on_textContentsChanged);
+    installEventFilter(this);
 }
 
 void TransmitTextEdit::setCharsSent(int n){
@@ -150,9 +151,7 @@ void TransmitTextEdit::setProtected(bool protect){
     m_protected = protect;
 }
 
-// slot
-void TransmitTextEdit::on_selectionChanged(){
-    auto c = textCursor();
+bool TransmitTextEdit::cursorShouldBeProtected(QTextCursor c){
     int start = c.selectionStart();
     int end = c.selectionEnd();
     if(end < start){
@@ -165,10 +164,21 @@ void TransmitTextEdit::on_selectionChanged(){
 
     if(m_sent && start <= m_sent){
         qDebug() << "selection in protected zone" << start << "<=" << m_sent;
-        setProtected(true);
+        return true;
     } else {
-        setProtected(false);
+        return false;
     }
+}
+
+// slot
+void TransmitTextEdit::on_selectionChanged(){
+    auto c = textCursor();
+
+    auto protect = cursorShouldBeProtected(c);
+
+    setProtected(protect);
+
+    // TODO: when protected and text is selected, remove protected region from selection
 }
 
 // slot
@@ -179,8 +189,13 @@ void TransmitTextEdit::on_textContentsChanged(int pos, int rem, int add){
 
     auto text = toPlainText();
     if(text != m_lastText){
-        qDebug() << "text changed" << pos << rem << add << "from" << m_lastText << "to" << text;
+        //qDebug() << "text changed" << pos << rem << add << "from" << m_lastText << "to" << text;
+
         highlight();
+
+        qDebug() << "sent:" << sentText();
+        qDebug() << "unsent:" << unsentText();
+
         m_lastText = text;
     }
 }
@@ -224,5 +239,153 @@ void TransmitTextEdit::highlightCharsSent(){
 void TransmitTextEdit::highlight(){
     highlightBase();
     highlightCharsSent();
+}
+
+bool isMovementKeyEvent(QKeyEvent * k){
+    return (
+       k == QKeySequence::MoveToNextChar        ||
+       k == QKeySequence::MoveToPreviousChar    ||
+       k == QKeySequence::SelectNextChar        ||
+       k == QKeySequence::SelectPreviousChar    ||
+       k == QKeySequence::SelectNextWord        ||
+       k == QKeySequence::SelectPreviousWord    ||
+       k == QKeySequence::SelectStartOfLine     ||
+       k == QKeySequence::SelectEndOfLine       ||
+       k == QKeySequence::SelectStartOfBlock    ||
+       k == QKeySequence::SelectEndOfBlock      ||
+       k == QKeySequence::SelectStartOfDocument ||
+       k == QKeySequence::SelectEndOfDocument   ||
+       k == QKeySequence::SelectPreviousLine    ||
+       k == QKeySequence::SelectNextLine        ||
+       k == QKeySequence::MoveToNextWord        ||
+       k == QKeySequence::MoveToPreviousWord    ||
+       k == QKeySequence::MoveToEndOfBlock      ||
+       k == QKeySequence::MoveToStartOfBlock    ||
+       k == QKeySequence::MoveToNextLine        ||
+       k == QKeySequence::MoveToPreviousLine    ||
+       k == QKeySequence::MoveToPreviousLine    ||
+       k == QKeySequence::MoveToStartOfLine     ||
+       k == QKeySequence::MoveToEndOfLine       ||
+       k == QKeySequence::MoveToStartOfDocument ||
+       k == QKeySequence::MoveToEndOfDocument
+    );
+}
+
+
+QTextCursor::MoveOperation movementKeyEventToMoveOperation(QKeyEvent *e){
+    QTextCursor::MoveOperation op = QTextCursor::NoMove;
+
+    if (e == QKeySequence::MoveToNextChar) {
+            op = QTextCursor::Right;
+    }
+    else if (e == QKeySequence::MoveToPreviousChar) {
+            op = QTextCursor::Left;
+    }
+    else if (e == QKeySequence::SelectNextChar) {
+            op = QTextCursor::Right;
+    }
+    else if (e == QKeySequence::SelectPreviousChar) {
+            op = QTextCursor::Left;
+    }
+    else if (e == QKeySequence::SelectNextWord) {
+            op = QTextCursor::WordRight;
+    }
+    else if (e == QKeySequence::SelectPreviousWord) {
+            op = QTextCursor::WordLeft;
+    }
+    else if (e == QKeySequence::SelectStartOfLine) {
+            op = QTextCursor::StartOfLine;
+    }
+    else if (e == QKeySequence::SelectEndOfLine) {
+            op = QTextCursor::EndOfLine;
+    }
+    else if (e == QKeySequence::SelectStartOfBlock) {
+            op = QTextCursor::StartOfBlock;
+    }
+    else if (e == QKeySequence::SelectEndOfBlock) {
+            op = QTextCursor::EndOfBlock;
+    }
+    else if (e == QKeySequence::SelectStartOfDocument) {
+            op = QTextCursor::Start;
+    }
+    else if (e == QKeySequence::SelectEndOfDocument) {
+            op = QTextCursor::End;
+    }
+    else if (e == QKeySequence::SelectPreviousLine) {
+            op = QTextCursor::Up;
+    }
+    else if (e == QKeySequence::SelectNextLine) {
+            op = QTextCursor::Down;
+    }
+    else if (e == QKeySequence::MoveToNextWord) {
+            op = QTextCursor::WordRight;
+    }
+    else if (e == QKeySequence::MoveToPreviousWord) {
+            op = QTextCursor::WordLeft;
+    }
+    else if (e == QKeySequence::MoveToEndOfBlock) {
+            op = QTextCursor::EndOfBlock;
+    }
+    else if (e == QKeySequence::MoveToStartOfBlock) {
+            op = QTextCursor::StartOfBlock;
+    }
+    else if (e == QKeySequence::MoveToNextLine) {
+            op = QTextCursor::Down;
+    }
+    else if (e == QKeySequence::MoveToPreviousLine) {
+            op = QTextCursor::Up;
+    }
+    else if (e == QKeySequence::MoveToPreviousLine) {
+            op = QTextCursor::Up;
+    }
+    else if (e == QKeySequence::MoveToStartOfLine) {
+            op = QTextCursor::StartOfLine;
+    }
+    else if (e == QKeySequence::MoveToEndOfLine) {
+            op = QTextCursor::EndOfLine;
+    }
+    else if (e == QKeySequence::MoveToStartOfDocument) {
+            op = QTextCursor::Start;
+    }
+    else if (e == QKeySequence::MoveToEndOfDocument) {
+            op = QTextCursor::End;
+    }
+
+    return op;
+}
+
+
+bool TransmitTextEdit::eventFilter(QObject */*o*/, QEvent *e){
+    if(e->type() != QEvent::KeyPress){
+        return false;
+    }
+
+    QKeyEvent *k = static_cast<QKeyEvent *>(e);
+
+    auto c = textCursor();
+
+    auto c2 = QTextCursor(c);
+    c2.movePosition(movementKeyEventToMoveOperation(k));
+
+    bool shouldBeProtected = cursorShouldBeProtected(c2);
+
+    // 0. only filter when in a protected range
+    // 0a. but only if we're not moving/deleting _into_ the protected range :/
+    if(!isProtected() && !shouldBeProtected){
+        return false;
+    }
+
+    // 1. do not filter movement sequences
+    if(isMovementKeyEvent(k)){
+        return false;
+    }
+
+    // 2. if on the edge, do not filter if not a backspace
+    int start = qMin(c.selectionStart(), c.selectionEnd());
+    if(start == m_sent && k->key() != Qt::Key_Backspace){
+        return false;
+    }
+
+    return true;
 }
 
