@@ -256,88 +256,6 @@ namespace
    return roundDown + multiple;
   }
 
-  void setTextEditFont(QTextEdit *edit, QFont font){
-    edit->setFont(font);
-    edit->setFontFamily(font.family());
-    edit->setFontItalic(font.italic());
-    edit->setFontPointSize(font.pointSize());
-    edit->setFontUnderline(font.underline());
-    edit->setFontWeight(font.weight());
-
-    auto d = edit->document();
-    d->setDefaultFont(font);
-    edit->setDocument(d);
-
-    auto c = edit->textCursor();
-    c.select(QTextCursor::Document);
-    auto cf = c.blockCharFormat();
-    cf.setFont(font);
-    c.mergeBlockCharFormat(cf);
-
-    edit->updateGeometry();
-  }
-
-  void setTextEditStyle(QTextEdit *edit, QColor fg, QColor bg, QFont font){
-    edit->setStyleSheet(QString("QTextEdit { color:%1; background: %2; %3; }").arg(fg.name()).arg(bg.name()).arg(font_as_stylesheet(font)));
-
-    QTimer::singleShot(10, nullptr, [edit, fg, bg](){
-          QPalette p = edit->palette();
-          p.setColor(QPalette::Base, bg);
-          p.setColor(QPalette::Active, QPalette::Base, bg);
-          p.setColor(QPalette::Disabled, QPalette::Base, bg);
-          p.setColor(QPalette::Inactive, QPalette::Base, bg);
-
-          p.setColor(QPalette::Text, fg);
-          p.setColor(QPalette::Active, QPalette::Text, fg);
-          p.setColor(QPalette::Disabled, QPalette::Text, fg);
-          p.setColor(QPalette::Inactive, QPalette::Text, fg);
-
-          edit->setBackgroundRole(QPalette::Base);
-          edit->setForegroundRole(QPalette::Text);
-          edit->setPalette(p);
-
-          edit->updateGeometry();
-          edit->update();
-      });
-  }
-
-  /*
-  void setTextEditForeground(QTextEdit *edit, QColor color){
-    QTimer::singleShot(20, nullptr, [edit, color](){
-        QPalette p = edit->palette();
-        p.setColor(QPalette::Text, color);
-        p.setColor(QPalette::Active, QPalette::Text, color);
-        p.setColor(QPalette::Disabled, QPalette::Text, color);
-        p.setColor(QPalette::Inactive, QPalette::Text, color);
-
-        edit->setPalette(p);
-        edit->updateGeometry();
-        edit->update();
-    });
-  }
-  */
-
-  void highlightBlock(QTextBlock block, QFont font, QColor foreground, QColor background){
-    QTextCursor cursor(block);
-
-    // Set background color
-    QTextBlockFormat blockFormat = cursor.blockFormat();
-    blockFormat.setBackground(background);
-    cursor.setBlockFormat(blockFormat);
-
-    // Set font
-    for (QTextBlock::iterator it = cursor.block().begin(); !(it.atEnd()); ++it) {
-      QTextCharFormat charFormat = it.fragment().charFormat();
-      charFormat.setFont(font);
-      charFormat.setForeground(QBrush(foreground));
-
-      QTextCursor tempCursor = cursor;
-      tempCursor.setPosition(it.fragment().position());
-      tempCursor.setPosition(it.fragment().position() + it.fragment().length(), QTextCursor::KeepAnchor);
-      tempCursor.setCharFormat(charFormat);
-    }
-  }
-
   template<typename T>
   QList<T> listCopyReverse(QList<T> const &list){
       QList<T> newList = QList<T>();
@@ -710,6 +628,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (&m_config, &Configuration::colors_changed, [this](){
      setTextEditStyle(ui->textEditRX, m_config.color_rx_foreground(), m_config.color_rx_background(), m_config.rx_text_font());
      setTextEditStyle(ui->extFreeTextMsgEdit, m_config.color_compose_foreground(), m_config.color_compose_background(), m_config.compose_text_font());
+     ui->extFreeTextMsgEdit->setFont(m_config.compose_text_font(), m_config.color_compose_foreground(), m_config.color_compose_background());
 
      // rehighlight
      auto d = ui->textEditRX->document();
@@ -1919,7 +1838,7 @@ void MainWindow::initializeDummyData(){
 #endif
 
     ui->extFreeTextMsgEdit->setPlainText("HELLO BRAVE NEW WORLD");
-    ui->extFreeTextMsgEdit->markCharsSent(6);
+    ui->extFreeTextMsgEdit->setCharsSent(6);
 
     logHeardGraph("KN4CRD", "OH8STN");
     logHeardGraph("KN4CRD", "K0OG");
@@ -2465,6 +2384,8 @@ void MainWindow::readSettings()
 
   setTextEditStyle(ui->textEditRX, m_config.color_rx_foreground(), m_config.color_rx_background(), m_config.rx_text_font());
   setTextEditStyle(ui->extFreeTextMsgEdit, m_config.color_compose_foreground(), m_config.color_compose_background(), m_config.compose_text_font());
+  ui->extFreeTextMsgEdit->setFont(m_config.compose_text_font(), m_config.color_compose_foreground(), m_config.color_compose_background());
+
 
   {
     auto const& coeffs = m_settings->value ("PhaseEqualizationCoefficients"
@@ -5408,7 +5329,7 @@ void MainWindow::stopTx()
   // start message marker
   // - keep track of the total message sent so far, and mark it having been sent
   m_totalTxMessage.append(dt.message());
-  ui->extFreeTextMsgEdit->markCharsSent(m_totalTxMessage.length());
+  ui->extFreeTextMsgEdit->setCharsSent(m_totalTxMessage.length());
   qDebug() << "total sent:\n" << m_totalTxMessage;
   // end message marker
 
@@ -5427,6 +5348,7 @@ void MainWindow::stopTx()
 #endif
   if(!shouldContinue){
       // TODO: jsherer - split this up...
+      ui->extFreeTextMsgEdit->clear();
       ui->extFreeTextMsgEdit->setReadOnly(false);
       update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", false);
       on_stopTxButton_clicked();
@@ -6319,6 +6241,7 @@ void MainWindow::on_nextFreeTextMsg_currentTextChanged (QString const& text)
 
 void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 {
+#if 0
     QString x;
     QString::const_iterator i;
     for(i = text.constBegin(); i != text.constEnd(); i++){
@@ -6332,13 +6255,11 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
       int pos = ui->extFreeTextMsgEdit->textCursor().position();
       int maxpos = x.size();
 
-      // don't emit current text changed or text contents changed
-      ui->extFreeTextMsgEdit->blockSignals(true);
-      {
-        ui->extFreeTextMsgEdit->setPlainText(x);
-      }
-      ui->extFreeTextMsgEdit->blockSignals(false);
+      int sent = ui->extFreeTextMsgEdit->charsSent();
+      ui->extFreeTextMsgEdit->setPlainText(x);
+      ui->extFreeTextMsgEdit->setCharsSent(sent);
 
+      // set cursor position
       QTextCursor c = ui->extFreeTextMsgEdit->textCursor();
       c.setPosition(pos < maxpos ? pos : maxpos, QTextCursor::MoveAnchor);
 
@@ -6347,9 +6268,35 @@ void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 
       ui->extFreeTextMsgEdit->setTextCursor(c);
     }
+#endif
 
-    m_txTextDirty = x != m_txTextDirtyLastText;
-    m_txTextDirtyLastText = x;
+#if 0
+    auto x = text;
+
+    // only highlight if dirty
+    if(x != m_txTextDirtyLastText){
+        // highlight the edited block with our fonts
+        QTextCursor c = ui->extFreeTextMsgEdit->textCursor();
+        ui->extFreeTextMsgEdit->blockSignals(true);
+        {
+            int pos = ui->extFreeTextMsgEdit->textCursor().position();
+            int maxpos = x.size();
+
+            // set cursor position
+            QTextCursor c = ui->extFreeTextMsgEdit->textCursor();
+            c.setPosition(pos < maxpos ? pos : maxpos, QTextCursor::MoveAnchor);
+
+            // highlight the block with our fonts
+            highlightBlock(c.block(), m_config.compose_text_font(), m_config.color_compose_foreground(), QColor(Qt::transparent));
+
+            ui->extFreeTextMsgEdit->setTextCursor(c);
+        }
+        ui->extFreeTextMsgEdit->blockSignals(false);
+    }
+#endif
+
+    m_txTextDirty = text != m_txTextDirtyLastText;
+    m_txTextDirtyLastText = text;
 
     // immediately update the display
     updateButtonDisplay();
@@ -8390,7 +8337,7 @@ void MainWindow::buildSuggestionsMenu(QMenu *menu, QTextEdit *edit, const QPoint
     c.movePosition(QTextCursor::StartOfWord);
     c.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
 
-    auto word = c.selectedText().trimmed();
+    auto word = c.selectedText().toUpper().trimmed();
     if(word.isEmpty()){
         return;
     }
@@ -10468,7 +10415,7 @@ void MainWindow::processCommandActivity() {
                 c = ui->textEditRX->textCursor();
                 c.movePosition(QTextCursor::StartOfBlock);
                 c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-                qDebug() << "should display directed message, erasing last rx activity line..." << c.selectedText();
+                qDebug() << "should display directed message, erasing last rx activity line..." << c.selectedText().toUpper();
                 c.removeSelectedText();
                 c.deletePreviousChar();
                 c.deletePreviousChar();

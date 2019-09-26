@@ -58,7 +58,7 @@ bool cursorHasProperty(const QTextCursor &cursor, int property){
 QString nextChar(QTextCursor c){
     QTextCursor cur(c);
     cur.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor);
-    return cur.selectedText();
+    return cur.selectedText().toUpper();
 }
 
 bool isNumeric(QString s){
@@ -97,7 +97,7 @@ void JSCChecker::checkRange(QTextEdit* edit, int start, int end)
             bool correct = false;
 
             cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
-            if(cursor.selectedText() == "@"){
+            if(cursor.selectedText()/*.toUpper()*/ == "@"){
                 cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor);
                 cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
             }
@@ -105,7 +105,7 @@ void JSCChecker::checkRange(QTextEdit* edit, int start, int end)
             if(cursorHasProperty(cursor, CORRECT)){
                 correct = true;
             } else {
-                QString word = cursor.selectedText();
+                QString word = cursor.selectedText().toUpper();
 
                 // three or less is always "correct"
                 if(word.length() < 4 || isNumeric(word)){
@@ -121,6 +121,8 @@ void JSCChecker::checkRange(QTextEdit* edit, int start, int end)
                         correct = Varicode::isValidCallsign(word, nullptr);
                     }
                 }
+
+                qDebug() << "word" << word << "correct" << correct;
             }
 
             if(correct){
