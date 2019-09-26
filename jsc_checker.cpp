@@ -80,7 +80,7 @@ void JSCChecker::checkRange(QTextEdit* edit, int start, int end)
     // stop contentsChange signals from being emitted due to changed charFormats
     edit->document()->blockSignals(true);
 
-    qDebug() << "checking range " << start << " - " << end;
+    //qDebug() << "checking range " << start << " - " << end;
 
     QTextCharFormat errorFmt;
     errorFmt.setFontUnderline(true);
@@ -122,7 +122,7 @@ void JSCChecker::checkRange(QTextEdit* edit, int start, int end)
                     }
                 }
 
-                qDebug() << "word" << word << "correct" << correct;
+                //qDebug() << "word" << word << "correct" << correct;
             }
 
             if(correct){
@@ -205,7 +205,7 @@ QMap<quint32, QString> candidates(QString word, bool includeTwoEdits){
 QStringList JSCChecker::suggestions(QString word, int n, bool *pFound){
     QStringList s;
 
-    qDebug() << "computing suggestions for word" << word;
+    // qDebug() << "computing suggestions for word" << word;
 
     QMap<quint32, QString> m;
 
@@ -229,7 +229,7 @@ QStringList JSCChecker::suggestions(QString word, int n, bool *pFound){
         if(i >= n){
             break;
         }
-        qDebug() << "suggest" << m[key] << key;
+        //qDebug() << "suggest" << m[key] << key;
         s.append(m[key]);
         i++;
     }
