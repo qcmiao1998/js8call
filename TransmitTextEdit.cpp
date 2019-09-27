@@ -122,6 +122,16 @@ void TransmitTextEdit::setPlainText(const QString &text){
 }
 
 //
+void TransmitTextEdit::replaceUnsentText(const QString &text){
+    auto c = textCursor();
+    c.movePosition(QTextCursor::Start);
+    c.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, m_sent);
+    c.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+    c.removeSelectedText();
+    c.insertText(text);
+}
+
+//
 void TransmitTextEdit::setFont(QFont f){
     m_font = f;
 
@@ -202,8 +212,8 @@ void TransmitTextEdit::on_textContentsChanged(int /*pos*/, int rem, int add){
 
         highlight();
 
-        qDebug() << "sent:" << sentText();
-        qDebug() << "unsent:" << unsentText();
+        //qDebug() << "sent:" << sentText();
+        //qDebug() << "unsent:" << unsentText();
 
         m_lastText = text;
     }

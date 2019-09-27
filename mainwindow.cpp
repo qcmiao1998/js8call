@@ -5295,7 +5295,7 @@ void MainWindow::startTx()
   }
 
   // disallow editing of the text while transmitting
-  ui->extFreeTextMsgEdit->setReadOnly(true);
+  // ui->extFreeTextMsgEdit->setReadOnly(true);
   update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", true);
 
   // update the tx button display
@@ -5325,13 +5325,13 @@ void MainWindow::stopTx()
   auto dt = DecodedText(m_currentMessage.trimmed(), m_currentMessageBits, m_nSubMode);
   last_tx_label.setText("Last Tx: " + dt.message()); //m_currentMessage.trimmed());
 
-
-  // start message marker
-  // - keep track of the total message sent so far, and mark it having been sent
-  m_totalTxMessage.append(dt.message());
-  ui->extFreeTextMsgEdit->setCharsSent(m_totalTxMessage.length());
-  qDebug() << "total sent:\n" << m_totalTxMessage;
-  // end message marker
+  // TODO: uncomment if we want to mark after the frame is sent.
+  //// // start message marker
+  //// // - keep track of the total message sent so far, and mark it having been sent
+  //// m_totalTxMessage.append(dt.message());
+  //// ui->extFreeTextMsgEdit->setCharsSent(m_totalTxMessage.length());
+  //// qDebug() << "total sent:\n" << m_totalTxMessage;
+  //// // end message marker
 
   m_btxok = false;
   m_transmitting = false;
@@ -6113,6 +6113,10 @@ bool MainWindow::ensureNotIdle(){
 }
 
 bool MainWindow::ensureCreateMessageReady(const QString &text){
+    if(text.isEmpty()){
+        return false;
+    }
+
     if(!ensureCallsignSet()){
         on_stopTxButton_clicked();
         return false;
@@ -6151,6 +6155,10 @@ QString MainWindow::createMessage(QString const& text){
     return createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false), true);
 }
 
+QString MainWindow::appendMessage(QString const& text){
+    return createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false), false);
+}
+
 QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
   if(reset){
       resetMessageTransmitQueue();
@@ -6165,13 +6173,14 @@ QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
   }
 
   m_txFrameQueue.append(frames);
-  m_txFrameCount = frames.length();
+  m_txFrameCount += frames.length();
 
   int freq = currentFreqOffset();
   qDebug() << "creating message for freq" << freq;
 
   // TODO: jsherer - parse outgoing message so we can add it to the inbox as an outgoing message
 
+  // TODO: jsherer - move this outside of create message transmit queue
   auto joined = Varicode::rstrip(lines.join(""));
   displayTextForFreq(QString("%1 %2 ").arg(joined).arg(m_config.eot()), freq, DriftingDateTime::currentDateTimeUtc(), true, true, true);
 
@@ -6183,7 +6192,7 @@ QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
 #endif
 
   // keep track of the last message text sent
-  m_lastTxMessage = text;
+  m_lastTxMessage += text;
 
   return joined;
 }
@@ -6202,6 +6211,9 @@ void MainWindow::resetMessageTransmitQueue(){
 
   // reset the total message sent
   m_totalTxMessage.clear();
+
+  // reset the last message sent
+  m_lastTxMessage.clear();
 }
 
 QPair<QString, int> MainWindow::popMessageFrame(){
@@ -6340,14 +6352,28 @@ bool MainWindow::prepareNextMessageFrame()
 {
   m_i3bit = Varicode::JS8Call;
 
+  // typeahead
+  static QString lastText;
+  if(lastText == "" || lastText != ui->extFreeTextMsgEdit->toPlainText()){
+      auto sent = ui->extFreeTextMsgEdit->sentText();
+      auto unsent = ui->extFreeTextMsgEdit->unsentText();
+      qDebug() << "text dirty for typeahead\n" << sent << "\n" << unsent;
+      m_txFrameQueue.clear();
+      m_txFrameCount = 0;
+      auto newUnsent = appendMessage(unsent);
+      ui->extFreeTextMsgEdit->replaceUnsentText(newUnsent);
+      lastText = ui->extFreeTextMsgEdit->toPlainText();
+  }
+
   QPair<QString, int> f = popMessageFrame();
   auto frame = f.first;
   auto bits = f.second;
 
   // append this frame to the total message sent so far
-  // auto dt = DecodedText(frame, bits, m_nSubMode);
-  // m_totalTxMessage.append(dt.message());
-  // qDebug() << "total sent" << m_totalTxMessage;
+  auto dt = DecodedText(frame, bits, m_nSubMode);
+  m_totalTxMessage.append(dt.message());
+  ui->extFreeTextMsgEdit->setCharsSent(m_totalTxMessage.length());
+  qDebug() << "total sent:\n" << m_totalTxMessage;
 
   if(frame.isEmpty()){
     ui->nextFreeTextMsg->clear();

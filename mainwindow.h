@@ -160,6 +160,7 @@ public slots:
   bool ensureNotIdle();
   bool ensureCreateMessageReady(const QString &text);
   QString createMessage(QString const& text);
+  QString appendMessage(QString const& text);
   QString createMessageTransmitQueue(QString const& text, bool reset);
   void resetMessageTransmitQueue();
   QPair<QString, int> popMessageFrame();
