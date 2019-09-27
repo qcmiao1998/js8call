@@ -55,8 +55,8 @@ public slots:
 
 private:
     QString m_lastText;
-    QString m_textSent;
     int m_sent;
+    QString m_textSent;
     bool m_protected;
     QFont m_font;
     QColor m_fg;

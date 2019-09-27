@@ -86,7 +86,6 @@ void highlightBlock(QTextBlock block, QFont font, QColor foreground, QColor back
 TransmitTextEdit::TransmitTextEdit(QWidget *parent):
     QTextEdit(parent),
     m_sent { 0 },
-    m_textSent { "" },
     m_protected { false }
 {
     connect(this, &QTextEdit::selectionChanged, this, &TransmitTextEdit::on_selectionChanged);
@@ -174,26 +173,25 @@ bool TransmitTextEdit::cursorShouldBeProtected(QTextCursor c){
 void TransmitTextEdit::on_selectionChanged(){
     auto c = textCursor();
 
-    auto protect = cursorShouldBeProtected(c);
+    auto shouldProtect = cursorShouldBeProtected(c);
 
-    if(protect){
+    if(shouldProtect){
         blockSignals(true);
         {
             int end = c.selectionEnd();
-            c.setPosition(m_sent);
-            c.setPosition(end, QTextCursor::KeepAnchor);
+            c.movePosition(QTextCursor::Start);
+            c.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, m_sent);
+            c.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, qMax(0, end-m_sent));
             setTextCursor(c);
         }
         blockSignals(false);
     }
 
-    setProtected(protect);
-
-    // TODO: when protected and text is selected, remove protected region from selection
+    setProtected(shouldProtect);
 }
 
 // slot
-void TransmitTextEdit::on_textContentsChanged(int pos, int rem, int add){
+void TransmitTextEdit::on_textContentsChanged(int /*pos*/, int rem, int add){
     if(rem == 0 && add == 0){
         return;
     }
@@ -251,37 +249,6 @@ void TransmitTextEdit::highlight(){
     highlightBase();
     highlightCharsSent();
 }
-
-bool isMovementKeyEvent(QKeyEvent * k){
-    return (
-       k == QKeySequence::MoveToNextChar        ||
-       k == QKeySequence::MoveToPreviousChar    ||
-       k == QKeySequence::SelectNextChar        ||
-       k == QKeySequence::SelectPreviousChar    ||
-       k == QKeySequence::SelectNextWord        ||
-       k == QKeySequence::SelectPreviousWord    ||
-       k == QKeySequence::SelectStartOfLine     ||
-       k == QKeySequence::SelectEndOfLine       ||
-       k == QKeySequence::SelectStartOfBlock    ||
-       k == QKeySequence::SelectEndOfBlock      ||
-       k == QKeySequence::SelectStartOfDocument ||
-       k == QKeySequence::SelectEndOfDocument   ||
-       k == QKeySequence::SelectPreviousLine    ||
-       k == QKeySequence::SelectNextLine        ||
-       k == QKeySequence::MoveToNextWord        ||
-       k == QKeySequence::MoveToPreviousWord    ||
-       k == QKeySequence::MoveToEndOfBlock      ||
-       k == QKeySequence::MoveToStartOfBlock    ||
-       k == QKeySequence::MoveToNextLine        ||
-       k == QKeySequence::MoveToPreviousLine    ||
-       k == QKeySequence::MoveToPreviousLine    ||
-       k == QKeySequence::MoveToStartOfLine     ||
-       k == QKeySequence::MoveToEndOfLine       ||
-       k == QKeySequence::MoveToStartOfDocument ||
-       k == QKeySequence::MoveToEndOfDocument
-    );
-}
-
 
 QTextCursor::MoveOperation movementKeyEventToMoveOperation(QKeyEvent *e){
     QTextCursor::MoveOperation op = QTextCursor::NoMove;
@@ -365,6 +332,9 @@ QTextCursor::MoveOperation movementKeyEventToMoveOperation(QKeyEvent *e){
     return op;
 }
 
+bool isMovementKeyEvent(QKeyEvent * k){
+    return movementKeyEventToMoveOperation(k) != QTextCursor::NoMove;
+}
 
 bool TransmitTextEdit::eventFilter(QObject */*o*/, QEvent *e){
     if(e->type() != QEvent::KeyPress){
@@ -393,16 +363,15 @@ bool TransmitTextEdit::eventFilter(QObject */*o*/, QEvent *e){
 
     // 2. if on the edge, do not filter if not a backspace
     int start = qMin(c.selectionStart(), c.selectionEnd());
-    int end = qMax(c.selectionStart(), c.selectionEnd());
     if(start == m_sent && k->key() != Qt::Key_Backspace){
         return false;
     }
 
     // 3. if on the edge, do not filter if a backspace and there is text selected
+    int end = qMax(c.selectionStart(), c.selectionEnd());
     if(start == m_sent && start != end && k->key() == Qt::Key_Backspace){
         return false;
     }
 
     return true;
 }
-

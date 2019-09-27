@@ -1095,7 +1095,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
       toggleTx(true);
   });
-  //ui->extFreeTextMsgEdit->installEventFilter(enterFilter);
+  ui->extFreeTextMsgEdit->installEventFilter(enterFilter);
 
   auto doubleClickFilter = new MouseDoubleClickEater();
   connect(doubleClickFilter, &MouseDoubleClickEater::mouseDoubleClicked, this, [this](QObject *, QMouseEvent *, bool *){
