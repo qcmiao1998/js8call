@@ -176,6 +176,17 @@ void TransmitTextEdit::on_selectionChanged(){
 
     auto protect = cursorShouldBeProtected(c);
 
+    if(protect){
+        blockSignals(true);
+        {
+            int end = c.selectionEnd();
+            c.setPosition(m_sent);
+            c.setPosition(end, QTextCursor::KeepAnchor);
+            setTextCursor(c);
+        }
+        blockSignals(false);
+    }
+
     setProtected(protect);
 
     // TODO: when protected and text is selected, remove protected region from selection
@@ -382,7 +393,13 @@ bool TransmitTextEdit::eventFilter(QObject */*o*/, QEvent *e){
 
     // 2. if on the edge, do not filter if not a backspace
     int start = qMin(c.selectionStart(), c.selectionEnd());
+    int end = qMax(c.selectionStart(), c.selectionEnd());
     if(start == m_sent && k->key() != Qt::Key_Backspace){
+        return false;
+    }
+
+    // 3. if on the edge, do not filter if a backspace and there is text selected
+    if(start == m_sent && start != end && k->key() == Qt::Key_Backspace){
         return false;
     }
 
