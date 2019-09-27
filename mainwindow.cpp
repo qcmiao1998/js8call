@@ -6354,15 +6354,28 @@ bool MainWindow::prepareNextMessageFrame()
 
   // typeahead
   static QString lastText;
-  if(lastText == "" || lastText != ui->extFreeTextMsgEdit->toPlainText()){
+  auto text = ui->extFreeTextMsgEdit->toPlainText();
+  if(lastText == "" || lastText != text){
+#if 1
       auto sent = ui->extFreeTextMsgEdit->sentText();
       auto unsent = ui->extFreeTextMsgEdit->unsentText();
       qDebug() << "text dirty for typeahead\n" << sent << "\n" << unsent;
       m_txFrameQueue.clear();
       m_txFrameCount = 0;
-      auto newUnsent = appendMessage(unsent);
-      ui->extFreeTextMsgEdit->replaceUnsentText(newUnsent);
-      lastText = ui->extFreeTextMsgEdit->toPlainText();
+      auto newText = appendMessage(unsent);
+      ui->extFreeTextMsgEdit->replaceUnsentText(newText);
+#else
+      m_txFrameQueue.clear();
+      auto newText = appendMessage(text);
+      for(int i = 0; i < m_txFrameCount; i++){
+          if(m_txFrameQueue.isEmpty()){
+              break;
+          }
+          m_txFrameQueue.removeFirst();
+      }
+      ui->extFreeTextMsgEdit->replacePlainText(newText);
+#endif
+      lastText = text;
   }
 
   QPair<QString, int> f = popMessageFrame();

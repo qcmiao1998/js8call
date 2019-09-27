@@ -35,6 +35,7 @@ public:
     QString toPlainText() const;
     void setPlainText(const QString &text);
     void replaceUnsentText(const QString &text);
+    void replacePlainText(const QString &text);
 
     void setFont(QFont f);
     void setFont(QFont f, QColor fg, QColor bg);

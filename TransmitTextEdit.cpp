@@ -132,6 +132,15 @@ void TransmitTextEdit::replaceUnsentText(const QString &text){
 }
 
 //
+void TransmitTextEdit::replacePlainText(const QString &text){
+    auto c = textCursor();
+    c.movePosition(QTextCursor::Start);
+    c.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+    c.removeSelectedText();
+    c.insertText(text);
+}
+
+//
 void TransmitTextEdit::setFont(QFont f){
     m_font = f;
 
@@ -351,7 +360,11 @@ bool TransmitTextEdit::eventFilter(QObject */*o*/, QEvent *e){
         return false;
     }
 
+    // -1. don't filter the escape key
     QKeyEvent *k = static_cast<QKeyEvent *>(e);
+    if(k->key() == Qt::Key_Escape){
+        return false;
+    }
 
     auto c = textCursor();
 
