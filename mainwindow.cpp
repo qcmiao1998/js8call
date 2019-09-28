@@ -5899,6 +5899,8 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
         freq = highFreq;
     }
 
+    qDebug() << "existing block?" << block << freq;
+
     if(isNewLine){
         m_rxFrameBlockNumbers.remove(freq);
         m_rxFrameBlockNumbers.remove(lowFreq);
@@ -5909,7 +5911,7 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
     block = writeMessageTextToUI(date, text.replace("\\n", "\n"), freq, isTx, block);
 
     // never cache tx or last lines
-    if(isTx || isLast) {
+    if(/*isTx || */isLast) {
         // reset the cache so we're always progressing forward
         m_rxFrameBlockNumbers.clear();
     } else {
@@ -5936,7 +5938,7 @@ void MainWindow::writeNoticeTextToUI(QDateTime date, QString text){
     ui->textEditRX->verticalScrollBar()->setValue(ui->textEditRX->verticalScrollBar()->maximum());
 }
 
-int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, bool bold, int block){
+int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, bool isTx, int block){
     auto c = ui->textEditRX->textCursor();
 
     // find an existing block (that does not contain an EOT marker)
@@ -5973,20 +5975,17 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
         }
     }
 
-    if(found && !bold){
+    if(found){
         c.clearSelection();
         c.insertText(text);
     } else {
         text = text.toHtmlEscaped();
         text = text.replace("  ", "&nbsp;&nbsp;");
-        if(bold){
-            text = QString("<strong>%1</strong>").arg(text);
-        }
         c.insertBlock();
-        c.insertHtml(QString("<strong>%1 - (%2)</strong> - %3").arg(date.time().toString()).arg(freq).arg(text));
+        c.insertHtml(QString("%1 - (%2) - %3").arg(date.time().toString()).arg(freq).arg(text));
     }
 
-    if(bold){
+    if(isTx){
         c.block().setUserState(STATE_TX);
         highlightBlock(c.block(), m_config.tx_text_font(), m_config.color_tx_foreground(), QColor(Qt::transparent));
     } else {
@@ -6182,17 +6181,7 @@ QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
   m_txFrameQueue.append(frames);
   m_txFrameCount += frames.length();
 
-#if 1
-  int freq = currentFreqOffset();
-  qDebug() << "creating message for freq" << freq;
-
-  // TODO: jsherer - parse outgoing message so we can add it to the inbox as an outgoing message
-
   // TODO: jsherer - move this outside of create message transmit queue
-  auto joined = Varicode::rstrip(lines.join(""));
-
-  //displayTextForFreq(QString("%1 %2 ").arg(joined).arg(m_config.eot()), freq, DriftingDateTime::currentDateTimeUtc(), true, true, true);
-
   // if we're transmitting a message to be displayed, we should bump the repeat buttons...
 #if JS8HB_RESET_HB_TIMER_ON_TX
   resetAutomaticIntervalTransmissions(false, false);
@@ -6201,12 +6190,11 @@ QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
 #endif
 
   // keep track of the last message text sent
+  auto joined = lines.join("");
+
   m_lastTxMessage += joined;
 
   return joined;
-#else
-  return Varicode::rstrip(lines.join(""));
-#endif
 }
 
 void MainWindow::restoreMessage(){
@@ -6266,60 +6254,7 @@ void MainWindow::on_nextFreeTextMsg_currentTextChanged (QString const& text)
 
 void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 {
-#if 0
-    QString x;
-    QString::const_iterator i;
-    for(i = text.constBegin(); i != text.constEnd(); i++){
-        auto ch = (*i).toUpper().toLatin1();
-        if(ch == 10 || (32 <= ch && ch <= 126)){
-            // newline or printable 7-bit ascii
-            x += ch;
-        }
-    }
-    if(x != text){
-      int pos = ui->extFreeTextMsgEdit->textCursor().position();
-      int maxpos = x.size();
-
-      int sent = ui->extFreeTextMsgEdit->charsSent();
-      ui->extFreeTextMsgEdit->setPlainText(x);
-      ui->extFreeTextMsgEdit->setCharsSent(sent);
-
-      // set cursor position
-      QTextCursor c = ui->extFreeTextMsgEdit->textCursor();
-      c.setPosition(pos < maxpos ? pos : maxpos, QTextCursor::MoveAnchor);
-
-      // highlight the block with our fonts
-      highlightBlock(c.block(), m_config.compose_text_font(), m_config.color_compose_foreground(), QColor(Qt::transparent));
-
-      ui->extFreeTextMsgEdit->setTextCursor(c);
-    }
-#endif
-
-#if 0
-    auto x = text;
-
-    // only highlight if dirty
-    if(x != m_txTextDirtyLastText){
-        // highlight the edited block with our fonts
-        QTextCursor c = ui->extFreeTextMsgEdit->textCursor();
-        ui->extFreeTextMsgEdit->blockSignals(true);
-        {
-            int pos = ui->extFreeTextMsgEdit->textCursor().position();
-            int maxpos = x.size();
-
-            // set cursor position
-            QTextCursor c = ui->extFreeTextMsgEdit->textCursor();
-            c.setPosition(pos < maxpos ? pos : maxpos, QTextCursor::MoveAnchor);
-
-            // highlight the block with our fonts
-            highlightBlock(c.block(), m_config.compose_text_font(), m_config.color_compose_foreground(), QColor(Qt::transparent));
-
-            ui->extFreeTextMsgEdit->setTextCursor(c);
-        }
-        ui->extFreeTextMsgEdit->blockSignals(false);
-    }
-#endif
-
+    // keep track of dirty flags
     m_txTextDirty = text != m_txTextDirtyLastText;
     m_txTextDirtyLastText = text;
 
@@ -6377,6 +6312,7 @@ bool MainWindow::prepareNextMessageFrame()
       m_txFrameQueue.clear();
       m_txFrameCount = 0;
       auto newText = appendMessage(unsent);
+      qDebug () << "unsent replaced to" << "\n" << newText;
       ui->extFreeTextMsgEdit->replaceUnsentText(newText);
       ui->extFreeTextMsgEdit->setClean();
   }
@@ -6410,7 +6346,12 @@ bool MainWindow::prepareNextMessageFrame()
 
   // display the frame...
   auto freq = currentFreqOffset();
-  displayTextForFreq(QString("%1 %2 ").arg(dt.message()).arg(m_txFrameQueue.isEmpty() ? m_config.eot(): ""), freq, DriftingDateTime::currentDateTimeUtc(), true, false, false);
+  if(m_txFrameQueue.isEmpty()){
+    displayTextForFreq(QString("%1 %2 ").arg(dt.message()).arg(m_config.eot()), freq, DriftingDateTime::currentDateTimeUtc(), true, false, true);
+  } else {
+    bool newLine = m_txFrameCountSent == 1;
+    displayTextForFreq(dt.message(), freq, DriftingDateTime::currentDateTimeUtc(), true, newLine, false);
+  }
 
   ui->nextFreeTextMsg->setText(frame);
   m_i3bit = bits;

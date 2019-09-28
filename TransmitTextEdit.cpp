@@ -95,6 +95,9 @@ TransmitTextEdit::TransmitTextEdit(QWidget *parent):
 }
 
 void TransmitTextEdit::setCharsSent(int n){
+    // never can send more than the document length
+    n = qMin(n, document()->characterCount());
+
     // update sent display
     auto c = textCursor();
     c.movePosition(QTextCursor::Start);
