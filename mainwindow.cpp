@@ -6182,7 +6182,7 @@ QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
   m_txFrameQueue.append(frames);
   m_txFrameCount += frames.length();
 
-#if 0
+#if 1
   int freq = currentFreqOffset();
   qDebug() << "creating message for freq" << freq;
 
@@ -6190,7 +6190,8 @@ QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
 
   // TODO: jsherer - move this outside of create message transmit queue
   auto joined = Varicode::rstrip(lines.join(""));
-  displayTextForFreq(QString("%1 %2 ").arg(joined).arg(m_config.eot()), freq, DriftingDateTime::currentDateTimeUtc(), true, true, true);
+
+  //displayTextForFreq(QString("%1 %2 ").arg(joined).arg(m_config.eot()), freq, DriftingDateTime::currentDateTimeUtc(), true, true, true);
 
   // if we're transmitting a message to be displayed, we should bump the repeat buttons...
 #if JS8HB_RESET_HB_TIMER_ON_TX
@@ -6200,7 +6201,7 @@ QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
 #endif
 
   // keep track of the last message text sent
-  m_lastTxMessage += text;
+  m_lastTxMessage += joined;
 
   return joined;
 #else
@@ -6406,6 +6407,10 @@ bool MainWindow::prepareNextMessageFrame()
   ui->extFreeTextMsgEdit->setCharsSent(m_totalTxMessage.length());
   m_txFrameCountSent += 1;
   qDebug() << "total sent:" << m_txFrameCountSent << "\n" << m_totalTxMessage;
+
+  // display the frame...
+  auto freq = currentFreqOffset();
+  displayTextForFreq(QString("%1 %2 ").arg(dt.message()).arg(m_txFrameQueue.isEmpty() ? m_config.eot(): ""), freq, DriftingDateTime::currentDateTimeUtc(), true, false, false);
 
   ui->nextFreeTextMsg->setText(frame);
   m_i3bit = bits;
