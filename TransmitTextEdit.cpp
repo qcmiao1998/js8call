@@ -224,6 +224,7 @@ void TransmitTextEdit::on_textContentsChanged(int /*pos*/, int rem, int add){
         //qDebug() << "sent:" << sentText();
         //qDebug() << "unsent:" << unsentText();
 
+        m_dirty = true;
         m_lastText = text;
     }
 }

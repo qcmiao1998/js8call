@@ -791,6 +791,7 @@ private:
   bool m_rxDisplayDirty;
   int m_txFrameCountEstimate;
   int m_txFrameCount;
+  int m_txFrameCountSent;
   QTimer m_txTextDirtyDebounce;
   bool m_txTextDirty;
   QString m_txTextDirtyLastText;

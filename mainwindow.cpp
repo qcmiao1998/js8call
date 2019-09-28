@@ -463,6 +463,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_i3bit {0},
   m_manual {&m_network_manager},
   m_txFrameCount {0},
+  m_txFrameCountSent {0},
   m_txTextDirty {false},
   m_txFrameCountEstimate {0},
   m_previousFreq {0},
@@ -4936,7 +4937,6 @@ void MainWindow::guiUpdate()
       // 0:   [000] <- this is standard set
       // 1:   [001] <- this is fox/hound
       //m_i3bit=0;
-      qDebug() << "gen tones" << message;
       char ft8msgbits[75 + 12]; //packed 75 bit ft8 message plus 12-bit CRC
 
       if(m_nSubMode == Varicode::JS8CallNormal){
@@ -4948,6 +4948,9 @@ void MainWindow::guiUpdate()
           genjs8_(message, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
                   const_cast<int *> (itone), 22, 6, 22);
       }
+
+      qDebug() << "-> msg:" << message;
+      qDebug() << "-> bit:" << m_i3bit;
 
       msgibits = m_i3bit;
       msgsent[22]=0;
@@ -5276,6 +5279,10 @@ void MainWindow::startTx()
       return;
   }
 #endif
+  auto text = ui->extFreeTextMsgEdit->toPlainText();
+  if(!ensureCreateMessageReady(text)){
+    return;
+  }
 
   if(!prepareNextMessageFrame()){
     return;
@@ -6210,6 +6217,7 @@ void MainWindow::restoreMessage(){
 
 void MainWindow::resetMessageTransmitQueue(){
   m_txFrameCount = 0;
+  m_txFrameCountSent = 0;
   m_txFrameQueue.clear();
   m_txMessageQueue.clear();
 
@@ -6334,7 +6342,7 @@ QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text){
     bool forceIdentify = !m_config.avoid_forced_identify();
 
     // TODO: might want to be more explicit?
-    bool forceData = !m_totalTxMessage.isEmpty();
+    bool forceData = m_txFrameCountSent > 0;
 
     auto frames = Varicode::buildMessageFrames(
         mycall,
@@ -6361,10 +6369,7 @@ bool MainWindow::prepareNextMessageFrame()
   m_i3bit = Varicode::JS8Call;
 
   // typeahead
-  static QString lastText;
-  auto text = ui->extFreeTextMsgEdit->toPlainText();
-  if(!text.isEmpty() && (lastText == "" || lastText != text)){
-#if 1
+  if(ui->extFreeTextMsgEdit->isDirty() && !ui->extFreeTextMsgEdit->isEmpty()){
       auto sent = ui->extFreeTextMsgEdit->sentText();
       auto unsent = ui->extFreeTextMsgEdit->unsentText();
       qDebug() << "text dirty for typeahead\n" << sent << "\n" << unsent;
@@ -6372,45 +6377,44 @@ bool MainWindow::prepareNextMessageFrame()
       m_txFrameCount = 0;
       auto newText = appendMessage(unsent);
       ui->extFreeTextMsgEdit->replaceUnsentText(newText);
-#else
-      m_txFrameQueue.clear();
-      auto newText = appendMessage(text);
-      for(int i = 0; i < m_txFrameCount; i++){
-          if(m_txFrameQueue.isEmpty()){
-              break;
-          }
-          m_txFrameQueue.removeFirst();
-      }
-      ui->extFreeTextMsgEdit->replacePlainText(newText);
-#endif
-      lastText = text;
+      ui->extFreeTextMsgEdit->setClean();
   }
 
   QPair<QString, int> f = popMessageFrame();
   auto frame = f.first;
   auto bits = f.second;
 
-  // append this frame to the total message sent so far
-  auto dt = DecodedText(frame, bits, m_nSubMode);
-  m_totalTxMessage.append(dt.message());
-  ui->extFreeTextMsgEdit->setCharsSent(m_totalTxMessage.length());
-  qDebug() << "total sent:\n" << m_totalTxMessage;
+  // if not the first frame, ensure first bit is not set
+  if(m_txFrameCountSent > 0){
+      bits &= ~Varicode::JS8CallFirst;
+  }
+
+  // if last frame, ensure the last bit is set
+  if(m_txFrameQueue.isEmpty()){
+      bits |= Varicode::JS8CallLast;
+  }
 
   if(frame.isEmpty()){
     ui->nextFreeTextMsg->clear();
     updateTxButtonDisplay();
-
     return false;
-  } else {
-    ui->nextFreeTextMsg->setText(frame);
-    m_i3bit = bits;
-
-    updateTxButtonDisplay();
-
-    // TODO: bump heartbeat
-
-    return true;
   }
+
+  // append this frame to the total message sent so far
+  auto dt = DecodedText(frame, bits, m_nSubMode);
+  m_totalTxMessage.append(dt.message());
+  ui->extFreeTextMsgEdit->setCharsSent(m_totalTxMessage.length());
+  m_txFrameCountSent += 1;
+  qDebug() << "total sent:" << m_txFrameCountSent << "\n" << m_totalTxMessage;
+
+  ui->nextFreeTextMsg->setText(frame);
+  m_i3bit = bits;
+
+  updateTxButtonDisplay();
+
+  // TODO: bump heartbeat
+
+  return true;
 }
 
 bool MainWindow::isFreqOffsetFree(int f, int bw){
@@ -6618,16 +6622,17 @@ QString MainWindow::calculateDistance(QString const& value, int *pDistance, int 
 void MainWindow::on_startTxButton_toggled(bool checked)
 {
     if(checked){
-        auto text = ui->extFreeTextMsgEdit->toPlainText();
-        if(ensureCreateMessageReady(text)){
-
-            auto txText = createMessage(text);
-            if(txText != text){
-                ui->extFreeTextMsgEdit->setPlainText(txText);
-            }
-
-            startTx();
-        }
+        // auto text = ui->extFreeTextMsgEdit->toPlainText();
+        // if(ensureCreateMessageReady(text)){
+        //
+        //     auto txText = createMessage(text);
+        //     if(txText != text){
+        //         ui->extFreeTextMsgEdit->setPlainText(txText);
+        //     }
+        //
+        //     startTx();
+        // }
+        startTx();
     } else {
         resetMessage();
         on_stopTxButton_clicked();

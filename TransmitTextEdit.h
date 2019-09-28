@@ -46,6 +46,17 @@ public:
     }
     void setProtected(bool protect);
     bool cursorShouldBeProtected(QTextCursor c);
+
+    bool isEmpty() const {
+        return toPlainText().isEmpty();
+    }
+    bool isDirty() const {
+        return m_dirty;
+    }
+    void setClean(){
+        m_dirty = false;
+    }
+
     void highlightBase();
     void highlightCharsSent();
     void highlight();
@@ -61,6 +72,7 @@ private:
     int m_sent;
     QString m_textSent;
     bool m_protected;
+    bool m_dirty;
     QFont m_font;
     QColor m_fg;
     QColor m_bg;

@@ -2044,7 +2044,12 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(QString const& mycall,
                   line = lstrip(line);
 
                   qDebug() << "before:" << line;
+
+#if 1
                   int checksumSize = Varicode::isCommandChecksumed(dirCmd);
+#else
+                  int checksumSize = 0;
+#endif
 
                   if(checksumSize == 32){
                       line = line + " " + Varicode::checksum32(line);
@@ -2111,7 +2116,7 @@ void BuildMessageFramesThread::run(){
     qDebug() << "frames:";
     foreach(auto frame, results){
         auto dt = DecodedText(frame.first, frame.second, m_submode);
-        qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType()) << m_submode;
+        qDebug() << "->" << frame << dt.message() << Varicode::frameTypeString(dt.frameType()) << "submode:" << m_submode;
         textList.append(dt.message());
     }
 
