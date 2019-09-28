@@ -6175,6 +6175,7 @@ QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
   m_txFrameQueue.append(frames);
   m_txFrameCount += frames.length();
 
+#if 0
   int freq = currentFreqOffset();
   qDebug() << "creating message for freq" << freq;
 
@@ -6195,6 +6196,9 @@ QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
   m_lastTxMessage += text;
 
   return joined;
+#else
+  return Varicode::rstrip(lines.join(""));
+#endif
 }
 
 void MainWindow::restoreMessage(){
@@ -6329,12 +6333,16 @@ QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text){
 
     bool forceIdentify = !m_config.avoid_forced_identify();
 
+    // TODO: might want to be more explicit?
+    bool forceData = !m_totalTxMessage.isEmpty();
+
     auto frames = Varicode::buildMessageFrames(
         mycall,
         mygrid,
         selectedCall,
         text,
         forceIdentify,
+        forceData,
         m_nSubMode);
 
 #if 0
@@ -6355,7 +6363,7 @@ bool MainWindow::prepareNextMessageFrame()
   // typeahead
   static QString lastText;
   auto text = ui->extFreeTextMsgEdit->toPlainText();
-  if(lastText == "" || lastText != text){
+  if(!text.isEmpty() && (lastText == "" || lastText != text)){
 #if 1
       auto sent = ui->extFreeTextMsgEdit->sentText();
       auto unsent = ui->extFreeTextMsgEdit->unsentText();
@@ -9579,6 +9587,7 @@ void MainWindow::refreshTextDisplay(){
     QString mycall = m_config.my_callsign();
     QString mygrid = m_config.my_grid().left(4);
     bool forceIdentify = !m_config.avoid_forced_identify();
+    bool forceData = false;
 
     BuildMessageFramesThread *t = new BuildMessageFramesThread(
         mycall,
@@ -9586,6 +9595,7 @@ void MainWindow::refreshTextDisplay(){
         selectedCall,
         text,
         forceIdentify,
+        forceData,
         m_nSubMode
     );
 

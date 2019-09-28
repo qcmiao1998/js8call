@@ -1828,6 +1828,7 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(QString const& mycall,
     QString const& selectedCall,
     QString const& text,
     bool forceIdentify,
+    bool forceData,
     int submode){
     #define ALLOW_SEND_COMPOUND 1
     #define ALLOW_SEND_COMPOUND_DIRECTED 1
@@ -1849,6 +1850,12 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(QString const& mycall,
         // do the same for when we have sent data...
         bool hasData = false;
 
+        // or if we're forcing data to be sent...
+        if(forceData){
+            forceIdentify = false;
+            hasData = true;
+        }
+
 #if AUTO_REMOVE_MYCALL
         // remove our callsign from the start of the line...
         if(line.startsWith(mycall + ":") || line.startsWith(mycall + " ")){
@@ -1866,7 +1873,7 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(QString const& mycall,
         // see if we need to prepend the directed call to the line...
         // if we have a selected call and the text doesn't start with that call...
         // and if this isn't a raw message (starting with "`")... then...
-        if(!selectedCall.isEmpty() && !line.startsWith(selectedCall) && !line.startsWith("`")){
+        if(!selectedCall.isEmpty() && !line.startsWith(selectedCall) && !line.startsWith("`") && !forceData){
             bool lineStartsWithBaseCall = (
                 line.startsWith("@ALLCALL")  ||
                 Varicode::startsWithCQ(line) ||
@@ -2074,6 +2081,7 @@ BuildMessageFramesThread::BuildMessageFramesThread(const QString &mycall,
     const QString &selectedCall,
     const QString &text,
     bool forceIdentify,
+    bool forceData,
     int submode,
     QObject *parent):
     QThread(parent),
@@ -2082,6 +2090,7 @@ BuildMessageFramesThread::BuildMessageFramesThread(const QString &mycall,
     m_selectedCall{selectedCall},
     m_text{text},
     m_forceIdentify{forceIdentify},
+    m_forceData{forceData},
     m_submode{submode}
 {
 }
@@ -2093,6 +2102,7 @@ void BuildMessageFramesThread::run(){
         m_selectedCall,
         m_text,
         m_forceIdentify,
+        m_forceData,
         m_submode
     );
 

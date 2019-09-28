@@ -360,9 +360,9 @@ bool TransmitTextEdit::eventFilter(QObject */*o*/, QEvent *e){
         return false;
     }
 
-    // -1. don't filter the escape key
+    // -1. don't filter the escape key, return key, or enter key here
     QKeyEvent *k = static_cast<QKeyEvent *>(e);
-    if(k->key() == Qt::Key_Escape){
+    if(k->key() == Qt::Key_Escape || k->key() == Qt::Key_Return || k->key() == Qt::Key_Enter){
         return false;
     }
 

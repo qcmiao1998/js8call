@@ -173,6 +173,7 @@ public:
         QString const& selectedCall,
         QString const& text,
         bool forceIdentify,
+        bool forceData,
         int submode);
 };
 
@@ -186,6 +187,7 @@ public:
                              QString const& selectedCall,
                              QString const& text,
                              bool forceIdentify,
+                             bool forceData,
                              int submode,
                              QObject *parent=nullptr);
     void run() override;
@@ -198,6 +200,7 @@ private:
     QString m_selectedCall;
     QString m_text;
     bool m_forceIdentify;
+    bool m_forceData;
     int m_submode;
 };
 
