@@ -6291,13 +6291,10 @@ QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text){
         m_nSubMode,
         &info);
 
-    if(!info.dirCmd.isEmpty()){
-        qDebug() << "message contains cmd" << info.dirCmd;
-        if(Varicode::isCommandBuffered(info.dirCmd)){
-            // buffered commands should not allow typeahead
-            // TODO: jsherer - i don't like setting this here, but it works for now...
-            ui->extFreeTextMsgEdit->setReadOnly(true);
-        }
+    if(!info.dirCmd.isEmpty() && Varicode::isCommandChecksumed(info.dirCmd)){
+        // checksummed commands should not allow typeahead
+        // TODO: jsherer - i don't like setting this here, but it works for now...
+        ui->extFreeTextMsgEdit->setReadOnly(true);
     }
 
 #if 0
