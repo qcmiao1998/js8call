@@ -1829,7 +1829,8 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(QString const& mycall,
     QString const& text,
     bool forceIdentify,
     bool forceData,
-    int submode){
+    int submode,
+    MessageInfo *pInfo){
     #define ALLOW_SEND_COMPOUND 1
     #define ALLOW_SEND_COMPOUND_DIRECTED 1
     #define AUTO_PREPEND_DIRECTED 1
@@ -2060,6 +2061,12 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(QString const& mycall,
                       qDebug() << "no checksum required for cmd" << dirCmd;
                   }
                   qDebug() << "after:" << line;
+              }
+
+              if(pInfo){
+                  pInfo->dirCmd = dirCmd;
+                  pInfo->dirTo = dirTo;
+                  pInfo->dirNum = dirNum;
               }
           }
 

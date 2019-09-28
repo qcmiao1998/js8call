@@ -6280,6 +6280,7 @@ QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text){
     // TODO: might want to be more explicit?
     bool forceData = m_txFrameCountSent > 0;
 
+    Varicode::MessageInfo info;
     auto frames = Varicode::buildMessageFrames(
         mycall,
         mygrid,
@@ -6287,7 +6288,17 @@ QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text){
         text,
         forceIdentify,
         forceData,
-        m_nSubMode);
+        m_nSubMode,
+        &info);
+
+    if(!info.dirCmd.isEmpty()){
+        qDebug() << "message contains cmd" << info.dirCmd;
+        if(Varicode::isCommandBuffered(info.dirCmd)){
+            // buffered commands should not allow typeahead
+            // TODO: jsherer - i don't like setting this here, but it works for now...
+            ui->extFreeTextMsgEdit->setReadOnly(true);
+        }
+    }
 
 #if 0
     qDebug() << "frames:";

@@ -16,6 +16,13 @@
 class Varicode
 {
 public:
+    // extra information out of buildMessageFrames
+    struct MessageInfo {
+        QString dirTo;
+        QString dirCmd;
+        QString dirNum;
+    };
+
     // submode types
     enum SubmodeType {
         JS8CallNormal   = 0,
@@ -174,7 +181,8 @@ public:
         QString const& text,
         bool forceIdentify,
         bool forceData,
-        int submode);
+        int submode,
+        MessageInfo *pInfo=nullptr);
 };
 
 
