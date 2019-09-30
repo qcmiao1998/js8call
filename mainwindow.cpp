@@ -6348,6 +6348,7 @@ bool MainWindow::prepareNextMessageFrame()
   // append this frame to the total message sent so far
   auto dt = DecodedText(frame, bits, m_nSubMode);
   m_totalTxMessage.append(dt.message());
+  m_lastMessageSent.append(dt.message());
   ui->extFreeTextMsgEdit->setCharsSent(m_totalTxMessage.length());
   m_txFrameCountSent += 1;
   qDebug() << "total sent:" << m_txFrameCountSent << "\n" << m_totalTxMessage;
