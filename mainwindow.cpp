@@ -6189,12 +6189,8 @@ QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
   resetCQTimer(false);
 #endif
 
-  // keep track of the last message text sent
-  auto joined = lines.join("");
-
-  m_lastTxMessage += joined;
-
-  return joined;
+  // return the text
+  return lines.join("");
 }
 
 void MainWindow::restoreMessage(){
@@ -6348,7 +6344,7 @@ bool MainWindow::prepareNextMessageFrame()
   // append this frame to the total message sent so far
   auto dt = DecodedText(frame, bits, m_nSubMode);
   m_totalTxMessage.append(dt.message());
-  m_lastMessageSent.append(dt.message());
+  m_lastTxMessage.append(dt.message());
   ui->extFreeTextMsgEdit->setCharsSent(m_totalTxMessage.length());
   m_txFrameCountSent += 1;
   qDebug() << "total sent:" << m_txFrameCountSent << "\n" << m_totalTxMessage;
