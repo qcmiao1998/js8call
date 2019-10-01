@@ -6208,9 +6208,6 @@ void MainWindow::resetMessageTransmitQueue(){
 
   // reset the total message sent
   m_totalTxMessage.clear();
-
-  // reset the last message sent
-  m_lastTxMessage.clear();
 }
 
 QPair<QString, int> MainWindow::popMessageFrame(){
@@ -6344,9 +6341,9 @@ bool MainWindow::prepareNextMessageFrame()
   // append this frame to the total message sent so far
   auto dt = DecodedText(frame, bits, m_nSubMode);
   m_totalTxMessage.append(dt.message());
-  m_lastTxMessage.append(dt.message());
   ui->extFreeTextMsgEdit->setCharsSent(m_totalTxMessage.length());
   m_txFrameCountSent += 1;
+  m_lastTxMessage = m_totalTxMessage;
   qDebug() << "total sent:" << m_txFrameCountSent << "\n" << m_totalTxMessage;
 
   // display the frame...
