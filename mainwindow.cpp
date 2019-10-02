@@ -11425,9 +11425,14 @@ void MainWindow::displayBandActivity() {
                         // hide heartbeats and acks if we have heartbeating hidden
                         if(item.text.contains(" HB ") || item.text.contains(" ACK ")){
                             shouldDisplay = false;
+
+                            // hide the previous item if this it shouldn't be displayed either...
+                            if(i > 0 && items[i-1].shouldDisplay && items[i-1].text.endsWith(": ")){
+                                items[i-1].shouldDisplay = false;
+                            }
                         }
 
-                        // if our previous item should not be displayed and we have a MSG ID, then don't display it either.
+                        // if our previous item should not be displayed (or this is the first frame) and we have a MSG ID, then don't display it either.
                         if(
                            (i == 0 || (i > 0 && !items[i-1].shouldDisplay)) &&
                            (item.text.contains(" MSG ID "))
