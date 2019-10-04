@@ -1913,6 +1913,7 @@ void MainWindow::initializeDummyData(){
     foreach(auto call, calls){
         CallDetail cd = {};
         cd.call = call;
+        cd.through = i == 2 ? "KN4CRD" : "";
         cd.freq = 500 + 100*i;
         cd.snr = i == 3 ? -100 : i;
         cd.ackTimestamp = i == 1 ? dt.addSecs(-900) : QDateTime{};
@@ -11758,22 +11759,19 @@ void MainWindow::displayCallActivity() {
             int row = ui->tableWidgetCalls->rowCount() - 1;
             int col = 0;
 
-            // icon column
 #if SHOW_THROUGH_CALLS
             QString displayCall = d.through.isEmpty() ? d.call : QString("%1>%2").arg(d.through).arg(d.call);
 #else
-            // unicode star
             QString displayCall = d.call;
 #endif
+            bool hasThrough = !d.through.isEmpty();
 
-
-
-            auto iconItem = new QTableWidgetItem(hasMessage ? "\u2691" : hasACK ? "\u2605" : hasCQ ? "\u260E" : "");
+            auto iconItem = new QTableWidgetItem(hasMessage ? "\u2691" : hasACK ? "\u2605" : hasCQ ? "\u260E" : hasThrough ? "\u269F" : "");
             iconItem->setData(Qt::UserRole, QVariant(d.call));
-            iconItem->setToolTip(hasMessage ? "Message Available" : hasACK ? "Hearing Your Station" : hasCQ ? "Calling CQ" : "");
+            iconItem->setToolTip(hasMessage ? "Message Available" : hasACK ? "Hearing Your Station" : hasCQ ? "Calling CQ" : hasThrough ? QString("Heard through %1").arg(d.through) : "");
             iconItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
             ui->tableWidgetCalls->setItem(row, col++, iconItem);
-            if(hasMessage || hasACK || hasCQ){
+            if(hasMessage || hasACK || hasCQ || hasThrough){
                 showIconColumn = true;
             }
 
