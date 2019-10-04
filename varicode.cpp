@@ -1862,7 +1862,9 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(QString const& mycall,
         if(line.startsWith(mycall + ":") || line.startsWith(mycall + " ")){
             line = lstrip(line.mid(mycall.length() + 1));
         }
+#endif
 
+#if AUTO_RSTRIP_WHITESPACE
         // remove trailing whitespace as long as there are characters left afterwards
         auto rline = rstrip(line);
         if(!rline.isEmpty()){

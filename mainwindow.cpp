@@ -1720,6 +1720,16 @@ void MainWindow::initializeDummyData(){
     }
 
 #if 0
+    Codeword all;
+    foreach(CodewordPair p, JSC::compress("")){
+        all.append(p.first);
+    }
+    qDebug() << all;
+    qDebug() << JSC::decompress(all) << (JSC::decompress(all) == "HELLO WORLD ");
+    exit(-1);
+#endif
+
+#if 0
     auto t = new QTimer(this);
     t->setInterval(150);
     connect(t, &QTimer::timeout, this, [this](){

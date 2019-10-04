@@ -58,13 +58,17 @@ QList<CodewordPair> JSC::compress(QString text){
 
     QString space(" ");
 
-    foreach(QString w, text.split(" ", QString::KeepEmptyParts)){
-        bool ok = false;
+    QStringList words = text.split(" ", QString::KeepEmptyParts);
 
+    for(int i = 0, len = words.length(); i < len; i++){
+        QString w = words[i];
+
+        bool isLastWord = (i == len - 1);
+        bool ok = false;
         bool isSpaceCharacter = false;
 
-        // if this is an empty part, it should be a space.
-        if(w.isEmpty()){
+        // if this is an empty part, it should be a space, unless its the last word.
+        if(w.isEmpty() && !isLastWord){
             w = space;
             isSpaceCharacter = true;
         }
@@ -77,10 +81,12 @@ QList<CodewordPair> JSC::compress(QString text){
             }
 
             auto t = JSC::map[index];
+
             w = QString(w).mid(t.size);
 
             bool isLast = w.isEmpty();
-            bool shouldAppendSpace = isLast && !isSpaceCharacter;
+            bool shouldAppendSpace = isLast && !isSpaceCharacter && !isLastWord;
+
             out.append({ codeword(index, shouldAppendSpace, b, s, c), (quint32)t.size + (shouldAppendSpace ? 1 : 0) /* for the space that follows */});
         }
     }
@@ -145,6 +151,7 @@ QString JSC::decompress(Codeword const& bitvec){
         if(j >= (int)JSC::size){
             break;
         }
+
         auto word = QString(JSC::map[j].str);
 
         out.append(word);
