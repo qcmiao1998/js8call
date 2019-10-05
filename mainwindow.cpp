@@ -4127,6 +4127,14 @@ void MainWindow::decodeDone ()
   m_blankLine=true;
 }
 
+QList<int> generateOffsets(int minOffset, int maxOffset){
+    QList<int> offsets;
+    for(int i = minOffset; i <= maxOffset; i++){
+        offsets.append(i);
+    }
+    return offsets;
+}
+
 void MainWindow::readFromStdout()                             //readFromStdout
 {
   while(proc_js8.canReadLine()) {
@@ -4203,12 +4211,11 @@ void MainWindow::readFromStdout()                             //readFromStdout
             int offset = decodedtext.frequencyOffset();
 
             if(!m_bandActivity.contains(offset)){
-                QList<int> offsets = {
-                    // offset - 60, offset - 61, offset - 62, offset - 63, offset - 64, offset - 65, offset - 66, offset - 67, offset - 68, offset - 69,
-                    // offset + 60, offset + 61, offset + 62, offset + 63, offset + 64, offset + 65, offset + 66, offset + 67, offset + 68, offset + 69,
-                    offset - 1, offset - 2, offset - 3, offset - 4, offset - 5, offset - 6, offset - 7, offset - 8, offset - 9, offset - 10,
-                    offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 7, offset + 8, offset + 9, offset + 10
-                };
+                int range = 10;
+                if(m_nSubMode == Varicode::JS8CallFast){ range = 15; }
+                if(m_nSubMode == Varicode::JS8CallTurbo){ range = 30; }
+                QList<int> offsets = generateOffsets(offset-10, offset+10);
+
                 foreach(int prevOffset, offsets){
                     if(!m_bandActivity.contains(prevOffset)){ continue; }
                     m_bandActivity[offset] = m_bandActivity[prevOffset];
@@ -4340,6 +4347,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                     logHeardGraph(cmd.from, cmd.to);
                 }
 
+                // merge any existing buffer to this frequency
                 hasExistingMessageBuffer(cmd.freq, true, nullptr);
 
                 if(cmd.to == m_config.my_callsign()){
@@ -4538,12 +4546,12 @@ bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffs
         return true;
     }
 
-    QList<int> offsets = {
-        //offset - 60, offset - 61, offset - 62, offset - 63, offset - 64, offset - 65, offset - 66, offset - 67, offset - 68, offset - 69,
-        //offset + 60, offset + 61, offset + 62, offset + 63, offset + 64, offset + 65, offset + 66, offset + 67, offset + 68, offset + 69,
-        offset - 1, offset - 2, offset - 3, offset - 4, offset - 5, offset - 6, offset - 7, offset - 8, offset - 9, offset - 10,
-        offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 7, offset + 8, offset + 9, offset + 10
-    };
+    int range = 10;
+    if(m_nSubMode == Varicode::JS8CallFast){ range = 15; }
+    if(m_nSubMode == Varicode::JS8CallTurbo){ range = 30; }
+
+    QList<int> offsets = generateOffsets(offset-range, offset+range);
+
     foreach(int prevOffset, offsets){
         if(!m_messageBuffer.contains(prevOffset)){ continue; }
 
@@ -4557,6 +4565,13 @@ bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffs
     }
 
     return false;
+}
+
+bool MainWindow::hasClosedExistingMessageBuffer(int offset){
+    int range = 10;
+    if(m_nSubMode == Varicode::JS8CallFast){ range = 15; }
+    if(m_nSubMode == Varicode::JS8CallTurbo){ range = 30; }
+    return offset - range <= m_lastClosedMessageBufferOffset && m_lastClosedMessageBufferOffset <= offset + range;
 }
 
 void MainWindow::logCallActivity(CallDetail d, bool spot){
@@ -9953,10 +9968,15 @@ void MainWindow::processRxActivity() {
                 d.utcTimestamp = qMin(d.utcTimestamp, lastCompound.utcTimestamp);
             }
 
+        } else if(hasClosedExistingMessageBuffer(d.freq)){
+            // incremental typeahead should just be displayed...
+            // TODO: should the buffer be reopened?
+            shouldDisplay = true;
 
         } else if(d.isDirected && d.text.contains("<....>")){
             // if this is a _partial_ directed message, skip until the complete call comes through.
             continue;
+
         } else if(d.isDirected && d.text.contains(": HB ")){ // TODO: HEARTBEAT
             // if this is a heartbeat, process elsewhere...
             continue;
@@ -10135,6 +10155,9 @@ void MainWindow::processCompoundActivity() {
 
         m_rxCommandQueue.append(buffer.cmd);
         m_messageBuffer.remove(freq);
+
+        // TODO: only if to me?
+        m_lastClosedMessageBufferOffset = freq;
     }
 }
 
@@ -10158,20 +10181,24 @@ void MainWindow::processBufferedActivity() {
         if(!buffer.msgs.isEmpty()){
             dt = qMax(dt, buffer.msgs.last().utcTimestamp);
         }
+
+        // if the buffer has messages older than 1 minute, and we still haven't closed it, let's mark it as the last frame
         if(dt.secsTo(DriftingDateTime::currentDateTimeUtc()) > 60 && !buffer.msgs.isEmpty()){
-            // if the buffer has messages older than 1 minute, and we still haven't closed it, let's just mark it as the last frame
             buffer.msgs.last().bits |= Varicode::JS8CallLast;
         }
+
+        // but, if the buffer is older than 1.5 minutes, and we still haven't closed it, just remove it and skip
         if(dt.secsTo(DriftingDateTime::currentDateTimeUtc()) > 90){
-            // but, if the buffer is older than 2 minutes, and we still haven't closed it, just remove it
             m_messageBuffer.remove(freq);
             continue;
         }
 
+        // if the buffer has no messages, skip
         if (buffer.msgs.isEmpty()) {
             continue;
         }
 
+        // if the buffered message hasn't seen the last message, skip
         if ((buffer.msgs.last().bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) {
             continue;
         }
@@ -10220,6 +10247,7 @@ void MainWindow::processBufferedActivity() {
 
         // regardless of valid or not, remove the "complete" buffered message from the buffer cache
         m_messageBuffer.remove(freq);
+        m_lastClosedMessageBufferOffset = freq;
     }
 }
 

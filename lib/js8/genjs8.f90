@@ -1,6 +1,6 @@
 subroutine genjs8(msg,mygrid,bcontest,i3bit,msgsent,msgbits,itone)
 
-! Encode an FT8 message, producing array itone().
+! Encode an JS8 message, producing array itone().
   
   use crc
   use packjt

@@ -1,6 +1,6 @@
 subroutine baselinejs8(s,nfa,nfb,sbase)
 
-! Fit baseline to spectrum (for FT8)
+! Fit baseline to spectrum (for JS8)
 ! Input:  s(npts)         Linear scale in power
 ! Output: sbase(npts)    Baseline
 

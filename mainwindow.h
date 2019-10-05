@@ -137,6 +137,7 @@ public slots:
   void playSoundFile(const QString &path);
   bool hasExistingMessageBufferToMe(int *pOffset);
   bool hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffset);
+  bool hasClosedExistingMessageBuffer(int offset);
   void logCallActivity(CallDetail d, bool spot=true);
   void logHeardGraph(QString from, QString to);
   QString lookupCallInCompoundCache(QString const &call);
@@ -843,6 +844,7 @@ private:
   QMap<int, int> m_rxFrameBlockNumbers; // freq -> block
   QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
   QMap<int, MessageBuffer> m_messageBuffer; // freq -> (cmd, [frames, ...])
+  int m_lastClosedMessageBufferOffset;
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
   QMap<QString, QDateTime> m_aprsCallCache;
 

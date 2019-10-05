@@ -1,5 +1,5 @@
 subroutine syncjs8d(cd0,i0,ctwk,itwk,sync)
-! Compute sync power for a complex, downsampled FT8 signal.
+! Compute sync power for a complex, downsampled JS8 signal.
 
   !include 'js8_params.f90'
 

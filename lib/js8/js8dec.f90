@@ -137,7 +137,7 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
     delf=ifr*0.5
     dphi=twopi*delf*dt2
     phi=0.0
-    do i=1,NDOWNSPS
+    do i=1,(4*NSPS/NDOWN)
       ctwk(i)=cmplx(cos(phi),sin(phi))
       phi=mod(phi+dphi,twopi)
     enddo
