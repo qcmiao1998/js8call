@@ -181,10 +181,10 @@ bool TransmitTextEdit::cursorShouldBeProtected(QTextCursor c){
         start = x;
     }
 
-    qDebug() << "selection" << start << end << m_sent;
+    //qDebug() << "selection" << start << end << m_sent;
 
     if(m_sent && start <= m_sent){
-        qDebug() << "selection in protected zone" << start << "<=" << m_sent;
+        //qDebug() << "selection in protected zone" << start << "<=" << m_sent;
         return true;
     } else {
         return false;
