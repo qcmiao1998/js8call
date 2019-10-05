@@ -4212,9 +4212,10 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
             if(!m_bandActivity.contains(offset)){
                 int range = 10;
-                if(m_nSubMode == Varicode::JS8CallFast){ range = 15; }
-                if(m_nSubMode == Varicode::JS8CallTurbo){ range = 30; }
-                QList<int> offsets = generateOffsets(offset-10, offset+10);
+                if(m_nSubMode == Varicode::JS8CallFast){ range = 16; }
+                if(m_nSubMode == Varicode::JS8CallTurbo){ range = 32; }
+
+                QList<int> offsets = generateOffsets(offset-range, offset+range);
 
                 foreach(int prevOffset, offsets){
                     if(!m_bandActivity.contains(prevOffset)){ continue; }
@@ -4547,8 +4548,8 @@ bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffs
     }
 
     int range = 10;
-    if(m_nSubMode == Varicode::JS8CallFast){ range = 15; }
-    if(m_nSubMode == Varicode::JS8CallTurbo){ range = 30; }
+    if(m_nSubMode == Varicode::JS8CallFast){ range = 16; }
+    if(m_nSubMode == Varicode::JS8CallTurbo){ range = 32; }
 
     QList<int> offsets = generateOffsets(offset-range, offset+range);
 
@@ -4569,8 +4570,9 @@ bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffs
 
 bool MainWindow::hasClosedExistingMessageBuffer(int offset){
     int range = 10;
-    if(m_nSubMode == Varicode::JS8CallFast){ range = 15; }
-    if(m_nSubMode == Varicode::JS8CallTurbo){ range = 30; }
+    if(m_nSubMode == Varicode::JS8CallFast){ range = 16; }
+    if(m_nSubMode == Varicode::JS8CallTurbo){ range = 32; }
+
     return offset - range <= m_lastClosedMessageBufferOffset && m_lastClosedMessageBufferOffset <= offset + range;
 }
 
