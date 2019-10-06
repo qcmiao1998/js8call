@@ -40,7 +40,7 @@ class Server(object):
 
         if typ == 'PING':
             if self.first:
-                self.send('STATION.GET_CALLSIGN')
+                self.send('MODE.SET_SPEED', '', params={'SPEED':3})
                 self.first = False
 
         #### if typ == 'PING':

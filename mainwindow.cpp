@@ -12227,6 +12227,41 @@ void MainWindow::networkMessage(Message const &message)
         }
     }
 
+    // MODE.GET_SPEED
+    // MODE.SET_SPEED
+    if(type == "MODE.GET_SPEED"){
+        sendNetworkMessage("MODE.SPEED", "", {
+            {"_ID", id},
+            {"SPEED", m_nSubMode},
+        });
+        return;
+    }
+
+    if(type == "MODE.SET_SPEED"){
+        bool ok = false;
+        int speed = message.params().value("SPEED", QVariant(m_nSubMode)).toInt(&ok);
+        if(ok){
+            if(speed == Varicode::JS8CallNormal){
+                ui->actionModeJS8Normal->setChecked(true);
+            }
+            if(speed == Varicode::JS8CallFast){
+                ui->actionModeJS8Fast->setChecked(true);
+            }
+            if(speed == Varicode::JS8CallTurbo){
+                ui->actionModeJS8Turbo->setChecked(true);
+            }
+            if(speed == Varicode::JS8CallUltra){
+                ui->actionModeJS8Ultra->setChecked(true);
+            }
+        }
+        sendNetworkMessage("MODE.SPEED", "", {
+            {"_ID", id},
+            {"SPEED", m_nSubMode},
+        });
+        return;
+    }
+
+
     // WINDOW.RAISE
 
     if(type == "WINDOW.RAISE"){
