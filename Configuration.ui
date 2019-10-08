@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>6</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -793,8 +793,8 @@ text message.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>738</width>
-                <height>453</height>
+                <width>616</width>
+                <height>331</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -1517,7 +1517,7 @@ a few, particularly some Kenwood rigs, require it).</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>494</width>
+                <width>718</width>
                 <height>490</height>
                </rect>
               </property>
@@ -1921,8 +1921,8 @@ this setting allows you to select which audio input will be used
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>266</width>
-            <height>329</height>
+            <width>760</width>
+            <height>502</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -1944,7 +1944,7 @@ this setting allows you to select which audio input will be used
               <string>Souncard</string>
              </property>
              <property name="title">
-              <string>Soundcard</string>
+              <string>Modulation Soundcard</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_6">
               <item row="1" column="1">
@@ -2052,6 +2052,72 @@ both here.</string>
                 <property name="buddy">
                  <cstring>sound_output_combo_box</cstring>
                 </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="notification_soundcard_group_box">
+             <property name="title">
+              <string>Notification Soundcard</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_18">
+              <item row="0" column="0">
+               <widget class="QLabel" name="notification_sound_output_label">
+                <property name="text">
+                 <string>O&amp;utput:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>sound_output_combo_box</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QComboBox" name="notification_sound_output_combo_box">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>1</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="toolTip">
+                 <string>Select the audio CODEC to use for transmitting.
+If this is your default device for system sounds then
+ensure that all system sounds are disabled otherwise
+you will broadcast any systems sounds generated during
+transmitting periods.</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QComboBox" name="notification_sound_output_channel_combo_box">
+                <property name="toolTip">
+                 <string>Select the audio channel used for transmission.
+Unless you have multiple radios connected on different
+channels; then you will usually want to select mono or
+both here.</string>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Mono</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Left</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Right</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Both</string>
+                 </property>
+                </item>
                </widget>
               </item>
              </layout>
@@ -2201,6 +2267,9 @@ both here.</string>
              </property>
             </spacer>
            </item>
+           <item>
+            <widget class="QWidget" name="widget_2" native="true"/>
+           </item>
           </layout>
          </widget>
         </widget>
@@ -2234,7 +2303,7 @@ both here.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>562</width>
+            <width>746</width>
             <height>663</height>
            </rect>
           </property>
@@ -2729,8 +2798,8 @@ for assessing propagation and system performance.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>487</width>
-            <height>341</height>
+            <width>760</width>
+            <height>502</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -3045,6 +3114,95 @@ QListView::item:hover {
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="notifications_tab">
+      <attribute name="title">
+       <string>&amp;Notifications</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_32">
+       <item>
+        <widget class="QScrollArea" name="scrollArea_12">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents_11">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>760</width>
+            <height>502</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_35">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QTableWidget" name="notifications_table_widget">
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
+             <property name="alternatingRowColors">
+              <bool>true</bool>
+             </property>
+             <property name="selectionMode">
+              <enum>QAbstractItemView::NoSelection</enum>
+             </property>
+             <property name="showGrid">
+              <bool>true</bool>
+             </property>
+             <attribute name="horizontalHeaderDefaultSectionSize">
+              <number>125</number>
+             </attribute>
+             <attribute name="horizontalHeaderStretchLastSection">
+              <bool>true</bool>
+             </attribute>
+             <attribute name="verticalHeaderVisible">
+              <bool>false</bool>
+             </attribute>
+             <column>
+              <property name="text">
+               <string>Event</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Visual Alert?</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Audio Alert?</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Sound File</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="colors_tab">
       <attribute name="title">
        <string>&amp;UI</string>
@@ -3110,8 +3268,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>274</width>
-                <height>690</height>
+                <width>724</width>
+                <height>418</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_14">
@@ -4370,12 +4528,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="CAT_handshake_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
   <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
  </buttongroups>
 </ui>

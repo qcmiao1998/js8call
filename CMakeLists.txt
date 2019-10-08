@@ -253,6 +253,7 @@ set (wsjtx_CXXSRCS
   wsprnet.cpp
   WSPRBandHopping.cpp
   TransmitTextEdit.cpp
+  NotificationAudio.cpp
   )
 
 set (wsjt_CXXSRCS

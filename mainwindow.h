@@ -48,6 +48,7 @@
 #include "SpotClient.h"
 #include "APRSISClient.h"
 #include "keyeater.h"
+#include "NotificationAudio.h"
 
 #define NUM_JT4_SYMBOLS 206                //(72+31)*2, embedded sync
 #define NUM_JT65_SYMBOLS 126               //63 data + 63 sync
@@ -434,6 +435,8 @@ private slots:
   void refreshTextDisplay();
 
 private:
+  Q_SIGNAL void playNotification(const QString &name);
+  Q_SIGNAL void initializeNotificationAudioOutputStream(QAudioDeviceInfo, QAudioFormat);
   Q_SIGNAL void initializeAudioOutputStream (QAudioDeviceInfo,
       unsigned channels, unsigned msBuffered) const;
   Q_SIGNAL void stopAudioOutputStream () const;
@@ -502,6 +505,7 @@ private:
   SoundInput * m_soundInput;
   Modulator * m_modulator;
   SoundOutput * m_soundOutput;
+  NotificationAudio * m_notification;
   QThread m_audioThread;
 
   qint64  m_msErase;

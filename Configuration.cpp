@@ -530,6 +530,7 @@ private:
 
   bool restart_sound_input_device_;
   bool restart_sound_output_device_;
+  bool restart_notification_sound_output_device_;
 
   Type2MsgGen type_2_msg_gen_;
 
@@ -688,9 +689,14 @@ private:
   QAudioDeviceInfo audio_input_device_;
   bool default_audio_input_device_selected_;
   AudioDevice::Channel audio_input_channel_;
+
   QAudioDeviceInfo audio_output_device_;
   bool default_audio_output_device_selected_;
   AudioDevice::Channel audio_output_channel_;
+
+  QAudioDeviceInfo notification_audio_output_device_;
+  bool default_notification_audio_output_device_selected_;
+  AudioDevice::Channel notification_audio_output_channel_;
 
   friend class Configuration;
 };
@@ -722,8 +728,11 @@ QAudioDeviceInfo const& Configuration::audio_input_device () const {return m_->a
 AudioDevice::Channel Configuration::audio_input_channel () const {return m_->audio_input_channel_;}
 QAudioDeviceInfo const& Configuration::audio_output_device () const {return m_->audio_output_device_;}
 AudioDevice::Channel Configuration::audio_output_channel () const {return m_->audio_output_channel_;}
+QAudioDeviceInfo const& Configuration::notification_audio_output_device () const {return m_->notification_audio_output_device_;}
+AudioDevice::Channel Configuration::notification_audio_output_channel () const {return m_->notification_audio_output_channel_;}
 bool Configuration::restart_audio_input () const {return m_->restart_sound_input_device_;}
 bool Configuration::restart_audio_output () const {return m_->restart_sound_output_device_;}
+bool Configuration::restart_notification_audio_output () const {return m_->restart_notification_sound_output_device_;}
 auto Configuration::type_2_msg_gen () const -> Type2MsgGen {return m_->type_2_msg_gen_;}
 bool Configuration::use_dynamic_grid() const {return m_->use_dynamic_info_; }
 QString Configuration::my_callsign () const {return m_->my_callsign_;}
@@ -1102,6 +1111,18 @@ template <typename T> void setUppercase(T* t){
     t->setFont(f);
 }
 
+QWidget * centeredCheckBox(QWidget *parent, QCheckBox **ppCheckbox){
+    auto w = new QWidget(parent);
+    auto cb = new QCheckBox(parent);
+    auto l = new QHBoxLayout(w);
+    l->setContentsMargins(1, 1, 1, 1);
+    l->setAlignment(Qt::AlignCenter);
+    l->addWidget(cb);
+    w->setLayout(l);
+    if(ppCheckbox) *ppCheckbox = cb;
+    return w;
+}
+
 Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
                            QSettings * settings, QWidget * parent)
   : QDialog {parent}
@@ -1115,6 +1136,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   , writeable_data_dir_ {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}
   , restart_sound_input_device_ {false}
   , restart_sound_output_device_ {false}
+  , restart_notification_sound_output_device_ {false}
   , frequencies_ {&bands_}
   , next_frequencies_ {&bands_}
   , stations_ {&bands_}
@@ -1277,8 +1299,12 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
 
     function<void (int)> cb (bind (&Configuration::impl::update_audio_channels, this, ui_->sound_input_combo_box, _1, ui_->sound_input_channel_combo_box, false));
     connect (ui_->sound_input_combo_box, static_cast<void (QComboBox::*)(int)> (&QComboBox::currentIndexChanged), cb);
+
     cb = bind (&Configuration::impl::update_audio_channels, this, ui_->sound_output_combo_box, _1, ui_->sound_output_channel_combo_box, true);
     connect (ui_->sound_output_combo_box, static_cast<void (QComboBox::*)(int)> (&QComboBox::currentIndexChanged), cb);
+
+    cb = bind (&Configuration::impl::update_audio_channels, this, ui_->notification_sound_output_combo_box, _1, ui_->notification_sound_output_channel_combo_box, true);
+    connect (ui_->notification_sound_output_combo_box, static_cast<void (QComboBox::*)(int)> (&QComboBox::currentIndexChanged), cb);
   }
 
   //
@@ -1335,6 +1361,63 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   ui_->frequencies_table_view->insertAction (nullptr, reset_frequencies_action_);
   connect (reset_frequencies_action_, &QAction::triggered, this, &Configuration::impl::reset_frequencies);
 
+  //
+  // setup notifications table view
+  //
+  QMap<QString, QString> notifyRows = {
+      {"notify_cq", "CQ Message Received"},
+      {"notify_hb", "HB Message Received"},
+      {"notify_directed", "Directed Message Received"},
+      {"notify_relay", "Relay Message Received"},
+      {"notify_new_call", "New Callsign Heard"},
+      {"notify_worked_call", "Worked Callsign Heard"},
+  };
+
+  int i = 0;
+  auto table = ui_->notifications_table_widget;
+  foreach(QString key, notifyRows.keys()){
+    QCheckBox *vcb;
+    auto w1 = centeredCheckBox(this, &vcb);
+    if(vcb){
+        vcb->setChecked(true);
+    }
+
+    QCheckBox *acb;
+    auto w2 = centeredCheckBox(this, &acb);
+    if(acb){
+        acb->setChecked(true);
+    }
+
+    QWidget *w3 = new QWidget(this);
+    QHBoxLayout *l3 = new QHBoxLayout(w3);
+    l3->setContentsMargins(9,1,1,1);
+    w3->setLayout(l3);
+
+    QLabel *sflb = new QLabel(this);
+    sflb->setText("/tmp/file.wav");
+    l3->addWidget(sflb);
+
+    QPushButton *sfpb1 = new QPushButton(this);
+    sfpb1->setText("Select");
+    l3->addWidget(sfpb1);
+
+    QPushButton *sfpb3 = new QPushButton(this);
+    sfpb3->setText("Clear");
+    l3->addWidget(sfpb3);
+
+
+    //
+    table->insertRow(i);
+
+    auto labelItem = new QTableWidgetItem(notifyRows.value(key));
+    table->setItem(i, 0, labelItem);
+    table->setCellWidget(i, 1, w1);
+    table->setCellWidget(i, 2, w2);
+    table->setCellWidget(i, 3, w3);
+    i++;
+  }
+  table->resizeColumnsToContents();
+
 
   //
   // setup stations table model & view
@@ -1371,12 +1454,15 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   //
   default_audio_input_device_selected_ = load_audio_devices (QAudio::AudioInput, ui_->sound_input_combo_box, &audio_input_device_);
   default_audio_output_device_selected_ = load_audio_devices (QAudio::AudioOutput, ui_->sound_output_combo_box, &audio_output_device_);
+  default_notification_audio_output_device_selected_ = load_audio_devices (QAudio::AudioOutput, ui_->notification_sound_output_combo_box, &notification_audio_output_device_);
 
   update_audio_channels (ui_->sound_input_combo_box, ui_->sound_input_combo_box->currentIndex (), ui_->sound_input_channel_combo_box, false);
   update_audio_channels (ui_->sound_output_combo_box, ui_->sound_output_combo_box->currentIndex (), ui_->sound_output_channel_combo_box, true);
+  update_audio_channels (ui_->notification_sound_output_combo_box, ui_->notification_sound_output_combo_box->currentIndex (), ui_->notification_sound_output_channel_combo_box, true);
 
   ui_->sound_input_channel_combo_box->setCurrentIndex (audio_input_channel_);
   ui_->sound_output_channel_combo_box->setCurrentIndex (audio_output_channel_);
+  ui_->notification_sound_output_channel_combo_box->setCurrentIndex (notification_audio_output_channel_);
 
   enumerate_rigs ();
   initialize_models ();
@@ -1718,9 +1804,36 @@ void Configuration::impl::read_settings ()
       }
   }
 
+  {
+    //
+    // retrieve notification audio output device
+    //
+    auto saved_name = settings_->value("NotificationSoundOutName").toString();
+
+    // deal with special Windows default audio devices
+    auto default_device = QAudioDeviceInfo::defaultOutputDevice ();
+    if (saved_name == default_device.deviceName ())
+      {
+        notification_audio_output_device_ = default_device;
+        default_notification_audio_output_device_selected_ = true;
+      }
+    else
+      {
+        default_notification_audio_output_device_selected_ = false;
+        Q_FOREACH (auto const& p, QAudioDeviceInfo::availableDevices (QAudio::AudioOutput)) // available audio output devices
+          {
+            if (p.deviceName () == saved_name)
+              {
+                notification_audio_output_device_ = p;
+              }
+          }
+      }
+  }
+
   // retrieve audio channel info
   audio_input_channel_ = AudioDevice::fromString (settings_->value ("AudioInputChannel", "Mono").toString ());
   audio_output_channel_ = AudioDevice::fromString (settings_->value ("AudioOutputChannel", "Mono").toString ());
+  notification_audio_output_channel_ = AudioDevice::fromString (settings_->value ("NotificationAudioOutputChannel", "Mono").toString ());
 
   type_2_msg_gen_ = settings_->value ("Type2MsgGen", QVariant::fromValue (Configuration::type_2_msg_3_full)).value<Configuration::Type2MsgGen> ();
 
@@ -1903,8 +2016,19 @@ void Configuration::impl::write_settings ()
       settings_->setValue ("SoundOutName", audio_output_device_.deviceName ());
     }
 
+  if (default_notification_audio_output_device_selected_)
+    {
+      settings_->setValue ("NotificationSoundOutName", QAudioDeviceInfo::defaultOutputDevice ().deviceName ());
+    }
+  else
+    {
+      settings_->setValue ("NotificationSoundOutName", notification_audio_output_device_.deviceName ());
+    }
+
+
   settings_->setValue ("AudioInputChannel", AudioDevice::toString (audio_input_channel_));
   settings_->setValue ("AudioOutputChannel", AudioDevice::toString (audio_output_channel_));
+  settings_->setValue ("NotificationAudioOutputChannel", AudioDevice::toString (notification_audio_output_channel_));
   settings_->setValue ("Type2MsgGen", QVariant::fromValue (type_2_msg_gen_));
   settings_->setValue ("TransmitDirected", transmit_directed_);
   settings_->setValue ("AutoreplyOnAtStartup", autoreply_on_at_startup_);
@@ -2432,6 +2556,35 @@ void Configuration::impl::accept ()
       }
   }
 
+  {
+    auto const& device_name = ui_->notification_sound_output_combo_box->currentText ();
+    if (device_name != notification_audio_output_device_.deviceName ())
+      {
+        auto const& default_device = QAudioDeviceInfo::defaultOutputDevice ();
+        if (device_name == default_device.deviceName ())
+          {
+            notification_audio_output_device_ = default_device;
+          }
+        else
+          {
+            bool found {false};
+            Q_FOREACH (auto const& d, QAudioDeviceInfo::availableDevices (QAudio::AudioOutput))
+              {
+                if (device_name == d.deviceName ())
+                  {
+                    notification_audio_output_device_ = d;
+                    found = true;
+                  }
+              }
+            if (!found)
+              {
+                notification_audio_output_device_ = default_device;
+              }
+          }
+        restart_notification_sound_output_device_ = true;
+      }
+  }
+
   if (audio_input_channel_ != static_cast<AudioDevice::Channel> (ui_->sound_input_channel_combo_box->currentIndex ()))
     {
       audio_input_channel_ = static_cast<AudioDevice::Channel> (ui_->sound_input_channel_combo_box->currentIndex ());
@@ -2445,6 +2598,13 @@ void Configuration::impl::accept ()
       restart_sound_output_device_ = true;
     }
   Q_ASSERT (audio_output_channel_ <= AudioDevice::Both);
+
+  if (notification_audio_output_channel_ != static_cast<AudioDevice::Channel> (ui_->notification_sound_output_channel_combo_box->currentIndex ()))
+    {
+      notification_audio_output_channel_ = static_cast<AudioDevice::Channel> (ui_->notification_sound_output_channel_combo_box->currentIndex ());
+      restart_notification_sound_output_device_ = true;
+    }
+  Q_ASSERT (notification_audio_output_channel_ <= AudioDevice::Both);
 
   auto_switch_bands_ = ui_->auto_switch_bands_check_box->isChecked();
   my_callsign_ = ui_->callsign_line_edit->text ().toUpper().trimmed();

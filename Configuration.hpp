@@ -86,6 +86,8 @@ public:
   AudioDevice::Channel audio_input_channel () const;
   QAudioDeviceInfo const& audio_output_device () const;
   AudioDevice::Channel audio_output_channel () const;
+  QAudioDeviceInfo const& notification_audio_output_device () const;
+  AudioDevice::Channel notification_audio_output_channel () const;
 
   // These query methods should be used after a call to exec() to
   // determine if either the audio input or audio output stream
@@ -93,6 +95,7 @@ public:
   // re-opened if they return true.
   bool restart_audio_input () const;
   bool restart_audio_output () const;
+  bool restart_notification_audio_output () const;
 
   bool use_dynamic_grid() const;
   QString my_callsign () const;
