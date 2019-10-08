@@ -4569,11 +4569,22 @@ bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffs
 }
 
 bool MainWindow::hasClosedExistingMessageBuffer(int offset){
+#if 0
     int range = 10;
     if(m_nSubMode == Varicode::JS8CallFast){ range = 16; }
     if(m_nSubMode == Varicode::JS8CallTurbo){ range = 32; }
 
     return offset - range <= m_lastClosedMessageBufferOffset && m_lastClosedMessageBufferOffset <= offset + range;
+#elif 0
+    int range = 10;
+    if(m_nSubMode == Varicode::JS8CallFast){ range = 16; }
+    if(m_nSubMode == Varicode::JS8CallTurbo){ range = 32; }
+
+    return m_lastClosedMessageBufferOffset - range <= offset && offset <= m_lastClosedMessageBufferOffset + range;
+#else
+    Q_UNUSED(offset);
+#endif
+    return false;
 }
 
 void MainWindow::logCallActivity(CallDetail d, bool spot){
