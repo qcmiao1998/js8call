@@ -4,8 +4,8 @@
 NotificationAudio::NotificationAudio(QObject *parent) :
     QIODevice(parent),
     m_state(State::Stopped),
-    m_input(&m_data),
-    m_output(&m_data),
+    m_input(&m_data, this),
+    m_output(&m_data, this),
     m_decoder(nullptr),
     m_audio(nullptr)
 {
@@ -13,6 +13,16 @@ NotificationAudio::NotificationAudio(QObject *parent) :
 
     m_init = false;
     m_isDecodingFinished = false;
+}
+
+NotificationAudio::~NotificationAudio(){
+    stop();
+
+    delete m_decoder;
+    m_decoder = nullptr;
+
+    delete m_audio;
+    m_audio = nullptr;
 }
 
 // initialize an audio device
@@ -28,7 +38,7 @@ void NotificationAudio::init(const QAudioDeviceInfo &device, const QAudioFormat&
     m_decoder->setAudioFormat(m_format);
 
     if(!m_audio){
-        m_audio = new QAudioOutput(m_device, m_format);
+        m_audio = new QAudioOutput(m_device, m_format, this);
     }
 
     if (!m_output.open(QIODevice::ReadOnly) || !m_input.open(QIODevice::WriteOnly)){
@@ -42,6 +52,10 @@ void NotificationAudio::init(const QAudioDeviceInfo &device, const QAudioFormat&
 
 // play an audio file
 void NotificationAudio::play(const QString &filePath) {
+    if(m_state == NotificationAudio::Playing){
+        return;
+    }
+
     QFile *file = new QFile(this);
     file->setFileName(filePath);
     if (!file->open(QIODevice::ReadOnly)){
@@ -78,8 +92,9 @@ void NotificationAudio::stop() {
 // Reset the internal buffers and ensure the decoder and audio device is stopped
 void NotificationAudio::resetBuffers() {
     if(m_audio){
-        if(m_audio->state() != QAudio::StoppedState){
-            m_audio->stop();
+
+        if(m_audio->state() != QAudio::SuspendedState){
+            m_audio->suspend();
         }
     }
 
@@ -105,21 +120,18 @@ void NotificationAudio::resetBuffers() {
 qint64 NotificationAudio::readData(char* data, qint64 maxlen) {
     memset(data, 0, maxlen);
 
-    if (m_state == State::Playing)
-    {
+    if (m_state == State::Playing){
         m_output.read(data, maxlen);
 
         // There is we send readed audio data via signal, for ability get audio signal for the who listen this signal.
         // Other word this emulate QAudioProbe behaviour for retrieve audio data which of sent to output device (speaker).
-        if (maxlen > 0)
-        {
-            QByteArray buff(data, maxlen);
-            emit newData(buff);
-        }
+        // if (maxlen > 0){
+        //     QByteArray buff(data, maxlen);
+        //     emit newData(buff);
+        // }
 
         // Is finish of file
-        if (atEnd())
-        {
+        if (atEnd()){
             stop();
         }
     }
@@ -137,9 +149,10 @@ qint64 NotificationAudio::writeData(const char* data, qint64 len) {
 
 // io device, at end of device
 bool NotificationAudio::atEnd() const {
-    return m_output.size()
+    bool value = m_output.size()
         && m_output.atEnd()
         && m_isDecodingFinished;
+    return value;
 }
 
 // handle buffered data ready

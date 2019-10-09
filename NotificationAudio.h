@@ -18,6 +18,7 @@ class NotificationAudio : public QIODevice
 
 public:
     NotificationAudio(QObject * parent=nullptr);
+    ~NotificationAudio();
 
     bool isInitialized() const { return m_init; }
 

@@ -439,6 +439,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_framesAudioInputBuffered (RX_SAMPLE_RATE / 10),
   m_downSampleFactor (downSampleFactor),
   m_audioThreadPriority (QThread::HighPriority),
+  m_notificationAudioThreadPriority (QThread::LowPriority),
   m_bandEdited {false},
   m_splitMode {false},
   m_monitoring {false},
@@ -503,12 +504,13 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_modulator->moveToThread (&m_audioThread);
   m_soundInput->moveToThread (&m_audioThread);
   m_detector->moveToThread (&m_audioThread);
-  m_notification->moveToThread(&m_audioThread);
+
+  // notification audio operates in its own thread at a lower priority
+  m_notification->moveToThread(&m_notificationAudioThread);
 
   // hook up sound output stream slots & signals and disposal
   connect (this, &MainWindow::initializeAudioOutputStream, m_soundOutput, &SoundOutput::setFormat);
   connect (m_soundOutput, &SoundOutput::error, this, &MainWindow::showSoundOutError);
-  // connect (m_soundOutput, &SoundOutput::status, this, &MainWindow::showStatusMessage);
   connect (this, &MainWindow::outAttenuationChanged, m_soundOutput, &SoundOutput::setAttenuation);
   connect (&m_audioThread, &QThread::finished, m_soundOutput, &QObject::deleteLater);
 
@@ -517,7 +519,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     emit playNotification("/tmp/test.wav");
   });
   connect(this, &MainWindow::playNotification, m_notification, &NotificationAudio::play);
-  connect (&m_audioThread, &QThread::finished, m_notification, &QObject::deleteLater);
+  connect (&m_notificationAudioThread, &QThread::finished, m_notification, &QObject::deleteLater);
 
   // hook up Modulator slots and disposal
   connect (this, &MainWindow::transmitFrequency, m_modulator, &Modulator::setFrequency);
@@ -841,6 +843,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   connect(m_wideGraph.data(), &WideGraph::qsy, this, &MainWindow::qsy);
 
+  connect(ui->tableWidgetCalls, &QTableWidget::clicked, this, [this](){
+     emit playNotification("/tmp/test.wav");
+  });
+
   decodeBusy(false);
   QString t1[28]={"1 uW","2 uW","5 uW","10 uW","20 uW","50 uW","100 uW","200 uW","500 uW",
                   "1 mW","2 mW","5 mW","10 mW","20 mW","50 mW","100 mW","200 mW","500 mW",
@@ -870,7 +876,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   displayDialFrequency();
   readSettings();            //Restore user's setup params
+
   m_audioThread.start (m_audioThreadPriority);
+  m_notificationAudioThread.start(m_notificationAudioThreadPriority);
 
 #ifdef WIN32
   if (!m_multiple)
@@ -943,6 +951,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 //  Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, &m_detector, m_downSampleFactor, m_config.audio_input_channel ());
   Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, m_detector, m_downSampleFactor, m_config.audio_input_channel ());
   Q_EMIT initializeAudioOutputStream (m_config.audio_output_device (), AudioDevice::Mono == m_config.audio_output_channel () ? 1 : 2, m_msAudioOutputBuffered);
+  Q_EMIT initializeNotificationAudioOutputStream(m_config.notification_audio_output_device(), m_config.notification_audio_output_device().preferredFormat());
   Q_EMIT transmitFrequency (ui->TxFreqSpinBox->value () - m_XIT);
 
   enable_DXCC_entity (m_config.DXCC ());  // sets text window proportions and (re)inits the logbook
@@ -2141,9 +2150,15 @@ MainWindow::~MainWindow()
   m_astroWidget.reset ();
   QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("wsjtx_wisdom.dat"))};
   QByteArray cfname=fname.toLocal8Bit();
+
   fftwf_export_wisdom_to_filename(cfname);
+
   m_audioThread.quit ();
   m_audioThread.wait ();
+
+  m_notificationAudioThread.quit();
+  m_notificationAudioThread.wait();
+
   remove_child_from_event_filter (this);
 }
 

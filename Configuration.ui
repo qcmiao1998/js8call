@@ -23,7 +23,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>6</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -278,7 +278,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>615</width>
+                <width>724</width>
                 <height>508</height>
                </rect>
               </property>
@@ -793,8 +793,8 @@ text message.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>616</width>
-                <height>331</height>
+                <width>738</width>
+                <height>453</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -2082,20 +2082,22 @@ both here.</string>
                  </sizepolicy>
                 </property>
                 <property name="toolTip">
-                 <string>Select the audio CODEC to use for transmitting.
-If this is your default device for system sounds then
+                 <string>Select the audio CODEC to use for notifications.
+If this is your default device for system sounds and transmission then
 ensure that all system sounds are disabled otherwise
-you will broadcast any systems sounds generated during
+you will broadcast any systems sounds and notifications generated during
 transmitting periods.</string>
                 </property>
                </widget>
               </item>
               <item row="0" column="2">
                <widget class="QComboBox" name="notification_sound_output_channel_combo_box">
+                <property name="visible">
+                 <bool>false</bool>
+                </property>
                 <property name="toolTip">
-                 <string>Select the audio channel used for transmission.
-Unless you have multiple radios connected on different
-channels; then you will usually want to select mono or
+                 <string>Select the audio channel used for notifications.
+You will usually want to select mono or
 both here.</string>
                 </property>
                 <item>

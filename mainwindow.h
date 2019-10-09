@@ -507,6 +507,7 @@ private:
   SoundOutput * m_soundOutput;
   NotificationAudio * m_notification;
   QThread m_audioThread;
+  QThread m_notificationAudioThread;
 
   qint64  m_msErase;
   qint64  m_secBandChanged;
@@ -906,6 +907,7 @@ private:
   unsigned m_framesAudioInputBuffered;
   unsigned m_downSampleFactor;
   QThread::Priority m_audioThreadPriority;
+  QThread::Priority m_notificationAudioThreadPriority;
   bool m_bandEdited;
   bool m_splitMode;
   bool m_monitoring;

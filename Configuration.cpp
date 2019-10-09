@@ -1416,7 +1416,9 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
     table->setCellWidget(i, 3, w3);
     i++;
   }
-  table->resizeColumnsToContents();
+  table->resizeColumnToContents(0);
+  table->resizeColumnToContents(1);
+  table->resizeColumnToContents(2);
 
 
   //
