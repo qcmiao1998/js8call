@@ -1365,6 +1365,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   // setup notifications table view
   //
   QMap<QString, QString> notifyRows = {
+      {"notify_start", "JS8Call Start"},
       {"notify_cq", "CQ Message Received"},
       {"notify_hb", "HB Message Received"},
       {"notify_directed", "Directed Message Received"},
@@ -1375,51 +1376,84 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
 
   int i = 0;
   auto table = ui_->notifications_table_widget;
+  auto header = table->horizontalHeader();
+  header->setStretchLastSection(false);
+  header->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+  header->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+  header->setSectionResizeMode(2, QHeaderView::Stretch);
+  header->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+
   foreach(QString key, notifyRows.keys()){
-    QCheckBox *vcb;
-    auto w1 = centeredCheckBox(this, &vcb);
-    if(vcb){
-        vcb->setChecked(true);
+    bool enabled = false;
+    QString path = "";
+
+    QCheckBox *enabledCheckbox;
+    auto enabledWidget = centeredCheckBox(this, &enabledCheckbox);
+    enabledWidget->setMinimumWidth(100);
+    if(enabledCheckbox){
+        enabledCheckbox->setChecked(enabled);
     }
 
-    QCheckBox *acb;
-    auto w2 = centeredCheckBox(this, &acb);
-    if(acb){
-        acb->setChecked(true);
-    }
+    auto expandingPolicy = QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    expandingPolicy.setHorizontalStretch(1);
 
-    QWidget *w3 = new QWidget(this);
-    QHBoxLayout *l3 = new QHBoxLayout(w3);
-    l3->setContentsMargins(9,1,1,1);
-    w3->setLayout(l3);
+    QLabel *pathLabel = new QLabel(this);
+    pathLabel->setText(path);
+    pathLabel->setSizePolicy(expandingPolicy);
 
-    QLabel *sflb = new QLabel(this);
-    sflb->setText("/tmp/file.wav");
-    l3->addWidget(sflb);
+    auto minimumPolicy = QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
+    minimumPolicy.setHorizontalStretch(0);
 
-    QPushButton *sfpb1 = new QPushButton(this);
-    sfpb1->setText("Select");
-    l3->addWidget(sfpb1);
+    QWidget *buttonWidget = new QWidget(this);
+    buttonWidget->setSizePolicy(minimumPolicy);
 
-    QPushButton *sfpb3 = new QPushButton(this);
-    sfpb3->setText("Clear");
-    l3->addWidget(sfpb3);
+    QHBoxLayout *buttonLayout = new QHBoxLayout(buttonWidget);
+    buttonLayout->setStretch(0, 0);
+    buttonLayout->setStretch(1, 0);
+    buttonLayout->setContentsMargins(9,1,1,1);
+    buttonWidget->setLayout(buttonLayout);
 
+    QPushButton *selectFilePushButton = new QPushButton(this);
+    selectFilePushButton->setSizePolicy(minimumPolicy);
+    selectFilePushButton->setText("Select");
+    buttonLayout->addWidget(selectFilePushButton);
 
-    //
+    connect(selectFilePushButton, &QPushButton::pressed, this, [this, pathLabel](){
+        auto dir = QStandardPaths::standardLocations(QStandardPaths::MusicLocation);
+        auto path = QFileDialog::getOpenFileName(this, "Audio Notification", dir.first(), "Wave Files (*.wav);;All files (*.*)");
+        if(!path.isEmpty()){
+            pathLabel->setText(path);
+        }
+    });
+
+    QPushButton *clearPushButton = new QPushButton(this);
+    clearPushButton->setSizePolicy(minimumPolicy);
+    clearPushButton->setText("Clear");
+    buttonLayout->addWidget(clearPushButton);
+
+    connect(clearPushButton, &QPushButton::pressed, this, [this, pathLabel, enabledCheckbox](){
+        pathLabel->clear();
+        enabledCheckbox->setChecked(false);
+    });
+
+    // row config
+    int col = 0;
     table->insertRow(i);
 
-    auto labelItem = new QTableWidgetItem(notifyRows.value(key));
-    table->setItem(i, 0, labelItem);
-    table->setCellWidget(i, 1, w1);
-    table->setCellWidget(i, 2, w2);
-    table->setCellWidget(i, 3, w3);
+    //
+    auto eventLabelItem = new QTableWidgetItem(notifyRows.value(key));
+    table->setItem(i, col++, eventLabelItem);
+
+    table->setCellWidget(i, col++, enabledWidget);
+
+    table->setCellWidget(i, col++, pathLabel);
+
+    table->setCellWidget(i, col++, buttonWidget);
     i++;
   }
-  table->resizeColumnToContents(0);
-  table->resizeColumnToContents(1);
-  table->resizeColumnToContents(2);
-
+  for(int i = 0, len = table->columnCount(); i < len; i++){
+    table->resizeColumnToContents(i);
+  }
 
   //
   // setup stations table model & view
