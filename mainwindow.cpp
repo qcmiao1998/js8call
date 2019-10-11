@@ -515,9 +515,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (&m_audioThread, &QThread::finished, m_soundOutput, &QObject::deleteLater);
 
   connect(this, &MainWindow::initializeNotificationAudioOutputStream, m_notification, &NotificationAudio::init);
-  connect(m_notification, &NotificationAudio::initialized, this, [this](){
-    emit playNotification("/tmp/test.wav");
-  });
   connect(this, &MainWindow::playNotification, m_notification, &NotificationAudio::play);
   connect (&m_notificationAudioThread, &QThread::finished, m_notification, &QObject::deleteLater);
 
@@ -842,10 +839,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
           SLOT(setFreq4(int,int)));
 
   connect(m_wideGraph.data(), &WideGraph::qsy, this, &MainWindow::qsy);
-
-  connect(ui->tableWidgetCalls, &QTableWidget::clicked, this, [this](){
-     emit playNotification("/tmp/test.wav");
-  });
 
   decodeBusy(false);
   QString t1[28]={"1 uW","2 uW","5 uW","10 uW","20 uW","50 uW","100 uW","200 uW","500 uW",
@@ -4316,7 +4309,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
                     // it is not processed elsewhere, so we need to just log it here.
                     logCallActivity(cd, true);
 
-                    // TODO: jsherer - notification for cq?
+                    // notification for cq
+                    tryNotify("cq");
 
                 } else {
                     // convert HEARTBEAT to a directed command and process...
@@ -4331,6 +4325,9 @@ void MainWindow::readFromStdout()                             //readFromStdout
                     cmd.tdrift = cd.tdrift;
                     cmd.mode = cd.mode;
                     m_rxCommandQueue.append(cmd);
+
+                    // notification for hb
+                    tryNotify("hb");
                 }
 
             } else {
@@ -4645,6 +4642,13 @@ void MainWindow::logCallActivity(CallDetail d, bool spot){
     } else {
         // create
         m_callActivity[d.call] = d;
+    }
+
+    // notification for new and old call
+    if(m_logBook.hasWorkedBefore(d.call, "")){
+        tryNotify("call_old");
+    } else {
+        tryNotify("call_new");
     }
 
     // enqueue for spotting to psk reporter
@@ -9498,6 +9502,17 @@ void MainWindow::postDecode (bool is_new, QString const& message)
   }
 }
 
+void MainWindow::tryNotify(const QString &key){
+    auto k = QString("notify_%1").arg(key);
+
+    auto path = m_config.notification_path(k);
+    if(path.isEmpty()){
+        return;
+    }
+
+    emit playNotification(path);
+}
+
 void MainWindow::displayTransmit(){
     // Transmit Activity
     update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
@@ -10456,15 +10471,14 @@ void MainWindow::processCommandActivity() {
         // log the text to directed txt log
         writeMsgTxt(text, d.snr);
 
-
-        // we're only responding to allcall, groupcalls, and our callsign at this point, so we'll end after logging the callsigns we've heard
-        if (!isAllCall && !toMe && !isGroupCall) {
-            continue;
-        }
-
         // we're only responding to allcalls if we are participating in the allcall group
         // but, don't avoid for heartbeats...those are technically allcalls but are processed differently
         if(isAllCall && m_config.avoid_allcall() && d.cmd != " HB"){
+            continue;
+        }
+
+        // we're only responding to allcall, groupcalls, and our callsign at this point, so we'll end after logging the callsigns we've heard
+        if (!isAllCall && !toMe && !isGroupCall) {
             continue;
         }
 
@@ -10530,7 +10544,8 @@ void MainWindow::processCommandActivity() {
                 // if we've received a message to be displayed, we should bump the repeat buttons...
                 resetAutomaticIntervalTransmissions(true, false);
 
-                // TODO: jsherer - notification for direct message?
+                // notification for directed message
+                tryNotify("directed");
             }
         }
 
@@ -10836,6 +10851,9 @@ void MainWindow::processCommandActivity() {
             d.text = text;
 
             addCommandToMyInbox(d);
+
+            // notification
+            tryNotify("inbox");
 
             // we haven't replaced the from with the relay path, so we have to use it for the ack if there is one
             reply = QString("%1 ACK").arg(calls.length() > 1 ? d.relayPath : d.from);
@@ -11210,64 +11228,6 @@ QStringList MainWindow::parseRelayPathCallsigns(QString from, QString text){
     return calls;
 }
 
-void MainWindow::processAlertReplyForCommand(CommandDetail d, QString from, QString cmd){
-    QMessageBox * msgBox = new QMessageBox(this);
-    msgBox->setIcon(QMessageBox::Information);
-
-    QList<QString> calls = listCopyReverse<QString>(from.split(">"));
-    auto fromLabel = calls.join(" via ");
-
-    calls.removeLast();
-
-    QString fromReplace = QString{};
-    foreach(auto call, calls){
-        fromReplace.append(" VIA ");
-        fromReplace.append(call);
-    }
-
-    auto text = d.text;
-    if(!fromReplace.isEmpty()){
-        text = text.replace(fromReplace, "");
-    }
-
-    auto header = QString("Message from %3 at %1 UTC (%2):");
-    header = header.arg(d.utcTimestamp.time().toString());
-    header = header.arg(d.freq);
-    header = header.arg(fromLabel);
-    msgBox->setText(header);
-    msgBox->setInformativeText(text);
-
-    auto rb = msgBox->addButton("Reply", QMessageBox::AcceptRole);
-    auto db = msgBox->addButton("Discard", QMessageBox::NoRole);
-
-    connect(msgBox, &QMessageBox::buttonClicked, this, [this, cmd, from, fromLabel, d, db, rb](QAbstractButton * btn) {
-        if (btn == db) {
-            displayCallActivity();
-            return;
-        }
-
-        if(btn == rb){
-#if USE_RELAY_REPLY_DIALOG
-            auto diag = new MessageReplyDialog(this);
-            diag->setWindowTitle("Message Reply");
-            diag->setLabel(QString("Message to send to %1:").arg(fromLabel));
-
-            connect(diag, &MessageReplyDialog::accepted, this, [this, diag, from, cmd, d](){
-                enqueueMessage(PriorityHigh, QString("%1%2%3").arg(from).arg(cmd).arg(diag->textValue()), -1, nullptr);
-            });
-
-            diag->show();
-#else
-            addMessageText(QString("%1%2[MESSAGE]").arg(from).arg(cmd), true, true);
-#endif
-        }
-    });
-
-    // TODO: jsherer - notification for alert?
-
-    msgBox->setModal(false);
-    msgBox->show();
-}
 
 void MainWindow::processSpots() {
     if(!m_config.spot_to_reporting_networks()){

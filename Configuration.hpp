@@ -89,6 +89,9 @@ public:
   QAudioDeviceInfo const& notification_audio_output_device () const;
   AudioDevice::Channel notification_audio_output_channel () const;
 
+  bool notifications_enabled() const;
+  QString notification_path(const QString &key) const;
+
   // These query methods should be used after a call to exec() to
   // determine if either the audio input or audio output stream
   // parameters have changed. The respective streams should be

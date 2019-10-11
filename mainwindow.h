@@ -433,6 +433,7 @@ private slots:
   void checkStartupWarnings ();
   void clearCallsignSelected();
   void refreshTextDisplay();
+  void tryNotify(const QString &key);
 
 private:
   Q_SIGNAL void playNotification(const QString &name);
@@ -1003,7 +1004,6 @@ private:
   int addCommandToStorage(QString type, CommandDetail d);
   int getNextMessageIdForCallsign(QString callsign);
   QStringList parseRelayPathCallsigns(QString from, QString text);
-  void processAlertReplyForCommand(CommandDetail d, QString from, QString cmd);
   void processSpots();
   void processTxQueue();
   void displayActivity(bool force=false);

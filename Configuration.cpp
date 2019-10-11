@@ -534,6 +534,9 @@ private:
 
   Type2MsgGen type_2_msg_gen_;
 
+  QMap<QString, bool> notifications_enabled_;
+  QMap<QString, QString> notifications_paths_;
+
   QStringListModel macros_;
   RearrangableMacrosModel next_macros_;
   QAction * macro_delete_action_;
@@ -730,6 +733,14 @@ QAudioDeviceInfo const& Configuration::audio_output_device () const {return m_->
 AudioDevice::Channel Configuration::audio_output_channel () const {return m_->audio_output_channel_;}
 QAudioDeviceInfo const& Configuration::notification_audio_output_device () const {return m_->notification_audio_output_device_;}
 AudioDevice::Channel Configuration::notification_audio_output_channel () const {return m_->notification_audio_output_channel_;}
+bool Configuration::notifications_enabled() const { return m_->notifications_enabled_.values().contains(true); }
+QString Configuration::notification_path(const QString &key) const {
+    if(!m_->notifications_enabled_.value(key, false)){
+        return "";
+    }
+
+    return m_->notifications_paths_.value(key, "");
+}
 bool Configuration::restart_audio_input () const {return m_->restart_sound_input_device_;}
 bool Configuration::restart_audio_output () const {return m_->restart_sound_output_device_;}
 bool Configuration::restart_notification_audio_output () const {return m_->restart_notification_sound_output_device_;}
@@ -1362,100 +1373,6 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   connect (reset_frequencies_action_, &QAction::triggered, this, &Configuration::impl::reset_frequencies);
 
   //
-  // setup notifications table view
-  //
-  QMap<QString, QString> notifyRows = {
-      {"notify_start", "JS8Call Start"},
-      {"notify_cq", "CQ Message Received"},
-      {"notify_hb", "HB Message Received"},
-      {"notify_directed", "Directed Message Received"},
-      {"notify_relay", "Relay Message Received"},
-      {"notify_new_call", "New Callsign Heard"},
-      {"notify_worked_call", "Worked Callsign Heard"},
-  };
-
-  int i = 0;
-  auto table = ui_->notifications_table_widget;
-  auto header = table->horizontalHeader();
-  header->setStretchLastSection(false);
-  header->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-  header->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-  header->setSectionResizeMode(2, QHeaderView::Stretch);
-  header->setSectionResizeMode(3, QHeaderView::ResizeToContents);
-
-  foreach(QString key, notifyRows.keys()){
-    bool enabled = false;
-    QString path = "";
-
-    QCheckBox *enabledCheckbox;
-    auto enabledWidget = centeredCheckBox(this, &enabledCheckbox);
-    enabledWidget->setMinimumWidth(100);
-    if(enabledCheckbox){
-        enabledCheckbox->setChecked(enabled);
-    }
-
-    auto expandingPolicy = QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    expandingPolicy.setHorizontalStretch(1);
-
-    QLabel *pathLabel = new QLabel(this);
-    pathLabel->setText(path);
-    pathLabel->setSizePolicy(expandingPolicy);
-
-    auto minimumPolicy = QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
-    minimumPolicy.setHorizontalStretch(0);
-
-    QWidget *buttonWidget = new QWidget(this);
-    buttonWidget->setSizePolicy(minimumPolicy);
-
-    QHBoxLayout *buttonLayout = new QHBoxLayout(buttonWidget);
-    buttonLayout->setStretch(0, 0);
-    buttonLayout->setStretch(1, 0);
-    buttonLayout->setContentsMargins(9,1,1,1);
-    buttonWidget->setLayout(buttonLayout);
-
-    QPushButton *selectFilePushButton = new QPushButton(this);
-    selectFilePushButton->setSizePolicy(minimumPolicy);
-    selectFilePushButton->setText("Select");
-    buttonLayout->addWidget(selectFilePushButton);
-
-    connect(selectFilePushButton, &QPushButton::pressed, this, [this, pathLabel](){
-        auto dir = QStandardPaths::standardLocations(QStandardPaths::MusicLocation);
-        auto path = QFileDialog::getOpenFileName(this, "Audio Notification", dir.first(), "Wave Files (*.wav);;All files (*.*)");
-        if(!path.isEmpty()){
-            pathLabel->setText(path);
-        }
-    });
-
-    QPushButton *clearPushButton = new QPushButton(this);
-    clearPushButton->setSizePolicy(minimumPolicy);
-    clearPushButton->setText("Clear");
-    buttonLayout->addWidget(clearPushButton);
-
-    connect(clearPushButton, &QPushButton::pressed, this, [this, pathLabel, enabledCheckbox](){
-        pathLabel->clear();
-        enabledCheckbox->setChecked(false);
-    });
-
-    // row config
-    int col = 0;
-    table->insertRow(i);
-
-    //
-    auto eventLabelItem = new QTableWidgetItem(notifyRows.value(key));
-    table->setItem(i, col++, eventLabelItem);
-
-    table->setCellWidget(i, col++, enabledWidget);
-
-    table->setCellWidget(i, col++, pathLabel);
-
-    table->setCellWidget(i, col++, buttonWidget);
-    i++;
-  }
-  for(int i = 0, len = table->columnCount(); i < len; i++){
-    table->resizeColumnToContents(i);
-  }
-
-  //
   // setup stations table model & view
   //
   stations_.sort (StationList::switch_at_column);
@@ -1667,9 +1584,109 @@ void Configuration::impl::initialize_models ()
   next_frequencies_.frequency_list (frequencies_.frequency_list ());
   next_stations_.station_list (stations_.station_list ());
 
+  //
+  // setup notifications table view
+  //
+  QList<QPair<QString, QString>> notifyRows = {
+      {"notify_cq", "CQ Message Received"},
+      {"notify_hb", "HB Message Received"},
+      {"notify_directed", "Directed Message Received"},
+      {"notify_inbox", "Inbox Message Received"},
+      {"notify_call_new", "New Callsign Heard"},
+      {"notify_call_old", "Worked Callsign Heard"},
+  };
+
+  int i = 0;
+  auto table = ui_->notifications_table_widget;
+  for(int i = ui_->notifications_table_widget->rowCount()-1; i >= 0; i--){
+    ui_->notifications_table_widget->removeRow(i);
+  }
+  auto header = table->horizontalHeader();
+  header->setStretchLastSection(false);
+  header->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+  header->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+  header->setSectionResizeMode(2, QHeaderView::Stretch);
+  header->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+  foreach(auto pair, notifyRows){
+    QString key = pair.first;
+    QString value = pair.second;
+    bool enabled = notifications_enabled_.value(key, false);
+    QString path = notifications_paths_.value(key, "");
+
+    QCheckBox *enabledCheckbox;
+    auto enabledWidget = centeredCheckBox(this, &enabledCheckbox);
+    enabledWidget->setMinimumWidth(100);
+    if(enabledCheckbox){
+        enabledCheckbox->setObjectName("enabledCheckbox");
+        enabledCheckbox->setChecked(enabled);
+    }
+
+    auto expandingPolicy = QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    expandingPolicy.setHorizontalStretch(1);
+
+    QLabel *pathLabel = new QLabel(this);
+    pathLabel->setText(path);
+    pathLabel->setSizePolicy(expandingPolicy);
+
+    auto minimumPolicy = QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
+    minimumPolicy.setHorizontalStretch(0);
+
+    QWidget *buttonWidget = new QWidget(this);
+    buttonWidget->setSizePolicy(minimumPolicy);
+
+    QHBoxLayout *buttonLayout = new QHBoxLayout(buttonWidget);
+    buttonLayout->setStretch(0, 0);
+    buttonLayout->setStretch(1, 0);
+    buttonLayout->setContentsMargins(9,1,1,1);
+    buttonWidget->setLayout(buttonLayout);
+
+    QPushButton *selectFilePushButton = new QPushButton(this);
+    selectFilePushButton->setSizePolicy(minimumPolicy);
+    selectFilePushButton->setText("Select");
+    buttonLayout->addWidget(selectFilePushButton);
+
+    connect(selectFilePushButton, &QPushButton::pressed, this, [this, pathLabel](){
+        auto dir = QStandardPaths::standardLocations(QStandardPaths::MusicLocation);
+        auto path = QFileDialog::getOpenFileName(this, "Audio Notification", dir.first(), "Wave Files (*.wav);;All files (*.*)");
+        if(!path.isEmpty()){
+            pathLabel->setText(path);
+        }
+    });
+
+    QPushButton *clearPushButton = new QPushButton(this);
+    clearPushButton->setSizePolicy(minimumPolicy);
+    clearPushButton->setText("Clear");
+    buttonLayout->addWidget(clearPushButton);
+
+    connect(clearPushButton, &QPushButton::pressed, this, [this, pathLabel, enabledCheckbox](){
+        pathLabel->clear();
+        enabledCheckbox->setChecked(false);
+    });
+
+    // row config
+    int col = 0;
+    table->insertRow(i);
+
+    //
+    auto eventLabelItem = new QTableWidgetItem(value);
+    eventLabelItem->setData(Qt::UserRole, QVariant(key));
+    table->setItem(i, col++, eventLabelItem);
+
+    table->setCellWidget(i, col++, enabledWidget);
+
+    table->setCellWidget(i, col++, pathLabel);
+
+    table->setCellWidget(i, col++, buttonWidget);
+    i++;
+  }
+  for(int i = 0, len = table->columnCount(); i < len; i++){
+    table->resizeColumnToContents(i);
+  }
 
   set_rig_invariants ();
 }
+
+
 
 void Configuration::impl::done (int r)
 {
@@ -1980,6 +1997,23 @@ void Configuration::impl::read_settings ()
   calibration_.slope_ppm = settings_->value ("CalibrationSlopePPM", 0.).toDouble ();
   pwrBandTxMemory_ = settings_->value("pwrBandTxMemory",false).toBool ();
   pwrBandTuneMemory_ = settings_->value("pwrBandTuneMemory",false).toBool ();
+
+
+  // notifications
+  notifications_enabled_.clear();
+  notifications_paths_.clear();
+  settings_->beginGroup("Notifications");
+  {
+    foreach(auto group, settings_->childGroups()){
+      settings_->beginGroup(group);
+      {
+        notifications_enabled_[group] = settings_->value("enabled", QVariant(false)).toBool();
+        notifications_paths_[group] = settings_->value("path", QVariant("")).toString();
+      }
+      settings_->endGroup();
+    }
+  }
+  settings_->endGroup();
 }
 
 void Configuration::impl::write_settings ()
@@ -2145,6 +2179,20 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("pwrBandTuneMemory", pwrBandTuneMemory_);
   settings_->setValue ("Region", QVariant::fromValue (region_));
   settings_->setValue ("AutoGrid", use_dynamic_info_);
+
+  // notifications
+  settings_->beginGroup("Notifications");
+  {
+    foreach(auto key, notifications_enabled_.keys()){
+      settings_->beginGroup(key);
+      {
+        settings_->setValue("enabled", QVariant(notifications_enabled_.value(key, false)));
+        settings_->setValue("path", QVariant(notifications_paths_.value(key, "")));
+      }
+      settings_->endGroup();
+    }
+  }
+  settings_->endGroup();
 }
 
 void Configuration::impl::set_rig_invariants ()
@@ -2771,6 +2819,28 @@ void Configuration::impl::accept ()
     dynamic_grid_.clear ();
   }
   use_dynamic_info_ = ui_->use_dynamic_grid->isChecked();
+
+  // notifications
+  for(int i = 0; i < ui_->notifications_table_widget->rowCount(); i++){
+      // event
+      auto eventItem = ui_->notifications_table_widget->item(i, 0);
+      auto key = eventItem->data(Qt::UserRole).toString();
+      if(key.isEmpty()){
+          continue;
+      }
+
+      auto enabledWidget = ui_->notifications_table_widget->cellWidget(i, 1);
+      QCheckBox * enabledCheckbox = enabledWidget->findChild<QCheckBox*>("enabledCheckbox");
+      if(enabledCheckbox){
+          notifications_enabled_[key] = enabledCheckbox->isChecked();
+      }
+
+      auto pathWidget = ui_->notifications_table_widget->cellWidget(i, 2);
+      QLabel * pathLabel = qobject_cast<QLabel*>(pathWidget);
+      if(pathLabel){
+          notifications_paths_[key] = pathLabel->text();
+      }
+  }
 
   write_settings ();		// make visible to all
 }
