@@ -10877,6 +10877,9 @@ void MainWindow::processCommandActivity() {
         else if (d.cmd == " ACK" && !isAllCall){
             qDebug() << "skipping incoming ack" << d.text;
 
+            // notification for ack
+            tryNotify("ack");
+
             // make sure this is explicit
             continue;
         }

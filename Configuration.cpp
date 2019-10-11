@@ -1590,6 +1590,7 @@ void Configuration::impl::initialize_models ()
   QList<QPair<QString, QString>> notifyRows = {
       {"notify_cq", "CQ Message Received"},
       {"notify_hb", "HB Message Received"},
+      {"notify_ack", "ACK Message Received"},
       {"notify_directed", "Directed Message Received"},
       {"notify_inbox", "Inbox Message Received"},
       {"notify_call_new", "New Callsign Heard"},
