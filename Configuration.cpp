@@ -434,6 +434,7 @@ private:
   void delete_stations ();
   void insert_station ();
 
+  Q_SLOT void on_notifications_check_box_toggled(bool checked);
   Q_SLOT void on_font_push_button_clicked ();
   Q_SLOT void on_tableFontButton_clicked();
   Q_SLOT void on_PTT_port_combo_box_activated (int);
@@ -534,6 +535,7 @@ private:
 
   Type2MsgGen type_2_msg_gen_;
 
+  bool enable_notifications_;
   QMap<QString, bool> notifications_enabled_;
   QMap<QString, QString> notifications_paths_;
 
@@ -733,8 +735,12 @@ QAudioDeviceInfo const& Configuration::audio_output_device () const {return m_->
 AudioDevice::Channel Configuration::audio_output_channel () const {return m_->audio_output_channel_;}
 QAudioDeviceInfo const& Configuration::notification_audio_output_device () const {return m_->notification_audio_output_device_;}
 AudioDevice::Channel Configuration::notification_audio_output_channel () const {return m_->notification_audio_output_channel_;}
-bool Configuration::notifications_enabled() const { return m_->notifications_enabled_.values().contains(true); }
+bool Configuration::notifications_enabled() const { return m_->enable_notifications_; }
 QString Configuration::notification_path(const QString &key) const {
+    if(!m_->enable_notifications_){
+        return "";
+    }
+
     if(!m_->notifications_enabled_.value(key, false)){
         return "";
     }
@@ -1587,6 +1593,9 @@ void Configuration::impl::initialize_models ()
   //
   // setup notifications table view
   //
+  ui_->notifications_check_box->setChecked(enable_notifications_);
+  on_notifications_check_box_toggled(enable_notifications_);
+
   QList<QPair<QString, QString>> notifyRows = {
       {"notify_cq", "CQ Message Received"},
       {"notify_hb", "HB Message Received"},
@@ -2001,6 +2010,7 @@ void Configuration::impl::read_settings ()
 
 
   // notifications
+  enable_notifications_ = settings_->value("EnableNotifications", false).toBool();
   notifications_enabled_.clear();
   notifications_paths_.clear();
   settings_->beginGroup("Notifications");
@@ -2182,6 +2192,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("AutoGrid", use_dynamic_info_);
 
   // notifications
+  settings_->setValue("EnableNotifications", enable_notifications_);
   settings_->beginGroup("Notifications");
   {
     foreach(auto key, notifications_enabled_.keys()){
@@ -2411,6 +2422,13 @@ bool Configuration::impl::validate ()
       && !QAudioDeviceInfo::availableDevices (QAudio::AudioOutput).empty ())
     {
       MessageBox::critical_message (this, tr ("Invalid audio out device"));
+      return false;
+    }
+
+  if (ui_->notification_sound_output_combo_box->currentIndex () < 0
+      && !QAudioDeviceInfo::availableDevices (QAudio::AudioOutput).empty ())
+    {
+      MessageBox::critical_message (this, tr ("Invalid notification audio out device"));
       return false;
     }
 
@@ -2822,6 +2840,8 @@ void Configuration::impl::accept ()
   use_dynamic_info_ = ui_->use_dynamic_grid->isChecked();
 
   // notifications
+  enable_notifications_ = ui_->notifications_check_box->isChecked();
+
   for(int i = 0; i < ui_->notifications_table_widget->rowCount(); i++){
       // event
       auto eventItem = ui_->notifications_table_widget->item(i, 0);
@@ -2867,6 +2887,10 @@ void Configuration::impl::reject ()
     }
 
   QDialog::reject ();
+}
+
+void Configuration::impl::on_notifications_check_box_toggled(bool checked){
+    ui_->notifications_table_widget->setEnabled(checked);
 }
 
 void Configuration::impl::on_font_push_button_clicked ()

@@ -3155,6 +3155,13 @@ QListView::item:hover {
             <number>0</number>
            </property>
            <item>
+            <widget class="QCheckBox" name="notifications_check_box">
+             <property name="text">
+              <string>Enable Notifications</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QTableWidget" name="notifications_table_widget">
              <property name="editTriggers">
               <set>QAbstractItemView::NoEditTriggers</set>
