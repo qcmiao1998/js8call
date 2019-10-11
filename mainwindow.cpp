@@ -4642,13 +4642,13 @@ void MainWindow::logCallActivity(CallDetail d, bool spot){
     } else {
         // create
         m_callActivity[d.call] = d;
-    }
 
-    // notification for new and old call
-    if(m_logBook.hasWorkedBefore(d.call, "")){
-        tryNotify("call_old");
-    } else {
-        tryNotify("call_new");
+        // notification of old and new callsigns
+        if(m_logBook.hasWorkedBefore(d.call, "")){
+            tryNotify("call_old");
+        } else {
+            tryNotify("call_new");
+        }
     }
 
     // enqueue for spotting to psk reporter
