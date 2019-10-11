@@ -1517,7 +1517,7 @@ a few, particularly some Kenwood rigs, require it).</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>494</width>
+                <width>718</width>
                 <height>490</height>
                </rect>
               </property>
@@ -1921,8 +1921,8 @@ this setting allows you to select which audio input will be used
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>266</width>
-            <height>420</height>
+            <width>760</width>
+            <height>502</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -2305,7 +2305,7 @@ both here.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>562</width>
+            <width>746</width>
             <height>663</height>
            </rect>
           </property>
@@ -2800,8 +2800,8 @@ for assessing propagation and system performance.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>487</width>
-            <height>341</height>
+            <width>760</width>
+            <height>502</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -3165,6 +3165,9 @@ QListView::item:hover {
              <property name="selectionMode">
               <enum>QAbstractItemView::NoSelection</enum>
              </property>
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
              <property name="showGrid">
               <bool>false</bool>
              </property>
@@ -3270,8 +3273,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>274</width>
-                <height>690</height>
+                <width>724</width>
+                <height>418</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_14">
