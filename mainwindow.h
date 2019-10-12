@@ -166,6 +166,8 @@ public slots:
   QString createMessageTransmitQueue(QString const& text, bool reset);
   void resetMessageTransmitQueue();
   QPair<QString, int> popMessageFrame();
+  void tryNotify(const QString &key);
+
 protected:
   void keyPressEvent (QKeyEvent *) override;
   void closeEvent(QCloseEvent *) override;
@@ -433,7 +435,6 @@ private slots:
   void checkStartupWarnings ();
   void clearCallsignSelected();
   void refreshTextDisplay();
-  void tryNotify(const QString &key);
 
 private:
   Q_SIGNAL void playNotification(const QString &name);

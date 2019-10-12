@@ -1597,13 +1597,13 @@ void Configuration::impl::initialize_models ()
   on_notifications_check_box_toggled(enable_notifications_);
 
   QList<QPair<QString, QString>> notifyRows = {
-      {"notify_cq", "CQ Message Received"},
-      {"notify_hb", "HB Message Received"},
-      {"notify_ack", "ACK Message Received"},
-      {"notify_directed", "Directed Message Received"},
-      {"notify_inbox", "Inbox Message Received"},
-      {"notify_call_new", "New Callsign Heard"},
-      {"notify_call_old", "Worked Callsign Heard"},
+      {"cq", "CQ Message Received"},
+      {"hb", "HB Message Received"},
+      {"ack", "ACK Message Received"},
+      {"directed", "Directed Message Received"},
+      {"inbox", "Inbox Message Received"},
+      {"call_new", "New Callsign Heard"},
+      {"call_old", "Worked Callsign Heard"},
   };
 
   int i = 0;
@@ -1661,6 +1661,18 @@ void Configuration::impl::initialize_models ()
         if(!path.isEmpty()){
             pathLabel->setText(path);
         }
+    });
+
+    QPushButton *testPushButton = new QPushButton(this);
+    testPushButton->setSizePolicy(minimumPolicy);
+    testPushButton->setText("Test");
+    buttonLayout->addWidget(testPushButton);
+
+    connect(testPushButton, &QPushButton::pressed, this, [this, key, pathLabel](){
+        // hack for testing...
+        notifications_enabled_[key] = true;
+        notifications_paths_[key] = pathLabel->text();
+        emit this->self_->test_notify(key);
     });
 
     QPushButton *clearPushButton = new QPushButton(this);

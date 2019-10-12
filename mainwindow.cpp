@@ -514,8 +514,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (this, &MainWindow::outAttenuationChanged, m_soundOutput, &SoundOutput::setAttenuation);
   connect (&m_audioThread, &QThread::finished, m_soundOutput, &QObject::deleteLater);
 
-  connect(this, &MainWindow::initializeNotificationAudioOutputStream, m_notification, &NotificationAudio::init);
-  connect(this, &MainWindow::playNotification, m_notification, &NotificationAudio::play);
+  connect (this, &MainWindow::initializeNotificationAudioOutputStream, m_notification, &NotificationAudio::init);
+  connect (&m_config, &Configuration::test_notify, this, &MainWindow::tryNotify);
+  connect (this, &MainWindow::playNotification, m_notification, &NotificationAudio::play);
   connect (&m_notificationAudioThread, &QThread::finished, m_notification, &QObject::deleteLater);
 
   // hook up Modulator slots and disposal
@@ -9503,9 +9504,7 @@ void MainWindow::postDecode (bool is_new, QString const& message)
 }
 
 void MainWindow::tryNotify(const QString &key){
-    auto k = QString("notify_%1").arg(key);
-
-    auto path = m_config.notification_path(k);
+    auto path = m_config.notification_path(key);
     if(path.isEmpty()){
         return;
     }
