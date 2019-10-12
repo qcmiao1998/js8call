@@ -37,7 +37,7 @@ protected:
     qint64 writeData(const char* data, qint64 len) override;
 
 private:
-    QFile *m_file;
+    QFile m_file;
     State m_state;
     QBuffer m_input;
     QBuffer m_output;
@@ -50,7 +50,7 @@ private:
     bool m_init;
     bool m_isDecodingFinished;
 
-    void playFile(QFile *file);
+    void playFile(const QString &filePath);
     void resetBuffers();
 
 private slots:

@@ -56,24 +56,26 @@ void NotificationAudio::play(const QString &filePath) {
         return;
     }
 
-    QFile *file = new QFile(this);
-    file->setFileName(filePath);
-    if (!file->open(QIODevice::ReadOnly)){
-        return;
-    }
-
-    playFile(file);
+    playFile(filePath);
 }
 
-void NotificationAudio::playFile(QFile *file){
-    if(!m_init || !m_decoder || !m_audio || !file){
+void NotificationAudio::playFile(const QString &filePath){
+    if(!m_init || !m_decoder || !m_audio){
         return;
     }
 
     resetBuffers();
 
-    m_file = file;
-    m_decoder->setSourceDevice(m_file);
+    m_file.setFileName(filePath);
+    if (!m_file.open(QFile::ReadOnly)){
+        return;
+    }
+
+    if(!m_file.isReadable()){
+        return;
+    }
+
+    m_decoder->setSourceDevice(&m_file);
     m_decoder->start();
 
     m_state = State::Playing;
@@ -104,12 +106,8 @@ void NotificationAudio::resetBuffers() {
         }
     }
 
-    if(m_file){
-        if(m_file->isOpen()){
-            m_file->close();
-        }
-        delete m_file;
-        m_file = nullptr;
+    if(m_file.isOpen()){
+        m_file.close();
     }
 
     m_data.clear();
