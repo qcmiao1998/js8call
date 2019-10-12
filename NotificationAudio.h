@@ -49,7 +49,6 @@ private:
     bool m_init;
     bool m_isDecodingFinished;
 
-    void playFile(const QString &filePath);
     void resetBuffers();
 
 private slots:

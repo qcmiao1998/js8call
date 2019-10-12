@@ -18,11 +18,15 @@ NotificationAudio::NotificationAudio(QObject *parent) :
 NotificationAudio::~NotificationAudio(){
     stop();
 
-    delete m_decoder;
-    m_decoder = nullptr;
+    if(m_decoder){
+      delete m_decoder;
+      m_decoder = nullptr;
+    }
 
-    delete m_audio;
-    m_audio = nullptr;
+    if(m_audio){
+      delete m_audio;
+      m_audio = nullptr;
+    }
 }
 
 // initialize an audio device
@@ -52,15 +56,11 @@ void NotificationAudio::init(const QAudioDeviceInfo &device, const QAudioFormat&
 }
 
 // play an audio file
-void NotificationAudio::play(const QString &filePath) {
+void NotificationAudio::play(const QString &filePath){
     if(m_state == NotificationAudio::Playing){
         return;
     }
 
-    playFile(filePath);
-}
-
-void NotificationAudio::playFile(const QString &filePath){
     if(!m_init || !m_decoder || !m_audio){
         return;
     }

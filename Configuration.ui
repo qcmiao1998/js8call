@@ -2181,6 +2181,9 @@ both here.</string>
            </item>
            <item>
             <widget class="QGroupBox" name="azel_path_group_box">
+            <property name="visible">
+            <bool>false</bool>
+            </property>
              <property name="toolTip">
               <string>AzEl Directory</string>
              </property>
