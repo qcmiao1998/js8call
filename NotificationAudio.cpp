@@ -33,6 +33,7 @@ void NotificationAudio::init(const QAudioDeviceInfo &device, const QAudioFormat&
     if(!m_decoder){
         m_decoder = new QAudioDecoder(this);
         connect(m_decoder, &QAudioDecoder::bufferReady, this, &NotificationAudio::bufferReady);
+        connect(m_decoder, static_cast<void(QAudioDecoder::*)(QAudioDecoder::Error)>(&QAudioDecoder::error), this, &NotificationAudio::errored);
         connect(m_decoder, &QAudioDecoder::finished, this, &NotificationAudio::finished);
     }
     m_decoder->setAudioFormat(m_format);
@@ -66,21 +67,11 @@ void NotificationAudio::playFile(const QString &filePath){
 
     resetBuffers();
 
-    m_file.setFileName(filePath);
-    if (!m_file.open(QFile::ReadOnly)){
-        return;
-    }
-
-    if(!m_file.isReadable()){
-        return;
-    }
-
-    m_decoder->setSourceDevice(&m_file);
-    m_decoder->start();
-
     m_state = State::Playing;
     emit stateChanged(m_state);
 
+    m_decoder->setSourceFilename(filePath);
+    m_decoder->start();
     m_audio->start(this);
 }
 
@@ -94,7 +85,6 @@ void NotificationAudio::stop() {
 // Reset the internal buffers and ensure the decoder and audio device is stopped
 void NotificationAudio::resetBuffers() {
     if(m_audio){
-
         if(m_audio->state() != QAudio::SuspendedState){
             m_audio->suspend();
         }
@@ -104,10 +94,6 @@ void NotificationAudio::resetBuffers() {
         if(m_decoder->state() != QAudioDecoder::StoppedState){
             m_decoder->stop();
         }
-    }
-
-    if(m_file.isOpen()){
-        m_file.close();
     }
 
     m_data.clear();
@@ -156,6 +142,9 @@ bool NotificationAudio::atEnd() const {
 // handle buffered data ready
 void NotificationAudio::bufferReady() {
     const QAudioBuffer &buffer = m_decoder->read();
+    if(!buffer.isValid()){
+        return;
+    }
 
     const int length = buffer.byteCount();
     const char *data = buffer.constData<char>();
@@ -166,4 +155,9 @@ void NotificationAudio::bufferReady() {
 // handle buffered data decoding is finished
 void NotificationAudio::finished() {
     m_isDecodingFinished = true;
+}
+
+// handle buffered data decoding error
+void NotificationAudio::errored(QAudioDecoder::Error /*error*/) {
+    stop();
 }

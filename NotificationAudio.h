@@ -37,7 +37,6 @@ protected:
     qint64 writeData(const char* data, qint64 len) override;
 
 private:
-    QFile m_file;
     State m_state;
     QBuffer m_input;
     QBuffer m_output;
@@ -56,6 +55,7 @@ private:
 private slots:
     void bufferReady();
     void finished();
+    void errored(QAudioDecoder::Error);
 
 signals:
     void initialized();
