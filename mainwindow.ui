@@ -1130,7 +1130,7 @@ background-color:#6699ff;
           <bool>true</bool>
          </property>
          <property name="placeholderText">
-          <string>Incoming and outgoing messages will appear here.</string>
+          <string>INCOMING AND OUTGOING MESSAGES WILL APPEAR HERE.</string>
          </property>
         </widget>
         <widget class="TransmitTextEdit" name="extFreeTextMsgEdit">
@@ -1162,7 +1162,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
           <bool>false</bool>
          </property>
          <property name="placeholderText">
-          <string>Type your outgoing messages here.</string>
+          <string>TYPE YOUR OUTGOING MESSAGES HERE.</string>
          </property>
         </widget>
        </widget>
