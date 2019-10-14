@@ -85,7 +85,8 @@ SOURCES += \
     SpotClient.cpp \
     TCPClient.cpp \
     TransmitTextEdit.cpp \
-    NotificationAudio.cpp
+    NotificationAudio.cpp \
+    CallsignValidator.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
