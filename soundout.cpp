@@ -71,6 +71,7 @@ void SoundOutput::setFormat (QAudioDeviceInfo const& device, unsigned channels, 
     }
 //  qDebug () << "Selected audio output format:" << format;
 
+  m_format = format;
   m_stream.reset (new QAudioOutput (device, format));
   audioError ();
   m_stream->setVolume (m_volume);
@@ -144,6 +145,10 @@ void SoundOutput::stop ()
 qreal SoundOutput::attenuation () const
 {
   return -(20. * qLn (m_volume) / qLn (10.));
+}
+
+QAudioFormat SoundOutput::format() const{
+    return m_format;
 }
 
 void SoundOutput::setAttenuation (qreal a)

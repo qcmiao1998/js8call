@@ -514,7 +514,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (this, &MainWindow::outAttenuationChanged, m_soundOutput, &SoundOutput::setAttenuation);
   connect (&m_audioThread, &QThread::finished, m_soundOutput, &QObject::deleteLater);
 
-  connect (this, &MainWindow::initializeNotificationAudioOutputStream, m_notification, &NotificationAudio::init);
+  connect (this, &MainWindow::initializeNotificationAudioOutputStream, m_notification, &NotificationAudio::setDevice);
   connect (&m_config, &Configuration::test_notify, this, &MainWindow::tryNotify);
   connect (this, &MainWindow::playNotification, m_notification, &NotificationAudio::play);
   connect (&m_notificationAudioThread, &QThread::finished, m_notification, &QObject::deleteLater);
@@ -945,7 +945,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 //  Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, &m_detector, m_downSampleFactor, m_config.audio_input_channel ());
   Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, m_detector, m_downSampleFactor, m_config.audio_input_channel ());
   Q_EMIT initializeAudioOutputStream (m_config.audio_output_device (), AudioDevice::Mono == m_config.audio_output_channel () ? 1 : 2, m_msAudioOutputBuffered);
-  Q_EMIT initializeNotificationAudioOutputStream(m_config.notification_audio_output_device(), m_config.notification_audio_output_device().preferredFormat());
+  Q_EMIT initializeNotificationAudioOutputStream(m_config.notification_audio_output_device(), AudioDevice::Mono == m_config.notification_audio_output_channel () ? 1 : 2, m_msAudioOutputBuffered);
   Q_EMIT transmitFrequency (ui->TxFreqSpinBox->value () - m_XIT);
 
   enable_DXCC_entity (m_config.DXCC ());  // sets text window proportions and (re)inits the logbook
@@ -3023,9 +3023,9 @@ void MainWindow::openSettings(int tab){
         }
 
         if(m_config.restart_notification_audio_output ()) {
-            Q_EMIT initializeNotificationAudioOutputStream(
-                m_config.notification_audio_output_device(),
-                m_config.notification_audio_output_device().preferredFormat());
+            Q_EMIT initializeNotificationAudioOutputStream(m_config.notification_audio_output_device(),
+                AudioDevice::Mono == m_config.notification_audio_output_channel () ? 1 : 2,
+                m_msAudioOutputBuffered);
         }
 
         ui->bandComboBox->view ()->setMinimumWidth (ui->bandComboBox->view ()->sizeHintForColumn (FrequencyList_v2::frequency_mhz_column));

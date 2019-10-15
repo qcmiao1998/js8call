@@ -86,7 +86,8 @@ SOURCES += \
     TCPClient.cpp \
     TransmitTextEdit.cpp \
     NotificationAudio.cpp \
-    CallsignValidator.cpp
+    CallsignValidator.cpp \
+    AudioDecoder.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -123,7 +124,8 @@ HEADERS  += qt_helpers.hpp \
     TCPClient.h \
     logbook/n3fjp.h \
     TransmitTextEdit.h \
-    NotificationAudio.h
+    NotificationAudio.h \
+    AudioDecoder.h
 
 
 INCLUDEPATH += qmake_only

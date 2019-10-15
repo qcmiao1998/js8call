@@ -438,7 +438,7 @@ private slots:
 
 private:
   Q_SIGNAL void playNotification(const QString &name);
-  Q_SIGNAL void initializeNotificationAudioOutputStream(QAudioDeviceInfo, QAudioFormat);
+  Q_SIGNAL void initializeNotificationAudioOutputStream(const QAudioDeviceInfo &, unsigned, unsigned) const;
   Q_SIGNAL void initializeAudioOutputStream (QAudioDeviceInfo,
       unsigned channels, unsigned msBuffered) const;
   Q_SIGNAL void stopAudioOutputStream () const;

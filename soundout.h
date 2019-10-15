@@ -24,6 +24,7 @@ public:
   }
 
   qreal attenuation () const;
+  QAudioFormat format() const;
 
 public Q_SLOTS:
   void setFormat (QAudioDeviceInfo const& device, unsigned channels, unsigned msBuffered = 0u);
@@ -47,6 +48,7 @@ private Q_SLOTS:
 
 private:
   QScopedPointer<QAudioOutput> m_stream;
+  QAudioFormat m_format;
   unsigned m_msBuffered;
   qreal m_volume;
 };

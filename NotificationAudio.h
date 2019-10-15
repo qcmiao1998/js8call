@@ -3,16 +3,18 @@
 
 #include <QIODevice>
 #include <QBuffer>
-#include <QAudioDecoder>
 #include <QAudioDeviceInfo>
 #include <QAudioFormat>
 #include <QAudioOutput>
 #include <QFile>
+#include <QPointer>
 
-// Class for decode audio files like MP3 and push decoded audio data to QOutputDevice (like speaker) and also signal newData().
-// For decoding it uses QAudioDecoder which uses QAudioFormat for decode audio file for desire format, then put decoded data to buffer.
-// based on: https://github.com/Znurre/QtMixer
-class NotificationAudio : public QIODevice
+#include "AudioDevice.hpp"
+#include "AudioDecoder.h"
+#include "soundout.h"
+
+class NotificationAudio :
+    public QObject
 {
     Q_OBJECT
 
@@ -20,46 +22,14 @@ public:
     NotificationAudio(QObject * parent=nullptr);
     ~NotificationAudio();
 
-    bool isInitialized() const { return m_init; }
-
-    enum State { Playing, Stopped };
-
-    bool atEnd() const override;
-
 public slots:
-    void init(const QAudioDeviceInfo &device, const QAudioFormat& format);
+    void setDevice(const QAudioDeviceInfo &device, unsigned channels, unsigned msBuffer=0);
     void play(const QString &filePath);
     void stop();
 
-protected:
-
-    qint64 readData(char* data, qint64 maxlen) override;
-    qint64 writeData(const char* data, qint64 len) override;
-
 private:
-    State m_state;
-    QBuffer m_input;
-    QBuffer m_output;
-    QByteArray m_data;
-    QAudioFormat m_format;
-    QAudioDeviceInfo m_device;
-    QAudioDecoder * m_decoder;
-    QAudioOutput * m_audio;
-
-    bool m_init;
-    bool m_isDecodingFinished;
-
-    void resetBuffers();
-
-private slots:
-    void bufferReady();
-    void finished();
-    void errored(QAudioDecoder::Error);
-
-signals:
-    void initialized();
-    void stateChanged(NotificationAudio::State state);
-    void newData(const QByteArray& data);
+    QPointer<SoundOutput> m_stream;
+    QPointer<AudioDecoder> m_decoder;
 };
 
 #endif // NOTIFICATIONAUDIO_H
