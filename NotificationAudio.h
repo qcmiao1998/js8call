@@ -11,7 +11,9 @@
 
 #include "AudioDevice.hpp"
 #include "AudioDecoder.h"
+#include "WaveFile.h"
 #include "soundout.h"
+
 
 class NotificationAudio :
     public QObject
@@ -30,6 +32,10 @@ public slots:
 private:
     QPointer<SoundOutput> m_stream;
     QPointer<AudioDecoder> m_decoder;
+    QPointer<WaveFile> m_file;
+    QAudioDeviceInfo m_device;
+    unsigned m_channels;
+    unsigned m_msBuffer;
 };
 
 #endif // NOTIFICATIONAUDIO_H

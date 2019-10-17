@@ -87,7 +87,9 @@ SOURCES += \
     TransmitTextEdit.cpp \
     NotificationAudio.cpp \
     CallsignValidator.cpp \
-    AudioDecoder.cpp
+    AudioDecoder.cpp \
+    WaveFile.cpp \
+    WaveUtils.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -125,7 +127,9 @@ HEADERS  += qt_helpers.hpp \
     logbook/n3fjp.h \
     TransmitTextEdit.h \
     NotificationAudio.h \
-    AudioDecoder.h
+    AudioDecoder.h \
+    WaveFile.h \
+    WaveUtils.h
 
 
 INCLUDEPATH += qmake_only

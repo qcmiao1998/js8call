@@ -253,6 +253,8 @@ set (wsjtx_CXXSRCS
   wsprnet.cpp
   WSPRBandHopping.cpp
   TransmitTextEdit.cpp
+  WaveUtils.cpp
+  WaveFile.cpp
   AudioDecoder.cpp
   NotificationAudio.cpp
   )

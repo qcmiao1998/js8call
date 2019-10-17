@@ -28,6 +28,7 @@ public:
 
 public Q_SLOTS:
   void setFormat (QAudioDeviceInfo const& device, unsigned channels, unsigned msBuffered = 0u);
+  void setDeviceFormat (QAudioDeviceInfo const& device, QAudioFormat const&format, unsigned channels, unsigned msBuffered = 0u);
   void restart (QIODevice *);
   void suspend ();
   void resume ();

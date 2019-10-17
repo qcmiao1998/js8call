@@ -47,20 +47,24 @@ bool SoundOutput::audioError () const
   return result;
 }
 
-void SoundOutput::setFormat (QAudioDeviceInfo const& device, unsigned channels, unsigned msBuffered)
+void SoundOutput::setFormat (QAudioDeviceInfo const &device, unsigned channels, unsigned msBuffered){
+    QAudioFormat format (device.preferredFormat ());
+    format.setChannelCount (channels);
+    format.setCodec ("audio/pcm");
+    format.setSampleRate (48000);
+    format.setSampleType (QAudioFormat::SignedInt);
+    format.setSampleSize (16);
+    format.setByteOrder (QAudioFormat::Endian (QSysInfo::ByteOrder));
+
+    setDeviceFormat(device, format, channels, msBuffered);
+}
+
+void SoundOutput::setDeviceFormat (QAudioDeviceInfo const &device, QAudioFormat const &format, unsigned channels, unsigned msBuffered)
 {
   Q_ASSERT (0 < channels && channels < 3);
 
   m_msBuffered = msBuffered;
 
-  QAudioFormat format (device.preferredFormat ());
-//  qDebug () << "Preferred audio output format:" << format;
-  format.setChannelCount (channels);
-  format.setCodec ("audio/pcm");
-  format.setSampleRate (48000);
-  format.setSampleType (QAudioFormat::SignedInt);
-  format.setSampleSize (16);
-  format.setByteOrder (QAudioFormat::Endian (QSysInfo::ByteOrder));
   if (!format.isValid ())
     {
       Q_EMIT error (tr ("Requested output audio format is not valid."));
