@@ -11219,7 +11219,7 @@ int MainWindow::getNextMessageIdForCallsign(QString callsign){
 
 QStringList MainWindow::parseRelayPathCallsigns(QString from, QString text){
     QStringList calls;
-    QString callDePattern = {R"(\s[*]DE[*]\s(?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
+    QString callDePattern = {R"(\s([*]DE[*]|VIA)\s(?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
     QRegularExpression re(callDePattern);
     auto iter = re.globalMatch(text);
     while(iter.hasNext()){
