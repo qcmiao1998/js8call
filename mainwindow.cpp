@@ -10674,7 +10674,7 @@ void MainWindow::processCommandActivity() {
                 if(match.captured("type") != ">"){
                     text = text.replace(match.capturedStart("type"), match.capturedLength("type"), ">");
                 }
-                reply = QString("%1 VIA %2").arg(text).arg(d.from);
+                reply = QString("%1 *DE* %2").arg(text).arg(d.from);
 
             // otherwise, as long as we're not an ACK...alert the user and either send an ACK or Message
             } else if(!d.text.startsWith("ACK")) {
@@ -11219,7 +11219,7 @@ int MainWindow::getNextMessageIdForCallsign(QString callsign){
 
 QStringList MainWindow::parseRelayPathCallsigns(QString from, QString text){
     QStringList calls;
-    QString callDePattern = {R"(\sVIA\s(?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
+    QString callDePattern = {R"(\s[*]DE[*]\s(?<callsign>\b(?<prefix>[A-Z0-9]{1,4}\/)?(?<base>([0-9A-Z])?([0-9A-Z])([0-9])([A-Z])?([A-Z])?([A-Z])?)(?<suffix>\/[A-Z0-9]{1,4})?)\b)"};
     QRegularExpression re(callDePattern);
     auto iter = re.globalMatch(text);
     while(iter.hasNext()){
