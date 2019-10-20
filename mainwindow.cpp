@@ -131,8 +131,6 @@ extern "C" {
   void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
-const int NEAR_THRESHOLD_RX = 10;
-
 int volatile itone[NUM_ISCAT_SYMBOLS];  //Audio tones for all Tx symbols
 int volatile icw[NUM_CW_SYMBOLS];       //Dits for CW ID
 struct dec_data dec_data;               // for sharing with Fortran
@@ -4227,7 +4225,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
       if(m_messageDupeCache.contains(frame)){
           // check to see if the frequency is near our previous frame
           auto cachedFreq = m_messageDupeCache.value(frame, 0);
-          if(qAbs(cachedFreq - frameOffset) <= NEAR_THRESHOLD_RX){
+          if(qAbs(cachedFreq - frameOffset) <= rxThreshold()){
             qDebug() << "duplicate frame from" << cachedFreq << "and" << frameOffset;
             bValidFrame = false;
           }
@@ -4255,9 +4253,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         int offset = decodedtext.frequencyOffset();
 
         if(!m_bandActivity.contains(offset)){
-            int range = 10;
-            if(m_nSubMode == Varicode::JS8CallFast){ range = 16; }
-            if(m_nSubMode == Varicode::JS8CallTurbo){ range = 32; }
+            int range = rxThreshold();
 
             QList<int> offsets = generateOffsets(offset-range, offset+range);
 
@@ -4536,9 +4532,7 @@ bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffs
         return true;
     }
 
-    int range = 10;
-    if(m_nSubMode == Varicode::JS8CallFast){ range = 16; }
-    if(m_nSubMode == Varicode::JS8CallTurbo){ range = 32; }
+    int range = rxThreshold();
 
     QList<int> offsets = generateOffsets(offset-range, offset+range);
 
@@ -9472,6 +9466,13 @@ void MainWindow::tryNotify(const QString &key){
     emit playNotification(path);
 }
 
+int MainWindow::rxThreshold(){
+    int threshold = 10;
+    if(m_nSubMode == Varicode::JS8CallFast){ threshold = 16; }
+    if(m_nSubMode == Varicode::JS8CallTurbo){ threshold = 32; }
+    return threshold;
+}
+
 void MainWindow::displayTransmit(){
     // Transmit Activity
     update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
@@ -9792,7 +9793,7 @@ void MainWindow::clearCallsignSelected(){
 }
 
 bool MainWindow::isRecentOffset(int offset){
-    if(abs(offset - currentFreqOffset()) <= NEAR_THRESHOLD_RX){
+    if(abs(offset - currentFreqOffset()) <= rxThreshold()){
         return true;
     }
     return (
@@ -9964,7 +9965,7 @@ void MainWindow::processRxActivity() {
 
         // use the actual frequency and check its delta from our current frequency
         // meaning, if our current offset is 1502 and the d.freq is 1492, the delta is <= 10;
-        bool shouldDisplay = abs(d.freq - freqOffset) <= NEAR_THRESHOLD_RX;
+        bool shouldDisplay = abs(d.freq - freqOffset) <= rxThreshold();
 
         int prevOffset = d.freq;
         if(hasExistingMessageBuffer(d.freq, false, &prevOffset) && (

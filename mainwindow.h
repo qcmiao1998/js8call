@@ -167,6 +167,7 @@ public slots:
   void resetMessageTransmitQueue();
   QPair<QString, int> popMessageFrame();
   void tryNotify(const QString &key);
+  int rxThreshold();
 
 protected:
   void keyPressEvent (QKeyEvent *) override;
