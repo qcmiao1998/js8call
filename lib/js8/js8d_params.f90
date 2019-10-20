@@ -19,7 +19,7 @@
 ! parameter (NSPS=1920, NTXDUR=15, NDOWNSPS=32, NDD=100, JZ=116) !  50 Hz  6.250 baud 16 wpm -25.0dB (1.0Eb/N0) 12.64s
 ! parameter (NSPS=4000, NTXDUR=30, NDOWNSPS=40, NDD=90,  JZ=116) !  24 Hz      3 baud  8 wpm -28.2dB (1.0Eb/N0) 26.33s
 
-parameter (AZ=12000.0/(1.0*NSPS)*0.64d0) !Dedupe overlap in Hz
+parameter (AZ=12000.0/(1.0*NSPS)*0.8d0) !Dedupe overlap in Hz
 parameter (ASTART=0.1)                   !Start delay in seconds
 parameter (ASYNCMIN=1.5)                 !Minimum Sync
 

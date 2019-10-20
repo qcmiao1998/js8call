@@ -4163,23 +4163,25 @@ QList<int> generateOffsets(int minOffset, int maxOffset){
 void MainWindow::readFromStdout()                             //readFromStdout
 {
   while(proc_js8.canReadLine()) {
-    QByteArray t=proc_js8.readLine();
-    qDebug() << "JS8: " << QString(t);
-    bool bAvgMsg=false;
-    int navg=0;
-    if(t.indexOf("<DecodeFinished>") >= 0) {
-      if(m_mode=="QRA64") m_wideGraph->drawRed(0,0);
-      m_bDecoded = t.mid(20).trimmed().toInt() > 0;
-      int mswait=3*1000*m_TRperiod/4;
-      if(!m_diskData) killFileTimer.start(mswait); //Kill in 3/4 period
-      decodeDone ();
-      m_startAnother=m_loopall;
-      if(m_bNoMoreFiles) {
-        MessageBox::information_message(this, tr("No more files to open."));
-        m_bNoMoreFiles=false;
+      QByteArray t=proc_js8.readLine();
+      qDebug() << "JS8: " << QString(t);
+      bool bAvgMsg=false;
+      int navg=0;
+      if(t.indexOf("<DecodeFinished>") >= 0) {
+        if(m_mode=="QRA64") m_wideGraph->drawRed(0,0);
+        m_bDecoded = t.mid(20).trimmed().toInt() > 0;
+        int mswait=3*1000*m_TRperiod/4;
+        if(!m_diskData) killFileTimer.start(mswait); //Kill in 3/4 period
+        decodeDone ();
+        m_startAnother=m_loopall;
+        if(m_bNoMoreFiles) {
+          MessageBox::information_message(this, tr("No more files to open."));
+          m_bNoMoreFiles=false;
+        }
+        m_messageDupeCache.clear();
+        return;
       }
-      return;
-    } else {
+
       if(m_mode=="JT4" or m_mode=="JT65" or m_mode=="QRA64" or m_mode=="FT8") {
         int n=t.indexOf("f");
         if(n<0) n=t.indexOf("d");
@@ -4219,328 +4221,286 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
       bool bValidFrame = decodedtext.snr() > -24;
 
+      // dupe check
+      auto frame = decodedtext.message();
+      auto frameOffset = decodedtext.frequencyOffset();
+      if(m_messageDupeCache.contains(frame)){
+          // check to see if the frequency is near our previous frame
+          auto cachedFreq = m_messageDupeCache.value(frame, 0);
+          if(qAbs(cachedFreq - frameOffset) <= NEAR_THRESHOLD_RX){
+            qDebug() << "duplicate frame from" << cachedFreq << "and" << frameOffset;
+            bValidFrame = false;
+          }
+      } else {
+          // cache for this decode cycle
+          m_messageDupeCache[frame] = frameOffset;
+      }
+
       qDebug() << "valid" << bValidFrame << "decoded text" << decodedtext.message();
+
+      // skip if invalid
+      if(!bValidFrame) {
+          continue;
+      }
 
       ActivityDetail d = {};
       CallDetail cd = {};
       CommandDetail cmd = {};
       CallDetail td = {};
 
-
-      //Left (Band activity) window
-      if(bValidFrame) {
-          // Parse General Activity
+      // Parse General Activity
 #if 1
-          bool shouldParseGeneralActivity = true;
-          if(shouldParseGeneralActivity && !decodedtext.messageWords().isEmpty()){
-            int offset = decodedtext.frequencyOffset();
+      bool shouldParseGeneralActivity = true;
+      if(shouldParseGeneralActivity && !decodedtext.messageWords().isEmpty()){
+        int offset = decodedtext.frequencyOffset();
 
-            if(!m_bandActivity.contains(offset)){
-                int range = 10;
-                if(m_nSubMode == Varicode::JS8CallFast){ range = 16; }
-                if(m_nSubMode == Varicode::JS8CallTurbo){ range = 32; }
+        if(!m_bandActivity.contains(offset)){
+            int range = 10;
+            if(m_nSubMode == Varicode::JS8CallFast){ range = 16; }
+            if(m_nSubMode == Varicode::JS8CallTurbo){ range = 32; }
 
-                QList<int> offsets = generateOffsets(offset-range, offset+range);
+            QList<int> offsets = generateOffsets(offset-range, offset+range);
 
-                foreach(int prevOffset, offsets){
-                    if(!m_bandActivity.contains(prevOffset)){ continue; }
-                    m_bandActivity[offset] = m_bandActivity[prevOffset];
-                    m_bandActivity.remove(prevOffset);
-                    break;
-                }
+            foreach(int prevOffset, offsets){
+                if(!m_bandActivity.contains(prevOffset)){ continue; }
+                m_bandActivity[offset] = m_bandActivity[prevOffset];
+                m_bandActivity.remove(prevOffset);
+                break;
             }
+        }
 
-            //ActivityDetail d = {};
-            d.isLowConfidence = decodedtext.isLowConfidence();
-            d.isFree = !decodedtext.isStandardMessage();
-            d.isCompound = decodedtext.isCompound();
-            d.isDirected = decodedtext.isDirectedMessage();
-            d.bits = decodedtext.bits();
-            d.freq = offset;
-            d.text = decodedtext.message();
-            d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-            d.snr = decodedtext.snr();
-            d.isBuffered = false;
-            d.tdrift = decodedtext.dt();
-            d.mode = currentMode();
+        //ActivityDetail d = {};
+        d.isLowConfidence = decodedtext.isLowConfidence();
+        d.isFree = !decodedtext.isStandardMessage();
+        d.isCompound = decodedtext.isCompound();
+        d.isDirected = decodedtext.isDirectedMessage();
+        d.bits = decodedtext.bits();
+        d.freq = offset;
+        d.text = decodedtext.message();
+        d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+        d.snr = decodedtext.snr();
+        d.isBuffered = false;
+        d.tdrift = decodedtext.dt();
+        d.mode = currentMode();
 
-            // if we have any "first" frame, and a buffer is already established, clear it...
-            int prevBufferOffset = -1;
-            if(((d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst) && hasExistingMessageBuffer(d.freq, true, &prevBufferOffset)){
-                qDebug() << "first message encountered, clearing existing buffer" << prevBufferOffset;
-                m_messageBuffer.remove(d.freq);
-            }
+        // if we have any "first" frame, and a buffer is already established, clear it...
+        int prevBufferOffset = -1;
+        if(((d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst) && hasExistingMessageBuffer(d.freq, true, &prevBufferOffset)){
+            qDebug() << "first message encountered, clearing existing buffer" << prevBufferOffset;
+            m_messageBuffer.remove(d.freq);
+        }
 
-            // if we have a data frame, and a message buffer has been established, buffer it...
-            if(hasExistingMessageBuffer(d.freq, true, &prevBufferOffset) && !decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
-                qDebug() << "buffering data" << d.freq << d.text;
-                d.isBuffered = true;
-                m_messageBuffer[d.freq].msgs.append(d);
-                // TODO: incremental display if it's "to" me.
-            }
+        // if we have a data frame, and a message buffer has been established, buffer it...
+        if(hasExistingMessageBuffer(d.freq, true, &prevBufferOffset) && !decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
+            qDebug() << "buffering data" << d.freq << d.text;
+            d.isBuffered = true;
+            m_messageBuffer[d.freq].msgs.append(d);
+            // TODO: incremental display if it's "to" me.
+        }
 
-            m_rxActivityQueue.append(d);
-            m_bandActivity[offset].append(d);
-            while(m_bandActivity[offset].count() > 10){
-                m_bandActivity[offset].removeFirst();
-            }
-          }
+        m_rxActivityQueue.append(d);
+        m_bandActivity[offset].append(d);
+        while(m_bandActivity[offset].count() > 10){
+            m_bandActivity[offset].removeFirst();
+        }
+      }
 #endif
 
-          // Process compound callsign commands (put them in cache)"
+      // Process compound callsign commands (put them in cache)"
 #if 1
-          qDebug() << "decoded" << decodedtext.frameType() << decodedtext.isCompound() << decodedtext.isDirectedMessage() << decodedtext.isHeartbeat();
-          bool shouldProcessCompound = true;
-          if(shouldProcessCompound && decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
-            cd.call = decodedtext.compoundCall();
-            cd.grid = decodedtext.extra(); // compound calls via pings may contain grid...
-            cd.snr = decodedtext.snr();
-            cd.freq = decodedtext.frequencyOffset();
-            cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-            cd.bits = decodedtext.bits();
-            cd.tdrift = decodedtext.dt();
-            cd.mode = currentMode();
+      qDebug() << "decoded" << decodedtext.frameType() << decodedtext.isCompound() << decodedtext.isDirectedMessage() << decodedtext.isHeartbeat();
+      bool shouldProcessCompound = true;
+      if(shouldProcessCompound && decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
+        cd.call = decodedtext.compoundCall();
+        cd.grid = decodedtext.extra(); // compound calls via pings may contain grid...
+        cd.snr = decodedtext.snr();
+        cd.freq = decodedtext.frequencyOffset();
+        cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+        cd.bits = decodedtext.bits();
+        cd.tdrift = decodedtext.dt();
+        cd.mode = currentMode();
 
-            // Only respond to HEARTBEATS...remember that CQ messages are "Alt" pings
-            if(decodedtext.isHeartbeat()){
-                if(decodedtext.isAlt()){
-                    // this is a cq with a standard or compound call, ala "KN4CRD/P: CQCQCQ"
-                    cd.cqTimestamp = DriftingDateTime::currentDateTimeUtc();
+        // Only respond to HEARTBEATS...remember that CQ messages are "Alt" pings
+        if(decodedtext.isHeartbeat()){
+            if(decodedtext.isAlt()){
+                // this is a cq with a standard or compound call, ala "KN4CRD/P: CQCQCQ"
+                cd.cqTimestamp = DriftingDateTime::currentDateTimeUtc();
 
-                    // it is not processed elsewhere, so we need to just log it here.
-                    logCallActivity(cd, true);
+                // it is not processed elsewhere, so we need to just log it here.
+                logCallActivity(cd, true);
 
-                    // notification for cq
-                    tryNotify("cq");
-
-                } else {
-                    // convert HEARTBEAT to a directed command and process...
-                    cmd.from = cd.call;
-                    cmd.to = "@ALLCALL";
-                    cmd.cmd = " HB";
-                    cmd.snr = cd.snr;
-                    cmd.bits = cd.bits;
-                    cmd.grid = cd.grid;
-                    cmd.freq = cd.freq;
-                    cmd.utcTimestamp = cd.utcTimestamp;
-                    cmd.tdrift = cd.tdrift;
-                    cmd.mode = cd.mode;
-                    m_rxCommandQueue.append(cmd);
-
-                    // notification for hb
-                    tryNotify("hb");
-                }
+                // notification for cq
+                tryNotify("cq");
 
             } else {
-                qDebug() << "buffering compound call" << cd.freq << cd.call << cd.bits;
-
-                hasExistingMessageBuffer(cd.freq, true, nullptr);
-                m_messageBuffer[cd.freq].compound.append(cd);
-            }
-          }
-#endif
-
-          // Parse commands
-          // KN4CRD K1JT ?
-#if 1
-          bool shouldProcessDirected = true;
-          if(shouldProcessDirected && decodedtext.isDirectedMessage()){
-              auto parts = decodedtext.directedMessage();
-
-              cmd.from = parts.at(0);
-              cmd.to = parts.at(1);
-              cmd.cmd = parts.at(2);
-              cmd.freq = decodedtext.frequencyOffset();
-              cmd.snr = decodedtext.snr();
-              cmd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-              cmd.bits = decodedtext.bits();
-              cmd.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
-              cmd.tdrift = decodedtext.dt();
-              cmd.mode = currentMode();
-
-              // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
-              if((Varicode::isCommandBuffered(cmd.cmd) && (cmd.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) || cmd.from == "<....>" || cmd.to == "<....>"){
-                qDebug() << "buffering cmd" << cmd.freq << cmd.cmd << cmd.from << cmd.to;
-
-                // log complete buffered callsigns immediately
-                if(cmd.from != "<....>" && cmd.to != "<....>"){
-                    CallDetail cmdcd = {};
-                    cmdcd.call = cmd.from;
-                    cmdcd.bits = cmd.bits;
-                    cmdcd.snr = cmd.snr;
-                    cmdcd.freq = cmd.freq;
-                    cmdcd.utcTimestamp = cmd.utcTimestamp;
-                    cmdcd.ackTimestamp = cmd.to == m_config.my_callsign() ? cmd.utcTimestamp : QDateTime{};
-                    cmdcd.tdrift = cmd.tdrift;
-                    cmdcd.mode = currentMode();
-                    logCallActivity(cmdcd, false);
-                    logHeardGraph(cmd.from, cmd.to);
-                }
-
-                // merge any existing buffer to this frequency
-                hasExistingMessageBuffer(cmd.freq, true, nullptr);
-
-                if(cmd.to == m_config.my_callsign()){
-                    d.shouldDisplay = true;
-                }
-
-                m_messageBuffer[cmd.freq].cmd = cmd;
-                m_messageBuffer[cmd.freq].msgs.clear();
-              } else {
+                // convert HEARTBEAT to a directed command and process...
+                cmd.from = cd.call;
+                cmd.to = "@ALLCALL";
+                cmd.cmd = " HB";
+                cmd.snr = cd.snr;
+                cmd.bits = cd.bits;
+                cmd.grid = cd.grid;
+                cmd.freq = cd.freq;
+                cmd.utcTimestamp = cd.utcTimestamp;
+                cmd.tdrift = cd.tdrift;
+                cmd.mode = cd.mode;
                 m_rxCommandQueue.append(cmd);
-              }
 
-              // check to see if this is a station we've heard 3rd party
-              bool shouldCaptureThirdPartyCallsigns = false;
-              if(shouldCaptureThirdPartyCallsigns && Radio::base_callsign(cmd.to) != Radio::base_callsign(m_config.my_callsign())){
-                  QString relayCall = QString("%1|%2").arg(Radio::base_callsign(cmd.from)).arg(Radio::base_callsign(cmd.to));
-                  int snr = -100;
-                  if(parts.length() == 4){
-                      snr = QString(parts.at(3)).toInt();
-                  }
-
-                  //CallDetail td = {};
-                  td.through = cmd.from;
-                  td.call = cmd.to;
-                  td.grid = "";
-                  td.snr = snr;
-                  td.freq = cmd.freq;
-                  td.utcTimestamp = cmd.utcTimestamp;
-                  td.tdrift = cmd.tdrift;
-                  td.mode = currentMode();
-                  logCallActivity(td, true);
-                  logHeardGraph(cmd.from, cmd.to);
-              }
-          }
-#endif
-
-
-
-
-          // Parse CQs
-#if 0
-          bool shouldParseCQs = true;
-          if(shouldParseCQs && decodedtext.isStandardMessage()){
-            QString theircall;
-            QString theirgrid;
-            decodedtext.deCallAndGrid(theircall, theirgrid);
-
-            QStringList calls = Varicode::parseCallsigns(theircall);
-            if(!calls.isEmpty() && !calls.first().isEmpty()){
-                theircall = calls.first();
-
-                CallDetail d = {};
-                d.bits = decodedtext.bits();
-                d.call = theircall;
-                d.grid = theirgrid;
-                d.snr = decodedtext.snr();
-                d.freq = decodedtext.frequencyOffset();
-                d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-                m_callActivity[d.call] = d;
-              }
-          }
-#endif
-
-          // Parse standard message callsigns
-          // K1JT KN4CRD EM73
-          // KN4CRD K1JT -21
-          // K1JT KN4CRD R-12
-          // DE KN4CRD
-          // KN4CRD
-#if 0
-          bool shouldParseCallsigns = false;
-          if(shouldParseCallsigns){
-              QStringList callsigns = Varicode::parseCallsigns(decodedtext.message());
-              if(!callsigns.isEmpty()){
-                  // one callsign
-                  // de [from]
-                  // cq [from]
-
-                  // two callsigns
-                  // [from]: [to] ...
-                  // [to] [from] [grid|signal]
-
-                  QStringList grids = Varicode::parseGrids(decodedtext.message());
-
-                  // one callsigns are handled above... so we only need to handle two callsigns if it's a standard message
-                  if(decodedtext.isStandardMessage()){
-                      if(callsigns.length() == 2){
-                          auto de_callsign = callsigns.last();
-
-                          // TODO: jsherer - put this in a function to record a callsign...
-                          CallDetail d;
-                          d.call = de_callsign;
-                          d.grid = !grids.empty() ? grids.first() : "";
-                          d.snr = decodedtext.snr();
-                          d.freq = decodedtext.frequencyOffset();
-                          d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-                          m_callActivity[Radio::base_callsign(de_callsign)] = d;
-                      }
-                  }
-              }
-          }
-#endif
-      }
-
-#if 0
-      //Right (Rx Frequency) window
-      bool bDisplayRight=bAvgMsg;
-      int audioFreq=decodedtext.frequencyOffset();
-
-      if(abs(audioFreq - m_wideGraph->rxFreq()) <= 10){
-          bDisplayRight=true;
-      }
-
-      if (bDisplayRight) {
-        // This msg is within 10 hertz of our tuned frequency, or a JT4 or JT65 avg,
-        // or contains MyCall
-        ui->decodedTextBrowser2->displayDecodedText(decodedtext,m_baseCall,false,
-               m_logBook,m_config.color_CQ(),m_config.color_MyCall(),
-               m_config.color_DXCC(),m_config.color_NewCall(),m_config.ppfx());
-
-        if(m_mode!="JT4") {
-          bool b65=decodedtext.isJT65();
-          if(b65 and m_modeTx!="JT65") on_pbTxMode_clicked();
-          if(!b65 and m_modeTx=="JT65") on_pbTxMode_clicked();
-        }
-        m_QSOText = decodedtext.string ().trimmed ();
-      }
-
-      if(m_mode!="FT8" or !m_config.bHound()) {
-        postDecode (true, decodedtext.string ());
-
-        // find and extract any report for myCall, but save in m_rptRcvd only if it's from DXcall
-        QString rpt;
-        bool stdMsg = decodedtext.report(m_baseCall,
-            Radio::base_callsign(ui->dxCallEntry->text()), rpt);
-        QString deCall;
-        QString grid;
-        decodedtext.deCallAndGrid(/*out*/deCall,grid);
-        {
-          QString t=Radio::base_callsign(ui->dxCallEntry->text());
-          if((t==deCall or t=="") and rpt!="") m_rptRcvd=rpt;
-        }
-        // extract details and send to PSKreporter
-        int nsec=DriftingDateTime::currentMSecsSinceEpoch()/1000-m_secBandChanged;
-        bool okToPost=(nsec>(4*m_TRperiod)/5);
-
-        //if (stdMsg && okToPost) pskPost(decodedtext);
-
-        if((m_mode=="JT4" or m_mode=="JT65" or m_mode=="QRA64") and m_msgAvgWidget!=NULL) {
-          if(m_msgAvgWidget->isVisible()) {
-            QFile f(m_config.temp_dir ().absoluteFilePath ("avemsg.txt"));
-            if(f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-              QTextStream s(&f);
-              QString t=s.readAll();
-              m_msgAvgWidget->displayAvg(t);
+                // notification for hb
+                tryNotify("hb");
             }
-          }
+
+        } else {
+            qDebug() << "buffering compound call" << cd.freq << cd.call << cd.bits;
+
+            hasExistingMessageBuffer(cd.freq, true, nullptr);
+            m_messageBuffer[cd.freq].compound.append(cd);
         }
       }
 #endif
 
-    }
+      // Parse commands
+      // KN4CRD K1JT ?
+#if 1
+      bool shouldProcessDirected = true;
+      if(shouldProcessDirected && decodedtext.isDirectedMessage()){
+          auto parts = decodedtext.directedMessage();
+
+          cmd.from = parts.at(0);
+          cmd.to = parts.at(1);
+          cmd.cmd = parts.at(2);
+          cmd.freq = decodedtext.frequencyOffset();
+          cmd.snr = decodedtext.snr();
+          cmd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+          cmd.bits = decodedtext.bits();
+          cmd.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
+          cmd.tdrift = decodedtext.dt();
+          cmd.mode = currentMode();
+
+          // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
+          if((Varicode::isCommandBuffered(cmd.cmd) && (cmd.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) || cmd.from == "<....>" || cmd.to == "<....>"){
+            qDebug() << "buffering cmd" << cmd.freq << cmd.cmd << cmd.from << cmd.to;
+
+            // log complete buffered callsigns immediately
+            if(cmd.from != "<....>" && cmd.to != "<....>"){
+                CallDetail cmdcd = {};
+                cmdcd.call = cmd.from;
+                cmdcd.bits = cmd.bits;
+                cmdcd.snr = cmd.snr;
+                cmdcd.freq = cmd.freq;
+                cmdcd.utcTimestamp = cmd.utcTimestamp;
+                cmdcd.ackTimestamp = cmd.to == m_config.my_callsign() ? cmd.utcTimestamp : QDateTime{};
+                cmdcd.tdrift = cmd.tdrift;
+                cmdcd.mode = currentMode();
+                logCallActivity(cmdcd, false);
+                logHeardGraph(cmd.from, cmd.to);
+            }
+
+            // merge any existing buffer to this frequency
+            hasExistingMessageBuffer(cmd.freq, true, nullptr);
+
+            if(cmd.to == m_config.my_callsign()){
+                d.shouldDisplay = true;
+            }
+
+            m_messageBuffer[cmd.freq].cmd = cmd;
+            m_messageBuffer[cmd.freq].msgs.clear();
+          } else {
+            m_rxCommandQueue.append(cmd);
+          }
+
+          // check to see if this is a station we've heard 3rd party
+          bool shouldCaptureThirdPartyCallsigns = false;
+          if(shouldCaptureThirdPartyCallsigns && Radio::base_callsign(cmd.to) != Radio::base_callsign(m_config.my_callsign())){
+              QString relayCall = QString("%1|%2").arg(Radio::base_callsign(cmd.from)).arg(Radio::base_callsign(cmd.to));
+              int snr = -100;
+              if(parts.length() == 4){
+                  snr = QString(parts.at(3)).toInt();
+              }
+
+              //CallDetail td = {};
+              td.through = cmd.from;
+              td.call = cmd.to;
+              td.grid = "";
+              td.snr = snr;
+              td.freq = cmd.freq;
+              td.utcTimestamp = cmd.utcTimestamp;
+              td.tdrift = cmd.tdrift;
+              td.mode = currentMode();
+              logCallActivity(td, true);
+              logHeardGraph(cmd.from, cmd.to);
+          }
+      }
+#endif
+
+
+
+
+      // Parse CQs
+#if 0
+      bool shouldParseCQs = true;
+      if(shouldParseCQs && decodedtext.isStandardMessage()){
+        QString theircall;
+        QString theirgrid;
+        decodedtext.deCallAndGrid(theircall, theirgrid);
+
+        QStringList calls = Varicode::parseCallsigns(theircall);
+        if(!calls.isEmpty() && !calls.first().isEmpty()){
+            theircall = calls.first();
+
+            CallDetail d = {};
+            d.bits = decodedtext.bits();
+            d.call = theircall;
+            d.grid = theirgrid;
+            d.snr = decodedtext.snr();
+            d.freq = decodedtext.frequencyOffset();
+            d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+            m_callActivity[d.call] = d;
+          }
+      }
+#endif
+
+      // Parse standard message callsigns
+      // K1JT KN4CRD EM73
+      // KN4CRD K1JT -21
+      // K1JT KN4CRD R-12
+      // DE KN4CRD
+      // KN4CRD
+#if 0
+      bool shouldParseCallsigns = false;
+      if(shouldParseCallsigns){
+          QStringList callsigns = Varicode::parseCallsigns(decodedtext.message());
+          if(!callsigns.isEmpty()){
+              // one callsign
+              // de [from]
+              // cq [from]
+
+              // two callsigns
+              // [from]: [to] ...
+              // [to] [from] [grid|signal]
+
+              QStringList grids = Varicode::parseGrids(decodedtext.message());
+
+              // one callsigns are handled above... so we only need to handle two callsigns if it's a standard message
+              if(decodedtext.isStandardMessage()){
+                  if(callsigns.length() == 2){
+                      auto de_callsign = callsigns.last();
+
+                      // TODO: jsherer - put this in a function to record a callsign...
+                      CallDetail d;
+                      d.call = de_callsign;
+                      d.grid = !grids.empty() ? grids.first() : "";
+                      d.snr = decodedtext.snr();
+                      d.freq = decodedtext.frequencyOffset();
+                      d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+                      m_callActivity[Radio::base_callsign(de_callsign)] = d;
+                  }
+              }
+          }
+      }
+#endif
   }
+
 
 
   // See MainWindow::postDecode for displaying the latest decodes

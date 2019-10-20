@@ -836,6 +836,7 @@ private:
       QDateTime date;
   };
 
+  QMap<QString, int> m_messageDupeCache; // message frame -> freq offset seen
   QMap<QString, QVariant> m_showColumnsCache; // table column:key -> show boolean
   QMap<QString, QVariant> m_sortCache; // table key -> sort by
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent
