@@ -8616,8 +8616,8 @@ void MainWindow::on_driftSyncButton_clicked(){
     auto now = QDateTime::currentDateTimeUtc();
 
     int n = 0;
-    int nPos = 15 - now.time().second() % m_TRperiod;
-    int nNeg = now.time().second() % m_TRperiod - 15;
+    int nPos = m_TRperiod - (now.time().second() % m_TRperiod);
+    int nNeg = (now.time().second() % m_TRperiod) - m_TRperiod;
 
     if(abs(nNeg) < nPos){
         n = nNeg;
@@ -8632,8 +8632,8 @@ void MainWindow::on_driftSyncEndButton_clicked(){
     auto now = QDateTime::currentDateTimeUtc();
 
     int n = 0;
-    int nPos = 15 - now.time().second() % m_TRperiod;
-    int nNeg = now.time().second() % m_TRperiod - 15;
+    int nPos = m_TRperiod - (now.time().second() % m_TRperiod);
+    int nNeg = (now.time().second() % m_TRperiod) - m_TRperiod;
 
     if(abs(nNeg) < nPos){
         n = nNeg + 2;
