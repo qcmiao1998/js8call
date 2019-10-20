@@ -6226,7 +6226,7 @@ void MainWindow::restoreMessage(){
     if(m_lastTxMessage.isEmpty()){
         return;
     }
-    addMessageText(m_lastTxMessage, true);
+    addMessageText(Varicode::rstrip(m_lastTxMessage), true);
 }
 
 void MainWindow::resetMessageTransmitQueue(){
