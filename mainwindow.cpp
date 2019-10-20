@@ -10762,7 +10762,7 @@ void MainWindow::processCommandActivity() {
 
         // PROCESS AGN
         else if (d.cmd == " AGN?" && !isAllCall && !isGroupCall && !m_lastTxMessage.isEmpty()) {
-            reply = m_lastTxMessage;
+            reply = Varicode::rstrip(m_lastTxMessage);
         }
 
         // PROCESS ACTIVE HEARTBEAT
