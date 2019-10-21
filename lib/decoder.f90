@@ -79,7 +79,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   endif
 
   if(params%nmode.eq.8 .and. params%nsubmode.eq.3) then
-! We're in JS8 mode C
+! We're in JS8 mode D
      call timer('decjs8d ',0)
      newdat=params%newdat
      call my_js8d%decode(js8d_decoded,id2,params%nQSOProgress,params%nfqso,    &
@@ -169,7 +169,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
 
 !$call omp_set_dynamic(.true.)
 
-800 ndecoded = my_js8a%decoded + my_js8b%decoded + my_js8c%decoded
+800 ndecoded = my_js8a%decoded + my_js8b%decoded + my_js8c%decoded + my_js8d%decoded
   write(*,1010) nsynced,ndecoded
 1010 format('<DecodeFinished>',2i4)
   call flush(6)
@@ -177,7 +177,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
 
 contains
 
-  subroutine js8_decoded (sync,snr,dt,freq,decoded,nap,qual)
+  subroutine js8_decoded (sync,snr,dt,freq,decoded,nap,qual,submode)
     implicit none
 
     real, intent(in) :: sync
@@ -189,6 +189,8 @@ contains
     integer i0,i1,i2,i3,i4,i5,n30,nwrap
     integer, intent(in) :: nap 
     real, intent(in) :: qual 
+    integer, intent(in) :: submode
+    character*3 m
     character*2 annot
     character*37 decoded0
     logical isgrid4,first,b0,b1,b2
@@ -220,11 +222,19 @@ contains
        if(qual.lt.0.17) decoded0(22:22)='?'
     endif
 
+
+    m = ' ~ '
+    if(submode.eq.0) m=' A '
+    if(submode.eq.1) m=' B '
+    if(submode.eq.2) m=' C '
+    if(submode.eq.3) m=' D '
+
+
     i0=index(decoded0,';')
-    if(i0.le.0) write(*,1000) params%nutc,snr,dt,nint(freq),decoded0(1:22),annot
-1000 format(i6.6,i4,f5.1,i5,' ~ ',1x,a22,1x,a2)
-    if(i0.gt.0) write(*,1001) params%nutc,snr,dt,nint(freq),decoded0
-1001 format(i6.6,i4,f5.1,i5,' ~ ',1x,a37)
+    if(i0.le.0) write(*,1000) params%nutc,snr,dt,nint(freq),m,decoded0(1:22),annot
+1000 format(i6.6,i4,f5.1,i5,a3,1x,a22,1x,a2)
+    if(i0.gt.0) write(*,1001) params%nutc,snr,dt,nint(freq),m,decoded0
+1001 format(i6.6,i4,f5.1,i5,a3,1x,a37)
 
     i1=index(decoded0,' ')
     i2=i1 + index(decoded0(i1+1:),' ')
@@ -276,7 +286,7 @@ contains
     real, intent(in) :: qual 
     save
 
-    call js8_decoded(sync, snr, dt, freq, decoded, nap, qual)
+    call js8_decoded(sync, snr, dt, freq, decoded, nap, qual, 0)
 
     select type(this)
     type is (counting_ft8_decoder)
@@ -300,7 +310,7 @@ contains
     real, intent(in) :: qual 
     save
     
-    call js8_decoded(sync, snr, dt, freq, decoded, nap, qual)
+    call js8_decoded(sync, snr, dt, freq, decoded, nap, qual, 1)
 
     select type(this)
     type is (counting_js8b_decoder)
@@ -324,7 +334,7 @@ contains
     real, intent(in) :: qual 
     save
 
-    call js8_decoded(sync, snr, dt, freq, decoded, nap, qual)
+    call js8_decoded(sync, snr, dt, freq, decoded, nap, qual, 2)
 
     select type(this)
     type is (counting_js8c_decoder)
@@ -348,7 +358,7 @@ contains
     real, intent(in) :: qual 
     save
 
-    call js8_decoded(sync, snr, dt, freq, decoded, nap, qual)
+    call js8_decoded(sync, snr, dt, freq, decoded, nap, qual, 3)
 
     select type(this)
     type is (counting_js8d_decoder)

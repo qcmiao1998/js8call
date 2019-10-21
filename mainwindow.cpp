@@ -4205,7 +4205,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         }
         int n=t.length();
         auto logText = t.mid(0, n-2);
-        auto dt = DecodedText(logText, false, m_config.my_grid(), m_nSubMode);
+        auto dt = DecodedText(logText, false, m_config.my_grid());
         out << logText << "  " << dt.message() << endl;
         f.close();
       } else {
@@ -4215,7 +4215,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
       }
 
       DecodedText decodedtext {QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"}), "FT8" == m_mode &&
-            ui->cbVHFcontest->isChecked(), m_config.my_grid (), m_nSubMode};
+            ui->cbVHFcontest->isChecked(), m_config.my_grid ()};
 
       bool bValidFrame = decodedtext.snr() > -24;
 
@@ -4234,7 +4234,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
           m_messageDupeCache[frame] = frameOffset;
       }
 
-      qDebug() << "valid" << bValidFrame << "decoded text" << decodedtext.message();
+      qDebug() << "valid" << bValidFrame << decodedtext.submode() << "decoded text" << decodedtext.message();
 
       // skip if invalid
       if(!bValidFrame) {

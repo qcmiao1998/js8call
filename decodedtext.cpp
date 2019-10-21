@@ -15,7 +15,7 @@ namespace
   QRegularExpression words_re {R"(^(?:(?<word1>(?:CQ|DE|QRZ)(?:\s?DX|\s(?:[A-Z]{2}|\d{3}))|[A-Z0-9/]+)\s)(?:(?<word2>[A-Z0-9/]+)(?:\s(?<word3>[-+A-Z0-9]+)(?:\s(?<word4>(?:OOO|(?!RR73)[A-R]{2}[0-9]{2})))?)?)?)"};
 }
 
-DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString const& my_grid, int submode)
+DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString const& my_grid)
   : string_ {the_string.left (the_string.indexOf (QChar::Nbsp))} // discard appended info
   , padding_ {string_.indexOf (" ") > 4 ? 2 : 0} // allow for seconds
   , contest_mode_ {contest_mode}
@@ -25,7 +25,7 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
   , isHeartbeat_(false)
   , isAlt_(false)
   , bits_{0}
-  , submode_{submode}
+  , submode_{ string_.mid(column_mode, 3).trimmed().at(0).cell() - 'A' }
 {
     if(message_.length() >= 1) {
         message_ = message_.left (21).remove (QRegularExpression {"[<>]"});

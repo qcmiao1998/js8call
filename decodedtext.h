@@ -30,7 +30,7 @@
 class DecodedText
 {
 public:
-  explicit DecodedText (QString const& message, bool, QString const& my_grid, int submode);
+  explicit DecodedText (QString const& message, bool, QString const& my_grid);
   explicit DecodedText (QString const& js8callmessage, int bits, int submode);
 
   bool tryUnpack();
@@ -74,6 +74,7 @@ public:
   bool hasBits() const { return !string_.right(5).trimmed().isEmpty(); }
   int bits() const { return string_.right(5).trimmed().toShort(); }
   float dt() const;
+  int submode() const { return submode_; }
 
   // find and extract any report. Returns true if this is a standard message
   bool report(QString const& myBaseCall, QString const& dxBaseCall, /*mod*/QString& report) const;
