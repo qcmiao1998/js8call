@@ -6981,19 +6981,7 @@ void MainWindow::on_actionJS8_triggered()
   //  ui->actionModeJS8HB->setChecked(false);
   //}
 
-  auto modeText = modeName(m_nSubMode);
-  if(ui->actionModeAutoreply->isChecked()){
-      modeText += QString("+AUTO");
-  }
-  if(ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked()){
-      if(ui->actionHeartbeatAcknowledgements->isChecked()){
-          modeText += QString("+HB+ACK");
-      } else {
-          modeText += QString("+HB");
-      }
-  }
-
-  ui->modeButton->setText(modeText);
+  updateModeButtonText();
 
   m_wideGraph->setSubMode(m_nSubMode);
   bool bVHF=m_config.enable_VHF_features();
@@ -9480,6 +9468,28 @@ void MainWindow::displayTransmit(){
     update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
 }
 
+void MainWindow::updateModeButtonText(){
+    auto selectedCallsign = callsignSelected();
+
+    auto autoreply = ui->actionModeAutoreply->isChecked();
+    auto heartbeat = ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked();
+    auto ack = autoreply && ui->actionHeartbeatAcknowledgements->isChecked() && (!m_config.heartbeat_qso_pause() || selectedCallsign.isEmpty());
+
+    auto modeText = modeName(m_nSubMode);
+    if(autoreply){
+        modeText += QString("+AUTO");
+    }
+
+    if(heartbeat){
+        if(ack){
+            modeText += QString("+HB+ACK");
+        } else {
+            modeText += QString("+HB");
+        }
+    }
+    ui->modeButton->setText(modeText);
+}
+
 void MainWindow::updateButtonDisplay(){
     bool isTransmitting = m_transmitting || m_txFrameCount > 0;
 
@@ -9499,11 +9509,14 @@ void MainWindow::updateButtonDisplay(){
 
     // refresh repeat button text too
     updateRepeatButtonDisplay();
+
+    // update mode button text
+    updateModeButtonText();
 }
 
 void MainWindow::updateRepeatButtonDisplay(){
     auto selectedCallsign = callsignSelected();
-    auto hbBase = ui->actionModeAutoreply->isChecked() && ui->actionHeartbeatAcknowledgements->isChecked() && selectedCallsign.isEmpty() ? "HB + ACK" : "HB";
+    auto hbBase = ui->actionModeAutoreply->isChecked() && ui->actionHeartbeatAcknowledgements->isChecked() && (!m_config.heartbeat_qso_pause() || selectedCallsign.isEmpty()) ? "HB + ACK" : "HB";
     if(ui->hbMacroButton->isChecked() && m_hbInterval > 0 && m_nextHeartbeat.isValid()){
         auto secs = DriftingDateTime::currentDateTimeUtc().secsTo(m_nextHeartbeat);
         if(secs > 0){
@@ -9741,7 +9754,7 @@ QString MainWindow::callsignSelected(bool useInputText){
 }
 
 void MainWindow::callsignSelectedChanged(QString /*old*/, QString selectedCall){
-    auto placeholderText = QString("Type your outgoing messages here.");
+    auto placeholderText = QString("Type your outgoing messages here.").toUpper();
     if(selectedCall.isEmpty()){
         // try to restore hb
         if(m_hbPaused){
@@ -9749,7 +9762,7 @@ void MainWindow::callsignSelectedChanged(QString /*old*/, QString selectedCall){
             m_hbPaused = false;
         }
     } else {
-        placeholderText = QString("Type your outgoing directed message to %1 here.").arg(selectedCall);
+        placeholderText = QString("Type your outgoing directed message to %1 here.").arg(selectedCall).toUpper();
 
         // when we select a callsign, use it as the qso start time
         if(!m_callSelectedTime.contains(selectedCall)){

@@ -973,6 +973,7 @@ private:
   void replayDecodes ();
   void postDecode (bool is_new, QString const& message);
   void displayTransmit();
+  void updateModeButtonText();
   void updateButtonDisplay();
   void updateRepeatButtonDisplay();
   void updateTextDisplay();
