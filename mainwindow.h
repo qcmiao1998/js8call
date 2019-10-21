@@ -745,7 +745,7 @@ private:
     int snr;
     int bits;
     float tdrift;
-    QString mode;
+    QString modename;
   };
 
   struct CommandDetail
@@ -763,7 +763,7 @@ private:
     QString text;
     QString extra;
     float tdrift;
-    QString mode;
+    QString modename;
     QString relayPath;
   };
 
@@ -781,7 +781,7 @@ private:
     int snr;
     bool shouldDisplay;
     float tdrift;
-    QString mode;
+    QString modename;
   };
 
   struct MessageBuffer {
@@ -965,7 +965,7 @@ private:
   void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
   void aprsLogReport(int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
-  QString currentMode();
+  QString modeName(int submode);
   void updateCurrentBand();
   void displayDialFrequency ();
   void transmitDisplay (bool);
