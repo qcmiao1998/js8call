@@ -25,7 +25,7 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
   , isHeartbeat_(false)
   , isAlt_(false)
   , bits_{0}
-  , submode_{ string_.mid(column_mode, 3).trimmed().at(0).cell() - 'A' }
+  , submode_{ string_.mid(column_mode + padding_, 3).trimmed().at(0).cell() - 'A' }
 {
     if(message_.length() >= 1) {
         message_ = message_.left (21).remove (QRegularExpression {"[<>]"});
