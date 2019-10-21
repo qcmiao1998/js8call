@@ -11846,10 +11846,12 @@ void MainWindow::displayCallActivity() {
 
                 auto logNameItem = new QTableWidgetItem(logDetailName);
                 logNameItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                logNameItem->setToolTip(logDetailName);
                 ui->tableWidgetCalls->setItem(row, col++, logNameItem);
 
                 auto logCommentItem = new QTableWidgetItem(logDetailComment);
                 logCommentItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                logCommentItem->setToolTip(logDetailComment);
                 ui->tableWidgetCalls->setItem(row, col++, logCommentItem);
 
             } else {
