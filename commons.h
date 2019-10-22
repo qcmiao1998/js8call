@@ -66,10 +66,10 @@ extern "C" {
    * sync with lib/jt9com.f90
    */
 extern struct dec_data {
-  float ss[184*NSMAX];
+  float ss[184*NSMAX]; // symbol spectra
   float savg[NSMAX];
   float sred[5760];
-  short int d2[NTMAX*RX_SAMPLE_RATE];
+  short int d2[NTMAX*RX_SAMPLE_RATE]; // sample frame buffer
   struct
   {
     int nutc;                   //UTC as integer, HHMM

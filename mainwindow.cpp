@@ -2525,90 +2525,122 @@ void MainWindow::fixStop()
 //-------------------------------------------------------------- dataSink()
 void MainWindow::dataSink(qint64 frames)
 {
-  static float s[NSMAX];
-  char line[80];
+    static float s[NSMAX];
+    char line[80];
 
-  int k (frames);
-  QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("refspec.dat"))};
-  QByteArray bafname = fname.toLatin1();
-  const char *c_fname = bafname.data();
-  int len=fname.length();
+    int k (frames);
+    QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("refspec.dat"))};
+    QByteArray bafname = fname.toLatin1();
+    const char *c_fname = bafname.data();
+    int len=fname.length();
 
-  if(m_diskData) {
-    dec_data.params.ndiskdat=1;
-  } else {
-    dec_data.params.ndiskdat=0;
-  }
-
-  m_bUseRef=m_wideGraph->useRef();
-  refspectrum_(&dec_data.d2[k-m_nsps/2],&m_bClearRefSpec,&m_bRefSpec,
-      &m_bUseRef,c_fname,len);
-  m_bClearRefSpec=false;
-
-// Get power, spectrum, and ihsym
-  int trmin=m_TRperiod/60;
-//  int k (frames - 1);
-  dec_data.params.nfa=m_wideGraph->nStartFreq();
-  dec_data.params.nfb=m_wideGraph->Fmax();
-  int nsps=m_nsps;
-  if(m_bFastMode) nsps=6912;
-  int nsmo=m_wideGraph->smoothYellow()-1;
-  symspec_(&dec_data,&k,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&m_ihsym,&m_npts8,&m_pxmax);
-  if(m_mode=="WSPR") wspr_downsample_(dec_data.d2,&k);
-  if(m_ihsym <=0) return;
-  if(ui) ui->signal_meter_widget->setValue(m_px,m_pxmax); // Update thermometer
-  if(m_monitoring || m_diskData) {
-    m_wideGraph->dataSink2(s,m_df3,m_ihsym,m_diskData);
-  }
-  if(m_mode=="MSK144") return;
-
-  fixStop();
-
-  if(m_ihsym==3*m_hsymStop/4) {
-    m_dialFreqRxWSPR=m_freqNominal;
-  }
-
-  //qDebug() << m_ihsym << m_hsymStop;
-  if(m_ihsym == m_hsymStop) {
-    if(m_mode=="Echo") {
-      float snr=0;
-      int nfrit=0;
-      int nqual=0;
-      float f1=1500.0;
-      float xlevel=0.0;
-      float sigdb=0.0;
-      float dfreq=0.0;
-      float width=0.0;
-      echocom_.nclearave=m_nclearave;
-      int nDop=0;
-      avecho_(dec_data.d2,&nDop,&nfrit,&nqual,&f1,&xlevel,&sigdb,
-          &snr,&dfreq,&width);
-      QString t;
-      t.sprintf("%3d %7.1f %7.1f %7.1f %7.1f %3d",echocom_.nsum,xlevel,sigdb,
-                dfreq,width,nqual);
-      t=DriftingDateTime::currentDateTimeUtc().toString("hh:mm:ss  ") + t;
-      if (ui) ui->decodedTextBrowser->appendText(t);
-      if(m_echoGraph->isVisible()) m_echoGraph->plotSpec();
-      m_nclearave=0;
-//Don't restart Monitor after an Echo transmission
-      if(m_bEchoTxed and !m_auto) {
-        monitor(false);
-        m_bEchoTxed=false;
-      }
-      return;
+    if(m_diskData) {
+      dec_data.params.ndiskdat=1;
+    } else {
+      dec_data.params.ndiskdat=0;
     }
-    if(m_mode=="FreqCal") {
-      return;
+
+    m_bUseRef=m_wideGraph->useRef();
+    refspectrum_(&dec_data.d2[k-m_nsps/2],&m_bClearRefSpec,&m_bRefSpec,
+        &m_bUseRef,c_fname,len);
+    m_bClearRefSpec=false;
+
+    // Get power, spectrum, and ihsym
+    int trmin=m_TRperiod/60;
+
+    //  int k (frames - 1);
+    dec_data.params.nfa=m_wideGraph->nStartFreq();
+    dec_data.params.nfb=m_wideGraph->Fmax();
+
+    int nsps=m_nsps;
+    if(m_bFastMode) nsps=6912;
+    int nsmo=m_wideGraph->smoothYellow()-1;
+    symspec_(&dec_data,&k,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&m_ihsym,&m_npts8,&m_pxmax);
+
+    if(m_mode=="WSPR") wspr_downsample_(dec_data.d2,&k);
+    if(m_ihsym <=0) return;
+    if(ui) ui->signal_meter_widget->setValue(m_px,m_pxmax); // Update thermometer
+    if(m_monitoring || m_diskData) {
+      m_wideGraph->dataSink2(s,m_df3,m_ihsym,m_diskData);
     }
+    if(m_mode=="MSK144") return;
+
+    fixStop();
+
+    if(m_ihsym==3*m_hsymStop/4) {
+      m_dialFreqRxWSPR=m_freqNominal;
+    }
+
+    // could we decode all at once?
+    QDateTime now {DriftingDateTime::currentDateTimeUtc ()};
+
+    // if the current half symbol index is the half symbol stop index, then proceed
+    int submode = m_nSubMode;
+    int period = m_TRperiod;
+    qint32 halfSymbolStop = m_hsymStop;
+    bool newDataReady = m_ihsym == m_hsymStop;
+
+#if 0
+    if(m_nSubMode == Varicode::JS8CallNormal)
+    {
+        int n = now.time().second();
+#if 0
+        if(n % JS8A_TX_SECONDS == 0){
+            qDebug() << "could decode normal now" << n;
+        }
+        if(n % JS8B_TX_SECONDS == 0){
+            qDebug() << "could decode fast now" << n;
+        }
+        if(n % JS8C_TX_SECONDS == 0){
+            qDebug() << "could decode turbo now" << n;
+        }
+#endif
+#if 1
+        qint32 hsymNormalStop = ((int(JS8A_TX_SECONDS/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
+        qint32 hsymFastStop = ((int(JS8B_TX_SECONDS/0.288))/8)*8 - 1;   // 0.288 because 6912/12000/2 = 0.288
+        qint32 hsymTurboStop = ((int(JS8C_TX_SECONDS/0.288))/8)*8 - 1;  // 0.288 because 6912/12000/2 = 0.288
+        if(m_ihsym % hsymNormalStop == 0){
+            period = JS8A_TX_SECONDS;
+            submode = Varicode::JS8CallNormal;
+            halfSymbolStop= hsymNormalStop;
+            qDebug() << "could decode normal now" << n;
+            newDataReady = true;
+        }
+        if(m_ihsym % hsymFastStop == 0){
+            period = JS8B_TX_SECONDS;
+            submode = Varicode::JS8CallFast;
+            halfSymbolStop= hsymFastStop;
+            qDebug() << "could decode fast now" << n;
+            newDataReady = true;
+        }
+        if(m_ihsym % hsymTurboStop == 0){
+            period = JS8C_TX_SECONDS;
+            submode = Varicode::JS8CallTurbo;
+            halfSymbolStop= hsymTurboStop;
+            qDebug() << "could decode turbo now" << n;
+            newDataReady = true;
+        }
+#endif
+    }
+#endif
+
+    if(!newDataReady) {
+        return;
+    }
+
     if( m_dialFreqRxWSPR==0) m_dialFreqRxWSPR=m_freqNominal;
     m_dataAvailable=true;
     dec_data.params.npts8=(m_ihsym*m_nsps)/16;
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
-    dec_data.params.nzhsym=m_hsymStop;
-    QDateTime now {DriftingDateTime::currentDateTimeUtc ()};
+    dec_data.params.nzhsym=halfSymbolStop;
     m_dateTime = now.toString ("yyyy-MMM-dd hh:mm");
-    if(!m_mode.startsWith ("WSPR")) decode(); //Start decoder
+
+    //qDebug() << now << "half symbol" << m_ihsym << "stop symbol" << m_hsymStop;
+
+    if(!m_mode.startsWith ("WSPR")){
+        decode(submode, period); //Start decoder
+    }
 
     if(!m_diskData) {                        //Always save; may delete later
 
@@ -2634,7 +2666,6 @@ void MainWindow::dataSink(qint64 frames)
     }
 
     m_rxDone=true;
-  }
 }
 
 void MainWindow::startP1()
@@ -3918,7 +3949,11 @@ void MainWindow::msgAvgDecode2()
   on_DecodeButton_clicked (true);
 }
 
-void MainWindow::decode()                                       //decode()
+void MainWindow::decode(){
+    decode(m_nSubMode, m_TRperiod);
+}
+
+void MainWindow::decode(int submode, int period)                                       //decode()
 {
   QDateTime now = DriftingDateTime::currentDateTime();
   if( m_dateTimeLastTX.isValid () ) {
@@ -4009,8 +4044,8 @@ void MainWindow::decode()                                       //decode()
   if(m_mode=="FT8") dec_data.params.nmode=8;
   if(m_mode=="FT8") dec_data.params.lft8apon = ui->actionEnable_AP_FT8->isVisible () && ui->actionEnable_AP_FT8->isChecked ();
   if(m_mode=="FT8") dec_data.params.napwid=50;
-  dec_data.params.ntrperiod=m_TRperiod;
-  dec_data.params.nsubmode=m_nSubMode;
+  dec_data.params.ntrperiod= period; //m_TRperiod;
+  dec_data.params.nsubmode=submode; // m_nSubMode;
   if(m_mode=="QRA64") dec_data.params.nsubmode=100 + m_nSubMode;
   dec_data.params.minw=0;
   dec_data.params.nclearave=m_nclearave;

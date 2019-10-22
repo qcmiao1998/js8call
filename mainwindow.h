@@ -235,6 +235,7 @@ private slots:
   void on_actionCopyright_Notice_triggered();
   void on_DecodeButton_clicked (bool);
   void decode();
+  void decode(int submode, int trPeriod);
   void decodeBusy(bool b);
   void on_EraseButton_clicked();
   void set_dateTimeQSO(int m_ntx);
