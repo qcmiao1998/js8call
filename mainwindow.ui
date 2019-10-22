@@ -4660,7 +4660,7 @@ list. The list can be maintained in Settings (F2).</string>
    </widget>
    <widget class="QMenu" name="menuDecode">
     <property name="visible">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="title">
      <string>&amp;Decode</string>
@@ -4917,7 +4917,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Fast (1x)</string>
+    <string>(1x) One Pass</string>
    </property>
    <property name="visible">
     <bool>true</bool>
@@ -5014,7 +5014,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Normal (2x)</string>
+    <string>(2x) Two Passes</string>
    </property>
   </action>
   <action name="actionDeepestDecode">
@@ -5025,7 +5025,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Deepest (4x)</string>
+    <string>(4x) Four Passes</string>
    </property>
   </action>
   <action name="actionMonitor_OFF_at_startup">
@@ -5601,7 +5601,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Deep (3x)</string>
+    <string>(3x) Three Passes</string>
    </property>
   </action>
   <action name="actionShow_Frequency_Clock">
