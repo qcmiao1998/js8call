@@ -1459,7 +1459,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       d.relayPath = d.from;
       d.text = m->textValue();
       d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-      d.modename = modeName(m_nSubMode);
+      d.speed = modeSpeedName(m_nSubMode);
 
       addCommandToStorage("STORE", d);
   });
@@ -1932,7 +1932,7 @@ void MainWindow::initializeDummyData(){
         cd.utcTimestamp = dt;
         cd.grid = i == 5 ? "J042" : i == 6 ? " FN42FN42FN" : "";
         cd.tdrift = 0.1*i;
-        cd.modename = modeName(i % 4);
+        cd.speed = modeSpeedName(i % 4);
         logCallActivity(cd, false);
 
         ActivityDetail ad = {};
@@ -1941,7 +1941,7 @@ void MainWindow::initializeDummyData(){
         ad.freq = 500 + 100*i;
         ad.text = QString("%1: %2 TEST MESSAGE").arg(call).arg(m_config.my_callsign());
         ad.utcTimestamp = dt;
-        ad.modename = cd.modename;
+        ad.speed = cd.speed;
         m_bandActivity[500+100*i] = { ad };
 
         markOffsetDirected(500+100*i, false);
@@ -1955,7 +1955,7 @@ void MainWindow::initializeDummyData(){
     adHB1.freq = 750;
     adHB1.text = QString("KN4CRD: HB AUTO EM73");
     adHB1.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-    adHB1.modename = "NORMAL";
+    adHB1.speed = "NORMAL";
     m_bandActivity[750].append(adHB1);
 
     ActivityDetail adHB2 = {};
@@ -1964,7 +1964,7 @@ void MainWindow::initializeDummyData(){
     adHB2.freq = 750;
     adHB2.text = QString(" MSG ID 1");
     adHB2.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-    adHB2.modename = "NORMAL";
+    adHB2.speed = "NORMAL";
     m_bandActivity[750].append(adHB2);
 
     CommandDetail cmd = {};
@@ -1974,7 +1974,7 @@ void MainWindow::initializeDummyData(){
     cmd.relayPath = "N0JDS>OH8STN";
     cmd.text = "HELLO BRAVE SOUL";
     cmd.utcTimestamp = dt;
-    cmd.modename = "NORMAL";
+    cmd.speed = "NORMAL";
     addCommandToMyInbox(cmd);
 
     QString eot = m_config.eot();
@@ -2278,7 +2278,7 @@ void MainWindow::writeSettings()
         {"ackTimestamp", QVariant(cd.ackTimestamp)},
         {"utcTimestamp", QVariant(cd.utcTimestamp)},
 #endif
-        {"mode", QVariant(cd.modename)},
+        {"mode", QVariant(cd.speed)},
       });
   }
   m_settings->endGroup();
@@ -2473,7 +2473,7 @@ void MainWindow::readSettings()
           cd.tdrift = tdrift;
           cd.ackTimestamp = ackTimestamp;
           cd.utcTimestamp = utcTimestamp;
-          cd.modename = mode;
+          cd.speed = mode;
 
           logCallActivity(cd, false);
       }
@@ -3225,7 +3225,7 @@ Radio::Frequency MainWindow::dialFrequency() {
         m_rigState.tx_frequency () : m_rigState.frequency ()};
 }
 
-QString MainWindow::modeName(int submode){
+QString MainWindow::modeSpeedName(int submode){
     if(submode == Varicode::JS8CallNormal){
         return "NORMAL";
     }
@@ -4279,7 +4279,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         d.snr = decodedtext.snr();
         d.isBuffered = false;
         d.tdrift = decodedtext.dt();
-        d.modename = modeName(decodedtext.submode());
+        d.speed = modeSpeedName(decodedtext.submode());
 
         // if we have any "first" frame, and a buffer is already established, clear it...
         int prevBufferOffset = -1;
@@ -4316,7 +4316,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
         cd.bits = decodedtext.bits();
         cd.tdrift = decodedtext.dt();
-        cd.modename = modeName(decodedtext.submode());
+        cd.speed = modeSpeedName(decodedtext.submode());
 
         // Only respond to HEARTBEATS...remember that CQ messages are "Alt" pings
         if(decodedtext.isHeartbeat()){
@@ -4341,7 +4341,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 cmd.freq = cd.freq;
                 cmd.utcTimestamp = cd.utcTimestamp;
                 cmd.tdrift = cd.tdrift;
-                cmd.modename = cd.modename;
+                cmd.speed = cd.speed;
                 m_rxCommandQueue.append(cmd);
 
                 // notification for hb
@@ -4373,7 +4373,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
           cmd.bits = decodedtext.bits();
           cmd.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
           cmd.tdrift = decodedtext.dt();
-          cmd.modename = modeName(decodedtext.submode());
+          cmd.speed = modeSpeedName(decodedtext.submode());
 
           // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
           if((Varicode::isCommandBuffered(cmd.cmd) && (cmd.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) || cmd.from == "<....>" || cmd.to == "<....>"){
@@ -4389,7 +4389,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 cmdcd.utcTimestamp = cmd.utcTimestamp;
                 cmdcd.ackTimestamp = cmd.to == m_config.my_callsign() ? cmd.utcTimestamp : QDateTime{};
                 cmdcd.tdrift = cmd.tdrift;
-                cmdcd.modename = cmd.modename;
+                cmdcd.speed = cmd.speed;
                 logCallActivity(cmdcd, false);
                 logHeardGraph(cmd.from, cmd.to);
             }
@@ -4424,7 +4424,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
               td.freq = cmd.freq;
               td.utcTimestamp = cmd.utcTimestamp;
               td.tdrift = cmd.tdrift;
-              td.modename = cmd.modename;
+              td.speed = cmd.speed;
               logCallActivity(td, true);
               logHeardGraph(cmd.from, cmd.to);
           }
@@ -9475,7 +9475,7 @@ void MainWindow::updateModeButtonText(){
     auto heartbeat = ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked();
     auto ack = autoreply && ui->actionHeartbeatAcknowledgements->isChecked() && (!m_config.heartbeat_qso_pause() || selectedCallsign.isEmpty());
 
-    auto modeText = modeName(m_nSubMode);
+    auto modeText = modeSpeedName(m_nSubMode);
     if(autoreply){
         modeText += QString("+AUTO");
     }
@@ -10029,7 +10029,7 @@ void MainWindow::processRxActivity() {
                     cd.bits = d.bits;
                     cd.tdrift = d.tdrift;
                     cd.utcTimestamp = d.utcTimestamp;
-                    cd.modename = d.modename;
+                    cd.speed = d.speed;
                     logCallActivity(cd, true);
                 }
             }
@@ -10374,7 +10374,7 @@ void MainWindow::processCommandActivity() {
         cd.ackTimestamp = d.text.contains(": ACK") || toMe ? d.utcTimestamp : QDateTime{};
         cd.utcTimestamp = d.utcTimestamp;
         cd.tdrift = d.tdrift;
-        cd.modename = d.modename;
+        cd.speed = d.speed;
         logCallActivity(cd, true);
         logHeardGraph(d.from, d.to);
 
@@ -10402,7 +10402,7 @@ void MainWindow::processCommandActivity() {
                 cd.snr = d.snr;
                 cd.utcTimestamp = d.utcTimestamp;
                 cd.tdrift = d.tdrift;
-                cd.modename = d.modename;
+                cd.speed = d.speed;
 
                 if(d.to == "@APRSIS"){
                     m_aprsCallCache.remove(cd.call);
@@ -10667,7 +10667,7 @@ void MainWindow::processCommandActivity() {
                     cd.through = d.from;
                     cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
                     cd.tdrift = d.tdrift;
-                    cd.modename = d.modename;
+                    cd.speed = d.speed;
                     logCallActivity(cd, false);
                 }
 
@@ -10766,7 +10766,7 @@ void MainWindow::processCommandActivity() {
             cd.text = text;
             cd.to = Radio::base_callsign(to);
             cd.utcTimestamp = d.utcTimestamp;
-            cd.modename = d.modename;
+            cd.speed = d.speed;
 
             qDebug() << "storing message to" << to << ":" << text;
 
@@ -11103,7 +11103,7 @@ void MainWindow::refreshInboxCounts(){
                 cd.utcTimestamp = QDateTime::fromString(utc, "yyyy-MM-dd hh:mm:ss");
                 cd.utcTimestamp.setUtcOffset(0);
                 cd.ackTimestamp = cd.utcTimestamp;
-                cd.modename = mode;
+                cd.speed = mode;
                 logCallActivity(cd, false);
             }
         }
@@ -11149,7 +11149,7 @@ int MainWindow::addCommandToStorage(QString type, CommandDetail d){
         {"OFFSET", QVariant(d.freq)},
         {"CMD", QVariant(d.cmd)},
         {"SNR", QVariant(d.snr)},
-        {"MODENAME", QVariant(d.modename)},
+        {"MODENAME", QVariant(d.speed)},
     };
 
     if(!d.grid.isEmpty()){
@@ -11493,7 +11493,7 @@ void MainWindow::displayBandActivity() {
                     age = since(item.utcTimestamp);
                     timestamp = item.utcTimestamp;
                     tdrift = item.tdrift;
-                    mode = item.modename;
+                    mode = item.speed;
                 }
 
                 auto joined = Varicode::rstrip(text.join(""));
@@ -11812,9 +11812,9 @@ void MainWindow::displayCallActivity() {
 
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 ms").arg((int)(1000*d.tdrift))));
 
-                auto modeItem = new QTableWidgetItem(d.modename.left(1).replace("H", "N"));
-                modeItem->setToolTip(d.modename);
-                modeItem->setData(Qt::UserRole, QVariant(d.modename));
+                auto modeItem = new QTableWidgetItem(d.speed.left(1).replace("H", "N"));
+                modeItem->setToolTip(d.speed);
+                modeItem->setData(Qt::UserRole, QVariant(d.speed));
                 modeItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
                 ui->tableWidgetCalls->setItem(row, col++, modeItem);
 
