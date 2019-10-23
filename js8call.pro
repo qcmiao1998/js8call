@@ -63,7 +63,7 @@ SOURCES += \
   getfile.cpp soundout.cpp soundin.cpp meterwidget.cpp signalmeter.cpp \
   WFPalette.cpp plotter.cpp widegraph.cpp about.cpp WsprTxScheduler.cpp mainwindow.cpp \
   main.cpp decodedtext.cpp wsprnet.cpp messageaveraging.cpp \
-  fastgraph.cpp fastplot.cpp Modes.cpp \
+  Modes.cpp \
   WSPRBandHopping.cpp MessageAggregator.cpp qt_helpers.cpp\
   MultiSettings.cpp PhaseEqualizationDialog.cpp IARURegions.cpp MessageBox.cpp \
   EqualizationToolsDialog.cpp \
@@ -103,7 +103,7 @@ HEADERS  += qt_helpers.hpp \
   EmulateSplitTransceiver.hpp DXLabSuiteCommanderTransceiver.hpp HamlibTransceiver.hpp \
   Configuration.hpp wsprnet.h signalmeter.h meterwidget.h \
   logbook/logbook.h logbook/countrydat.h logbook/countriesworked.h logbook/adif.h \
-  messageaveraging.h fastgraph.h fastplot.h Modes.hpp WSPRBandHopping.hpp \
+  messageaveraging.h Modes.hpp WSPRBandHopping.hpp \
   WsprTxScheduler.h MultiSettings.hpp PhaseEqualizationDialog.hpp \
   IARURegions.hpp MessageBox.hpp EqualizationToolsDialog.hpp \
     qorderedmap.h \
@@ -141,7 +141,6 @@ HEADERS += OmniRigTransceiver.hpp
 
 FORMS    += mainwindow.ui about.ui Configuration.ui widegraph.ui astro.ui \
     logqso.ui wf_palette_design_dialog.ui messageaveraging.ui \
-    fastgraph.ui \
     messagereplydialog.ui \
     messagewindow.ui
 

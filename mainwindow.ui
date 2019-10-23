@@ -2488,16 +2488,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                     </widget>
                    </item>
                    <item>
-                    <widget class="QCheckBox" name="cbFast9">
-                     <property name="toolTip">
-                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check to enable JT9 fast modes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                     </property>
-                     <property name="text">
-                      <string>Fast</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
                     <widget class="QCheckBox" name="cbAutoSeq">
                      <property name="toolTip">
                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check to enable automatic sequencing of Tx messages based on received messages.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -4653,7 +4643,6 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionWide_Waterfall"/>
     <addaction name="actionAstronomical_data"/>
     <addaction name="actionMessage_averaging"/>
-    <addaction name="actionFast_Graph"/>
     <addaction name="actionFox_Log"/>
     <addaction name="separator"/>
    </widget>
@@ -5272,14 +5261,6 @@ list. The list can be maintained in Settings (F2).</string>
     <string>ISCAT</string>
    </property>
   </action>
-  <action name="actionFast_Graph">
-   <property name="text">
-    <string>Fast Graph</string>
-   </property>
-   <property name="shortcut">
-    <string>F9</string>
-   </property>
-  </action>
   <action name="download_samples_action">
    <property name="enabled">
     <bool>false</bool>
@@ -5852,7 +5833,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>sbCQTxFreq</tabstop>
   <tabstop>cbCQTx</tabstop>
   <tabstop>cbShMsgs</tabstop>
-  <tabstop>cbFast9</tabstop>
   <tabstop>cbAutoSeq</tabstop>
   <tabstop>cbTx6</tabstop>
   <tabstop>pbTxMode</tabstop>

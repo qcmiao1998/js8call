@@ -227,8 +227,6 @@ set (wsjtx_CXXSRCS
   signalmeter.cpp
   plotter.cpp
   widegraph.cpp
-  fastgraph.cpp
-  fastplot.cpp
   about.cpp
   astro.cpp
   messageaveraging.cpp
@@ -526,7 +524,6 @@ set (wsjtx_UISRCS
   messagewindow.ui
   about.ui
   astro.ui
-  fastgraph.ui
   messageaveraging.ui
   widegraph.ui
   logqso.ui

@@ -75,7 +75,6 @@ class QSettings;
 class QLineEdit;
 class QFont;
 class QHostInfo;
-class FastGraph;
 class WideGraph;
 class LogQSO;
 class Transceiver;
@@ -120,7 +119,6 @@ public slots:
   void showSoundOutError(const QString& errorMsg);
   void showStatusMessage(const QString& statusMsg);
   void dataSink(qint64 frames);
-  void fastSink(qint64 frames);
   void diskDat();
   void freezeDecode(int n);
   void guiUpdate();
@@ -132,7 +130,6 @@ public slots:
   bool tryRestoreFreqOffset();
   void setFreq4(int rxFreq, int txFreq);
   void msgAvgDecode2();
-  void fastPick(int x0, int x1, int y);
 
   void playSoundFile(const QString &path);
   bool hasExistingMessageBufferToMe(int *pOffset);
@@ -420,13 +417,10 @@ private slots:
   void uploadResponse(QString response);
   void on_WSPRfreqSpinBox_valueChanged(int n);
   void on_pbTxNext_clicked(bool b);
-  void on_actionFast_Graph_triggered();
   void on_actionMeasure_reference_spectrum_triggered();
   void on_actionErase_reference_spectrum_triggered();
   void on_actionMeasure_phase_response_triggered();
-  void on_sbTR_valueChanged (int);
   void on_sbFtol_valueChanged (int);
-  void on_cbFast9_clicked(bool b);
   void on_sbCQTxFreq_valueChanged(int n);
   void on_cbCQTx_toggled(bool b);
   void splash_done (); 
@@ -487,7 +481,6 @@ private:
   QScopedPointer<EqualizationToolsDialog> m_equalizationToolsDialog;
 
   QScopedPointer<WideGraph> m_wideGraph;
-  QScopedPointer<FastGraph> m_fastGraph;
   QScopedPointer<LogQSO> m_logDlg;
   QScopedPointer<Astro> m_astroWidget;
   QScopedPointer<HelpTextWindow> m_shortcuts;
@@ -619,15 +612,11 @@ private:
   bool    m_rxDone;
   bool    m_bSimplex; // not using split even if it is available
   bool    m_bTransmittedEcho;
-  bool    m_bFastMode;
-  bool    m_bFast9;
-  bool    m_bFastDecodeCalled;
   bool    m_bDoubleClickAfterCQnnn;
   bool    m_bRefSpec;
   bool    m_bClearRefSpec;
   bool    m_bTrain;
   bool    m_bUseRef;
-  bool    m_bFastDone;
   bool    m_bAltV;
   bool    m_bNoMoreFiles;
   bool    m_bQRAsyncWarned;
@@ -1017,7 +1006,6 @@ private:
   void setRig (Frequency = 0);  // zero frequency means no change
   void WSPR_history(Frequency dialFreq, int ndecodes);
   QString WSPR_hhmm(int n);
-  void fast_config(bool b);
   void CQTxFreq();
   QString save_wave_file (QString const& name
                           , short const * data

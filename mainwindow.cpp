@@ -41,8 +41,6 @@
 #include "Modulator.hpp"
 #include "Detector.hpp"
 #include "plotter.h"
-#include "fastplot.h"
-#include "fastgraph.h"
 #include "about.h"
 #include "messageaveraging.h"
 #include "widegraph.h"
@@ -282,7 +280,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_rigErrorMessageBox {MessageBox::Critical, tr ("Rig Control Error")
       , MessageBox::Cancel | MessageBox::Ok | MessageBox::Retry},
   m_wideGraph (new WideGraph(m_settings)),
-  m_fastGraph (new FastGraph(m_settings)),
   // no parent so that it has a taskbar icon
   m_logDlg (new LogQSO (program_title (), m_settings, &m_config, nullptr)),
   m_lastDialFreq {0},
@@ -349,7 +346,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_rxDone {false},
   m_bSimplex {false},
   m_bTransmittedEcho {false},
-  m_bFastDecodeCalled {false},
   m_bDoubleClickAfterCQnnn {false},
   m_bRefSpec {false},
   m_bClearRefSpec {false},
@@ -536,10 +532,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(m_wideGraph.data (), SIGNAL(f11f12(int)),this,SLOT(bumpFqso(int)));
   connect(m_wideGraph.data (), SIGNAL(setXIT2(int)),this,SLOT(setXIT(int)));
 
-  connect (m_fastGraph.data (), &FastGraph::fastPick, this, &MainWindow::fastPick);
-
   connect (this, &MainWindow::finished, m_wideGraph.data (), &WideGraph::close);
-  connect (this, &MainWindow::finished, m_fastGraph.data (), &FastGraph::close);
 
   // setup the log QSO dialog
   connect (m_logDlg.data (), &LogQSO::acceptQSO, this, &MainWindow::acceptQSO);
@@ -950,8 +943,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   on_actionWide_Waterfall_triggered();
   ui->cbShMsgs->setChecked(m_bShMsgs);
   ui->cbSWL->setChecked(m_bSWL);
-  if(m_bFast9) m_bFastMode=true;
-  ui->cbFast9->setChecked(m_bFast9 or m_bFastMode);
 
   if(true || m_mode=="FT8") on_actionJS8_triggered();
 
@@ -978,7 +969,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   m_UTCdisk=-1;
   m_fCPUmskrtd=0.0;
-  m_bFastDone=false;
   m_bAltV=false;
   m_bNoMoreFiles=false;
   m_bVHFwarned=false;
@@ -1004,7 +994,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   statusChanged();
 
-  m_fastGraph->setMode(m_mode);
   m_wideGraph->setMode(m_mode);
   m_wideGraph->setModeTx(m_modeTx);
 
@@ -2207,8 +2196,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("UploadSpots",m_uploadSpots);
   m_settings->setValue ("BandHopping", ui->band_hopping_group_box->isChecked ());
   m_settings->setValue ("TRPeriod", ui->sbTR->value ());
-  m_settings->setValue("FastMode",m_bFastMode);
-  m_settings->setValue("Fast9",m_bFast9);
   m_settings->setValue ("CQTxfreq", ui->sbCQTxFreq->value ());
   m_settings->setValue("pwrBandTxMemory",m_pwrBandTxMemory);
   m_settings->setValue("pwrBandTuneMemory",m_pwrBandTuneMemory);
@@ -2357,8 +2344,6 @@ void MainWindow::readSettings()
   ui->cbVHFcontest->setChecked (m_settings->value ("VHFcontest", false).toBool());
   m_bShMsgs=m_settings->value("ShMsgs",false).toBool();
   m_bSWL=m_settings->value("SWL",false).toBool();
-  m_bFast9=m_settings->value("Fast9",false).toBool();
-  m_bFastMode=m_settings->value("FastMode",false).toBool();
   ui->sbTR->setValue (m_settings->value ("TRPeriod", 30).toInt());
   m_lastMonitoredFrequency = m_settings->value ("DialFreq",
     QVariant::fromValue<Frequency> (default_frequency)).value<Frequency> ();
@@ -2542,7 +2527,6 @@ void MainWindow::dataSink(qint64 frames)
     dec_data.params.nfb=m_wideGraph->Fmax();
 
     int nsps=m_nsps;
-    if(m_bFastMode) nsps=6912;
     int nsmo=m_wideGraph->smoothYellow()-1;
     symspec_(&dec_data,&k,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&m_ihsym,&m_npts8,&m_pxmax);
 
@@ -2704,11 +2688,6 @@ QString MainWindow::save_wave_file (QString const& name, short const * data, int
       return file_name + ": " + wav.errorString ();
     }
   return QString {};
-}
-
-//-------------------------------------------------------------- fastSink()
-void MainWindow::fastSink(qint64 frames)
-{
 }
 
 void MainWindow::showSoundInError(const QString& errorMsg)
@@ -3065,7 +3044,9 @@ void MainWindow::openSettings(int tab){
         if(b) VHF_features_enabled(b);
 
         m_config.transceiver_online ();
-        if(!m_bFastMode) setXIT (ui->TxFreqSpinBox->value ());
+
+        setXIT (ui->TxFreqSpinBox->value ());
+
         if(m_config.single_decode() or m_mode=="JT4") {
             ui->label_6->setText("Single-Period Decodes");
             ui->label_7->setText("Average Decodes");
@@ -3562,11 +3543,6 @@ void MainWindow::on_actionWide_Waterfall_triggered()      //Display Waterfalls
   m_wideGraph->show();
 }
 
-void MainWindow::on_actionFast_Graph_triggered()
-{
-  m_fastGraph->show();
-}
-
 void MainWindow::on_actionSolve_FreqCal_triggered()
 {
   QString dpath{QDir::toNativeSeparators(m_config.writeable_data_dir().absolutePath()+"/")};
@@ -3950,9 +3926,6 @@ void MainWindow::decode(int submode, int period)                                
   m_msec0=DriftingDateTime::currentMSecsSinceEpoch();
   if(!m_dataAvailable or m_TRperiod==0) return;
   ui->DecodeButton->setChecked (true);
-  if(!dec_data.params.nagain && m_diskData && !m_bFastMode && m_mode!="FT8") {
-    dec_data.params.nutc=dec_data.params.nutc/100;
-  }
   if(dec_data.params.nagain==0 && dec_data.params.newdat==1 && (!m_diskData)) {
     qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
     int imin=ms/60000;
@@ -3960,7 +3933,7 @@ void MainWindow::decode(int submode, int period)                                
     imin=imin % 60;
     if(m_TRperiod>=60) imin=imin - (imin % (m_TRperiod/60));
     dec_data.params.nutc=100*ihr + imin;
-    if(m_mode=="ISCAT" or m_mode=="MSK144" or m_bFast9 or m_mode=="FT8") {
+    if(m_mode=="FT8") {
       QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(2-m_TRperiod);
       ihr=t.toString("hh").toInt();
       imin=t.toString("mm").toInt();
@@ -4823,7 +4796,7 @@ void MainWindow::guiUpdate()
 
   if(m_mode=="FT8") icw[0]=0;                                   //No CW ID in FT8 mode
 
-  if((icw[0]>0) and (!m_bFast9)) tx2 += icw[0]*2560.0/48000.0;  //Full length including CW ID
+  if((icw[0]>0)) tx2 += icw[0]*2560.0/48000.0;  //Full length including CW ID
   if(tx2>m_TRperiod) tx2=m_TRperiod;
 
   qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
@@ -5052,10 +5025,6 @@ void MainWindow::guiUpdate()
     }
     if(m_restart) {
       write_transmit_entry ("ALL.TXT");
-      if (m_config.TX_messages ()) {
-        ui->decodedTextBrowser2->displayTransmittedText(m_currentMessage,m_modeTx,
-                     ui->TxFreqSpinBox->value(),m_config.color_rx_background(),m_bFastMode);
-        }
     }
 
     auto t2 = DriftingDateTime::currentDateTimeUtc ().toString ("hhmm");
@@ -6854,7 +6823,6 @@ void MainWindow::displayWidgets(qint64 n)
       ui->cbCQTx->setEnabled (b && (!is_compound || shortList (m_config.my_callsign ())));
     }
     if(i==7) ui->cbShMsgs->setVisible(b);
-    if(i==8) ui->cbFast9->setVisible(b);
     if(i==9) ui->cbAutoSeq->setVisible(b);
     if(i==10) ui->cbTx6->setVisible(b);
     if(i==11) ui->pbTxMode->setVisible(b);
@@ -6996,8 +6964,6 @@ void MainWindow::on_actionJS8_triggered()
 
   m_wideGraph->setSubMode(m_nSubMode);
   bool bVHF=m_config.enable_VHF_features();
-  m_bFast9=false;
-  m_bFastMode=false;
   WSPR_config(false);
   switch_mode (Modes::JS8);
   m_modeTx="FT8";
@@ -7025,7 +6991,6 @@ void MainWindow::on_actionJS8_triggered()
   else if(m_nSubMode == Varicode::JS8CallUltra){
     m_TRperiod = JS8D_TX_SECONDS;
   }
-  m_fastGraph->hide();
   m_wideGraph->show();
   ui->decodedTextLabel2->setText("  UTC   dB   DT Freq    Message");
   m_wideGraph->setPeriod(m_TRperiod,m_nsps);
@@ -7064,7 +7029,6 @@ void MainWindow::on_actionJS8_triggered()
 
 void MainWindow::switch_mode (Mode mode)
 {
-  m_fastGraph->setMode(m_mode);
   m_config.frequencies ()->filter (m_config.region (), mode);
 
 #if 0
@@ -7126,20 +7090,6 @@ void MainWindow::WSPR_config(bool b)
     m_bSimplex = false;
   }
   enable_DXCC_entity (m_config.DXCC ());  // sets text window proportions and (re)inits the logbook
-}
-
-void MainWindow::fast_config(bool b)
-{
-  m_bFastMode=b;
-  ui->TxFreqSpinBox->setEnabled(!b);
-  ui->sbTR->setVisible(b);
-  if(b and (m_bFast9 or m_mode=="MSK144" or m_mode=="ISCAT")) {
-    m_wideGraph->hide();
-    m_fastGraph->show();
-  } else {
-    m_wideGraph->show();
-    m_fastGraph->hide();
-  }
 }
 
 void MainWindow::on_TxFreqSpinBox_valueChanged(int n)
@@ -9221,7 +9171,7 @@ void MainWindow::transmitDisplay (bool transmitting)
         ui->TxFreqSpinBox->setEnabled (true);
 //###
       } else {
-        ui->TxFreqSpinBox->setEnabled (QSY_allowed and !m_bFastMode);
+        ui->TxFreqSpinBox->setEnabled (QSY_allowed);
         ui->pbR2T->setEnabled (QSY_allowed);
         ui->cbHoldTxFreq->setEnabled (QSY_allowed);
       }
@@ -9265,26 +9215,6 @@ void::MainWindow::VHF_features_enabled(bool b)
   }
 }
 
-void MainWindow::on_sbTR_valueChanged(int value)
-{
-//  if(!m_bFastMode and n>m_nSubMode) m_MinW=m_nSubMode;
-  if(m_bFastMode or m_mode=="FreqCal") {
-    m_TRperiod = value;
-    m_fastGraph->setTRPeriod (value);
-    m_modulator->setTRPeriod (value); // TODO - not thread safe
-    m_detector->setTRPeriod (value);  // TODO - not thread safe
-    m_wideGraph->setPeriod (value, m_nsps);
-    progressBar.setMaximum (value);
-  }
-  if(m_monitoring) {
-    on_stopButton_clicked();
-    on_monitorButton_clicked(true);
-  }
-  if(m_transmitting) {
-    on_stopTxButton_clicked();
-  }
-}
-
 QChar MainWindow::current_submode () const
 {
   QChar submode {0};
@@ -9309,45 +9239,8 @@ void MainWindow::on_sbSubmode_valueChanged(int n)
     {
       mode_label.setText (m_mode);
     }
-  if(m_mode=="ISCAT") {
-    if(m_nSubMode==0) ui->TxFreqSpinBox->setValue(1012);
-    if(m_nSubMode==1) ui->TxFreqSpinBox->setValue(560);
-  }
-  if(m_mode=="JT9") {
-    if(m_nSubMode<4) {
-      ui->cbFast9->setChecked(false);
-      on_cbFast9_clicked(false);
-      ui->cbFast9->setEnabled(false);
-      ui->sbTR->setVisible(false);
-      m_TRperiod=60;
-    } else {
-      ui->cbFast9->setEnabled(true);
-    }
-    ui->sbTR->setVisible(m_bFast9);
-    if(m_bFast9) ui->TxFreqSpinBox->setValue(700);
-  }
-  if(m_transmitting and m_bFast9 and m_nSubMode>=4) transmit (99.0);
   statusUpdate ();
 }
-
-void MainWindow::on_cbFast9_clicked(bool b)
-{
-  if(m_mode=="JT9") {
-    m_bFast9=b;
-//    ui->cbAutoSeq->setVisible(b);
-  }
-
-  if(b) {
-    m_TRperiod = ui->sbTR->value ();
-  } else {
-    m_TRperiod=60;
-  }
-  progressBar.setMaximum(m_TRperiod);
-  m_wideGraph->setPeriod(m_TRperiod,m_nsps);
-  fast_config(b);
-  statusChanged ();
-}
-
 
 void MainWindow::on_cbShMsgs_toggled(bool b)
 {
@@ -12647,24 +12540,6 @@ void MainWindow::setRig (Frequency f)
     }
 }
 
-void MainWindow::fastPick(int x0, int x1, int y)
-{
-  float pixPerSecond=12000.0/512.0;
-  if(m_TRperiod<30) pixPerSecond=12000.0/256.0;
-  if(m_mode!="ISCAT" and m_mode!="MSK144") return;
-  if(!m_decoderBusy) {
-    dec_data.params.newdat=0;
-    dec_data.params.nagain=1;
-    m_blankLine=false;                 // don't insert the separator again
-    m_nPick=1;
-    if(y > 120) m_nPick=2;
-    m_t0Pick=x0/pixPerSecond;
-    m_t1Pick=x1/pixPerSecond;
-    m_dataAvailable=true;
-    decode();
-  }
-}
-
 void MainWindow::on_actionMeasure_reference_spectrum_triggered()
 {
   if(!m_monitoring) on_monitorButton_clicked (true);
@@ -12719,19 +12594,6 @@ void MainWindow::on_cbCQTx_toggled(bool b)
 
 void MainWindow::statusUpdate () const
 {
-#if 0
-  if (!ui) return;
-  auto submode = current_submode ();
-
-  m_messageClient->status_update (m_freqNominal, m_mode, m_hisCall,
-                                  QString::number (ui->rptSpinBox->value ()),
-                                  m_modeTx, ui->autoButton->isChecked (),
-                                  m_transmitting, m_decoderBusy,
-                                  ui->RxFreqSpinBox->value (), ui->TxFreqSpinBox->value (),
-                                  m_config.my_callsign (), m_config.my_grid (),
-                                  m_hisGrid, m_tx_watchdog,
-                                  submode != QChar::Null ? QString {submode} : QString {}, m_bFastMode);
-#endif
 }
 
 void MainWindow::childEvent (QChildEvent * e)
