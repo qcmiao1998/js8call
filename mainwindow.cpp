@@ -6321,13 +6321,19 @@ bool MainWindow::prepareNextMessageFrame()
 
   // typeahead
   if(ui->extFreeTextMsgEdit->isDirty() && !ui->extFreeTextMsgEdit->isEmpty()){
-      auto sent = ui->extFreeTextMsgEdit->sentText();
-      auto unsent = ui->extFreeTextMsgEdit->unsentText();
-      qDebug() << "text dirty for typeahead\n" << sent << "\n" << unsent;
-      m_txFrameQueue.clear();
-      m_txFrameCount = 0;
-      auto newText = appendMessage(unsent);
-      qDebug () << "unsent replaced to" << "\n" << newText;
+      // block edit events while computing next frame
+      QString newText;
+      ui->extFreeTextMsgEdit->setReadOnly(true);
+      {
+          auto sent = ui->extFreeTextMsgEdit->sentText();
+          auto unsent = ui->extFreeTextMsgEdit->unsentText();
+          qDebug() << "text dirty for typeahead\n" << sent << "\n" << unsent;
+          m_txFrameQueue.clear();
+          m_txFrameCount = 0;
+          newText = appendMessage(unsent);
+          qDebug () << "unsent replaced to" << "\n" << newText;
+      }
+      ui->extFreeTextMsgEdit->setReadOnly(false);
       ui->extFreeTextMsgEdit->replaceUnsentText(newText);
       ui->extFreeTextMsgEdit->setClean();
   }
