@@ -108,7 +108,6 @@ void TransmitTextEdit::setCharsSent(int n){
     m_sent = n;
 
     // highlight the sent text
-    //highlightCharsSent();
     highlight();
 }
 
@@ -184,7 +183,7 @@ bool TransmitTextEdit::cursorShouldBeProtected(QTextCursor c){
     //qDebug() << "selection" << start << end << m_sent;
 
     if(m_sent && start <= m_sent){
-        //qDebug() << "selection in protected zone" << start << "<=" << m_sent;
+        qDebug() << "cursor in protected zone" << start << "<=" << m_sent;
         return true;
     } else {
         return false;
@@ -273,10 +272,54 @@ void TransmitTextEdit::highlight(){
     highlightCharsSent();
 }
 
+QTextCursor::MoveOperation deleteKeyEventToMoveOperation(QKeyEvent *e){
+    QTextCursor::MoveOperation op = QTextCursor::NoMove;
+
+#if 0
+    if (e == QKeySequence::Delete) {
+            op = QTextCursor::PreviousCharacter;
+    }
+    else
+#endif
+    if (e == QKeySequence::DeleteStartOfWord) {
+            op = QTextCursor::StartOfWord;
+    }
+    else if (e == QKeySequence::DeleteEndOfWord) {
+            op = QTextCursor::EndOfWord;
+    }
+    else if (e == QKeySequence::DeleteCompleteLine) {
+            op = QTextCursor::StartOfLine;
+    }
+    else if (e == QKeySequence::DeleteEndOfLine) {
+            op = QTextCursor::EndOfLine;
+    }
+
+    return op;
+}
+
+bool isDeleteKeyEvent(QKeyEvent *e){
+    return deleteKeyEventToMoveOperation(e) != QTextCursor::NoMove;
+}
+
 QTextCursor::MoveOperation movementKeyEventToMoveOperation(QKeyEvent *e){
     QTextCursor::MoveOperation op = QTextCursor::NoMove;
 
-    if (e == QKeySequence::MoveToNextChar) {
+    if (e == QKeySequence::Delete) {
+            op = QTextCursor::PreviousCharacter;
+    }
+    else if (e == QKeySequence::DeleteStartOfWord) {
+            op = QTextCursor::StartOfWord;
+    }
+    else if (e == QKeySequence::DeleteEndOfWord) {
+            op = QTextCursor::EndOfWord;
+    }
+    else if (e == QKeySequence::DeleteCompleteLine) {
+            op = QTextCursor::StartOfLine;
+    }
+    else if (e == QKeySequence::DeleteEndOfLine) {
+            op = QTextCursor::EndOfLine;
+    }
+    else if (e == QKeySequence::MoveToNextChar) {
             op = QTextCursor::Right;
     }
     else if (e == QKeySequence::MoveToPreviousChar) {
@@ -373,12 +416,34 @@ bool TransmitTextEdit::eventFilter(QObject */*o*/, QEvent *e){
     auto c = textCursor();
 
     auto c2 = QTextCursor(c);
-    c2.movePosition(movementKeyEventToMoveOperation(k));
+
+    auto op = movementKeyEventToMoveOperation(k);
+    c2.movePosition(op);
 
     bool shouldBeProtected = cursorShouldBeProtected(c2);
 
+    // -1. if this is a delete event (like Ctrl+Backspace) and it should be protected, force protection
+    if(isDeleteKeyEvent(k)){
+        // if we technically shouldn't be protected...check to see if the previous character is a space
+        // if it is, let's try the move operation from before the space, since the space can cause
+        // word coallescing in the qtextdocument making the operation not actually move the cursor
+        if(!shouldBeProtected){
+            auto c3 = QTextCursor(c);
+            c3.movePosition(QTextCursor::PreviousCharacter);
+            if(c.document()->characterAt(qMin(c3.selectionStart(), c3.selectionEnd())).isSpace()){
+                c3.movePosition(op);
+                shouldBeProtected = cursorShouldBeProtected(c3);
+            }
+        }
+
+        if(shouldBeProtected){
+            k->ignore();
+            return true;
+        }
+    }
+
     // 0. only filter when in a protected range
-    // 0a. but only if we're not moving/deleting _into_ the protected range :/
+    // 0b. but only if we're not moving/deleting _into_ the protected range :/
     if(!isProtected() && !shouldBeProtected){
         return false;
     }

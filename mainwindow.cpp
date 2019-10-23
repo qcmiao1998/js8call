@@ -1838,7 +1838,7 @@ void MainWindow::initializeDummyData(){
     c.setCharFormat(f);
 #endif
 
-    ui->extFreeTextMsgEdit->setPlainText("HELLO BRAVE NEW WORLD");
+    ui->extFreeTextMsgEdit->setPlainText("HELLOBRAVE NEW WORLD");
     ui->extFreeTextMsgEdit->setCharsSent(6);
 
     logHeardGraph("KN4CRD", "OH8STN");
