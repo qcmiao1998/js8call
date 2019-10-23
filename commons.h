@@ -123,13 +123,6 @@ extern struct {
 } spectra_;
 
 extern struct {
-  int   nclearave;
-  int   nsum;
-  float blue[4096];
-  float red[4096];
-} echocom_;
-
-extern struct {
   float wave[606720];
   int   nslots;
   int   nfreq;

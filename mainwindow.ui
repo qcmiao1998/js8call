@@ -4653,7 +4653,6 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionWide_Waterfall"/>
     <addaction name="actionAstronomical_data"/>
     <addaction name="actionMessage_averaging"/>
-    <addaction name="actionEcho_Graph"/>
     <addaction name="actionFast_Graph"/>
     <addaction name="actionFox_Log"/>
     <addaction name="separator"/>
@@ -4725,7 +4724,6 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionWSPR"/>
     <addaction name="actionWSPR_LF"/>
     <addaction name="separator"/>
-    <addaction name="actionEcho"/>
     <addaction name="separator"/>
     <addaction name="actionFreqCal"/>
    </widget>
@@ -5264,25 +5262,6 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>WSPR</string>
-   </property>
-  </action>
-  <action name="actionEcho_Graph">
-   <property name="text">
-    <string>Echo Graph</string>
-   </property>
-   <property name="shortcut">
-    <string>F8</string>
-   </property>
-  </action>
-  <action name="actionEcho">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Echo</string>
-   </property>
-   <property name="toolTip">
-    <string>EME Echo mode</string>
    </property>
   </action>
   <action name="actionISCAT">

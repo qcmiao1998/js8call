@@ -75,7 +75,6 @@ class QSettings;
 class QLineEdit;
 class QFont;
 class QHostInfo;
-class EchoGraph;
 class FastGraph;
 class WideGraph;
 class LogQSO;
@@ -421,7 +420,6 @@ private slots:
   void uploadResponse(QString response);
   void on_WSPRfreqSpinBox_valueChanged(int n);
   void on_pbTxNext_clicked(bool b);
-  void on_actionEcho_Graph_triggered();
   void on_actionFast_Graph_triggered();
   void on_actionMeasure_reference_spectrum_triggered();
   void on_actionErase_reference_spectrum_triggered();
@@ -489,7 +487,6 @@ private:
   QScopedPointer<EqualizationToolsDialog> m_equalizationToolsDialog;
 
   QScopedPointer<WideGraph> m_wideGraph;
-  QScopedPointer<EchoGraph> m_echoGraph;
   QScopedPointer<FastGraph> m_fastGraph;
   QScopedPointer<LogQSO> m_logDlg;
   QScopedPointer<Astro> m_astroWidget;
@@ -621,9 +618,7 @@ private:
   bool    m_bTxTime;
   bool    m_rxDone;
   bool    m_bSimplex; // not using split even if it is available
-  bool    m_bEchoTxOK;
   bool    m_bTransmittedEcho;
-  bool    m_bEchoTxed;
   bool    m_bFastMode;
   bool    m_bFast9;
   bool    m_bFastDecodeCalled;

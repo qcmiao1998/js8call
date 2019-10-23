@@ -227,8 +227,6 @@ set (wsjtx_CXXSRCS
   signalmeter.cpp
   plotter.cpp
   widegraph.cpp
-  echograph.cpp
-  echoplot.cpp
   fastgraph.cpp
   fastplot.cpp
   about.cpp
@@ -317,7 +315,6 @@ set (wsjt_FSRCS
   lib/astro.f90
   lib/astrosub.f90
   lib/astro0.f90
-  lib/avecho.f90
   lib/averms.f90
   lib/azdist.f90
   lib/badmsg.f90
@@ -529,7 +526,6 @@ set (wsjtx_UISRCS
   messagewindow.ui
   about.ui
   astro.ui
-  echograph.ui
   fastgraph.ui
   messageaveraging.ui
   widegraph.ui

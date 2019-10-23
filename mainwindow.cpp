@@ -41,8 +41,6 @@
 #include "Modulator.hpp"
 #include "Detector.hpp"
 #include "plotter.h"
-#include "echoplot.h"
-#include "echograph.h"
 #include "fastplot.h"
 #include "fastgraph.h"
 #include "about.h"
@@ -106,10 +104,6 @@ extern "C" {
   void wspr_downsample_(short int d2[], int* k);
 
   int savec2_(char* fname, int* TR_seconds, double* dial_freq, fortran_charlen_t);
-
-  void avecho_( short id2[], int* dop, int* nfrit, int* nqual, float* f1,
-                float* level, float* sigdb, float* snr, float* dfreq,
-                float* width);
 
   void degrade_snr_(short d2[], int* n, float* db, float* bandwidth);
 
@@ -288,7 +282,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_rigErrorMessageBox {MessageBox::Critical, tr ("Rig Control Error")
       , MessageBox::Cancel | MessageBox::Ok | MessageBox::Retry},
   m_wideGraph (new WideGraph(m_settings)),
-  m_echoGraph (new EchoGraph(m_settings)),
   m_fastGraph (new FastGraph(m_settings)),
   // no parent so that it has a taskbar icon
   m_logDlg (new LogQSO (program_title (), m_settings, &m_config, nullptr)),
@@ -355,9 +348,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_bTxTime {false},
   m_rxDone {false},
   m_bSimplex {false},
-  m_bEchoTxOK {false},
   m_bTransmittedEcho {false},
-  m_bEchoTxed {false},
   m_bFastDecodeCalled {false},
   m_bDoubleClickAfterCQnnn {false},
   m_bRefSpec {false},
@@ -548,7 +539,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (m_fastGraph.data (), &FastGraph::fastPick, this, &MainWindow::fastPick);
 
   connect (this, &MainWindow::finished, m_wideGraph.data (), &WideGraph::close);
-  connect (this, &MainWindow::finished, m_echoGraph.data (), &EchoGraph::close);
   connect (this, &MainWindow::finished, m_fastGraph.data (), &FastGraph::close);
 
   // setup the log QSO dialog
@@ -578,7 +568,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->actionJT4->setActionGroup(modeGroup);
   ui->actionWSPR->setActionGroup(modeGroup);
   ui->actionWSPR_LF->setActionGroup(modeGroup);
-  ui->actionEcho->setActionGroup(modeGroup);
   ui->actionISCAT->setActionGroup(modeGroup);
   ui->actionMSK144->setActionGroup(modeGroup);
   ui->actionQRA64->setActionGroup(modeGroup);
@@ -3171,11 +3160,6 @@ void MainWindow::on_autoButton_clicked (bool checked)
   }
   if (!checked) m_bCallingCQ = false;
   statusUpdate ();
-  m_bEchoTxOK=false;
-  if(m_auto and (m_mode=="Echo")) {
-    m_nclearave=1;
-    echocom_.nsum=0;
-  }
   if(m_mode.startsWith ("WSPR"))  {
     QPalette palette {ui->sbTxPercent->palette ()};
     if(m_auto or m_pctx==0) {
@@ -3576,11 +3560,6 @@ void MainWindow::on_actionLocal_User_Guide_triggered()
 void MainWindow::on_actionWide_Waterfall_triggered()      //Display Waterfalls
 {
   m_wideGraph->show();
-}
-
-void MainWindow::on_actionEcho_Graph_triggered()
-{
-  m_echoGraph->show();
 }
 
 void MainWindow::on_actionFast_Graph_triggered()
@@ -6893,9 +6872,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==19) ui->actionDeepestDecode->setEnabled(b);
     if(i==20) ui->actionInclude_averaging->setVisible (b);
     if(i==21) ui->actionInclude_correlation->setVisible (b);
-    if(i==22) {
-      if(!b && m_echoGraph->isVisible())  m_echoGraph->hide();
-    }
     if(i==23) ui->cbSWL->setVisible(b);
     //if(i==24) ui->actionEnable_AP_FT8->setVisible (b);
     //if(i==25) ui->actionEnable_AP_JT65->setVisible (b);
