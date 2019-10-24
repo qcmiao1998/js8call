@@ -123,7 +123,6 @@ public slots:
   void freezeDecode(int n);
   void guiUpdate();
   void readFromStdout();
-  void p1ReadFromStdout();
   void setXIT(int n, Frequency base = 0u);
   void qsy(int hzDelta);
   void setFreqOffsetForRestore(int freq, bool shouldRestore);
@@ -285,7 +284,6 @@ private slots:
   void on_actionErase_js8call_log_adi_triggered();
   void startTx();
   void startTx2();
-  void startP1();
   void stopTx();
   void stopTx2();
   void on_pbCallCQ_clicked();
@@ -410,9 +408,6 @@ private slots:
   void on_syncSpinBox_valueChanged(int n);
   void on_TxPowerComboBox_currentIndexChanged(const QString &arg1);
   void on_sbTxPercent_valueChanged(int n);
-  void on_cbUploadWSPR_Spots_toggled(bool b);
-  void WSPR_config(bool b);
-  void uploadSpots();
   void TxAgain();
   void uploadResponse(QString response);
   void on_WSPRfreqSpinBox_valueChanged(int n);
@@ -603,14 +598,12 @@ private:
   QString m_lastMessageSent;
   bool    m_bShMsgs;
   bool    m_bSWL;
-  bool    m_uploadSpots;
   bool    m_uploading;
   bool    m_txNext;
   bool    m_grid6;
   bool    m_tuneup;
   bool    m_bTxTime;
   bool    m_rxDone;
-  bool    m_bSimplex; // not using split even if it is available
   bool    m_bTransmittedEcho;
   bool    m_bDoubleClickAfterCQnnn;
   bool    m_bRefSpec;
@@ -670,10 +663,6 @@ private:
   QFutureWatcher<QString> m_saveWAVWatcher;
 
   QProcess proc_js8;
-  QProcess p1;
-  QProcess p3;
-
-  WSPRNet *wsprNet;
 
   QTimer m_guiTimer;
   QTimer ptt1Timer;                 //StartTx delay
@@ -705,7 +694,6 @@ private:
   QString m_qsoStart;
   QString m_qsoStop;
   QString m_cmnd;
-  QString m_cmndP1;
   QString m_msgSent0;
   QString m_fileToSave;
   QString m_calls;
@@ -955,7 +943,6 @@ private:
   void displayDialFrequency ();
   void transmitDisplay (bool);
   void locationChange(QString const& location);
-  void replayDecodes ();
   void postDecode (bool is_new, QString const& message);
   void displayTransmit();
   void updateModeButtonText();
@@ -998,7 +985,6 @@ private:
   void displayActivity(bool force=false);
   void displayBandActivity();
   void displayCallActivity();
-  void postWSPRDecode (bool is_new, QStringList message_parts);
   void enable_DXCC_entity (bool on);
   void switch_mode (Mode);
   void WSPR_scheduling ();

@@ -344,7 +344,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_tuneup {false},
   m_bTxTime {false},
   m_rxDone {false},
-  m_bSimplex {false},
   m_bTransmittedEcho {false},
   m_bDoubleClickAfterCQnnn {false},
   m_bRefSpec {false},
@@ -361,7 +360,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_onAirFreq0 {0.0},
   m_first_error {true},
   tx_status_label {"Receiving"},
-  wsprNet {new WSPRNet {&m_network_manager, this}},
   m_appDir {QApplication::applicationDirPath ()},
   m_palette {"Linrad"},
   m_mode {"FT8"},
@@ -653,25 +651,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
             subProcessFailed (&proc_js8, exitCode, status);
           });
 
-  connect(&p1, &QProcess::readyReadStandardOutput, this, &MainWindow::p1ReadFromStdout);
-  connect(&p1, static_cast<void (QProcess::*) (QProcess::ProcessError)> (&QProcess::error),
-          [this] (QProcess::ProcessError error) {
-            subProcessError (&p1, error);
-          });
-  connect(&p1, static_cast<void (QProcess::*) (int, QProcess::ExitStatus)> (&QProcess::finished),
-          [this] (int exitCode, QProcess::ExitStatus status) {
-            subProcessFailed (&p1, exitCode, status);
-          });
-
-  connect(&p3, static_cast<void (QProcess::*) (QProcess::ProcessError)> (&QProcess::error),
-          [this] (QProcess::ProcessError error) {
-            subProcessError (&p3, error);
-          });
-  connect(&p3, static_cast<void (QProcess::*) (int, QProcess::ExitStatus)> (&QProcess::finished),
-          [this] (int exitCode, QProcess::ExitStatus status) {
-            subProcessFailed (&p3, exitCode, status);
-          });
-
   // hook up save WAV file exit handling
   connect (&m_saveWAVWatcher, &QFutureWatcher<QString>::finished, [this] {
       // extract the promise from the future
@@ -791,9 +770,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ptt1Timer.setSingleShot(true);
   connect(&ptt1Timer, &QTimer::timeout, this, &MainWindow::startTx2);
 
-  p1Timer.setSingleShot(true);
-  connect(&p1Timer, &QTimer::timeout, this, &MainWindow::startP1);
-
   logQSOTimer.setSingleShot(true);
   connect(&logQSOTimer, &QTimer::timeout, this, &MainWindow::on_logQSOButton_clicked);
 
@@ -805,9 +781,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   killFileTimer.setSingleShot(true);
   connect(&killFileTimer, &QTimer::timeout, this, &MainWindow::killFile);
-
-  uploadTimer.setSingleShot(true);
-  connect(&uploadTimer, SIGNAL(timeout()), this, SLOT(uploadSpots()));
 
   TxAgainTimer.setSingleShot(true);
   connect(&TxAgainTimer, SIGNAL(timeout()), this, SLOT(TxAgain()));
@@ -958,7 +931,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_saveAll=ui->actionSave_all->isChecked();
   ui->sbTxPercent->setValue(m_pctx);
   ui->TxPowerComboBox->setCurrentIndex(int(0.3*(m_dBm + 30.0)+0.2));
-  ui->cbUploadWSPR_Spots->setChecked(m_uploadSpots);
   if((m_ndepth&7)==1) ui->actionQuickDecode->setChecked(true);
   if((m_ndepth&7)==2) ui->actionMediumDecode->setChecked(true);
   if((m_ndepth&7)==3) ui->actionDeepDecode->setChecked(true);
@@ -989,8 +961,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   fixStop();
   VHF_features_enabled(m_config.enable_VHF_features());
   m_wideGraph->setVHF(m_config.enable_VHF_features());
-
-  connect( wsprNet, SIGNAL(uploadStatus(QString)), this, SLOT(uploadResponse(QString)));
 
   statusChanged();
 
@@ -2193,7 +2163,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("PctTx",m_pctx);
   m_settings->setValue("dBm",m_dBm);
   m_settings->setValue ("WSPRPreferType1", ui->WSPR_prefer_type_1_check_box->isChecked ());
-  m_settings->setValue("UploadSpots",m_uploadSpots);
   m_settings->setValue ("BandHopping", ui->band_hopping_group_box->isChecked ());
   m_settings->setValue ("TRPeriod", ui->sbTR->value ());
   m_settings->setValue ("CQTxfreq", ui->sbCQTxFreq->value ());
@@ -2355,8 +2324,6 @@ void MainWindow::readSettings()
   m_pctx=m_settings->value("PctTx",20).toInt();
   m_dBm=m_settings->value("dBm",37).toInt();
   ui->WSPR_prefer_type_1_check_box->setChecked (m_settings->value ("WSPRPreferType1", true).toBool ());
-  m_uploadSpots=m_settings->value("UploadSpots",false).toBool();
-  if(!m_uploadSpots) ui->cbUploadWSPR_Spots->setStyleSheet("QCheckBox{background-color: yellow}");
   ui->band_hopping_group_box->setChecked (m_settings->value ("BandHopping", false).toBool());
   // setup initial value of tx attenuator
   m_block_pwr_tooltip = true;
@@ -2536,6 +2503,7 @@ void MainWindow::dataSink(qint64 frames)
     if(m_monitoring || m_diskData) {
       m_wideGraph->dataSink2(s,m_df3,m_ihsym,m_diskData);
     }
+
     if(m_mode=="MSK144") return;
 
     fixStop();
@@ -2568,7 +2536,7 @@ void MainWindow::dataSink(qint64 frames)
             qDebug() << "could decode turbo now" << n;
         }
 #endif
-#if 1
+#if 0
         qint32 hsymNormalStop = ((int(JS8A_TX_SECONDS/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
         qint32 hsymFastStop = ((int(JS8B_TX_SECONDS/0.288))/8)*8 - 1;   // 0.288 because 6912/12000/2 = 0.288
         qint32 hsymTurboStop = ((int(JS8C_TX_SECONDS/0.288))/8)*8 - 1;  // 0.288 because 6912/12000/2 = 0.288
@@ -2639,11 +2607,6 @@ void MainWindow::dataSink(qint64 frames)
     }
 
     m_rxDone=true;
-}
-
-void MainWindow::startP1()
-{
-  p1.start(m_cmndP1);
 }
 
 QString MainWindow::save_wave_file (QString const& name, short const * data, int seconds,
@@ -6970,7 +6933,7 @@ void MainWindow::on_actionJS8_triggered()
 
   m_wideGraph->setSubMode(m_nSubMode);
   bool bVHF=m_config.enable_VHF_features();
-  WSPR_config(false);
+  enable_DXCC_entity (m_config.DXCC ());
   switch_mode (Modes::JS8);
   m_modeTx="FT8";
   m_nsps=6912;
@@ -7068,34 +7031,6 @@ void MainWindow::switch_mode (Mode mode)
     ui->label_6->setVisible(false);
     ui->label_7->setVisible(false);
   }
-}
-
-void MainWindow::WSPR_config(bool b)
-{
-  ui->decodedTextBrowser2->setVisible(!b);
-  ui->decodedTextLabel2->setVisible(!b and ui->cbMenus->isChecked());
-  ui->controls_stack_widget->setCurrentIndex (b && m_mode != "Echo" ? 1 : 0);
-  //ui->QSO_controls_widget->setVisible (!b);
-  //ui->DX_controls_widget->setVisible (!b);
-  ui->WSPR_controls_widget->setVisible (b);
-  ui->label_6->setVisible(!b and ui->cbMenus->isChecked());
-  ui->label_7->setVisible(!b and ui->cbMenus->isChecked());
-  //ui->logQSOButton->setVisible(!b);
-  ui->DecodeButton->setEnabled(!b);
-  if(b and (m_mode!="Echo")) {
-    QString t="UTC    dB   DT     Freq     Drift  Call          Grid    dBm    ";
-    if(m_config.miles()) t += " mi";
-    if(!m_config.miles()) t += " km";
-    ui->decodedTextLabel->setText(t);
-    if (m_config.is_transceiver_online ()) {
-      Q_EMIT m_config.transceiver_tx_frequency (0); // turn off split
-    }
-    m_bSimplex = true;
-  } else {
-    ui->decodedTextLabel->setText("UTC   dB   DT Freq    Message");
-    m_bSimplex = false;
-  }
-  enable_DXCC_entity (m_config.DXCC ());  // sets text window proportions and (re)inits the logbook
 }
 
 void MainWindow::on_TxFreqSpinBox_valueChanged(int n)
@@ -8815,24 +8750,23 @@ void MainWindow::setXIT(int n, Frequency base)
     }
   if (!base) base = m_freqNominal;
   m_XIT = 0;
-  if (!m_bSimplex) {
-    // m_bSimplex is false, so we can use split mode if requested
-    if (m_config.split_mode () && (!m_config.enable_VHF_features () || m_mode == "FT8")) {
-      // Don't use XIT for VHF & up
-      m_XIT=(n/500)*500 - 1500;
+
+  if (m_config.split_mode () && (!m_config.enable_VHF_features () || m_mode == "FT8")) {
+    // Don't use XIT for VHF & up
+    m_XIT=(n/500)*500 - 1500;
+  }
+
+  if ((m_monitoring || m_transmitting)
+      && m_config.is_transceiver_online ()
+      && m_config.split_mode ())
+    {
+      // All conditions are met, reset the transceiver Tx dial
+      // frequency
+      m_freqTxNominal = base + m_XIT;
+      if (m_astroWidget) m_astroWidget->nominal_frequency (m_freqNominal, m_freqTxNominal);
+      Q_EMIT m_config.transceiver_tx_frequency (m_freqTxNominal + m_astroCorrection.tx);
     }
 
-    if ((m_monitoring || m_transmitting)
-        && m_config.is_transceiver_online ()
-        && m_config.split_mode ())
-      {
-        // All conditions are met, reset the transceiver Tx dial
-        // frequency
-        m_freqTxNominal = base + m_XIT;
-        if (m_astroWidget) m_astroWidget->nominal_frequency (m_freqNominal, m_freqTxNominal);
-        Q_EMIT m_config.transceiver_tx_frequency (m_freqTxNominal + m_astroCorrection.tx);
-      }
-  }
   //Now set the audio Tx freq
   Q_EMIT transmitFrequency (ui->TxFreqSpinBox->value () - m_XIT);
 }
@@ -9299,39 +9233,6 @@ void MainWindow::locationChange (QString const& location)
   } else {
     qDebug() << "locationChange: Invalid grid " << grid;
   }
-}
-
-void MainWindow::replayDecodes ()
-{
-  // we accept this request even if the setting to accept UDP requests
-  // is not checked
-
-  // attempt to parse the decoded text
-  Q_FOREACH (auto const& message
-             , ui->decodedTextBrowser->toPlainText ().split (QChar::LineFeed,
-                                                             QString::SkipEmptyParts))
-    {
-      if (message.size() >= 4 && message.left (4) != "----")
-        {
-          auto const& parts = message.split (' ', QString::SkipEmptyParts);
-          if (parts.size () >= 5 && parts[3].contains ('.')) // WSPR
-            {
-              postWSPRDecode (false, parts);
-            }
-          else
-            {
-              auto eom_pos = message.indexOf (' ', 35);
-              // we always want at least the characters to position 35
-              if (eom_pos < 35)
-                {
-                  eom_pos = message.size () - 1;
-                }
-              // TODO - how to skip ISCAT decodes
-              postDecode (false, message.left (eom_pos + 1));
-            }
-        }
-    }
-  statusChanged ();
 }
 
 void MainWindow::postDecode (bool is_new, QString const& message)
@@ -11883,21 +11784,6 @@ void MainWindow::displayCallActivity() {
     ui->tableWidgetCalls->setUpdatesEnabled(true);
 }
 
-void MainWindow::postWSPRDecode (bool is_new, QStringList parts)
-{
-#if 0
-    if (parts.size () < 8)
-    {
-      parts.insert (6, "");
-    }
-
-  m_messageClient->WSPR_decode (is_new, QTime::fromString (parts[0], "hhmm"), parts[1].toInt ()
-                                , parts[2].toFloat (), Radio::frequency (parts[3].toFloat (), 6)
-                                , parts[4].toInt (), parts[5], parts[6], parts[7].toInt ()
-                                , m_diskData);
-#endif
-}
-
 void MainWindow::emitPTT(bool on){
     qDebug() << "PTT:" << on;
 
@@ -12215,101 +12101,6 @@ void MainWindow::on_syncSpinBox_valueChanged(int n)
   m_minSync=n;
 }
 
-void MainWindow::p1ReadFromStdout()                        //p1readFromStdout
-{
-  QString t1;
-  while(p1.canReadLine()) {
-    QString t(p1.readLine());
-    if(t.indexOf("<DecodeFinished>") >= 0) {
-      m_bDecoded = m_nWSPRdecodes > 0;
-      if(!m_diskData) {
-        WSPR_history(m_dialFreqRxWSPR, m_nWSPRdecodes);
-        if(m_nWSPRdecodes==0 and ui->band_hopping_group_box->isChecked()) {
-          t = " Receiving " + m_mode + " ----------------------- " +
-              m_config.bands ()->find (m_dialFreqRxWSPR);
-          t=WSPR_hhmm(-60) + ' ' + t.rightJustified (66, '-');
-          ui->decodedTextBrowser->appendText(t);
-        }
-        killFileTimer.start (45*1000); //Kill in 45s (for slow modes)
-      }
-      m_nWSPRdecodes=0;
-      ui->DecodeButton->setChecked (false);
-      if(m_uploadSpots
-         && m_config.is_transceiver_online ()) { // need working rig control
-        float x=qrand()/((double)RAND_MAX + 1.0);
-        int msdelay=20000*x;
-        uploadTimer.start(msdelay);                         //Upload delay
-      } else {
-        QFile f(QDir::toNativeSeparators(m_config.writeable_data_dir ().absolutePath()) + "/wspr_spots.txt");
-        if(f.exists()) f.remove();
-      }
-      m_RxLog=0;
-      m_startAnother=m_loopall;
-      m_blankLine=true;
-      m_decoderBusy = false;
-      statusUpdate ();
-    } else {
-
-      int n=t.length();
-      t=t.mid(0,n-2) + "                                                  ";
-      t.remove(QRegExp("\\s+$"));
-      QStringList rxFields = t.split(QRegExp("\\s+"));
-      QString rxLine;
-      QString grid="";
-      if ( rxFields.count() == 8 ) {
-          rxLine = QString("%1 %2 %3 %4 %5   %6  %7  %8")
-                  .arg(rxFields.at(0), 4)
-                  .arg(rxFields.at(1), 4)
-                  .arg(rxFields.at(2), 5)
-                  .arg(rxFields.at(3), 11)
-                  .arg(rxFields.at(4), 4)
-                  .arg(rxFields.at(5).leftJustified (12))
-                  .arg(rxFields.at(6), -6)
-                  .arg(rxFields.at(7), 3);
-          postWSPRDecode (true, rxFields);
-          grid = rxFields.at(6);
-      } else if ( rxFields.count() == 7 ) { // Type 2 message
-          rxLine = QString("%1 %2 %3 %4 %5   %6  %7  %8")
-                  .arg(rxFields.at(0), 4)
-                  .arg(rxFields.at(1), 4)
-                  .arg(rxFields.at(2), 5)
-                  .arg(rxFields.at(3), 11)
-                  .arg(rxFields.at(4), 4)
-                  .arg(rxFields.at(5).leftJustified (12))
-                  .arg("", -6)
-                  .arg(rxFields.at(6), 3);
-          postWSPRDecode (true, rxFields);
-      } else {
-          rxLine = t;
-      }
-      if(grid!="") {
-        double utch=0.0;
-        int nAz,nEl,nDmiles,nDkm,nHotAz,nHotABetter;
-        azdist_(const_cast <char *> (m_config.my_grid ().toLatin1().constData()),
-                const_cast <char *> (grid.toLatin1().constData()),&utch,
-                &nAz,&nEl,&nDmiles,&nDkm,&nHotAz,&nHotABetter,6,6);
-        QString t1;
-        if(m_config.miles()) {
-          t1.sprintf("%7d",nDmiles);
-        } else {
-          t1.sprintf("%7d",nDkm);
-        }
-        rxLine += t1;
-      }
-
-      if (m_config.insert_blank () && m_blankLine) {
-        QString band;
-        Frequency f=1000000.0*rxFields.at(3).toDouble()+0.5;
-        band = ' ' + m_config.bands ()->find (f);
-        ui->decodedTextBrowser->appendText(band.rightJustified (71, '-'));
-        m_blankLine = false;
-      }
-      m_nWSPRdecodes += 1;
-      ui->decodedTextBrowser->appendText(rxLine);
-    }
-  }
-}
-
 QString MainWindow::WSPR_hhmm(int n)
 {
   QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(n);
@@ -12345,26 +12136,6 @@ void MainWindow::WSPR_history(Frequency dialFreq, int ndecodes)
   }
 }
 
-
-void MainWindow::uploadSpots()
-{
-  // do not spot replays or if rig control not working
-  if(m_diskData || !m_config.is_transceiver_online ()) return;
-  if(m_uploading) {
-    qDebug() << "Previous upload has not completed, spots were lost";
-    wsprNet->abortOutstandingRequests ();
-    m_uploading = false;
-  }
-  QString rfreq = QString("%1").arg(0.000001*(m_dialFreqRxWSPR + 1500), 0, 'f', 6);
-  QString tfreq = QString("%1").arg(0.000001*(m_dialFreqRxWSPR +
-                        ui->TxFreqSpinBox->value()), 0, 'f', 6);
-  wsprNet->upload(m_config.my_callsign(), m_config.my_grid(), rfreq, tfreq,
-                  m_mode, QString::number(ui->autoButton->isChecked() ? m_pctx : 0),
-                  QString::number(m_dBm), version(),
-                  QDir::toNativeSeparators(m_config.writeable_data_dir ().absolutePath()) + "/wspr_spots.txt");
-  m_uploading = true;
-}
-
 void MainWindow::uploadResponse(QString response)
 {
   if (response == "done") {
@@ -12395,14 +12166,6 @@ void MainWindow::on_sbTxPercent_valueChanged(int n)
   }
 }
 
-void MainWindow::on_cbUploadWSPR_Spots_toggled(bool b)
-{
-  m_uploadSpots=b;
-  if(m_uploadSpots) ui->cbUploadWSPR_Spots->setStyleSheet("");
-  if(!m_uploadSpots) ui->cbUploadWSPR_Spots->setStyleSheet(
-        "QCheckBox{background-color: yellow}");
-}
-
 void MainWindow::on_WSPRfreqSpinBox_valueChanged(int n)
 {
   ui->TxFreqSpinBox->setValue(n);
@@ -12411,51 +12174,6 @@ void MainWindow::on_WSPRfreqSpinBox_valueChanged(int n)
 void MainWindow::on_pbTxNext_clicked(bool b)
 {
   m_txNext=b;
-}
-
-void MainWindow::WSPR_scheduling ()
-{
-  m_WSPR_tx_next = false;
-  if (m_config.is_transceiver_online () // need working rig control for hopping
-      && !m_config.is_dummy_rig ()
-      && ui->band_hopping_group_box->isChecked ()) {
-    auto hop_data = m_WSPR_band_hopping.next_hop (m_auto);
-    qDebug () << "hop data: period:" << hop_data.period_name_
-              << "frequencies index:" << hop_data.frequencies_index_
-              << "tune:" << hop_data.tune_required_
-              << "tx:" << hop_data.tx_next_;
-    m_WSPR_tx_next = hop_data.tx_next_;
-    if (hop_data.frequencies_index_ >= 0) { // new band
-      ui->bandComboBox->setCurrentIndex (hop_data.frequencies_index_);
-      on_bandComboBox_activated (hop_data.frequencies_index_);
-      m_cmnd.clear ();
-      QStringList prefixes {".bat", ".cmd", ".exe", ""};
-      for (auto const& prefix : prefixes)
-        {
-          auto const& path = m_appDir + "/user_hardware" + prefix;
-          QFile f {path};
-          if (f.exists ()) {
-            m_cmnd = QDir::toNativeSeparators (f.fileName ()) + ' ' +
-              m_config.bands ()->find (m_freqNominal).remove ('m');
-          }
-        }
-      if(m_cmnd!="") p3.start(m_cmnd);     // Execute user's hardware controller
-
-      // Produce a short tuneup signal
-      m_tuneup = false;
-      if (hop_data.tune_required_) {
-        m_tuneup = true;
-        on_tuneButton_clicked (true);
-        tuneATU_Timer.start (2500);
-      }
-    }
-
-    // Display grayline status
-    band_hopping_label.setText (hop_data.period_name_);
-  }
-  else {
-    m_WSPR_tx_next = m_WSPR_band_hopping.next_is_tx ("WSPR-LF" == m_mode);
-  }
 }
 
 void MainWindow::astroUpdate ()
