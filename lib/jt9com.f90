@@ -18,6 +18,8 @@
      integer(c_int) :: nfsplit
      integer(c_int) :: nfb
      integer(c_int) :: ntol
+     integer(c_int) :: knum
+     integer(c_int) :: kpos
      integer(c_int) :: kin
      integer(c_int) :: nzhsym
      integer(c_int) :: nsubmode
@@ -52,6 +54,7 @@
      real(c_float) :: ss(184,NSMAX)
      real(c_float) :: savg(NSMAX)
      real(c_float) :: sred(5760)
+     integer(c_short) :: id1(NMAX)
      integer(c_short) :: id2(NMAX)
      type(params_block) :: params
   end type dec_data

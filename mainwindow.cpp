@@ -2496,9 +2496,9 @@ void MainWindow::dataSink(qint64 frames)
     int nsps=m_nsps;
     int nsmo=m_wideGraph->smoothYellow()-1;
     symspec_(&dec_data,&k,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&m_ihsym,&m_npts8,&m_pxmax);
-
-    if(m_mode=="WSPR") wspr_downsample_(dec_data.d2,&k);
+    qDebug() << "dataSink" << k << "ihsym" << m_ihsym;
     if(m_ihsym <=0) return;
+
     if(ui) ui->signal_meter_widget->setValue(m_px,m_pxmax); // Update thermometer
     if(m_monitoring || m_diskData) {
       m_wideGraph->dataSink2(s,m_df3,m_ihsym,m_diskData);
@@ -2519,27 +2519,43 @@ void MainWindow::dataSink(qint64 frames)
     int submode = m_nSubMode;
     int period = m_TRperiod;
     qint32 halfSymbolStop = m_hsymStop;
-    bool newDataReady = m_ihsym == m_hsymStop;
+    //bool newDataReady = m_ihsym == m_hsymStop;
+    bool newDataReady = m_ihsym % m_hsymStop == 0;
 
 #if 0
-    if(m_nSubMode == Varicode::JS8CallNormal)
+    static int lastn = 0;
+    int n = now.time().second();
+
+    if(!m_decoderBusy) // m_nSubMode == Varicode::JS8CallNormal)
     {
-        int n = now.time().second();
 #if 0
-        if(n % JS8A_TX_SECONDS == 0){
+        if(lastn != n && n % JS8A_TX_SECONDS == 0){
             qDebug() << "could decode normal now" << n;
+            period = JS8A_TX_SECONDS;
+            submode = Varicode::JS8CallNormal;
+            newDataReady = true;
+            m_hsymStop = m_ihsym;
         }
-        if(n % JS8B_TX_SECONDS == 0){
+        if(lastn != n && n % JS8B_TX_SECONDS == 0){
             qDebug() << "could decode fast now" << n;
+            period = JS8B_TX_SECONDS;
+            submode = Varicode::JS8CallFast;
+            newDataReady = true;
+            m_hsymStop = m_ihsym;
         }
-        if(n % JS8C_TX_SECONDS == 0){
+        if(lastn != n && n % JS8C_TX_SECONDS == 0){
             qDebug() << "could decode turbo now" << n;
+            period = JS8C_TX_SECONDS;
+            submode = Varicode::JS8CallTurbo;
+            newDataReady = true;
+            m_hsymStop = m_ihsym;
         }
+        lastn = n;
 #endif
 #if 0
         qint32 hsymNormalStop = ((int(JS8A_TX_SECONDS/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
-        qint32 hsymFastStop = ((int(JS8B_TX_SECONDS/0.288))/8)*8 - 1;   // 0.288 because 6912/12000/2 = 0.288
-        qint32 hsymTurboStop = ((int(JS8C_TX_SECONDS/0.288))/8)*8 - 1;  // 0.288 because 6912/12000/2 = 0.288
+        qint32 hsymFastStop   = ((int(JS8B_TX_SECONDS/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
+        qint32 hsymTurboStop  = ((int(JS8C_TX_SECONDS/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
         if(m_ihsym % hsymNormalStop == 0){
             period = JS8A_TX_SECONDS;
             submode = Varicode::JS8CallNormal;
@@ -2575,12 +2591,19 @@ void MainWindow::dataSink(qint64 frames)
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
     dec_data.params.nzhsym=halfSymbolStop;
+    dec_data.params.knum=period * RX_SAMPLE_RATE;
     m_dateTime = now.toString ("yyyy-MMM-dd hh:mm");
 
     //qDebug() << now << "half symbol" << m_ihsym << "stop symbol" << m_hsymStop;
 
     if(!m_mode.startsWith ("WSPR")){
+#if 1
         decode(submode, period); //Start decoder
+#else
+        if(n % JS8A_TX_SECONDS == 0) decode(Varicode::JS8CallNormal, JS8A_TX_SECONDS);
+        if(n % JS8B_TX_SECONDS == 0) decode(Varicode::JS8CallFast, JS8B_TX_SECONDS);
+        if(n % JS8C_TX_SECONDS == 0) decode(Varicode::JS8CallTurbo, JS8C_TX_SECONDS);
+#endif
     }
 
     if(!m_diskData) {                        //Always save; may delete later
@@ -3888,6 +3911,7 @@ void MainWindow::decode(int submode, int period)                                
 
   m_msec0=DriftingDateTime::currentMSecsSinceEpoch();
   if(!m_dataAvailable or m_TRperiod==0) return;
+
   ui->DecodeButton->setChecked (true);
   if(dec_data.params.nagain==0 && dec_data.params.newdat==1 && (!m_diskData)) {
     qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
@@ -3903,6 +3927,11 @@ void MainWindow::decode(int submode, int period)                                
       int isec=t.toString("ss").toInt();
       isec=isec - isec%m_TRperiod;
       dec_data.params.nutc=10000*ihr + 100*imin + isec;
+
+      // qint64 now (DriftingDateTime::currentMSecsSinceEpoch ());
+      //unsigned msInPeriod = (ms % (period * 1000));
+      //unsigned frameInPeriod = qMin ((msInPeriod * RX_SAMPLE_RATE) / 1000, static_cast<unsigned> (sizeof (dec_data.d2) / sizeof (dec_data.d2[0])));
+      //dec_data.params.kpos = qMax(0, (period * RX_SAMPLE_RATE));
     }
   }
 
@@ -3959,7 +3988,7 @@ void MainWindow::decode(int submode, int period)                                
   if(m_mode=="FT8") dec_data.params.nmode=8;
   if(m_mode=="FT8") dec_data.params.lft8apon = ui->actionEnable_AP_FT8->isVisible () && ui->actionEnable_AP_FT8->isChecked ();
   if(m_mode=="FT8") dec_data.params.napwid=50;
-  dec_data.params.ntrperiod= period; //m_TRperiod;
+  dec_data.params.ntrperiod=period; //m_TRperiod;
   dec_data.params.nsubmode=submode; // m_nSubMode;
   if(m_mode=="QRA64") dec_data.params.nsubmode=100 + m_nSubMode;
   dec_data.params.minw=0;
@@ -3985,6 +4014,8 @@ void MainWindow::decode(int submode, int period)                                
   strncpy(dec_data.params.hiscall,(hisCall + "            ").toLatin1 ().constData (), 12);
   strncpy(dec_data.params.hisgrid,(hisGrid + "      ").toLatin1 ().constData (), 6);
 
+  qDebug() << "knum" << dec_data.params.knum << "kpos" << dec_data.params.kpos << "kin" << dec_data.params.kin;
+
   //newdat=1  ==> this is new data, must do the big FFT
   //nagain=1  ==> decode only at fQSO +/- Tol
 
@@ -3996,7 +4027,7 @@ void MainWindow::decode(int submode, int period)                                
     to += noffset;
     from += noffset;
     size -= noffset;
-  }
+  }  
 
   memcpy(to, from, qMin(mem_js8->size(), size));
   QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove (); // Allow jt9 to start

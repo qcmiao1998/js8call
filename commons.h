@@ -69,6 +69,7 @@ extern struct dec_data {
   float ss[184*NSMAX]; // symbol spectra
   float savg[NSMAX];
   float sred[5760];
+  short int d1[NTMAX*RX_SAMPLE_RATE]; // sample frame buffer
   short int d2[NTMAX*RX_SAMPLE_RATE]; // sample frame buffer
   struct
   {
@@ -85,7 +86,9 @@ extern struct dec_data {
     int nfSplit;                //JT65 | JT9 split frequency
     int nfb;                    //High decode limit (Hz)
     int ntol;                   //+/- decoding range around fQSO (Hz)
-    int kin;
+    int knum;                   // maximum number of frames per period in d2
+    int kpos;                   // number of frames already processed in d2
+    int kin;                    // number of frames available in d2
     int nzhsym;
     int nsubmode;
     bool nagain;

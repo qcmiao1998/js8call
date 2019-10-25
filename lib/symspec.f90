@@ -2,12 +2,13 @@ subroutine symspec(shared_data,k,ntrperiod,nsps,ingain,nminw,pxdb,s,   &
      df3,ihsym,npts8,pxdbmax)
 
 ! Input:
-!  k         pointer to the most recent new data
-!  ntrperiod T/R sequence length, minutes
-!  nsps      samples per symbol, at 12000 Hz
-!  ndiskdat  0/1 to indicate if data from disk
-!  nb        0/1 status of noise blanker (off/on)
-!  nbslider  NB setting, 0-100
+!  shared_data  pointer to the most recent new data
+!  k            frames in that data
+!  ntrperiod    T/R sequence length, minutes
+!  nsps         samples per symbol, at 12000 Hz
+!  ndiskdat     0/1 to indicate if data from disk
+!  nb           0/1 status of noise blanker (off/on)
+!  nbslider     NB setting, 0-100
 
 ! Output:
 !  pxdb      raw power (0-90 dB)
