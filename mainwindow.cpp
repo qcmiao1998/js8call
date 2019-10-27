@@ -283,7 +283,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // no parent so that it has a taskbar icon
   m_logDlg (new LogQSO (program_title (), m_settings, &m_config, nullptr)),
   m_lastDialFreq {0},
-  m_dialFreqRxWSPR {0},
   m_detector {new Detector {RX_SAMPLE_RATE, NTMAX, downSampleFactor}},
   m_FFTSize {6192 / 2},         // conservative value to avoid buffer overruns
   m_soundInput {new SoundInput},
@@ -2497,10 +2496,12 @@ void MainWindow::dataSink(qint64 frames)
       dec_data.params.ndiskdat=0;
     }
 
+#if 0
     m_bUseRef=m_wideGraph->useRef();
     refspectrum_(&dec_data.d2[k-m_nsps/2],&m_bClearRefSpec,&m_bRefSpec,
         &m_bUseRef,c_fname,len);
     m_bClearRefSpec=false;
+#endif
 
     // Get power, spectrum, and ihsym
     int trmin=m_TRperiod/60;
@@ -2523,10 +2524,6 @@ void MainWindow::dataSink(qint64 frames)
     if(m_mode=="MSK144") return;
 
     fixStop();
-
-    if(m_ihsym==3*m_hsymStop/4) {
-      m_dialFreqRxWSPR=m_freqNominal;
-    }
 
     // could we decode all at once?
     QDateTime now {DriftingDateTime::currentDateTimeUtc ()};
