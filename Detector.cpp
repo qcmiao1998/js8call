@@ -58,7 +58,6 @@ qint64 Detector::writeData (char const * data, qint64 maxSize)
 {
   int ns=secondInPeriod();
   if(ns < m_ns) {                      // When ns has wrapped around to zero, restart the buffers
-    dec_data.params.kpos = 0;
     dec_data.params.kin = 0;
     m_bufferPos = 0;
   }

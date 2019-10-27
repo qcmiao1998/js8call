@@ -18,8 +18,6 @@
      integer(c_int) :: nfsplit
      integer(c_int) :: nfb
      integer(c_int) :: ntol
-     integer(c_int) :: knum
-     integer(c_int) :: kpos
      integer(c_int) :: kin
      integer(c_int) :: nzhsym
      integer(c_int) :: nsubmode

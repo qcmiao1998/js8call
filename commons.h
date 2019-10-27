@@ -2,7 +2,7 @@
 #define COMMONS_H
 
 #define NSMAX 6827
-#define NTMAX 300
+#define NTMAX 60
 
 #define RX_SAMPLE_RATE 12000
 
@@ -86,9 +86,7 @@ extern struct dec_data {
     int nfSplit;                //JT65 | JT9 split frequency
     int nfb;                    //High decode limit (Hz)
     int ntol;                   //+/- decoding range around fQSO (Hz)
-    int knum;                   // maximum number of frames per period in d2
-    int kpos;                   // number of frames already processed in d2
-    int kin;                    // number of frames available in d2
+    int kin;                    // number of frames written to d2
     int nzhsym;
     int nsubmode;
     bool nagain;

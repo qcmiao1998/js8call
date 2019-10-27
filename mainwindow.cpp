@@ -2456,11 +2456,27 @@ void MainWindow::setDecodedTextFont (QFont const& font)
 
 void MainWindow::fixStop()
 {
+#if 1
     m_hsymStop=((int(m_TRperiod/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
-
     if(m_nSubMode == Varicode::JS8CallUltra){
         m_hsymStop++;
     }
+#elif 0
+    m_hsymStop = int(m_TRperiod/0.288);
+#else
+    if(m_nSubMode == Varicode::JS8CallNormal){
+        m_hsymStop = int(((float)JS8A_SYMBOL_SAMPLES*(float)JS8_NUM_SYMBOLS/(float)RX_SAMPLE_RATE)/0.288);
+    }
+    else if(m_nSubMode == Varicode::JS8CallFast){
+        m_hsymStop = int(((float)JS8B_SYMBOL_SAMPLES*(float)JS8_NUM_SYMBOLS/(float)RX_SAMPLE_RATE)/0.288);
+    }
+    else if(m_nSubMode == Varicode::JS8CallTurbo){
+        m_hsymStop = int(((float)JS8C_SYMBOL_SAMPLES*(float)JS8_NUM_SYMBOLS/(float)RX_SAMPLE_RATE)/0.288);
+    }
+    else if(m_nSubMode == Varicode::JS8CallUltra){
+        m_hsymStop = int(((float)JS8D_SYMBOL_SAMPLES*(float)JS8_NUM_SYMBOLS/(float)RX_SAMPLE_RATE)/0.288);
+    }
+#endif
 }
 
 //-------------------------------------------------------------- dataSink()
@@ -2525,10 +2541,10 @@ void MainWindow::dataSink(qint64 frames)
 #if 0
     static int lastn = 0;
     int n = now.time().second();
+    newDataReady = false;
 
     if(!m_decoderBusy) // m_nSubMode == Varicode::JS8CallNormal)
     {
-#if 0
         if(lastn != n && n % JS8A_TX_SECONDS == 0){
             qDebug() << "could decode normal now" << n;
             period = JS8A_TX_SECONDS;
@@ -2536,6 +2552,8 @@ void MainWindow::dataSink(qint64 frames)
             newDataReady = true;
             m_hsymStop = m_ihsym;
         }
+        lastn = n;
+#if 0
         if(lastn != n && n % JS8B_TX_SECONDS == 0){
             qDebug() << "could decode fast now" << n;
             period = JS8B_TX_SECONDS;
@@ -2550,7 +2568,7 @@ void MainWindow::dataSink(qint64 frames)
             newDataReady = true;
             m_hsymStop = m_ihsym;
         }
-        lastn = n;
+
 #endif
 #if 0
         qint32 hsymNormalStop = ((int(JS8A_TX_SECONDS/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
@@ -2591,7 +2609,6 @@ void MainWindow::dataSink(qint64 frames)
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
     dec_data.params.nzhsym=halfSymbolStop;
-    dec_data.params.knum=period * RX_SAMPLE_RATE;
     m_dateTime = now.toString ("yyyy-MMM-dd hh:mm");
 
     //qDebug() << now << "half symbol" << m_ihsym << "stop symbol" << m_hsymStop;
@@ -3927,11 +3944,6 @@ void MainWindow::decode(int submode, int period)                                
       int isec=t.toString("ss").toInt();
       isec=isec - isec%m_TRperiod;
       dec_data.params.nutc=10000*ihr + 100*imin + isec;
-
-      // qint64 now (DriftingDateTime::currentMSecsSinceEpoch ());
-      //unsigned msInPeriod = (ms % (period * 1000));
-      //unsigned frameInPeriod = qMin ((msInPeriod * RX_SAMPLE_RATE) / 1000, static_cast<unsigned> (sizeof (dec_data.d2) / sizeof (dec_data.d2[0])));
-      //dec_data.params.kpos = qMax(0, (period * RX_SAMPLE_RATE));
     }
   }
 
@@ -4014,7 +4026,31 @@ void MainWindow::decode(int submode, int period)                                
   strncpy(dec_data.params.hiscall,(hisCall + "            ").toLatin1 ().constData (), 12);
   strncpy(dec_data.params.hisgrid,(hisGrid + "      ").toLatin1 ().constData (), 6);
 
-  qDebug() << "knum" << dec_data.params.knum << "kpos" << dec_data.params.kpos << "kin" << dec_data.params.kin;
+#if 0
+  qDebug() << "kin" << dec_data.params.kin;
+
+  unsigned maxframe = 30 * RX_SAMPLE_RATE;
+  unsigned periodFrames = m_hsymStop * m_nsps / 2;
+
+  memset(dec_data.d1, 0, sizeof(dec_data.d1));
+  if(dec_data.params.kin < periodFrames){
+      //kstart = 0;
+      //ksize = dec_data.params.kin;
+
+      // kin is less than the period, so we need to copy the first part missing from the end of the buffer
+      int delta = periodFrames - dec_data.params.kin;
+      qDebug() << "try decode from" << (maxframe-delta) << "to" << dec_data.params.kin << "at beginning of buffer with delta" << delta << "and period" << periodFrames;
+      memcpy(dec_data.d1, &dec_data.d2[maxframe-delta], delta);
+      memcpy(&dec_data.d1[delta], dec_data.d2, dec_data.params.kin);
+  } else {
+      // decode the last N frames based on the current tr period
+      qDebug() << "try decode from" << (dec_data.params.kin-periodFrames) << "to" << dec_data.params.kin << "with period" << periodFrames;
+      memcpy(dec_data.d1, &dec_data.d2[dec_data.params.kin-periodFrames], periodFrames);
+  }
+#else
+  memset(dec_data.d1, 0, sizeof(dec_data.d1));
+  memcpy(dec_data.d1, dec_data.d2, sizeof(dec_data.d2));
+#endif
 
   //newdat=1  ==> this is new data, must do the big FFT
   //nagain=1  ==> decode only at fQSO +/- Tol
