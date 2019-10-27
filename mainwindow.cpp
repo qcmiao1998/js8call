@@ -2600,7 +2600,6 @@ void MainWindow::dataSink(qint64 frames)
         return;
     }
 
-    if( m_dialFreqRxWSPR==0) m_dialFreqRxWSPR=m_freqNominal;
     m_dataAvailable=true;
     dec_data.params.npts8=(m_ihsym*m_nsps)/16;
     dec_data.params.newdat=1;
@@ -2610,16 +2609,15 @@ void MainWindow::dataSink(qint64 frames)
 
     //qDebug() << now << "half symbol" << m_ihsym << "stop symbol" << m_hsymStop;
 
-    if(!m_mode.startsWith ("WSPR")){
 #if 1
-        decode(submode, period); //Start decoder
+    decode(submode, period); //Start decoder
 #else
-        if(n % JS8A_TX_SECONDS == 0) decode(Varicode::JS8CallNormal, JS8A_TX_SECONDS);
-        if(n % JS8B_TX_SECONDS == 0) decode(Varicode::JS8CallFast, JS8B_TX_SECONDS);
-        if(n % JS8C_TX_SECONDS == 0) decode(Varicode::JS8CallTurbo, JS8C_TX_SECONDS);
+    if(n % JS8A_TX_SECONDS == 0) decode(Varicode::JS8CallNormal, JS8A_TX_SECONDS);
+    if(n % JS8B_TX_SECONDS == 0) decode(Varicode::JS8CallFast, JS8B_TX_SECONDS);
+    if(n % JS8C_TX_SECONDS == 0) decode(Varicode::JS8CallTurbo, JS8C_TX_SECONDS);
 #endif
-    }
 
+#if SAVE_TO_WAV
     if(!m_diskData) {                        //Always save; may delete later
 
       if(m_mode=="FT8") {
@@ -2642,6 +2640,7 @@ void MainWindow::dataSink(qint64 frames)
                 m_config.my_grid(), m_mode, m_nSubMode, m_freqNominal, m_hisCall, m_hisGrid)));
       }
     }
+#endif
 
     m_rxDone=true;
 }
