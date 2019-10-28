@@ -2481,6 +2481,7 @@ void MainWindow::fixStop()
 //-------------------------------------------------------------- dataSink()
 void MainWindow::dataSink(qint64 frames)
 {
+    static int k0 = 0;
     static float s[NSMAX];
     char line[80];
 
@@ -2512,16 +2513,37 @@ void MainWindow::dataSink(qint64 frames)
 
     int nsps=m_nsps;
     int nsmo=m_wideGraph->smoothYellow()-1;
-    symspec_(&dec_data,&k,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&m_ihsym,&m_npts8,&m_pxmax);
-    qDebug() << "dataSink" << k << "ihsym" << m_ihsym;
-    if(m_ihsym <=0) return;
+
+    /// START IHSYM
+
+    // moving ihsym computation to here from symspec.f90
+    // 1) set the initial ihsym
+    if(m_ihsym == 0){
+        m_ihsym = int((float)k/m_nsps)*2;
+    }
+    // 2) reset the ihsym when loop around
+    if(k < k0){
+        m_ihsym = 0;
+    }
+    k0 = k;
+    int ihs = m_ihsym;
+    symspec_(&dec_data,&k,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&ihs,&m_npts8,&m_pxmax);
+    // 3) if symspec wants ihs to be 0, set it.
+    if(ihs == 0){
+        m_ihsym = ihs;
+    } else {
+        m_ihsym += 1;
+    }
+    qDebug() << "dataSink" << k << "ihsym" << m_ihsym << "ihs" << ihs;
+
+    /// END IHSYM
+
+    if(m_ihsym <= 0) return;
 
     if(ui) ui->signal_meter_widget->setValue(m_px,m_pxmax); // Update thermometer
     if(m_monitoring || m_diskData) {
       m_wideGraph->dataSink2(s,m_df3,m_ihsym,m_diskData);
     }
-
-    if(m_mode=="MSK144") return;
 
     fixStop();
 
@@ -2607,8 +2629,6 @@ void MainWindow::dataSink(qint64 frames)
     dec_data.params.nzhsym=halfSymbolStop;
     m_dateTime = now.toString ("yyyy-MMM-dd hh:mm");
 
-    //qDebug() << now << "half symbol" << m_ihsym << "stop symbol" << m_hsymStop;
-
 #if 1
     decode(submode, period); //Start decoder
 #else
@@ -2617,9 +2637,7 @@ void MainWindow::dataSink(qint64 frames)
     if(n % JS8C_TX_SECONDS == 0) decode(Varicode::JS8CallTurbo, JS8C_TX_SECONDS);
 #endif
 
-#if SAVE_TO_WAV
     if(!m_diskData) {                        //Always save; may delete later
-
       if(m_mode=="FT8") {
         int n=now.time().second() % m_TRperiod;
         if(n<(m_TRperiod/2)) n=n+m_TRperiod;
@@ -2640,7 +2658,6 @@ void MainWindow::dataSink(qint64 frames)
                 m_config.my_grid(), m_mode, m_nSubMode, m_freqNominal, m_hisCall, m_hisGrid)));
       }
     }
-#endif
 
     m_rxDone=true;
 }
@@ -4022,26 +4039,21 @@ void MainWindow::decode(int submode, int period)                                
   strncpy(dec_data.params.hiscall,(hisCall + "            ").toLatin1 ().constData (), 12);
   strncpy(dec_data.params.hisgrid,(hisGrid + "      ").toLatin1 ().constData (), 6);
 
-#if 0
-  qDebug() << "kin" << dec_data.params.kin;
-
-  unsigned maxframe = 30 * RX_SAMPLE_RATE;
+#if JS8_RING_BUFFER
+  unsigned maxframe = period * RX_SAMPLE_RATE;
   unsigned periodFrames = m_hsymStop * m_nsps / 2;
 
   memset(dec_data.d1, 0, sizeof(dec_data.d1));
   if(dec_data.params.kin < periodFrames){
-      //kstart = 0;
-      //ksize = dec_data.params.kin;
-
       // kin is less than the period, so we need to copy the first part missing from the end of the buffer
       int delta = periodFrames - dec_data.params.kin;
-      qDebug() << "try decode from" << (maxframe-delta) << "to" << dec_data.params.kin << "at beginning of buffer with delta" << delta << "and period" << periodFrames;
-      memcpy(dec_data.d1, &dec_data.d2[maxframe-delta], delta);
-      memcpy(&dec_data.d1[delta], dec_data.d2, dec_data.params.kin);
+      memcpy(dec_data.d1, &dec_data.d2[maxframe-delta], delta * sizeof(dec_data.d2[0]));
+      memcpy(&dec_data.d1[delta * sizeof(dec_data.d2[0])], dec_data.d2, dec_data.params.kin * sizeof(dec_data.d2[0]));
+      //qDebug() << "try decode from" << (maxframe-delta) << "to" << dec_data.params.kin << "at beginning of buffer with delta" << delta << "and period" << periodFrames;
   } else {
       // decode the last N frames based on the current tr period
-      qDebug() << "try decode from" << (dec_data.params.kin-periodFrames) << "to" << dec_data.params.kin << "with period" << periodFrames;
-      memcpy(dec_data.d1, &dec_data.d2[dec_data.params.kin-periodFrames], periodFrames);
+      memcpy(dec_data.d1, &dec_data.d2[dec_data.params.kin-periodFrames], periodFrames * sizeof(dec_data.d2[0]));
+      //qDebug() << "try decode from" << (dec_data.params.kin-periodFrames) << "to" << dec_data.params.kin << "with period" << periodFrames;
   }
 #else
   memset(dec_data.d1, 0, sizeof(dec_data.d1));

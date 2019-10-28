@@ -6,6 +6,7 @@
 
 #define RX_SAMPLE_RATE 12000
 
+#define JS8_RING_BUFFER    1
 #define JS8_NUM_SYMBOLS    79
 #define JS8_ENABLE_JS8B    1
 #define JS8_ENABLE_JS8C    1
@@ -69,8 +70,8 @@ extern struct dec_data {
   float ss[184*NSMAX]; // symbol spectra
   float savg[NSMAX];
   float sred[5760];
-  short int d1[NTMAX*RX_SAMPLE_RATE]; // sample frame buffer
-  short int d2[NTMAX*RX_SAMPLE_RATE]; // sample frame buffer
+  short int d1[NTMAX*RX_SAMPLE_RATE]; // sample frame buffer for decoding (copied from d2 for the frame period)
+  short int d2[NTMAX*RX_SAMPLE_RATE]; // sample frame buffer for sample collection
   struct
   {
     int nutc;                   //UTC as integer, HHMM
