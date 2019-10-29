@@ -2455,7 +2455,7 @@ void MainWindow::setDecodedTextFont (QFont const& font)
 
 void MainWindow::fixStop()
 {
-#if 1
+#if 0
     m_hsymStop=((int(m_TRperiod/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
     if(m_nSubMode == Varicode::JS8CallUltra){
         m_hsymStop++;
@@ -2463,18 +2463,15 @@ void MainWindow::fixStop()
 #elif 0
     m_hsymStop = int(m_TRperiod/0.288);
 #else
-    if(m_nSubMode == Varicode::JS8CallNormal){
-        m_hsymStop = int(((float)JS8A_SYMBOL_SAMPLES*(float)JS8_NUM_SYMBOLS/(float)RX_SAMPLE_RATE)/0.288);
+    int symbolSamples = 0;
+    float threshold = 1.0;
+    switch(m_nSubMode){
+        case Varicode::JS8CallNormal: symbolSamples = JS8A_SYMBOL_SAMPLES; break;
+        case Varicode::JS8CallFast:   symbolSamples = JS8B_SYMBOL_SAMPLES; break;
+        case Varicode::JS8CallTurbo:  symbolSamples = JS8C_SYMBOL_SAMPLES; break;
+        case Varicode::JS8CallUltra:  symbolSamples = JS8D_SYMBOL_SAMPLES; break;
     }
-    else if(m_nSubMode == Varicode::JS8CallFast){
-        m_hsymStop = int(((float)JS8B_SYMBOL_SAMPLES*(float)JS8_NUM_SYMBOLS/(float)RX_SAMPLE_RATE)/0.288);
-    }
-    else if(m_nSubMode == Varicode::JS8CallTurbo){
-        m_hsymStop = int(((float)JS8C_SYMBOL_SAMPLES*(float)JS8_NUM_SYMBOLS/(float)RX_SAMPLE_RATE)/0.288);
-    }
-    else if(m_nSubMode == Varicode::JS8CallUltra){
-        m_hsymStop = int(((float)JS8D_SYMBOL_SAMPLES*(float)JS8_NUM_SYMBOLS/(float)RX_SAMPLE_RATE)/0.288);
-    }
+    m_hsymStop = qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)/(float)m_nsps*2.0);
 #endif
 }
 
@@ -2551,10 +2548,9 @@ void MainWindow::dataSink(qint64 frames)
     QDateTime now {DriftingDateTime::currentDateTimeUtc ()};
 
     // if the current half symbol index is the half symbol stop index, then proceed
-    int submode = m_nSubMode;
-    int period = m_TRperiod;
+    qint32 submode = m_nSubMode;
+    qint32 period = m_TRperiod;
     qint32 halfSymbolStop = m_hsymStop;
-    //bool newDataReady = m_ihsym == m_hsymStop;
     bool newDataReady = m_ihsym % m_hsymStop == 0;
 
 #if 0
@@ -2564,6 +2560,7 @@ void MainWindow::dataSink(qint64 frames)
 
     if(!m_decoderBusy) // m_nSubMode == Varicode::JS8CallNormal)
     {
+#if 0
         if(lastn != n && n % JS8A_TX_SECONDS == 0){
             qDebug() << "could decode normal now" << n;
             period = JS8A_TX_SECONDS;
@@ -2571,8 +2568,7 @@ void MainWindow::dataSink(qint64 frames)
             newDataReady = true;
             m_hsymStop = m_ihsym;
         }
-        lastn = n;
-#if 0
+
         if(lastn != n && n % JS8B_TX_SECONDS == 0){
             qDebug() << "could decode fast now" << n;
             period = JS8B_TX_SECONDS;
@@ -2587,29 +2583,29 @@ void MainWindow::dataSink(qint64 frames)
             newDataReady = true;
             m_hsymStop = m_ihsym;
         }
-
-#endif
-#if 0
+        lastn = n;
+#elif 0
         qint32 hsymNormalStop = ((int(JS8A_TX_SECONDS/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
         qint32 hsymFastStop   = ((int(JS8B_TX_SECONDS/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
         qint32 hsymTurboStop  = ((int(JS8C_TX_SECONDS/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
-        if(m_ihsym % hsymNormalStop == 0){
-            period = JS8A_TX_SECONDS;
-            submode = Varicode::JS8CallNormal;
-            halfSymbolStop= hsymNormalStop;
-            qDebug() << "could decode normal now" << n;
-            newDataReady = true;
-        }
-        if(m_ihsym % hsymFastStop == 0){
-            period = JS8B_TX_SECONDS;
-            submode = Varicode::JS8CallFast;
-            halfSymbolStop= hsymFastStop;
-            qDebug() << "could decode fast now" << n;
-            newDataReady = true;
-        }
-        if(m_ihsym % hsymTurboStop == 0){
+        /// if(m_ihsym % hsymNormalStop == 0){
+        ///     period = JS8A_TX_SECONDS;
+        ///     submode = Varicode::JS8CallNormal;
+        ///     halfSymbolStop= hsymNormalStop;
+        ///     qDebug() << "could decode normal now" << n;
+        ///     newDataReady = true;
+        /// }
+        /// if(m_ihsym % hsymFastStop == 0){
+        ///     period = JS8B_TX_SECONDS;
+        ///     submode = Varicode::JS8CallFast;
+        ///     halfSymbolStop= hsymFastStop;
+        ///     qDebug() << "could decode fast now" << n;
+        ///     newDataReady = true;
+        /// }
+        if(m_ihsym % hsymTurboStop == 0 || m_ihsym == hsymTurboStop/2-1){
             period = JS8C_TX_SECONDS;
             submode = Varicode::JS8CallTurbo;
+            dec_data.params.nsz = hsymTurboStop * m_nsps / 2;
             halfSymbolStop= hsymTurboStop;
             qDebug() << "could decode turbo now" << n;
             newDataReady = true;
@@ -2633,8 +2629,8 @@ void MainWindow::dataSink(qint64 frames)
     decode(submode, period); //Start decoder
 #else
     if(n % JS8A_TX_SECONDS == 0) decode(Varicode::JS8CallNormal, JS8A_TX_SECONDS);
-    if(n % JS8B_TX_SECONDS == 0) decode(Varicode::JS8CallFast, JS8B_TX_SECONDS);
-    if(n % JS8C_TX_SECONDS == 0) decode(Varicode::JS8CallTurbo, JS8C_TX_SECONDS);
+    if(n % JS8B_TX_SECONDS == 0) decode(Varicode::JS8CallFast,   JS8B_TX_SECONDS);
+    if(n % JS8C_TX_SECONDS == 0) decode(Varicode::JS8CallTurbo,  JS8C_TX_SECONDS);
 #endif
 
     if(!m_diskData) {                        //Always save; may delete later
@@ -4039,9 +4035,11 @@ void MainWindow::decode(int submode, int period)                                
   strncpy(dec_data.params.hiscall,(hisCall + "            ").toLatin1 ().constData (), 12);
   strncpy(dec_data.params.hisgrid,(hisGrid + "      ").toLatin1 ().constData (), 6);
 
-#if JS8_RING_BUFFER
-  unsigned maxframe = period * RX_SAMPLE_RATE;
-  unsigned periodFrames = m_hsymStop * m_nsps / 2;
+#if 0 // JS8_RING_BUFFER
+  // TODO: m_TRperiod here needs to be replaced with what we send to m_detector period
+  unsigned maxframe = m_TRperiod * RX_SAMPLE_RATE;
+  unsigned periodFrames = dec_data.params.nsz; //m_hsymStop * m_nsps / 2;
+  //dec_data.params.nsz = periodFrames;
 
   memset(dec_data.d1, 0, sizeof(dec_data.d1));
   if(dec_data.params.kin < periodFrames){
@@ -4049,11 +4047,11 @@ void MainWindow::decode(int submode, int period)                                
       int delta = periodFrames - dec_data.params.kin;
       memcpy(dec_data.d1, &dec_data.d2[maxframe-delta], delta * sizeof(dec_data.d2[0]));
       memcpy(&dec_data.d1[delta * sizeof(dec_data.d2[0])], dec_data.d2, dec_data.params.kin * sizeof(dec_data.d2[0]));
-      //qDebug() << "try decode from" << (maxframe-delta) << "to" << dec_data.params.kin << "at beginning of buffer with delta" << delta << "and period" << periodFrames;
+      qDebug() << "try decode from" << (maxframe-delta) << "to" << dec_data.params.kin << "at beginning of buffer with delta" << delta << "and period frames" << periodFrames;
   } else {
       // decode the last N frames based on the current tr period
       memcpy(dec_data.d1, &dec_data.d2[dec_data.params.kin-periodFrames], periodFrames * sizeof(dec_data.d2[0]));
-      //qDebug() << "try decode from" << (dec_data.params.kin-periodFrames) << "to" << dec_data.params.kin << "with period" << periodFrames;
+      qDebug() << "try decode from" << (dec_data.params.kin-periodFrames) << "to" << dec_data.params.kin << "with period frames" << periodFrames;
   }
 #else
   memset(dec_data.d1, 0, sizeof(dec_data.d1));

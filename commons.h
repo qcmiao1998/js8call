@@ -88,6 +88,7 @@ extern struct dec_data {
     int nfb;                    //High decode limit (Hz)
     int ntol;                   //+/- decoding range around fQSO (Hz)
     int kin;                    // number of frames written to d2
+    int nsz;                    // number of frames to use in the decoder (period size)
     int nzhsym;
     int nsubmode;
     bool nagain;

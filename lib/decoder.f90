@@ -1,4 +1,4 @@
-subroutine multimode_decoder(ss,id2,params,nfsample)
+subroutine multimode_decoder(ss,id1,params,nfsample)
 
   !$ use omp_lib
   use prog_args
@@ -29,13 +29,13 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
 
   real ss(184,NSMAX)
   logical baddata,newdat65,newdat9,single_decode,bVHF,bad0,newdat
-  integer*2 id2(NTMAX*12000)
+  integer*2 id1(NTMAX*12000)
   type(params_block) :: params
   character(len=20) :: datetime
   character(len=12) :: mycall, hiscall
   character(len=6) :: mygrid, hisgrid
   save
-  type(counting_ft8_decoder) :: my_js8a
+  type(counting_ft8_decoder)  :: my_js8a
   type(counting_js8b_decoder) :: my_js8b
   type(counting_js8c_decoder) :: my_js8c
   type(counting_js8d_decoder) :: my_js8d
@@ -78,11 +78,11 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      endif
   endif
 
-  if(params%nmode.eq.8 .and. params%nsubmode.eq.3) then
+  if(params%nmode.eq.8 .and. params%nsubmode.eq.4) then
 ! We're in JS8 mode D
      call timer('decjs8d ',0)
      newdat=params%newdat
-     call my_js8d%decode(js8d_decoded,id2,params%nQSOProgress,params%nfqso,    &
+     call my_js8d%decode(js8d_decoded,id1,params%nQSOProgress,params%nfqso,    &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
@@ -95,7 +95,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
 ! We're in JS8 mode C
      call timer('decjs8c ',0)
      newdat=params%newdat
-     call my_js8c%decode(js8c_decoded,id2,params%nQSOProgress,params%nfqso,    &
+     call my_js8c%decode(js8c_decoded,id1,params%nQSOProgress,params%nfqso,    &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
@@ -108,7 +108,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
 ! We're in JS8 mode B
      call timer('decjs8b ',0)
      newdat=params%newdat
-     call my_js8b%decode(js8b_decoded,id2,params%nQSOProgress,params%nfqso,    &
+     call my_js8b%decode(js8b_decoded,id1,params%nQSOProgress,params%nfqso,    &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
@@ -117,11 +117,11 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      go to 800
   endif
 
-  if(params%nmode.eq.8) then
+  if(params%nmode.eq.8 .and. params%nsubmode.eq.0) then
 ! We're in JS8 mode A
      call timer('decjs8a ',0)
      newdat=params%newdat
-     call my_js8a%decode(js8a_decoded,id2,params%nQSOProgress,params%nfqso,    &
+     call my_js8a%decode(js8a_decoded,id1,params%nQSOProgress,params%nfqso,    &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
@@ -130,8 +130,8 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      go to 800
   endif
 
-  rms=sqrt(dot_product(float(id2(300000:310000)),            &
-       float(id2(300000:310000)))/10000.0)
+  rms=sqrt(dot_product(float(id1(300000:310000)),            &
+       float(id1(300000:310000)))/10000.0)
   if(rms.lt.2.0) go to 800
 
 ! Zap data at start that might come from T/R switching transient?
@@ -142,7 +142,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      sq=0.
      do n=1,nadd
         k=k+1
-        sq=sq + float(id2(k))**2
+        sq=sq + float(id1(k))**2
      enddo
      rms=sqrt(sq/nadd)
      if(rms.gt.10000.0) then
@@ -153,11 +153,11 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   enddo
   if(bad0) then
      nz=min(NTMAX*12000,kbad+100)
-!     id2(1:nz)=0                ! temporarily disabled as it can breaak the JT9 decoder, maybe others
+!     id1(1:nz)=0                ! temporarily disabled as it can breaak the JT9 decoder, maybe others
   endif
   
   npts65=52*12000
-  if(baddata(id2,npts65)) then
+  if(baddata(id1,npts65)) then
      nsynced=0
      ndecoded=0
      go to 800
