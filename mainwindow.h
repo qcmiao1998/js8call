@@ -925,6 +925,7 @@ private:
   void stub();
   void statusChanged();
   void fixStop();
+  int computeStop(int submode, int period);
   bool shortList(QString callsign);
   void transmit (double snr = 99.);
   void rigFailure (QString const& reason);

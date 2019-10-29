@@ -2455,24 +2455,32 @@ void MainWindow::setDecodedTextFont (QFont const& font)
 
 void MainWindow::fixStop()
 {
+    m_hsymStop = computeStop(m_nSubMode, m_TRperiod);
+}
+
+int MainWindow::computeStop(int submode, int period){
+    int stop = 0;
+
 #if 0
-    m_hsymStop=((int(m_TRperiod/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
-    if(m_nSubMode == Varicode::JS8CallUltra){
-        m_hsymStop++;
+    stop=((int(period/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
+    if(submode == Varicode::JS8CallUltra){
+        stop++;
     }
 #elif 0
-    m_hsymStop = int(m_TRperiod/0.288);
+    stop = int(period/0.288);
 #else
     int symbolSamples = 0;
     float threshold = 1.0;
-    switch(m_nSubMode){
+    switch(submode){
         case Varicode::JS8CallNormal: symbolSamples = JS8A_SYMBOL_SAMPLES; break;
         case Varicode::JS8CallFast:   symbolSamples = JS8B_SYMBOL_SAMPLES; break;
         case Varicode::JS8CallTurbo:  symbolSamples = JS8C_SYMBOL_SAMPLES; break;
         case Varicode::JS8CallUltra:  symbolSamples = JS8D_SYMBOL_SAMPLES; break;
     }
-    m_hsymStop = qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)/(float)m_nsps*2.0);
+    stop = qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)/(float)m_nsps*2.0);
 #endif
+
+    return stop;
 }
 
 //-------------------------------------------------------------- dataSink()
@@ -2556,6 +2564,9 @@ void MainWindow::dataSink(qint64 frames)
 #if 0
     static int lastn = 0;
     int n = now.time().second();
+    // newDataReady = n != lastn;
+    // lastn = n;
+#elif 1
     newDataReady = false;
 
     if(!m_decoderBusy) // m_nSubMode == Varicode::JS8CallNormal)
@@ -2584,32 +2595,41 @@ void MainWindow::dataSink(qint64 frames)
             m_hsymStop = m_ihsym;
         }
         lastn = n;
-#elif 0
-        qint32 hsymNormalStop = ((int(JS8A_TX_SECONDS/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
-        qint32 hsymFastStop   = ((int(JS8B_TX_SECONDS/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
-        qint32 hsymTurboStop  = ((int(JS8C_TX_SECONDS/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
+#elif 1
+        int n = now.time().second();
+        qint32 hsymNormalStop = computeStop(Varicode::JS8CallNormal, JS8A_TX_SECONDS);
+        qint32 hsymFastStop   = computeStop(Varicode::JS8CallFast,   JS8B_TX_SECONDS);
+        qint32 hsymTurboStop  = computeStop(Varicode::JS8CallTurbo,  JS8C_TX_SECONDS);
+        qint32 hsymUltraStop  = computeStop(Varicode::JS8CallUltra,  JS8D_TX_SECONDS);
         /// if(m_ihsym % hsymNormalStop == 0){
         ///     period = JS8A_TX_SECONDS;
         ///     submode = Varicode::JS8CallNormal;
-        ///     halfSymbolStop= hsymNormalStop;
+        ///     halfSymbolStop = hsymNormalStop;
         ///     qDebug() << "could decode normal now" << n;
         ///     newDataReady = true;
         /// }
         /// if(m_ihsym % hsymFastStop == 0){
         ///     period = JS8B_TX_SECONDS;
         ///     submode = Varicode::JS8CallFast;
-        ///     halfSymbolStop= hsymFastStop;
+        ///     halfSymbolStop = hsymFastStop;
         ///     qDebug() << "could decode fast now" << n;
         ///     newDataReady = true;
         /// }
-        if(m_ihsym % hsymTurboStop == 0 || m_ihsym == hsymTurboStop/2-1){
+        if(m_ihsym % hsymTurboStop == 0){
             period = JS8C_TX_SECONDS;
             submode = Varicode::JS8CallTurbo;
-            dec_data.params.nsz = hsymTurboStop * m_nsps / 2;
-            halfSymbolStop= hsymTurboStop;
+            halfSymbolStop = hsymTurboStop;
             qDebug() << "could decode turbo now" << n;
             newDataReady = true;
         }
+        /// if(m_ihsym % hsymUltraStop == 0){
+        ///     period = JS8D_TX_SECONDS;
+        ///     submode = Varicode::JS8CallUltra;
+        ///     halfSymbolStop = hsymFastStop;
+        ///     qDebug() << "could decode ultra now" << n;
+        ///     newDataReady = true;
+        /// }
+        dec_data.params.nsz = halfSymbolStop * m_nsps / 2;
 #endif
     }
 #endif
@@ -4053,7 +4073,17 @@ void MainWindow::decode(int submode, int period)                                
       memcpy(dec_data.d1, &dec_data.d2[dec_data.params.kin-periodFrames], periodFrames * sizeof(dec_data.d2[0]));
       qDebug() << "try decode from" << (dec_data.params.kin-periodFrames) << "to" << dec_data.params.kin << "with period frames" << periodFrames;
   }
+#elif 1
+  int neededFrames = dec_data.params.nsz; // m_hsymStop*m_nsps/2;
+  int start = qMax(0, dec_data.params.kin-neededFrames);
+  int stop =  qMin(start + neededFrames, dec_data.params.kin);
+  int availableFrames = stop - start;
+  int missingFrames = neededFrames - availableFrames;
+  qDebug() << "try decode from" << start << "to" << stop << "available" << availableFrames << "missing" << missingFrames;
+  memset(dec_data.d1, 0, sizeof(dec_data.d1));
+  memcpy(dec_data.d1 + missingFrames, dec_data.d2 + start, sizeof(dec_data.d2[0]) * availableFrames);
 #else
+  qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
   memset(dec_data.d1, 0, sizeof(dec_data.d1));
   memcpy(dec_data.d1, dec_data.d2, sizeof(dec_data.d2));
 #endif
@@ -7037,7 +7067,7 @@ void MainWindow::on_actionJS8_triggered()
   ui->decodedTextLabel2->setText("  UTC   dB   DT Freq    Message");
   m_wideGraph->setPeriod(m_TRperiod,m_nsps);
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
-  m_detector->setTRPeriod(m_TRperiod);  // TODO - not thread safe
+  m_detector->setTRPeriod(30); //m_TRperiod);  // TODO - not thread safe
   ui->label_7->setText("Rx Frequency");
   if(m_config.bFox()) {
     ui->label_6->setText("Stations calling DXpedition " + m_config.my_callsign());
