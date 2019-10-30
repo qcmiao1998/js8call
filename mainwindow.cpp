@@ -2564,7 +2564,7 @@ void MainWindow::dataSink(qint64 frames)
 #if 1
     static int lastn = 0;
     int n = now.time().second();
-    newDataReady = n != lastn;
+    newDataReady = n != lastn && n % 2 == 0;
     dec_data.params.nsz = halfSymbolStop * m_nsps / 2.0;
     lastn = n;
 #elif 0
