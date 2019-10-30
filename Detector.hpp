@@ -24,6 +24,7 @@ public:
   //
   Detector (unsigned frameRate, unsigned periodLengthInSeconds, unsigned downSampleFactor = 4u, QObject * parent = 0);
 
+  unsigned period() const {return m_period;}
   void setTRPeriod(unsigned p) {m_period=p;}
   bool reset () override;
 

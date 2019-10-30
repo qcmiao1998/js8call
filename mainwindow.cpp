@@ -2561,12 +2561,13 @@ void MainWindow::dataSink(qint64 frames)
     qint32 halfSymbolStop = m_hsymStop;
     bool newDataReady = m_ihsym % m_hsymStop == 0;
 
-#if 0
+#if 1
     static int lastn = 0;
     int n = now.time().second();
-    // newDataReady = n != lastn;
-    // lastn = n;
-#elif 1
+    newDataReady = n != lastn;
+    dec_data.params.nsz = halfSymbolStop * m_nsps / 2.0;
+    lastn = n;
+#elif 0
     newDataReady = false;
 
     if(!m_decoderBusy) // m_nSubMode == Varicode::JS8CallNormal)
@@ -4074,13 +4075,23 @@ void MainWindow::decode(int submode, int period)                                
       qDebug() << "try decode from" << (dec_data.params.kin-periodFrames) << "to" << dec_data.params.kin << "with period frames" << periodFrames;
   }
 #elif 1
+  // clear out d1
+  memset(dec_data.d1, 0, sizeof(dec_data.d1));
+
+  // compute frames to copy for decoding
   int neededFrames = dec_data.params.nsz; // m_hsymStop*m_nsps/2;
   int start = qMax(0, dec_data.params.kin-neededFrames);
   int stop =  qMin(start + neededFrames, dec_data.params.kin);
   int availableFrames = stop - start;
   int missingFrames = neededFrames - availableFrames;
+
   qDebug() << "try decode from" << start << "to" << stop << "available" << availableFrames << "missing" << missingFrames;
-  memset(dec_data.d1, 0, sizeof(dec_data.d1));
+  if(missingFrames){
+      // the maximum frame is the period sample size
+      int maxFrames = m_detector->period() * RX_SAMPLE_RATE;
+      qDebug() << "-> copy missing frames from" << maxFrames-missingFrames << "to" << maxFrames << "to beginning of d1";
+      memcpy(dec_data.d1, &dec_data.d2[maxFrames-missingFrames], sizeof(dec_data.d2[0]) * missingFrames);
+  }
   memcpy(dec_data.d1 + missingFrames, dec_data.d2 + start, sizeof(dec_data.d2[0]) * availableFrames);
 #else
   qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
@@ -5308,9 +5319,12 @@ void MainWindow::guiUpdate()
     bool forceDirty = false;
     if(m_sec0 % (m_TRperiod-2) == 0 ||
        m_sec0 % (m_TRperiod) == 0   ||
-       m_sec0 % (m_TRperiod+2) == 0 ){
+       m_sec0 % (m_TRperiod+2) == 0){
         // force rx dirty at the end of the period
         forceDirty = true;
+    }
+    if(!forceDirty){
+        forceDirty = !m_rxActivityQueue.isEmpty();
     }
 
     // update the dial frequency once per second..
