@@ -2502,7 +2502,7 @@ void MainWindow::dataSink(qint64 frames)
       dec_data.params.ndiskdat=0;
     }
 
-#if 0
+#if JS8_USE_REFSPEC
     m_bUseRef=m_wideGraph->useRef();
     refspectrum_(&dec_data.d2[k-m_nsps/2],&m_bClearRefSpec,&m_bRefSpec,
         &m_bUseRef,c_fname,len);
@@ -2561,15 +2561,16 @@ void MainWindow::dataSink(qint64 frames)
     qint32 halfSymbolStop = m_hsymStop;
     bool newDataReady = m_ihsym % m_hsymStop == 0;
 
-#if 1
+#if JS8_DECODER_E2S
+    // decoding every 2 seconds
     static int lastn = 0;
     int n = now.time().second();
     newDataReady = n != lastn && n % 2 == 0;
-    dec_data.params.nsz = halfSymbolStop * m_nsps / 2.0;
     lastn = n;
-#elif 0
-    newDataReady = false;
+#endif
 
+#if 0
+    newDataReady = false;
     if(!m_decoderBusy) // m_nSubMode == Varicode::JS8CallNormal)
     {
 #if 0
@@ -2646,7 +2647,7 @@ void MainWindow::dataSink(qint64 frames)
     dec_data.params.nzhsym=halfSymbolStop;
     m_dateTime = now.toString ("yyyy-MMM-dd hh:mm");
 
-#if 1
+#if JS8_DECODER_ONE
     decode(submode, period); //Start decoder
 #else
     if(n % JS8A_TX_SECONDS == 0) decode(Varicode::JS8CallNormal, JS8A_TX_SECONDS);
@@ -4056,30 +4057,12 @@ void MainWindow::decode(int submode, int period)                                
   strncpy(dec_data.params.hiscall,(hisCall + "            ").toLatin1 ().constData (), 12);
   strncpy(dec_data.params.hisgrid,(hisGrid + "      ").toLatin1 ().constData (), 6);
 
-#if 0 // JS8_RING_BUFFER
-  // TODO: m_TRperiod here needs to be replaced with what we send to m_detector period
-  unsigned maxframe = m_TRperiod * RX_SAMPLE_RATE;
-  unsigned periodFrames = dec_data.params.nsz; //m_hsymStop * m_nsps / 2;
-  //dec_data.params.nsz = periodFrames;
-
-  memset(dec_data.d1, 0, sizeof(dec_data.d1));
-  if(dec_data.params.kin < periodFrames){
-      // kin is less than the period, so we need to copy the first part missing from the end of the buffer
-      int delta = periodFrames - dec_data.params.kin;
-      memcpy(dec_data.d1, &dec_data.d2[maxframe-delta], delta * sizeof(dec_data.d2[0]));
-      memcpy(&dec_data.d1[delta * sizeof(dec_data.d2[0])], dec_data.d2, dec_data.params.kin * sizeof(dec_data.d2[0]));
-      qDebug() << "try decode from" << (maxframe-delta) << "to" << dec_data.params.kin << "at beginning of buffer with delta" << delta << "and period frames" << periodFrames;
-  } else {
-      // decode the last N frames based on the current tr period
-      memcpy(dec_data.d1, &dec_data.d2[dec_data.params.kin-periodFrames], periodFrames * sizeof(dec_data.d2[0]));
-      qDebug() << "try decode from" << (dec_data.params.kin-periodFrames) << "to" << dec_data.params.kin << "with period frames" << periodFrames;
-  }
-#elif 1
+#if JS8_RING_BUFFER
   // clear out d1
   memset(dec_data.d1, 0, sizeof(dec_data.d1));
 
   // compute frames to copy for decoding
-  int neededFrames = dec_data.params.nsz; // m_hsymStop*m_nsps/2;
+  int neededFrames = dec_data.params.nzhsym * m_nsps / 2.0;
   int start = qMax(0, dec_data.params.kin-neededFrames);
   int stop =  qMin(start + neededFrames, dec_data.params.kin);
   int availableFrames = stop - start;
@@ -7081,7 +7064,7 @@ void MainWindow::on_actionJS8_triggered()
   ui->decodedTextLabel2->setText("  UTC   dB   DT Freq    Message");
   m_wideGraph->setPeriod(m_TRperiod,m_nsps);
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
-  m_detector->setTRPeriod(30); //m_TRperiod);  // TODO - not thread safe
+  m_detector->setTRPeriod(30); // TODO - not thread safe
   ui->label_7->setText("Rx Frequency");
   if(m_config.bFox()) {
     ui->label_6->setText("Stations calling DXpedition " + m_config.my_callsign());

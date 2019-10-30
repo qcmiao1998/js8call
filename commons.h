@@ -6,7 +6,11 @@
 
 #define RX_SAMPLE_RATE 12000
 
-#define JS8_RING_BUFFER    1
+#define JS8_USE_REFSPEC    1       // compute the signal refspec
+#define JS8_RING_BUFFER    1       // use a ring buffer instead of clearing the decode frames
+#define JS8_DECODER_ONE    1       // decode only one mode at a time
+#define JS8_DECODER_E2S    0       // decode every 2 seconds instead of at the half symbol stop
+
 #define JS8_NUM_SYMBOLS    79
 #define JS8_ENABLE_JS8B    1
 #define JS8_ENABLE_JS8C    1
@@ -88,8 +92,7 @@ extern struct dec_data {
     int nfb;                    //High decode limit (Hz)
     int ntol;                   //+/- decoding range around fQSO (Hz)
     int kin;                    // number of frames written to d2
-    int nsz;                    // number of frames to use in the decoder (period size)
-    int nzhsym;
+    int nzhsym;                 // half symbol stop index
     int nsubmode;
     bool nagain;
     int ndepth;
