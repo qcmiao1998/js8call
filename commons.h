@@ -7,6 +7,7 @@
 #define RX_SAMPLE_RATE 12000
 
 #define JS8_USE_REFSPEC    1       // compute the signal refspec
+#define JS8_USE_IHSYM      1       // compute ihsym manually instead of from symspec
 #define JS8_RING_BUFFER    1       // use a ring buffer instead of clearing the decode frames
 #define JS8_DECODER_ONE    1       // decode only one mode at a time
 #define JS8_DECODER_E2S    0       // decode every 2 seconds instead of at the half symbol stop

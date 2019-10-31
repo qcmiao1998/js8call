@@ -2520,7 +2520,7 @@ void MainWindow::dataSink(qint64 frames)
     int nsmo=m_wideGraph->smoothYellow()-1;
 
     /// START IHSYM
-
+#if JS8_USE_IHSYM
     // moving ihsym computation to here from symspec.f90
     // 1) set the initial ihsym
     if(m_ihsym == 0){
@@ -2542,6 +2542,9 @@ void MainWindow::dataSink(qint64 frames)
     qDebug() << "dataSink" << k << "ihsym" << m_ihsym << "ihs" << ihs;
 
     /// END IHSYM
+#else
+    symspec_(&dec_data,&k,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&m_ihsym,&m_npts8,&m_pxmax);
+#endif
 
     if(m_ihsym <= 0) return;
 
@@ -4061,21 +4064,27 @@ void MainWindow::decode(int submode, int period)                                
   // clear out d1
   memset(dec_data.d1, 0, sizeof(dec_data.d1));
 
-  // compute frames to copy for decoding
-  int neededFrames = dec_data.params.nzhsym * m_nsps / 2.0;
-  int start = qMax(0, dec_data.params.kin-neededFrames);
-  int stop =  qMin(start + neededFrames, dec_data.params.kin);
-  int availableFrames = stop - start;
-  int missingFrames = neededFrames - availableFrames;
+  // copy the whole sample if disk data, otherwise, copy the needed frames
+  if(m_diskData){
+    qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
+    memcpy(dec_data.d1, dec_data.d2, sizeof(dec_data.d2));
+  } else {
+      // compute frames to copy for decoding
+      int neededFrames = dec_data.params.nzhsym * m_nsps / 2.0;
+      int start = qMax(0, dec_data.params.kin-neededFrames);
+      int stop =  qMin(start + neededFrames, dec_data.params.kin);
+      int availableFrames = stop - start;
+      int missingFrames = neededFrames - availableFrames;
 
-  qDebug() << "try decode from" << start << "to" << stop << "available" << availableFrames << "missing" << missingFrames;
-  if(missingFrames){
-      // the maximum frame is the period sample size
-      int maxFrames = m_detector->period() * RX_SAMPLE_RATE;
-      qDebug() << "-> copy missing frames from" << maxFrames-missingFrames << "to" << maxFrames << "to beginning of d1";
-      memcpy(dec_data.d1, &dec_data.d2[maxFrames-missingFrames], sizeof(dec_data.d2[0]) * missingFrames);
+      qDebug() << "try decode from" << start << "to" << stop << "available" << availableFrames << "missing" << missingFrames;
+      if(missingFrames){
+          // the maximum frame is the period sample size
+          int maxFrames = m_detector->period() * RX_SAMPLE_RATE;
+          qDebug() << "-> copy missing frames from" << maxFrames-missingFrames << "to" << maxFrames << "to beginning of d1";
+          memcpy(dec_data.d1, &dec_data.d2[maxFrames-missingFrames], sizeof(dec_data.d2[0]) * missingFrames);
+      }
+      memcpy(dec_data.d1 + missingFrames, dec_data.d2 + start, sizeof(dec_data.d2[0]) * availableFrames);
   }
-  memcpy(dec_data.d1 + missingFrames, dec_data.d2 + start, sizeof(dec_data.d2[0]) * availableFrames);
 #else
   qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
   memset(dec_data.d1, 0, sizeof(dec_data.d1));
