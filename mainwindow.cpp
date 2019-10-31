@@ -2472,10 +2472,10 @@ int MainWindow::computeStop(int submode, int period){
     int symbolSamples = 0;
     float threshold = 1.0;
     switch(submode){
-        case Varicode::JS8CallNormal: symbolSamples = JS8A_SYMBOL_SAMPLES; break;
-        case Varicode::JS8CallFast:   symbolSamples = JS8B_SYMBOL_SAMPLES; break;
-        case Varicode::JS8CallTurbo:  symbolSamples = JS8C_SYMBOL_SAMPLES; break;
-        case Varicode::JS8CallUltra:  symbolSamples = JS8D_SYMBOL_SAMPLES; break;
+        case Varicode::JS8CallNormal: symbolSamples = JS8A_SYMBOL_SAMPLES; threshold = 1.00; break;
+        case Varicode::JS8CallFast:   symbolSamples = JS8B_SYMBOL_SAMPLES; threshold = 1.08; break;
+        case Varicode::JS8CallTurbo:  symbolSamples = JS8C_SYMBOL_SAMPLES; threshold = 0.50; break;
+        case Varicode::JS8CallUltra:  symbolSamples = JS8D_SYMBOL_SAMPLES; threshold = 0.00; break;
     }
     stop = qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)/(float)m_nsps*2.0);
 #endif
@@ -3958,7 +3958,7 @@ void MainWindow::decode(int submode, int period)                                
   }
 
   m_msec0=DriftingDateTime::currentMSecsSinceEpoch();
-  if(!m_dataAvailable or m_TRperiod==0) return;
+  if(!m_dataAvailable or period==0) return;
 
   ui->DecodeButton->setChecked (true);
   if(dec_data.params.nagain==0 && dec_data.params.newdat==1 && (!m_diskData)) {
@@ -3966,14 +3966,14 @@ void MainWindow::decode(int submode, int period)                                
     int imin=ms/60000;
     int ihr=imin/60;
     imin=imin % 60;
-    if(m_TRperiod>=60) imin=imin - (imin % (m_TRperiod/60));
+    if(period>=60) imin=imin - (imin % (period/60));
     dec_data.params.nutc=100*ihr + imin;
     if(m_mode=="FT8") {
-      QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(2-m_TRperiod);
+      QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(2-period);
       ihr=t.toString("hh").toInt();
       imin=t.toString("mm").toInt();
       int isec=t.toString("ss").toInt();
-      isec=isec - isec%m_TRperiod;
+      isec=isec - isec%period;
       dec_data.params.nutc=10000*ihr + 100*imin + isec;
     }
   }
@@ -3983,7 +3983,7 @@ void MainWindow::decode(int submode, int period)                                
     int ihr=t.toString("hh").toInt();
     int imin=t.toString("mm").toInt();
     int isec=t.toString("ss").toInt();
-    isec=isec - isec%m_TRperiod;
+    isec=isec - isec%period;
     dec_data.params.nutc=10000*ihr + 100*imin + isec;
   }
   if(m_nPick==2) dec_data.params.nutc=m_nutc0;
