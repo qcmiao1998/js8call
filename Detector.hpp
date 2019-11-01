@@ -31,6 +31,9 @@ public:
   Q_SIGNAL void framesWritten (qint64) const;
   Q_SLOT void setBlockSize (unsigned);
 
+  void clear ();		// discard buffer contents
+  unsigned secondInPeriod () const;
+
 protected:
   qint64 readData (char * /* data */, qint64 /* maxSize */) override
   {
@@ -40,9 +43,6 @@ protected:
   qint64 writeData (char const * data, qint64 maxSize) override;
 
 private:
-  void clear ();		// discard buffer contents
-  unsigned secondInPeriod () const;
-
   unsigned m_frameRate;
   unsigned m_period;
   unsigned m_downSampleFactor;

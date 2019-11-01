@@ -93,6 +93,8 @@ extern struct dec_data {
     int nfb;                    //High decode limit (Hz)
     int ntol;                   //+/- decoding range around fQSO (Hz)
     int kin;                    // number of frames written to d2
+    int kpos;                   // starting position of decode
+    int kout;                   // number of frames for decode
     int nzhsym;                 // half symbol stop index
     int nsubmode;
     bool nagain;

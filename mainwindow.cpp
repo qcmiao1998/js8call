@@ -284,7 +284,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_logDlg (new LogQSO (program_title (), m_settings, &m_config, nullptr)),
   m_lastDialFreq {0},
   m_detector {new Detector {RX_SAMPLE_RATE, NTMAX, downSampleFactor}},
-  m_FFTSize {6192 / 2},         // conservative value to avoid buffer overruns
+  m_FFTSize {6912 / 2},         // conservative value to avoid buffer overruns
   m_soundInput {new SoundInput},
   m_modulator {new Modulator {TX_SAMPLE_RATE, NTMAX}},
   m_soundOutput {new SoundOutput},
@@ -2461,7 +2461,14 @@ void MainWindow::fixStop()
 int MainWindow::computeStop(int submode, int period){
     int stop = 0;
 
-#if 0
+#if 1
+    switch(submode){
+    case Varicode::JS8CallNormal: stop = 50; break; // tx dur + 1.76s (74.5%)
+    case Varicode::JS8CallFast:   stop = 30; break; //
+    case Varicode::JS8CallTurbo:  stop = 16; break; //
+    case Varicode::JS8CallUltra:  stop = 11; break; //
+    }
+#elif 0
     stop=((int(period/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
     if(submode == Varicode::JS8CallUltra){
         stop++;
@@ -2472,15 +2479,19 @@ int MainWindow::computeStop(int submode, int period){
     int symbolSamples = 0;
     float threshold = 1.0;
     switch(submode){
-        case Varicode::JS8CallNormal: symbolSamples = JS8A_SYMBOL_SAMPLES; threshold = 1.00; break;
-        case Varicode::JS8CallFast:   symbolSamples = JS8B_SYMBOL_SAMPLES; threshold = 1.08; break;
-        case Varicode::JS8CallTurbo:  symbolSamples = JS8C_SYMBOL_SAMPLES; threshold = 0.50; break;
-        case Varicode::JS8CallUltra:  symbolSamples = JS8D_SYMBOL_SAMPLES; threshold = 0.00; break;
+        case Varicode::JS8CallNormal: symbolSamples = JS8A_SYMBOL_SAMPLES; /* threshold = 1.00 */ ; break;
+        case Varicode::JS8CallFast:   symbolSamples = JS8B_SYMBOL_SAMPLES; /* threshold = 1.08 */ ; break;
+        case Varicode::JS8CallTurbo:  symbolSamples = JS8C_SYMBOL_SAMPLES; /* threshold = 0.50 */ ; break;
+        case Varicode::JS8CallUltra:  symbolSamples = JS8D_SYMBOL_SAMPLES; /* threshold = 0.00 */ ; break;
     }
     stop = qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)/(float)m_nsps*2.0);
 #endif
 
     return stop;
+}
+
+int MainWindow::computeStopSymbols(int submode, int period){
+    return computeStop(submode, period) * m_nsps / 2.0;
 }
 
 //-------------------------------------------------------------- dataSink()
@@ -2561,8 +2572,26 @@ void MainWindow::dataSink(qint64 frames)
     // if the current half symbol index is the half symbol stop index, then proceed
     qint32 submode = m_nSubMode;
     qint32 period = m_TRperiod;
-    qint32 halfSymbolStop = m_hsymStop;
-    bool newDataReady = m_ihsym % m_hsymStop == 0;
+
+#if JS8_RING_BUFFER
+    qint32 cycle = m_detector->secondInPeriod() / period;
+    qint32 samplesPerCycle = period * RX_SAMPLE_RATE;
+    qint32 cycleSampleStart = cycle * samplesPerCycle;
+    qint32 symbolsNeeded = computeStopSymbols(submode, period);
+
+    bool newDataReady = false;
+    static int lastCycle = -1;
+    if(cycle < lastCycle){
+        lastCycle = -1;
+    }
+    if(cycle != lastCycle && k >= cycleSampleStart + symbolsNeeded){
+        qDebug() << "cycle" << cycle << "start" << cycleSampleStart << "k" << k << "needed" << symbolsNeeded;
+        dec_data.params.kout = symbolsNeeded;
+        dec_data.params.kpos = cycleSampleStart;
+        newDataReady = true;
+        lastCycle = cycle;
+    }
+#endif
 
 #if JS8_DECODER_E2S
     // decoding every 2 seconds
@@ -2647,7 +2676,7 @@ void MainWindow::dataSink(qint64 frames)
     dec_data.params.npts8=(m_ihsym*m_nsps)/16;
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
-    dec_data.params.nzhsym=halfSymbolStop;
+    dec_data.params.nzhsym=m_ihsym;
     m_dateTime = now.toString ("yyyy-MMM-dd hh:mm");
 
 #if JS8_DECODER_ONE
@@ -4064,26 +4093,32 @@ void MainWindow::decode(int submode, int period)                                
   // clear out d1
   memset(dec_data.d1, 0, sizeof(dec_data.d1));
 
-  // copy the whole sample if disk data, otherwise, copy the needed frames
+  // copy the whole sample if disk data, otherwise, copy only the needed frames
   if(m_diskData){
     qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
     memcpy(dec_data.d1, dec_data.d2, sizeof(dec_data.d2));
   } else {
       // compute frames to copy for decoding
-      int neededFrames = dec_data.params.nzhsym * m_nsps / 2.0;
-      int start = qMax(0, dec_data.params.kin-neededFrames);
-      int stop =  qMin(start + neededFrames, dec_data.params.kin);
+      int neededFrames = dec_data.params.kout;
+      int start = dec_data.params.kpos;
+      int stop = qMax(start + neededFrames, dec_data.params.kin); // copy more than needed if available
       int availableFrames = stop - start;
       int missingFrames = neededFrames - availableFrames;
 
       qDebug() << "try decode from" << start << "to" << stop << "available" << availableFrames << "missing" << missingFrames;
-      if(missingFrames){
-          // the maximum frame is the period sample size
-          int maxFrames = m_detector->period() * RX_SAMPLE_RATE;
-          qDebug() << "-> copy missing frames from" << maxFrames-missingFrames << "to" << maxFrames << "to beginning of d1";
-          memcpy(dec_data.d1, &dec_data.d2[maxFrames-missingFrames], sizeof(dec_data.d2[0]) * missingFrames);
-      }
-      memcpy(dec_data.d1 + missingFrames, dec_data.d2 + start, sizeof(dec_data.d2[0]) * availableFrames);
+
+      // TODO: missing frames happen if we run a decode period not relative to the period interval...
+      //       we'll need to figure out the best way to use the ring buffer in these situations.
+
+      // if(missingFrames){
+      //     // the maximum frame is the period sample size
+      //     int maxFrames = m_detector->period() * RX_SAMPLE_RATE;
+      //     qDebug() << "-> copy missing frames from" << maxFrames-missingFrames << "to" << maxFrames << "to beginning of d1";
+      //     memcpy(dec_data.d1, &dec_data.d2[maxFrames-missingFrames], sizeof(dec_data.d2[0]) * missingFrames);
+      // }
+
+      //memcpy(dec_data.d1 + missingFrames, dec_data.d2 + start, sizeof(dec_data.d2[0]) * availableFrames);
+      memcpy(dec_data.d1, dec_data.d2 + start, sizeof(dec_data.d2[0]) * availableFrames);
   }
 #else
   qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
@@ -7071,9 +7106,13 @@ void MainWindow::on_actionJS8_triggered()
   }
   m_wideGraph->show();
   ui->decodedTextLabel2->setText("  UTC   dB   DT Freq    Message");
-  m_wideGraph->setPeriod(m_TRperiod,m_nsps);
+  m_wideGraph->setPeriod(m_TRperiod, m_nsps);
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
+#if JS8_RING_BUFFER
   m_detector->setTRPeriod(30); // TODO - not thread safe
+#else
+  m_detector->setTRPeriod(m_TRperiod); // TODO - not thread safe
+#endif
   ui->label_7->setText("Rx Frequency");
   if(m_config.bFox()) {
     ui->label_6->setText("Stations calling DXpedition " + m_config.my_callsign());

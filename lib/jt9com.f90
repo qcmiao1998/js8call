@@ -19,6 +19,8 @@
      integer(c_int) :: nfb
      integer(c_int) :: ntol
      integer(c_int) :: kin
+     integer(c_int) :: kpos
+     integer(c_int) :: kout
      integer(c_int) :: nzhsym
      integer(c_int) :: nsubmode
      logical(c_bool) :: nagain
