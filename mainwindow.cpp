@@ -2461,7 +2461,7 @@ void MainWindow::fixStop()
 int MainWindow::computeStop(int submode, int period){
     int stop = 0;
 
-#if 1
+#if 0
     switch(submode){
     case Varicode::JS8CallNormal: stop = 50; break; // tx dur + 1.76s (74.5%)
     case Varicode::JS8CallFast:   stop = 30; break; //
@@ -4103,7 +4103,7 @@ void MainWindow::decode(int submode, int period)                                
       int start = dec_data.params.kpos;
       int stop = qMax(start + neededFrames, dec_data.params.kin); // copy more than needed if available
       int availableFrames = stop - start;
-      int missingFrames = neededFrames - availableFrames;
+      int missingFrames = qMax(0, neededFrames - availableFrames);
 
       qDebug() << "try decode from" << start << "to" << stop << "available" << availableFrames << "missing" << missingFrames;
 
