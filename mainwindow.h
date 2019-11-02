@@ -926,7 +926,9 @@ private:
   void statusChanged();
   void fixStop();
   int computeStop(int submode, int period);
-  int computeStopSymbols(int submode, int period);
+  int computeCurrentCycle(int period);
+  int computeCycleStartForDecode(int cycle, int period);
+  int computeFramesNeededForDecode(int submode, int period);
   bool shortList(QString callsign);
   void transmit (double snr = 99.);
   void rigFailure (QString const& reason);

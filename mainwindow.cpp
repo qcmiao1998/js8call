@@ -2490,7 +2490,16 @@ int MainWindow::computeStop(int submode, int period){
     return stop;
 }
 
-int MainWindow::computeStopSymbols(int submode, int period){
+int MainWindow::computeCurrentCycle(int period){
+    return m_detector->secondInPeriod() / period;
+}
+
+int MainWindow::computeCycleStartForDecode(int cycle, int period){
+    qint32 samplesPerCycle = period * RX_SAMPLE_RATE;
+    return cycle * samplesPerCycle;
+}
+
+int MainWindow::computeFramesNeededForDecode(int submode, int period){
     return computeStop(submode, period) * m_nsps / 2.0;
 }
 
@@ -2566,27 +2575,25 @@ void MainWindow::dataSink(qint64 frames)
 
     fixStop();
 
-    // could we decode all at once?
     QDateTime now {DriftingDateTime::currentDateTimeUtc ()};
 
-    // if the current half symbol index is the half symbol stop index, then proceed
+    // check if we have enough frames to issue a decode for the current submode/period
+    bool newDataReady = false;
     qint32 submode = m_nSubMode;
     qint32 period = m_TRperiod;
 
 #if JS8_RING_BUFFER
-    qint32 cycle = m_detector->secondInPeriod() / period;
-    qint32 samplesPerCycle = period * RX_SAMPLE_RATE;
-    qint32 cycleSampleStart = cycle * samplesPerCycle;
-    qint32 symbolsNeeded = computeStopSymbols(submode, period);
+    qint32 cycle = computeCurrentCycle(period);
+    qint32 cycleSampleStart = computeCycleStartForDecode(cycle, period);
+    qint32 framesNeeded = computeFramesNeededForDecode(submode, period);
 
-    bool newDataReady = false;
     static int lastCycle = -1;
     if(cycle < lastCycle){
         lastCycle = -1;
     }
-    if(cycle != lastCycle && k >= cycleSampleStart + symbolsNeeded){
-        qDebug() << "cycle" << cycle << "start" << cycleSampleStart << "k" << k << "needed" << symbolsNeeded;
-        dec_data.params.kout = symbolsNeeded;
+    if(cycle != lastCycle && k >= cycleSampleStart + framesNeeded){
+        qDebug() << "cycle" << cycle << "start" << cycleSampleStart << "k" << k << "needed" << framesNeeded;
+        dec_data.params.kout = framesNeeded;
         dec_data.params.kpos = cycleSampleStart;
         newDataReady = true;
         lastCycle = cycle;
@@ -2594,78 +2601,20 @@ void MainWindow::dataSink(qint64 frames)
 #endif
 
 #if JS8_DECODER_E2S
+    // TODO: e2s works until the signal crosses a detector period boundary :/
+
+    // if we're using e2s decoding, don't decode other cycles...
+    newDataReady = false;
+
     // decoding every 2 seconds
     static int lastn = 0;
-    int n = now.time().second();
-    newDataReady = n != lastn && n % 2 == 0;
-    lastn = n;
-#endif
-
-#if 0
-    newDataReady = false;
-    if(!m_decoderBusy) // m_nSubMode == Varicode::JS8CallNormal)
-    {
-#if 0
-        if(lastn != n && n % JS8A_TX_SECONDS == 0){
-            qDebug() << "could decode normal now" << n;
-            period = JS8A_TX_SECONDS;
-            submode = Varicode::JS8CallNormal;
-            newDataReady = true;
-            m_hsymStop = m_ihsym;
-        }
-
-        if(lastn != n && n % JS8B_TX_SECONDS == 0){
-            qDebug() << "could decode fast now" << n;
-            period = JS8B_TX_SECONDS;
-            submode = Varicode::JS8CallFast;
-            newDataReady = true;
-            m_hsymStop = m_ihsym;
-        }
-        if(lastn != n && n % JS8C_TX_SECONDS == 0){
-            qDebug() << "could decode turbo now" << n;
-            period = JS8C_TX_SECONDS;
-            submode = Varicode::JS8CallTurbo;
-            newDataReady = true;
-            m_hsymStop = m_ihsym;
-        }
-        lastn = n;
-#elif 1
-        int n = now.time().second();
-        qint32 hsymNormalStop = computeStop(Varicode::JS8CallNormal, JS8A_TX_SECONDS);
-        qint32 hsymFastStop   = computeStop(Varicode::JS8CallFast,   JS8B_TX_SECONDS);
-        qint32 hsymTurboStop  = computeStop(Varicode::JS8CallTurbo,  JS8C_TX_SECONDS);
-        qint32 hsymUltraStop  = computeStop(Varicode::JS8CallUltra,  JS8D_TX_SECONDS);
-        /// if(m_ihsym % hsymNormalStop == 0){
-        ///     period = JS8A_TX_SECONDS;
-        ///     submode = Varicode::JS8CallNormal;
-        ///     halfSymbolStop = hsymNormalStop;
-        ///     qDebug() << "could decode normal now" << n;
-        ///     newDataReady = true;
-        /// }
-        /// if(m_ihsym % hsymFastStop == 0){
-        ///     period = JS8B_TX_SECONDS;
-        ///     submode = Varicode::JS8CallFast;
-        ///     halfSymbolStop = hsymFastStop;
-        ///     qDebug() << "could decode fast now" << n;
-        ///     newDataReady = true;
-        /// }
-        if(m_ihsym % hsymTurboStop == 0){
-            period = JS8C_TX_SECONDS;
-            submode = Varicode::JS8CallTurbo;
-            halfSymbolStop = hsymTurboStop;
-            qDebug() << "could decode turbo now" << n;
-            newDataReady = true;
-        }
-        /// if(m_ihsym % hsymUltraStop == 0){
-        ///     period = JS8D_TX_SECONDS;
-        ///     submode = Varicode::JS8CallUltra;
-        ///     halfSymbolStop = hsymFastStop;
-        ///     qDebug() << "could decode ultra now" << n;
-        ///     newDataReady = true;
-        /// }
-        dec_data.params.nsz = halfSymbolStop * m_nsps / 2;
-#endif
+    qint32 n = m_detector->secondInPeriod();
+    if(n != lastn && n % 2 == 0){
+        dec_data.params.kout = symbolsNeeded;
+        dec_data.params.kpos = qMax(0, dec_data.params.kin - symbolsNeeded);
+        newDataReady = true;
     }
+    lastn = n;
 #endif
 
     if(!newDataReady) {
@@ -4099,26 +4048,29 @@ void MainWindow::decode(int submode, int period)                                
     memcpy(dec_data.d1, dec_data.d2, sizeof(dec_data.d2));
   } else {
       // compute frames to copy for decoding
-      int neededFrames = dec_data.params.kout;
+      int framesNeeded = dec_data.params.kout;
       int start = dec_data.params.kpos;
-      int stop = qMax(start + neededFrames, dec_data.params.kin); // copy more than needed if available
-      int availableFrames = stop - start;
-      int missingFrames = qMax(0, neededFrames - availableFrames);
+      int stop = qMax(start + framesNeeded, dec_data.params.kin);    // copy more than needed if available
+      int framesAvailable = qMin(stop - start, dec_data.params.kin); // kin is the max available currently
+      int framesMissing = qMax(0, framesNeeded - framesAvailable);
 
-      qDebug() << "try decode from" << start << "to" << stop << "available" << availableFrames << "missing" << missingFrames;
+      qDebug() << "try decode from" << start << "to" << stop << "available" << framesAvailable << "missing" << framesMissing;
 
+#if JS8_DECODER_E2S
       // TODO: missing frames happen if we run a decode period not relative to the period interval...
       //       we'll need to figure out the best way to use the ring buffer in these situations.
 
-      // if(missingFrames){
-      //     // the maximum frame is the period sample size
-      //     int maxFrames = m_detector->period() * RX_SAMPLE_RATE;
-      //     qDebug() << "-> copy missing frames from" << maxFrames-missingFrames << "to" << maxFrames << "to beginning of d1";
-      //     memcpy(dec_data.d1, &dec_data.d2[maxFrames-missingFrames], sizeof(dec_data.d2[0]) * missingFrames);
-      // }
+      if(missingFrames){
+          // the maximum frame is the period sample size
+          int maxFrames = m_detector->period() * RX_SAMPLE_RATE;
+          qDebug() << "-> copy missing frames from" << maxFrames-missingFrames << "to" << maxFrames << "to beginning of d1";
+          memcpy(dec_data.d1, &dec_data.d2[maxFrames-missingFrames], sizeof(dec_data.d2[0]) * missingFrames);
+      }
+      memcpy(dec_data.d1 + missingFrames, dec_data.d2 + start, sizeof(dec_data.d2[0]) * availableFrames);
+#else
+      memcpy(dec_data.d1, dec_data.d2 + start, sizeof(dec_data.d2[0]) * framesAvailable);
+#endif
 
-      //memcpy(dec_data.d1 + missingFrames, dec_data.d2 + start, sizeof(dec_data.d2[0]) * availableFrames);
-      memcpy(dec_data.d1, dec_data.d2 + start, sizeof(dec_data.d2[0]) * availableFrames);
   }
 #else
   qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
