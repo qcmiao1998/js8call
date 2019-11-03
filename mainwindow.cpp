@@ -4084,6 +4084,8 @@ void MainWindow::decode(int submode, int period)                                
   char *to = (char*)mem_js8->data();
   char *from = (char*) dec_data.ss;
   int size=sizeof(struct dec_data);
+
+  // only copy the params
   if(dec_data.params.newdat==0) {
     int noffset {offsetof (struct dec_data, params.nutc)};
     to += noffset;
@@ -4092,7 +4094,7 @@ void MainWindow::decode(int submode, int period)                                
   }  
 
   memcpy(to, from, qMin(mem_js8->size(), size));
-  QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove (); // Allow jt9 to start
+  QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove (); // Allow decoder to start
   decodeBusy(true);
 }
 
