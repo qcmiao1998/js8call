@@ -2638,12 +2638,12 @@ void MainWindow::dataSink(qint64 frames)
 
     if(!m_diskData) {                        //Always save; may delete later
       if(m_mode=="FT8") {
-        int n=now.time().second() % m_TRperiod;
-        if(n<(m_TRperiod/2)) n=n+m_TRperiod;
+        int n=now.time().second() % period;
+        if(n<(period/2)) n=n+period;
         auto const& period_start=now.addSecs(-n);
         m_fnameWE=m_config.save_directory().absoluteFilePath (period_start.toString("yyMMdd_hhmmss"));
       } else {
-        auto const& period_start = now.addSecs (-(now.time ().minute () % (m_TRperiod / 60)) * 60);
+        auto const& period_start = now.addSecs (-(now.time ().minute () % (period / 60)) * 60);
         m_fnameWE=m_config.save_directory ().absoluteFilePath (period_start.toString ("yyMMdd_hhmm"));
       }
       m_fileToSave.clear ();
@@ -2653,8 +2653,8 @@ void MainWindow::dataSink(qint64 frames)
           // the following is potential a threading hazard - not a good
           // idea to pass pointer to be processed in another thread
           m_saveWAVWatcher.setFuture (QtConcurrent::run (std::bind (&MainWindow::save_wave_file,
-                this, m_fnameWE, &dec_data.d2[0], m_TRperiod, m_config.my_callsign(),
-                m_config.my_grid(), m_mode, m_nSubMode, m_freqNominal, m_hisCall, m_hisGrid)));
+                this, m_fnameWE, &dec_data.d2[0], period, m_config.my_callsign(),
+                m_config.my_grid(), m_mode, submode, m_freqNominal, m_hisCall, m_hisGrid)));
       }
     }
 
