@@ -95,8 +95,8 @@ int main(int argc, char *argv[])
   Radio::register_types ();
   register_types ();
 
-  // Multiple instances communicate with jt9 via this
-  QSharedMemory mem_jt9;
+  // Multiple instances communicate with the decoder via this shared memory segment
+  QSharedMemory mem_js8;
 
   QApplication a(argc, argv);
   try
@@ -294,21 +294,21 @@ int main(int argc, char *argv[])
 
           // Create and initialize shared memory segment
           // Multiple instances: use rig_name as shared memory key
-          mem_jt9.setKey(a.applicationName ());
+          mem_js8.setKey(a.applicationName ());
 
-          if(!mem_jt9.attach()) {
-            std::cerr << QString("memory attach error: %1").arg(mem_jt9.error()).toLocal8Bit ().data () << std::endl;
+          if(!mem_js8.attach()) {
+            std::cerr << QString("memory attach error: %1").arg(mem_js8.error()).toLocal8Bit ().data () << std::endl;
 
-            if (!mem_jt9.create(sizeof(struct dec_data))) {
+            if (!mem_js8.create(sizeof(struct dec_data))) {
               splash.hide ();
-              std::cerr << QString("memory create error: %1").arg(mem_jt9.error()).toLocal8Bit ().data () << std::endl;
+              std::cerr << QString("memory create error: %1").arg(mem_js8.error()).toLocal8Bit ().data () << std::endl;
 
               MessageBox::critical_message (nullptr, a.translate ("main", "Shared memory error"),
                                             a.translate ("main", "Unable to create shared memory segment"));
               throw std::runtime_error {"Shared memory error"};
             }
           }
-          memset(mem_jt9.data(),0,sizeof(struct dec_data)); //Zero all decoding params in shared memory
+          memset(mem_js8.data(),0,sizeof(struct dec_data)); //Zero all decoding params in shared memory
 
           unsigned downSampleFactor;
           {
@@ -328,7 +328,7 @@ int main(int argc, char *argv[])
           }
 
           // run the application UI
-          MainWindow w(temp_dir, multiple, &multi_settings, &mem_jt9, downSampleFactor, &splash);
+          MainWindow w(temp_dir, multiple, &multi_settings, &mem_js8, downSampleFactor, &splash);
           w.show();
           //splash.raise ();
           QObject::connect (&a, SIGNAL (lastWindowClosed()), &a, SLOT (quit()));

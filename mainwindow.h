@@ -877,6 +877,7 @@ private:
   QDateTime m_dateTimeLastTX;
 
   QSharedMemory *mem_js8;
+
   LogBook m_logBook;
   QString m_QSOText;
   unsigned m_msAudioOutputBuffered;
