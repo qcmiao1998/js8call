@@ -230,7 +230,9 @@ private slots:
   void on_actionCopyright_Notice_triggered();
   void on_DecodeButton_clicked (bool);
   void decode();
-  void decode(int submode, int trPeriod);
+  bool decodeReady(int submode, int period);
+  void decodeStart(int submode, int period);
+  void decodePrepareSaveAudio(int submode, int period);
   void decodeBusy(bool b);
   void on_EraseButton_clicked();
   void set_dateTimeQSO(int m_ntx);
@@ -583,7 +585,6 @@ private:
   bool    m_saveAll;
   bool    m_widebandDecode;
   bool    m_call3Modified;
-  bool    m_dataAvailable;
   bool    m_bDecoded;
   bool    m_noSuffix;
   bool    m_blankLine;
@@ -602,7 +603,6 @@ private:
   bool    m_grid6;
   bool    m_tuneup;
   bool    m_bTxTime;
-  bool    m_rxDone;
   bool    m_bTransmittedEcho;
   bool    m_bDoubleClickAfterCQnnn;
   bool    m_bRefSpec;

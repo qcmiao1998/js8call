@@ -2,7 +2,7 @@
 #define COMMONS_H
 
 #define NSMAX 6827
-#define NTMAX 60
+#define NTMAX 30
 
 #define RX_SAMPLE_RATE 12000
 

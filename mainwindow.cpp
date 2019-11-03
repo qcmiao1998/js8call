@@ -328,7 +328,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_saveDecoded {false},
   m_saveAll {false},
   m_widebandDecode {false},
-  m_dataAvailable {false},
   m_blankLine {false},
   m_decodedText2 {false},
   m_freeText {false},
@@ -342,7 +341,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_grid6 {false},
   m_tuneup {false},
   m_bTxTime {false},
-  m_rxDone {false},
   m_bTransmittedEcho {false},
   m_bDoubleClickAfterCQnnn {false},
   m_bRefSpec {false},
@@ -2575,90 +2573,14 @@ void MainWindow::dataSink(qint64 frames)
 
     fixStop();
 
-    QDateTime now {DriftingDateTime::currentDateTimeUtc ()};
+    m_dateTime = DriftingDateTime::currentDateTimeUtc().toString ("yyyy-MMM-dd hh:mm");
 
-    // check if we have enough frames to issue a decode for the current submode/period
-    bool newDataReady = false;
-    qint32 submode = m_nSubMode;
-    qint32 period = m_TRperiod;
-
-#if JS8_RING_BUFFER
-    qint32 cycle = computeCurrentCycle(period);
-    qint32 cycleSampleStart = computeCycleStartForDecode(cycle, period);
-    qint32 framesNeeded = computeFramesNeededForDecode(submode, period);
-
-    static int lastCycle = -1;
-    if(cycle < lastCycle){
-        lastCycle = -1;
-    }
-    if(cycle != lastCycle && k >= cycleSampleStart + framesNeeded){
-        qDebug() << "cycle" << cycle << "start" << cycleSampleStart << "k" << k << "needed" << framesNeeded;
-        dec_data.params.kout = framesNeeded;
-        dec_data.params.kpos = cycleSampleStart;
-        newDataReady = true;
-        lastCycle = cycle;
-    }
-#endif
-
-#if JS8_DECODER_E2S
-    // TODO: e2s works until the signal crosses a detector period boundary :/
-
-    // if we're using e2s decoding, don't decode other cycles...
-    newDataReady = false;
-
-    // decoding every 2 seconds
-    static int lastn = 0;
-    qint32 n = m_detector->secondInPeriod();
-    if(n != lastn && n % 2 == 0){
-        dec_data.params.kout = symbolsNeeded;
-        dec_data.params.kpos = qMax(0, dec_data.params.kin - symbolsNeeded);
-        newDataReady = true;
-    }
-    lastn = n;
-#endif
-
-    if(!newDataReady) {
-        return;
-    }
-
-    m_dataAvailable=true;
     dec_data.params.npts8=(m_ihsym*m_nsps)/16;
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
     dec_data.params.nzhsym=m_ihsym;
-    m_dateTime = now.toString ("yyyy-MMM-dd hh:mm");
 
-#if JS8_DECODER_ONE
-    decode(submode, period); //Start decoder
-#else
-    if(n % JS8A_TX_SECONDS == 0) decode(Varicode::JS8CallNormal, JS8A_TX_SECONDS);
-    if(n % JS8B_TX_SECONDS == 0) decode(Varicode::JS8CallFast,   JS8B_TX_SECONDS);
-    if(n % JS8C_TX_SECONDS == 0) decode(Varicode::JS8CallTurbo,  JS8C_TX_SECONDS);
-#endif
-
-    if(!m_diskData) {                        //Always save; may delete later
-      if(m_mode=="FT8") {
-        int n=now.time().second() % period;
-        if(n<(period/2)) n=n+period;
-        auto const& period_start=now.addSecs(-n);
-        m_fnameWE=m_config.save_directory().absoluteFilePath (period_start.toString("yyMMdd_hhmmss"));
-      } else {
-        auto const& period_start = now.addSecs (-(now.time ().minute () % (period / 60)) * 60);
-        m_fnameWE=m_config.save_directory ().absoluteFilePath (period_start.toString ("yyMMdd_hhmm"));
-      }
-      m_fileToSave.clear ();
-
-      if(m_saveAll or m_bAltV or (m_bDecoded and m_saveDecoded) or (m_mode!="MSK144" and m_mode!="FT8")) {
-          m_bAltV=false;
-          // the following is potential a threading hazard - not a good
-          // idea to pass pointer to be processed in another thread
-          m_saveWAVWatcher.setFuture (QtConcurrent::run (std::bind (&MainWindow::save_wave_file,
-                this, m_fnameWE, &dec_data.d2[0], period, m_config.my_callsign(),
-                m_config.my_grid(), m_mode, submode, m_freqNominal, m_hisCall, m_hisGrid)));
-      }
-    }
-
-    m_rxDone=true;
+    decode();
 }
 
 QString MainWindow::save_wave_file (QString const& name, short const * data, int seconds,
@@ -3920,163 +3842,218 @@ void MainWindow::msgAvgDecode2()
 }
 
 void MainWindow::decode(){
-    decode(m_nSubMode, m_TRperiod);
+    qint32 submode = m_nSubMode;
+    qint32 period = m_TRperiod;
+
+    bool ready = decodeReady(submode, period);
+    if(!ready){
+        return;
+    }
+
+    decodeStart(submode, period);
+    decodePrepareSaveAudio(submode, period);
 }
 
-void MainWindow::decode(int submode, int period)                                       //decode()
-{
-  QDateTime now = DriftingDateTime::currentDateTime();
-  if( m_dateTimeLastTX.isValid () ) {
-    qint64 isecs_since_tx = m_dateTimeLastTX.secsTo(now);
-    dec_data.params.lapcqonly= (isecs_since_tx > 600);
-//    QTextStream(stdout) << "last tx " << isecs_since_tx << endl;
-  } else {
-    m_dateTimeLastTX = now.addSecs(-900);
-    dec_data.params.lapcqonly=true;
-  }
-  if( m_diskData ) {
-    dec_data.params.lapcqonly=false;
-  }
+bool MainWindow::decodeReady(int submode, int period){
+    if(period == 0){
+        return false;
+    }
 
-  m_msec0=DriftingDateTime::currentMSecsSinceEpoch();
-  if(!m_dataAvailable or period==0) return;
+#if JS8_RING_BUFFER
+    qint32 cycle = computeCurrentCycle(period);
+    qint32 cycleSampleStart = computeCycleStartForDecode(cycle, period);
+    qint32 framesNeeded = computeFramesNeededForDecode(submode, period);
 
-  ui->DecodeButton->setChecked (true);
-  if(dec_data.params.nagain==0 && dec_data.params.newdat==1 && (!m_diskData)) {
-    qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
-    int imin=ms/60000;
-    int ihr=imin/60;
-    imin=imin % 60;
-    if(period>=60) imin=imin - (imin % (period/60));
-    dec_data.params.nutc=100*ihr + imin;
-    if(m_mode=="FT8") {
-      QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(2-period);
-      ihr=t.toString("hh").toInt();
-      imin=t.toString("mm").toInt();
+    static int lastCycle = -1;
+    if(cycle < lastCycle){
+        lastCycle = -1;
+    }
+
+    int k = dec_data.params.kin;
+    if(!m_diskData && (cycle == lastCycle || k < cycleSampleStart + framesNeeded)){
+        return false;
+    }
+
+    qDebug() << "cycle" << cycle << "start" << cycleSampleStart << "k" << k << "needed" << framesNeeded;
+    lastCycle = cycle;
+#endif
+
+#if JS8_DECODER_E2S
+    // TODO: e2s works until the signal crosses a detector period boundary :/
+
+    // decoding every 2 seconds
+    static int lastn = 0;
+    qint32 n = m_detector->secondInPeriod();
+    if(!m_diskData && (n == lastn || n % 2 != 0)){
+        return false;
+    }
+
+    cycleSampleStart = qMax(0, dec_data.params.kin - framesNeeded);
+    lastn = n;
+#endif
+
+    ui->DecodeButton->setChecked(true);
+    m_msec0 = DriftingDateTime::currentMSecsSinceEpoch();
+
+    if(dec_data.params.nagain==0 && dec_data.params.newdat==1 && (!m_diskData)) {
+      qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
+      int imin=ms/60000;
+      int ihr=imin/60;
+      imin=imin % 60;
+      if(period>=60) imin=imin - (imin % (period/60));
+      dec_data.params.nutc=100*ihr + imin;
+      if(m_mode=="FT8") {
+        QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(2-period);
+        ihr=t.toString("hh").toInt();
+        imin=t.toString("mm").toInt();
+        int isec=t.toString("ss").toInt();
+        isec=isec - isec%period;
+        dec_data.params.nutc=10000*ihr + 100*imin + isec;
+      }
+    }
+
+    if(m_nPick==1 and !m_diskData) {
+      QDateTime t=DriftingDateTime::currentDateTimeUtc();
+      int ihr=t.toString("hh").toInt();
+      int imin=t.toString("mm").toInt();
       int isec=t.toString("ss").toInt();
       isec=isec - isec%period;
       dec_data.params.nutc=10000*ihr + 100*imin + isec;
     }
-  }
 
-  if(m_nPick==1 and !m_diskData) {
-    QDateTime t=DriftingDateTime::currentDateTimeUtc();
-    int ihr=t.toString("hh").toInt();
-    int imin=t.toString("mm").toInt();
-    int isec=t.toString("ss").toInt();
-    isec=isec - isec%period;
-    dec_data.params.nutc=10000*ihr + 100*imin + isec;
-  }
-  if(m_nPick==2) dec_data.params.nutc=m_nutc0;
-  dec_data.params.nQSOProgress = m_QSOProgress;
-  dec_data.params.nfqso=m_wideGraph->rxFreq();
-  dec_data.params.nftx = ui->TxFreqSpinBox->value ();
-  qint32 depth {m_ndepth};
-  if (!ui->actionInclude_averaging->isVisible ()) depth &= ~16;
-  if (!ui->actionInclude_correlation->isVisible ()) depth &= ~32;
-  if (!ui->actionEnable_AP_DXcall->isVisible ()) depth &= ~64;
-  dec_data.params.ndepth=depth;
-  dec_data.params.n2pass=1;
-  if(m_config.twoPass()) dec_data.params.n2pass=2;
-  dec_data.params.nranera=m_config.ntrials();
-  dec_data.params.naggressive=m_config.aggressive();
-  dec_data.params.nrobust=0;
-  dec_data.params.ndiskdat=0;
-  if(m_diskData) dec_data.params.ndiskdat=1;
-  dec_data.params.nfa=m_wideGraph->nStartFreq();
-  dec_data.params.nfSplit=m_wideGraph->Fmin();
-  dec_data.params.nfb=m_wideGraph->Fmax();
+    if(m_nPick==2) dec_data.params.nutc=m_nutc0;
 
-  //if(m_mode=="FT8" and m_config.bHound() and !ui->cbRxAll->isChecked()) dec_data.params.nfb=1000;
-  //if(m_mode=="FT8" and m_config.bFox()) dec_data.params.nfqso=200;
+    dec_data.params.lapcqonly = false;
+    dec_data.params.nQSOProgress = m_QSOProgress;
+    dec_data.params.nfqso=m_wideGraph->rxFreq();
+    dec_data.params.nftx = ui->TxFreqSpinBox->value ();
 
-  dec_data.params.ntol=ui->sbFtol->value ();
-  if(m_mode=="JT9+JT65" or !m_config.enable_VHF_features()) {
-    dec_data.params.ntol=20;
-    dec_data.params.naggressive=0;
-  }
-  if(dec_data.params.nutc < m_nutc0) m_RxLog = 1;       //Date and Time to ALL.TXT
-  if(dec_data.params.newdat==1 and !m_diskData) m_nutc0=dec_data.params.nutc;
-  dec_data.params.ntxmode=9;
-  if(m_modeTx=="JT65") dec_data.params.ntxmode=65;
-  dec_data.params.nmode=9;
-  if(m_mode=="JT65") dec_data.params.nmode=65;
-  if(m_mode=="JT65") dec_data.params.ljt65apon = ui->actionEnable_AP_JT65->isVisible () && ui->actionEnable_AP_JT65->isChecked ();
-  if(m_mode=="QRA64") dec_data.params.nmode=164;
-  if(m_mode=="QRA64") dec_data.params.ntxmode=164;
-  if(m_mode=="JT9+JT65") dec_data.params.nmode=9+65;  // = 74
-  if(m_mode=="JT4") {
-    dec_data.params.nmode=4;
-    dec_data.params.ntxmode=4;
-  }
-  if(m_mode=="FT8") dec_data.params.nmode=8;
-  if(m_mode=="FT8") dec_data.params.lft8apon = ui->actionEnable_AP_FT8->isVisible () && ui->actionEnable_AP_FT8->isChecked ();
-  if(m_mode=="FT8") dec_data.params.napwid=50;
-  dec_data.params.ntrperiod=period; //m_TRperiod;
-  dec_data.params.nsubmode=submode; // m_nSubMode;
-  if(m_mode=="QRA64") dec_data.params.nsubmode=100 + m_nSubMode;
-  dec_data.params.minw=0;
-  dec_data.params.nclearave=m_nclearave;
-  if(m_nclearave!=0) {
-    QFile f(m_config.temp_dir ().absoluteFilePath ("avemsg.txt"));
-    f.remove();
-  }
-  dec_data.params.dttol=m_DTtol;
-  dec_data.params.emedelay=0.0;
-  if(m_config.decode_at_52s()) dec_data.params.emedelay=2.5;
-  dec_data.params.minSync=ui->syncSpinBox->isVisible () ? m_minSync : 0;
-  dec_data.params.nexp_decode=0;
-  if(m_config.single_decode()) dec_data.params.nexp_decode += 32;
-  if(m_config.enable_VHF_features()) dec_data.params.nexp_decode += 64;
-  if(ui->cbVHFcontest->isChecked()) dec_data.params.nexp_decode += 128;
+    qint32 depth {m_ndepth};
 
-  strncpy(dec_data.params.datetime, m_dateTime.toLatin1(), 20);
-  strncpy(dec_data.params.mycall, (m_config.my_callsign()+"            ").toLatin1(),12);
-  strncpy(dec_data.params.mygrid, (m_config.my_grid()+"      ").toLatin1(),6);
-  QString hisCall {ui->dxCallEntry->text ()};
-  QString hisGrid {ui->dxGridEntry->text ()};
-  strncpy(dec_data.params.hiscall,(hisCall + "            ").toLatin1 ().constData (), 12);
-  strncpy(dec_data.params.hisgrid,(hisGrid + "      ").toLatin1 ().constData (), 6);
+    if (!ui->actionInclude_averaging->isVisible ()) depth &= ~16;
+    if (!ui->actionInclude_correlation->isVisible ()) depth &= ~32;
+    if (!ui->actionEnable_AP_DXcall->isVisible ()) depth &= ~64;
+
+    dec_data.params.ndepth=depth;
+    dec_data.params.n2pass=1;
+    if(m_config.twoPass()) dec_data.params.n2pass=2;
+
+    dec_data.params.nranera=m_config.ntrials();
+    dec_data.params.naggressive=m_config.aggressive();
+    dec_data.params.nrobust=0;
+    dec_data.params.ndiskdat=0;
+
+    if(m_diskData) dec_data.params.ndiskdat=1;
+
+    dec_data.params.nfa=m_wideGraph->nStartFreq();
+    dec_data.params.nfSplit=m_wideGraph->Fmin();
+    dec_data.params.nfb=m_wideGraph->Fmax();
+
+    //if(m_mode=="FT8" and m_config.bHound() and !ui->cbRxAll->isChecked()) dec_data.params.nfb=1000;
+    //if(m_mode=="FT8" and m_config.bFox()) dec_data.params.nfqso=200;
+
+    dec_data.params.ntol=ui->sbFtol->value ();
+    if(m_mode=="JT9+JT65" or !m_config.enable_VHF_features()) {
+      dec_data.params.ntol=20;
+      dec_data.params.naggressive=0;
+    }
+
+    if(dec_data.params.nutc < m_nutc0) m_RxLog = 1;       //Date and Time to ALL.TXT
+    if(dec_data.params.newdat==1 and !m_diskData) m_nutc0=dec_data.params.nutc;
+
+    dec_data.params.ntxmode=9;
+    if(m_modeTx=="JT65") dec_data.params.ntxmode=65;
+
+    dec_data.params.nmode=9;
+    if(m_mode=="JT65") dec_data.params.nmode=65;
+    if(m_mode=="JT65") dec_data.params.ljt65apon = ui->actionEnable_AP_JT65->isVisible () && ui->actionEnable_AP_JT65->isChecked ();
+    if(m_mode=="QRA64") dec_data.params.nmode=164;
+    if(m_mode=="QRA64") dec_data.params.ntxmode=164;
+    if(m_mode=="JT9+JT65") dec_data.params.nmode=9+65;  // = 74
+    if(m_mode=="JT4") {
+      dec_data.params.nmode=4;
+      dec_data.params.ntxmode=4;
+    }
+    if(m_mode=="FT8") dec_data.params.nmode=8;
+    if(m_mode=="FT8") dec_data.params.lft8apon = ui->actionEnable_AP_FT8->isVisible () && ui->actionEnable_AP_FT8->isChecked ();
+    if(m_mode=="FT8") dec_data.params.napwid=50;
+
+    dec_data.params.ntrperiod=period; //m_TRperiod;
+    dec_data.params.nsubmode=submode; // m_nSubMode;
+
+    if(m_mode=="QRA64") dec_data.params.nsubmode=100 + m_nSubMode;
+
+    dec_data.params.minw=0;
+    dec_data.params.nclearave=m_nclearave;
+
+    if(m_nclearave!=0) {
+      QFile f(m_config.temp_dir ().absoluteFilePath ("avemsg.txt"));
+      f.remove();
+    }
+
+    dec_data.params.dttol=m_DTtol;
+    dec_data.params.emedelay=0.0;
+
+    if(m_config.decode_at_52s()) dec_data.params.emedelay=2.5;
+
+    dec_data.params.minSync=ui->syncSpinBox->isVisible () ? m_minSync : 0;
+    dec_data.params.nexp_decode=0;
+
+    if(m_config.single_decode()) dec_data.params.nexp_decode += 32;
+    if(m_config.enable_VHF_features()) dec_data.params.nexp_decode += 64;
+    if(ui->cbVHFcontest->isChecked()) dec_data.params.nexp_decode += 128;
+
+    strncpy(dec_data.params.datetime, m_dateTime.toLatin1(), 20);
+    strncpy(dec_data.params.mycall, (m_config.my_callsign()+"            ").toLatin1(),12);
+    strncpy(dec_data.params.mygrid, (m_config.my_grid()+"      ").toLatin1(),6);
+    QString hisCall {ui->dxCallEntry->text ()};
+    QString hisGrid {ui->dxGridEntry->text ()};
+    strncpy(dec_data.params.hiscall,(hisCall + "            ").toLatin1 ().constData (), 12);
+    strncpy(dec_data.params.hisgrid,(hisGrid + "      ").toLatin1 ().constData (), 6);
 
 #if JS8_RING_BUFFER
-  // clear out d1
-  memset(dec_data.d1, 0, sizeof(dec_data.d1));
+    // clear out d1
+    memset(dec_data.d1, 0, sizeof(dec_data.d1));
 
-  // copy the whole sample if disk data, otherwise, copy only the needed frames
-  if(m_diskData){
-    qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
-    memcpy(dec_data.d1, dec_data.d2, sizeof(dec_data.d2));
-  } else {
-      // compute frames to copy for decoding
-      int framesNeeded = dec_data.params.kout;
-      int start = dec_data.params.kpos;
-      int stop = qMax(start + framesNeeded, dec_data.params.kin);    // copy more than needed if available
-      int framesAvailable = qMin(stop - start, dec_data.params.kin); // kin is the max available currently
-      int framesMissing = qMax(0, framesNeeded - framesAvailable);
+    // copy the whole sample if disk data, otherwise, copy only the needed frames
+    if(m_diskData){
+      qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
+      memcpy(dec_data.d1, dec_data.d2, sizeof(dec_data.d2));
+    } else {
+        // compute frames to copy for decoding
+        int start = cycleSampleStart;
+        int stop = qMax(start + framesNeeded, dec_data.params.kin);    // copy more than needed if available
+        int framesAvailable = qMin(stop - start, dec_data.params.kin); // kin is the max available currently
+        int framesMissing = qMax(0, framesNeeded - framesAvailable);
 
-      qDebug() << "try decode from" << start << "to" << stop << "available" << framesAvailable << "missing" << framesMissing;
+        qDebug() << "try decode from" << start << "to" << stop << "available" << framesAvailable << "missing" << framesMissing;
 
 #if JS8_DECODER_E2S
-      // TODO: missing frames happen if we run a decode period not relative to the period interval...
-      //       we'll need to figure out the best way to use the ring buffer in these situations.
+        // TODO: missing frames happen if we run a decode period not relative to the period interval...
+        //       we'll need to figure out the best way to use the ring buffer in these situations.
 
-      if(missingFrames){
-          // the maximum frame is the period sample size
-          int maxFrames = m_detector->period() * RX_SAMPLE_RATE;
-          qDebug() << "-> copy missing frames from" << maxFrames-missingFrames << "to" << maxFrames << "to beginning of d1";
-          memcpy(dec_data.d1, &dec_data.d2[maxFrames-missingFrames], sizeof(dec_data.d2[0]) * missingFrames);
-      }
-      memcpy(dec_data.d1 + missingFrames, dec_data.d2 + start, sizeof(dec_data.d2[0]) * availableFrames);
+        if(missingFrames){
+            // the maximum frame is the period sample size
+            int maxFrames = m_detector->period() * RX_SAMPLE_RATE;
+            qDebug() << "-> copy missing frames from" << maxFrames-missingFrames << "to" << maxFrames << "to beginning of d1";
+            memcpy(dec_data.d1, &dec_data.d2[maxFrames-missingFrames], sizeof(dec_data.d2[0]) * missingFrames);
+        }
+        memcpy(dec_data.d1 + missingFrames, dec_data.d2 + start, sizeof(dec_data.d2[0]) * availableFrames);
 #else
-      memcpy(dec_data.d1, dec_data.d2 + start, sizeof(dec_data.d2[0]) * framesAvailable);
+        memcpy(dec_data.d1, dec_data.d2 + start, sizeof(dec_data.d2[0]) * framesAvailable);
+#endif
+    }
+#else
+    qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
+    memset(dec_data.d1, 0, sizeof(dec_data.d1));
+    memcpy(dec_data.d1, dec_data.d2, sizeof(dec_data.d2));
 #endif
 
-  }
-#else
-  qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
-  memset(dec_data.d1, 0, sizeof(dec_data.d1));
-  memcpy(dec_data.d1, dec_data.d2, sizeof(dec_data.d2));
-#endif
+    return true;
+}
+
+void MainWindow::decodeStart(int submode, int period){
+  qDebug() << "starting decode for submode" << submode << "and period" << period;
 
   //newdat=1  ==> this is new data, must do the big FFT
   //nagain=1  ==> decode only at fQSO +/- Tol
@@ -4096,6 +4073,32 @@ void MainWindow::decode(int submode, int period)                                
   memcpy(to, from, qMin(mem_js8->size(), size));
   QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove (); // Allow decoder to start
   decodeBusy(true);
+}
+
+void MainWindow::decodePrepareSaveAudio(int submode, int period){
+    auto now = DriftingDateTime::currentDateTimeUtc();
+
+    if(!m_diskData) {                        //Always save; may delete later
+      if(m_mode=="FT8") {
+        int n=now.time().second() % period;
+        if(n<(period/2)) n=n+period;
+        auto const& period_start=now.addSecs(-n);
+        m_fnameWE=m_config.save_directory().absoluteFilePath (period_start.toString("yyMMdd_hhmmss"));
+      } else {
+        auto const& period_start = now.addSecs (-(now.time ().minute () % (period / 60)) * 60);
+        m_fnameWE=m_config.save_directory ().absoluteFilePath (period_start.toString ("yyMMdd_hhmm"));
+      }
+      m_fileToSave.clear ();
+
+      if(m_saveAll or m_bAltV or (m_bDecoded and m_saveDecoded) or (m_mode!="MSK144" and m_mode!="FT8")) {
+          m_bAltV=false;
+          // the following is potential a threading hazard - not a good
+          // idea to pass pointer to be processed in another thread
+          m_saveWAVWatcher.setFuture (QtConcurrent::run (std::bind (&MainWindow::save_wave_file,
+                this, m_fnameWE, &dec_data.d2[0], period, m_config.my_callsign(),
+                m_config.my_grid(), m_mode, submode, m_freqNominal, m_hisCall, m_hisGrid)));
+      }
+    }
 }
 
 void MainWindow::writeAllTxt(QString message, int bits)
@@ -7063,7 +7066,7 @@ void MainWindow::on_actionJS8_triggered()
   m_wideGraph->setPeriod(m_TRperiod, m_nsps);
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
 #if JS8_RING_BUFFER
-  m_detector->setTRPeriod(30); // TODO - not thread safe
+  m_detector->setTRPeriod(NTMAX); // TODO - not thread safe
 #else
   m_detector->setTRPeriod(m_TRperiod); // TODO - not thread safe
 #endif
