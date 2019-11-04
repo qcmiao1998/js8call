@@ -1,4 +1,4 @@
-subroutine multimode_decoder(ss,id1,params,nfsample)
+subroutine multimode_decoder(ss,id2,params,nfsample)
 
   !$ use omp_lib
   use prog_args
@@ -28,8 +28,9 @@ subroutine multimode_decoder(ss,id1,params,nfsample)
   end type counting_js8d_decoder
 
   real ss(184,NSMAX)
-  logical baddata,newdat65,newdat9,single_decode,bVHF,bad0,newdat
-  integer*2 id1(NTMAX*12000)
+  logical baddata,newdat65,newdat9,single_decode,bVHF,bad0,newdat,trydecode
+  integer*2 id0(NTMAX*12000)
+  integer*2 id2(NTMAX*12000)
   type(params_block) :: params
   character(len=20) :: datetime
   character(len=12) :: mycall, hiscall
@@ -78,60 +79,92 @@ subroutine multimode_decoder(ss,id1,params,nfsample)
      endif
   endif
 
-  if(params%nmode.eq.8 .and. params%nsubmode.eq.4) then
+  trydecode=.false.
+
+  if(params%nmode.eq.8 .and. (params%nsubmode.eq.4 .or. iand(params%nsubmodes, 8).eq.8)) then
 ! We're in JS8 mode D
      call timer('decjs8d ',0)
      newdat=params%newdat
-     call my_js8d%decode(js8d_decoded,id1,params%nQSOProgress,params%nfqso,    &
+     trydecode=.true.
+
+     ! copy the relevant frames for decoding
+     pos = params%kposD
+     sz = params%kszD
+     id0=0
+     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     
+     call my_js8d%decode(js8d_decoded,id0,params%nQSOProgress,params%nfqso,    &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
           mycall,mygrid,hiscall,hisgrid)
      call timer('decjs8d ',1)
-     go to 800
   endif
 
-  if(params%nmode.eq.8 .and. params%nsubmode.eq.2) then
+  if(params%nmode.eq.8 .and. (params%nsubmode.eq.2 .or. iand(params%nsubmodes, 4).eq.4)) then
 ! We're in JS8 mode C
      call timer('decjs8c ',0)
      newdat=params%newdat
-     call my_js8c%decode(js8c_decoded,id1,params%nQSOProgress,params%nfqso,    &
+     trydecode=.true.
+
+     ! copy the relevant frames for decoding
+     pos = params%kposC
+     sz = params%kszC
+     id0=0
+     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     
+     call my_js8c%decode(js8c_decoded,id0,params%nQSOProgress,params%nfqso,    &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
           mycall,mygrid,hiscall,hisgrid)
      call timer('decjs8c ',1)
-     go to 800
   endif
 
-  if(params%nmode.eq.8 .and. params%nsubmode.eq.1) then
+  if(params%nmode.eq.8 .and. (params%nsubmode.eq.1 .or. iand(params%nsubmodes, 2).eq.2)) then
 ! We're in JS8 mode B
      call timer('decjs8b ',0)
      newdat=params%newdat
-     call my_js8b%decode(js8b_decoded,id1,params%nQSOProgress,params%nfqso,    &
+     trydecode=.true.
+
+     ! copy the relevant frames for decoding
+     pos = params%kposB
+     sz = params%kszB
+     id0=0
+     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     
+     call my_js8b%decode(js8b_decoded,id0,params%nQSOProgress,params%nfqso,    &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
           mycall,mygrid,hiscall,hisgrid)
      call timer('decjs8b ',1)
-     go to 800
   endif
 
-  if(params%nmode.eq.8 .and. params%nsubmode.eq.0) then
+  if(params%nmode.eq.8 .and. (params%nsubmode.eq.0 .or. iand(params%nsubmodes, 1).eq.1)) then
 ! We're in JS8 mode A
      call timer('decjs8a ',0)
      newdat=params%newdat
-     call my_js8a%decode(js8a_decoded,id1,params%nQSOProgress,params%nfqso,    &
+     trydecode=.true.
+
+     ! copy the relevant frames for decoding
+     pos = params%kposA
+     sz = params%kszA
+     id0=0
+     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     
+     call my_js8a%decode(js8a_decoded,id0,params%nQSOProgress,params%nfqso,    &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
           mycall,mygrid,hiscall,hisgrid)
      call timer('decjs8a ',1)
-     go to 800
   endif
 
-  rms=sqrt(dot_product(float(id1(300000:310000)),            &
-       float(id1(300000:310000)))/10000.0)
+  if(trydecode) go to 800
+
+  rms=sqrt(dot_product(float(id2(300000:310000)),            &
+       float(id2(300000:310000)))/10000.0)
   if(rms.lt.2.0) go to 800
 
 ! Zap data at start that might come from T/R switching transient?
@@ -142,7 +175,7 @@ subroutine multimode_decoder(ss,id1,params,nfsample)
      sq=0.
      do n=1,nadd
         k=k+1
-        sq=sq + float(id1(k))**2
+        sq=sq + float(id2(k))**2
      enddo
      rms=sqrt(sq/nadd)
      if(rms.gt.10000.0) then
@@ -153,11 +186,11 @@ subroutine multimode_decoder(ss,id1,params,nfsample)
   enddo
   if(bad0) then
      nz=min(NTMAX*12000,kbad+100)
-!     id1(1:nz)=0                ! temporarily disabled as it can breaak the JT9 decoder, maybe others
+!     id2(1:nz)=0                ! temporarily disabled as it can breaak the JT9 decoder, maybe others
   endif
   
   npts65=52*12000
-  if(baddata(id1,npts65)) then
+  if(baddata(id2,npts65)) then
      nsynced=0
      ndecoded=0
      go to 800

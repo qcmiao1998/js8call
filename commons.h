@@ -2,7 +2,7 @@
 #define COMMONS_H
 
 #define NSMAX 6827
-#define NTMAX 30
+#define NTMAX 60
 
 #define RX_SAMPLE_RATE 12000
 
@@ -13,6 +13,7 @@
 #define JS8_DECODER_E2S    0       // decode every 2 seconds instead of at the half symbol stop
 
 #define JS8_NUM_SYMBOLS    79
+#define JS8_ENABLE_JS8A    1
 #define JS8_ENABLE_JS8B    1
 #define JS8_ENABLE_JS8C    1
 #define JS8_ENABLE_JS8D    0
@@ -75,7 +76,6 @@ extern struct dec_data {
   float ss[184*NSMAX]; // symbol spectra
   float savg[NSMAX];
   float sred[5760];
-  short int d1[NTMAX*RX_SAMPLE_RATE]; // sample frame buffer for decoding (copied from d2 for the frame period)
   short int d2[NTMAX*RX_SAMPLE_RATE]; // sample frame buffer for sample collection
   struct
   {
@@ -93,10 +93,17 @@ extern struct dec_data {
     int nfb;                    //High decode limit (Hz)
     int ntol;                   //+/- decoding range around fQSO (Hz)
     int kin;                    // number of frames written to d2
-    int kpos;                   // starting position of decode
-    int kout;                   // number of frames for decode
+    int kposA;                  // starting position of decode for submode A
+    int kposB;                  // starting position of decode for submode B
+    int kposC;                  // starting position of decode for submode C
+    int kposD;                  // starting position of decode for submode D
+    int kszA;                   // number of frames for decode for submode A
+    int kszB;                   // number of frames for decode for submode B
+    int kszC;                   // number of frames for decode for submode C
+    int kszD;                   // number of frames for decode for submode D
     int nzhsym;                 // half symbol stop index
     int nsubmode;
+    int nsubmodes;
     bool nagain;
     int ndepth;
     bool lft8apon;

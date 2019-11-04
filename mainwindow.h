@@ -230,7 +230,7 @@ private slots:
   void on_actionCopyright_Notice_triggered();
   void on_DecodeButton_clicked (bool);
   void decode();
-  bool decodeReady(int submode, int period);
+  bool decodeReady(int submode, int period, int *pSubmode, int *pPeriod);
   void decodeStart(int submode, int period);
   void decodePrepareSaveAudio(int submode, int period);
   void decodeBusy(bool b);

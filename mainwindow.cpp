@@ -1015,6 +1015,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       if(pProcessed) *pProcessed = true;
   });
   ui->modeButton->installEventFilter(mbmp);
+  if(!JS8_ENABLE_JS8A){
+      ui->actionModeJS8Normal->setVisible(false);
+  }
   if(!JS8_ENABLE_JS8B){
       ui->actionModeJS8Fast->setVisible(false);
   }
@@ -2480,7 +2483,7 @@ int MainWindow::computeStop(int submode, int period){
         case Varicode::JS8CallNormal: symbolSamples = JS8A_SYMBOL_SAMPLES; /* threshold = 1.00 */ ; break;
         case Varicode::JS8CallFast:   symbolSamples = JS8B_SYMBOL_SAMPLES; /* threshold = 1.08 */ ; break;
         case Varicode::JS8CallTurbo:  symbolSamples = JS8C_SYMBOL_SAMPLES; /* threshold = 0.50 */ ; break;
-        case Varicode::JS8CallUltra:  symbolSamples = JS8D_SYMBOL_SAMPLES; /* threshold = 0.00 */ ; break;
+        case Varicode::JS8CallUltra:  symbolSamples = JS8D_SYMBOL_SAMPLES; threshold = 0.00; break;
     }
     stop = qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)/(float)m_nsps*2.0);
 #endif
@@ -2579,6 +2582,14 @@ void MainWindow::dataSink(qint64 frames)
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
     dec_data.params.nzhsym=m_ihsym;
+
+    // only decode once per second
+    static int lastn = -1;
+    int n = m_detector->secondInPeriod();
+    if(n == lastn){
+        return;
+    }
+    lastn = n;
 
     decode();
 }
@@ -3845,7 +3856,7 @@ void MainWindow::decode(){
     qint32 submode = m_nSubMode;
     qint32 period = m_TRperiod;
 
-    bool ready = decodeReady(submode, period);
+    bool ready = decodeReady(submode, period, &submode, &period);
     if(!ready){
         return;
     }
@@ -3854,28 +3865,80 @@ void MainWindow::decode(){
     decodePrepareSaveAudio(submode, period);
 }
 
-bool MainWindow::decodeReady(int submode, int period){
+bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPeriod){
     if(period == 0){
         return false;
     }
 
 #if JS8_RING_BUFFER
-    qint32 cycle = computeCurrentCycle(period);
-    qint32 cycleSampleStart = computeCycleStartForDecode(cycle, period);
-    qint32 framesNeeded = computeFramesNeededForDecode(submode, period);
+    int k = dec_data.params.kin;
 
-    static int lastCycle = -1;
-    if(cycle < lastCycle){
-        lastCycle = -1;
+    qint32 cycleSampleStartA = computeCycleStartForDecode(computeCurrentCycle(JS8A_TX_SECONDS), JS8A_TX_SECONDS);
+    qint32 framesNeededA = computeFramesNeededForDecode(Varicode::JS8CallNormal, JS8A_TX_SECONDS);
+    bool couldDecodeA = k >= cycleSampleStartA + framesNeededA;
+
+    qint32 cycleSampleStartB = computeCycleStartForDecode(computeCurrentCycle(JS8B_TX_SECONDS), JS8B_TX_SECONDS);
+    qint32 framesNeededB = computeFramesNeededForDecode(Varicode::JS8CallFast, JS8B_TX_SECONDS);
+    bool couldDecodeB = k >= cycleSampleStartB + framesNeededB;
+
+    qint32 cycleSampleStartC = computeCycleStartForDecode(computeCurrentCycle(JS8C_TX_SECONDS), JS8C_TX_SECONDS);
+    qint32 framesNeededC = computeFramesNeededForDecode(Varicode::JS8CallTurbo, JS8C_TX_SECONDS);
+    bool couldDecodeC = k >= cycleSampleStartC + framesNeededC;
+
+#if JS8_ENABLE_JS8D
+    qint32 cycleSampleStartD = computeCycleStartForDecode(computeCurrentCycle(JS8D_TX_SECONDS), JS8D_TX_SECONDS);
+    qint32 framesNeededD = computeFramesNeededForDecode(Varicode::JS8CallUltra, JS8D_TX_SECONDS);
+    bool couldDecodeD = k >= cycleSampleStartD + framesNeededD;
+#else
+    qint32 cycleSampleStartD = 0;
+    qint32 framesNeededD = 0;
+    bool couldDecodeD = false;
+#endif
+
+    // set the params for starting positions and sizes for decode
+    dec_data.params.kposA = cycleSampleStartA;
+    dec_data.params.kposB = cycleSampleStartB;
+    dec_data.params.kposC = cycleSampleStartC;
+    dec_data.params.kposD = cycleSampleStartD;
+    dec_data.params.kszA  = qMax(framesNeededA, k-cycleSampleStartA);
+    dec_data.params.kszB  = qMax(framesNeededB, k-cycleSampleStartB);
+    dec_data.params.kszC  = qMax(framesNeededC, k-cycleSampleStartC);
+    dec_data.params.kszD  = qMax(framesNeededD, k-cycleSampleStartD);
+    dec_data.params.nsubmodes = 0;
+
+    int decodes = int(couldDecodeA) + int(couldDecodeB) + int(couldDecodeC) + int(couldDecodeD);
+
+    if(couldDecodeD){
+        qDebug() << "could decode D from" << cycleSampleStartD << "to" << cycleSampleStartD + framesNeededD;
+        submode = Varicode::JS8CallUltra;
+        period = JS8D_TX_SECONDS;
+        dec_data.params.nsubmodes |= (Varicode::JS8CallUltra << 1);
+    }
+    if(couldDecodeC){
+        qDebug() << "could decode C from" << cycleSampleStartC << "to" << cycleSampleStartC + framesNeededC;
+        submode = Varicode::JS8CallTurbo;
+        period = JS8C_TX_SECONDS;
+        dec_data.params.nsubmodes |= (Varicode::JS8CallTurbo << 1);
+    }
+    if(couldDecodeB){
+        qDebug() << "could decode B from" << cycleSampleStartB << "to" << cycleSampleStartB + framesNeededB;
+        submode = Varicode::JS8CallFast;
+        period = JS8B_TX_SECONDS;
+        dec_data.params.nsubmodes |= (Varicode::JS8CallFast << 1);
+    }
+    if(couldDecodeA){
+        qDebug() << "could decode A from" << cycleSampleStartA << "to" << cycleSampleStartA + framesNeededA;
+        submode = Varicode::JS8CallNormal;
+        period = JS8A_TX_SECONDS;
+        dec_data.params.nsubmodes |= (Varicode::JS8CallNormal + 1);
     }
 
-    int k = dec_data.params.kin;
-    if(!m_diskData && (cycle == lastCycle || k < cycleSampleStart + framesNeeded)){
+    if(pSubmode) *pSubmode=submode;
+    if(pPeriod) *pPeriod=period;
+
+    if(!m_diskData && decodes == 0){
         return false;
     }
-
-    qDebug() << "cycle" << cycle << "start" << cycleSampleStart << "k" << k << "needed" << framesNeeded;
-    lastCycle = cycle;
 #endif
 
 #if JS8_DECODER_E2S
@@ -4011,6 +4074,7 @@ bool MainWindow::decodeReady(int submode, int period){
     strncpy(dec_data.params.hiscall,(hisCall + "            ").toLatin1 ().constData (), 12);
     strncpy(dec_data.params.hisgrid,(hisGrid + "      ").toLatin1 ().constData (), 6);
 
+#if JS8_TWO_BUFFERS
 #if JS8_RING_BUFFER
     // clear out d1
     memset(dec_data.d1, 0, sizeof(dec_data.d1));
@@ -4047,6 +4111,7 @@ bool MainWindow::decodeReady(int submode, int period){
     qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
     memset(dec_data.d1, 0, sizeof(dec_data.d1));
     memcpy(dec_data.d1, dec_data.d2, sizeof(dec_data.d2));
+#endif
 #endif
 
     return true;
@@ -7066,7 +7131,8 @@ void MainWindow::on_actionJS8_triggered()
   m_wideGraph->setPeriod(m_TRperiod, m_nsps);
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
 #if JS8_RING_BUFFER
-  m_detector->setTRPeriod(NTMAX); // TODO - not thread safe
+  Q_ASSERT(NTMAX == 60);
+  m_detector->setTRPeriod(NTMAX / 2); // TODO - not thread safe
 #else
   m_detector->setTRPeriod(m_TRperiod); // TODO - not thread safe
 #endif
