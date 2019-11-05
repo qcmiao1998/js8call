@@ -1,9 +1,10 @@
-subroutine symspec(shared_data,k,ntrperiod,nsps,ingain,nminw,pxdb,s,   &
+subroutine symspec(shared_data,k,k0,ntrperiod,nsps,ingain,nminw,pxdb,s,   &
      df3,ihsym,npts8,pxdbmax)
 
 ! Input:
 !  shared_data  pointer to the most recent new data
 !  k            frames in that data
+!  k0           the last k observed
 !  ntrperiod    T/R sequence length, minutes
 !  nsps         samples per symbol, at 12000 Hz
 !  ndiskdat     0/1 to indicate if data from disk
@@ -32,7 +33,7 @@ subroutine symspec(shared_data,k,ntrperiod,nsps,ingain,nminw,pxdb,s,   &
   integer nch(7)
 
   common/spectra/syellow(NSMAX),ref(0:3456),filter(0:3456)
-  data k0/99999999/,nfft3z/0/
+  data nfft3z/0/
   data nch/1,2,4,9,18,36,72/
   equivalence (xc,cx)
   save

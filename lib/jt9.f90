@@ -1,7 +1,7 @@
 program jt9
 
-! Decoder for JT9.  Can run stand-alone, reading data from *.wav files;
-! or as the back end of wsjt-x, with data placed in a shared memory region.
+! Decoder for js8.  Can run stand-alone, reading data from *.wav files;
+! or as the back end of js8call, with data placed in a shared memory region.
 
   use options
   use prog_args
@@ -15,7 +15,6 @@ program jt9
 
   integer(C_INT) iret
   type(wav_header) wav
-  real*4 s(NSMAX)
   character c
   character(len=500) optarg, infile
   character wisfile*80
@@ -234,15 +233,6 @@ program jt9
 4       call timer('read_wav',1)
         nhsym=(k-2048)/kstep
         if(nhsym.ge.1 .and. nhsym.ne.nhsym0) then
-           if(mode.eq.9 .or. mode.eq.74) then
-! Compute rough symbol spectra for the JT9 decoder
-              ingain=0
-              call timer('symspec ',0)
-              nminw=1
-              call symspec(shared_data,k,ntrperiod,nsps,ingain,nminw,pxdb,  &
-                   s,df3,ihsym,npts8,pxdbmax)
-              call timer('symspec ',1)
-           endif
            nhsym0=nhsym
            if(nhsym.ge.181) exit
         endif

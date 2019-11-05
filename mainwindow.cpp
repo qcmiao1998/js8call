@@ -79,7 +79,7 @@
 
 extern "C" {
   //----------------------------------------------------- C and Fortran routines
-  void symspec_(struct dec_data *, int* k, int* ntrperiod, int* nsps, int* ingain,
+  void symspec_(struct dec_data *, int* k, int* k0, int* ntrperiod, int* nsps, int* ingain,
                 int* minw, float* px, float s[], float* df3, int* nhsym, int* npts8,
                 float *m_pxmax);
 
@@ -2542,11 +2542,16 @@ int MainWindow::computeFramesNeededForDecode(int submode, int period){
 //-------------------------------------------------------------- dataSink()
 void MainWindow::dataSink(qint64 frames)
 {
-    static int k0 = 0;
+    static int k0 = 999999999;
     static float s[NSMAX];
     char line[80];
 
     int k (frames);
+    if(k0 == 999999999){
+        m_ihsym = int((float)frames/(float)m_nsps)*2;
+        k0 = k;
+    }
+
     QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("refspec.dat"))};
     QByteArray bafname = fname.toLatin1();
     const char *c_fname = bafname.data();
@@ -2588,25 +2593,37 @@ void MainWindow::dataSink(qint64 frames)
     }
     k0 = k;
     int ihs = m_ihsym;
-    symspec_(&dec_data,&k,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&ihs,&m_npts8,&m_pxmax);
+    dec_data.params.kpos = computeCycleStartForDecode(computeCurrentCycle(m_TRperiod), m_TRperiod);
+    symspec_(&dec_data,&k,&k0,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&ihs,&m_npts8,&m_pxmax);
     // 3) if symspec wants ihs to be 0, set it.
     if(ihs == 0){
         m_ihsym = ihs;
     } else {
         m_ihsym += 1;
     }
-    qDebug() << "dataSink" << k << "ihsym" << m_ihsym << "ihs" << ihs;
+
+    // make ihsym similar to how it was...relative to the tr period
+    m_ihsym = m_ihsym % (m_TRperiod*RX_SAMPLE_RATE/m_nsps*2);
+
+    /// qDebug() << "dataSink" << k << "ihsym" << m_ihsym << "ihs" << ihs;
+    /// QVector<float> sss;
+    /// for(int i = 0; i < 10; i++){
+    ///     sss << s[i];
+    /// }
+    /// qDebug() << "-->" << sss;
 
     /// END IHSYM
 #else
-    symspec_(&dec_data,&k,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&m_ihsym,&m_npts8,&m_pxmax);
+    m_ihsym=m_ihsym%(m_TRperiod*RX_SAMPLE_RATE/m_nsps*2);
+    qDebug() << "k" << k << "k0" << k0 << "ihsym" << m_ihsym;
+    symspec_(&dec_data,&k,&k0,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&m_ihsym,&m_npts8,&m_pxmax);
 #endif
 
     if(m_ihsym <= 0) return;
 
     if(ui) ui->signal_meter_widget->setValue(m_px,m_pxmax); // Update thermometer
     if(m_monitoring || m_diskData) {
-      m_wideGraph->dataSink2(s,m_df3,m_ihsym,m_diskData);
+      m_wideGraph->dataSink2(s, m_df3, m_ihsym, m_diskData);
     }
 
     fixStop();
@@ -4139,6 +4156,31 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
     QString hisGrid {ui->dxGridEntry->text ()};
     strncpy(dec_data.params.hiscall,(hisCall + "            ").toLatin1 ().constData (), 12);
     strncpy(dec_data.params.hisgrid,(hisGrid + "      ").toLatin1 ().constData (), 6);
+
+#if 0
+    // for waterfall computation
+    memset(dec_data.d1, 0, sizeof(dec_data.d1));
+
+    int start = 0;
+    int frames = 0;
+    if(m_nSubMode == Varicode::JS8CallNormal){
+        start = dec_data.params.kposA;
+        frames = dec_data.params.kszA;
+    }
+    else if(m_nSubMode == Varicode::JS8CallFast){
+        start = dec_data.params.kposB;
+        frames = dec_data.params.kszB;
+    }
+    else if(m_nSubMode == Varicode::JS8CallTurbo){
+        start = dec_data.params.kposC;
+        frames = dec_data.params.kszC;
+    }
+    else if(m_nSubMode == Varicode::JS8CallUltra){
+        start = dec_data.params.kposD;
+        frames = dec_data.params.kszD;
+    }
+    memcpy(dec_data.d1, dec_data.d2 + start, sizeof(dec_data.d2[0]) * frames);
+#endif
 
 #if JS8_TWO_BUFFERS
 #if JS8_RING_BUFFER
@@ -7190,12 +7232,13 @@ void MainWindow::on_actionJS8_triggered()
   m_TRperiod = computeSubmodePeriod(m_nSubMode);
   m_wideGraph->show();
   ui->decodedTextLabel2->setText("  UTC   dB   DT Freq    Message");
-  m_wideGraph->setPeriod(m_TRperiod, m_nsps);
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
 #if JS8_RING_BUFFER
   Q_ASSERT(NTMAX == 60);
+  m_wideGraph->setPeriod(m_TRperiod, m_nsps);
   m_detector->setTRPeriod(NTMAX / 2); // TODO - not thread safe
 #else
+  m_wideGraph->setPeriod(m_TRperiod, m_nsps);
   m_detector->setTRPeriod(m_TRperiod); // TODO - not thread safe
 #endif
   ui->label_7->setText("Rx Frequency");
