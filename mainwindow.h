@@ -926,6 +926,7 @@ private:
   void stub();
   void statusChanged();
   void fixStop();
+  int computeSubmodePeriod(int submode);
   int computeStop(int submode, int period);
   int computeCurrentCycle(int period);
   int computeCycleStartForDecode(int cycle, int period);
@@ -942,6 +943,7 @@ private:
   void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
   void aprsLogReport(int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
+  int speedNameMode(QString speed);
   QString modeSpeedName(int submode);
   void updateCurrentBand();
   void displayDialFrequency ();

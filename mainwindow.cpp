@@ -2146,6 +2146,7 @@ void MainWindow::writeSettings()
   m_settings->setValue("SubMode",m_nSubMode);
   m_settings->setValue("SubModeHB", ui->actionModeJS8HB->isChecked());
   m_settings->setValue("SubModeHBAck", ui->actionHeartbeatAcknowledgements->isChecked());
+  m_settings->setValue("SubModeMultiDecode", ui->actionModeMultiDecoder->isChecked());
   m_settings->setValue("DTtol",m_DTtol);
   m_settings->setValue("Ftol", ui->sbFtol->value ());
   m_settings->setValue("MinSync",m_minSync);
@@ -2305,6 +2306,7 @@ void MainWindow::readSettings()
   ui->actionModeJS8Fast->setChecked(m_nSubMode == Varicode::JS8CallFast);
   ui->actionModeJS8Turbo->setChecked(m_nSubMode == Varicode::JS8CallTurbo);
   ui->actionModeJS8Ultra->setChecked(m_nSubMode == Varicode::JS8CallUltra);
+  ui->actionModeMultiDecoder->setChecked(m_settings->value("SubModeMultiDecode", false).toBool());
   ui->sbFtol->setValue (m_settings->value("Ftol", 20).toInt());
   m_minSync=m_settings->value("MinSync",0).toInt();
   ui->syncSpinBox->setValue(m_minSync);
@@ -2457,6 +2459,17 @@ void MainWindow::setDecodedTextFont (QFont const& font)
 void MainWindow::fixStop()
 {
     m_hsymStop = computeStop(m_nSubMode, m_TRperiod);
+}
+
+int MainWindow::computeSubmodePeriod(int submode){
+    switch(submode){
+        case Varicode::JS8CallNormal: return JS8A_TX_SECONDS;
+        case Varicode::JS8CallFast:   return JS8B_TX_SECONDS;
+        case Varicode::JS8CallTurbo:  return JS8C_TX_SECONDS;
+        case Varicode::JS8CallUltra:  return JS8D_TX_SECONDS;
+    }
+
+    return 0;
 }
 
 int MainWindow::computeStop(int submode, int period){
@@ -3168,6 +3181,23 @@ Radio::Frequency MainWindow::dialFrequency() {
     return Frequency {m_rigState.ptt () && m_rigState.split () ?
         m_rigState.tx_frequency () : m_rigState.frequency ()};
 }
+
+int MainWindow::speedNameMode(QString speed){
+    if(speed == modeSpeedName(Varicode::JS8CallNormal)){
+        return Varicode::JS8CallNormal;
+    }
+    if(speed == modeSpeedName(Varicode::JS8CallFast)){
+        return Varicode::JS8CallFast;
+    }
+    if(speed == modeSpeedName(Varicode::JS8CallTurbo)){
+        return Varicode::JS8CallTurbo;
+    }
+    if(speed == modeSpeedName(Varicode::JS8CallUltra)){
+        return Varicode::JS8CallUltra;
+    }
+    return -1;
+}
+
 
 QString MainWindow::modeSpeedName(int submode){
     if(submode == Varicode::JS8CallNormal){
@@ -3906,31 +3936,36 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
     dec_data.params.kszD  = qMax(framesNeededD, k-cycleSampleStartD);
     dec_data.params.nsubmodes = 0;
 
-    int decodes = int(couldDecodeA) + int(couldDecodeB) + int(couldDecodeC) + int(couldDecodeD);
+    bool multi = ui->actionModeMultiDecoder->isChecked();
+    int decodes = 0;
 
-    if(couldDecodeD){
+    if(couldDecodeD && (multi || submode == Varicode::JS8CallUltra)){
         qDebug() << "could decode D from" << cycleSampleStartD << "to" << cycleSampleStartD + framesNeededD;
         submode = Varicode::JS8CallUltra;
         period = JS8D_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallUltra << 1);
+        decodes++;
     }
-    if(couldDecodeC){
+    if(couldDecodeC && (multi || submode == Varicode::JS8CallTurbo)){
         qDebug() << "could decode C from" << cycleSampleStartC << "to" << cycleSampleStartC + framesNeededC;
         submode = Varicode::JS8CallTurbo;
         period = JS8C_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallTurbo << 1);
+        decodes++;
     }
-    if(couldDecodeB){
+    if(couldDecodeB && (multi || submode == Varicode::JS8CallFast)){
         qDebug() << "could decode B from" << cycleSampleStartB << "to" << cycleSampleStartB + framesNeededB;
         submode = Varicode::JS8CallFast;
         period = JS8B_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallFast << 1);
+        decodes++;
     }
-    if(couldDecodeA){
+    if(couldDecodeA && (multi || submode == Varicode::JS8CallNormal)){
         qDebug() << "could decode A from" << cycleSampleStartA << "to" << cycleSampleStartA + framesNeededA;
         submode = Varicode::JS8CallNormal;
         period = JS8A_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallNormal + 1);
+        decodes++;
     }
 
     if(pSubmode) *pSubmode=submode;
@@ -7113,19 +7148,7 @@ void MainWindow::on_actionJS8_triggered()
   m_wideGraph->setModeTx(m_modeTx);
   VHF_features_enabled(bVHF);
   ui->cbAutoSeq->setChecked(true);
-  m_TRperiod = 0;
-  if(m_nSubMode == Varicode::JS8CallNormal){
-    m_TRperiod = JS8A_TX_SECONDS;
-  }
-  else if(m_nSubMode == Varicode::JS8CallFast){
-    m_TRperiod = JS8B_TX_SECONDS;
-  }
-  else if(m_nSubMode == Varicode::JS8CallTurbo){
-    m_TRperiod = JS8C_TX_SECONDS;
-  }
-  else if(m_nSubMode == Varicode::JS8CallUltra){
-    m_TRperiod = JS8D_TX_SECONDS;
-  }
+  m_TRperiod = computeSubmodePeriod(m_nSubMode);
   m_wideGraph->show();
   ui->decodedTextLabel2->setText("  UTC   dB   DT Freq    Message");
   m_wideGraph->setPeriod(m_TRperiod, m_nsps);
@@ -9453,11 +9476,16 @@ void MainWindow::displayTransmit(){
 void MainWindow::updateModeButtonText(){
     auto selectedCallsign = callsignSelected();
 
+    auto multi = ui->actionModeMultiDecoder->isChecked();
     auto autoreply = ui->actionModeAutoreply->isChecked();
     auto heartbeat = ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked();
     auto ack = autoreply && ui->actionHeartbeatAcknowledgements->isChecked() && (!m_config.heartbeat_qso_pause() || selectedCallsign.isEmpty());
 
     auto modeText = modeSpeedName(m_nSubMode);
+    if(multi){
+        modeText += QString("+MULTI");
+    }
+
     if(autoreply){
         modeText += QString("+AUTO");
     }
@@ -9921,7 +9949,8 @@ void MainWindow::processIdleActivity() {
             continue;
         }
 
-        if(last.utcTimestamp.secsTo(now) < m_TRperiod){
+        auto submode = speedNameMode(last.speed);
+        if(last.utcTimestamp.secsTo(now) < computeSubmodePeriod(submode)){
             continue;
         }
 
@@ -9936,6 +9965,7 @@ void MainWindow::processIdleActivity() {
         d.snr = last.snr;
         d.tdrift = last.tdrift;
         d.freq = last.freq;
+        d.speed = last.speed;
 
         if(hasExistingMessageBuffer(offset, false, nullptr)){
             m_messageBuffer[offset].msgs.append(d);

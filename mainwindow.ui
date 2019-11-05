@@ -4648,7 +4648,7 @@ list. The list can be maintained in Settings (F2).</string>
    </widget>
    <widget class="QMenu" name="menuDecode">
     <property name="visible">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
     <property name="title">
      <string>&amp;Decode</string>
@@ -4805,6 +4805,7 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionModeAutoreply"/>
     <addaction name="actionModeJS8HB"/>
     <addaction name="actionHeartbeatAcknowledgements"/>
+    <addaction name="actionModeMultiDecoder"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
@@ -5767,6 +5768,17 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+R</string>
+   </property>
+  </action>
+  <action name="actionModeMultiDecoder">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Enable Simultaneous Decoding of All Speeds</string>
    </property>
   </action>
  </widget>
