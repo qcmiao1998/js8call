@@ -4802,10 +4802,10 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionModeJS8Turbo"/>
     <addaction name="actionModeJS8Ultra"/>
     <addaction name="separator"/>
+    <addaction name="actionModeMultiDecoder"/>
     <addaction name="actionModeAutoreply"/>
     <addaction name="actionModeJS8HB"/>
     <addaction name="actionHeartbeatAcknowledgements"/>
-    <addaction name="actionModeMultiDecoder"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
@@ -5778,7 +5778,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Enable Simultaneous Decoding of All Speeds</string>
+    <string>Enable Simultaneous Decoding of All Speeds (MULTI)</string>
    </property>
   </action>
  </widget>
