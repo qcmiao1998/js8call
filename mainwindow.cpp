@@ -1225,6 +1225,19 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
             setFreqOffsetForRestore(selectedOffset, false);
             // TODO: prompt mode switch?
         });
+
+        auto items = m_bandActivity.value(selectedOffset);
+        if(!items.isEmpty()){
+            auto speed = items.last().speed;
+            int submode = speedNameMode(speed);
+            if(submode != m_nSubMode){
+                auto qrqAction = menu->addAction(QString("Jump to %1%2 speed").arg(speed.left(1)).arg(speed.mid(1).toLower()));
+                connect(qrqAction, &QAction::triggered, this, [this, submode](){
+                    setSubmode(submode);
+                });
+            }
+        }
+
         menu->addSeparator();
     }
 
@@ -1444,6 +1457,17 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
                 setFreqOffsetForRestore(selectedOffset, false);
                 // TODO: prompt mode switch?
             });
+
+
+            auto speed = m_callActivity[selectedCall].speed;
+            int submode = speedNameMode(speed);
+            if(submode != m_nSubMode){
+                auto qrqAction = menu->addAction(QString("Jump to %1%2 speed").arg(speed.left(1)).arg(speed.mid(1).toLower()));
+                connect(qrqAction, &QAction::triggered, this, [this, submode](){
+                    setSubmode(submode);
+                });
+            }
+
             menu->addSeparator();
         }
     }
@@ -2302,11 +2326,9 @@ void MainWindow::readSettings()
   m_nSubMode=m_settings->value("SubMode",0).toInt();
   ui->actionModeJS8HB->setChecked(m_nSubMode == Varicode::JS8CallNormal && m_settings->value("SubModeHB", false).toBool());
   ui->actionHeartbeatAcknowledgements->setChecked(m_settings->value("SubModeHBAck", false).toBool());
-  ui->actionModeJS8Normal->setChecked(m_nSubMode == Varicode::JS8CallNormal);
-  ui->actionModeJS8Fast->setChecked(m_nSubMode == Varicode::JS8CallFast);
-  ui->actionModeJS8Turbo->setChecked(m_nSubMode == Varicode::JS8CallTurbo);
-  ui->actionModeJS8Ultra->setChecked(m_nSubMode == Varicode::JS8CallUltra);
   ui->actionModeMultiDecoder->setChecked(m_settings->value("SubModeMultiDecode", false).toBool());
+  setSubmode(m_nSubMode);
+
   ui->sbFtol->setValue (m_settings->value("Ftol", 20).toInt());
   m_minSync=m_settings->value("MinSync",0).toInt();
   ui->syncSpinBox->setValue(m_minSync);
@@ -3180,6 +3202,15 @@ void MainWindow::bumpFqso(int n)                                 //bumpFqso()
 Radio::Frequency MainWindow::dialFrequency() {
     return Frequency {m_rigState.ptt () && m_rigState.split () ?
         m_rigState.tx_frequency () : m_rigState.frequency ()};
+}
+
+void MainWindow::setSubmode(int submode){
+    m_nSubMode = submode;
+    ui->actionModeJS8Normal->setChecked(submode == Varicode::JS8CallNormal);
+    ui->actionModeJS8Fast->setChecked(submode == Varicode::JS8CallFast);
+    ui->actionModeJS8Turbo->setChecked(submode == Varicode::JS8CallTurbo);
+    ui->actionModeJS8Ultra->setChecked(submode == Varicode::JS8CallUltra);
+    on_actionJS8_triggered();
 }
 
 int MainWindow::speedNameMode(QString speed){

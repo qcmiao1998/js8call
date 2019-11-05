@@ -943,6 +943,7 @@ private:
   void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
   void aprsLogReport(int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
+  void setSubmode(int submode);
   int speedNameMode(QString speed);
   QString modeSpeedName(int submode);
   void updateCurrentBand();
