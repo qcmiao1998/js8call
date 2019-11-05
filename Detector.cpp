@@ -47,13 +47,14 @@ void Detector::clear ()
   // set index to roughly where we are in time (1ms resolution)
   qint64 now (DriftingDateTime::currentMSecsSinceEpoch ());
   unsigned msInPeriod ((now % 86400000LL) % (m_period * 1000));
+  int prevKin = dec_data.params.kin;
   dec_data.params.kin = qMin ((msInPeriod * m_frameRate) / 1000, static_cast<unsigned> (sizeof (dec_data.d2) / sizeof (dec_data.d2[0])));
   m_bufferPos = m_samplesPerFFT;
 
   // erase everything after kin.
   memset(dec_data.d2 + dec_data.params.kin, 0, sizeof(dec_data.d2) - (sizeof(dec_data.d2[0]) * dec_data.params.kin));
 
-  qDebug() << "advancing detector buffer to" << dec_data.params.kin;
+  qDebug() << "advancing detector buffer from" << prevKin << "to" << dec_data.params.kin << "delta" << dec_data.params.kin - prevKin;
 #else
   dec_data.params.kin = 0;
   m_bufferPos = 0;
