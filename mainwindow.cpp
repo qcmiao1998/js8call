@@ -7075,6 +7075,14 @@ void MainWindow::on_actionHeartbeatAcknowledgements_toggled(bool checked){
     on_actionJS8_triggered();
 }
 
+void MainWindow::on_actionModeMultiDecoder_toggled(bool checked){
+    Q_UNUSED(checked);
+
+    displayActivity(true);
+
+    on_actionJS8_triggered();
+}
+
 void MainWindow::on_actionModeJS8Normal_triggered(){
     on_actionJS8_triggered();
 }
