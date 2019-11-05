@@ -3983,6 +3983,12 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
         dec_data.params.kszC  = NTMAX*RX_SAMPLE_RATE-1;
         dec_data.params.kszD  = NTMAX*RX_SAMPLE_RATE-1;
         dec_data.params.nsubmodes = 0;
+        couldDecodeA = true;
+        couldDecodeB = true;
+        couldDecodeC = true;
+#if JS8_ENABLE_JS8D
+        couldDecodeD = true;
+#endif
     } else {
         // set the params for starting positions and sizes for decode
         dec_data.params.kposA = cycleSampleStartA;
