@@ -3973,16 +3973,28 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
     bool couldDecodeD = false;
 #endif
 
-    // set the params for starting positions and sizes for decode
-    dec_data.params.kposA = cycleSampleStartA;
-    dec_data.params.kposB = cycleSampleStartB;
-    dec_data.params.kposC = cycleSampleStartC;
-    dec_data.params.kposD = cycleSampleStartD;
-    dec_data.params.kszA  = qMax(framesNeededA, k-cycleSampleStartA);
-    dec_data.params.kszB  = qMax(framesNeededB, k-cycleSampleStartB);
-    dec_data.params.kszC  = qMax(framesNeededC, k-cycleSampleStartC);
-    dec_data.params.kszD  = qMax(framesNeededD, k-cycleSampleStartD);
-    dec_data.params.nsubmodes = 0;
+    if(m_diskData){
+        dec_data.params.kposA = 0;
+        dec_data.params.kposB = 0;
+        dec_data.params.kposC = 0;
+        dec_data.params.kposD = 0;
+        dec_data.params.kszA  = NTMAX*RX_SAMPLE_RATE-1;
+        dec_data.params.kszB  = NTMAX*RX_SAMPLE_RATE-1;
+        dec_data.params.kszC  = NTMAX*RX_SAMPLE_RATE-1;
+        dec_data.params.kszD  = NTMAX*RX_SAMPLE_RATE-1;
+        dec_data.params.nsubmodes = 0;
+    } else {
+        // set the params for starting positions and sizes for decode
+        dec_data.params.kposA = cycleSampleStartA;
+        dec_data.params.kposB = cycleSampleStartB;
+        dec_data.params.kposC = cycleSampleStartC;
+        dec_data.params.kposD = cycleSampleStartD;
+        dec_data.params.kszA  = qMax(framesNeededA, k-cycleSampleStartA);
+        dec_data.params.kszB  = qMax(framesNeededB, k-cycleSampleStartB);
+        dec_data.params.kszC  = qMax(framesNeededC, k-cycleSampleStartC);
+        dec_data.params.kszD  = qMax(framesNeededD, k-cycleSampleStartD);
+        dec_data.params.nsubmodes = 0;
+    }
 
     bool multi = ui->actionModeMultiDecoder->isChecked();
     int decodes = 0;
