@@ -2618,8 +2618,22 @@ void MainWindow::dataSink(qint64 frames)
 
     /// END IHSYM
 #else
-    m_ihsym=m_ihsym%(m_TRperiod*RX_SAMPLE_RATE/m_nsps*2);
+    // make sure the ssum global is reset every period cycle
+    static int lastCycle = -1;
+    int cycle = computeCurrentCycle(m_TRperiod);
+    if(cycle != lastCycle){
+        qDebug() << "period loop, resetting ssum";
+        memset(ssum, 0, sizeof(ssum));
+    }
+    lastCycle = cycle;
+
+    // cap ihsym based on the period max
+    m_ihsym = m_ihsym%(m_TRperiod*RX_SAMPLE_RATE/m_nsps*2);
+
+    // compute the symbol spectra for the waterfall display
     symspec_(&dec_data,&k,&k0,&ja,ssum,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&m_ihsym,&m_npts8,&m_pxmax);
+
+    // make sure ja is equal to k so if we jump ahead in the buffer, everything resolves correctly
     ja = k;
 #endif
 
