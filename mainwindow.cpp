@@ -79,7 +79,7 @@
 
 extern "C" {
   //----------------------------------------------------- C and Fortran routines
-  void symspec_(struct dec_data *, int* k, int* k0, int* ntrperiod, int* nsps, int* ingain,
+  void symspec_(struct dec_data *, int* k, int* k0, int *ja, float ssum[], int* ntrperiod, int* nsps, int* ingain,
                 int* minw, float* px, float s[], float* df3, int* nhsym, int* npts8,
                 float *m_pxmax);
 
@@ -2542,13 +2542,17 @@ int MainWindow::computeFramesNeededForDecode(int submode, int period){
 //-------------------------------------------------------------- dataSink()
 void MainWindow::dataSink(qint64 frames)
 {
+    // symspec global vars
+    static int ja = 0;
     static int k0 = 999999999;
+    static float ssum[NSMAX];
     static float s[NSMAX];
     char line[80];
 
     int k (frames);
     if(k0 == 999999999){
         m_ihsym = int((float)frames/(float)m_nsps)*2;
+        ja = k;
         k0 = k;
     }
 
@@ -2615,8 +2619,8 @@ void MainWindow::dataSink(qint64 frames)
     /// END IHSYM
 #else
     m_ihsym=m_ihsym%(m_TRperiod*RX_SAMPLE_RATE/m_nsps*2);
-    qDebug() << "k" << k << "k0" << k0 << "ihsym" << m_ihsym;
-    symspec_(&dec_data,&k,&k0,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&m_ihsym,&m_npts8,&m_pxmax);
+    symspec_(&dec_data,&k,&k0,&ja,ssum,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&m_ihsym,&m_npts8,&m_pxmax);
+    ja = k;
 #endif
 
     if(m_ihsym <= 0) return;

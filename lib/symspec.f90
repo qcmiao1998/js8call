@@ -1,4 +1,4 @@
-subroutine symspec(shared_data,k,k0,ntrperiod,nsps,ingain,nminw,pxdb,s,   &
+subroutine symspec(shared_data,k,k0,ja,ssum,ntrperiod,nsps,ingain,nminw,pxdb,s,   &
      df3,ihsym,npts8,pxdbmax)
 
 ! Input:
@@ -84,7 +84,9 @@ subroutine symspec(shared_data,k,k0,ntrperiod,nsps,ingain,nminw,pxdb,s,   &
   do i=0,nfft3-1                      !Copy data into cx
      j=ja+i-(nfft3-1)
      xc(i)=0.
-     if(j.ge.1 .and.j.le.NMAX) xc(i)=fac0*shared_data%id2(j)
+     if(j.ge.1 .and. j.le.NMAX) then
+         xc(i)=fac0*shared_data%id2(j)
+     endif
   enddo
   ihsym=ihsym+1
 

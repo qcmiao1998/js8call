@@ -55,6 +55,7 @@
      character(kind=c_char) :: mygrid(6)
      character(kind=c_char) :: hiscall(12)
      character(kind=c_char) :: hisgrid(6)
+     integer(c_int) :: ndebug
   end type params_block
 
   type, bind(C) :: dec_data
