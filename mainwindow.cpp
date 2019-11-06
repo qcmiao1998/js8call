@@ -2326,7 +2326,7 @@ void MainWindow::readSettings()
   m_nSubMode=m_settings->value("SubMode",0).toInt();
   ui->actionModeJS8HB->setChecked(m_nSubMode == Varicode::JS8CallNormal && m_settings->value("SubModeHB", false).toBool());
   ui->actionHeartbeatAcknowledgements->setChecked(m_settings->value("SubModeHBAck", false).toBool());
-  ui->actionModeMultiDecoder->setChecked(m_settings->value("SubModeMultiDecode", false).toBool());
+  ui->actionModeMultiDecoder->setChecked(m_settings->value("SubModeMultiDecode", true).toBool());
   setSubmode(m_nSubMode);
 
   ui->sbFtol->setValue (m_settings->value("Ftol", 20).toInt());
