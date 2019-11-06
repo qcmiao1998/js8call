@@ -269,7 +269,7 @@ private slots:
   void on_actionModeJS8Normal_triggered();
   void on_actionModeJS8Fast_triggered();
   void on_actionModeJS8Turbo_triggered();
-  void on_actionModeJS8Ultra_triggered();
+  void on_actionModeJS8UltraSlow_triggered();
   void on_actionHeartbeatAcknowledgements_toggled(bool checked);
   void on_actionModeMultiDecoder_toggled(bool checked);
   void on_actionModeAutoreply_toggled(bool checked);

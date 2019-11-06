@@ -264,7 +264,7 @@ bool DecodedText::tryUnpackFastData(){
         return false;
     }
 
-    if(submode_ != Varicode::JS8CallFast && submode_ != Varicode::JS8CallTurbo && submode_ != Varicode::JS8CallUltra){
+    if(submode_ != Varicode::JS8CallFast && submode_ != Varicode::JS8CallTurbo && submode_ != Varicode::JS8CallUltraSlow){
         return false;
     }
 

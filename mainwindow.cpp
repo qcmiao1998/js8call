@@ -1007,7 +1007,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->actionModeJS8Normal->setActionGroup(modeActionGroup);
   ui->actionModeJS8Fast->setActionGroup(modeActionGroup);
   ui->actionModeJS8Turbo->setActionGroup(modeActionGroup);
-  ui->actionModeJS8Ultra->setActionGroup(modeActionGroup);
+  ui->actionModeJS8UltraSlow->setActionGroup(modeActionGroup);
 
   auto mbmp = new MousePressEater();
   connect(mbmp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent * e, bool *pProcessed){
@@ -1024,8 +1024,14 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if(!JS8_ENABLE_JS8C){
       ui->actionModeJS8Turbo->setVisible(false);
   }
-  if(!JS8_ENABLE_JS8D){
-      ui->actionModeJS8Ultra->setVisible(false);
+  if(!JS8_ENABLE_JS8E){
+      ui->actionModeJS8UltraSlow->setVisible(false);
+  }
+  if(JS8_ENABLE_JS8E && !JS8E_IS_ULTRA){
+      // reorder so slow is at the top
+      ui->menuModeJS8->removeAction(ui->actionModeJS8UltraSlow);
+      ui->menuModeJS8->insertAction(ui->actionModeJS8Normal, ui->actionModeJS8UltraSlow);
+      ui->actionModeJS8UltraSlow->setText("JS8 (&Slow, 30s, 24Hz, ~8WPM)");
   }
 
   // prep
@@ -2488,7 +2494,7 @@ int MainWindow::computeSubmodePeriod(int submode){
         case Varicode::JS8CallNormal: return JS8A_TX_SECONDS;
         case Varicode::JS8CallFast:   return JS8B_TX_SECONDS;
         case Varicode::JS8CallTurbo:  return JS8C_TX_SECONDS;
-        case Varicode::JS8CallUltra:  return JS8D_TX_SECONDS;
+        case Varicode::JS8CallUltraSlow:  return JS8E_TX_SECONDS;
     }
 
     return 0;
@@ -2518,7 +2524,16 @@ int MainWindow::computeStop(int submode, int period){
         case Varicode::JS8CallNormal: symbolSamples = JS8A_SYMBOL_SAMPLES; /* threshold = 1.00 */ ; break;
         case Varicode::JS8CallFast:   symbolSamples = JS8B_SYMBOL_SAMPLES; /* threshold = 1.08 */ ; break;
         case Varicode::JS8CallTurbo:  symbolSamples = JS8C_SYMBOL_SAMPLES; /* threshold = 0.50 */ ; break;
-        case Varicode::JS8CallUltra:  symbolSamples = JS8D_SYMBOL_SAMPLES; threshold = 0.00; break;
+        case Varicode::JS8CallUltraSlow:
+        {
+            symbolSamples = JS8E_SYMBOL_SAMPLES;
+#if JS8E_IS_ULTRA
+            threshold = 0.00;
+#endif
+            break;
+        }
+
+
     }
     stop = qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)/(float)m_nsps*2.0);
 #endif
@@ -2742,7 +2757,7 @@ void MainWindow::on_menuModeJS8_aboutToShow(){
     ui->actionModeJS8Normal->setEnabled(canChangeMode);
     ui->actionModeJS8Fast->setEnabled(canChangeMode);
     ui->actionModeJS8Turbo->setEnabled(canChangeMode);
-    ui->actionModeJS8Ultra->setEnabled(canChangeMode);
+    ui->actionModeJS8UltraSlow->setEnabled(canChangeMode);
 }
 
 void MainWindow::on_menuControl_aboutToShow(){
@@ -3244,7 +3259,7 @@ void MainWindow::setSubmode(int submode){
     ui->actionModeJS8Normal->setChecked(submode == Varicode::JS8CallNormal);
     ui->actionModeJS8Fast->setChecked(submode == Varicode::JS8CallFast);
     ui->actionModeJS8Turbo->setChecked(submode == Varicode::JS8CallTurbo);
-    ui->actionModeJS8Ultra->setChecked(submode == Varicode::JS8CallUltra);
+    ui->actionModeJS8UltraSlow->setChecked(submode == Varicode::JS8CallUltraSlow);
     on_actionJS8_triggered();
 }
 
@@ -3258,8 +3273,8 @@ int MainWindow::speedNameMode(QString speed){
     if(speed == modeSpeedName(Varicode::JS8CallTurbo)){
         return Varicode::JS8CallTurbo;
     }
-    if(speed == modeSpeedName(Varicode::JS8CallUltra)){
-        return Varicode::JS8CallUltra;
+    if(speed == modeSpeedName(Varicode::JS8CallUltraSlow)){
+        return Varicode::JS8CallUltraSlow;
     }
     return -1;
 }
@@ -3275,8 +3290,8 @@ QString MainWindow::modeSpeedName(int submode){
     else if(submode == Varicode::JS8CallTurbo){
         return "TURBO";
     }
-    else if(submode == Varicode::JS8CallUltra){
-#ifdef JS8D_IS_ULTRA
+    else if(submode == Varicode::JS8CallUltraSlow){
+#if JS8E_IS_ULTRA
         return "ULTRA";
 #else
         return "SLOW";
@@ -3981,53 +3996,53 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
     qint32 framesNeededC = computeFramesNeededForDecode(Varicode::JS8CallTurbo, JS8C_TX_SECONDS);
     bool couldDecodeC = k >= cycleSampleStartC + framesNeededC;
 
-#if JS8_ENABLE_JS8D
-    qint32 cycleSampleStartD = computeCycleStartForDecode(computeCurrentCycle(JS8D_TX_SECONDS), JS8D_TX_SECONDS);
-    qint32 framesNeededD = computeFramesNeededForDecode(Varicode::JS8CallUltra, JS8D_TX_SECONDS);
-    bool couldDecodeD = k >= cycleSampleStartD + framesNeededD;
+#if JS8_ENABLE_JS8E
+    qint32 cycleSampleStartE = computeCycleStartForDecode(computeCurrentCycle(JS8E_TX_SECONDS), JS8E_TX_SECONDS);
+    qint32 framesNeededE = computeFramesNeededForDecode(Varicode::JS8CallUltraSlow, JS8E_TX_SECONDS);
+    bool couldDecodeE = k >= cycleSampleStartE + framesNeededE;
 #else
-    qint32 cycleSampleStartD = 0;
-    qint32 framesNeededD = 0;
-    bool couldDecodeD = false;
+    qint32 cycleSampleStartE = 0;
+    qint32 framesNeededE = 0;
+    bool couldDecodeE = false;
 #endif
 
     if(m_diskData){
         dec_data.params.kposA = 0;
         dec_data.params.kposB = 0;
         dec_data.params.kposC = 0;
-        dec_data.params.kposD = 0;
+        dec_data.params.kposE = 0;
         dec_data.params.kszA  = NTMAX*RX_SAMPLE_RATE-1;
         dec_data.params.kszB  = NTMAX*RX_SAMPLE_RATE-1;
         dec_data.params.kszC  = NTMAX*RX_SAMPLE_RATE-1;
-        dec_data.params.kszD  = NTMAX*RX_SAMPLE_RATE-1;
+        dec_data.params.kszE  = NTMAX*RX_SAMPLE_RATE-1;
         dec_data.params.nsubmodes = 0;
         couldDecodeA = true;
         couldDecodeB = true;
         couldDecodeC = true;
-#if JS8_ENABLE_JS8D
-        couldDecodeD = true;
+#if JS8_ENABLE_JS8E
+        couldDecodeE = true;
 #endif
     } else {
         // set the params for starting positions and sizes for decode
         dec_data.params.kposA = cycleSampleStartA;
         dec_data.params.kposB = cycleSampleStartB;
         dec_data.params.kposC = cycleSampleStartC;
-        dec_data.params.kposD = cycleSampleStartD;
+        dec_data.params.kposE = cycleSampleStartE;
         dec_data.params.kszA  = qMax(framesNeededA, k-cycleSampleStartA);
         dec_data.params.kszB  = qMax(framesNeededB, k-cycleSampleStartB);
         dec_data.params.kszC  = qMax(framesNeededC, k-cycleSampleStartC);
-        dec_data.params.kszD  = qMax(framesNeededD, k-cycleSampleStartD);
+        dec_data.params.kszE  = qMax(framesNeededE, k-cycleSampleStartE);
         dec_data.params.nsubmodes = 0;
     }
 
     bool multi = ui->actionModeMultiDecoder->isChecked();
     int decodes = 0;
 
-    if(couldDecodeD && (multi || submode == Varicode::JS8CallUltra)){
-        qDebug() << "could decode D from" << cycleSampleStartD << "to" << cycleSampleStartD + framesNeededD;
-        submode = Varicode::JS8CallUltra;
-        period = JS8D_TX_SECONDS;
-        dec_data.params.nsubmodes |= (Varicode::JS8CallUltra << 1);
+    if(couldDecodeE && (multi || submode == Varicode::JS8CallUltraSlow)){
+        qDebug() << "could decode E from" << cycleSampleStartE << "to" << cycleSampleStartE + framesNeededE;
+        submode = Varicode::JS8CallUltraSlow;
+        period = JS8E_TX_SECONDS;
+        dec_data.params.nsubmodes |= (Varicode::JS8CallUltraSlow << 1);
         decodes++;
     }
     if(couldDecodeC && (multi || submode == Varicode::JS8CallTurbo)){
@@ -4212,8 +4227,8 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
         frames = dec_data.params.kszC;
     }
     else if(m_nSubMode == Varicode::JS8CallUltra){
-        start = dec_data.params.kposD;
-        frames = dec_data.params.kszD;
+        start = dec_data.params.kposE;
+        frames = dec_data.params.kszE;
     }
     memcpy(dec_data.d1, dec_data.d2 + start, sizeof(dec_data.d2[0]) * frames);
 #endif
@@ -5056,8 +5071,8 @@ void MainWindow::guiUpdate()
         txDuration=JS8B_START_DELAY_MS/1000.0 + JS8_NUM_SYMBOLS * (double)JS8B_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE;
       } else if(m_nSubMode == Varicode::JS8CallTurbo){
         txDuration=JS8C_START_DELAY_MS/1000.0 + JS8_NUM_SYMBOLS * (double)JS8C_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE;
-      } else if(m_nSubMode == Varicode::JS8CallUltra){
-        txDuration=JS8D_START_DELAY_MS/1000.0 + JS8_NUM_SYMBOLS * (double)JS8D_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE;
+      } else if(m_nSubMode == Varicode::JS8CallUltraSlow){
+        txDuration=JS8E_START_DELAY_MS/1000.0 + JS8_NUM_SYMBOLS * (double)JS8E_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE;
       }
   }
 
@@ -5143,8 +5158,8 @@ void MainWindow::guiUpdate()
     else if(m_nSubMode == Varicode::JS8CallTurbo){
         ratio = (((double)m_TRperiod - (JS8_NUM_SYMBOLS*(double)JS8C_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE))/(double)m_TRperiod);
     }
-    else if(m_nSubMode == Varicode::JS8CallUltra){
-        ratio = (((double)m_TRperiod - (JS8_NUM_SYMBOLS*(double)JS8D_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE))/(double)m_TRperiod);
+    else if(m_nSubMode == Varicode::JS8CallUltraSlow){
+        ratio = (((double)m_TRperiod - (JS8_NUM_SYMBOLS*(double)JS8E_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE))/(double)m_TRperiod);
     }
 
     if(fTR > 1.0-ratio && fTR < 1.0){
@@ -5231,7 +5246,7 @@ void MainWindow::guiUpdate()
           qDebug() << "gen ft8";
           genft8_(message, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
                   const_cast<int *> (itone), 22, 6, 22);
-      } else if (m_nSubMode == Varicode::JS8CallFast || m_nSubMode == Varicode::JS8CallTurbo || m_nSubMode == Varicode::JS8CallUltra){
+      } else if (m_nSubMode == Varicode::JS8CallFast || m_nSubMode == Varicode::JS8CallTurbo || m_nSubMode == Varicode::JS8CallUltraSlow){
           qDebug() << "gen js8";
           genjs8_(message, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
                   const_cast<int *> (itone), 22, 6, 22);
@@ -7173,7 +7188,7 @@ void MainWindow::on_actionModeJS8Turbo_triggered(){
     on_actionJS8_triggered();
 }
 
-void MainWindow::on_actionModeJS8Ultra_triggered(){
+void MainWindow::on_actionModeJS8UltraSlow_triggered(){
     on_actionJS8_triggered();
 }
 
@@ -7235,8 +7250,8 @@ void MainWindow::on_actionJS8_triggered()
   else if(ui->actionModeJS8Turbo->isChecked()){
       m_nSubMode=Varicode::JS8CallTurbo;
   }
-  else if(ui->actionModeJS8Ultra->isChecked()){
-      m_nSubMode=Varicode::JS8CallUltra;
+  else if(ui->actionModeJS8UltraSlow->isChecked()){
+      m_nSubMode=Varicode::JS8CallUltraSlow;
   }
 
   // Only enable heartbeat for normal mode
@@ -7272,7 +7287,12 @@ void MainWindow::on_actionJS8_triggered()
 #if JS8_RING_BUFFER
   Q_ASSERT(NTMAX == 60);
   m_wideGraph->setPeriod(m_TRperiod, m_nsps);
+#if JS8_ENABLE_JS8E && !JS8E_IS_ULTRA
+  m_detector->setTRPeriod(NTMAX); // TODO - not thread safe
+#else
   m_detector->setTRPeriod(NTMAX / 2); // TODO - not thread safe
+#endif
+
 #else
   m_wideGraph->setPeriod(m_TRperiod, m_nsps);
   m_detector->setTRPeriod(m_TRperiod); // TODO - not thread safe
@@ -9313,9 +9333,9 @@ void MainWindow::transmit (double snr)
         symbolSamples=(double)JS8C_SYMBOL_SAMPLES;
         toneSpacing=(double)RX_SAMPLE_RATE/(double)JS8C_SYMBOL_SAMPLES;
     }
-    else if(m_nSubMode == Varicode::JS8CallUltra){
-        symbolSamples=(double)JS8D_SYMBOL_SAMPLES;
-        toneSpacing=(double)RX_SAMPLE_RATE/(double)JS8D_SYMBOL_SAMPLES;
+    else if(m_nSubMode == Varicode::JS8CallUltraSlow){
+        symbolSamples=(double)JS8E_SYMBOL_SAMPLES;
+        toneSpacing=(double)RX_SAMPLE_RATE/(double)JS8E_SYMBOL_SAMPLES;
     }
     if(m_config.x2ToneSpacing()) toneSpacing*=2.0;
     if(m_config.x4ToneSpacing()) toneSpacing*=4.0;
@@ -9583,6 +9603,9 @@ int MainWindow::rxThreshold(){
     int threshold = 10;
     if(m_nSubMode == Varicode::JS8CallFast){ threshold = 16; }
     if(m_nSubMode == Varicode::JS8CallTurbo){ threshold = 32; }
+#if JS8E_IS_ULTRA
+    if(m_nSubMode == Varicode::JS8CallUltraSlow){ threshold = 50; }
+#endif
     return threshold;
 }
 
@@ -12350,8 +12373,8 @@ void MainWindow::networkMessage(Message const &message)
             if(speed == Varicode::JS8CallTurbo){
                 ui->actionModeJS8Turbo->setChecked(true);
             }
-            if(speed == Varicode::JS8CallUltra){
-                ui->actionModeJS8Ultra->setChecked(true);
+            if(speed == Varicode::JS8CallUltraSlow){
+                ui->actionModeJS8UltraSlow->setChecked(true);
             }
         }
         sendNetworkMessage("MODE.SPEED", "", {

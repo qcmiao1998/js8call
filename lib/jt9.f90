@@ -290,7 +290,7 @@ program jt9
      shared_data%params%kszA=NMAX-1
      shared_data%params%kszB=NMAX-1
      shared_data%params%kszC=NMAX-1
-     shared_data%params%kszD=NMAX-1
+     shared_data%params%kszE=NMAX-1
      call multimode_decoder(shared_data%ss,shared_data%id2,shared_data%params,nfsample)
   enddo
 

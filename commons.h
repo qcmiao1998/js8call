@@ -15,7 +15,7 @@
 #define JS8_ENABLE_JS8A    1
 #define JS8_ENABLE_JS8B    1
 #define JS8_ENABLE_JS8C    1
-#define JS8_ENABLE_JS8D    0
+#define JS8_ENABLE_JS8E    0
 
 #define JS8A_SYMBOL_SAMPLES 1920
 #define JS8A_TX_SECONDS     15
@@ -29,15 +29,15 @@
 #define JS8C_TX_SECONDS     6
 #define JS8C_START_DELAY_MS 100
 
-#define JS8D_IS_ULTRA 1
-#if JS8D_IS_ULTRA
-#define JS8D_SYMBOL_SAMPLES 384
-#define JS8D_TX_SECONDS     4
-#define JS8D_START_DELAY_MS 100
+#define JS8E_IS_ULTRA 0
+#if JS8E_IS_ULTRA
+#define JS8E_SYMBOL_SAMPLES 384
+#define JS8E_TX_SECONDS     4
+#define JS8E_START_DELAY_MS 100
 #else
-#define JS8D_SYMBOL_SAMPLES 4000
-#define JS8D_TX_SECONDS     30
-#define JS8D_START_DELAY_MS 100
+#define JS8E_SYMBOL_SAMPLES 4000
+#define JS8E_TX_SECONDS     30
+#define JS8E_START_DELAY_MS 100
 #endif
 
 #ifndef TEST_FOX_WAVE_GEN
@@ -95,11 +95,11 @@ extern struct dec_data {
     int kposA;                  // starting position of decode for submode A
     int kposB;                  // starting position of decode for submode B
     int kposC;                  // starting position of decode for submode C
-    int kposD;                  // starting position of decode for submode D
+    int kposE;                  // starting position of decode for submode E
     int kszA;                   // number of frames for decode for submode A
     int kszB;                   // number of frames for decode for submode B
     int kszC;                   // number of frames for decode for submode C
-    int kszD;                   // number of frames for decode for submode D
+    int kszE;                   // number of frames for decode for submode E
     int nzhsym;                 // half symbol stop index
     int nsubmode;
     int nsubmodes;

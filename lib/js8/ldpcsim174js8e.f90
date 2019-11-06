@@ -4,7 +4,7 @@ use crc
 use packjt
 
 include 'js8_params.f90'
-include 'js8d_params.f90'
+include 'js8e_params.f90'
 
 character*22 msg,msgsent,msgreceived
 character*8 arg

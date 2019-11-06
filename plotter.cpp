@@ -422,8 +422,8 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   else if(m_nSubMode == Varicode::JS8CallTurbo){
       bw = 8.0*(double)RX_SAMPLE_RATE/(double)JS8C_SYMBOL_SAMPLES;
   }
-  else if(m_nSubMode == Varicode::JS8CallUltra){
-      bw = 8.0*(double)RX_SAMPLE_RATE/(double)JS8D_SYMBOL_SAMPLES;
+  else if(m_nSubMode == Varicode::JS8CallUltraSlow){
+      bw = 8.0*(double)RX_SAMPLE_RATE/(double)JS8E_SYMBOL_SAMPLES;
   }
 
   painter0.setPen(penGreen);

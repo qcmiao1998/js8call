@@ -22,11 +22,11 @@
      integer(c_int) :: kposA
      integer(c_int) :: kposB
      integer(c_int) :: kposC
-     integer(c_int) :: kposD
+     integer(c_int) :: kposE
      integer(c_int) :: kszA
      integer(c_int) :: kszB
      integer(c_int) :: kszC
-     integer(c_int) :: kszD
+     integer(c_int) :: kszE
      integer(c_int) :: nzhsym
      integer(c_int) :: nsubmode
      integer(c_int) :: nsubmodes

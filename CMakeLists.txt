@@ -300,8 +300,8 @@ set (wsjt_FSRCS
   lib/js8b_decode.f90
   lib/js8c_module.f90
   lib/js8c_decode.f90
-  lib/js8d_module.f90
-  lib/js8d_decode.f90
+  lib/js8e_module.f90
+  lib/js8e_decode.f90
 
   # remaining non-module sources
   lib/addit.f90
@@ -417,7 +417,7 @@ set (wsjt_FSRCS
   lib/ft8/ldpcsim174.f90
   lib/js8/ldpcsim174js8b.f90
   lib/js8/ldpcsim174js8c.f90
-  lib/js8/ldpcsim174js8d.f90
+  lib/js8/ldpcsim174js8e.f90
   lib/ldpcsim40.f90
   lib/libration.f90
   lib/lorentzian.f90
@@ -1001,8 +1001,8 @@ target_link_libraries (ldpcsim174js8b wsjt_fort wsjt_cxx)
 add_executable (ldpcsim174js8c lib/js8/ldpcsim174js8c.f90 wsjtx.rc)
 target_link_libraries (ldpcsim174js8c wsjt_fort wsjt_cxx)
 
-add_executable (ldpcsim174js8d lib/js8/ldpcsim174js8d.f90 wsjtx.rc)
-target_link_libraries (ldpcsim174js8d wsjt_fort wsjt_cxx)
+add_executable (ldpcsim174js8e lib/js8/ldpcsim174js8e.f90 wsjtx.rc)
+target_link_libraries (ldpcsim174js8e wsjt_fort wsjt_cxx)
 
 add_executable (js8 ${js8_FSRCS} ${js8_CXXSRCS} wsjtx.rc)
 if (${OPENMP_FOUND} OR APPLE)

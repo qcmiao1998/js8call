@@ -81,8 +81,8 @@ void Modulator::start (unsigned symbolsLength, double framesPerSymbol,
   else if(m_TRperiod == JS8C_TX_SECONDS){
       delay_ms = JS8C_START_DELAY_MS;
   }
-  else if(m_TRperiod == JS8D_TX_SECONDS){
-      delay_ms = JS8D_START_DELAY_MS;
+  else if(m_TRperiod == JS8E_TX_SECONDS){
+      delay_ms = JS8E_START_DELAY_MS;
   }
 
   // noise generator parameters

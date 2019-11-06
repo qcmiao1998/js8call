@@ -4791,7 +4791,7 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionModeJS8Normal"/>
     <addaction name="actionModeJS8Fast"/>
     <addaction name="actionModeJS8Turbo"/>
-    <addaction name="actionModeJS8Ultra"/>
+    <addaction name="actionModeJS8UltraSlow"/>
     <addaction name="separator"/>
     <addaction name="menu_Decode_Passes"/>
     <addaction name="actionModeMultiDecoder"/>
@@ -5722,7 +5722,7 @@ list. The list can be maintained in Settings (F2).</string>
     <string>JS8 (&amp;Turbo, 6s, 160Hz, ~40 WPM)</string>
    </property>
   </action>
-  <action name="actionModeJS8Ultra">
+  <action name="actionModeJS8UltraSlow">
    <property name="checkable">
     <bool>true</bool>
    </property>

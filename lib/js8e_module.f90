@@ -1,6 +1,6 @@
-module js8d_module
+module js8e_module
     include 'js8/js8_params.f90'
-    include 'js8/js8d_params.f90'
+    include 'js8/js8e_params.f90'
 
 contains
     include 'js8/baselinejs8.f90'
@@ -10,4 +10,4 @@ contains
     include 'js8/genjs8refsig.f90'
     include 'js8/subtractjs8.f90'
     include 'js8/js8dec.f90'
-end module js8d_module
+end module js8e_module

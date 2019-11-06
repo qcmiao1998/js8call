@@ -1,16 +1,16 @@
-module js8d_decode
+module js8e_decode
 
-  type :: js8d_decoder
-     procedure(js8d_decode_callback), pointer :: callback
+  type :: js8e_decoder
+     procedure(js8e_decode_callback), pointer :: callback
    contains
      procedure :: decode
-  end type js8d_decoder
+  end type js8e_decoder
 
   abstract interface
-     subroutine js8d_decode_callback (this,sync,snr,dt,freq,decoded,nap,qual)
-       import js8d_decoder
+     subroutine js8e_decode_callback (this,sync,snr,dt,freq,decoded,nap,qual)
+       import js8e_decoder
        implicit none
-       class(js8d_decoder), intent(inout) :: this
+       class(js8e_decoder), intent(inout) :: this
        real, intent(in) :: sync
        integer, intent(in) :: snr
        real, intent(in) :: dt
@@ -18,7 +18,7 @@ module js8d_decode
        character(len=37), intent(in) :: decoded
        integer, intent(in) :: nap 
        real, intent(in) :: qual 
-     end subroutine js8d_decode_callback
+     end subroutine js8e_decode_callback
   end interface
 
 contains
@@ -29,10 +29,10 @@ contains
 !    use wavhdr
     use timer_module, only: timer
 !    type(hdr) h
-    use js8d_module
+    use js8e_module
 
-    class(js8d_decoder), intent(inout) :: this
-    procedure(js8d_decode_callback) :: callback
+    class(js8e_decoder), intent(inout) :: this
+    procedure(js8e_decode_callback) :: callback
     real s(NH1,NHSYM)
     real sbase(NH1)
     real candidate(3,200)
@@ -153,4 +153,4 @@ contains
   return
   end subroutine decode
 
-end module js8d_decode
+end module js8e_decode
