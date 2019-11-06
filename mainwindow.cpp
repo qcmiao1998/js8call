@@ -2528,7 +2528,9 @@ int MainWindow::computeStop(int submode, int period){
         {
             symbolSamples = JS8E_SYMBOL_SAMPLES;
 #if JS8E_IS_ULTRA
-            threshold = 0.00;
+            threshold = 0.0;
+#else
+            threshold = 2.0;
 #endif
             break;
         }
@@ -3997,9 +3999,20 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
     bool couldDecodeC = k >= cycleSampleStartC + framesNeededC;
 
 #if JS8_ENABLE_JS8E
-    qint32 cycleSampleStartE = computeCycleStartForDecode(computeCurrentCycle(JS8E_TX_SECONDS), JS8E_TX_SECONDS);
+    int cycleE = computeCurrentCycle(JS8E_TX_SECONDS);
+    qint32 cycleSampleStartE = computeCycleStartForDecode(cycleE, JS8E_TX_SECONDS);
     qint32 framesNeededE = computeFramesNeededForDecode(Varicode::JS8CallUltraSlow, JS8E_TX_SECONDS);
     bool couldDecodeE = k >= cycleSampleStartE + framesNeededE;
+#if !JS8E_IS_ULTRA
+    static int lastE = -1;
+    if(couldDecodeE){
+        if(cycleE == lastE){
+            couldDecodeE = false;
+        }
+        lastE = cycleE;
+    }
+#endif
+
 #else
     qint32 cycleSampleStartE = 0;
     qint32 framesNeededE = 0;

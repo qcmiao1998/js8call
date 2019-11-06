@@ -37,7 +37,7 @@
 #else
 #define JS8E_SYMBOL_SAMPLES 4000
 #define JS8E_TX_SECONDS     30
-#define JS8E_START_DELAY_MS 100
+#define JS8E_START_DELAY_MS 500
 #endif
 
 #ifndef TEST_FOX_WAVE_GEN
