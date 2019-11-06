@@ -4646,24 +4646,6 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionFox_Log"/>
     <addaction name="separator"/>
    </widget>
-   <widget class="QMenu" name="menuDecode">
-    <property name="visible">
-     <bool>false</bool>
-    </property>
-    <property name="title">
-     <string>&amp;Decode</string>
-    </property>
-    <addaction name="actionQuickDecode"/>
-    <addaction name="actionMediumDecode"/>
-    <addaction name="actionDeepDecode"/>
-    <addaction name="actionDeepestDecode"/>
-    <addaction name="separator"/>
-    <addaction name="actionInclude_averaging"/>
-    <addaction name="actionInclude_correlation"/>
-    <addaction name="actionEnable_AP_FT8"/>
-    <addaction name="actionEnable_AP_JT65"/>
-    <addaction name="actionEnable_AP_DXcall"/>
-   </widget>
    <widget class="QMenu" name="menuSave">
     <property name="title">
      <string>&amp;Save</string>
@@ -4795,14 +4777,25 @@ list. The list can be maintained in Settings (F2).</string>
    </widget>
    <widget class="QMenu" name="menuModeJS8">
     <property name="title">
-     <string>Mode</string>
+     <string>&amp;Mode</string>
     </property>
+    <widget class="QMenu" name="menu_Decode_Passes">
+     <property name="title">
+      <string>&amp;Decoder Sensitivity...</string>
+     </property>
+     <addaction name="actionQuickDecode"/>
+     <addaction name="actionMediumDecode"/>
+     <addaction name="actionDeepDecode"/>
+     <addaction name="actionDeepestDecode"/>
+    </widget>
     <addaction name="actionModeJS8Normal"/>
     <addaction name="actionModeJS8Fast"/>
     <addaction name="actionModeJS8Turbo"/>
     <addaction name="actionModeJS8Ultra"/>
     <addaction name="separator"/>
+    <addaction name="menu_Decode_Passes"/>
     <addaction name="actionModeMultiDecoder"/>
+    <addaction name="separator"/>
     <addaction name="actionModeAutoreply"/>
     <addaction name="actionModeJS8HB"/>
     <addaction name="actionHeartbeatAcknowledgements"/>
@@ -4810,7 +4803,6 @@ list. The list can be maintained in Settings (F2).</string>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
    <addaction name="menuModeJS8"/>
-   <addaction name="menuDecode"/>
    <addaction name="menuSave"/>
    <addaction name="menu_Log"/>
    <addaction name="menuWindow"/>
@@ -4905,7 +4897,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>(1x) One Pass</string>
+    <string>(&amp;1x) One Decode Pass</string>
    </property>
    <property name="visible">
     <bool>true</bool>
@@ -5002,7 +4994,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>(2x) Two Passes</string>
+    <string>(&amp;2x) Two Decode Passes</string>
    </property>
   </action>
   <action name="actionDeepestDecode">
@@ -5013,7 +5005,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>(4x) Four Passes</string>
+    <string>(&amp;4x) Four Decode Passes</string>
    </property>
   </action>
   <action name="actionMonitor_OFF_at_startup">
@@ -5562,7 +5554,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>(3x) Three Passes</string>
+    <string>(&amp;3x) Three Decode Passes</string>
    </property>
   </action>
   <action name="actionShow_Frequency_Clock">
@@ -5711,15 +5703,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>JS8 (Normal, 15s, 50Hz, ~16 WPM)</string>
-   </property>
-  </action>
-  <action name="actionModeAutoreply">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Enable Autoreply (AUTO)</string>
+    <string>JS8 (&amp;Normal, 15s, 50Hz, ~16 WPM)</string>
    </property>
   </action>
   <action name="actionModeJS8Fast">
@@ -5727,7 +5711,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>JS8 (Fast, 10s, 80Hz, ~24 WPM)</string>
+    <string>JS8 (&amp;Fast, 10s, 80Hz, ~24 WPM)</string>
    </property>
   </action>
   <action name="actionModeJS8Turbo">
@@ -5735,7 +5719,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>JS8 (Turbo, 6s, 160Hz, ~40 WPM)</string>
+    <string>JS8 (&amp;Turbo, 6s, 160Hz, ~40 WPM)</string>
    </property>
   </action>
   <action name="actionModeJS8Ultra">
@@ -5743,7 +5727,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>JS8 (Ultra, 4s, 250Hz, ~60WPM)</string>
+    <string>JS8 (&amp;Ultra, 4s, 250Hz, ~60WPM)</string>
    </property>
   </action>
   <action name="actionModeJS8HB">
@@ -5751,7 +5735,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Enable Heartbeat Networking (HB)</string>
+    <string>Enable &amp;Heartbeat Networking (HB)</string>
    </property>
   </action>
   <action name="actionHeartbeatAcknowledgements">
@@ -5759,7 +5743,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Enable Heartbeat Acknowledgments (ACK)</string>
+    <string>Enable Heartbeat Ac&amp;knowledgments (ACK)</string>
    </property>
   </action>
   <action name="actionFocus_Message_Receive_Area">
@@ -5779,6 +5763,14 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Enable Simultaneous Decoding of All Speeds (MULTI)</string>
+   </property>
+  </action>
+  <action name="actionModeAutoreply">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable &amp;Autoreply (AUTO)</string>
    </property>
   </action>
  </widget>
