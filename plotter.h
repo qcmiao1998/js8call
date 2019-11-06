@@ -82,8 +82,10 @@ public:
   void setTol(int n);
   void setRxBand(QString band);
   void setTurbo(bool turbo);
+#if JS8_USE_REFSPEC
   void setReference(bool b) {m_bReference = b;}
   bool Reference() const {return m_bReference;}
+#endif
   void drawRed(int ia, int ib, float swide[]);
   void setVHF(bool bVHF);
   void setRedFile(QString fRed);

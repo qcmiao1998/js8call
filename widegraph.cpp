@@ -79,11 +79,13 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     ui->widePlot->setCurrent(m_settings->value("Current",false).toBool());
     ui->widePlot->setCumulative(m_settings->value("Cumulative",true).toBool());
     ui->widePlot->setLinearAvg(m_settings->value("LinearAvg",false).toBool());
-    ui->widePlot->setReference(m_settings->value("Reference",false).toBool());
     if(ui->widePlot->current()) ui->spec2dComboBox->setCurrentIndex(0);
     if(ui->widePlot->cumulative()) ui->spec2dComboBox->setCurrentIndex(1);
     if(ui->widePlot->linearAvg()) ui->spec2dComboBox->setCurrentIndex(2);
+#if JS8_USE_REFSPEC
+    ui->widePlot->setReference(m_settings->value("Reference",false).toBool());
     if(ui->widePlot->Reference()) ui->spec2dComboBox->setCurrentIndex(3);
+#endif
     int nbpp=m_settings->value("BinsPerPixel", 2).toInt();
     ui->widePlot->setBinsPerPixel(nbpp);
     ui->sbPercent2dPlot->setValue(m_Percent2DScreen);
@@ -141,7 +143,9 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("Current", ui->widePlot->current());
   m_settings->setValue ("Cumulative", ui->widePlot->cumulative());
   m_settings->setValue ("LinearAvg", ui->widePlot->linearAvg());
+#if JS8_USE_REFSPEC
   m_settings->setValue ("Reference", ui->widePlot->Reference());
+#endif
   m_settings->setValue ("BinsPerPixel", ui->widePlot->binsPerPixel ());
   m_settings->setValue ("StartFreq", ui->widePlot->startFreq ());
   m_settings->setValue ("WaterfallPalette", m_waterfallPalette);
@@ -354,7 +358,6 @@ void WideGraph::on_spec2dComboBox_currentIndexChanged(const QString &arg1)
   ui->widePlot->setCurrent(false);
   ui->widePlot->setCumulative(false);
   ui->widePlot->setLinearAvg(false);
-  ui->widePlot->setReference(false);
   ui->smoSpinBox->setEnabled(false);
   if(arg1=="Current") ui->widePlot->setCurrent(true);
   if(arg1=="Cumulative") ui->widePlot->setCumulative(true);
@@ -362,9 +365,12 @@ void WideGraph::on_spec2dComboBox_currentIndexChanged(const QString &arg1)
     ui->widePlot->setLinearAvg(true);
     ui->smoSpinBox->setEnabled(true);
   }
+#if JS8_USE_REFSPEC
+  ui->widePlot->setReference(false);
   if(arg1=="Reference") {
     ui->widePlot->setReference(true);
   }
+#endif
   replot();
 }
 
