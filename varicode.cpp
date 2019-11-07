@@ -251,6 +251,7 @@ QMap<QString, quint32> basecalls = {
 
     // special groups
     { "@APRSIS",    nbasecall + 33 }, // APRS GROUP
+    { "@RAGCHEW",   nbasecall + 34 }, // RAGCHEW GROUP
 };
 
 QMap<quint32, QString> cqs = {
