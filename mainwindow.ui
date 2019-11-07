@@ -5735,7 +5735,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Enable &amp;Heartbeat Networking (HB)</string>
+    <string>Enable Heartbeat Networking (&amp;HB)</string>
    </property>
   </action>
   <action name="actionHeartbeatAcknowledgements">
@@ -5743,7 +5743,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Enable Heartbeat Ac&amp;knowledgments (ACK)</string>
+    <string>Enable Heartbeat Acknowledgments (AC&amp;K)</string>
    </property>
   </action>
   <action name="actionFocus_Message_Receive_Area">
@@ -5762,7 +5762,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Enable Simultaneous Decoding of All Speeds (MULTI)</string>
+    <string>Enable Simultaneous Decoding of All Speeds (&amp;MULTI)</string>
    </property>
   </action>
   <action name="actionModeAutoreply">
@@ -5770,7 +5770,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Enable &amp;Autoreply (AUTO)</string>
+    <string>Enable Autoreply (&amp;AUTO)</string>
    </property>
   </action>
  </widget>
