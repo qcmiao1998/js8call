@@ -3979,6 +3979,10 @@ void MainWindow::decode(){
 }
 
 bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPeriod){
+    if(m_decoderBusy){
+        return false;
+    }
+
     if(period == 0){
         return false;
     }

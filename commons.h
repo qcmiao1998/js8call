@@ -15,7 +15,7 @@
 #define JS8_ENABLE_JS8A    1
 #define JS8_ENABLE_JS8B    1
 #define JS8_ENABLE_JS8C    1
-#define JS8_ENABLE_JS8E    1
+#define JS8_ENABLE_JS8E    0
 
 #define JS8A_SYMBOL_SAMPLES 1920
 #define JS8A_TX_SECONDS     15
@@ -29,7 +29,7 @@
 #define JS8C_TX_SECONDS     6
 #define JS8C_START_DELAY_MS 100
 
-#define JS8E_IS_ULTRA 0
+#define JS8E_IS_ULTRA 1
 #if JS8E_IS_ULTRA
 #define JS8E_SYMBOL_SAMPLES 384
 #define JS8E_TX_SECONDS     4
