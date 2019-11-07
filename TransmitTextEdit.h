@@ -19,6 +19,18 @@ class TransmitTextEdit : public QTextEdit
 public:
     TransmitTextEdit(QWidget *parent);
 
+    static QPair<int,int> relativeTextCursorPosition(QTextCursor cursor){
+        auto c = QTextCursor(cursor);
+        c.movePosition(QTextCursor::End);
+        int last = c.position();
+
+        auto cc = QTextCursor(cursor);
+        int relstart = last - qMin(cc.selectionStart(), cc.selectionEnd());
+        int relend = last - qMax(cc.selectionStart(), cc.selectionEnd());
+
+        return {relstart, relend};
+    }
+
     int charsSent() const {
         return m_sent;
     }
@@ -34,8 +46,8 @@ public:
 
     QString toPlainText() const;
     void setPlainText(const QString &text);
-    void replaceUnsentText(const QString &text);
-    void replacePlainText(const QString &text);
+    void replaceUnsentText(const QString &text, bool keepCursor);
+    void replacePlainText(const QString &text, bool keepCursor);
 
     void setFont(QFont f);
     void setFont(QFont f, QColor fg, QColor bg);

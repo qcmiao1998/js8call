@@ -1831,6 +1831,7 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(QString const& mycall,
     bool forceData,
     int submode,
     MessageInfo *pInfo){
+
     #define ALLOW_SEND_COMPOUND 1
     #define ALLOW_SEND_COMPOUND_DIRECTED 1
     #define AUTO_PREPEND_DIRECTED 1
@@ -1897,8 +1898,8 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(QString const& mycall,
                 // and if there are no other callsigns in this message
                 // or if the first callsign in the message isn't at the beginning...
                 // then we should be auto-prefixing this line with the selected call
-
-                line = QString("%1 %2").arg(selectedCall).arg(line);
+                auto sep = line.startsWith(" ") ? "" : " ";
+                line = QString("%1%2%3").arg(selectedCall).arg(sep).arg(line);
             }
         }
 #endif

@@ -157,8 +157,8 @@ public slots:
   bool ensureNotIdle();
   bool ensureCreateMessageReady(const QString &text);
   QString createMessage(QString const& text);
-  QString appendMessage(QString const& text);
-  QString createMessageTransmitQueue(QString const& text, bool reset);
+  QString appendMessage(QString const& text, bool isData);
+  QString createMessageTransmitQueue(QString const& text, bool reset, bool isData);
   void resetMessageTransmitQueue();
   QPair<QString, int> popMessageFrame();
   void tryNotify(const QString &key);
@@ -343,7 +343,7 @@ private slots:
   void on_nextFreeTextMsg_currentTextChanged (QString const&);
   void on_extFreeTextMsgEdit_currentTextChanged (QString const&);
   int currentFreqOffset();
-  QList<QPair<QString, int>> buildMessageFrames(QString const& text);
+  QList<QPair<QString, int>> buildMessageFrames(QString const& text, bool isData);
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);
   int findFreeFreqOffset(int fmin, int fmax, int bw);

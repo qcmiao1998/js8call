@@ -6476,19 +6476,19 @@ bool MainWindow::ensureCreateMessageReady(const QString &text){
 }
 
 QString MainWindow::createMessage(QString const& text){
-    return createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false), true);
+    return createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false), true, false);
 }
 
-QString MainWindow::appendMessage(QString const& text){
-    return createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false), false);
+QString MainWindow::appendMessage(QString const& text, bool isData){
+    return createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false), false, isData);
 }
 
-QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset){
+QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset, bool isData){
   if(reset){
       resetMessageTransmitQueue();
   }
 
-  auto frames = buildMessageFrames(text);
+  auto frames = buildMessageFrames(text, isData);
 
   QStringList lines;
   foreach(auto frame, frames){
@@ -6535,6 +6535,8 @@ QPair<QString, int> MainWindow::popMessageFrame(){
   return m_txFrameQueue.dequeue();
 }
 
+// when we double click the rx window, we send the selected text to the log dialog
+// when the text could be an snr value prefixed with a - or +, we extend the selection to include it
 void MainWindow::on_textEditRX_mouseDoubleClicked(){
   auto c = ui->textEditRX->textCursor();
   auto text = c.selectedText();
@@ -6578,7 +6580,7 @@ int MainWindow::currentFreqOffset(){
     return ui->RxFreqSpinBox->value();
 }
 
-QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text){
+QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text, bool isData){
     // prepare selected callsign for directed message
     QString selectedCall = callsignSelected();
 
@@ -6589,7 +6591,7 @@ QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text){
     bool forceIdentify = !m_config.avoid_forced_identify();
 
     // TODO: might want to be more explicit?
-    bool forceData = m_txFrameCountSent > 0;
+    bool forceData = m_txFrameCountSent > 0 && isData;
 
     Varicode::MessageInfo info;
     auto frames = Varicode::buildMessageFrames(
@@ -6621,6 +6623,13 @@ QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text){
 
 bool MainWindow::prepareNextMessageFrame()
 {
+  // check to see if the last i3bit was a last bit
+  bool i3bitLast = (m_i3bit & Varicode::JS8CallLast) == Varicode::JS8CallLast;
+
+  // TODO: should this be user configurable?
+  bool shouldForceDataForTypeahead = !i3bitLast;
+
+  // reset i3
   m_i3bit = Varicode::JS8Call;
 
   // typeahead
@@ -6634,11 +6643,19 @@ bool MainWindow::prepareNextMessageFrame()
           qDebug() << "text dirty for typeahead\n" << sent << "\n" << unsent;
           m_txFrameQueue.clear();
           m_txFrameCount = 0;
-          newText = appendMessage(unsent);
+
+          newText = appendMessage(unsent, shouldForceDataForTypeahead);
+
+          // if this was the last frame, append a newline
+          if(i3bitLast){
+              m_totalTxMessage.append("\n");
+              newText.prepend("\n");
+          }
+
           qDebug () << "unsent replaced to" << "\n" << newText;
       }
       ui->extFreeTextMsgEdit->setReadOnly(false);
-      ui->extFreeTextMsgEdit->replaceUnsentText(newText);
+      ui->extFreeTextMsgEdit->replaceUnsentText(newText, true);
       ui->extFreeTextMsgEdit->setClean();
   }
 

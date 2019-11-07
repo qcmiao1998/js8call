@@ -124,22 +124,40 @@ void TransmitTextEdit::setPlainText(const QString &text){
 }
 
 //
-void TransmitTextEdit::replaceUnsentText(const QString &text){
+void TransmitTextEdit::replaceUnsentText(const QString &text, bool keepCursor){
+    auto rel = relativeTextCursorPosition(textCursor());
     auto c = textCursor();
     c.movePosition(QTextCursor::Start);
     c.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, m_sent);
     c.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
     c.removeSelectedText();
     c.insertText(text);
+
+    // keep cursor
+    if(keepCursor){
+        c.movePosition(QTextCursor::End);
+        c.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveAnchor, rel.first);
+        c.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, rel.second - rel.first);
+        setTextCursor(c);
+    }
 }
 
 //
-void TransmitTextEdit::replacePlainText(const QString &text){
+void TransmitTextEdit::replacePlainText(const QString &text, bool keepCursor){
+    auto rel = relativeTextCursorPosition(textCursor());
     auto c = textCursor();
     c.movePosition(QTextCursor::Start);
     c.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
     c.removeSelectedText();
     c.insertText(text);
+
+    // keep cursor
+    if(keepCursor){
+        c.movePosition(QTextCursor::End);
+        c.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveAnchor, rel.first);
+        c.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, rel.second - rel.first);
+        setTextCursor(c);
+    }
 }
 
 //
