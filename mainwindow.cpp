@@ -1031,7 +1031,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       // reorder so slow is at the top
       ui->menuModeJS8->removeAction(ui->actionModeJS8UltraSlow);
       ui->menuModeJS8->insertAction(ui->actionModeJS8Normal, ui->actionModeJS8UltraSlow);
-      ui->actionModeJS8UltraSlow->setText("JS8 (&Slow, 30s, 24Hz, ~8WPM)");
+      ui->actionModeJS8UltraSlow->setText("JS8 (&Slow, 30s, 25Hz, ~8WPM)");
   }
 
   // prep
@@ -2491,9 +2491,9 @@ void MainWindow::fixStop()
 
 int MainWindow::computeSubmodePeriod(int submode){
     switch(submode){
-        case Varicode::JS8CallNormal: return JS8A_TX_SECONDS;
-        case Varicode::JS8CallFast:   return JS8B_TX_SECONDS;
-        case Varicode::JS8CallTurbo:  return JS8C_TX_SECONDS;
+        case Varicode::JS8CallNormal:     return JS8A_TX_SECONDS;
+        case Varicode::JS8CallFast:       return JS8B_TX_SECONDS;
+        case Varicode::JS8CallTurbo:      return JS8C_TX_SECONDS;
         case Varicode::JS8CallUltraSlow:  return JS8E_TX_SECONDS;
     }
 
@@ -4003,16 +4003,15 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
     qint32 cycleSampleStartE = computeCycleStartForDecode(cycleE, JS8E_TX_SECONDS);
     qint32 framesNeededE = computeFramesNeededForDecode(Varicode::JS8CallUltraSlow, JS8E_TX_SECONDS);
     bool couldDecodeE = k >= cycleSampleStartE + framesNeededE;
-#if !JS8E_IS_ULTRA
-    static int lastE = -1;
+
+    // protect against multiple decodes for the same cycle
+    static int lastDecodeCycleE = -1;
     if(couldDecodeE){
-        if(cycleE == lastE){
+        if(cycleE == lastDecodeCycleE){
             couldDecodeE = false;
         }
-        lastE = cycleE;
+        lastDecodeCycleE = cycleE;
     }
-#endif
-
 #else
     qint32 cycleSampleStartE = 0;
     qint32 framesNeededE = 0;
@@ -4504,7 +4503,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
       DecodedText decodedtext {QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"}), "FT8" == m_mode &&
             ui->cbVHFcontest->isChecked(), m_config.my_grid ()};
 
-      bool bValidFrame = decodedtext.snr() > -24;
+      bool bValidFrame = decodedtext.snr() > -28;
 
       // dupe check
       auto frame = decodedtext.message();
@@ -7220,7 +7219,7 @@ void MainWindow::prepareHeartbeatMode(bool enabled){
         ui->hbMacroButton->setChecked(false);
     }
     ui->actionHeartbeat->setEnabled(enabled);
-    ui->actionModeJS8HB->setEnabled(m_nSubMode == Varicode::JS8CallNormal);
+    ui->actionModeJS8HB->setEnabled(m_nSubMode == Varicode::JS8CallNormal || (!JS8E_IS_ULTRA && m_nSubMode == Varicode::JS8CallUltraSlow));
     ui->actionHeartbeatAcknowledgements->setEnabled(ui->actionModeAutoreply->isChecked() && enabled);
 
 #if 0
@@ -7268,7 +7267,7 @@ void MainWindow::on_actionJS8_triggered()
   }
 
   // Only enable heartbeat for normal mode
-  ui->actionModeJS8HB->setEnabled(m_nSubMode == Varicode::JS8CallNormal);
+  ui->actionModeJS8HB->setEnabled(m_nSubMode == Varicode::JS8CallNormal || (!JS8E_IS_ULTRA && m_nSubMode == Varicode::JS8CallUltraSlow));
   prepareHeartbeatMode(ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked());
 
   //if(m_nSubMode != Varicode::JS8CallNormal){

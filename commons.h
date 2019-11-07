@@ -35,7 +35,7 @@
 #define JS8E_TX_SECONDS     4
 #define JS8E_START_DELAY_MS 100
 #else
-#define JS8E_SYMBOL_SAMPLES 4000
+#define JS8E_SYMBOL_SAMPLES 3840
 #define JS8E_TX_SECONDS     30
 #define JS8E_START_DELAY_MS 500
 #endif
