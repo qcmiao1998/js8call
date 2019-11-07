@@ -1031,7 +1031,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       // reorder so slow is at the top
       ui->menuModeJS8->removeAction(ui->actionModeJS8UltraSlow);
       ui->menuModeJS8->insertAction(ui->actionModeJS8Normal, ui->actionModeJS8UltraSlow);
-      ui->actionModeJS8UltraSlow->setText("JS8 (&Slow, 30s, 25Hz, ~8WPM)");
+      ui->actionModeJS8UltraSlow->setText("JS8 (&Slow, 30s, 24Hz, ~8WPM)");
   }
 
   // prep
