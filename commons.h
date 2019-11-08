@@ -29,7 +29,7 @@
 #define JS8C_TX_SECONDS     6
 #define JS8C_START_DELAY_MS 100
 
-#define JS8E_IS_ULTRA 0
+#define JS8E_IS_ULTRA 1
 #if JS8E_IS_ULTRA
 #define JS8E_SYMBOL_SAMPLES 384
 #define JS8E_TX_SECONDS     4

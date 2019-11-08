@@ -4507,7 +4507,23 @@ void MainWindow::readFromStdout()                             //readFromStdout
       DecodedText decodedtext {QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"}), "FT8" == m_mode &&
             ui->cbVHFcontest->isChecked(), m_config.my_grid ()};
 
-      bool bValidFrame = decodedtext.snr() > -28;
+      int snr = decodedtext.snr();
+      bool bValidFrame = snr >= -28;
+
+      // these are baseline thresholds for valid frames
+      switch(decodedtext.submode()){
+        case Varicode::JS8CallNormal:
+          bValidFrame = snr >= -24;
+        case Varicode::JS8CallFast:
+          bValidFrame = snr >= -22;
+        case Varicode::JS8CallTurbo:
+          bValidFrame = snr >= -20;
+#if JS8E_IS_ULTRA
+        case Varicode::JS8CallUltraSlow:
+          bValidFrame = snr >= -18;
+          break;
+#endif
+      }
 
       // dupe check
       auto frame = decodedtext.message();
