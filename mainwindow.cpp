@@ -4513,14 +4513,14 @@ void MainWindow::readFromStdout()                             //readFromStdout
       // these are baseline thresholds for valid frames
       switch(decodedtext.submode()){
         case Varicode::JS8CallNormal:
-          bValidFrame = snr >= -24;
+          bValidFrame = snr >= -24; break;
         case Varicode::JS8CallFast:
-          bValidFrame = snr >= -22;
+          bValidFrame = snr >= -22; break;
         case Varicode::JS8CallTurbo:
-          bValidFrame = snr >= -20;
+          bValidFrame = snr >= -20; break;
 #if JS8E_IS_ULTRA
         case Varicode::JS8CallUltraSlow:
-          bValidFrame = snr >= -18;
+          bValidFrame = snr >= -18; break;
           break;
 #endif
       }
