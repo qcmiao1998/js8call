@@ -163,6 +163,7 @@ public slots:
   QPair<QString, int> popMessageFrame();
   void tryNotify(const QString &key);
   int rxThreshold(int submode);
+  int rxSnrThreshold(int submode);
 
 protected:
   void keyPressEvent (QKeyEvent *) override;
@@ -719,7 +720,6 @@ private:
     int bits;
     float tdrift;
     int submode;
-    QString speed;
   };
 
   struct CommandDetail
@@ -738,7 +738,6 @@ private:
     QString extra;
     float tdrift;
     int submode;
-    QString speed;
     QString relayPath;
   };
 
@@ -757,7 +756,6 @@ private:
     bool shouldDisplay;
     float tdrift;
     int submode;
-    QString speed;
   };
 
   struct MessageBuffer {
@@ -948,8 +946,8 @@ private:
   void aprsLogReport(int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
   void setSubmode(int submode);
-  int speedNameToSubmode(QString speed);
-  QString modeSpeedName(int submode);
+  int submodeNameToSubmode(QString speed);
+  QString submodeName(int submode);
   void updateCurrentBand();
   void displayDialFrequency ();
   void transmitDisplay (bool);

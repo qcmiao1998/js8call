@@ -1234,8 +1234,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
         auto items = m_bandActivity.value(selectedOffset);
         if(!items.isEmpty()){
-            auto speed = items.last().speed;
-            int submode = speedNameToSubmode(speed);
+            int submode = items.last().submode;
+            auto speed = submodeName(submode);
             if(submode != m_nSubMode){
                 auto qrqAction = menu->addAction(QString("Jump to %1%2 speed").arg(speed.left(1)).arg(speed.mid(1).toLower()));
                 connect(qrqAction, &QAction::triggered, this, [this, submode](){
@@ -1426,7 +1426,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       d.relayPath = d.from;
       d.text = m->textValue();
       d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-      d.speed = modeSpeedName(m_nSubMode);
+      d.submode = m_nSubMode;
 
       addCommandToStorage("STORE", d);
   });
@@ -1465,8 +1465,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
             });
 
 
-            auto speed = m_callActivity[selectedCall].speed;
-            int submode = speedNameToSubmode(speed);
+            int submode = m_callActivity[selectedCall].submode;
+            auto speed = submodeName(submode);
             if(submode != m_nSubMode){
                 auto qrqAction = menu->addAction(QString("Jump to %1%2 speed").arg(speed.left(1)).arg(speed.mid(1).toLower()));
                 connect(qrqAction, &QAction::triggered, this, [this, submode](){
@@ -1910,7 +1910,7 @@ void MainWindow::initializeDummyData(){
         cd.utcTimestamp = dt;
         cd.grid = i == 5 ? "J042" : i == 6 ? " FN42FN42FN" : "";
         cd.tdrift = 0.1*i;
-        cd.speed = modeSpeedName(i % 4);
+        cd.submode = i % 4;
         logCallActivity(cd, false);
 
         ActivityDetail ad = {};
@@ -1919,7 +1919,7 @@ void MainWindow::initializeDummyData(){
         ad.freq = 500 + 100*i;
         ad.text = QString("%1: %2 TEST MESSAGE").arg(call).arg(m_config.my_callsign());
         ad.utcTimestamp = dt;
-        ad.speed = cd.speed;
+        ad.submode = cd.submode;
         m_bandActivity[500+100*i] = { ad };
 
         markOffsetDirected(500+100*i, false);
@@ -1933,7 +1933,7 @@ void MainWindow::initializeDummyData(){
     adHB1.freq = 750;
     adHB1.text = QString("KN4CRD: HB AUTO EM73");
     adHB1.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-    adHB1.speed = "NORMAL";
+    adHB1.submode = Varicode::JS8CallNormal;
     m_bandActivity[750].append(adHB1);
 
     ActivityDetail adHB2 = {};
@@ -1942,7 +1942,7 @@ void MainWindow::initializeDummyData(){
     adHB2.freq = 750;
     adHB2.text = QString(" MSG ID 1");
     adHB2.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-    adHB2.speed = "NORMAL";
+    adHB2.submode = Varicode::JS8CallNormal;
     m_bandActivity[750].append(adHB2);
 
     CommandDetail cmd = {};
@@ -1952,7 +1952,7 @@ void MainWindow::initializeDummyData(){
     cmd.relayPath = "N0JDS>OH8STN";
     cmd.text = "HELLO BRAVE SOUL";
     cmd.utcTimestamp = dt;
-    cmd.speed = "NORMAL";
+    cmd.submode = Varicode::JS8CallNormal;
     addCommandToMyInbox(cmd);
 
     QString eot = m_config.eot();
@@ -2254,7 +2254,7 @@ void MainWindow::writeSettings()
         {"ackTimestamp", QVariant(cd.ackTimestamp)},
         {"utcTimestamp", QVariant(cd.utcTimestamp)},
 #endif
-        {"mode", QVariant(cd.speed)},
+        {"submode", QVariant(cd.submode)},
       });
   }
   m_settings->endGroup();
@@ -2434,7 +2434,7 @@ void MainWindow::readSettings()
           auto ackTimestamp = values.value("ackTimestamp").toDateTime();
           auto utcTimestamp = values.value("utcTimestamp").toDateTime();
 #endif
-          auto mode = values.value("mode", "JS8").toString();
+          auto submode = values.value("submode", Varicode::JS8CallNormal).toInt();
 
           CallDetail cd = {};
           cd.call = call;
@@ -2444,7 +2444,7 @@ void MainWindow::readSettings()
           cd.tdrift = tdrift;
           cd.ackTimestamp = ackTimestamp;
           cd.utcTimestamp = utcTimestamp;
-          cd.speed = mode;
+          cd.submode = submode;
 
           logCallActivity(cd, false);
       }
@@ -2675,8 +2675,6 @@ void MainWindow::dataSink(qint64 frames)
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
     dec_data.params.nzhsym=m_ihsym;
-
-    qDebug() << "dataSink k" << k;
 
     decode();
 }
@@ -3265,19 +3263,19 @@ void MainWindow::setSubmode(int submode){
     on_actionJS8_triggered();
 }
 
-int MainWindow::speedNameToSubmode(QString speedName){
+int MainWindow::submodeNameToSubmode(QString speedName){
     auto speed = speedName.toUpper().trimmed();
 
-    if(speed == modeSpeedName(Varicode::JS8CallNormal)){
+    if(speed == submodeName(Varicode::JS8CallNormal)){
         return Varicode::JS8CallNormal;
     }
-    if(speed == modeSpeedName(Varicode::JS8CallFast)){
+    if(speed == submodeName(Varicode::JS8CallFast)){
         return Varicode::JS8CallFast;
     }
-    if(speed == modeSpeedName(Varicode::JS8CallTurbo)){
+    if(speed == submodeName(Varicode::JS8CallTurbo)){
         return Varicode::JS8CallTurbo;
     }
-    if(speed == modeSpeedName(Varicode::JS8CallUltraSlow)){
+    if(speed == submodeName(Varicode::JS8CallUltraSlow)){
         return Varicode::JS8CallUltraSlow;
     }
     // default to the current submode
@@ -3285,7 +3283,7 @@ int MainWindow::speedNameToSubmode(QString speedName){
 }
 
 
-QString MainWindow::modeSpeedName(int submode){
+QString MainWindow::submodeName(int submode){
     if(submode == Varicode::JS8CallNormal){
         return "NORMAL";
     }
@@ -3982,7 +3980,9 @@ void MainWindow::decode(){
 }
 
 bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPeriod){
-    qDebug() << "decoder checking if ready...";
+    int k = dec_data.params.kin;
+
+    qDebug() << "decoder checking if ready..." << "k" << k;
 
     if(m_decoderBusy){
         qDebug() << "decoder busy";
@@ -3995,8 +3995,6 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
     }
 
 #if JS8_RING_BUFFER
-    int k = dec_data.params.kin;
-
     static int lastKA = -1;
     static qint32 lastCycleA = -1;
     qint32 cycleA = computeCurrentCycle(JS8A_TX_SECONDS);
@@ -4450,23 +4448,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
       DecodedText decodedtext {QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"}), "FT8" == m_mode &&
             ui->cbVHFcontest->isChecked(), m_config.my_grid ()};
 
-      int snr = decodedtext.snr();
-      bool bValidFrame = snr >= -28;
-
-      // these are baseline thresholds for valid frames
-      switch(decodedtext.submode()){
-        case Varicode::JS8CallNormal:
-          bValidFrame = snr >= -24; break;
-        case Varicode::JS8CallFast:
-          bValidFrame = snr >= -22; break;
-        case Varicode::JS8CallTurbo:
-          bValidFrame = snr >= -20; break;
-#if JS8E_IS_ULTRA
-        case Varicode::JS8CallUltraSlow:
-          bValidFrame = snr >= -18; break;
-          break;
-#endif
-      }
+      bool bValidFrame = decodedtext.snr() >= rxSnrThreshold(decodedtext.submode());
 
       // dupe check
       auto frame = decodedtext.message();
@@ -4483,7 +4465,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
           m_messageDupeCache[frame] = frameOffset;
       }
 
-      qDebug() << "valid" << bValidFrame << decodedtext.submode() << "decoded text" << decodedtext.message();
+      qDebug() << "valid" << bValidFrame << submodeName(decodedtext.submode()) << "decoded text" << decodedtext.message();
 
       // skip if invalid
       if(!bValidFrame) {
@@ -4526,7 +4508,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         d.snr = decodedtext.snr();
         d.isBuffered = false;
         d.tdrift = decodedtext.dt();
-        d.speed = modeSpeedName(decodedtext.submode());
+        d.submode = decodedtext.submode();
 
         // if we have any "first" frame, and a buffer is already established, clear it...
         int prevBufferOffset = -1;
@@ -4563,7 +4545,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
         cd.bits = decodedtext.bits();
         cd.tdrift = decodedtext.dt();
-        cd.speed = modeSpeedName(decodedtext.submode());
+        cd.submode = decodedtext.submode();
 
         // Only respond to HEARTBEATS...remember that CQ messages are "Alt" pings
         if(decodedtext.isHeartbeat()){
@@ -4588,7 +4570,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 cmd.freq = cd.freq;
                 cmd.utcTimestamp = cd.utcTimestamp;
                 cmd.tdrift = cd.tdrift;
-                cmd.speed = cd.speed;
+                cmd.submode = cd.submode;
                 m_rxCommandQueue.append(cmd);
 
                 // notification for hb
@@ -4598,7 +4580,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         } else {
             qDebug() << "buffering compound call" << cd.freq << cd.call << cd.bits;
 
-            hasExistingMessageBuffer(speedNameToSubmode(cd.speed), cd.freq, true, nullptr);
+            hasExistingMessageBuffer(cd.submode, cd.freq, true, nullptr);
             m_messageBuffer[cd.freq].compound.append(cd);
         }
       }
@@ -4620,7 +4602,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
           cmd.bits = decodedtext.bits();
           cmd.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
           cmd.tdrift = decodedtext.dt();
-          cmd.speed = modeSpeedName(decodedtext.submode());
+          cmd.submode = decodedtext.submode();
 
           // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
           if((Varicode::isCommandBuffered(cmd.cmd) && (cmd.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) || cmd.from == "<....>" || cmd.to == "<....>"){
@@ -4636,13 +4618,13 @@ void MainWindow::readFromStdout()                             //readFromStdout
                 cmdcd.utcTimestamp = cmd.utcTimestamp;
                 cmdcd.ackTimestamp = cmd.to == m_config.my_callsign() ? cmd.utcTimestamp : QDateTime{};
                 cmdcd.tdrift = cmd.tdrift;
-                cmdcd.speed = cmd.speed;
+                cmdcd.submode = cmd.submode;
                 logCallActivity(cmdcd, false);
                 logHeardGraph(cmd.from, cmd.to);
             }
 
             // merge any existing buffer to this frequency
-            hasExistingMessageBuffer(speedNameToSubmode(cmd.speed), cmd.freq, true, nullptr);
+            hasExistingMessageBuffer(cmd.submode, cmd.freq, true, nullptr);
 
             if(cmd.to == m_config.my_callsign()){
                 d.shouldDisplay = true;
@@ -4671,7 +4653,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
               td.freq = cmd.freq;
               td.utcTimestamp = cmd.utcTimestamp;
               td.tdrift = cmd.tdrift;
-              td.speed = cmd.speed;
+              td.submode = cmd.submode;
               logCallActivity(td, true);
               logHeardGraph(cmd.from, cmd.to);
           }
@@ -9602,6 +9584,24 @@ int MainWindow::rxThreshold(int submode){
     return threshold;
 }
 
+int MainWindow::rxSnrThreshold(int submode){
+    // these are baseline thresholds for valid frames
+    switch(submode){
+    case Varicode::JS8CallNormal:
+        return -24;
+    case Varicode::JS8CallFast:
+        return -22;
+    case Varicode::JS8CallTurbo:
+        return -20;
+#if JS8E_IS_ULTRA
+    case Varicode::JS8CallUltraSlow:
+        return -18;
+#endif
+    }
+
+    return -28;
+}
+
 void MainWindow::displayTransmit(){
     // Transmit Activity
     update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
@@ -9615,7 +9615,7 @@ void MainWindow::updateModeButtonText(){
     auto heartbeat = ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked();
     auto ack = autoreply && ui->actionHeartbeatAcknowledgements->isChecked() && (!m_config.heartbeat_qso_pause() || selectedCallsign.isEmpty());
 
-    auto modeText = modeSpeedName(m_nSubMode);
+    auto modeText = submodeName(m_nSubMode);
     if(multi){
         modeText += QString("+MULTI");
     }
@@ -10083,8 +10083,7 @@ void MainWindow::processIdleActivity() {
             continue;
         }
 
-        auto submode = speedNameToSubmode(last.speed);
-        if(last.utcTimestamp.secsTo(now) < computeSubmodePeriod(submode)){
+        if(last.utcTimestamp.secsTo(now) < computeSubmodePeriod(last.submode)){
             continue;
         }
 
@@ -10099,9 +10098,9 @@ void MainWindow::processIdleActivity() {
         d.snr = last.snr;
         d.tdrift = last.tdrift;
         d.freq = last.freq;
-        d.speed = last.speed;
+        d.submode = last.submode;
 
-        if(hasExistingMessageBuffer(speedNameToSubmode(d.speed), offset, false, nullptr)){
+        if(hasExistingMessageBuffer(d.submode, offset, false, nullptr)){
             m_messageBuffer[offset].msgs.append(d);
         }
 
@@ -10126,12 +10125,10 @@ void MainWindow::processRxActivity() {
 
         // use the actual frequency and check its delta from our current frequency
         // meaning, if our current offset is 1502 and the d.freq is 1492, the delta is <= 10;
-        int submode = speedNameToSubmode(d.speed);
-
-        bool shouldDisplay = abs(d.freq - freqOffset) <= rxThreshold(submode);
+        bool shouldDisplay = abs(d.freq - freqOffset) <= rxThreshold(d.submode);
 
         int prevOffset = d.freq;
-        if(hasExistingMessageBuffer(submode, d.freq, false, &prevOffset) && (
+        if(hasExistingMessageBuffer(d.submode, d.freq, false, &prevOffset) && (
                 (m_messageBuffer[prevOffset].cmd.to == m_config.my_callsign()) ||
                 // (isAllCallIncluded(m_messageBuffer[prevOffset].cmd.to))     || // uncomment this if we want to incrementally print allcalls
                 (isGroupCallIncluded(m_messageBuffer[prevOffset].cmd.to))
@@ -10177,7 +10174,7 @@ void MainWindow::processRxActivity() {
                     cd.bits = d.bits;
                     cd.tdrift = d.tdrift;
                     cd.utcTimestamp = d.utcTimestamp;
-                    cd.speed = d.speed;
+                    cd.submode = d.submode;
                     logCallActivity(cd, true);
                 }
             }
@@ -10522,7 +10519,7 @@ void MainWindow::processCommandActivity() {
         cd.ackTimestamp = d.text.contains(": ACK") || toMe ? d.utcTimestamp : QDateTime{};
         cd.utcTimestamp = d.utcTimestamp;
         cd.tdrift = d.tdrift;
-        cd.speed = d.speed;
+        cd.submode = d.submode;
         logCallActivity(cd, true);
         logHeardGraph(d.from, d.to);
 
@@ -10550,7 +10547,7 @@ void MainWindow::processCommandActivity() {
                 cd.snr = d.snr;
                 cd.utcTimestamp = d.utcTimestamp;
                 cd.tdrift = d.tdrift;
-                cd.speed = d.speed;
+                cd.submode = d.submode;
 
                 if(d.to == "@APRSIS"){
                     m_aprsCallCache.remove(cd.call);
@@ -10815,7 +10812,7 @@ void MainWindow::processCommandActivity() {
                     cd.through = d.from;
                     cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
                     cd.tdrift = d.tdrift;
-                    cd.speed = d.speed;
+                    cd.submode = d.submode;
                     logCallActivity(cd, false);
                 }
 
@@ -10914,7 +10911,7 @@ void MainWindow::processCommandActivity() {
             cd.text = text;
             cd.to = Radio::base_callsign(to);
             cd.utcTimestamp = d.utcTimestamp;
-            cd.speed = d.speed;
+            cd.submode = d.submode;
 
             qDebug() << "storing message to" << to << ":" << text;
 
@@ -11241,7 +11238,7 @@ void MainWindow::refreshInboxCounts(){
                 auto snr = params.value("SNR").toInt();
                 auto freq = params.value("OFFSET").toInt();
                 auto tdrift = params.value("TDRIFT").toInt();
-                auto mode = params.value("MODENAME").toString();
+                auto submode = params.value("SUBMODE").toInt();
 
                 CallDetail cd;
                 cd.call = from;
@@ -11251,7 +11248,7 @@ void MainWindow::refreshInboxCounts(){
                 cd.utcTimestamp = QDateTime::fromString(utc, "yyyy-MM-dd hh:mm:ss");
                 cd.utcTimestamp.setUtcOffset(0);
                 cd.ackTimestamp = cd.utcTimestamp;
-                cd.speed = mode;
+                cd.submode = submode;
                 logCallActivity(cd, false);
             }
         }
@@ -11297,7 +11294,7 @@ int MainWindow::addCommandToStorage(QString type, CommandDetail d){
         {"OFFSET", QVariant(d.freq)},
         {"CMD", QVariant(d.cmd)},
         {"SNR", QVariant(d.snr)},
-        {"MODENAME", QVariant(d.speed)},
+        {"SUBMODE", QVariant(d.submode)},
     };
 
     if(!d.grid.isEmpty()){
@@ -11576,7 +11573,7 @@ void MainWindow::displayBandActivity() {
                 QString age;
                 int snr = 0;
                 float tdrift = 0;
-                QString mode;
+                int submode;
 
                 int activityAging = m_config.activity_aging();
 
@@ -11641,7 +11638,7 @@ void MainWindow::displayBandActivity() {
                     age = since(item.utcTimestamp);
                     timestamp = item.utcTimestamp;
                     tdrift = item.tdrift;
-                    mode = item.speed;
+                    submode = item.submode;
                 }
 
                 auto joined = Varicode::rstrip(text.join(""));
@@ -11671,11 +11668,12 @@ void MainWindow::displayBandActivity() {
                 tdriftItem->setData(Qt::UserRole, QVariant(tdrift));
                 ui->tableWidgetRXAll->setItem(row, col++, tdriftItem);
 
-                auto modeItem = new QTableWidgetItem(mode.left(1).replace("H", "N"));
-                modeItem->setToolTip(mode);
-                modeItem->setData(Qt::UserRole, QVariant(mode));
-                modeItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-                ui->tableWidgetRXAll->setItem(row, col++, modeItem);
+                auto name = submodeName(submode);
+                auto submodeItem = new QTableWidgetItem(name.left(1).replace("H", "N"));
+                submodeItem->setToolTip(name);
+                submodeItem->setData(Qt::UserRole, QVariant(name));
+                submodeItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                ui->tableWidgetRXAll->setItem(row, col++, submodeItem);
 
                 // align right if eliding...
                 int colWidth = ui->tableWidgetRXAll->columnWidth(3);
@@ -11960,9 +11958,10 @@ void MainWindow::displayCallActivity() {
 
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 ms").arg((int)(1000*d.tdrift))));
 
-                auto modeItem = new QTableWidgetItem(d.speed.left(1).replace("H", "N"));
-                modeItem->setToolTip(d.speed);
-                modeItem->setData(Qt::UserRole, QVariant(d.speed));
+                auto name = submodeName(d.submode);
+                auto modeItem = new QTableWidgetItem(name.left(1).replace("H", "N"));
+                modeItem->setToolTip(name);
+                modeItem->setData(Qt::UserRole, QVariant(name));
                 modeItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
                 ui->tableWidgetCalls->setItem(row, col++, modeItem);
 
