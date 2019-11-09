@@ -132,7 +132,7 @@ public slots:
 
   void playSoundFile(const QString &path);
   bool hasExistingMessageBufferToMe(int *pOffset);
-  bool hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffset);
+  bool hasExistingMessageBuffer(int submode, int offset, bool drift, int *pPrevOffset);
   bool hasClosedExistingMessageBuffer(int offset);
   void logCallActivity(CallDetail d, bool spot=true);
   void logHeardGraph(QString from, QString to);
@@ -162,7 +162,7 @@ public slots:
   void resetMessageTransmitQueue();
   QPair<QString, int> popMessageFrame();
   void tryNotify(const QString &key);
-  int rxThreshold();
+  int rxThreshold(int submode);
 
 protected:
   void keyPressEvent (QKeyEvent *) override;
@@ -718,6 +718,7 @@ private:
     int snr;
     int bits;
     float tdrift;
+    int submode;
     QString speed;
   };
 
@@ -736,6 +737,7 @@ private:
     QString text;
     QString extra;
     float tdrift;
+    int submode;
     QString speed;
     QString relayPath;
   };
@@ -754,6 +756,7 @@ private:
     int snr;
     bool shouldDisplay;
     float tdrift;
+    int submode;
     QString speed;
   };
 
@@ -945,7 +948,7 @@ private:
   void aprsLogReport(int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
   void setSubmode(int submode);
-  int speedNameMode(QString speed);
+  int speedNameToSubmode(QString speed);
   QString modeSpeedName(int submode);
   void updateCurrentBand();
   void displayDialFrequency ();
@@ -966,7 +969,7 @@ private:
   bool isGroupCallIncluded(const QString &text);
   QString callsignSelected(bool useInputText=false);
   void callsignSelectedChanged(QString old, QString current);
-  bool isRecentOffset(int offset);
+  bool isRecentOffset(int submode, int offset);
   void markOffsetRecent(int offset);
   bool isDirectedOffset(int offset, bool *pIsAllCall);
   void markOffsetDirected(int offset, bool isAllCall);

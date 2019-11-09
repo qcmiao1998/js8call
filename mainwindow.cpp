@@ -1235,7 +1235,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         auto items = m_bandActivity.value(selectedOffset);
         if(!items.isEmpty()){
             auto speed = items.last().speed;
-            int submode = speedNameMode(speed);
+            int submode = speedNameToSubmode(speed);
             if(submode != m_nSubMode){
                 auto qrqAction = menu->addAction(QString("Jump to %1%2 speed").arg(speed.left(1)).arg(speed.mid(1).toLower()));
                 connect(qrqAction, &QAction::triggered, this, [this, submode](){
@@ -1466,7 +1466,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
 
             auto speed = m_callActivity[selectedCall].speed;
-            int submode = speedNameMode(speed);
+            int submode = speedNameToSubmode(speed);
             if(submode != m_nSubMode){
                 auto qrqAction = menu->addAction(QString("Jump to %1%2 speed").arg(speed.left(1)).arg(speed.mid(1).toLower()));
                 connect(qrqAction, &QAction::triggered, this, [this, submode](){
@@ -2534,8 +2534,6 @@ int MainWindow::computeStop(int submode, int period){
 #endif
             break;
         }
-
-
     }
     stop = qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)/(float)m_nsps*2.0);
 #endif
@@ -2552,8 +2550,16 @@ int MainWindow::computeCycleStartForDecode(int cycle, int period){
     return cycle * samplesPerCycle;
 }
 
-int MainWindow::computeFramesNeededForDecode(int submode, int period){
-    return computeStop(submode, period) * m_nsps / 2.0;
+int MainWindow::computeFramesNeededForDecode(int submode, int /*period*/){
+    int symbolSamples = 0;
+    float threshold = 0.0;
+    switch(submode){
+        case Varicode::JS8CallNormal:    symbolSamples = JS8A_SYMBOL_SAMPLES; threshold = JS8A_START_DELAY_MS/1000.0 + 0.5; break;
+        case Varicode::JS8CallFast:      symbolSamples = JS8B_SYMBOL_SAMPLES; threshold = JS8B_START_DELAY_MS/1000.0 + 0.5; break;
+        case Varicode::JS8CallTurbo:     symbolSamples = JS8C_SYMBOL_SAMPLES; threshold = JS8C_START_DELAY_MS/1000.0 + 0.5; break;
+        case Varicode::JS8CallUltraSlow: symbolSamples = JS8E_SYMBOL_SAMPLES; threshold = JS8E_START_DELAY_MS/1000.0 + 0.5; break;
+    }
+    return int(qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)));
 }
 
 //-------------------------------------------------------------- dataSink()
@@ -2670,13 +2676,7 @@ void MainWindow::dataSink(qint64 frames)
     dec_data.params.nagain=0;
     dec_data.params.nzhsym=m_ihsym;
 
-    // only decode once per second
-    static int lastn = -1;
-    int n = m_detector->secondInPeriod();
-    if(n == lastn){
-        return;
-    }
-    lastn = n;
+    qDebug() << "dataSink k" << k;
 
     decode();
 }
@@ -3265,7 +3265,9 @@ void MainWindow::setSubmode(int submode){
     on_actionJS8_triggered();
 }
 
-int MainWindow::speedNameMode(QString speed){
+int MainWindow::speedNameToSubmode(QString speedName){
+    auto speed = speedName.toUpper().trimmed();
+
     if(speed == modeSpeedName(Varicode::JS8CallNormal)){
         return Varicode::JS8CallNormal;
     }
@@ -3278,7 +3280,8 @@ int MainWindow::speedNameMode(QString speed){
     if(speed == modeSpeedName(Varicode::JS8CallUltraSlow)){
         return Varicode::JS8CallUltraSlow;
     }
-    return -1;
+    // default to the current submode
+    return m_nSubMode;
 }
 
 
@@ -3979,44 +3982,55 @@ void MainWindow::decode(){
 }
 
 bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPeriod){
+    qDebug() << "decoder checking if ready...";
+
     if(m_decoderBusy){
+        qDebug() << "decoder busy";
         return false;
     }
 
     if(period == 0){
+        qDebug() << "decoder period is zero";
         return false;
     }
 
 #if JS8_RING_BUFFER
     int k = dec_data.params.kin;
 
-    qint32 cycleSampleStartA = computeCycleStartForDecode(computeCurrentCycle(JS8A_TX_SECONDS), JS8A_TX_SECONDS);
+    static int lastKA = -1;
+    static qint32 lastCycleA = -1;
+    qint32 cycleA = computeCurrentCycle(JS8A_TX_SECONDS);
+    qint32 cycleSampleStartA = computeCycleStartForDecode(cycleA, JS8A_TX_SECONDS);
     qint32 framesNeededA = computeFramesNeededForDecode(Varicode::JS8CallNormal, JS8A_TX_SECONDS);
-    bool couldDecodeA = k >= cycleSampleStartA + framesNeededA;
+    bool couldDecodeA = cycleA != lastCycleA && k >= cycleSampleStartA + framesNeededA;
+    if(couldDecodeA) lastCycleA = cycleA;
 
-    qint32 cycleSampleStartB = computeCycleStartForDecode(computeCurrentCycle(JS8B_TX_SECONDS), JS8B_TX_SECONDS);
+    static int lastKB = -1;
+    static qint32 lastCycleB = -1;
+    qint32 cycleB = computeCurrentCycle(JS8B_TX_SECONDS);
+    qint32 cycleSampleStartB = computeCycleStartForDecode(cycleB, JS8B_TX_SECONDS);
     qint32 framesNeededB = computeFramesNeededForDecode(Varicode::JS8CallFast, JS8B_TX_SECONDS);
-    bool couldDecodeB = k >= cycleSampleStartB + framesNeededB;
+    bool couldDecodeB = cycleB != lastCycleB && k >= cycleSampleStartB + framesNeededB;
+    if(couldDecodeB) lastCycleB = cycleB;
 
-    qint32 cycleSampleStartC = computeCycleStartForDecode(computeCurrentCycle(JS8C_TX_SECONDS), JS8C_TX_SECONDS);
+    static int lastKC = -1;
+    static qint32 lastCycleC = -1;
+    qint32 cycleC = computeCurrentCycle(JS8C_TX_SECONDS);
+    qint32 cycleSampleStartC = computeCycleStartForDecode(cycleC, JS8C_TX_SECONDS);
     qint32 framesNeededC = computeFramesNeededForDecode(Varicode::JS8CallTurbo, JS8C_TX_SECONDS);
-    bool couldDecodeC = k >= cycleSampleStartC + framesNeededC;
+    bool couldDecodeC = cycleC != lastCycleC && k >= cycleSampleStartC + framesNeededC;
+    if(couldDecodeC) lastCycleC = cycleC;
 
 #if JS8_ENABLE_JS8E
-    int cycleE = computeCurrentCycle(JS8E_TX_SECONDS);
+    static int lastKE = -1;
+    static qint32 lastCycleE = -1;
+    qint32 cycleE = computeCurrentCycle(JS8E_TX_SECONDS);
     qint32 cycleSampleStartE = computeCycleStartForDecode(cycleE, JS8E_TX_SECONDS);
     qint32 framesNeededE = computeFramesNeededForDecode(Varicode::JS8CallUltraSlow, JS8E_TX_SECONDS);
-    bool couldDecodeE = k >= cycleSampleStartE + framesNeededE;
-
-    // protect against multiple decodes for the same cycle
-    static int lastDecodeCycleE = -1;
-    if(couldDecodeE){
-        if(cycleE == lastDecodeCycleE){
-            couldDecodeE = false;
-        }
-        lastDecodeCycleE = cycleE;
-    }
+    bool couldDecodeE = cycleE != lastCycleE && k >= cycleSampleStartE + framesNeededE;
+    if(couldDecodeE) lastCycleE = cycleE;
 #else
+    static int lastKE = -1;
     qint32 cycleSampleStartE = 0;
     qint32 framesNeededE = 0;
     bool couldDecodeE = false;
@@ -4055,28 +4069,32 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
     int decodes = 0;
 
     if(couldDecodeE && (multi || submode == Varicode::JS8CallUltraSlow)){
-        qDebug() << "could decode E from" << cycleSampleStartE << "to" << cycleSampleStartE + framesNeededE;
+        qDebug() << "could decode E from" << cycleSampleStartE << "to" << cycleSampleStartE + framesNeededE << "--> last decode at" << lastKE;
+        lastKE = k;
         submode = Varicode::JS8CallUltraSlow;
         period = JS8E_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallUltraSlow << 1);
         decodes++;
     }
     if(couldDecodeC && (multi || submode == Varicode::JS8CallTurbo)){
-        qDebug() << "could decode C from" << cycleSampleStartC << "to" << cycleSampleStartC + framesNeededC;
+        qDebug() << "could decode C from" << cycleSampleStartC << "to" << cycleSampleStartC + framesNeededC << "--> last decode at" << lastKC;
+        lastKC = k;
         submode = Varicode::JS8CallTurbo;
         period = JS8C_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallTurbo << 1);
         decodes++;
     }
     if(couldDecodeB && (multi || submode == Varicode::JS8CallFast)){
-        qDebug() << "could decode B from" << cycleSampleStartB << "to" << cycleSampleStartB + framesNeededB;
+        qDebug() << "could decode B from" << cycleSampleStartB << "to" << cycleSampleStartB + framesNeededB << "--> last decode at" << lastKB;
+        lastKB = k;
         submode = Varicode::JS8CallFast;
         period = JS8B_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallFast << 1);
         decodes++;
     }
     if(couldDecodeA && (multi || submode == Varicode::JS8CallNormal)){
-        qDebug() << "could decode A from" << cycleSampleStartA << "to" << cycleSampleStartA + framesNeededA;
+        qDebug() << "could decode A from" << cycleSampleStartA << "to" << cycleSampleStartA + framesNeededA << "--> last decode at" << lastKA;
+        lastKA = k;
         submode = Varicode::JS8CallNormal;
         period = JS8A_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallNormal + 1);
@@ -4087,22 +4105,9 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
     if(pPeriod) *pPeriod=period;
 
     if(!m_diskData && decodes == 0){
+        qDebug() << "decoder has no modes ready for decoding";
         return false;
     }
-#endif
-
-#if JS8_DECODER_E2S
-    // TODO: e2s works until the signal crosses a detector period boundary :/
-
-    // decoding every 2 seconds
-    static int lastn = 0;
-    qint32 n = m_detector->secondInPeriod();
-    if(!m_diskData && (n == lastn || n % 2 != 0)){
-        return false;
-    }
-
-    cycleSampleStart = qMax(0, dec_data.params.kin - framesNeeded);
-    lastn = n;
 #endif
 
     ui->DecodeButton->setChecked(true);
@@ -4223,71 +4228,6 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
     QString hisGrid {ui->dxGridEntry->text ()};
     strncpy(dec_data.params.hiscall,(hisCall + "            ").toLatin1 ().constData (), 12);
     strncpy(dec_data.params.hisgrid,(hisGrid + "      ").toLatin1 ().constData (), 6);
-
-#if 0
-    // for waterfall computation
-    memset(dec_data.d1, 0, sizeof(dec_data.d1));
-
-    int start = 0;
-    int frames = 0;
-    if(m_nSubMode == Varicode::JS8CallNormal){
-        start = dec_data.params.kposA;
-        frames = dec_data.params.kszA;
-    }
-    else if(m_nSubMode == Varicode::JS8CallFast){
-        start = dec_data.params.kposB;
-        frames = dec_data.params.kszB;
-    }
-    else if(m_nSubMode == Varicode::JS8CallTurbo){
-        start = dec_data.params.kposC;
-        frames = dec_data.params.kszC;
-    }
-    else if(m_nSubMode == Varicode::JS8CallUltra){
-        start = dec_data.params.kposE;
-        frames = dec_data.params.kszE;
-    }
-    memcpy(dec_data.d1, dec_data.d2 + start, sizeof(dec_data.d2[0]) * frames);
-#endif
-
-#if JS8_TWO_BUFFERS
-#if JS8_RING_BUFFER
-    // clear out d1
-    memset(dec_data.d1, 0, sizeof(dec_data.d1));
-
-    // copy the whole sample if disk data, otherwise, copy only the needed frames
-    if(m_diskData){
-      qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
-      memcpy(dec_data.d1, dec_data.d2, sizeof(dec_data.d2));
-    } else {
-        // compute frames to copy for decoding
-        int start = cycleSampleStart;
-        int stop = qMax(start + framesNeeded, dec_data.params.kin);    // copy more than needed if available
-        int framesAvailable = qMin(stop - start, dec_data.params.kin); // kin is the max available currently
-        int framesMissing = qMax(0, framesNeeded - framesAvailable);
-
-        qDebug() << "try decode from" << start << "to" << stop << "available" << framesAvailable << "missing" << framesMissing;
-
-#if JS8_DECODER_E2S
-        // TODO: missing frames happen if we run a decode period not relative to the period interval...
-        //       we'll need to figure out the best way to use the ring buffer in these situations.
-
-        if(missingFrames){
-            // the maximum frame is the period sample size
-            int maxFrames = m_detector->period() * RX_SAMPLE_RATE;
-            qDebug() << "-> copy missing frames from" << maxFrames-missingFrames << "to" << maxFrames << "to beginning of d1";
-            memcpy(dec_data.d1, &dec_data.d2[maxFrames-missingFrames], sizeof(dec_data.d2[0]) * missingFrames);
-        }
-        memcpy(dec_data.d1 + missingFrames, dec_data.d2 + start, sizeof(dec_data.d2[0]) * availableFrames);
-#else
-        memcpy(dec_data.d1, dec_data.d2 + start, sizeof(dec_data.d2[0]) * framesAvailable);
-#endif
-    }
-#else
-    qDebug() << "try decode from" << 0 << "to" << dec_data.params.kin;
-    memset(dec_data.d1, 0, sizeof(dec_data.d1));
-    memcpy(dec_data.d1, dec_data.d2, sizeof(dec_data.d2));
-#endif
-#endif
 
     return true;
 }
@@ -4442,6 +4382,9 @@ void MainWindow::decodeDone ()
 
 QList<int> generateOffsets(int minOffset, int maxOffset){
     QList<int> offsets;
+
+    // TODO: these offsets aren't ordered correctly...
+
     for(int i = minOffset; i <= maxOffset; i++){
         offsets.append(i);
     }
@@ -4531,7 +4474,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
       if(m_messageDupeCache.contains(frame)){
           // check to see if the frequency is near our previous frame
           auto cachedFreq = m_messageDupeCache.value(frame, 0);
-          if(qAbs(cachedFreq - frameOffset) <= rxThreshold()){
+          if(qAbs(cachedFreq - frameOffset) <= rxThreshold(decodedtext.submode())){
             qDebug() << "duplicate frame from" << cachedFreq << "and" << frameOffset;
             bValidFrame = false;
           }
@@ -4559,7 +4502,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         int offset = decodedtext.frequencyOffset();
 
         if(!m_bandActivity.contains(offset)){
-            int range = rxThreshold();
+            int range = rxThreshold(decodedtext.submode());
 
             QList<int> offsets = generateOffsets(offset-range, offset+range);
 
@@ -4587,13 +4530,13 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
         // if we have any "first" frame, and a buffer is already established, clear it...
         int prevBufferOffset = -1;
-        if(((d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst) && hasExistingMessageBuffer(d.freq, true, &prevBufferOffset)){
+        if(((d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst) && hasExistingMessageBuffer(decodedtext.submode(), d.freq, true, &prevBufferOffset)){
             qDebug() << "first message encountered, clearing existing buffer" << prevBufferOffset;
             m_messageBuffer.remove(d.freq);
         }
 
         // if we have a data frame, and a message buffer has been established, buffer it...
-        if(hasExistingMessageBuffer(d.freq, true, &prevBufferOffset) && !decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
+        if(hasExistingMessageBuffer(decodedtext.submode(), d.freq, true, &prevBufferOffset) && !decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
             qDebug() << "buffering data" << d.freq << d.text;
             d.isBuffered = true;
             m_messageBuffer[d.freq].msgs.append(d);
@@ -4655,7 +4598,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
         } else {
             qDebug() << "buffering compound call" << cd.freq << cd.call << cd.bits;
 
-            hasExistingMessageBuffer(cd.freq, true, nullptr);
+            hasExistingMessageBuffer(speedNameToSubmode(cd.speed), cd.freq, true, nullptr);
             m_messageBuffer[cd.freq].compound.append(cd);
         }
       }
@@ -4699,7 +4642,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             }
 
             // merge any existing buffer to this frequency
-            hasExistingMessageBuffer(cmd.freq, true, nullptr);
+            hasExistingMessageBuffer(speedNameToSubmode(cmd.speed), cmd.freq, true, nullptr);
 
             if(cmd.to == m_config.my_callsign()){
                 d.shouldDisplay = true;
@@ -4832,13 +4775,14 @@ bool MainWindow::hasExistingMessageBufferToMe(int *pOffset){
     return false;
 }
 
-bool MainWindow::hasExistingMessageBuffer(int offset, bool drift, int *pPrevOffset){
+bool MainWindow::hasExistingMessageBuffer(int submode, int offset, bool drift, int *pPrevOffset){
     if(m_messageBuffer.contains(offset)){
         if(pPrevOffset) *pPrevOffset = offset;
         return true;
     }
 
-    int range = rxThreshold();
+
+    int range = rxThreshold(submode);
 
     QList<int> offsets = generateOffsets(offset-range, offset+range);
 
@@ -9648,12 +9592,12 @@ void MainWindow::tryNotify(const QString &key){
     emit playNotification(path);
 }
 
-int MainWindow::rxThreshold(){
+int MainWindow::rxThreshold(int submode){
     int threshold = 10;
-    if(m_nSubMode == Varicode::JS8CallFast){ threshold = 16; }
-    if(m_nSubMode == Varicode::JS8CallTurbo){ threshold = 32; }
+    if(submode == Varicode::JS8CallFast){ threshold = 16; }
+    if(submode == Varicode::JS8CallTurbo){ threshold = 32; }
 #if JS8E_IS_ULTRA
-    if(m_nSubMode == Varicode::JS8CallUltraSlow){ threshold = 50; }
+    if(submode == Varicode::JS8CallUltraSlow){ threshold = 50; }
 #endif
     return threshold;
 }
@@ -10007,8 +9951,8 @@ void MainWindow::clearCallsignSelected(){
     ui->tableWidgetRXAll->clearSelection();
 }
 
-bool MainWindow::isRecentOffset(int offset){
-    if(abs(offset - currentFreqOffset()) <= rxThreshold()){
+bool MainWindow::isRecentOffset(int submode, int offset){
+    if(abs(offset - currentFreqOffset()) <= rxThreshold(submode)){
         return true;
     }
     return (
@@ -10139,7 +10083,7 @@ void MainWindow::processIdleActivity() {
             continue;
         }
 
-        auto submode = speedNameMode(last.speed);
+        auto submode = speedNameToSubmode(last.speed);
         if(last.utcTimestamp.secsTo(now) < computeSubmodePeriod(submode)){
             continue;
         }
@@ -10157,7 +10101,7 @@ void MainWindow::processIdleActivity() {
         d.freq = last.freq;
         d.speed = last.speed;
 
-        if(hasExistingMessageBuffer(offset, false, nullptr)){
+        if(hasExistingMessageBuffer(speedNameToSubmode(d.speed), offset, false, nullptr)){
             m_messageBuffer[offset].msgs.append(d);
         }
 
@@ -10182,10 +10126,12 @@ void MainWindow::processRxActivity() {
 
         // use the actual frequency and check its delta from our current frequency
         // meaning, if our current offset is 1502 and the d.freq is 1492, the delta is <= 10;
-        bool shouldDisplay = abs(d.freq - freqOffset) <= rxThreshold();
+        int submode = speedNameToSubmode(d.speed);
+
+        bool shouldDisplay = abs(d.freq - freqOffset) <= rxThreshold(submode);
 
         int prevOffset = d.freq;
-        if(hasExistingMessageBuffer(d.freq, false, &prevOffset) && (
+        if(hasExistingMessageBuffer(submode, d.freq, false, &prevOffset) && (
                 (m_messageBuffer[prevOffset].cmd.to == m_config.my_callsign()) ||
                 // (isAllCallIncluded(m_messageBuffer[prevOffset].cmd.to))     || // uncomment this if we want to incrementally print allcalls
                 (isGroupCallIncluded(m_messageBuffer[prevOffset].cmd.to))

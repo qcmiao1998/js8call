@@ -9,13 +9,12 @@
 #define JS8_USE_REFSPEC    0       // compute the signal refspec
 #define JS8_USE_IHSYM      0       // compute ihsym manually instead of from symspec
 #define JS8_RING_BUFFER    1       // use a ring buffer instead of clearing the decode frames
-#define JS8_DECODER_E2S    0       // decode every 2 seconds instead of at the half symbol stop
 
 #define JS8_NUM_SYMBOLS    79
 #define JS8_ENABLE_JS8A    1
 #define JS8_ENABLE_JS8B    1
 #define JS8_ENABLE_JS8C    1
-#define JS8_ENABLE_JS8E    1
+#define JS8_ENABLE_JS8E    0
 
 #define JS8A_SYMBOL_SAMPLES 1920
 #define JS8A_TX_SECONDS     15
