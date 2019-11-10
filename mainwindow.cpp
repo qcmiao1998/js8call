@@ -1910,7 +1910,7 @@ void MainWindow::initializeDummyData(){
         cd.utcTimestamp = dt;
         cd.grid = i == 5 ? "J042" : i == 6 ? " FN42FN42FN" : "";
         cd.tdrift = 0.1*i;
-        cd.submode = i % 4;
+        cd.submode = i % 3;
         logCallActivity(cd, false);
 
         ActivityDetail ad = {};
@@ -7968,11 +7968,11 @@ void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
         {"Last heard timestamp", "timestamp"},
         {"SNR", "snr"},
         {"Time Delta", "tdrift"},
-        {"Mode Speed", "mode"},
+        {"Mode Speed", "submode"},
     };
 
     QMap<QString, bool> defaultOverride = {
-        {"mode", false},
+        {"submode", false},
         {"tdrift", false},
         {"grid", false},
         {"distance", false}
@@ -8055,7 +8055,9 @@ void MainWindow::buildBandActivitySortByMenu(QMenu * menu){
         {"Last heard timestamp (oldest first)", "timestamp"},
         {"Last heard timestamp (recent first)", "-timestamp"},
         {"SNR (weakest first)", "snr"},
-        {"SNR (strongest first)", "-snr"}
+        {"SNR (strongest first)", "-snr"},
+        {"Mode Speed (slowest first)", "submode"},
+        {"Mode Speed (fastest first)", "-submode"}
     });
 }
 
@@ -8069,7 +8071,9 @@ void MainWindow::buildCallActivitySortByMenu(QMenu * menu){
         {"Last heard timestamp (oldest first)", "timestamp"},
         {"Last heard timestamp (recent first)", "-timestamp"},
         {"SNR (weakest first)", "snr"},
-        {"SNR (strongest first)", "-snr"}
+        {"SNR (strongest first)", "-snr"},
+        {"Mode Speed (slowest first)", "submode"},
+        {"Mode Speed (fastest first)", "-submode"}
     });
 }
 
@@ -11548,6 +11552,24 @@ void MainWindow::displayBandActivity() {
             return leftActivity.snr < rightActivity.snr;
         };
 
+        auto compareSubmode = [this](const int left, int right) {
+            auto leftItems = m_bandActivity[left];
+            auto rightItems = m_bandActivity[right];
+
+            if(leftItems.isEmpty()){
+                return false;
+            }
+
+            if(rightItems.isEmpty()){
+                return true;
+            }
+
+            auto leftLast = leftItems.last();
+            auto rightLast = rightItems.last();
+
+            return leftLast.submode < rightLast.submode;
+        };
+
         // compare offset
         qStableSort(keys.begin(), keys.end());
 
@@ -11555,6 +11577,8 @@ void MainWindow::displayBandActivity() {
             qStableSort(keys.begin(), keys.end(), compareTimestamp);
         } else if(sortBy == "snr"){
             qStableSort(keys.begin(), keys.end(), compareSNR);
+        } else if(sortBy == "submode"){
+            qStableSort(keys.begin(), keys.end(), compareSubmode);
         }
 
         if(reverse){
@@ -11764,7 +11788,7 @@ void MainWindow::displayBandActivity() {
         ui->tableWidgetRXAll->setColumnHidden(1, !showColumn("band", "timestamp"));
         ui->tableWidgetRXAll->setColumnHidden(2, !showColumn("band", "snr"));
         ui->tableWidgetRXAll->setColumnHidden(3, !showColumn("band", "tdrift", false));
-        ui->tableWidgetRXAll->setColumnHidden(4, !showColumn("band", "mode", false));
+        ui->tableWidgetRXAll->setColumnHidden(4, !showColumn("band", "submode", false));
 
         // Resize the table columns
         ui->tableWidgetRXAll->resizeColumnToContents(0);
@@ -11857,6 +11881,13 @@ void MainWindow::displayCallActivity() {
             return leftActivity.snr < rightActivity.snr;
         };
 
+        auto compareSubmode= [this](const QString left, QString right) {
+            auto leftActivity = m_callActivity[left];
+            auto rightActivity = m_callActivity[right];
+
+            return leftActivity.submode < rightActivity.submode;
+        };
+
 
         // compare callsign
         qStableSort(keys.begin(), keys.end());
@@ -11871,6 +11902,8 @@ void MainWindow::displayCallActivity() {
             qStableSort(keys.begin(), keys.end(), compareAckTimestamp);
         } else if(sortBy == "snr"){
             qStableSort(keys.begin(), keys.end(), compareSNR);
+        } else if(sortBy == "submode"){
+            qStableSort(keys.begin(), keys.end(), compareSubmode);
         }
 
         if(reverse){
@@ -12093,7 +12126,7 @@ void MainWindow::displayCallActivity() {
         ui->tableWidgetCalls->setColumnHidden(3, !showColumn("call", "snr"));
         ui->tableWidgetCalls->setColumnHidden(4, !showColumn("call", "offset"));
         ui->tableWidgetCalls->setColumnHidden(5, !showColumn("call", "tdrift", false));
-        ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "mode", false));
+        ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "submode", false));
         ui->tableWidgetCalls->setColumnHidden(7, !showColumn("call", "grid", false));
         ui->tableWidgetCalls->setColumnHidden(8, !showColumn("call", "distance", false));
         ui->tableWidgetCalls->setColumnHidden(9, !showColumn("call", "log"));
