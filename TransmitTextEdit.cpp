@@ -1,6 +1,8 @@
 #include "TransmitTextEdit.h"
 
+#include <iterator>
 #include <QDebug>
+
 
 void setTextEditFont(QTextEdit *edit, QFont font){
   // all uppercase
@@ -235,18 +237,30 @@ void TransmitTextEdit::on_textContentsChanged(int /*pos*/, int rem, int add){
         return;
     }
 
-    auto text = toPlainText();
-    if(text != m_lastText){
-        //qDebug() << "text changed" << pos << rem << add << "from" << m_lastText << "to" << text;
-
-        highlight();
-
-        //qDebug() << "sent:" << sentText();
-        //qDebug() << "unsent:" << unsentText();
-
-        m_dirty = true;
-        m_lastText = text;
+    QString text = toPlainText();
+    if(text == m_lastText){
+        return;
     }
+
+    QString normalized = text.normalized(QString::NormalizationForm_KD);
+    QString result;
+    std::copy_if(normalized.begin(), normalized.end(), std::back_inserter(result), [](QChar& c) {
+        return c.toLatin1() != 0 && c > 31 && c < 128;
+    });
+    if(result != text){
+        bool blocked = signalsBlocked();
+        blockSignals(true);
+        {
+            replacePlainText(result, true);
+            text = result;
+        }
+        blockSignals(blocked);
+    }
+
+    highlight();
+
+    m_dirty = true;
+    m_lastText = text;
 }
 
 void TransmitTextEdit::highlightBase(){
