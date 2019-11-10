@@ -4245,7 +4245,7 @@ void MainWindow::decodeStart(int submode, int period){
     to += noffset;
     from += noffset;
     size -= noffset;
-  }  
+  }
 
   memcpy(to, from, qMin(mem_js8->size(), size));
   QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove (); // Allow decoder to start
@@ -6416,20 +6416,20 @@ bool MainWindow::ensureCreateMessageReady(const QString &text){
     return true;
 }
 
-QString MainWindow::createMessage(QString const& text){
-    return createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false), true, false);
+QString MainWindow::createMessage(QString const& text, bool *pDisableTypeahead){
+    return createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false), true, false, pDisableTypeahead);
 }
 
-QString MainWindow::appendMessage(QString const& text, bool isData){
-    return createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false), false, isData);
+QString MainWindow::appendMessage(QString const& text, bool isData, bool *pDisableTypeahead){
+    return createMessageTransmitQueue(replaceMacros(text, buildMacroValues(), false), false, isData, pDisableTypeahead);
 }
 
-QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset, bool isData){
+QString MainWindow::createMessageTransmitQueue(QString const& text, bool reset, bool isData, bool *pDisableTypeahead){
   if(reset){
       resetMessageTransmitQueue();
   }
 
-  auto frames = buildMessageFrames(text, isData);
+  auto frames = buildMessageFrames(text, isData, pDisableTypeahead);
 
   QStringList lines;
   foreach(auto frame, frames){
@@ -6521,7 +6521,7 @@ int MainWindow::currentFreqOffset(){
     return ui->RxFreqSpinBox->value();
 }
 
-QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text, bool isData){
+QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text, bool isData, bool *pDisableTypeahead){
     // prepare selected callsign for directed message
     QString selectedCall = callsignSelected();
 
@@ -6545,10 +6545,9 @@ QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text, b
         m_nSubMode,
         &info);
 
-    if(!info.dirCmd.isEmpty() && Varicode::isCommandChecksumed(info.dirCmd)){
+    if(pDisableTypeahead){
         // checksummed commands should not allow typeahead
-        // TODO: jsherer - i don't like setting this here, but it works for now...
-        ui->extFreeTextMsgEdit->setReadOnly(true);
+        *pDisableTypeahead = (!info.dirCmd.isEmpty() && Varicode::isCommandChecksumed(info.dirCmd));
     }
 
 #if 0
@@ -6574,6 +6573,7 @@ bool MainWindow::prepareNextMessageFrame()
   m_i3bit = Varicode::JS8Call;
 
   // typeahead
+  bool shouldDisableTypeahead = false;
   if(ui->extFreeTextMsgEdit->isDirty() && !ui->extFreeTextMsgEdit->isEmpty()){
       // block edit events while computing next frame
       QString newText;
@@ -6585,7 +6585,7 @@ bool MainWindow::prepareNextMessageFrame()
           m_txFrameQueue.clear();
           m_txFrameCount = 0;
 
-          newText = appendMessage(unsent, shouldForceDataForTypeahead);
+          newText = appendMessage(unsent, shouldForceDataForTypeahead, &shouldDisableTypeahead);
 
           // if this was the last frame, append a newline
           if(i3bitLast){
@@ -6595,7 +6595,7 @@ bool MainWindow::prepareNextMessageFrame()
 
           qDebug () << "unsent replaced to" << "\n" << newText;
       }
-      ui->extFreeTextMsgEdit->setReadOnly(false);
+      ui->extFreeTextMsgEdit->setReadOnly(shouldDisableTypeahead);
       ui->extFreeTextMsgEdit->replaceUnsentText(newText, true);
       ui->extFreeTextMsgEdit->setClean();
   }
@@ -7799,7 +7799,7 @@ void MainWindow::sendHeartbeat(){
     QStringList parts;
 
     parts.append(QString("%1:").arg(mycall));
-    
+
     auto flags = generateStatusFlags();
     if(flags.isEmpty() || flags.first() != "HB"){
         parts.append("HB");
