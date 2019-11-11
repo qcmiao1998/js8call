@@ -5015,7 +5015,7 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
 {
   if (!b) m_optimizingProgress.reset ();
   m_decoderBusy=b;
-  tx_status_label.setText (m_decoderBusy ? "Decoding" : "Receiving");
+  tx_status_label.setText (m_decoderBusy ? "Decoding" : m_monitoring ? "Receiving" : "");
   ui->DecodeButton->setEnabled(!b);
   ui->actionOpen->setEnabled(!b);
   ui->actionOpen_next_in_directory->setEnabled(!b);
