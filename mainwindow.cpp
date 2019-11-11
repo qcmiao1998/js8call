@@ -2549,7 +2549,11 @@ int MainWindow::computeCycleStartForDecode(int cycle, int period){
     return cycle * samplesPerCycle;
 }
 
-int MainWindow::computeFramesNeededForDecode(int submode, int /*period*/){
+int MainWindow::computeFramesPerCycleForDecode(int submode){
+    return computeSubmodePeriod(submode) * RX_SAMPLE_RATE;
+}
+
+int MainWindow::computeFramesNeededForDecode(int submode){
     int symbolSamples = 0;
     float threshold = 0.0;
     switch(submode){
@@ -3965,6 +3969,38 @@ void MainWindow::msgAvgDecode2()
   on_DecodeButton_clicked (true);
 }
 
+bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurrentDecodeStart, qint32 *pNextDecodeStart, qint32 *pStart, qint32 *pSz){
+    if(pCurrentDecodeStart == nullptr || pNextDecodeStart == nullptr || pStart == nullptr || pSz == nullptr){
+        return false;
+    }
+
+    qint32 maxFrames = m_detector->period() * RX_SAMPLE_RATE;
+
+    qint32 cycleFrames = computeFramesPerCycleForDecode(submode);
+    qint32 framesNeeded = computeFramesNeededForDecode(submode);
+    qint32 currentCycle = (k / cycleFrames) % (maxFrames / cycleFrames); // we mod here so we loop back to zero correctly
+
+    // on buffer loop, prepare proper next decode start
+    if(k < k0){
+        *pCurrentDecodeStart = currentCycle * cycleFrames;
+        *pNextDecodeStart = *pCurrentDecodeStart + cycleFrames;
+    }
+
+    bool ready = *pCurrentDecodeStart + framesNeeded <= k;
+
+    if(ready){
+        qDebug() << "-->" << submodeName(submode) << "from" << *pCurrentDecodeStart << "to" << *pCurrentDecodeStart+framesNeeded << "k" << k << "k0" << k0;
+
+        *pStart = *pCurrentDecodeStart;
+        *pSz = qMax(framesNeeded, k-(*pCurrentDecodeStart));
+
+        *pCurrentDecodeStart = *pNextDecodeStart;
+        *pNextDecodeStart = *pCurrentDecodeStart + cycleFrames;
+    }
+
+    return ready;
+}
+
 void MainWindow::decode(){
     qint32 submode = m_nSubMode;
     qint32 period = m_TRperiod;
@@ -3979,59 +4015,55 @@ void MainWindow::decode(){
 }
 
 bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPeriod){
+
+    // compute the next decode for each submode
+    // enqueue those decodes that are "ready"
+    // on an interval, issue a decode
+
+    static int k0 = 9999999;
     int k = dec_data.params.kin;
 
     qDebug() << "decoder checking if ready..." << "k" << k;
 
     if(m_decoderBusy){
-        qDebug() << "decoder busy";
+        qDebug() << "--> decoder busy";
         return false;
     }
 
     if(period == 0){
-        qDebug() << "decoder period is zero";
+        qDebug() << "--> decoder period is zero";
         return false;
     }
 
-#if JS8_RING_BUFFER
-    static int lastKA = -1;
-    static qint32 lastCycleA = -1;
-    qint32 cycleA = computeCurrentCycle(JS8A_TX_SECONDS);
-    qint32 cycleSampleStartA = computeCycleStartForDecode(cycleA, JS8A_TX_SECONDS);
-    qint32 framesNeededA = computeFramesNeededForDecode(Varicode::JS8CallNormal, JS8A_TX_SECONDS);
-    bool couldDecodeA = cycleA != lastCycleA && k >= cycleSampleStartA + framesNeededA;
-    if(couldDecodeA) lastCycleA = cycleA;
+    static qint32 currentDecodeStartA = -1;
+    static qint32 nextDecodeStartA = -1;
+    qint32 startA = -1;
+    qint32 szA = -1;
+    bool couldDecodeA = isDecodeReady(Varicode::JS8CallNormal, k, k0, &currentDecodeStartA, &nextDecodeStartA, &startA, &szA);
 
-    static int lastKB = -1;
-    static qint32 lastCycleB = -1;
-    qint32 cycleB = computeCurrentCycle(JS8B_TX_SECONDS);
-    qint32 cycleSampleStartB = computeCycleStartForDecode(cycleB, JS8B_TX_SECONDS);
-    qint32 framesNeededB = computeFramesNeededForDecode(Varicode::JS8CallFast, JS8B_TX_SECONDS);
-    bool couldDecodeB = cycleB != lastCycleB && k >= cycleSampleStartB + framesNeededB;
-    if(couldDecodeB) lastCycleB = cycleB;
+    static qint32 currentDecodeStartB = -1;
+    static qint32 nextDecodeStartB = -1;
+    qint32 startB = -1;
+    qint32 szB = -1;
+    bool couldDecodeB = isDecodeReady(Varicode::JS8CallFast, k, k0, &currentDecodeStartB, &nextDecodeStartB, &startB, &szB);
 
-    static int lastKC = -1;
-    static qint32 lastCycleC = -1;
-    qint32 cycleC = computeCurrentCycle(JS8C_TX_SECONDS);
-    qint32 cycleSampleStartC = computeCycleStartForDecode(cycleC, JS8C_TX_SECONDS);
-    qint32 framesNeededC = computeFramesNeededForDecode(Varicode::JS8CallTurbo, JS8C_TX_SECONDS);
-    bool couldDecodeC = cycleC != lastCycleC && k >= cycleSampleStartC + framesNeededC;
-    if(couldDecodeC) lastCycleC = cycleC;
+    static qint32 currentDecodeStartC = -1;
+    static qint32 nextDecodeStartC = -1;
+    qint32 startC = -1;
+    qint32 szC = -1;
+    bool couldDecodeC = isDecodeReady(Varicode::JS8CallTurbo, k, k0, &currentDecodeStartC, &nextDecodeStartC, &startC, &szC);
 
 #if JS8_ENABLE_JS8E
-    static int lastKE = -1;
-    static qint32 lastCycleE = -1;
-    qint32 cycleE = computeCurrentCycle(JS8E_TX_SECONDS);
-    qint32 cycleSampleStartE = computeCycleStartForDecode(cycleE, JS8E_TX_SECONDS);
-    qint32 framesNeededE = computeFramesNeededForDecode(Varicode::JS8CallUltraSlow, JS8E_TX_SECONDS);
-    bool couldDecodeE = cycleE != lastCycleE && k >= cycleSampleStartE + framesNeededE;
-    if(couldDecodeE) lastCycleE = cycleE;
-#else
-    static int lastKE = -1;
-    qint32 cycleSampleStartE = 0;
-    qint32 framesNeededE = 0;
-    bool couldDecodeE = false;
+    static qint32 currentDecodeStartE = -1;
+    static qint32 nextDecodeStartE = -1;
+    qint32 startE = -1;
+    qint32 szE = -1;
+    bool couldDecodeE = isDecodeReady(Varicode::JS8CallUltraSlow, k, k0, &currentDecodeStartE, &nextDecodeStartE, &startE, &szE);
 #endif
+
+    k0 = k;
+
+#if JS8_RING_BUFFER
 
     if(m_diskData){
         dec_data.params.kposA = 0;
@@ -4051,47 +4083,53 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
 #endif
     } else {
         // set the params for starting positions and sizes for decode
-        dec_data.params.kposA = cycleSampleStartA;
-        dec_data.params.kposB = cycleSampleStartB;
-        dec_data.params.kposC = cycleSampleStartC;
-        dec_data.params.kposE = cycleSampleStartE;
-        dec_data.params.kszA  = qMax(framesNeededA, k-cycleSampleStartA);
-        dec_data.params.kszB  = qMax(framesNeededB, k-cycleSampleStartB);
-        dec_data.params.kszC  = qMax(framesNeededC, k-cycleSampleStartC);
-        dec_data.params.kszE  = qMax(framesNeededE, k-cycleSampleStartE);
+        dec_data.params.kposA = startA;
+        dec_data.params.kposB = startB;
+        dec_data.params.kposC = startC;
+#if JS8_ENABLE_JS8E
+        dec_data.params.kposE = startE;
+#endif
+        dec_data.params.kszA  = szA;
+        dec_data.params.kszB  = szB;
+        dec_data.params.kszC  = szC;
+#if JS8_ENABLE_JS8E
+        dec_data.params.kszE  = szE;
+#endif
         dec_data.params.nsubmodes = 0;
     }
 
     bool multi = ui->actionModeMultiDecoder->isChecked();
     int decodes = 0;
 
+#if JS8_ENABLE_JS8E
     if(couldDecodeE && (multi || submode == Varicode::JS8CallUltraSlow)){
-        qDebug() << "could decode E from" << cycleSampleStartE << "to" << cycleSampleStartE + framesNeededE << "--> last decode at" << lastKE;
-        lastKE = k;
+        //qDebug() << "could decode E from" << cycleSampleStartE << "to" << cycleSampleStartE + framesNeededE << "--> last decode at" << lastKE;
+        //lastKE = k;
         submode = Varicode::JS8CallUltraSlow;
         period = JS8E_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallUltraSlow << 1);
         decodes++;
     }
+#endif
     if(couldDecodeC && (multi || submode == Varicode::JS8CallTurbo)){
-        qDebug() << "could decode C from" << cycleSampleStartC << "to" << cycleSampleStartC + framesNeededC << "--> last decode at" << lastKC;
-        lastKC = k;
+        //qDebug() << "could decode C from" << cycleSampleStartC << "to" << cycleSampleStartC + framesNeededC << "--> last decode at" << lastKC;
+        //lastKC = k;
         submode = Varicode::JS8CallTurbo;
         period = JS8C_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallTurbo << 1);
         decodes++;
     }
     if(couldDecodeB && (multi || submode == Varicode::JS8CallFast)){
-        qDebug() << "could decode B from" << cycleSampleStartB << "to" << cycleSampleStartB + framesNeededB << "--> last decode at" << lastKB;
-        lastKB = k;
+        //qDebug() << "could decode B from" << cycleSampleStartB << "to" << cycleSampleStartB + framesNeededB << "--> last decode at" << lastKB;
+        //lastKB = k;
         submode = Varicode::JS8CallFast;
         period = JS8B_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallFast << 1);
         decodes++;
     }
     if(couldDecodeA && (multi || submode == Varicode::JS8CallNormal)){
-        qDebug() << "could decode A from" << cycleSampleStartA << "to" << cycleSampleStartA + framesNeededA << "--> last decode at" << lastKA;
-        lastKA = k;
+        //qDebug() << "could decode A from" << cycleSampleStartA << "to" << cycleSampleStartA + framesNeededA << "--> last decode at" << lastKA;
+        //lastKA = k;
         submode = Varicode::JS8CallNormal;
         period = JS8A_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallNormal + 1);

@@ -231,6 +231,7 @@ private slots:
   void on_actionCopyright_Notice_triggered();
   void on_DecodeButton_clicked (bool);
   void decode();
+  bool isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurrentDecodeStart, qint32 *pNextDecodeStart, qint32 *pStart, qint32 *pSz);
   bool decodeReady(int submode, int period, int *pSubmode, int *pPeriod);
   void decodeStart(int submode, int period);
   void decodePrepareSaveAudio(int submode, int period);
@@ -932,7 +933,8 @@ private:
   int computeStop(int submode, int period);
   int computeCurrentCycle(int period);
   int computeCycleStartForDecode(int cycle, int period);
-  int computeFramesNeededForDecode(int submode, int period);
+  int computeFramesPerCycleForDecode(int submode);
+  int computeFramesNeededForDecode(int submode);
   bool shortList(QString callsign);
   void transmit (double snr = 99.);
   void rigFailure (QString const& reason);
