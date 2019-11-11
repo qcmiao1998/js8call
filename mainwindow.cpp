@@ -4128,7 +4128,6 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
     if(pPeriod) *pPeriod=period;
 
     if(!m_diskData && decodes == 0){
-        qDebug() << "decoder has no modes ready for decoding";
         return false;
     }
 #endif
@@ -5016,6 +5015,7 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
 {
   if (!b) m_optimizingProgress.reset ();
   m_decoderBusy=b;
+  tx_status_label.setText (m_decoderBusy ? "Decoding" : "Receiving");
   ui->DecodeButton->setEnabled(!b);
   ui->actionOpen->setEnabled(!b);
   ui->actionOpen_next_in_directory->setEnabled(!b);
@@ -5450,14 +5450,7 @@ void MainWindow::guiUpdate()
         tx_status_label.setText ("Idle timeout");
       } else {
         tx_status_label.setStyleSheet("QLabel{background-color: #22ff22}");
-        QString t;
-        t="Receiving";
-        if(m_mode=="MSK144") {
-          int npct=int(100.0*m_fCPUmskrtd/0.298667);
-          if(npct>90) tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000; }");
-          t.sprintf("Receiving   %2d%%",npct);
-        }
-        tx_status_label.setText (t);
+        tx_status_label.setText (m_decoderBusy ? "Decoding" : "Receiving");
       }
       transmitDisplay(false);
     } else if (!m_diskData && !m_tx_watchdog) {
