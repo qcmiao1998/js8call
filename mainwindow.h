@@ -120,7 +120,6 @@ public slots:
   void showStatusMessage(const QString& statusMsg);
   void dataSink(qint64 frames);
   void diskDat();
-  void freezeDecode(int n);
   void guiUpdate();
   void readFromStdout();
   void setXIT(int n, Frequency base = 0u);
@@ -128,7 +127,6 @@ public slots:
   void setFreqOffsetForRestore(int freq, bool shouldRestore);
   bool tryRestoreFreqOffset();
   void setFreq4(int rxFreq, int txFreq);
-  void msgAvgDecode2();
 
   void playSoundFile(const QString &path);
   bool hasExistingMessageBufferToMe(int *pOffset);

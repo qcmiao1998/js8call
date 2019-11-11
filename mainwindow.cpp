@@ -523,7 +523,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (&m_audioThread, &QThread::finished, m_detector, &QObject::deleteLater);
 
   // setup the waterfall
-  connect(m_wideGraph.data (), SIGNAL(freezeDecode2(int)),this,SLOT(freezeDecode(int)));
   connect(m_wideGraph.data (), SIGNAL(f11f12(int)),this,SLOT(bumpFqso(int)));
   connect(m_wideGraph.data (), SIGNAL(setXIT2(int)),this,SLOT(setXIT(int)));
 
@@ -3951,22 +3950,12 @@ void MainWindow::on_DecodeButton_clicked (bool /* checked */) //Decode request
   }
 }
 
-void MainWindow::freezeDecode(int n)                          //freezeDecode()
-{
-  if((n%100)==2) on_DecodeButton_clicked (true);
-}
-
 void MainWindow::on_ClrAvgButton_clicked()
 {
   m_nclearave=1;
   if(m_msgAvgWidget != NULL) {
     if(m_msgAvgWidget->isVisible()) m_msgAvgWidget->displayAvg("");
   }
-}
-
-void MainWindow::msgAvgDecode2()
-{
-  on_DecodeButton_clicked (true);
 }
 
 bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurrentDecodeStart, qint32 *pNextDecodeStart, qint32 *pStart, qint32 *pSz){
@@ -4024,6 +4013,11 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
     int k = dec_data.params.kin;
 
     qDebug() << "decoder checking if ready..." << "k" << k;
+
+    if(isMessageQueuedForTransmit()){
+        qDebug() << "--> decoder paused during transmit";
+        return false;
+    }
 
     if(m_decoderBusy){
         qDebug() << "--> decoder busy";
@@ -4112,24 +4106,18 @@ bool MainWindow::decodeReady(int submode, int period, int *pSubmode, int *pPerio
     }
 #endif
     if(couldDecodeC && (multi || submode == Varicode::JS8CallTurbo)){
-        //qDebug() << "could decode C from" << cycleSampleStartC << "to" << cycleSampleStartC + framesNeededC << "--> last decode at" << lastKC;
-        //lastKC = k;
         submode = Varicode::JS8CallTurbo;
         period = JS8C_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallTurbo << 1);
         decodes++;
     }
     if(couldDecodeB && (multi || submode == Varicode::JS8CallFast)){
-        //qDebug() << "could decode B from" << cycleSampleStartB << "to" << cycleSampleStartB + framesNeededB << "--> last decode at" << lastKB;
-        //lastKB = k;
         submode = Varicode::JS8CallFast;
         period = JS8B_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallFast << 1);
         decodes++;
     }
     if(couldDecodeA && (multi || submode == Varicode::JS8CallNormal)){
-        //qDebug() << "could decode A from" << cycleSampleStartA << "to" << cycleSampleStartA + framesNeededA << "--> last decode at" << lastKA;
-        //lastKA = k;
         submode = Varicode::JS8CallNormal;
         period = JS8A_TX_SECONDS;
         dec_data.params.nsubmodes |= (Varicode::JS8CallNormal + 1);
@@ -9676,7 +9664,7 @@ void MainWindow::updateModeButtonText(){
 }
 
 void MainWindow::updateButtonDisplay(){
-    bool isTransmitting = m_transmitting || m_txFrameCount > 0;
+    bool isTransmitting = isMessageQueuedForTransmit();
 
     auto selectedCallsign = callsignSelected(true);
     bool emptyCallsign = selectedCallsign.isEmpty();
@@ -9726,7 +9714,7 @@ void MainWindow::updateRepeatButtonDisplay(){
 }
 
 void MainWindow::updateTextDisplay(){
-    bool isTransmitting = m_transmitting || m_txFrameCount > 0;
+    bool isTransmitting = isMessageQueuedForTransmit();
     bool emptyText = ui->extFreeTextMsgEdit->toPlainText().isEmpty();
 
     ui->startTxButton->setDisabled(isTransmitting || emptyText);
@@ -9842,7 +9830,7 @@ void MainWindow::updateTextStatsDisplay(QString text, int count){
 
 void MainWindow::updateTxButtonDisplay(){
     // update transmit button
-    if(m_tune || m_transmitting || m_txFrameCount > 0){
+    if(m_tune || isMessageQueuedForTransmit()){
         int count = m_txFrameCount;
 
 #if TEST_FOX_WAVE_GEN
