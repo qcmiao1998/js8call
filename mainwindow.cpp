@@ -4170,12 +4170,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
     int period = computePeriodForSubmode(submode);
 
-    if(m_diskData) {
-      dec_data.params.ndiskdat=1;
-    } else {
-      dec_data.params.ndiskdat=0;
-    }
-
     dec_data.params.npts8=(m_ihsym*m_nsps)/16;
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
@@ -4185,7 +4179,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nfb=m_wideGraph->Fmax();
 
     ui->DecodeButton->setChecked(true);
-    m_msec0 = DriftingDateTime::currentMSecsSinceEpoch();
 
     if(dec_data.params.nagain==0 && dec_data.params.newdat==1 && (!m_diskData)) {
       qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
@@ -4220,13 +4213,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nfqso=m_wideGraph->rxFreq();
     dec_data.params.nftx = ui->TxFreqSpinBox->value ();
 
-    qint32 depth {m_ndepth};
-
-    if (!ui->actionInclude_averaging->isVisible ()) depth &= ~16;
-    if (!ui->actionInclude_correlation->isVisible ()) depth &= ~32;
-    if (!ui->actionEnable_AP_DXcall->isVisible ()) depth &= ~64;
-
-    dec_data.params.ndepth=depth;
+    dec_data.params.ndepth=m_ndepth;
     dec_data.params.n2pass=1;
     if(m_config.twoPass()) dec_data.params.n2pass=2;
 
@@ -4234,7 +4221,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.naggressive=m_config.aggressive();
     dec_data.params.nrobust=0;
     dec_data.params.ndiskdat=0;
-
     if(m_diskData) dec_data.params.ndiskdat=1;
 
     dec_data.params.nfa=m_wideGraph->nStartFreq();
@@ -4256,25 +4242,11 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.ntxmode=9;
     if(m_modeTx=="JT65") dec_data.params.ntxmode=65;
 
-    dec_data.params.nmode=9;
-    if(m_mode=="JT65") dec_data.params.nmode=65;
-    if(m_mode=="JT65") dec_data.params.ljt65apon = ui->actionEnable_AP_JT65->isVisible () && ui->actionEnable_AP_JT65->isChecked ();
-    if(m_mode=="QRA64") dec_data.params.nmode=164;
-    if(m_mode=="QRA64") dec_data.params.ntxmode=164;
-    if(m_mode=="JT9+JT65") dec_data.params.nmode=9+65;  // = 74
-    if(m_mode=="JT4") {
-      dec_data.params.nmode=4;
-      dec_data.params.ntxmode=4;
-    }
-    if(m_mode=="FT8") dec_data.params.nmode=8;
-    if(m_mode=="FT8") dec_data.params.lft8apon = ui->actionEnable_AP_FT8->isVisible () && ui->actionEnable_AP_FT8->isChecked ();
-    if(m_mode=="FT8") dec_data.params.napwid=50;
-
+    dec_data.params.nmode=8;
+    dec_data.params.lft8apon = false;
+    dec_data.params.napwid=50;
     dec_data.params.ntrperiod=period; //m_TRperiod;
     dec_data.params.nsubmode=submode; // m_nSubMode;
-
-    if(m_mode=="QRA64") dec_data.params.nsubmode=100 + m_nSubMode;
-
     dec_data.params.minw=0;
     dec_data.params.nclearave=m_nclearave;
 
@@ -4311,6 +4283,8 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
 void MainWindow::decodeStart(){
   qDebug() << "--> decoder starting";
+  qDebug() << " --> kin:" << dec_data.params.kin;
+  qDebug() << " --> newdat:" << dec_data.params.newdat;
   qDebug() << " --> nsubmodes:" << dec_data.params.nsubmodes;
   qDebug() << " --> A:" << dec_data.params.kposA << dec_data.params.kszA;
   qDebug() << " --> B:" << dec_data.params.kposB << dec_data.params.kszB;
@@ -4355,6 +4329,7 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
 
 void MainWindow::decodeDone ()
 {
+  dec_data.params.newdat=0;
   dec_data.params.nagain=0;
   dec_data.params.ndiskdat=0;
   m_nclearave=0;
@@ -12911,34 +12886,6 @@ void MainWindow::update_watchdog_label ()
       watchdog_label.setVisible (false);
     }
 #endif
-}
-
-void MainWindow::on_cbMenus_toggled(bool b)
-{
-  hideMenus(!b);
-}
-
-void MainWindow::on_cbCQonly_toggled(bool)
-{
-  QFile {m_config.temp_dir().absoluteFilePath(".lock")}.remove(); // Allow jt9 to start
-  decodeBusy(true);
-}
-
-void MainWindow::on_cbFirst_toggled(bool b)
-{
-  if (b) {
-    if (m_auto && CALLING == m_QSOProgress) {
-      ui->cbFirst->setStyleSheet ("QCheckBox{color:red}");
-    }
-  } else {
-    ui->cbFirst->setStyleSheet ("");
-  }
-}
-
-void MainWindow::on_cbAutoSeq_toggled(bool b)
-{
-  if(!b) ui->cbFirst->setChecked(false);
-  ui->cbFirst->setVisible((m_mode=="FT8") and b);
 }
 
 void MainWindow::on_measure_check_box_stateChanged (int state)

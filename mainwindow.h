@@ -399,10 +399,6 @@ private slots:
   void on_cbShMsgs_toggled(bool b);
   void on_cbSWL_toggled(bool b);
   void on_cbTx6_toggled(bool b);
-  void on_cbMenus_toggled(bool b);
-  void on_cbCQonly_toggled(bool b);
-  void on_cbFirst_toggled(bool b);
-  void on_cbAutoSeq_toggled(bool b);
   void emitPTT(bool on);
   void emitTones();
   void networkMessage(Message const &message);
@@ -505,7 +501,6 @@ private:
   qint64  m_msErase;
   qint64  m_secBandChanged;
   qint64  m_freqMoon;
-  qint64  m_msec0;
   qint64  m_fullFoxCallTime;
 
   Frequency m_freqNominal;
