@@ -1555,7 +1555,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   });
 
   // Don't block heartbeat's first run...
-  m_lastTxTime = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
+  m_lastTxStartTime = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
+  m_lastTxStopTime = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
 
   int width = 75;
   /*
@@ -3987,7 +3988,7 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
 
         if(pCycle) *pCycle = currentCycle;
         if(pStart) *pStart = *pCurrentDecodeStart;
-        if(pSz) *pSz = qMax(framesNeeded, k-(*pCurrentDecodeStart));
+        if(pSz) *pSz = cycleFrames; // qMax(framesNeeded, k-(*pCurrentDecodeStart));
 
         *pCurrentDecodeStart = *pNextDecodeStart;
         *pNextDecodeStart = *pCurrentDecodeStart + cycleFrames;
@@ -4004,6 +4005,12 @@ void MainWindow::decode(){
 
     if(isMessageQueuedForTransmit()){
         qDebug() << "--> decoder paused during transmit";
+        return;
+    }
+
+    int threshold = 1000; // one second
+    if(isInTransmitDecodeThreshold(threshold)){
+        qDebug() << "--> decoder paused for" << threshold << "ms after transmit stop";
         return;
     }
 
@@ -4091,7 +4098,7 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
 
     if(couldDecodeB){
         DecodeParams d;
-        d.submode = Varicode::JS8CallNormal;
+        d.submode = Varicode::JS8CallFast;
         d.cycle = cycleB;
         d.start = startB;
         d.sz = szB;
@@ -4101,7 +4108,7 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
 
     if(couldDecodeC){
         DecodeParams d;
-        d.submode = Varicode::JS8CallNormal;
+        d.submode = Varicode::JS8CallTurbo;
         d.cycle = cycleC;
         d.start = startC;
         d.sz = szC;
@@ -4112,7 +4119,7 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
 #if JS8_ENABLE_JS8E
     if(couldDecodeE){
         DecodeParams d;
-        d.submode = Varicode::JS8CallNormal;
+        d.submode = Varicode::JS8CallUltraSlow;
         d.cycle = cycleE;
         d.start = startE;
         d.sz = szE;
@@ -4148,6 +4155,8 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
         qDebug() << "--> decoder skipping at least 1 decode cycle" << "count" << count << "max" << maxDecodes;
     }
 
+    dec_data.params.nsubmodes = 0;
+
     while(!m_decoderQueue.isEmpty()){
         auto params = m_decoderQueue.front();
         m_decoderQueue.removeFirst();
@@ -4161,7 +4170,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
             submode = params.submode;
         }
 
-        dec_data.params.nsubmodes = 0;
         switch(params.submode){
         case Varicode::JS8CallNormal:
             dec_data.params.kposA = params.start;
@@ -4178,12 +4186,17 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
             dec_data.params.kszC = params.sz;
             dec_data.params.nsubmodes |= (params.submode << 1);
             break;
+#if JS8_ENABLE_JS8E
         case Varicode::JS8CallUltraSlow:
             dec_data.params.kposE = params.start;
             dec_data.params.kszE = params.sz;
             dec_data.params.nsubmodes |= (params.submode << 1);
             break;
+#endif
         }
+#if JS8_SINGLE_DECODE
+        break;
+#endif
     }
 
     if(submode == -1){
@@ -4320,6 +4333,11 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
 void MainWindow::decodeStart(){
   qDebug() << "--> decoder starting";
+  qDebug() << " --> nsubmodes:" << dec_data.params.nsubmodes;
+  qDebug() << " --> A:" << dec_data.params.kposA << dec_data.params.kszA;
+  qDebug() << " --> B:" << dec_data.params.kposB << dec_data.params.kszB;
+  qDebug() << " --> C:" << dec_data.params.kposC << dec_data.params.kszC;
+  qDebug() << " --> E:" << dec_data.params.kposE << dec_data.params.kszE;
 
   //newdat=1  ==> this is new data, must do the big FFT
   //nagain=1  ==> decode only at fQSO +/- Tol
@@ -5443,7 +5461,7 @@ void MainWindow::guiUpdate()
       }
 
       // TODO: jsherer - perhaps an on_transmitting signal?
-      m_lastTxTime = DriftingDateTime::currentDateTimeUtc();
+      m_lastTxStartTime = DriftingDateTime::currentDateTimeUtc();
 
       m_transmitting = true;
       transmitDisplay (true);
@@ -5685,6 +5703,7 @@ void MainWindow::stopTx()
   m_btxok = false;
   m_transmitting = false;
   g_iptt=0;
+  m_lastTxStopTime = DriftingDateTime::currentDateTimeUtc();
   if (!m_tx_watchdog) {
     tx_status_label.setStyleSheet("");
     tx_status_label.setText("");
@@ -6343,6 +6362,14 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
 
 bool MainWindow::isMessageQueuedForTransmit(){
     return m_transmitting || m_txFrameCount > 0;
+}
+
+bool MainWindow::isInTransmitDecodeThreshold(int ms){
+    if(m_lastTxStopTime.isNull()){
+        return false;
+    }
+
+    return m_lastTxStopTime.msecsTo(DriftingDateTime::currentDateTimeUtc()) < ms;
 }
 
 void MainWindow::prependMessageText(QString text){
@@ -11519,7 +11546,7 @@ void MainWindow::processTxQueue(){
     }
 
     // and if we are a low priority message, we need to have not transmitted in the past 30 seconds...
-    if(head.priority <= PriorityLow && m_lastTxTime.secsTo(DriftingDateTime::currentDateTimeUtc()) <= 30){
+    if(head.priority <= PriorityLow && m_lastTxStartTime.secsTo(DriftingDateTime::currentDateTimeUtc()) <= 30){
         return;
     }
 

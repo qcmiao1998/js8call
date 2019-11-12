@@ -143,6 +143,7 @@ public slots:
   void writeNoticeTextToUI(QDateTime date, QString text);
   int writeMessageTextToUI(QDateTime date, QString text, int freq, bool isTx, int block=-1);
   bool isMessageQueuedForTransmit();
+  bool isInTransmitDecodeThreshold(int seconds);
   void prependMessageText(QString text);
   void addMessageText(QString text, bool clear=false, bool selectFirstPlaceholder=false);
   void enqueueMessage(int priority, QString message, int freq, Callback c);
@@ -782,7 +783,8 @@ private:
   QString m_txTextDirtyLastSelectedCall;
   QString m_lastTxMessage;
   QString m_totalTxMessage;
-  QDateTime m_lastTxTime;
+  QDateTime m_lastTxStartTime;
+  QDateTime m_lastTxStopTime;
   int m_timeDeltaMsMMA;
   int m_timeDeltaMsMMA_N;
 
