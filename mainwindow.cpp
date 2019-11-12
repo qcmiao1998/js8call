@@ -3930,6 +3930,19 @@ void MainWindow::on_ClrAvgButton_clicked()
   }
 }
 
+/**
+ * @brief MainWindow::isDecodeReady
+ *        determine if decoding is ready for a given submode
+ * @param submode - submode to test
+ * @param k - current frame count
+ * @param k0 - previous frame count
+ * @param pCurrentDecodeStart - input pointer to a static integer with the current decode start position
+ * @param pNextDecodeStart - input pointer to a static integer with the next decode start position
+ * @param pStart - output pointer to the next start position when decode is ready
+ * @param pSz - output pointer to the next size when decode is ready
+ * @param pCycle - output pointer to the next cycle when decode is ready
+ * @return true if decode is ready for this submode, false otherwise
+ */
 bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurrentDecodeStart, qint32 *pNextDecodeStart, qint32 *pStart, qint32 *pSz, qint32 *pCycle){
     if(pCurrentDecodeStart == nullptr || pNextDecodeStart == nullptr){
         return false;
@@ -3966,38 +3979,55 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
     return ready;
 }
 
-void MainWindow::decode(){
+
+/**
+ * @brief MainWindow::decode
+ *        try decoding
+ * @return true if the decoder was activated, false otherwise
+ */
+bool MainWindow::decode(){
     static int k0 = 9999999;
     int k = dec_data.params.kin;
+    int kZero = k0;
+    k0 = k;
 
-    qDebug() << "decoder checking if ready..." << "k" << k;
+    qDebug() << "decoder checking if ready..." << "k" << k << "k0" << kZero;
 
     if(isMessageQueuedForTransmit()){
         qDebug() << "--> decoder paused during transmit";
-        return;
+        return false;
     }
 
     int threshold = 1000; // one second
     if(isInTransmitDecodeThreshold(threshold)){
         qDebug() << "--> decoder paused for" << threshold << "ms after transmit stop";
-        return;
+        return false;
     }
 
-    bool ready = decodeEnqueueReady(k, k0);
+    bool ready = decodeEnqueueReady(k, kZero);
     if(ready || !m_decoderQueue.isEmpty()){
         qDebug() << "--> decoder is ready to be run with" << m_decoderQueue.count() << "decode periods";
     }
 
     // TODO: this can be pulled out to an async process
     qint32 submode = -1;
-    if(decodeProcessQueue(&submode)){
-        decodeStart();
-        decodePrepareSaveAudio(submode);
+    if(!decodeProcessQueue(&submode)){
+        return false;
     }
 
-    k0=k;
+    decodeStart();
+    decodePrepareSaveAudio(submode);
+    return true;
 }
 
+/**
+ * @brief MainWindow::decodeEnqueueReady
+ *        compute the available decoder ranges that can be processed and
+ *        place them in the decode queue
+ * @param k - the current frame count
+ * @param k0 - the previous frame count
+ * @return true if decoder ranges were queued, false otherwise
+ */
 bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     // compute the next decode for each submode
     // enqueue those decodes that are "ready"
@@ -4100,6 +4130,13 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     return decodes > 0;
 }
 
+/**
+ * @brief MainWindow::decodeProcessQueue
+ *        process the decode queue by merging available decode ranges
+ *        into the dec_data shared structure for the decoder to process
+ * @param pSubmode - the lowest speed submode in this iteration
+ * @return true if the decoder is ready to be run, false otherwise
+ */
 bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     if(m_decoderBusy){
         qDebug() << "--> decoder is busy!";
@@ -4286,6 +4323,11 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     return true;
 }
 
+/**
+ * @brief MainWindow::decodeStart
+ *        copy the dec_data structure to shared memory and
+ *        remove the lock file to start the decoding process
+ */
 void MainWindow::decodeStart(){
   if(m_decoderBusy){
     qDebug() << "--> decoder cannot start...busy";
@@ -4324,7 +4366,11 @@ void MainWindow::decodeStart(){
   }
 }
 
-
+/**
+ * @brief MainWindow::decodeBusy
+ *        mark the decoder as currently busy (to prevent overlapping decodes)
+ * @param b - true if busy, false otherwise
+ */
 void MainWindow::decodeBusy(bool b)                             //decodeBusy()
 {
   if (!b) m_optimizingProgress.reset ();
@@ -4340,6 +4386,10 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
   statusUpdate ();
 }
 
+/**
+ * @brief MainWindow::decodeDone
+ *        clean up after a decode is finished
+ */
 void MainWindow::decodeDone ()
 {
   dec_data.params.newdat=0;
@@ -4351,8 +4401,14 @@ void MainWindow::decodeDone ()
   decodeBusy(false);
   m_RxLog=0;
   m_blankLine=true;
+  m_messageDupeCache.clear();
 }
 
+/**
+ * @brief MainWindow::decodePrepareSaveAudio
+ *        save the audio for the current decode cycle
+ * @param submode - submode which period length we will use for saving
+ */
 void MainWindow::decodePrepareSaveAudio(int submode){
     if(m_diskData){
       return;
@@ -4492,7 +4548,6 @@ void MainWindow::readFromStdout()                             //readFromStdout
           MessageBox::information_message(this, tr("No more files to open."));
           m_bNoMoreFiles=false;
         }
-        m_messageDupeCache.clear();
         return;
       }
 
