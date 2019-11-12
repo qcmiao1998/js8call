@@ -954,7 +954,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     palette.setColor(QPalette::Base,Qt::yellow);
     ui->sbTxPercent->setPalette(palette);
   }
-  fixStop();
   VHF_features_enabled(m_config.enable_VHF_features());
   m_wideGraph->setVHF(m_config.enable_VHF_features());
 
@@ -2483,11 +2482,6 @@ void MainWindow::setDecodedTextFont (QFont const& font)
   updateGeometry ();
 }
 
-void MainWindow::fixStop()
-{
-    m_hsymStop = computeStop(m_nSubMode, m_TRperiod);
-}
-
 int MainWindow::computePeriodForSubmode(int submode){
     switch(submode){
         case Varicode::JS8CallNormal:     return JS8A_TX_SECONDS;
@@ -2589,18 +2583,12 @@ void MainWindow::dataSink(qint64 frames)
         k0 = k;
     }
 
+#if JS8_USE_REFSPEC
     QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("refspec.dat"))};
     QByteArray bafname = fname.toLatin1();
     const char *c_fname = bafname.data();
     int len=fname.length();
 
-    if(m_diskData) {
-      dec_data.params.ndiskdat=1;
-    } else {
-      dec_data.params.ndiskdat=0;
-    }
-
-#if JS8_USE_REFSPEC
     m_bUseRef=m_wideGraph->useRef();
     refspectrum_(&dec_data.d2[k-m_nsps/2],&m_bClearRefSpec,&m_bRefSpec,
         &m_bUseRef,c_fname,len);
@@ -2609,11 +2597,6 @@ void MainWindow::dataSink(qint64 frames)
 
     // Get power, spectrum, and ihsym
     int trmin=m_TRperiod/60;
-
-    //  int k (frames - 1);
-    dec_data.params.nfa=m_wideGraph->nStartFreq();
-    dec_data.params.nfb=m_wideGraph->Fmax();
-
     int nsps=m_nsps;
     int nsmo=m_wideGraph->smoothYellow()-1;
 
@@ -2673,18 +2656,12 @@ void MainWindow::dataSink(qint64 frames)
     if(m_ihsym <= 0) return;
 
     if(ui) ui->signal_meter_widget->setValue(m_px,m_pxmax); // Update thermometer
+
     if(m_monitoring || m_diskData) {
       m_wideGraph->dataSink2(s, m_df3, m_ihsym, m_diskData);
     }
 
-    fixStop();
-
     m_dateTime = DriftingDateTime::currentDateTimeUtc().toString ("yyyy-MMM-dd hh:mm");
-
-    dec_data.params.npts8=(m_ihsym*m_nsps)/16;
-    dec_data.params.newdat=1;
-    dec_data.params.nagain=0;
-    dec_data.params.nzhsym=m_ihsym;
 
     decode();
 }
@@ -3886,6 +3863,7 @@ void MainWindow::diskDat()                                   //diskDat()
     int k;
     int kstep=m_FFTSize;
     m_diskData=true;
+    m_hsymStop=computeStop(m_nSubMode, m_TRperiod);
     float db=m_config.degrade();
     float bw=m_config.RxBandwidth();
     if(db > 0.0) degrade_snr_(dec_data.d2,&dec_data.params.kin,&db,&bw);
@@ -3942,20 +3920,6 @@ void MainWindow::on_actionKeyboard_shortcuts_triggered()
 
 void MainWindow::on_actionSpecial_mouse_commands_triggered()
 {
-}
-
-void MainWindow::on_DecodeButton_clicked (bool /* checked */) //Decode request
-{
-  if(m_mode=="MSK144") {
-    ui->DecodeButton->setChecked(false);
-  } else {
-    if(!m_mode.startsWith ("WSPR") && !m_decoderBusy) {
-      dec_data.params.newdat=0;
-      dec_data.params.nagain=1;
-      m_blankLine=false; // don't insert the separator again
-      decode();
-    }
-  }
 }
 
 void MainWindow::on_ClrAvgButton_clicked()
@@ -4205,6 +4169,20 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     }
 
     int period = computePeriodForSubmode(submode);
+
+    if(m_diskData) {
+      dec_data.params.ndiskdat=1;
+    } else {
+      dec_data.params.ndiskdat=0;
+    }
+
+    dec_data.params.npts8=(m_ihsym*m_nsps)/16;
+    dec_data.params.newdat=1;
+    dec_data.params.nagain=0;
+    dec_data.params.nzhsym=m_ihsym;
+
+    dec_data.params.nfa=m_wideGraph->nStartFreq();
+    dec_data.params.nfb=m_wideGraph->Fmax();
 
     ui->DecodeButton->setChecked(true);
     m_msec0 = DriftingDateTime::currentMSecsSinceEpoch();
@@ -7356,7 +7334,6 @@ void MainWindow::on_actionJS8_triggered()
   m_nsps=6912;
   m_FFTSize = m_nsps / 2;
   Q_EMIT FFTSize (m_FFTSize);
-  fixStop();
   setup_status_bar (bVHF);
   m_toneSpacing=0.0;                   //???
   ui->actionFT8->setChecked(true);     //???
