@@ -229,11 +229,13 @@ private slots:
   void on_actionCopyright_Notice_triggered();
   void on_DecodeButton_clicked (bool);
   void decode();
-  bool isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurrentDecodeStart, qint32 *pNextDecodeStart, qint32 *pStart, qint32 *pSz);
-  bool decodeReady(int submode, int period, int *pSubmode, int *pPeriod);
-  void decodeStart(int submode, int period);
-  void decodePrepareSaveAudio(int submode, int period);
+  bool isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurrentDecodeStart, qint32 *pNextDecodeStart, qint32 *pStart, qint32 *pSz, qint32 *pCycle);
+  bool decodeEnqueueReady(qint32 k, qint32 k0);
+  bool decodeProcessQueue(qint32 *pSubmode);
+  void decodeStart();
+  void decodePrepareSaveAudio(int submode);
   void decodeBusy(bool b);
+  void decodeDone ();
   void on_EraseButton_clicked();
   void set_dateTimeQSO(int m_ntx);
   void set_ntx(int n);
@@ -810,6 +812,14 @@ private:
       QDateTime date;
   };
 
+  struct DecodeParams {
+      int submode;
+      int cycle;
+      int start;
+      int sz;
+  };
+
+  QQueue<DecodeParams> m_decoderQueue;
   QMap<QString, int> m_messageDupeCache; // message frame -> freq offset seen
   QMap<QString, QVariant> m_showColumnsCache; // table column:key -> show boolean
   QMap<QString, QVariant> m_sortCache; // table key -> sort by
@@ -927,10 +937,11 @@ private:
   void stub();
   void statusChanged();
   void fixStop();
-  int computeSubmodePeriod(int submode);
+  int computePeriodForSubmode(int submode);
   int computeStop(int submode, int period);
-  int computeCurrentCycle(int period);
-  int computeCycleStartForDecode(int cycle, int period);
+  //int computeCurrentCycle(int period);
+  //int computeCycleStartForDecode(int cycle, int period);
+  int computeCycleForDecode(int submode, int k);
   int computeFramesPerCycleForDecode(int submode);
   int computeFramesNeededForDecode(int submode);
   bool shortList(QString callsign);
@@ -1017,7 +1028,6 @@ private:
   void resetAutomaticIntervalTransmissions(bool stopCQ, bool stopHB);
   void resetCQTimer(bool stop);
   void resetHeartbeatTimer(bool stop);
-  void decodeDone ();
   void subProcessFailed (QProcess *, int exit_code, QProcess::ExitStatus);
   void subProcessError (QProcess *, QProcess::ProcessError);
   void statusUpdate () const;
