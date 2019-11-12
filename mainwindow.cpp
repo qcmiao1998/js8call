@@ -3939,8 +3939,13 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
     qint32 framesNeeded = computeFramesNeededForDecode(submode);
     qint32 currentCycle = computeCycleForDecode(submode, k);
 
+    qint32 delta = qAbs(k-k0);
+    if(delta > cycleFrames){
+        qDebug() << "-->" << submodeName(submode) << "buffer advance delta" << delta;
+    }
+
     // on buffer loop, prepare proper next decode start
-    if(k < k0){
+    if(k < k0 || delta > cycleFrames){
         *pCurrentDecodeStart = currentCycle * cycleFrames;
         *pNextDecodeStart = *pCurrentDecodeStart + cycleFrames;
     }
@@ -3952,7 +3957,7 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
 
         if(pCycle) *pCycle = currentCycle;
         if(pStart) *pStart = *pCurrentDecodeStart;
-        if(pSz) *pSz = cycleFrames; // qMax(framesNeeded, k-(*pCurrentDecodeStart));
+        if(pSz) *pSz = qMax(framesNeeded, k-(*pCurrentDecodeStart));
 
         *pCurrentDecodeStart = *pNextDecodeStart;
         *pNextDecodeStart = *pCurrentDecodeStart + cycleFrames;
@@ -4282,33 +4287,41 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 }
 
 void MainWindow::decodeStart(){
-  qDebug() << "--> decoder starting";
-  qDebug() << " --> kin:" << dec_data.params.kin;
-  qDebug() << " --> newdat:" << dec_data.params.newdat;
-  qDebug() << " --> nsubmodes:" << dec_data.params.nsubmodes;
-  qDebug() << " --> A:" << dec_data.params.kposA << dec_data.params.kszA;
-  qDebug() << " --> B:" << dec_data.params.kposB << dec_data.params.kszB;
-  qDebug() << " --> C:" << dec_data.params.kposC << dec_data.params.kszC;
-  qDebug() << " --> E:" << dec_data.params.kposE << dec_data.params.kszE;
-
-  //newdat=1  ==> this is new data, must do the big FFT
-  //nagain=1  ==> decode only at fQSO +/- Tol
-
-  char *to = (char*)mem_js8->data();
-  char *from = (char*) dec_data.ss;
-  int size=sizeof(struct dec_data);
-
-  // only copy the params
-  if(dec_data.params.newdat==0) {
-    int noffset {offsetof (struct dec_data, params.nutc)};
-    to += noffset;
-    from += noffset;
-    size -= noffset;
+  if(m_decoderBusy){
+    qDebug() << "--> decoder cannot start...busy";
+    return;
   }
 
-  memcpy(to, from, qMin(mem_js8->size(), size));
-  QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove (); // Allow decoder to start
+  // mark the decoder busy early while we prep the memory copy
   decodeBusy(true);
+  {
+    qDebug() << "--> decoder starting";
+    qDebug() << " --> kin:" << dec_data.params.kin;
+    qDebug() << " --> newdat:" << dec_data.params.newdat;
+    qDebug() << " --> nsubmodes:" << dec_data.params.nsubmodes;
+    qDebug() << " --> A:" << dec_data.params.kposA << dec_data.params.kposA + dec_data.params.kszA << QString("(%1)").arg(dec_data.params.kszA);
+    qDebug() << " --> B:" << dec_data.params.kposB << dec_data.params.kposB + dec_data.params.kszB << QString("(%1)").arg(dec_data.params.kszB);
+    qDebug() << " --> C:" << dec_data.params.kposC << dec_data.params.kposC + dec_data.params.kszC << QString("(%1)").arg(dec_data.params.kszC);
+    qDebug() << " --> E:" << dec_data.params.kposE << dec_data.params.kposE + dec_data.params.kszE << QString("(%1)").arg(dec_data.params.kszE);
+
+    //newdat=1  ==> this is new data, must do the big FFT
+    //nagain=1  ==> decode only at fQSO +/- Tol
+
+    char *to = (char*)mem_js8->data();
+    char *from = (char*) dec_data.ss;
+    int size=sizeof(struct dec_data);
+
+    // only copy the params
+    if(dec_data.params.newdat==0) {
+      int noffset {offsetof (struct dec_data, params.nutc)};
+      to += noffset;
+      from += noffset;
+      size -= noffset;
+    }
+
+    memcpy(to, from, qMin(mem_js8->size(), size));
+    QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove (); // Allow decoder to start
+  }
 }
 
 
