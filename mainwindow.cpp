@@ -8987,6 +8987,20 @@ void MainWindow::on_driftSyncEndButton_clicked(){
     setDrift(n * 1000);
 }
 
+void MainWindow::on_driftSyncMinuteButton_clicked(){
+    auto now = QDateTime::currentDateTimeUtc();
+    int n = 0;
+    int s = now.time().second();
+
+    if(s < 30){
+        n = -s;
+    } else {
+        n = 60 - s;
+    }
+
+    setDrift(n * 1000);
+}
+
 void MainWindow::on_driftSyncResetButton_clicked(){
     setDrift(0);
     resetTimeDeltaAverage();

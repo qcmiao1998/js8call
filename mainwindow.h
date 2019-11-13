@@ -354,6 +354,7 @@ private slots:
   void on_driftSpinBox_valueChanged(int n);
   void on_driftSyncButton_clicked();
   void on_driftSyncEndButton_clicked();
+  void on_driftSyncMinuteButton_clicked();
   void on_driftSyncResetButton_clicked();
   void setDrift(int n);
   void on_rptSpinBox_valueChanged(int n);
