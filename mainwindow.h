@@ -114,6 +114,9 @@ public:
                       QWidget *parent = nullptr);
   ~MainWindow();
 
+private:
+  void initDecoderSubprocess();
+
 public slots:
   void showSoundInError(const QString& errorMsg);
   void showSoundOutError(const QString& errorMsg);
@@ -121,7 +124,7 @@ public slots:
   void dataSink(qint64 frames);
   void diskDat();
   void guiUpdate();
-  void readFromStdout();
+  void readFromStdout(QProcess * proc);
   void setXIT(int n, Frequency base = 0u);
   void qsy(int hzDelta);
   void setFreqOffsetForRestore(int freq, bool shouldRestore);
@@ -236,6 +239,7 @@ private slots:
   void decodePrepareSaveAudio(int submode);
   void decodeBusy(bool b);
   void decodeDone ();
+  void decodeCheckHangingDecoder();
   void on_EraseButton_clicked();
   void set_dateTimeQSO(int m_ntx);
   void set_ntx(int n);
@@ -577,6 +581,7 @@ private:
   bool    m_diskData;
   bool    m_loopall;
   bool    m_decoderBusy;
+  QDateTime m_decoderBusyStartTime;
   bool    m_auto;
   bool    m_restart;
   bool    m_startAnother;
@@ -660,7 +665,7 @@ private:
   QFutureWatcher<void> watcher3;
   QFutureWatcher<QString> m_saveWAVWatcher;
 
-  QProcess proc_js8;
+  QScopedPointer<QProcess> proc_js8;
 
   QTimer m_guiTimer;
   QTimer ptt1Timer;                 //StartTx delay

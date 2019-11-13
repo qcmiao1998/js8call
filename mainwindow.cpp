@@ -637,16 +637,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   setWindowTitle (program_title ());
 
-  connect(&proc_js8, &QProcess::readyReadStandardOutput, this, &MainWindow::readFromStdout);
-  connect(&proc_js8, static_cast<void (QProcess::*) (QProcess::ProcessError)> (&QProcess::error),
-          [this] (QProcess::ProcessError error) {
-            subProcessError (&proc_js8, error);
-          });
-  connect(&proc_js8, static_cast<void (QProcess::*) (int, QProcess::ExitStatus)> (&QProcess::finished),
-          [this] (int exitCode, QProcess::ExitStatus status) {
-            subProcessFailed (&proc_js8, exitCode, status);
-          });
-
   // hook up save WAV file exit handling
   connect (&m_saveWAVWatcher, &QFutureWatcher<QString>::finished, [this] {
       // extract the promise from the future
@@ -853,34 +843,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       }
   }
 
-  //Create .lock so jt9 will wait
-  QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.open(QIODevice::ReadWrite);
-
-  QStringList js8_args {
-    "-s", QApplication::applicationName () // shared memory key,
-                                           // includes rig
-#ifdef NDEBUG
-      , "-w", "1"               //FFTW patience - release
-#else
-      , "-w", "1"               //FFTW patience - debug builds for speed
-#endif
-      // The number  of threads for  FFTW specified here is  chosen as
-      // three because  that gives  the best  throughput of  the large
-      // FFTs used  in jt9.  The count  is the minimum of  (the number
-      // available CPU threads less one) and three.  This ensures that
-      // there is always at least one free CPU thread to run the other
-      // mode decoder in parallel.
-      , "-m", QString::number (qMin (qMax (QThread::idealThreadCount () - 1, 1), 3)) //FFTW threads
-
-      , "-e", QDir::toNativeSeparators (m_appDir)
-      , "-a", QDir::toNativeSeparators (m_config.writeable_data_dir ().absolutePath ())
-      , "-t", QDir::toNativeSeparators (m_config.temp_dir ().absolutePath ())
-      };
-  QProcessEnvironment env {QProcessEnvironment::systemEnvironment ()};
-  env.insert ("OMP_STACKSIZE", "4M");
-  proc_js8.setProcessEnvironment (env);
-  proc_js8.start(QDir::toNativeSeparators (m_appDir) + QDir::separator () +
-          "js8", js8_args, QIODevice::ReadWrite | QIODevice::Unbuffered);
+  initDecoderSubprocess();
+  decodeBusy(true);
 
   QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("wsjtx_wisdom.dat"))};
   QByteArray cfname=fname.toLocal8Bit();
@@ -1613,6 +1577,72 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   // this must be the last statement of constructor
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
+}
+
+void MainWindow::initDecoderSubprocess(){
+    //Create .lock so jt9 will wait
+    QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.open(QIODevice::ReadWrite);
+
+    QStringList js8_args {
+      "-s", QApplication::applicationName () // shared memory key,
+                                             // includes rig
+  #ifdef NDEBUG
+        , "-w", "1"               //FFTW patience - release
+  #else
+        , "-w", "1"               //FFTW patience - debug builds for speed
+  #endif
+        // The number  of threads for  FFTW specified here is  chosen as
+        // three because  that gives  the best  throughput of  the large
+        // FFTs used  in jt9.  The count  is the minimum of  (the number
+        // available CPU threads less one) and three.  This ensures that
+        // there is always at least one free CPU thread to run the other
+        // mode decoder in parallel.
+        , "-m", QString::number (qMin (qMax (QThread::idealThreadCount () - 1, 1), 3)) //FFTW threads
+
+        , "-e", QDir::toNativeSeparators (m_appDir)
+        , "-a", QDir::toNativeSeparators (m_config.writeable_data_dir ().absolutePath ())
+        , "-t", QDir::toNativeSeparators (m_config.temp_dir ().absolutePath ())
+        };
+
+    QProcessEnvironment env {QProcessEnvironment::systemEnvironment ()};
+    env.insert ("OMP_STACKSIZE", "4M");
+
+    if(JS8_DEBUG_DECODE) qDebug() << "decoder subprocess starting...";
+
+    auto proc = new QProcess(this);
+    proc->setProcessEnvironment (env);
+    proc->start(QDir::toNativeSeparators (m_appDir) + QDir::separator () +
+            "js8", js8_args, QIODevice::ReadWrite | QIODevice::Unbuffered);
+
+    connect(proc, &QProcess::readyReadStandardOutput, this,
+            [this, proc](){
+                readFromStdout(proc);
+            });
+
+    connect(proc, static_cast<void (QProcess::*) (QProcess::ProcessError)> (&QProcess::error),
+            [this, proc] (QProcess::ProcessError error) {
+              subProcessError (proc, error);
+            });
+
+    connect(proc, static_cast<void (QProcess::*) (int, QProcess::ExitStatus)> (&QProcess::finished),
+            [this, proc] (int exitCode, QProcess::ExitStatus status) {
+              subProcessFailed (proc, exitCode, status);
+            });
+
+    // kill the previous proc and set the new one
+    m_valid = false;
+    {
+        if(!proc_js8.isNull()){
+            proc_js8->kill();
+        }
+        proc_js8.reset(proc);
+    }
+    m_valid = true;
+
+    // reset decode busy
+    if(m_decoderBusy){
+        decodeBusy(false);
+    }
 }
 
 QPair<QPair<int, int>, int> splitVersion(QString v){
@@ -3541,8 +3571,10 @@ void MainWindow::closeEvent(QCloseEvent * e)
   QFile quitFile {m_config.temp_dir ().absoluteFilePath (".quit")};
   quitFile.open(QIODevice::ReadWrite);
   QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove(); // Allow jt9 to terminate
-  bool b=proc_js8.waitForFinished(1000);
-  if(!b) proc_js8.close();
+  if(!proc_js8.isNull()){
+      bool b=proc_js8->waitForFinished(1000);
+      if(!b) proc_js8->close();
+  }
   quitFile.remove();
 
   Q_EMIT finished ();
@@ -3993,6 +4025,8 @@ bool MainWindow::decode(){
 
     if(JS8_DEBUG_DECODE) qDebug() << "decoder checking if ready..." << "k" << k << "k0" << kZero;
 
+    // TODO: check js8 process hasn't stalled?
+
     if(isMessageQueuedForTransmit()){
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused during transmit";
         return false;
@@ -4139,7 +4173,15 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
  */
 bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     if(m_decoderBusy){
-        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder is busy!";
+        int seconds = m_decoderBusyStartTime.secsTo(DriftingDateTime::currentDateTimeUtc());
+        if(seconds > 60){
+            if(JS8_DEBUG_DECODE) qDebug() << "--> decoder should be killed!" << QString("(%1 seconds)").arg(seconds);
+        } else if(seconds > 30){
+            if(JS8_DEBUG_DECODE) qDebug() << "--> decoder is hanging!" << QString("(%1 seconds)").arg(seconds);
+        } else {
+            if(JS8_DEBUG_DECODE) qDebug() << "--> decoder is busy!";
+        }
+
         return false;
     }
 
@@ -4377,6 +4419,7 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
   m_decoderBusy=b;
   if(m_decoderBusy){
     tx_status_label.setText("Decoding");
+    m_decoderBusyStartTime = DriftingDateTime::currentDateTimeUtc();
   }
   ui->DecodeButton->setEnabled(!b);
   ui->actionOpen->setEnabled(!b);
@@ -4429,6 +4472,33 @@ void MainWindow::decodePrepareSaveAudio(int submode){
         m_saveWAVWatcher.setFuture (QtConcurrent::run (std::bind (&MainWindow::save_wave_file,
               this, m_fnameWE, &dec_data.d2[0], period, m_config.my_callsign(),
               m_config.my_grid(), m_mode, submode, m_freqNominal, m_hisCall, m_hisGrid)));
+    }
+}
+
+/**
+ * @brief MainWindow::decodeCheckHangingDecoder
+ *        check if decoder is hanging and reset if it is
+ */
+void MainWindow::decodeCheckHangingDecoder(){
+    if(!m_decoderBusy){
+        return;
+    }
+
+    if(m_decoderBusyStartTime.isValid() && m_decoderBusyStartTime.secsTo(DriftingDateTime::currentDateTimeUtc()) > 60){
+        m_decoderBusyStartTime = QDateTime();
+
+        SelfDestructMessageBox * m = new SelfDestructMessageBox(60,
+          "Decoder Hang",
+          "The JS8 decoder is having trouble and is now restarting.",
+          QMessageBox::Warning,
+          QMessageBox::Ok,
+          QMessageBox::Ok,
+          false,
+          this);
+
+        m->show();
+
+        initDecoderSubprocess();
     }
 }
 
@@ -4530,11 +4600,16 @@ QList<int> generateOffsets(int minOffset, int maxOffset){
     return offsets;
 }
 
-void MainWindow::readFromStdout()                             //readFromStdout
+void MainWindow::readFromStdout(QProcess * proc)                             //readFromStdout
 {
-  while(proc_js8.canReadLine()) {
-      QByteArray t=proc_js8.readLine();
+  if(!proc || proc->state() != QProcess::Running){
+    return;
+  }
+
+  while(proc->canReadLine()) {
+      QByteArray t = proc->readLine();
       qDebug() << "JS8: " << QString(t);
+
       bool bAvgMsg=false;
       int navg=0;
       if(t.indexOf("<DecodeFinished>") >= 0) {
@@ -5600,6 +5675,7 @@ void MainWindow::guiUpdate()
     // once per period
     if(m_sec0 % m_TRperiod == 0){
         tryBandHop();
+        decodeCheckHangingDecoder();
     }
 
     // at the end of the period
