@@ -2638,7 +2638,7 @@ void MainWindow::dataSink(qint64 frames)
     static int lastCycle = -1;
     int cycle = computeCycleForDecode(m_nSubMode, k);
     if(cycle != lastCycle){
-        qDebug() << "period loop, resetting ssum";
+        if(JS8_DEBUG_DECODE) qDebug() << "period loop, resetting ssum";
         memset(ssum, 0, sizeof(ssum));
     }
     lastCycle = cycle;
@@ -3954,7 +3954,7 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
 
     qint32 delta = qAbs(k-k0);
     if(delta > cycleFrames){
-        qDebug() << "-->" << submodeName(submode) << "buffer advance delta" << delta;
+        if(JS8_DEBUG_DECODE) qDebug() << "-->" << submodeName(submode) << "buffer advance delta" << delta;
     }
 
     // on buffer loop, prepare proper next decode start
@@ -3966,7 +3966,7 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
     bool ready = *pCurrentDecodeStart + framesNeeded <= k;
 
     if(ready){
-        qDebug() << "-->" << submodeName(submode) << "from" << *pCurrentDecodeStart << "to" << *pCurrentDecodeStart+framesNeeded << "k" << k << "k0" << k0;
+        if(JS8_DEBUG_DECODE) qDebug() << "-->" << submodeName(submode) << "from" << *pCurrentDecodeStart << "to" << *pCurrentDecodeStart+framesNeeded << "k" << k << "k0" << k0;
 
         if(pCycle) *pCycle = currentCycle;
         if(pStart) *pStart = *pCurrentDecodeStart;
@@ -3991,22 +3991,22 @@ bool MainWindow::decode(){
     int kZero = k0;
     k0 = k;
 
-    qDebug() << "decoder checking if ready..." << "k" << k << "k0" << kZero;
+    if(JS8_DEBUG_DECODE) qDebug() << "decoder checking if ready..." << "k" << k << "k0" << kZero;
 
     if(isMessageQueuedForTransmit()){
-        qDebug() << "--> decoder paused during transmit";
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused during transmit";
         return false;
     }
 
     int threshold = 1000; // one second
     if(isInTransmitDecodeThreshold(threshold)){
-        qDebug() << "--> decoder paused for" << threshold << "ms after transmit stop";
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused for" << threshold << "ms after transmit stop";
         return false;
     }
 
     bool ready = decodeEnqueueReady(k, kZero);
     if(ready || !m_decoderQueue.isEmpty()){
-        qDebug() << "--> decoder is ready to be run with" << m_decoderQueue.count() << "decode periods";
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder is ready to be run with" << m_decoderQueue.count() << "decode periods";
     }
 
     // TODO: this can be pulled out to an async process
@@ -4139,12 +4139,12 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
  */
 bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     if(m_decoderBusy){
-        qDebug() << "--> decoder is busy!";
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder is busy!";
         return false;
     }
 
     if(m_decoderQueue.isEmpty()){
-        qDebug() << "--> decoder has nothing to process!";
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder has nothing to process!";
         return false;
     }
 
@@ -4158,7 +4158,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
     int count = m_decoderQueue.count();
     if(count > maxDecodes){
-        qDebug() << "--> decoder skipping at least 1 decode cycle" << "count" << count << "max" << maxDecodes;
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder skipping at least 1 decode cycle" << "count" << count << "max" << maxDecodes;
     }
 
     dec_data.params.nsubmodes = 0;
@@ -4206,7 +4206,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     }
 
     if(submode == -1){
-        qDebug() << "--> decoder has no segments to decode!";
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder has no segments to decode!";
         return false;
     }
 
@@ -4329,41 +4329,41 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
  *        remove the lock file to start the decoding process
  */
 void MainWindow::decodeStart(){
-  if(m_decoderBusy){
-    qDebug() << "--> decoder cannot start...busy";
-    return;
-  }
-
-  // mark the decoder busy early while we prep the memory copy
-  decodeBusy(true);
-  {
-    qDebug() << "--> decoder starting";
-    qDebug() << " --> kin:" << dec_data.params.kin;
-    qDebug() << " --> newdat:" << dec_data.params.newdat;
-    qDebug() << " --> nsubmodes:" << dec_data.params.nsubmodes;
-    qDebug() << " --> A:" << dec_data.params.kposA << dec_data.params.kposA + dec_data.params.kszA << QString("(%1)").arg(dec_data.params.kszA);
-    qDebug() << " --> B:" << dec_data.params.kposB << dec_data.params.kposB + dec_data.params.kszB << QString("(%1)").arg(dec_data.params.kszB);
-    qDebug() << " --> C:" << dec_data.params.kposC << dec_data.params.kposC + dec_data.params.kszC << QString("(%1)").arg(dec_data.params.kszC);
-    qDebug() << " --> E:" << dec_data.params.kposE << dec_data.params.kposE + dec_data.params.kszE << QString("(%1)").arg(dec_data.params.kszE);
-
-    //newdat=1  ==> this is new data, must do the big FFT
-    //nagain=1  ==> decode only at fQSO +/- Tol
-
-    char *to = (char*)mem_js8->data();
-    char *from = (char*) dec_data.ss;
-    int size=sizeof(struct dec_data);
-
-    // only copy the params
-    if(dec_data.params.newdat==0) {
-      int noffset {offsetof (struct dec_data, params.nutc)};
-      to += noffset;
-      from += noffset;
-      size -= noffset;
+    if(m_decoderBusy){
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder cannot start...busy";
+        return;
     }
 
-    memcpy(to, from, qMin(mem_js8->size(), size));
-    QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove (); // Allow decoder to start
-  }
+    // mark the decoder busy early while we prep the memory copy
+    decodeBusy(true);
+    {
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder starting";
+        if(JS8_DEBUG_DECODE) qDebug() << " --> kin:" << dec_data.params.kin;
+        if(JS8_DEBUG_DECODE) qDebug() << " --> newdat:" << dec_data.params.newdat;
+        if(JS8_DEBUG_DECODE) qDebug() << " --> nsubmodes:" << dec_data.params.nsubmodes;
+        if(JS8_DEBUG_DECODE) qDebug() << " --> A:" << dec_data.params.kposA << dec_data.params.kposA + dec_data.params.kszA << QString("(%1)").arg(dec_data.params.kszA);
+        if(JS8_DEBUG_DECODE) qDebug() << " --> B:" << dec_data.params.kposB << dec_data.params.kposB + dec_data.params.kszB << QString("(%1)").arg(dec_data.params.kszB);
+        if(JS8_DEBUG_DECODE) qDebug() << " --> C:" << dec_data.params.kposC << dec_data.params.kposC + dec_data.params.kszC << QString("(%1)").arg(dec_data.params.kszC);
+        if(JS8_DEBUG_DECODE) qDebug() << " --> E:" << dec_data.params.kposE << dec_data.params.kposE + dec_data.params.kszE << QString("(%1)").arg(dec_data.params.kszE);
+
+        //newdat=1  ==> this is new data, must do the big FFT
+        //nagain=1  ==> decode only at fQSO +/- Tol
+
+        char *to = (char*)mem_js8->data();
+        char *from = (char*) dec_data.ss;
+        int size=sizeof(struct dec_data);
+
+        // only copy the params
+        if(dec_data.params.newdat==0) {
+            int noffset {offsetof (struct dec_data, params.nutc)};
+            to += noffset;
+            from += noffset;
+            size -= noffset;
+        }
+
+        memcpy(to, from, qMin(mem_js8->size(), size));
+        QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove (); // Allow decoder to start
+    }
 }
 
 /**
