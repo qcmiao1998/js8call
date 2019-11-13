@@ -2308,7 +2308,7 @@ void MainWindow::readSettings()
   ui->actionShow_Statusbar->setChecked(m_settings->value("ShowStatusbar",true).toBool());
   ui->statusBar->setVisible(ui->actionShow_Statusbar->isChecked());
   ui->textEditRX->setHtml(m_config.reset_activity() ? "" : m_settings->value("RXActivity", "").toString());
-  ui->actionShow_Band_Heartbeats_and_ACKs->setChecked(m_settings->value("BandHBActivityVisible", false).toBool());
+  ui->actionShow_Band_Heartbeats_and_ACKs->setChecked(m_settings->value("BandHBActivityVisible", true).toBool());
   m_settings->endGroup();
 
   // do this outside of settings group because it uses groups internally
