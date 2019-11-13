@@ -10160,7 +10160,8 @@ bool MainWindow::isMyCallIncluded(const QString &text){
         return false;
     }
 
-    return Varicode::parseCallsigns(text).contains(myCall);
+    auto calls = Varicode::parseCallsigns(text);
+    return calls.contains(myCall) || calls.contains(m_config.my_callsign());
 }
 
 bool MainWindow::isAllCallIncluded(const QString &text){
