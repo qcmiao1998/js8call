@@ -4760,7 +4760,7 @@ list. The list can be maintained in Settings (F2).</string>
     </property>
     <widget class="QMenu" name="menuFocus">
      <property name="title">
-      <string>Set Focus...</string>
+      <string>Set Fo&amp;cus...</string>
      </property>
      <addaction name="actionFocus_Message_Receive_Area"/>
      <addaction name="actionFocus_Message_Reply_Area"/>
@@ -4815,7 +4815,7 @@ list. The list can be maintained in Settings (F2).</string>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionExit">
    <property name="text">
-    <string>Exit</string>
+    <string>E&amp;xit</string>
    </property>
    <property name="menuRole">
     <enum>QAction::QuitRole</enum>
@@ -4837,7 +4837,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>About JS8Call</string>
+    <string>About &amp;JS8Call</string>
    </property>
   </action>
   <action name="actionWide_Waterfall">
@@ -4853,7 +4853,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Open</string>
+    <string>&amp;Open</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -4864,7 +4864,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Open next in directory</string>
+    <string>Open &amp;next in directory</string>
    </property>
    <property name="shortcut">
     <string>F6</string>
@@ -4875,7 +4875,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Decode remaining files in directory</string>
+    <string>&amp;Decode remaining files in directory</string>
    </property>
    <property name="shortcut">
     <string>Shift+F6</string>
@@ -4886,7 +4886,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Delete all *.wav files in Save Directory</string>
+    <string>D&amp;elete all *.wav files in Save Directory</string>
    </property>
   </action>
   <action name="actionQuickDecode">
@@ -4911,7 +4911,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>None</string>
+    <string>&amp;None</string>
    </property>
   </action>
   <action name="actionSave_all">
@@ -4919,7 +4919,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Save audio for all</string>
+    <string>Save audio for &amp;all</string>
    </property>
   </action>
   <action name="actionOnline_User_Guide">
@@ -4983,7 +4983,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Save audio for decoded</string>
+    <string>Save audio for &amp;decoded</string>
    </property>
   </action>
   <action name="actionMediumDecode">
@@ -5018,12 +5018,12 @@ list. The list can be maintained in Settings (F2).</string>
   </action>
   <action name="actionErase_ALL_TXT">
    <property name="text">
-    <string>Erase ALL.TXT</string>
+    <string>&amp;Erase ALL.TXT</string>
    </property>
   </action>
   <action name="actionErase_js8call_log_adi">
    <property name="text">
-    <string>Erase js8call_log.adi</string>
+    <string>Erase &amp;js8call_log.adi</string>
    </property>
   </action>
   <action name="actionConvert_JT9_x_to_RTTY">
@@ -5178,7 +5178,7 @@ list. The list can be maintained in Settings (F2).</string>
   </action>
   <action name="actionSettings">
    <property name="text">
-    <string>Settings...</string>
+    <string>&amp;Settings...</string>
    </property>
    <property name="shortcut">
     <string>F2</string>
@@ -5197,7 +5197,7 @@ list. The list can be maintained in Settings (F2).</string>
   </action>
   <action name="actionOpen_log_directory">
    <property name="text">
-    <string>Open Log Directory...</string>
+    <string>&amp;Open Log Directory...</string>
    </property>
   </action>
   <action name="actionJT4">
@@ -5405,7 +5405,7 @@ list. The list can be maintained in Settings (F2).</string>
   </action>
   <action name="actionCopyright_Notice">
    <property name="text">
-    <string>Copyright notice</string>
+    <string>&amp;Copyright notice</string>
    </property>
   </action>
   <action name="actionFox_Log">
@@ -5452,7 +5452,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Band Activity</string>
+    <string>Show &amp;Band Activity</string>
    </property>
    <property name="shortcut">
     <string>F7</string>
@@ -5466,7 +5466,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Call Activity</string>
+    <string>Show &amp;Call Activity</string>
    </property>
    <property name="shortcut">
     <string>F8</string>
@@ -5480,7 +5480,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Waterfall</string>
+    <string>Show &amp;Waterfall</string>
    </property>
    <property name="shortcut">
     <string>F4</string>
@@ -5509,7 +5509,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Waterfall Controls</string>
+    <string>Show Wa&amp;terfall Controls</string>
    </property>
   </action>
   <action name="actionShow_Time_Drift_Controls">
@@ -5517,7 +5517,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Time Drift Controls</string>
+    <string>Show Time &amp;Drift Controls</string>
    </property>
   </action>
   <action name="actionShow_Band_Activity_Columns">
@@ -5532,7 +5532,7 @@ list. The list can be maintained in Settings (F2).</string>
   </action>
   <action name="actionAdd_Log_Entry">
    <property name="text">
-    <string>Add Log Entry...</string>
+    <string>&amp;Add Log Entry...</string>
    </property>
    <property name="shortcut">
     <string>F5</string>
@@ -5543,7 +5543,7 @@ list. The list can be maintained in Settings (F2).</string>
   </action>
   <action name="actionOpen_Save_Directory">
    <property name="text">
-    <string>Open Save Directory...</string>
+    <string>&amp;Open Save Directory...</string>
    </property>
   </action>
   <action name="actionDeepDecode">
@@ -5565,7 +5565,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Frequency &amp;&amp; Clock</string>
+    <string>Show &amp;Frequency &amp;&amp; Clock</string>
    </property>
    <property name="shortcut">
     <string>F3</string>
@@ -5579,7 +5579,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Tooltips</string>
+    <string>Show Toolti&amp;ps</string>
    </property>
   </action>
   <action name="actionEnable_Spotting">
@@ -5619,7 +5619,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Fullscreen</string>
+    <string>Show Full&amp;screen</string>
    </property>
    <property name="shortcut">
     <string>F11</string>
@@ -5627,12 +5627,12 @@ list. The list can be maintained in Settings (F2).</string>
   </action>
   <action name="actionHeartbeat">
    <property name="text">
-    <string>Send Heartbeat...</string>
+    <string>Send &amp;Heartbeat...</string>
    </property>
   </action>
   <action name="actionCQ">
    <property name="text">
-    <string>Send CQ Message...</string>
+    <string>Send C&amp;Q Message...</string>
    </property>
   </action>
   <action name="actionShow_Band_Heartbeats_and_ACKs">
@@ -5640,7 +5640,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Band Heartbeats and ACKs</string>
+    <string>Show Band &amp;Heartbeats and ACKs</string>
    </property>
   </action>
   <action name="actionShow_Statusbar">
@@ -5648,27 +5648,27 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Statusbar</string>
+    <string>Show Statusba&amp;r</string>
    </property>
   </action>
   <action name="actionSetFrequency">
    <property name="text">
-    <string>Set Frequency...</string>
+    <string>Set &amp;Frequency...</string>
    </property>
   </action>
   <action name="actionSetOffset">
    <property name="text">
-    <string>Set Offset...</string>
+    <string>Set &amp;Offset...</string>
    </property>
   </action>
   <action name="actionShow_Message_Inbox">
    <property name="text">
-    <string>Show Message Inbox...</string>
+    <string>Show Message &amp;Inbox...</string>
    </property>
   </action>
   <action name="actionCheck_for_Updates">
    <property name="text">
-    <string>Check for Updates</string>
+    <string>Check for &amp;Updates</string>
    </property>
   </action>
   <action name="actionFocus_Message_Reply_Area">
