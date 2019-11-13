@@ -6961,6 +6961,8 @@ QString MainWindow::calculateDistance(QString const& value, int *pDistance, int 
         return QString{};
     }
 
+    bool approx = m_config.my_grid().length() < 6 || value.length() < 6;
+
     qint64 nsec = (DriftingDateTime::currentMSecsSinceEpoch()/1000) % 86400;
     double utch=nsec/3600.0;
     int nAz,nEl,nDmiles,nDkm,nHotAz,nHotABetter;
@@ -6970,13 +6972,22 @@ QString MainWindow::calculateDistance(QString const& value, int *pDistance, int 
 
     if(pAzimuth) *pAzimuth = nAz;
 
+    QString lt;
     if(m_config.miles()){
+        if(approx && nDmiles <= 75){
+            lt = "<";
+            nDmiles = qMax(nDmiles, 75);
+        }
         if(pDistance) *pDistance = nDmiles;
-        return QString("%1 mi / %2°").arg(nDmiles).arg(nAz);
+        return QString("%1%2 mi / %3°").arg(lt).arg(nDmiles).arg(nAz);
     }
 
+    if(approx && nDkm <= 120){
+        lt = "<";
+        nDkm = qMax(nDkm, 120);
+    }
     if(pDistance) *pDistance = nDkm;
-    return QString("%1 km / %2°").arg(nDkm).arg(nAz);
+    return QString("%1%2 km / %3°").arg(lt).arg(nDkm).arg(nAz);
 }
 
 // this function is called by auto_tx_mode, which is called by autoButton.clicked
