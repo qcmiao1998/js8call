@@ -432,9 +432,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_lastMonitoredFrequency {default_frequency},
   m_toneSpacing {0.},
   m_firstDecode {0},
-  m_optimizingProgress {"Optimizing decoder FFTs for your CPU.\n"
-      "Please be patient,\n"
-      "this may take a few minutes", QString {}, 0, 1, this},
   m_messageClient {new MessageClient {QApplication::applicationName (),
         version (), revision (),
         m_config.udp_server_name (), m_config.udp_server_port (),
@@ -465,10 +462,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   m_baseCall = Radio::base_callsign (m_config.my_callsign ());
   m_opCall = m_config.opCall();
-
-  m_optimizingProgress.setWindowModality (Qt::WindowModal);
-  m_optimizingProgress.setAutoReset (false);
-  m_optimizingProgress.setMinimumDuration (15000); // only show after 15s delay
 
   // Closedown.
   connect (ui->actionExit, &QAction::triggered, this, &QMainWindow::close);
@@ -828,23 +821,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     }
 #endif
 
-  {
-    //delete any .quit file that might have been left lying around
-    //since its presence will cause jt9 to exit a soon as we start it
-    //and decodes will hang
-    QFile quitFile {m_config.temp_dir ().absoluteFilePath (".quit")};
-    while (quitFile.exists ())
-      {
-        if (!quitFile.remove ())
-          {
-            MessageBox::query_message (this, tr ("Error removing \"%1\"").arg (quitFile.fileName ())
-                                       , tr ("Click OK to retry"));
-          }
-      }
-  }
-
   initDecoderSubprocess();
-  decodeBusy(true);
 
   QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("wsjtx_wisdom.dat"))};
   QByteArray cfname=fname.toLocal8Bit();
@@ -1580,6 +1557,21 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 }
 
 void MainWindow::initDecoderSubprocess(){
+    {
+      //delete any .quit file that might have been left lying around
+      //since its presence will cause jt9 to exit a soon as we start it
+      //and decodes will hang
+      QFile quitFile {m_config.temp_dir ().absoluteFilePath (".quit")};
+      while (quitFile.exists ())
+        {
+          if (!quitFile.remove ())
+            {
+              MessageBox::query_message (this, tr ("Error removing \"%1\"").arg (quitFile.fileName ())
+                                         , tr ("Click OK to retry"));
+            }
+        }
+    }
+
     //Create .lock so jt9 will wait
     QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.open(QIODevice::ReadWrite);
 
@@ -4025,9 +4017,13 @@ bool MainWindow::decode(){
 
     if(JS8_DEBUG_DECODE) qDebug() << "decoder checking if ready..." << "k" << k << "k0" << kZero;
 
-    // TODO: check js8 process hasn't stalled?
+    if(k == kZero){
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder stream has not advanced";
+        return false;
+    }
 
-    if(isMessageQueuedForTransmit()){
+    if(m_transmitting || !m_txFrameQueue.isEmpty()){
+        // we used to use isMessageQueuedForTransmit, but it checks total frames, not queued frames
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused during transmit";
         return false;
     }
@@ -4262,8 +4258,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nfa=m_wideGraph->nStartFreq();
     dec_data.params.nfb=m_wideGraph->Fmax();
 
-    ui->DecodeButton->setChecked(true);
-
     if(dec_data.params.nagain==0 && dec_data.params.newdat==1 && (!m_diskData)) {
       qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
       int imin=ms/60000;
@@ -4372,11 +4366,18 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
  */
 void MainWindow::decodeStart(){
     if(m_decoderBusy){
-        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder cannot start...busy";
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder cannot start...busy (busy flag)";
+        return;
+    }
+
+    QFile lock {m_config.temp_dir ().absoluteFilePath (".lock")};
+    if(!lock.exists()){
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder cannot start...busy (lock missing)";
         return;
     }
 
     // mark the decoder busy early while we prep the memory copy
+    // decodeDone is responsible for marking the decode _not_ busy
     decodeBusy(true);
     {
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder starting";
@@ -4404,8 +4405,8 @@ void MainWindow::decodeStart(){
         }
 
         memcpy(to, from, qMin(mem_js8->size(), size));
-        QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove (); // Allow decoder to start
     }
+    lock.remove(); // Allow decoder to start
 }
 
 /**
@@ -4415,13 +4416,11 @@ void MainWindow::decodeStart(){
  */
 void MainWindow::decodeBusy(bool b)                             //decodeBusy()
 {
-  if (!b) m_optimizingProgress.reset ();
   m_decoderBusy=b;
   if(m_decoderBusy){
     tx_status_label.setText("Decoding");
     m_decoderBusyStartTime = DriftingDateTime::currentDateTimeUtc();
   }
-  ui->DecodeButton->setEnabled(!b);
   ui->actionOpen->setEnabled(!b);
   ui->actionOpen_next_in_directory->setEnabled(!b);
   ui->actionDecode_remaining_files_in_directory->setEnabled(!b);
@@ -4435,12 +4434,11 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
  */
 void MainWindow::decodeDone ()
 {
+  QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.open(QIODevice::ReadWrite);
   dec_data.params.newdat=0;
   dec_data.params.nagain=0;
   dec_data.params.ndiskdat=0;
   m_nclearave=0;
-  QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.open(QIODevice::ReadWrite);
-  ui->DecodeButton->setChecked (false);
   decodeBusy(false);
   m_RxLog=0;
   m_blankLine=true;

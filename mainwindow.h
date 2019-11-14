@@ -913,7 +913,6 @@ private:
   Frequency m_lastMonitoredFrequency;
   double m_toneSpacing;
   int m_firstDecode;
-  QProgressDialog m_optimizingProgress;
   MessageClient * m_messageClient;
   TCPClient * m_n3fjpClient;
   PSK_Reporter *psk_Reporter;

@@ -4501,39 +4501,6 @@ list. The list can be maintained in Settings (F2).</string>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="DecodeButton">
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="visible">
-          <bool>false</bool>
-         </property>
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Decode most recent Rx period at QSO Frequency&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">QPushButton:checked {
-       background-color: cyan;
-       border-style: outset;
-       border-width: 1px;
-       border-radius: 5px;
-       border-color: black;
-       min-width: 5em;
-       padding: 3px;
-}</string>
-         </property>
-         <property name="text">
-          <string>&amp;Decode</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="autoButton">
          <property name="minimumSize">
           <size>
@@ -5846,7 +5813,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>stopButton</tabstop>
   <tabstop>EraseButton</tabstop>
   <tabstop>ClrAvgButton</tabstop>
-  <tabstop>DecodeButton</tabstop>
   <tabstop>dxCallEntry</tabstop>
   <tabstop>dxGridEntry</tabstop>
   <tabstop>lookupButton</tabstop>
