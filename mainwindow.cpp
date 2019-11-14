@@ -11826,7 +11826,7 @@ void MainWindow::displayBandActivity() {
                 QString age;
                 int snr = 0;
                 float tdrift = 0;
-                int submode;
+                int submode = -1;
 
                 int activityAging = m_config.activity_aging();
 
