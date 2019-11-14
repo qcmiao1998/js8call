@@ -3983,8 +3983,8 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
         if(JS8_DEBUG_DECODE) qDebug() << "-->" << submodeName(submode) << "buffer advance delta" << delta;
     }
 
-    // on buffer loop, prepare proper next decode start
-    if(k < k0 || delta > cycleFrames){
+    // on buffer loop or init, prepare proper next decode start
+    if(k < k0 || delta > cycleFrames || *pCurrentDecodeStart == -1 || *pNextDecodeStart == -1){
         *pCurrentDecodeStart = currentCycle * cycleFrames;
         *pNextDecodeStart = *pCurrentDecodeStart + cycleFrames;
     }
@@ -4021,6 +4021,11 @@ bool MainWindow::decode(){
 
     if(k == kZero){
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder stream has not advanced";
+        return false;
+    }
+
+    if(!m_monitoring && !m_diskData){
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder stream is not active";
         return false;
     }
 
@@ -4070,6 +4075,7 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     qint32 startA = -1;
     qint32 szA = -1;
     qint32 cycleA = -1;
+    if(JS8_DEBUG_DECODE) qDebug() << "? NORMAL   " << currentDecodeStartA << nextDecodeStartA;
     bool couldDecodeA = isDecodeReady(Varicode::JS8CallNormal, k, k0, &currentDecodeStartA, &nextDecodeStartA, &startA, &szA, &cycleA);
     if(m_diskData){
         startA = 0;
@@ -4082,6 +4088,7 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     qint32 startB = -1;
     qint32 szB = -1;
     qint32 cycleB = -1;
+    if(JS8_DEBUG_DECODE) qDebug() << "? FAST     " << currentDecodeStartB << nextDecodeStartB;
     bool couldDecodeB = isDecodeReady(Varicode::JS8CallFast, k, k0, &currentDecodeStartB, &nextDecodeStartB, &startB, &szB, &cycleB);
     if(m_diskData){
         startB = 0;
@@ -4094,6 +4101,7 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     qint32 startC = -1;
     qint32 szC = -1;
     qint32 cycleC = -1;
+    if(JS8_DEBUG_DECODE) qDebug() << "? TURBO    " << currentDecodeStartC << nextDecodeStartC;
     bool couldDecodeC = isDecodeReady(Varicode::JS8CallTurbo, k, k0, &currentDecodeStartC, &nextDecodeStartC, &startC, &szC, &cycleC);
     if(m_diskData){
         startC = 0;
@@ -4107,6 +4115,7 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     qint32 startE = -1;
     qint32 szE = -1;
     qint32 cycleE = -1;
+    if(JS8_DEBUG_DECODE) qDebug() << "? ULTRASLOW" << currentDecodeStartE << nextDecodeStartE;
     bool couldDecodeE = isDecodeReady(Varicode::JS8CallUltraSlow, k, k0, &currentDecodeStartE, &nextDecodeStartE, &startE, &szE, &cycleE);
     if(m_diskData){
         startE = 0;
