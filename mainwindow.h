@@ -146,7 +146,7 @@ public slots:
   void writeNoticeTextToUI(QDateTime date, QString text);
   int writeMessageTextToUI(QDateTime date, QString text, int freq, bool isTx, int block=-1);
   bool isMessageQueuedForTransmit();
-  bool isInTransmitDecodeThreshold(int seconds);
+  bool isInDecodeDelayThreshold(int seconds);
   void prependMessageText(QString text);
   void addMessageText(QString text, bool clear=false, bool selectFirstPlaceholder=false);
   void enqueueMessage(int priority, QString message, int freq, Callback c);

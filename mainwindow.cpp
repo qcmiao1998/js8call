@@ -1496,7 +1496,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   // Don't block heartbeat's first run...
   m_lastTxStartTime = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
-  m_lastTxStopTime = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
+
+  // But do block the decoder's first run until the next transmit period
+  m_lastTxStopTime = nextTransmitCycle();
 
   int width = 75;
   /*
@@ -4036,7 +4038,7 @@ bool MainWindow::decode(){
     }
 
     int threshold = 1000; // one second
-    if(isInTransmitDecodeThreshold(threshold)){
+    if(isInDecodeDelayThreshold(threshold)){
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused for" << threshold << "ms after transmit stop";
         return false;
     }
@@ -4570,7 +4572,7 @@ QDateTime MainWindow::nextTransmitCycle(){
 
     // round to 15 second increment
     int secondsSinceEpoch = (timestamp.toMSecsSinceEpoch()/1000);
-    int delta = roundUp(secondsSinceEpoch, 15) + 1 - secondsSinceEpoch;
+    int delta = roundUp(secondsSinceEpoch, m_TRperiod) + 1 - secondsSinceEpoch;
     timestamp = timestamp.addSecs(delta);
 
     return timestamp;
@@ -6472,7 +6474,7 @@ bool MainWindow::isMessageQueuedForTransmit(){
     return m_transmitting || m_txFrameCount > 0;
 }
 
-bool MainWindow::isInTransmitDecodeThreshold(int ms){
+bool MainWindow::isInDecodeDelayThreshold(int ms){
     if(m_lastTxStopTime.isNull()){
         return false;
     }
