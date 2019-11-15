@@ -247,6 +247,7 @@ void TransmitTextEdit::on_textContentsChanged(int /*pos*/, int rem, int add){
     std::copy_if(normalized.begin(), normalized.end(), std::back_inserter(result), [](QChar& c) {
         return c.toLatin1() != 0 && (c == 10 || (c > 31 && c < 128));
     });
+
     if(result != text){
         bool blocked = signalsBlocked();
         blockSignals(true);
@@ -441,7 +442,11 @@ bool TransmitTextEdit::eventFilter(QObject */*o*/, QEvent *e){
 
     // -1. don't filter the escape key, return key, or enter key here
     QKeyEvent *k = static_cast<QKeyEvent *>(e);
-    if(k->key() == Qt::Key_Escape || k->key() == Qt::Key_Return || k->key() == Qt::Key_Enter){
+    if(k->key() == Qt::Key_Escape){
+        return false;
+    }
+
+    if(k->key() == Qt::Key_Return || k->key() == Qt::Key_Enter){
         return false;
     }
 

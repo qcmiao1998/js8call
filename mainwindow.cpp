@@ -980,7 +980,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto enterFilter = new EnterKeyPressEater();
   connect(enterFilter, &EnterKeyPressEater::enterKeyPressed, this, [this](QObject *, QKeyEvent *, bool *pProcessed){
       if(QApplication::keyboardModifiers() & Qt::ShiftModifier){
-          if(pProcessed) *pProcessed = false;
+          // do not allow shift+enter
+          if(pProcessed) *pProcessed = true;
           return;
       }
       if(ui->extFreeTextMsgEdit->isReadOnly()){
