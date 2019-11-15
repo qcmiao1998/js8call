@@ -557,6 +557,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->actionNone->setActionGroup(saveGroup);
   ui->actionSave_decoded->setActionGroup(saveGroup);
   ui->actionSave_all->setActionGroup(saveGroup);
+  saveGroup->setVisible(false);
 
   QActionGroup* DepthGroup = new QActionGroup(this);
   ui->actionQuickDecode->setActionGroup(DepthGroup);
@@ -921,15 +922,15 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   //UI Customizations & Tweaks
   m_wideGraph.data()->installEventFilter(new EscapeKeyPressEater());
   ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized();
-  //ui->menuDecode->setEnabled(true);
   ui->menuMode->setVisible(false);
-  ui->menuSave->setEnabled(true);
+  ui->menuSave->setEnabled(false);
   ui->menuTools->setEnabled(false);
   ui->menuView->setEnabled(false);
   foreach(auto action, ui->menuBar->actions()){
       if(action->text() == "Old View") ui->menuBar->removeAction(action);
       if(action->text() == "Old Mode") ui->menuBar->removeAction(action);
       if(action->text() == "Old Tools") ui->menuBar->removeAction(action);
+      if(action->text() == "Old &Save") ui->menuBar->removeAction(action);
   }
   ui->dxCallEntry->clear();
   ui->dxGridEntry->clear();
@@ -4086,7 +4087,10 @@ bool MainWindow::decode(){
     }
 
     decodeStart();
+
+#if JS8_SAVE_AUDIO
     decodePrepareSaveAudio(submode);
+#endif
     return true;
 }
 

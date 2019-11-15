@@ -4370,7 +4370,7 @@ list. The list can be maintained in Settings (F2).</string>
       <property name="visible">
        <bool>false</bool>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,2,2,2,0,2,2,2,2,2,0,2,1">
+      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,2,2,2,0,2,2,2,2,2,0,2">
        <item>
         <widget class="QCheckBox" name="cbCQonly">
          <property name="visible">
@@ -4638,7 +4638,7 @@ list. The list can be maintained in Settings (F2).</string>
    </widget>
    <widget class="QMenu" name="menuSave">
     <property name="title">
-     <string>&amp;Save</string>
+     <string>Old &amp;Save</string>
     </property>
     <addaction name="actionNone"/>
     <addaction name="actionSave_decoded"/>
@@ -4793,7 +4793,6 @@ list. The list can be maintained in Settings (F2).</string>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
    <addaction name="menuModeJS8"/>
-   <addaction name="menuSave"/>
    <addaction name="menu_Log"/>
    <addaction name="menuWindow"/>
    <addaction name="menuControl"/>
@@ -4801,6 +4800,7 @@ list. The list can be maintained in Settings (F2).</string>
    <addaction name="menuView"/>
    <addaction name="menuMode"/>
    <addaction name="menuTools"/>
+   <addaction name="menuSave"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionExit">
