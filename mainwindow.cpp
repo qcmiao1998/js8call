@@ -3985,8 +3985,36 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
         if(JS8_DEBUG_DECODE) qDebug() << "-->" << submodeName(submode) << "buffer advance delta" << delta;
     }
 
+    // say, current decode start is 360000 and the next is 540000 (right before we loop)
+    // frames needed are 150000
+    // and then we turn off rx until k is 110000 and the cycle frames are 180000 and k0 is a proper 100000
+    // we need to still reset...
+    // so, if k is less than the last decode start - cycle frames (in this case 360000-180000, or 180000),
+    // then we should reset. but, what if k is now 182000??
+
+    // k=182000
+    // k < current (182000 < 360000) true
+    // k < max(0, current-cycleframes+framesNeeded) (k < 180000+150000) true
+
+    // k=6000
+    // k < current (6000<360000) true
+    // k < max(0, 360000-180000+150000) true
+
+    // k=350000
+    // k < current (350000<360000) true
+    // k < max(0, 360000-350000+150000) false
+
+    // are we in the space between the end of the last decode and the start of the next decode?
+    bool deadAir = (k < *pCurrentDecodeStart && k < qMax(0, *pCurrentDecodeStart-cycleFrames+framesNeeded));
+
     // on buffer loop or init, prepare proper next decode start
-    if(k < k0 || delta > cycleFrames || *pCurrentDecodeStart == -1 || *pNextDecodeStart == -1){
+    if(
+        (deadAir)                    ||
+        (k < k0)                     ||
+        (delta > cycleFrames)        ||
+        (*pCurrentDecodeStart == -1) ||
+        (*pNextDecodeStart    == -1)
+    ){
         *pCurrentDecodeStart = currentCycle * cycleFrames;
         *pNextDecodeStart = *pCurrentDecodeStart + cycleFrames;
     }
@@ -4031,6 +4059,15 @@ bool MainWindow::decode(){
         return false;
     }
 
+    bool ready = decodeEnqueueReady(k, kZero);
+    if(ready || !m_decoderQueue.isEmpty()){
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder is ready to be run with" << m_decoderQueue.count() << "decode periods";
+    }
+
+    //
+    // TODO: what follows can likely be pulled out to an async process
+    //
+
     if(m_transmitting || !m_txFrameQueue.isEmpty()){
         // we used to use isMessageQueuedForTransmit, but it checks total frames, not queued frames
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused during transmit";
@@ -4043,12 +4080,6 @@ bool MainWindow::decode(){
         return false;
     }
 
-    bool ready = decodeEnqueueReady(k, kZero);
-    if(ready || !m_decoderQueue.isEmpty()){
-        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder is ready to be run with" << m_decoderQueue.count() << "decode periods";
-    }
-
-    // TODO: this can be pulled out to an async process
     qint32 submode = -1;
     if(!decodeProcessQueue(&submode)){
         return false;
