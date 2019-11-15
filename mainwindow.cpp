@@ -980,8 +980,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   auto enterFilter = new EnterKeyPressEater();
   connect(enterFilter, &EnterKeyPressEater::enterKeyPressed, this, [this](QObject *, QKeyEvent *, bool *pProcessed){
       if(QApplication::keyboardModifiers() & Qt::ShiftModifier){
-          // do not allow shift+enter
-          if(pProcessed) *pProcessed = true;
+          if(pProcessed) *pProcessed = false;
           return;
       }
       if(ui->extFreeTextMsgEdit->isReadOnly()){
@@ -6411,7 +6410,7 @@ void MainWindow::displayTextForFreq(QString text, int freq, QDateTime date, bool
         block = -1;
     }
 
-    block = writeMessageTextToUI(date, text.replace("\\n", "\n"), freq, isTx, block);
+    block = writeMessageTextToUI(date, text, freq, isTx, block);
 
     // never cache tx or last lines
     if(/*isTx || */isLast) {
@@ -6483,6 +6482,7 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
         c.insertText(text);
     } else {
         text = text.toHtmlEscaped();
+        text = text.replace("\n", "<br/>");
         text = text.replace("  ", "&nbsp;&nbsp;");
         c.insertBlock();
         c.insertHtml(QString("%1 - (%2) - %3").arg(date.time().toString()).arg(freq).arg(text));

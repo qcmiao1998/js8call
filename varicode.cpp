@@ -327,6 +327,16 @@ int dbmTomwatts(int dbm){
     return iter.value();
 }
 
+QString Varicode::escape(const QString &text){
+    // // TODO: support different escapes?
+    return text;
+}
+
+QString Varicode::unescape(const QString &text){
+    // // TODO: support different escapes?
+    return text;
+}
+
 QString Varicode::rstrip(const QString& str) {
   int n = str.size() - 1;
   for (; n >= 0; --n) {
@@ -1844,7 +1854,13 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(QString const& mycall,
 
     QList<QPair<QString, int>> allFrames;
 
-    foreach(QString line, text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts)){
+#if JS8_NO_MULTILINE
+    // auto lines = text.split(QRegExp("[\\r\\n]"), QString::SkipEmptyParts);
+#else
+    QStringList lines = { text };
+#endif
+
+    foreach(QString line, lines){
         QList<QPair<QString, int>> lineFrames;
 
         // once we find a directed call, data encode the rest of the line.

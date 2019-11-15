@@ -78,6 +78,9 @@ public:
 
     //Varicode();
 
+    static QString escape(const QString &text);
+    static QString unescape(const QString &text);
+
     static QString rstrip(const QString& str);
     static QString lstrip(const QString& str);
 
