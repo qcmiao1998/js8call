@@ -116,6 +116,9 @@ int main(int argc, char *argv[])
       auto help_option = parser.addHelpOption ();
       auto version_option = parser.addVersionOption ();
 
+      QCommandLineOption output_option(QStringList() << "o" << "output", "Write debug statements into <file>.", "file");
+      parser.addOption (output_option);
+
       // support for multiple instances running from a single installation
       QCommandLineOption rig_option (QStringList {} << "r" << "rig-name"
                                      , a.translate ("main", "Where <rig-name> is for multi-instance support.")
@@ -150,6 +153,10 @@ int main(int argc, char *argv[])
               return 0;
             }
         }
+
+      if(parser.isSet(output_option)){
+          new TraceFile(parser.value(output_option));
+      }
 
       QStandardPaths::setTestModeEnabled (parser.isSet (test_option));
 
