@@ -32,7 +32,6 @@
 #include <QUdpSocket>
 #include <QVariant>
 
-#include "APRSISClient.h"
 #include "revision_utils.hpp"
 #include "qt_helpers.hpp"
 #include "NetworkAccessManager.hpp"
@@ -438,7 +437,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         this}},
   m_n3fjpClient { new TCPClient{this}},
   m_spotClient { new SpotClient{m_messageClient, this}},
-  m_aprsClient {new APRSISClient{"rotate.aprs2.net", 14580, this}},
   psk_Reporter {new PSK_Reporter {m_messageClient, this}},
   m_i3bit {0},
   m_manual {&m_network_manager},
@@ -3117,12 +3115,8 @@ void MainWindow::prepareSpotting(){
     if(m_config.spot_to_reporting_networks ()){
         spotSetLocal();
         pskSetLocal();
-        aprsSetLocal();
-        m_aprsClient->setServer(m_config.aprs_server_name(), m_config.aprs_server_port());
-        m_aprsClient->setPaused(false);
         ui->spotButton->setChecked(true);
     } else {
-        m_aprsClient->setPaused(true);
         ui->spotButton->setChecked(false);
     }
 }
@@ -5170,18 +5164,6 @@ void MainWindow::spotCmd(CommandDetail cmd){
     m_spotClient->enqueueCmd(cmdStr, cmd.from, cmd.to, cmd.relayPath, cmd.text, cmd.grid, cmd.extra, m_freqNominal + cmd.freq, cmd.snr);
 }
 
-void MainWindow::spotAPRSMsg(CommandDetail d){
-    if(!m_config.spot_to_reporting_networks()) return;
-    if(!m_aprsClient->isPasscodeValid()) return;
-
-    // ONLY MSG IS APPROPRIATE HERE, e.g.,
-    // KN4CRD: @APRSIS MSG :EMAIL-2  :email@domain.com booya{
-    if(d.cmd != " MSG") return;
-
-    qDebug() << "enqueueing third party text" << d.from << d.text;
-    m_aprsClient->enqueueThirdParty(Radio::base_callsign(d.from), d.text);
-}
-
 void MainWindow::pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid){
     if(!m_config.spot_to_reporting_networks()) return;
 
@@ -5194,33 +5176,6 @@ void MainWindow::pskLogReport(QString mode, int offset, int snr, QString callsig
        mode,
        QString::number(snr),
        QString::number(DriftingDateTime::currentDateTime().toTime_t()));
-}
-
-void MainWindow::aprsLogReport(int offset, int snr, QString callsign, QString grid){
-    if(!m_config.spot_to_reporting_networks()) return;
-
-    Frequency frequency = m_freqNominal + offset;
-
-    if(grid.length() < 6){
-        qDebug() << "APRSISClient Spot Skipped:" << callsign << grid;
-        return;
-    }
-
-    auto comment = QString("%1MHz %2dB").arg(Radio::frequency_MHz_string(frequency)).arg(Varicode::formatSNR(snr));
-    if(callsign.contains("/")){
-        comment = QString("%1 %2").arg(callsign).arg(comment);
-    }
-
-    auto base = Radio::base_callsign(callsign);
-    callsign = APRSISClient::replaceCallsignSuffixWithSSID(callsign, base);
-
-    if(m_aprsCallCache.contains(callsign)){
-        qDebug() << "APRSISClient Spot Skipped For Cache:" << callsign << grid;
-        return;
-    }
-
-    m_aprsClient->enqueueSpot(callsign, grid, comment);
-    m_aprsCallCache.insert(callsign, DriftingDateTime::currentDateTimeUtc());
 }
 
 void MainWindow::killFile ()
@@ -6664,11 +6619,6 @@ bool MainWindow::ensureCreateMessageReady(const QString &text){
         return false;
     }
 
-    if(text.contains("@APRSIS") && !m_aprsClient->isPasscodeValid()){
-        MessageBox::warning_message(this, tr ("Please ensure a valid APRS passcode is set in the settings when sending to the @APRSIS group."));
-        return false;
-    }
-
     return true;
 }
 
@@ -7772,7 +7722,6 @@ void MainWindow::band_changed (Frequency f)
     m_bandEdited = false;
 
     psk_Reporter->sendReport();      // Upload any queued spots before changing band
-    m_aprsClient->sendReports();
     if (!m_transmitting) monitor (true);
     if ("FreqCal" == m_mode)
       {
@@ -9501,7 +9450,6 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
             if (m_config.spot_to_reporting_networks ()) {
               spotSetLocal();
               pskSetLocal();
-              aprsSetLocal();
             }
             statusChanged();
             m_wideGraph->setDialFreq(m_freqNominal / 1.e6);
@@ -9659,19 +9607,6 @@ void MainWindow::pskSetLocal ()
 {
   auto info = replaceMacros(m_config.my_info(), buildMacroValues(), true);
   psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (), info, QString {"JS8Call v" + version() }.simplified ());
-}
-
-void MainWindow::aprsSetLocal ()
-{
-    auto call = m_config.my_callsign();
-    auto base = Radio::base_callsign(call);
-    auto grid = m_config.my_grid();
-    auto passcode = m_config.aprs_passcode();
-
-    call = APRSISClient::replaceCallsignSuffixWithSSID(call, base);
-
-    qDebug() << "APRSISClient Set Local Station:" << call << grid << passcode;
-    m_aprsClient->setLocalStation(call, grid, passcode);
 }
 
 void MainWindow::transmitDisplay (bool transmitting)
@@ -10833,23 +10768,13 @@ void MainWindow::processCommandActivity() {
                 cd.tdrift = d.tdrift;
                 cd.submode = d.submode;
 
-                if(d.to == "@APRSIS"){
-                    m_aprsCallCache.remove(cd.call);
-                    m_aprsCallCache.remove(APRSISClient::replaceCallsignSuffixWithSSID(cd.call, Radio::base_callsign(cd.call)));
-                }
-
                 logCallActivity(cd, true);
             }
         }
 
-        // PROCESS @JS8NET SPOTS FOR EVERYONE
-        if (d.to == "@JS8NET"){
+        // PROCESS @JS8NET AND @APRSIS SPOTS FOR EVERYONE
+        if (d.to == "@JS8NET" || d.to == "@APRSIS"){
             spotCmd(d);
-        }
-
-        // PROCESS @APRSIS MSG SPOTS FOR EVERYONE
-        if (d.to == "@APRSIS"){
-            spotAPRSMsg(d);
         }
 
         // PREPARE CMD TEXT STRING
@@ -11669,7 +11594,6 @@ void MainWindow::processSpots() {
 
         spotReport(d.freq, d.snr, d.call, d.grid);
         pskLogReport("JS8", d.freq, d.snr, d.call, d.grid);
-        aprsLogReport(d.freq, d.snr, d.call, d.grid);
 
         sendNetworkMessage("RX.SPOT", "", {
             {"DIAL", QVariant(dial)},

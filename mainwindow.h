@@ -46,7 +46,6 @@
 #include "MessageClient.hpp"
 #include "TCPClient.h"
 #include "SpotClient.h"
-#include "APRSISClient.h"
 #include "keyeater.h"
 #include "NotificationAudio.h"
 
@@ -840,7 +839,6 @@ private:
   QMap<int, MessageBuffer> m_messageBuffer; // freq -> (cmd, [frames, ...])
   int m_lastClosedMessageBufferOffset;
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)
-  QMap<QString, QDateTime> m_aprsCallCache;
 
   QMap<QString, QSet<QString>> m_heardGraphOutgoing; // callsign -> [stations who've this callsign has heard]
   QMap<QString, QSet<QString>> m_heardGraphIncoming; // callsign -> [stations who've heard this callsign]
@@ -917,7 +915,6 @@ private:
   TCPClient * m_n3fjpClient;
   PSK_Reporter *psk_Reporter;
   SpotClient *m_spotClient;
-  APRSISClient * m_aprsClient;
   DisplayManual m_manual;
   QHash<QString, QVariant> m_pwrBandTxMemory; // Remembers power level by band
   QHash<QString, QVariant> m_pwrBandTuneMemory; // Remembers power level by band for tuning
@@ -950,12 +947,9 @@ private:
   void rigFailure (QString const& reason);
   void spotSetLocal();
   void pskSetLocal ();
-  void aprsSetLocal ();
   void spotReport(int offset, int snr, QString callsign, QString grid);
   void spotCmd(CommandDetail cmd);
-  void spotAPRSMsg(CommandDetail d);
   void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
-  void aprsLogReport(int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
   void setSubmode(int submode);
   int submodeNameToSubmode(QString speed);

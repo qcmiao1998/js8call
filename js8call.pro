@@ -71,7 +71,6 @@ SOURCES += \
     NetworkMessage.cpp \
     MessageClient.cpp \
     SelfDestructMessageBox.cpp \
-    APRSISClient.cpp \
     messagereplydialog.cpp \
     keyeater.cpp \
     DriftingDateTime.cpp \
@@ -113,7 +112,6 @@ HEADERS  += qt_helpers.hpp \
     NetworkMessage.hpp \
     MessageClient.hpp \
     SelfDestructMessageBox.h \
-    APRSISClient.h \
     messagereplydialog.h \
     keyeater.h \
     DriftingDateTime.h \
