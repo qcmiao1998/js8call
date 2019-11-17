@@ -4991,8 +4991,6 @@ void MainWindow::readFromStdout(QProcess * proc)                             //r
 #endif
   }
 
-
-
   // See MainWindow::postDecode for displaying the latest decodes
 }
 
@@ -5015,7 +5013,6 @@ bool MainWindow::hasExistingMessageBuffer(int submode, int offset, bool drift, i
         if(pPrevOffset) *pPrevOffset = offset;
         return true;
     }
-
 
     int range = rxThreshold(submode);
 

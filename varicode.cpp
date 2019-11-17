@@ -328,12 +328,12 @@ int dbmTomwatts(int dbm){
 }
 
 QString Varicode::escape(const QString &text){
-    // // TODO: support different escapes?
+    // TODO: support different escapes?
     return text;
 }
 
 QString Varicode::unescape(const QString &text){
-    // // TODO: support different escapes?
+    // TODO: support different escapes?
     return text;
 }
 
