@@ -10302,11 +10302,11 @@ void MainWindow::processIdleActivity() {
             continue;
         }
 
-        if(last.utcTimestamp.secsTo(now) < computePeriodForSubmode(last.submode) * 1.50){
+        if(last.text == " . . . "){
             continue;
         }
 
-        if(last.text == " . . . "){
+        if(last.utcTimestamp.secsTo(now) < computePeriodForSubmode(last.submode) * 1.50){
             continue;
         }
 
