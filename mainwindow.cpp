@@ -10302,7 +10302,7 @@ void MainWindow::processIdleActivity() {
             continue;
         }
 
-        if(last.utcTimestamp.secsTo(now) < computePeriodForSubmode(last.submode)){
+        if(last.utcTimestamp.secsTo(now) < computePeriodForSubmode(last.submode) * 1.50){
             continue;
         }
 
