@@ -230,7 +230,7 @@ private slots:
   void on_actionSpecial_mouse_commands_triggered();
   void on_actionSolve_FreqCal_triggered();
   void on_actionCopyright_Notice_triggered();
-  bool decode();
+  bool decode(qint32 k);
   bool isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurrentDecodeStart, qint32 *pNextDecodeStart, qint32 *pStart, qint32 *pSz, qint32 *pCycle);
   bool decodeEnqueueReady(qint32 k, qint32 k0);
   bool decodeProcessQueue(qint32 *pSubmode);

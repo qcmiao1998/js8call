@@ -43,6 +43,8 @@ bool Detector::reset ()
 
 void Detector::clear ()
 {
+  QMutexLocker mutex(&m_lock);
+
 #if JS8_RING_BUFFER
   // set index to roughly where we are in time (1ms resolution)
   qint64 now (DriftingDateTime::currentMSecsSinceEpoch ());
@@ -64,6 +66,8 @@ void Detector::clear ()
 
 qint64 Detector::writeData (char const * data, qint64 maxSize)
 {
+  QMutexLocker mutex(&m_lock);
+
   int ns=secondInPeriod();
   if(ns < m_ns) {                      // When ns has wrapped around to zero, restart the buffers
     dec_data.params.kin = 0;

@@ -2,6 +2,8 @@
 #define DETECTOR_HPP__
 #include "AudioDevice.hpp"
 #include <QScopedArrayPointer>
+#include <QMutex>
+#include <QMutexLocker>
 
 //
 // output device that distributes data in predefined chunks via a signal
@@ -24,6 +26,7 @@ public:
   //
   Detector (unsigned frameRate, unsigned periodLengthInSeconds, unsigned downSampleFactor = 4u, QObject * parent = 0);
 
+  QMutex * getMutex(){ return &m_lock; }
   unsigned period() const {return m_period;}
   void setTRPeriod(unsigned p) {m_period=p;}
   bool reset () override;
@@ -55,6 +58,7 @@ private:
   // data (a signals worth) at
   // the input sample rate
   unsigned m_bufferPos;
+  QMutex m_lock;
 };
 
 #endif

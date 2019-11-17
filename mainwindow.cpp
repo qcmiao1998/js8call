@@ -1496,8 +1496,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // Don't block heartbeat's first run...
   m_lastTxStartTime = DriftingDateTime::currentDateTimeUtc().addSecs(-300);
 
-  // But do block the decoder's first run until the next transmit period
-  m_lastTxStopTime = nextTransmitCycle();
+  // But do block the decoder's first run until 50% through next transmit period
+  m_lastTxStopTime = nextTransmitCycle().addSecs(-m_TRperiod/2);
 
   int width = 75;
   /*
@@ -2687,7 +2687,7 @@ void MainWindow::dataSink(qint64 frames)
 
     m_dateTime = DriftingDateTime::currentDateTimeUtc().toString ("yyyy-MMM-dd hh:mm");
 
-    decode();
+    decode(k);
 }
 
 QString MainWindow::save_wave_file (QString const& name, short const * data, int seconds,
@@ -3801,48 +3801,48 @@ void MainWindow::read_wav_file (QString const& fname)
   m_nutc0=m_UTCdisk;
   m_UTCdisk=fname.mid(i0+1,i1-i0-1).toInt();
   m_wav_future_watcher.setFuture (QtConcurrent::run ([this, fname] {
-        auto basename = fname.mid (fname.lastIndexOf ('/') + 1);
-        auto pos = fname.indexOf (".wav", 0, Qt::CaseInsensitive);
-        // global variables and threads do not mix well, this needs changing
-        dec_data.params.nutc = 0;
-        if (pos > 0)
-          {
-            if (pos == fname.indexOf ('_', -11) + 7)
-              {
-                dec_data.params.nutc = fname.mid (pos - 6, 6).toInt ();
-              }
-            else
-              {
-                dec_data.params.nutc = 100 * fname.mid (pos - 4, 4).toInt ();
-              }
-          }
-        BWFFile file {QAudioFormat {}, fname};
-        bool ok=file.open (BWFFile::ReadOnly);
-        if(ok) {
-          auto bytes_per_frame = file.format ().bytesPerFrame ();
-          qint64 max_bytes = std::min (std::size_t (m_TRperiod * RX_SAMPLE_RATE),
-              sizeof (dec_data.d2) / sizeof (dec_data.d2[0]))* bytes_per_frame;
-          auto n = file.read (reinterpret_cast<char *> (dec_data.d2),
-                            std::min (max_bytes, file.size ()));
-          int frames_read = n / bytes_per_frame;
-        // zero unfilled remaining sample space
-          std::memset(&dec_data.d2[frames_read],0,max_bytes - n);
-          if (11025 == file.format ().sampleRate ()) {
-            short sample_size = file.format ().sampleSize ();
-            wav12_ (dec_data.d2, dec_data.d2, &frames_read, &sample_size);
-          }
-          dec_data.params.kin = frames_read;
-          dec_data.params.newdat = 1;
-        } else {
-          dec_data.params.kin = 0;
-          dec_data.params.newdat = 0;
+      QMutexLocker lock(m_detector->getMutex());
+      auto basename = fname.mid (fname.lastIndexOf ('/') + 1);
+      auto pos = fname.indexOf (".wav", 0, Qt::CaseInsensitive);
+      // global variables and threads do not mix well, this needs changing
+      dec_data.params.nutc = 0;
+      if (pos > 0)
+        {
+          if (pos == fname.indexOf ('_', -11) + 7)
+            {
+              dec_data.params.nutc = fname.mid (pos - 6, 6).toInt ();
+            }
+          else
+            {
+              dec_data.params.nutc = 100 * fname.mid (pos - 4, 4).toInt ();
+            }
         }
-
-        if(basename.mid(0,10)=="000000_000" && m_mode == "FT8") {
-          dec_data.params.nutc=15*basename.mid(10,3).toInt();
+      BWFFile file {QAudioFormat {}, fname};
+      bool ok=file.open (BWFFile::ReadOnly);
+      if(ok) {
+        auto bytes_per_frame = file.format ().bytesPerFrame ();
+        qint64 max_bytes = std::min (std::size_t (m_TRperiod * RX_SAMPLE_RATE),
+            sizeof (dec_data.d2) / sizeof (dec_data.d2[0]))* bytes_per_frame;
+        auto n = file.read (reinterpret_cast<char *> (dec_data.d2),
+                          std::min (max_bytes, file.size ()));
+        int frames_read = n / bytes_per_frame;
+      // zero unfilled remaining sample space
+        std::memset(&dec_data.d2[frames_read],0,max_bytes - n);
+        if (11025 == file.format ().sampleRate ()) {
+          short sample_size = file.format ().sampleSize ();
+          wav12_ (dec_data.d2, dec_data.d2, &frames_read, &sample_size);
         }
+        dec_data.params.kin = frames_read;
+        dec_data.params.newdat = 1;
+      } else {
+        dec_data.params.kin = 0;
+        dec_data.params.newdat = 0;
+      }
 
-      }));
+      if(basename.mid(0,10)=="000000_000" && m_mode == "FT8") {
+        dec_data.params.nutc=15*basename.mid(10,3).toInt();
+      }
+    }));
 }
 
 void MainWindow::on_actionOpen_next_in_directory_triggered()   //Open Next
@@ -3880,9 +3880,14 @@ void MainWindow::on_actionDecode_remaining_files_in_directory_triggered()
   on_actionOpen_next_in_directory_triggered();
 }
 
-void MainWindow::diskDat()                                   //diskDat()
-{
-  if(dec_data.params.kin>0) {
+void MainWindow::diskDat(){
+    QMutexLocker mutex(m_detector->getMutex());
+
+    if(dec_data.params.kin<=0) {
+        MessageBox::information_message(this, tr("No data read from disk. Wrong file format?"));
+        return;
+    }
+
     int k;
     int kstep=m_FFTSize;
     m_diskData=true;
@@ -3891,15 +3896,12 @@ void MainWindow::diskDat()                                   //diskDat()
     float bw=m_config.RxBandwidth();
     if(db > 0.0) degrade_snr_(dec_data.d2,&dec_data.params.kin,&db,&bw);
     for(int n=1; n<=m_hsymStop; n++) {                      // Do the waterfall spectra
-      k=(n+1)*kstep;
-      if(k > dec_data.params.kin) break;
-      dec_data.params.npts8=k/8;
-      dataSink(k);
-      qApp->processEvents();                                //Update the waterfall
+        k=(n+1)*kstep;
+        if(k > dec_data.params.kin) break;
+        dec_data.params.npts8=k/8;
+        dataSink(k);
+        qApp->processEvents();                                //Update the waterfall
     }
-  } else {
-    MessageBox::information_message(this, tr("No data read from disk. Wrong file format?"));
-  }
 }
 
 //Delete ../save/*.wav
@@ -4036,9 +4038,8 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
  *        try decoding
  * @return true if the decoder was activated, false otherwise
  */
-bool MainWindow::decode(){
+bool MainWindow::decode(qint32 k){
     static int k0 = 9999999;
-    int k = dec_data.params.kin;
     int kZero = k0;
     k0 = k;
 
@@ -4406,7 +4407,10 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
  *        copy the dec_data structure to shared memory and
  *        remove the lock file to start the decoding process
  */
-void MainWindow::decodeStart(){
+void MainWindow::decodeStart(){    
+    // critical section
+    QMutexLocker mutex(m_detector->getMutex());
+
     if(m_decoderBusy){
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder cannot start...busy (busy flag)";
         return;
@@ -6466,7 +6470,7 @@ bool MainWindow::isMessageQueuedForTransmit(){
 }
 
 bool MainWindow::isInDecodeDelayThreshold(int ms){
-    if(m_lastTxStopTime.isNull()){
+    if(!m_lastTxStopTime.isValid() || m_lastTxStopTime.isNull()){
         return false;
     }
 
