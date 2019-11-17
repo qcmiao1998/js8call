@@ -1574,7 +1574,7 @@ void MainWindow::initDecoderSubprocess(){
     }
 
     //Create .lock so jt9 will wait
-    if(JS8_DEBUG_DECODE) qDebug() << "decoder lock open";
+    if(JS8_DEBUG_DECODE) qDebug() << "decoder lock create";
     QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.open(QIODevice::ReadWrite);
 
     QStringList js8_args {
@@ -3560,7 +3560,7 @@ void MainWindow::closeEvent(QCloseEvent * e)
   mem_js8->detach();
   QFile quitFile {m_config.temp_dir ().absoluteFilePath (".quit")};
   quitFile.open(QIODevice::ReadWrite);
-  if(JS8_DEBUG_DECODE) qDebug() << "decoder lock close";
+  if(JS8_DEBUG_DECODE) qDebug() << "decoder lock remove";
   QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove(); // Allow jt9 to terminate
   if(!proc_js8.isNull()){
       bool b=proc_js8->waitForFinished(1000);
@@ -4452,7 +4452,7 @@ void MainWindow::decodeStart(){
 
         memcpy(to, from, qMin(mem_js8->size(), size));
     }
-    if(JS8_DEBUG_DECODE) qDebug() << "decoder lock close";
+    if(JS8_DEBUG_DECODE) qDebug() << "decoder lock remove";
     lock.remove(); // Allow decoder to start
 }
 
@@ -4481,16 +4481,16 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
  */
 void MainWindow::decodeDone ()
 {
-  if(JS8_DEBUG_DECODE) qDebug() << "decoder lock open";
+  if(JS8_DEBUG_DECODE) qDebug() << "decoder lock create";
   QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.open(QIODevice::ReadWrite);
   dec_data.params.newdat=0;
   dec_data.params.nagain=0;
   dec_data.params.ndiskdat=0;
   m_nclearave=0;
-  decodeBusy(false);
   m_RxLog=0;
   m_blankLine=true;
   m_messageDupeCache.clear();
+  decodeBusy(false);
 }
 
 /**
@@ -4530,22 +4530,24 @@ void MainWindow::decodeCheckHangingDecoder(){
         return;
     }
 
-    if(m_decoderBusyStartTime.isValid() && m_decoderBusyStartTime.secsTo(DriftingDateTime::currentDateTimeUtc()) > 60){
-        m_decoderBusyStartTime = QDateTime();
-
-        SelfDestructMessageBox * m = new SelfDestructMessageBox(60,
-          "Decoder Hang",
-          "The JS8 decoder is having trouble and is now restarting.",
-          QMessageBox::Warning,
-          QMessageBox::Ok,
-          QMessageBox::Ok,
-          false,
-          this);
-
-        m->show();
-
-        initDecoderSubprocess();
+    if(!m_decoderBusyStartTime.isValid() || m_decoderBusyStartTime.secsTo(DriftingDateTime::currentDateTimeUtc()) < 60){
+        return;
     }
+
+    m_decoderBusyStartTime = QDateTime();
+
+    SelfDestructMessageBox * m = new SelfDestructMessageBox(30,
+      "Decoder Restart",
+      "The JS8 decoder is restarting.",
+      QMessageBox::Warning,
+      QMessageBox::Ok,
+      QMessageBox::Ok,
+      false,
+      this);
+
+    m->show();
+
+    initDecoderSubprocess();
 }
 
 void MainWindow::writeAllTxt(QString message, int bits)
