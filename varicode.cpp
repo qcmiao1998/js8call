@@ -252,6 +252,14 @@ QMap<QString, quint32> basecalls = {
     // special groups
     { "@APRSIS",    nbasecall + 33 }, // APRS GROUP
     { "@RAGCHEW",   nbasecall + 34 }, // RAGCHEW GROUP
+    { "@JS8",       nbasecall + 35 }, // JS8 GROUP
+    { "@EMCOMM",    nbasecall + 36 }, // EMCOMM GROUP
+    { "@ARES",      nbasecall + 37 }, // ARES GROUP
+    { "@MARS",      nbasecall + 38 }, // MARS GROUP
+    { "@AMRRON",    nbasecall + 39 }, // AMRRON GROUP
+    { "@RACES",     nbasecall + 40 }, // RACES GROUP
+    { "@RAYNET",    nbasecall + 41 }, // RAYNET GROUP
+    { "@RADAR",     nbasecall + 42 }, // RADAR GROUP
 };
 
 QMap<quint32, QString> cqs = {
