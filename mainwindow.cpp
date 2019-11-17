@@ -4076,6 +4076,8 @@ bool MainWindow::decode(qint32 k){
         return false;
     }
 
+    // critical section (modifying dec_data)
+
     qint32 submode = -1;
     if(!decodeProcessQueue(&submode)){
         return false;
@@ -4211,6 +4213,9 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
  * @return true if the decoder is ready to be run, false otherwise
  */
 bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
+    // critical section
+    QMutexLocker mutex(m_detector->getMutex());
+
     if(m_decoderBusy){
         int seconds = m_decoderBusyStartTime.secsTo(DriftingDateTime::currentDateTimeUtc());
         if(seconds > 60){
@@ -4481,6 +4486,9 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
  */
 void MainWindow::decodeDone ()
 {
+  // critical section
+  QMutexLocker mutex(m_detector->getMutex());
+
   if(JS8_DEBUG_DECODE) qDebug() << "decoder lock create";
   QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.open(QIODevice::ReadWrite);
   dec_data.params.newdat=0;
@@ -4490,6 +4498,7 @@ void MainWindow::decodeDone ()
   m_RxLog=0;
   m_blankLine=true;
   m_messageDupeCache.clear();
+
   decodeBusy(false);
 }
 
@@ -4500,7 +4509,7 @@ void MainWindow::decodeDone ()
  */
 void MainWindow::decodePrepareSaveAudio(int submode){
     if(m_diskData){
-      return;
+        return;
     }
 
     int period = computePeriodForSubmode(submode);
@@ -4650,7 +4659,7 @@ QList<int> generateOffsets(int minOffset, int maxOffset){
 
 void MainWindow::readFromStdout(QProcess * proc)                             //readFromStdout
 {
-  if(!proc || proc->state() != QProcess::Running){
+  if(!proc || proc->state() == QProcess::NotRunning){
     return;
   }
 
