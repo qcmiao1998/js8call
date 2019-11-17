@@ -71,14 +71,6 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
     nfox=0
   endif
 
-  if(ios.ne.0) then
-     nfail=nfail+1
-     if(nfail.le.3) then
-        call sleep_msec(10)
-        go to 10
-     endif
-  endif
-
   trydecode=.false.
 
   if(params%nmode.eq.8 .and. (params%nsubmode.eq.4 .or. iand(params%nsubmodes, 8).eq.8)) then
@@ -163,43 +155,6 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
 
   if(trydecode) go to 800
 
-  rms=sqrt(dot_product(float(id2(300000:310000)),            &
-       float(id2(300000:310000)))/10000.0)
-  if(rms.lt.2.0) go to 800
-
-! Zap data at start that might come from T/R switching transient?
-  nadd=100
-  k=0
-  bad0=.false.
-  do i=1,240
-     sq=0.
-     do n=1,nadd
-        k=k+1
-        sq=sq + float(id2(k))**2
-     enddo
-     rms=sqrt(sq/nadd)
-     if(rms.gt.10000.0) then
-        bad0=.true.
-        kbad=k
-        rmsbad=rms
-     endif
-  enddo
-  if(bad0) then
-     nz=min(NTMAX*12000,kbad+100)
-!     id2(1:nz)=0                ! temporarily disabled as it can breaak the JT9 decoder, maybe others
-  endif
-  
-  npts65=52*12000
-  if(baddata(id2,npts65)) then
-     nsynced=0
-     ndecoded=0
-     go to 800
-  endif
- 
-  ntol65=params%ntol              !### is this OK? ###
-  newdat65=params%newdat
-  newdat9=params%newdat
-
 !$call omp_set_dynamic(.true.)
 
 800 ndecoded = my_js8a%decoded + my_js8b%decoded + my_js8c%decoded + my_js8e%decoded
@@ -219,7 +174,7 @@ contains
     real, intent(in) :: freq
     character(len=37), intent(in) :: decoded
     character c1*12,c2*12,g2*4,w*4
-    integer i0,i1,i2,i3,i4,i5,n30,nwrap
+    integer i0,i1,i2,i3,i4,i5,n30,nwrap,n
     integer, intent(in) :: nap 
     real, intent(in) :: qual 
     integer, intent(in) :: submode
