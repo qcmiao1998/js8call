@@ -130,7 +130,6 @@ public slots:
   bool tryRestoreFreqOffset();
   void setFreq4(int rxFreq, int txFreq);
 
-  void playSoundFile(const QString &path);
   bool hasExistingMessageBufferToMe(int *pOffset);
   bool hasExistingMessageBuffer(int submode, int offset, bool drift, int *pPrevOffset);
   bool hasClosedExistingMessageBuffer(int offset);

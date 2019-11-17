@@ -4996,16 +4996,6 @@ void MainWindow::readFromStdout(QProcess * proc)                             //r
   // See MainWindow::postDecode for displaying the latest decodes
 }
 
-void MainWindow::playSoundFile(const QString &path){
-    if(path.isEmpty()){
-        return;
-    }
-
-    qDebug() << "Trying to play sound file" << path;
-
-    QSound::play(path);
-}
-
 bool MainWindow::hasExistingMessageBufferToMe(int *pOffset){
     foreach(auto offset, m_messageBuffer.keys()){
         auto buffer = m_messageBuffer[offset];
