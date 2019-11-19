@@ -1604,9 +1604,6 @@ void MainWindow::initDecoderSubprocess(){
     if(JS8_DEBUG_DECODE) qDebug() << "decoder subprocess starting...";
 
     auto proc = new QProcess(this);
-    proc->setProcessEnvironment (env);
-    proc->start(QDir::toNativeSeparators (m_appDir) + QDir::separator () +
-            "js8", js8_args, QIODevice::ReadWrite | QIODevice::Unbuffered);
 
     connect(proc, &QProcess::readyReadStandardOutput, this,
             [this, proc](){
@@ -1620,8 +1617,27 @@ void MainWindow::initDecoderSubprocess(){
 
     connect(proc, static_cast<void (QProcess::*) (int, QProcess::ExitStatus)> (&QProcess::finished),
             [this, proc] (int exitCode, QProcess::ExitStatus status) {
+              proc->deleteLater();
+              proc->thread()->quit();
               subProcessFailed (proc, exitCode, status);
             });
+
+    proc->setProcessEnvironment (env);
+    proc->start(QDir::toNativeSeparators (m_appDir) + QDir::separator () +
+            "js8", js8_args, QIODevice::ReadWrite | QIODevice::Unbuffered);
+
+    // create a process watcher looking for stdout read...
+    // seems like we're starving the event loop or something?
+    // auto watcher = new QTimer(proc);
+    // watcher->setInterval(500);
+    // connect(watcher, &QTimer::timeout, this,
+    //         [this, proc](){
+    //             if(proc->canReadLine()){
+    //                 if(JS8_DEBUG_DECODE) qDebug() << "decode process watcher intercepted readline";
+    //                 readFromStdout(proc);
+    //             }
+    //         });
+    // watcher->start();
 
     // kill the previous proc and set the new one
     m_valid = false;
@@ -4371,8 +4387,8 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nmode=8;
     dec_data.params.lft8apon = false;
     dec_data.params.napwid=50;
-    dec_data.params.ntrperiod=period; //m_TRperiod;
-    dec_data.params.nsubmode=submode; // m_nSubMode;
+    dec_data.params.ntrperiod=-1; // not needed
+    dec_data.params.nsubmode=-1;  // not needed
     dec_data.params.minw=0;
     dec_data.params.nclearave=m_nclearave;
 
@@ -4660,6 +4676,7 @@ QList<int> generateOffsets(int minOffset, int maxOffset){
 void MainWindow::readFromStdout(QProcess * proc)                             //readFromStdout
 {
   if(!proc || proc->state() == QProcess::NotRunning){
+    qDebug() << "proc not running";
     return;
   }
 
@@ -4669,9 +4686,19 @@ void MainWindow::readFromStdout(QProcess * proc)                             //r
 
       bool bAvgMsg=false;
       int navg=0;
+      if(t.indexOf("<DecodeDebug>") >= 0) {
+        if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
+        return;
+      }
+
+      if(t.indexOf("<DecodeStarted>") >= 0) {
+        if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
+        return;
+      }
+
       if(t.indexOf("<DecodeFinished>") >= 0) {
         if(m_mode=="QRA64") m_wideGraph->drawRed(0,0);
-        m_bDecoded = t.mid(20).trimmed().toInt() > 0;
+        m_bDecoded = t.mid(16).trimmed().toInt() > 0;
         int mswait=3*1000*m_TRperiod/4;
         if(!m_diskData) killFileTimer.start(mswait); //Kill in 3/4 period
         decodeDone();

@@ -71,13 +71,14 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
     nfox=0
   endif
 
-  trydecode=.false.
+  write(*,1012) params%nsubmode, params%nsubmodes
+1012 format('<DecodeStarted>',2i4)
 
   if(params%nmode.eq.8 .and. (params%nsubmode.eq.4 .or. iand(params%nsubmodes, 8).eq.8)) then
 ! We're in JS8 mode E
      call timer('decjs8e ',0)
      newdat=params%newdat
-     trydecode=.true.
+     write(*,*) '<DecodeDebug> mode E decode started'
 
      ! copy the relevant frames for decoding
      pos = max(0,params%kposE)
@@ -90,6 +91,9 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
           mycall,mygrid,hiscall,hisgrid)
+
+     write(*,*) '<DecodeDebug> mode E decode finished'
+     
      call timer('decjs8e ',1)
   endif
 
@@ -97,7 +101,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
 ! We're in JS8 mode C
      call timer('decjs8c ',0)
      newdat=params%newdat
-     trydecode=.true.
+     write(*,*) '<DecodeDebug> mode C decode started'
 
      ! copy the relevant frames for decoding
      pos = max(0,params%kposC)
@@ -110,6 +114,9 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
           mycall,mygrid,hiscall,hisgrid)
+
+     write(*,*) '<DecodeDebug> mode C decode finished'
+     
      call timer('decjs8c ',1)
   endif
 
@@ -117,7 +124,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
 ! We're in JS8 mode B
      call timer('decjs8b ',0)
      newdat=params%newdat
-     trydecode=.true.
+     write(*,*) '<DecodeDebug> mode B decode started'
 
      ! copy the relevant frames for decoding
      pos = max(0,params%kposB)
@@ -130,6 +137,9 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
           mycall,mygrid,hiscall,hisgrid)
+
+     write(*,*) '<DecodeDebug> mode B decode finished'
+     
      call timer('decjs8b ',1)
   endif
 
@@ -137,7 +147,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
 ! We're in JS8 mode A
      call timer('decjs8a ',0)
      newdat=params%newdat
-     trydecode=.true.
+     write(*,*) '<DecodeDebug> mode A decode started'
 
      ! copy the relevant frames for decoding
      pos = max(0,params%kposA)
@@ -150,16 +160,19 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
           mycall,mygrid,hiscall,hisgrid)
+
+     write(*,*) '<DecodeDebug> mode A decode finished'
+
      call timer('decjs8a ',1)
   endif
 
-  if(trydecode) go to 800
+  write(*,*) '<DecodeDebug> finished'
+  call flush(6)
 
-!$call omp_set_dynamic(.true.)
-
-800 ndecoded = my_js8a%decoded + my_js8b%decoded + my_js8c%decoded + my_js8e%decoded
-  write(*,1010) nsynced,ndecoded
-1010 format('<DecodeFinished>',2i4)
+  ndecoded = my_js8a%decoded + my_js8b%decoded + my_js8c%decoded + my_js8e%decoded
+  call sleep_msec(3000)
+  write(*,1010) ndecoded
+1010 format('<DecodeFinished>',i4)
   call flush(6)
   return
 
