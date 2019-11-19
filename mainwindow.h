@@ -164,6 +164,7 @@ public slots:
   void tryNotify(const QString &key);
   int rxThreshold(int submode);
   int rxSnrThreshold(int submode);
+  void processDecodedLine(QByteArray t);
 
 protected:
   void keyPressEvent (QKeyEvent *) override;
@@ -430,6 +431,7 @@ private slots:
   void refreshTextDisplay();
 
 private:
+  Q_SIGNAL void decodedLineReady(QByteArray t);
   Q_SIGNAL void playNotification(const QString &name);
   Q_SIGNAL void initializeNotificationAudioOutputStream(const QAudioDeviceInfo &, unsigned, unsigned) const;
   Q_SIGNAL void initializeAudioOutputStream (QAudioDeviceInfo,

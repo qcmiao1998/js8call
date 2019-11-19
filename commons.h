@@ -10,6 +10,7 @@
 #define JS8_USE_IHSYM      0       // compute ihsym manually instead of from symspec
 #define JS8_RING_BUFFER    1       // use a ring buffer instead of clearing the decode frames
 #define JS8_SINGLE_DECODE  0       // single submode decode per instantiation of the decoder
+#define JS8_DECODE_THREAD  1       // use a separate thread for decode process handling
 
 #ifdef QT_DEBUG
 #define JS8_DEBUG_DECODE   1       // emit debug statements for the decode pipeline

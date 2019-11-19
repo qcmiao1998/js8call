@@ -170,7 +170,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   call flush(6)
 
   ndecoded = my_js8a%decoded + my_js8b%decoded + my_js8c%decoded + my_js8e%decoded
-  call sleep_msec(3000)
+  !call sleep_msec(3000)
   write(*,1010) ndecoded
 1010 format('<DecodeFinished>',i4)
   call flush(6)
