@@ -63,11 +63,8 @@ subroutine jt9a()
   call timer('decoder ',0)
   call multimode_decoder(shared_data%ss,shared_data%id2,local_params,12000)
   call timer('decoder ',1)
-
-100 inquire(file=trim(temp_dir)//'/.lock',exist=fileExists)
-  if(fileExists) go to 10
-  call sleep_msec(msdelay)
-  go to 100
+  call sleep_msec(100)
+  go to 10
 
 999 call timer('decoder ',101)
 
