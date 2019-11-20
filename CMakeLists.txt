@@ -253,6 +253,8 @@ set (wsjtx_CXXSRCS
   WaveFile.cpp
   AudioDecoder.cpp
   NotificationAudio.cpp
+  ProcessThread.cpp
+  Decoder.cpp
   )
 
 set (wsjt_CXXSRCS

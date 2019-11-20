@@ -419,6 +419,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_downSampleFactor (downSampleFactor),
   m_audioThreadPriority (QThread::HighPriority),
   m_notificationAudioThreadPriority (QThread::LowPriority),
+  m_decoderThreadPriority (QThread::HighPriority),
+  m_decoder {this},
   m_bandEdited {false},
   m_splitMode {false},
   m_monitoring {false},
@@ -537,7 +539,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 #endif
 
   // decoder queue handler
-  connect(this, &MainWindow::decodedLineReady, this, &MainWindow::processDecodedLine);
+  //connect (&m_decodeThread, &QThread::finished, m_notification, &QObject::deleteLater);
+  //connect(this, &MainWindow::decodedLineReady, this, &MainWindow::processDecodedLine);
+  connect(&m_decoder, &Decoder::ready, this, &MainWindow::processDecodedLine);
 
   on_EraseButton_clicked ();
 
@@ -807,6 +811,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   m_audioThread.start (m_audioThreadPriority);
   m_notificationAudioThread.start(m_notificationAudioThreadPriority);
+  m_decoder.start(m_decoderThreadPriority);
 
 #ifdef WIN32
   if (!m_multiple)
@@ -1561,17 +1566,17 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 }
 
 void MainWindow::initDecoderSubprocess(){
+    //delete any .quit file that might have been left lying around
+    //since its presence will cause jt9 to exit a soon as we start it
+    //and decodes will hang
     {
-      //delete any .quit file that might have been left lying around
-      //since its presence will cause jt9 to exit a soon as we start it
-      //and decodes will hang
-      QFile quitFile {m_config.temp_dir ().absoluteFilePath (".quit")};
-      while (quitFile.exists ())
+        QFile quitFile {m_config.temp_dir ().absoluteFilePath (".quit")};
+        while (quitFile.exists ())
         {
-          if (!quitFile.remove ())
+            if (!quitFile.remove ())
             {
-              MessageBox::query_message (this, tr ("Error removing \"%1\"").arg (quitFile.fileName ())
-                                         , tr ("Click OK to retry"));
+                MessageBox::query_message (this, tr ("Error removing \"%1\"").arg (quitFile.fileName ())
+                                 , tr ("Click OK to retry"));
             }
         }
     }
@@ -1580,7 +1585,11 @@ void MainWindow::initDecoderSubprocess(){
     if(JS8_DEBUG_DECODE) qDebug() << "decoder lock create";
     QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.open(QIODevice::ReadWrite);
 
-    QStringList js8_args {
+    // create path
+    QString path = QDir::toNativeSeparators(m_appDir) + QDir::separator() + "js8";
+
+    // create args
+    QStringList args {
       "-s", QApplication::applicationName () // shared memory key,
                                              // includes rig
   #ifdef NDEBUG
@@ -1599,79 +1608,10 @@ void MainWindow::initDecoderSubprocess(){
         , "-e", QDir::toNativeSeparators (m_appDir)
         , "-a", QDir::toNativeSeparators (m_config.writeable_data_dir ().absolutePath ())
         , "-t", QDir::toNativeSeparators (m_config.temp_dir ().absolutePath ())
-        };
+    };
 
-    QProcessEnvironment env {QProcessEnvironment::systemEnvironment ()};
-    env.insert ("OMP_STACKSIZE", "4M");
-
-    if(JS8_DEBUG_DECODE) qDebug() << "decoder subprocess starting...";
-
-#if JS8_DECODE_THREAD
-    auto thread = new QThread(nullptr);
-#endif
-
-    auto proc = new QProcess(nullptr);
-
-    connect(proc, &QProcess::readyReadStandardOutput, this,
-            [this, proc](){
-#if JS8_DECODE_THREAD
-                while(proc->canReadLine()){
-                    emit decodedLineReady(proc->readLine());
-                }
-#else
-                readFromStdout(proc);
-#endif
-            });
-
-    connect(proc, static_cast<void (QProcess::*) (QProcess::ProcessError)> (&QProcess::error),
-            [this, proc] (QProcess::ProcessError error) {
-              subProcessError (proc, error);
-            });
-
-    connect(proc, static_cast<void (QProcess::*) (int, QProcess::ExitStatus)> (&QProcess::finished),
-            [this, proc] (int exitCode, QProcess::ExitStatus status) {
-#if JS8_DECODE_THREAD
-              proc->deleteLater();
-              proc->thread()->quit();
-#endif
-              subProcessFailed (proc, exitCode, status);
-            });
-
-    proc->setProcessEnvironment (env);
-    proc->start(QDir::toNativeSeparators (m_appDir) + QDir::separator () +
-            "js8", js8_args, QIODevice::ReadWrite | QIODevice::Unbuffered);
-
-#if JS8_DECODE_THREAD
-    if(JS8_DEBUG_DECODE) qDebug() << "decoder subprocess moving to new thread...";
-    // move process handling into its own thread
-    proc->moveToThread(thread);
-    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
-    thread->moveToThread(qApp->thread());
-    thread->start(QThread::HighPriority);
-#endif
-
-    // create a process watcher looking for stdout read...
-    // seems like we're starving the event loop or something?
-    // auto watcher = new QTimer(proc);
-    // watcher->setInterval(500);
-    // connect(watcher, &QTimer::timeout, this,
-    //         [this, proc](){
-    //             if(proc->canReadLine()){
-    //                 if(JS8_DEBUG_DECODE) qDebug() << "decode process watcher intercepted readline";
-    //                 readFromStdout(proc);
-    //             }
-    //         });
-    // watcher->start();
-
-    // kill the previous proc and set the new one
-    m_valid = false;
-    {
-        if(!proc_js8.isNull()){
-            proc_js8->kill();
-        }
-        proc_js8.reset(proc);
-    }
-    m_valid = true;
+    // initialize
+    m_decoder.processStart(path, args);
 
     // reset decode busy
     if(m_decoderBusy){
@@ -2194,6 +2134,9 @@ MainWindow::~MainWindow()
   m_notificationAudioThread.quit();
   m_notificationAudioThread.wait();
 
+  m_decoder.quit();
+  m_decoder.wait();
+
   remove_child_from_event_filter (this);
 }
 
@@ -2468,6 +2411,8 @@ void MainWindow::readSettings()
   m_msAudioOutputBuffered = m_settings->value ("Audio/OutputBufferMs").toInt ();
   m_framesAudioInputBuffered = m_settings->value ("Audio/InputBufferFrames", RX_SAMPLE_RATE / 10).toInt ();
   m_audioThreadPriority = static_cast<QThread::Priority> (m_settings->value ("Audio/ThreadPriority", QThread::HighPriority).toInt () % 8);
+  m_notificationAudioThreadPriority = static_cast<QThread::Priority> (m_settings->value ("Audio/NotificationThreadPriority", QThread::LowPriority).toInt () % 8);
+  m_decoderThreadPriority = static_cast<QThread::Priority> (m_settings->value ("Audio/DecoderThreadPriority", QThread::HighPriority).toInt () % 8);
   m_settings->endGroup ();
 
   if(m_config.reset_activity()){
@@ -3600,14 +3545,12 @@ void MainWindow::closeEvent(QCloseEvent * e)
   mem_js8->detach();
   QFile quitFile {m_config.temp_dir ().absoluteFilePath (".quit")};
   quitFile.open(QIODevice::ReadWrite);
-  if(JS8_DEBUG_DECODE) qDebug() << "decoder lock remove";
-  QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove(); // Allow jt9 to terminate
-  if(!proc_js8.isNull()){
-      bool b=proc_js8->waitForFinished(1000);
-      if(!b) proc_js8->close();
+  {
+      if(JS8_DEBUG_DECODE) qDebug() << "decoder lock remove";
+      QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove(); // Allow jt9 to terminate
+      m_decoder.processQuit();
   }
   quitFile.remove();
-
   Q_EMIT finished ();
 
   QMainWindow::closeEvent (e);

@@ -48,6 +48,8 @@
 #include "SpotClient.h"
 #include "keyeater.h"
 #include "NotificationAudio.h"
+#include "ProcessThread.h"
+#include "Decoder.h"
 
 #define NUM_JT4_SYMBOLS 206                //(72+31)*2, embedded sync
 #define NUM_JT65_SYMBOLS 126               //63 data + 63 sync
@@ -500,8 +502,10 @@ private:
   Modulator * m_modulator;
   SoundOutput * m_soundOutput;
   NotificationAudio * m_notification;
+
   QThread m_audioThread;
   QThread m_notificationAudioThread;
+  Decoder m_decoder;
 
   qint64  m_msErase;
   qint64  m_secBandChanged;
@@ -665,7 +669,7 @@ private:
   QFutureWatcher<void> watcher3;
   QFutureWatcher<QString> m_saveWAVWatcher;
 
-  QScopedPointer<QProcess> proc_js8;
+  //QPointer<QProcess> proc_js8;
 
   QTimer m_guiTimer;
   QTimer ptt1Timer;                 //StartTx delay
@@ -897,6 +901,7 @@ private:
   unsigned m_downSampleFactor;
   QThread::Priority m_audioThreadPriority;
   QThread::Priority m_notificationAudioThreadPriority;
+  QThread::Priority m_decoderThreadPriority;
   bool m_bandEdited;
   bool m_splitMode;
   bool m_monitoring;

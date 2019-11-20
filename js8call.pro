@@ -88,7 +88,10 @@ SOURCES += \
     CallsignValidator.cpp \
     AudioDecoder.cpp \
     WaveFile.cpp \
-    WaveUtils.cpp
+    WaveUtils.cpp \
+    ProcessThread.cpp \
+    DecoderThread.cpp \
+    Decoder.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -127,7 +130,10 @@ HEADERS  += qt_helpers.hpp \
     NotificationAudio.h \
     AudioDecoder.h \
     WaveFile.h \
-    WaveUtils.h
+    WaveUtils.h \
+    ProcessThread.h \
+    DecoderThread.h \
+    Decoder.h
 
 
 INCLUDEPATH += qmake_only
