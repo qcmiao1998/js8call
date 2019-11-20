@@ -62,11 +62,6 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
 
     bits_ = bits();
 
-    // don't even try to unpack -24dB frames...they are *very* likely to be false decodes...
-    if(snr() <= -24){
-        return;
-    }
-
     tryUnpack();
 }
 
