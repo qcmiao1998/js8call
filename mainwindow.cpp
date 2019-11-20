@@ -4697,27 +4697,8 @@ void MainWindow::processDecodedLine(QByteArray t){
     }
   }
 
-  QFile f {m_config.writeable_data_dir ().absoluteFilePath ("ALL.TXT")};
-  if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
-    QTextStream out(&f);
-    if(m_RxLog==1) {
-      out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
-          << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
-          << "JS8" << endl;
-      m_RxLog=0;
-    }
-    int n=t.length();
-    auto logText = t.mid(0, n-2);
-    auto dt = DecodedText(logText, false, m_config.my_grid());
-    out << logText << "  " << dt.message() << endl;
-    f.close();
-  } else {
-    MessageBox::warning_message (this, tr ("File Open Error")
-                                 , tr ("Cannot open \"%1\" for append: %2")
-                                 .arg (f.fileName ()).arg (f.errorString ()));
-  }
-
-  DecodedText decodedtext {QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"}), "FT8" == m_mode &&
+  auto rawText = QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"});
+  DecodedText decodedtext {rawText, "FT8" == m_mode &&
         ui->cbVHFcontest->isChecked(), m_config.my_grid ()};
 
   bool bValidFrame = decodedtext.snr() >= rxSnrThreshold(decodedtext.submode());
@@ -4743,6 +4724,11 @@ void MainWindow::processDecodedLine(QByteArray t){
   if(!bValidFrame) {
       return;
   }
+
+  // log valid frames to ALL.txt (and correct their timestamp format)
+  auto date = DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd");
+  auto time = rawText.left(2) + ":" + rawText.mid(2, 2) + ":" + rawText.mid(4, 2);
+  writeAllTxt(date + " " + time + rawText.mid(7) + " " + decodedtext.message(), decodedtext.bits());
 
   ActivityDetail d = {};
   CallDetail cd = {};
