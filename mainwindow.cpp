@@ -4053,7 +4053,7 @@ bool MainWindow::decode(qint32 k){
         return false;
     }
 
-    int threshold = 1000; // one second
+    int threshold = 2000; // two seconds
     if(isInDecodeDelayThreshold(threshold)){
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused for" << threshold << "ms after transmit stop";
         return false;
