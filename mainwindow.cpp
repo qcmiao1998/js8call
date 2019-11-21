@@ -7177,8 +7177,11 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
     QUdpSocket _sock;
     auto rzult = _sock.writeDatagram (ADIF + " <eor>", n1mmhost, quint16(m_config.n1mm_server_port()));
     if (rzult == -1) {
+      bool hidden = m_logDlg->isHidden();
+      m_logDlg->setHidden(true);
       MessageBox::warning_message (this, tr ("Error sending log to N1MM"),
                                    tr ("Write returned \"%1\"").arg (rzult));
+      m_logDlg->setHidden(hidden);
     }
   }
 
@@ -7246,8 +7249,11 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
             m_n3fjpClient->sendNetworkMessage(host, port, "\r\n", true, 100);
           });
       } else {
+          bool hidden = m_logDlg->isHidden();
+          m_logDlg->setHidden(true);
           MessageBox::warning_message (this, tr ("Error sending log to N3FJP"),
                                        tr ("Write failed for \"%1:%2\"").arg (host).arg(port));
+          m_logDlg->setHidden(hidden);
       }
   }
 

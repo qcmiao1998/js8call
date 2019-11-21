@@ -320,10 +320,10 @@ void LogQSO::accept()
     f.close();
   }
 
+  Q_EMIT acceptQSO (m_dateTimeOff, hisCall, hisGrid, m_dialFreq, mode, submode, rptSent, rptRcvd, comments, name,m_dateTimeOn, operator_call, m_myCall, m_myGrid, ADIF, additionalFields);
+
   //Clean up and finish logging
   ui->call->clear();
-
-  Q_EMIT acceptQSO (m_dateTimeOff, hisCall, hisGrid, m_dialFreq, mode, submode, rptSent, rptRcvd, comments, name,m_dateTimeOn, operator_call, m_myCall, m_myGrid, ADIF, additionalFields);
 
   QDialog::accept();
 }
