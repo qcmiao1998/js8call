@@ -11,7 +11,7 @@
 
 #include "AudioDevice.hpp"
 #include "AudioDecoder.h"
-#include "WaveFile.h"
+#include "Audio/BWFFile.hpp"
 #include "soundout.h"
 
 
@@ -25,6 +25,8 @@ public:
     ~NotificationAudio();
 
 public slots:
+    void status(QString message);
+    void error(QString message);
     void setDevice(const QAudioDeviceInfo &device, unsigned channels, unsigned msBuffer=0);
     void play(const QString &filePath);
     void stop();
@@ -32,7 +34,7 @@ public slots:
 private:
     QPointer<SoundOutput> m_stream;
     QPointer<AudioDecoder> m_decoder;
-    QPointer<WaveFile> m_file;
+    QPointer<BWFFile> m_file;
     QAudioDeviceInfo m_device;
     unsigned m_channels;
     unsigned m_msBuffer;
