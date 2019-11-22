@@ -2004,7 +2004,7 @@ void Configuration::impl::read_settings ()
   aprs_server_port_ = settings_->value ("aprsServerPort", 14580).toUInt ();
   aprs_passcode_ = settings_->value ("aprsPasscode", "").toString();
   udp_server_name_ = settings_->value ("UDPServer", "127.0.0.1").toString ();
-  udp_server_port_ = settings_->value ("UDPServerPort", 2237).toUInt ();
+  udp_server_port_ = settings_->value ("UDPServerPort", 2242).toUInt ();
   n3fjp_server_name_ = settings_->value ("N3FJPServer", "127.0.0.1").toString ();
   n3fjp_server_port_ = settings_->value ("N3FJPServerPort", 1100).toUInt ();
   broadcast_to_n3fjp_ = settings_->value ("BroadcastToN3FJP", false).toBool ();
