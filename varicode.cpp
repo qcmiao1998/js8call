@@ -335,6 +335,17 @@ int dbmTomwatts(int dbm){
     return iter.value();
 }
 
+QString Varicode::extendedChars(){
+    static QString c;
+    if(c.size() == 0){
+        for(int i = 0; i < JSC::prefixSize; i++){
+            if(JSC::prefix[i].size != 1){ continue; }
+            c.append(QLatin1String(JSC::prefix[i].str, 1));
+        }
+    }
+    return c;
+}
+
 QString Varicode::escape(const QString &text){
     static const int size = 6;
     QString escaped;

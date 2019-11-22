@@ -1,5 +1,6 @@
 #include "TransmitTextEdit.h"
 
+#include "commons.h"
 #include "varicode.h"
 
 #include <iterator>
@@ -244,12 +245,18 @@ void TransmitTextEdit::on_textContentsChanged(int /*pos*/, int rem, int add){
         return;
     }
 
+#if JS8_ALLOW_EXTENDED
+    QString normalized = text;
+#else
     QString normalized = text.normalized(QString::NormalizationForm_KD);
+#endif
 
     QString result;
     std::copy_if(normalized.begin(), normalized.end(), std::back_inserter(result), [](QChar& c) {
 #if JS8_ALLOW_UNICODE
         return (c == 10 || c == 0x1A || (c > 31 && c < 128)) || c.isPrint());
+#elif JS8_ALLOW_EXTENDED
+        return c.toLatin1() != 0 && (c == 10 || c == 0x1A || (c > 31 && c < 128) || Varicode::extendedChars().contains(c.toUpper()));
 #else
         return c.toLatin1() != 0 && (c == 10 || c == 0x1A || (c > 31 && c < 128));
 #endif

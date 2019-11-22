@@ -78,6 +78,8 @@ public:
 
     //Varicode();
 
+    static QString extendedChars();
+
     static QString escape(const QString &text);
     static QString unescape(const QString &text);
 
