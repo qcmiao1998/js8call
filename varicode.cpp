@@ -336,13 +336,42 @@ int dbmTomwatts(int dbm){
 }
 
 QString Varicode::escape(const QString &text){
-    // TODO: support different escapes?
-    return text;
+    static const int size = 6;
+    QString escaped;
+    escaped.reserve(size * text.size());
+    for(QString::const_iterator it = text.begin(); it != text.end(); ++it){
+        QChar ch = *it;
+        ushort code = ch.unicode();
+        if (code < 0x80) {
+            escaped += ch;
+        } else {
+#if JS8_USE_ESCAPE_SUB_CHAR
+            //escaped += "\x1A"; // substitute char
+#else
+            escaped += "\\U"; // "U+"; // substitute char
+#endif
+            escaped += QString::number(code, 16).rightJustified(4, '0');
+        }
+    }
+
+    return escaped;
 }
 
 QString Varicode::unescape(const QString &text){
-    // TODO: support different escapes?
-    return text;
+    QString unescaped(text);
+#if JS8_USE_ESCAPE_SUB_CHAR
+    static const int size = 5;
+    QRegExp r("([\\x1A][0-9a-fA-F]{4})");
+#else
+    static const int size = 6;
+    QRegExp r("(([uU][+]|\\\\[uU])[0-9a-fA-F]{4})");
+#endif
+    int pos = 0;
+    while ((pos = r.indexIn(unescaped, pos)) != -1) {
+        unescaped.replace(pos++, size, QChar(r.cap(1).right(4).toUShort(0, 16)));
+    }
+
+    return unescaped;
 }
 
 QString Varicode::rstrip(const QString& str) {
