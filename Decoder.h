@@ -26,8 +26,8 @@ private:
 
 signals:
     void ready(QByteArray t);
-    void error();
-    void finished();
+    void error(int errorCode);
+    void finished(int exitCode, int statusCode);
 
 private:
     QScopedPointer<QProcess> m_proc;
@@ -56,11 +56,16 @@ public slots:
     void processReady(QByteArray t);
     void processQuit();
 
+    void processError(int errorCode);
+    void processFinished(int exitCode, int statusCode);
+
 signals:
     void startWorker(QString path, QStringList args);
     void quitWorker();
 
     void ready(QByteArray t);
+    void error(int errorCode);
+    void finished(int exitCode, int statusCode);
 
 private:
     QPointer<Worker> m_worker;

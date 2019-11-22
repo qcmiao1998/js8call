@@ -50,7 +50,9 @@ Worker* Decoder::createWorker(){
     connect(&m_thread, &QThread::finished, worker, &QObject::deleteLater);
     connect(this, &Decoder::startWorker, worker, &Worker::start);
     connect(this, &Decoder::quitWorker, worker, &Worker::quit);
-    connect(worker, &Worker::ready, this, &Decoder::ready);
+    connect(worker, &Worker::ready, this, &Decoder::processReady);
+    connect(worker, &Worker::error, this, &Decoder::processError);
+    connect(worker, &Worker::finished, this, &Decoder::processFinished);
     return worker;
 }
 
@@ -88,6 +90,18 @@ void Decoder::processQuit(){
     emit quitWorker();
 }
 
+//
+void Decoder::processError(int errorCode){
+    if(JS8_DEBUG_DECODE) qDebug() << "decoder process error" << errorCode;
+    emit error(errorCode);
+}
+
+//
+void Decoder::processFinished(int exitCode, int statusCode){
+    if(JS8_DEBUG_DECODE) qDebug() << "decoder process finished" << exitCode << statusCode;
+    emit finished(exitCode, statusCode);
+}
+
 ////////////////////////////////////////
 //////////////// WORKER ////////////////
 ////////////////////////////////////////
@@ -123,31 +137,14 @@ void Worker::start(QString path, QStringList args){
             });
 
     connect(proc, static_cast<void (QProcess::*) (QProcess::ProcessError)> (&QProcess::error),
-            [this, proc] (QProcess::ProcessError e) {
-              emit error();
+            [this, proc] (QProcess::ProcessError errorCode) {
+              emit error(int(errorCode));
             });
 
     connect(proc, static_cast<void (QProcess::*) (int, QProcess::ExitStatus)> (&QProcess::finished),
             [this, proc] (int exitCode, QProcess::ExitStatus status) {
-              emit finished();
+              emit finished(exitCode, int(status));
             });
-
-
-    auto watcher = new QTimer(this);
-
-    connect(proc, static_cast<void (QProcess::*) (int, QProcess::ExitStatus)> (&QProcess::finished),
-            [this, watcher] (int /*exitCode*/, QProcess::ExitStatus /*status*/) {
-                watcher->stop();
-            });
-
-    connect(watcher, &QTimer::timeout,
-            [this, proc](){
-                if(JS8_DEBUG_DECODE) qDebug() << "decode process" << proc->state() << "can readline?" << proc->canReadLine();
-            });
-
-    watcher->setInterval(500);
-    watcher->start();
-
 
     QProcessEnvironment env {QProcessEnvironment::systemEnvironment ()};
     env.insert ("OMP_STACKSIZE", "4M");
