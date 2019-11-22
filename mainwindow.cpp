@@ -542,6 +542,13 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   //connect (&m_decodeThread, &QThread::finished, m_notification, &QObject::deleteLater);
   //connect(this, &MainWindow::decodedLineReady, this, &MainWindow::processDecodedLine);
   connect(&m_decoder, &Decoder::ready, this, &MainWindow::processDecodedLine);
+  connect(&m_decoder, &Decoder::error, this, [this](int errorCode, QString errorString){
+    subProcessError(m_decoder.program(), m_decoder.arguments(), errorCode, errorString);
+  });
+  connect(&m_decoder, &Decoder::finished, this, [this](int exitCode, int statusCode, QString errorString){
+    subProcessFailed(m_decoder.program(), m_decoder.arguments(), exitCode, statusCode, errorString);
+  });
+
 
   on_EraseButton_clicked ();
 
@@ -1616,6 +1623,10 @@ void MainWindow::initDecoderSubprocess(){
     // reset decode busy
     if(m_decoderBusy){
         decodeBusy(false);
+    }
+
+    if(!m_valid){
+        m_valid = true;
     }
 }
 
@@ -3484,46 +3495,59 @@ void MainWindow::setup_status_bar (bool vhf)
   }
 }
 
-void MainWindow::subProcessFailed (QProcess * process, int exit_code, QProcess::ExitStatus status)
-{
-  if (m_valid && (exit_code || QProcess::NormalExit != status))
-    {
-      QStringList arguments;
-      for (auto argument: process->arguments ())
-        {
-          if (argument.contains (' ')) argument = '"' + argument + '"';
-          arguments << argument;
-        }
-      if (m_splash && m_splash->isVisible ()) m_splash->hide ();
-      MessageBox::critical_message (this, tr ("Subprocess Error")
-                                    , tr ("Subprocess failed with exit code %1")
-                                    .arg (exit_code)
-                                    , tr ("Running: %1\n%2")
-                                    .arg (process->program () + ' ' + arguments.join (' '))
-                                    .arg (QString {process->readAllStandardError()}));
-      QTimer::singleShot (0, this, SLOT (close ()));
-      m_valid = false;          // ensures exit if still constructing
+void MainWindow::subProcessFailed (QString program, QStringList args, int exitCode, int status, QString errorString){
+    if(!m_valid){
+        return;
     }
+
+    if(!exitCode || QProcess::NormalExit == QProcess::ExitStatus(status)){
+        return;
+    }
+
+    // surpress any other process notifications until restart
+    m_valid = false;
+
+    QStringList arguments;
+    for (auto argument: args){
+      if (argument.contains (' ')) argument = '"' + argument + '"';
+      arguments << argument;
+    }
+
+    if (m_splash && m_splash->isVisible ()) m_splash->hide ();
+
+    MessageBox::critical_message (this, tr ("Subprocess Error")
+                                , tr ("Subprocess failed with exit code %1 and will restart.")
+                                .arg (exitCode)
+                                , tr ("Running: %1\n%2")
+                                .arg (program + ' ' + arguments.join (' '))
+                                .arg (errorString));
+
+    initDecoderSubprocess();
 }
 
-void MainWindow::subProcessError (QProcess * process, QProcess::ProcessError)
-{
-  if (m_valid)
-    {
-      QStringList arguments;
-      for (auto argument: process->arguments ())
-        {
-          if (argument.contains (' ')) argument = '"' + argument + '"';
-          arguments << argument;
-        }
-      if (m_splash && m_splash->isVisible ()) m_splash->hide ();
-      MessageBox::critical_message (this, tr ("Subprocess error")
-                                    , tr ("Running: %1\n%2")
-                                    .arg (process->program () + ' ' + arguments.join (' '))
-                                    .arg (process->errorString ()));
-      QTimer::singleShot (0, this, SLOT (close ()));
-      m_valid = false;              // ensures exit if still constructing
+void MainWindow::subProcessError (QString program, QStringList args, int errorCode, QString errorString){
+    if(!m_valid){
+        return;
     }
+
+    // surpress any other process notifications until process restart
+    m_valid = false;
+
+    QStringList arguments;
+    for(auto argument: args){
+        if (argument.contains (' ')) argument = '"' + argument + '"';
+        arguments << argument;
+    }
+
+    if (m_splash && m_splash->isVisible ()) m_splash->hide ();
+
+    MessageBox::critical_message (this, tr ("Subprocess error")
+                                    , tr ("Subprocess errored with code %1 and will restart.").arg(errorCode)
+                                    , tr ("Running: %1\n%2")
+                                    .arg (program + ' ' + arguments.join (' '))
+                                    .arg (errorString));
+
+    initDecoderSubprocess();
 }
 
 void MainWindow::closeEvent(QCloseEvent * e)

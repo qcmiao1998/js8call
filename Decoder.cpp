@@ -91,15 +91,15 @@ void Decoder::processQuit(){
 }
 
 //
-void Decoder::processError(int errorCode){
-    if(JS8_DEBUG_DECODE) qDebug() << "decoder process error" << errorCode;
-    emit error(errorCode);
+void Decoder::processError(int errorCode, QString errorString){
+    if(JS8_DEBUG_DECODE) qDebug() << "decoder process error" << errorCode << errorString;
+    emit error(errorCode, errorString);
 }
 
 //
-void Decoder::processFinished(int exitCode, int statusCode){
-    if(JS8_DEBUG_DECODE) qDebug() << "decoder process finished" << exitCode << statusCode;
-    emit finished(exitCode, statusCode);
+void Decoder::processFinished(int exitCode, int statusCode, QString errorString){
+    if(JS8_DEBUG_DECODE) qDebug() << "decoder process finished" << exitCode << statusCode << errorString;
+    emit finished(exitCode, statusCode, errorString);
 }
 
 ////////////////////////////////////////
@@ -138,12 +138,12 @@ void Worker::start(QString path, QStringList args){
 
     connect(proc, static_cast<void (QProcess::*) (QProcess::ProcessError)> (&QProcess::error),
             [this, proc] (QProcess::ProcessError errorCode) {
-              emit error(int(errorCode));
+              emit error(int(errorCode), proc->errorString());
             });
 
     connect(proc, static_cast<void (QProcess::*) (int, QProcess::ExitStatus)> (&QProcess::finished),
             [this, proc] (int exitCode, QProcess::ExitStatus status) {
-              emit finished(exitCode, int(status));
+              emit finished(exitCode, int(status), QString{proc->readAllStandardError()});
             });
 
     QProcessEnvironment env {QProcessEnvironment::systemEnvironment ()};

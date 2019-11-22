@@ -21,13 +21,14 @@ public slots:
     void start(QString path, QStringList args);
     void quit();
 
+    QProcess* process() const { return m_proc.data(); }
 private:
     void setProcess(QProcess *proc, int msecs=1000);
 
 signals:
     void ready(QByteArray t);
-    void error(int errorCode);
-    void finished(int exitCode, int statusCode);
+    void error(int errorCode, QString errorString);
+    void finished(int exitCode, int statusCode, QString errorString);
 
 private:
     QScopedPointer<QProcess> m_proc;
@@ -44,6 +45,20 @@ public:
     void lock();
     void unlock();
 
+    QString program() const {
+        if(!m_worker.isNull() && m_worker->process() != nullptr){
+            return m_worker->process()->program();
+        }
+        return {};
+    }
+
+    QStringList arguments() const {
+        if(!m_worker.isNull() && m_worker->process() != nullptr){
+            return m_worker->process()->arguments();
+        }
+        return {};
+    }
+
 private:
     Worker* createWorker();
 
@@ -56,16 +71,16 @@ public slots:
     void processReady(QByteArray t);
     void processQuit();
 
-    void processError(int errorCode);
-    void processFinished(int exitCode, int statusCode);
+    void processError(int errorCode, QString errorString);
+    void processFinished(int exitCode, int statusCode, QString errorString);
 
 signals:
     void startWorker(QString path, QStringList args);
     void quitWorker();
 
     void ready(QByteArray t);
-    void error(int errorCode);
-    void finished(int exitCode, int statusCode);
+    void error(int errorCode, QString errorString);
+    void finished(int exitCode, int statusCode, QString errorString);
 
 private:
     QPointer<Worker> m_worker;

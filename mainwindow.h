@@ -1029,8 +1029,8 @@ private:
   void resetAutomaticIntervalTransmissions(bool stopCQ, bool stopHB);
   void resetCQTimer(bool stop);
   void resetHeartbeatTimer(bool stop);
-  void subProcessFailed (QProcess *, int exit_code, QProcess::ExitStatus);
-  void subProcessError (QProcess *, QProcess::ProcessError);
+  void subProcessFailed (QString program, QStringList args, int exitCode, int status, QString errorString);
+  void subProcessError (QString program, QStringList arguments, int errorCode, QString errorString);
   void statusUpdate () const;
   void update_watchdog_label ();
   void on_the_minute ();
