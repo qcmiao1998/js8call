@@ -112,7 +112,7 @@ QString JSC::decompress(Codeword const& bitvec){
     base[7] = base[6] + s*c*c*c*c*c*c;
 
     QList<quint64> bytes;
-    QList<int> separators;
+    QList<quint32> separators;
 
     int i = 0;
     int count = bitvec.count();
@@ -133,22 +133,25 @@ QString JSC::decompress(Codeword const& bitvec){
         }
     }
 
-    int start = 0;
-    while(start < bytes.length()){
-        int k = 0;
-        int j = 0;
+    quint32 start = 0;
+    while(start < (quint32)bytes.length()){
+        quint32 k = 0;
+        quint32 j = 0;
 
-        while(start + k < bytes.length() && bytes[start + k] >= s){
+        while(start + k < (quint32)bytes.length() && bytes[start + k] >= s){
             j = j*c + (bytes[start + k] - s);
             k++;
         }
+        if(j >= JSC::size){
+            break;
+        }
 
-        if(start + k >= bytes.length()){
+        if(start + k >= (quint32)bytes.length()){
             break;
         }
         j = j*s + bytes[start + k] + base[k];
 
-        if(j >= (int)JSC::size){
+        if(j >= JSC::size){
             break;
         }
 

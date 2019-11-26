@@ -1852,6 +1852,9 @@ void MainWindow::initializeDummyData(){
     c.setCharFormat(f);
 #endif
 
+    // this causes a segfault!
+    processDecodedLine("223000 -15 -0.3 1681 B  6t++yk+aJbaE         6   \n");
+
     ui->extFreeTextMsgEdit->setPlainText("HELLOBRAVE NEW WORLD");
     ui->extFreeTextMsgEdit->setCharsSent(6);
 
