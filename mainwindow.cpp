@@ -1166,7 +1166,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     QMenu * menu = new QMenu(ui->tableWidgetRXAll);
 
     // clear the selection of the call widget on right click
-    ui->tableWidgetCalls->selectionModel()->clearSelection();
+    // but only if the table has rows.
+    if(ui->tableWidgetRXAll->rowAt(point.y()) != -1){
+        ui->tableWidgetCalls->selectionModel()->clearSelection();
+    }
 
     QString selectedCall = callsignSelected();
     bool missingCallsign = selectedCall.isEmpty();
@@ -1182,7 +1185,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         auto qsyAction = menu->addAction(QString("Jump to %1Hz").arg(selectedOffset));
         connect(qsyAction, &QAction::triggered, this, [this, selectedOffset](){
             setFreqOffsetForRestore(selectedOffset, false);
-            // TODO: prompt mode switch?
         });
 
         auto items = m_bandActivity.value(selectedOffset);
@@ -1401,7 +1403,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(ui->tableWidgetCalls, &QTableWidget::customContextMenuRequested, this, [this, logAction, historyAction, localMessageAction, clearAction4, clearActionAll, addStation, removeStation](QPoint const &point){
     QMenu * menu = new QMenu(ui->tableWidgetCalls);
 
-    ui->tableWidgetRXAll->selectionModel()->clearSelection();
+    // clear the selection of the call widget on right click
+    // but only if the table has rows.
+    if(ui->tableWidgetCalls->rowAt(point.y()) != -1){
+        ui->tableWidgetRXAll->selectionModel()->clearSelection();
+    }
 
     QString selectedCall = callsignSelected();
     bool isAllCall = isAllCallIncluded(selectedCall);
@@ -10103,6 +10109,12 @@ QString MainWindow::callsignSelected(bool useInputText){
         auto selectedItems = ui->tableWidgetRXAll->selectedItems();
         selectedOffset = selectedItems.first()->data(Qt::UserRole).toInt();
 
+        int threshold = 0;
+        auto activity = m_bandActivity.value(selectedOffset);
+        if(!activity.isEmpty()){
+            threshold = rxThreshold(activity.last().submode);
+        }
+
         auto keys = m_callActivity.keys();
         qStableSort(keys.begin(), keys.end(), [this](QString const &a, QString const &b){
             auto tA = m_callActivity[a].utcTimestamp;
@@ -10114,7 +10126,9 @@ QString MainWindow::callsignSelected(bool useInputText){
         });
         foreach(auto call, keys){
             auto d = m_callActivity[call];
-            if(d.freq == selectedOffset){
+
+            // if this callsign is at a frequency within the threshold limit of the selected offset
+            if(selectedOffset - threshold <= d.freq && d.freq <= selectedOffset + threshold){
                 return d.call;
             }
         }
