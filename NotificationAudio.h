@@ -7,7 +7,11 @@
 #include <QAudioFormat>
 #include <QAudioOutput>
 #include <QFile>
+#include <QPair>
 #include <QPointer>
+#include <QByteArray>
+#include <QCache>
+#include <QScopedPointer>
 
 #include "AudioDevice.hpp"
 #include "AudioDecoder.h"
@@ -32,10 +36,15 @@ public slots:
     void stop();
 
 private:
+    void playBytes(const QAudioFormat &format, QByteArray *bytes);
+
+private:
+    QMap<QString, QPair<QAudioFormat, QByteArray*>> m_cache;
     QPointer<SoundOutput> m_stream;
     QPointer<AudioDecoder> m_decoder;
     QPointer<BWFFile> m_file;
     QAudioDeviceInfo m_device;
+    QBuffer m_buffer;
     unsigned m_channels;
     unsigned m_msBuffer;
 };
