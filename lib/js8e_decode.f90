@@ -43,11 +43,13 @@ contains
     character*6 mygrid6,hisgrid6
     integer*2 iwave(NMAX)
     integer apsym(KK)
+    integer ncand
     character datetime*13,message*22,msg37*37
     character*22 allmessages(100)
     integer allsnrs(100)
     save s,dd
 
+    ncand=0
     bcontest=iand(nexp_decode,128).ne.0
     this%callback => callback
     write(datetime,1001) nutc        !### TEMPORARY ###
@@ -115,6 +117,7 @@ contains
              lapcqonly,napwid,lsubtract,nagain,iaptype,mycall12,mygrid6,   &
              hiscall12,bcontest,sync,f1,xdt,xbase,apsym,nharderrors,dmin,  &
              nbadcrc,iappass,iera,msg37,xsnr)
+
         message=msg37(1:22)   !###
         nsnr=nint(xsnr) 
         xdt=xdt-ASTART
