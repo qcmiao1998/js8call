@@ -1,10 +1,13 @@
 subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
+
+  !include 'js8_params.f90'
+  
   complex cx(0:NH1)
   real s(NH1,NHSYM)
   real savg(NH1)
   real sbase(NH1)
   real x(NFFT1)
-  real sync1d(-JZ:JZ)
+  real sync2d(NH1,-JZ:JZ)
   real red(NH1)
   real candidate0(3,200)
   real candidate(3,200)
@@ -26,7 +29,7 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
     icos7c = (/2,5,0,6,4,1,3/)                  !End Costas 7x7 tone pattern
   endif
 
-  ! Compute symbol spectra, stepping by NSTEP steps.
+! Compute symbol spectra, stepping by NSTEP steps.  
   savg=0.
   tstep=NSTEP/12000.0                         
   df=12000.0/NFFT1                  
@@ -42,7 +45,6 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
      enddo
      savg=savg + s(1:NH1,j)                   !Average spectrum
   enddo
-
   call baselinejs8(savg,nfa,nfb,sbase)
 
   ia=max(1,nint(nfa/df)) ! min freq
@@ -104,13 +106,17 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
         t0=(t0-t)/6.0
         sync_bc=t/t0
 
-        sync1d(j)=max(sync_abc, sync_ab, sync_bc)
+        !sync2d(i,j)=max(max(max(sync_abc, sync_ab), sync_ac), sync_bc)
+        sync2d(i,j)=max(sync_abc, sync_ab, sync_bc)
      enddo
+  enddo
 
-     ii=maxloc(sync1d(-JZ:JZ)) - 1 - JZ
+  red=0.
+  do i=ia,ib
+     ii=maxloc(sync2d(i,-JZ:JZ)) - 1 - JZ
      j0=ii(1)
      jpeak(i)=j0
-     red(i)=sync1d(j0)
+     red(i)=sync2d(i,j0)
   enddo
 
   iz=ib-ia+1
@@ -139,7 +145,8 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   enddo
   ncand=k
 
-  ! Save only the best of near-dupe freqs.
+
+! Save only the best of near-dupe freqs.  
   do i=1,ncand
      if(i.ge.2) then
         do j=1,i-1
@@ -152,7 +159,7 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
      endif
   enddo
 
-  ! Put nfqso at top of list
+! Put nfqso at top of list
   do i=1,ncand
      if(abs(candidate0(1,i)-nfqso).lt.10.0) candidate0(1,i)=-candidate0(1,i)
   enddo
@@ -160,13 +167,15 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   fac=20.0/maxval(s)
   s=fac*s
 
-  ! Sort by sync
-  ! call indexx(candidate0(3,1:ncand),ncand,indx)
-  ! Sort by frequency
+! Sort by sync
+!  call indexx(candidate0(3,1:ncand),ncand,indx)
+! Sort by frequency 
   call indexx(candidate0(1,1:ncand),ncand,indx)
   k=1
+!  do i=ncand,1,-1
   do i=1,ncand
      j=indx(i)
+!     if( candidate0(3,j) .ge. syncmin .and. candidate0(2,j).ge.-1.5 ) then
      if( candidate0(3,j) .ge. syncmin ) then
        candidate(1,k)=abs(candidate0(1,j))
        candidate(2,k)=candidate0(2,j)
@@ -175,6 +184,5 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
      endif
   enddo
   ncand=k-1
-
   return
 end subroutine syncjs8

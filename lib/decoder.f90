@@ -31,7 +31,6 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   logical baddata,newdat65,newdat9,single_decode,bVHF,bad0,newdat,trydecode
   integer*2 id0(NTMAX*12000)
   integer*2 id2(NTMAX*12000)
-  integer pos,sz
   type(params_block) :: params
   character(len=20) :: datetime
   character(len=12) :: mycall, hiscall
@@ -86,7 +85,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      sz = max(0,params%kszE)
      id0=0
      id0(1:sz+1)=id2(pos+1:pos+sz+1)
-
+     
      call my_js8e%decode(js8e_decoded,id0,params%nQSOProgress,params%nfqso,  &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
