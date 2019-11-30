@@ -31,7 +31,6 @@ void NotificationAudio::status(QString message){
 
 void NotificationAudio::error(QString message){
     qDebug() << "notification error:" << message;
-    stop();
 }
 
 void NotificationAudio::setDevice(const QAudioDeviceInfo &device, unsigned channels, unsigned msBuffer){
