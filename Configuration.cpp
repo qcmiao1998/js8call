@@ -1010,6 +1010,14 @@ QSet<QString> Configuration::my_groups() const {
 }
 
 void Configuration::addGroup(QString const &group){
+    if(!Varicode::isGroupAllowed(group)){
+        MessageBox::critical_message (m_->window(), QString("%1 is a group that cannot be joined").arg(group));
+        return;
+    }
+    if(!Varicode::isCompoundCallsign(group)){
+        MessageBox::critical_message (m_->window(), QString("%1 is not a valid group").arg(group));
+        return;
+    }
     QSet<QString> groups = my_groups();
     groups.insert(group.trimmed());
     m_->my_groups_ = groups.toList();
@@ -2401,7 +2409,7 @@ bool Configuration::impl::validate ()
 
   foreach(auto group, splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), false)){
       if(!Varicode::isGroupAllowed(group)){
-          MessageBox::critical_message (this, QString("%1 is not an available group").arg(group));
+          MessageBox::critical_message (this, QString("%1 is a group that cannot be joined").arg(group));
           return false;
       }
       if(!Varicode::isCompoundCallsign(group)){

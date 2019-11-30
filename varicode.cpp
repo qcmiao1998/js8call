@@ -1278,7 +1278,8 @@ bool Varicode::isCompoundCallsign(const QString &callsign){
 
 bool Varicode::isGroupAllowed(const QString &group){
     const QSet<QString> disallowed = {
-        "@APRSIS"
+        "@APRSIS",
+        "@JS8NET",
     };
     return !disallowed.contains(group);
 }
