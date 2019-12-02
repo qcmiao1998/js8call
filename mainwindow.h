@@ -219,7 +219,6 @@ private slots:
   void on_actionFT8_DXpedition_Mode_User_Guide_triggered();
   void on_actionOnline_User_Guide_triggered();
   void on_actionLocal_User_Guide_triggered();
-  void on_actionWide_Waterfall_triggered();
   void on_actionOpen_triggered();
   void on_actionOpen_next_in_directory_triggered();
   void on_actionDecode_remaining_files_in_directory_triggered();
@@ -483,6 +482,7 @@ private:
   MessageBox m_rigErrorMessageBox;
   QScopedPointer<EqualizationToolsDialog> m_equalizationToolsDialog;
 
+  bool m_isWideGraphMDI;
   QScopedPointer<WideGraph> m_wideGraph;
   QScopedPointer<LogQSO> m_logDlg;
   QScopedPointer<Astro> m_astroWidget;

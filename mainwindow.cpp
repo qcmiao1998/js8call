@@ -278,6 +278,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_WSPR_tx_next {false},
   m_rigErrorMessageBox {MessageBox::Critical, tr ("Rig Control Error")
       , MessageBox::Cancel | MessageBox::Ok | MessageBox::Retry},
+  m_isWideGraphMDI {false},
   m_wideGraph (new WideGraph(m_settings)),
   // no parent so that it has a taskbar icon
   m_logDlg (new LogQSO (program_title (), m_settings, &m_config, nullptr)),
@@ -864,7 +865,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   morse_(const_cast<char *> (m_config.my_callsign ().toLatin1().constData()),
          const_cast<int *> (icw), &m_ncw, m_config.my_callsign ().length());
-  on_actionWide_Waterfall_triggered();
   ui->cbShMsgs->setChecked(m_bShMsgs);
   ui->cbSWL->setChecked(m_bSWL);
 
@@ -935,6 +935,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   //UI Customizations & Tweaks
   m_wideGraph.data()->installEventFilter(new EscapeKeyPressEater());
   ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized();
+  m_isWideGraphMDI = true;
   ui->menuMode->setVisible(false);
   ui->menuSave->setEnabled(false);
   ui->menuTools->setEnabled(false);
@@ -3624,11 +3625,6 @@ void MainWindow::on_actionOnline_User_Guide_triggered()      //Display manual
 //Display local copy of manual
 void MainWindow::on_actionLocal_User_Guide_triggered()
 {
-}
-
-void MainWindow::on_actionWide_Waterfall_triggered()      //Display Waterfalls
-{
-  m_wideGraph->show();
 }
 
 void MainWindow::on_actionSolve_FreqCal_triggered()
@@ -7495,7 +7491,7 @@ void MainWindow::on_actionJS8_triggered()
   VHF_features_enabled(bVHF);
   ui->cbAutoSeq->setChecked(true);
   m_TRperiod = computePeriodForSubmode(m_nSubMode);
-  m_wideGraph->show();
+  if(m_isWideGraphMDI) m_wideGraph->show();
   ui->decodedTextLabel2->setText("  UTC   dB   DT Freq    Message");
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
 #if JS8_RING_BUFFER
