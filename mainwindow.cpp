@@ -2553,7 +2553,7 @@ int MainWindow::computeStop(int submode, int period){
 #if JS8E_IS_ULTRA
             threshold = 0.0;
 #else
-            threshold = 2.0;
+            threshold = 1.25;
 #endif
             break;
         }
