@@ -23,12 +23,23 @@ subroutine subtractjs8(dd,itone,f0,dt)
   save first
 
   nstart=dt*12000+1
+
+  if(NWRITELOG.eq.1) then
+      write(*,*) '<DecodeDebug> generating reference signal', nstart
+      flush(6)
+  endif
+
   call genjs8refsig(itone,cref,f0)
   camp=0.
   do i=1,nframe
     id=nstart-1+i 
     if(id.ge.1.and.id.le.NMAX) camp(i)=dd(id)*conjg(cref(i))
   enddo
+
+  if(NWRITELOG.eq.1) then
+      write(*,*) '<DecodeDebug> filtering', nfft
+      flush(6)
+  endif
 
   if(first) then
 ! Create and normalize the filter
@@ -52,6 +63,11 @@ subroutine subtractjs8(dd,itone,f0,dt)
   call four2a(cfilt,nfft,1,-1,1)
   cfilt(1:nfft)=cfilt(1:nfft)*cw(1:nfft)
   call four2a(cfilt,nfft,1,1,1)
+
+  if(NWRITELOG.eq.1) then
+      write(*,*) '<DecodeDebug> subtracting filtered reference', nfft
+      flush(6)
+  endif
 
 ! Subtract the reconstructed signal
   do i=1,nframe

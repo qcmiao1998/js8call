@@ -100,10 +100,6 @@ contains
       call sync8(dd,ifa,ifb,syncmin,nfqso,s,candidate,ncand,sbase)
       call timer('sync8   ',1)
 
-      !open(99, file="./js8.log", status="old", position="append", action="write")
-      !write(99,*) ncand, "candidates"   
-      !close(99) 
-
       do icand=1,ncand
         sync=candidate(3,icand)
         f1=candidate(1,icand)

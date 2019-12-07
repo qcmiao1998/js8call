@@ -23,6 +23,11 @@ subroutine js8_downsample(dd,newdat,f0,c1)
      first=.false.
   endif
   if(newdat) then
+     if(NWRITELOG.eq.1) then
+       write(*,*) '<DecodeDebug> newdat', NMAX, NDFFT1
+       flush(6)
+     endif
+
      ! Data in dd have changed, recompute the long FFT
      x(1:NMAX)=dd
      x(NMAX+1:NDFFT1)=0.                       !Zero-pad the x array
@@ -39,6 +44,12 @@ subroutine js8_downsample(dd,newdat,f0,c1)
   ib=max(1,nint(fb/df))
   k=0
   c1=0.
+
+  if(NWRITELOG.eq.1) then
+    write(*,*) '<DecodeDebug> ds', df, baud, i0, ib, it
+    flush(6)
+  endif
+
   do i=ib,it
    c1(k)=cx(i)
    k=k+1

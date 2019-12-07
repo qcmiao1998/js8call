@@ -81,13 +81,5 @@ subroutine genjs8(msg,mygrid,bcontest,i3bit,msgsent,msgbits,itone)
      indx=codeword(i)*4 + codeword(i+1)*2 + codeword(i+2)
      itone(k)=indx
   enddo
-
-    if(NWRITELOG.eq.1) then
-        open(99, file="./js8.log", status="old", position="append", action="write")
-        write(99,*) 'tones', itone
-        write(99,*) '...', icos7a, '--->', NCOSTAS
-        close(99) 
-    endif
-
   return
 end subroutine genjs8

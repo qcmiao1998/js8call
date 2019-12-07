@@ -95,6 +95,9 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   delfbest=0.
   ibest=0
 
+  write(*,*) '<DecodeDebug> downsampling', fs2, dt2
+  flush(6)
+
   call timer('js8_down',0)
   call js8_downsample(dd0,newdat,f1,cd0)   !Mix f1 to baseband and downsample
   call timer('js8_down',1)
@@ -104,17 +107,15 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   smax=0.0
 
   if(NWRITELOG.eq.1) then
-      open(99, file="./js8.log", status="old", position="append", action="write")
-      write(99,*) 'initial dt guess', i0, xdt
-      close(99) 
+      write(*,*) '<DecodeDebug> initial dt guess', i0, xdt
+      flush(6)
   endif
 
   do idt=i0-NQSYMBOL,i0+NQSYMBOL             !Search over +/- one quarter symbol
      call syncjs8d(cd0,idt,ctwk,0,sync)
      if(NWRITELOG.eq.1) then
-         open(99, file="./js8.log", status="old", position="append", action="write")
-         write(99,*) 'idt', idt, 'sync', sync
-         close(99) 
+         write(*,*) '<DecodeDebug> ', 'idt', idt, 'sync', sync
+         flush(6)
      endif
      if(sync.gt.smax) then
         smax=sync
@@ -124,9 +125,8 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   xdt2=ibest*dt2                           !Improved estimate for DT
 
   if(NWRITELOG.eq.1) then
-    open(99, file="./js8.log", status="old", position="append", action="write")
-    write(99,*) 'xdt2', xdt2, ibest
-    close(99) 
+    write(*,*) '<DecodeDebug> ', 'xdt2', xdt2, 'ibest', ibest
+    flush(6)
   endif
 
 ! Now peak up in frequency
@@ -143,9 +143,8 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
     enddo
     call syncjs8d(cd0,i0,ctwk,1,sync)
     if(NWRITELOG.eq.1) then
-        open(99, file="./js8.log", status="old", position="append", action="write")
-        write(99,*) 'df', delf, 'sync', sync
-        close(99) 
+        write(*,*) '<DecodeDebug> ', 'df', delf, 'sync', sync
+        flush(6)
     endif
     if( sync .gt. smax ) then
       smax=sync
@@ -159,9 +158,8 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   f1=f1+delfbest                           !Improved estimate of DF
 
   if(NWRITELOG.eq.1) then
-    open(99, file="./js8.log", status="old", position="append", action="write")
-    write(99,*) 'twk', xdt, f1, smax
-    close(99) 
+    write(*,*) '<DecodeDebug> ', 'twk', xdt, f1, smax
+    flush(6)
   endif
 
   call syncjs8d(cd0,i0,ctwk,2,sync)
@@ -192,9 +190,8 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   nsync=is1+is2+is3
 
   if(NWRITELOG.eq.1) then
-    open(99, file="./js8.log", status="old", position="append", action="write")
-    write(99,*) 'sync', ibest, nsync   
-    close(99) 
+    write(*,*) '<DecodeDebug> sync', ibest, nsync
+    flush(6)
   endif
 
   if(nsync .le. 6) then ! bail out
@@ -400,9 +397,8 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
      call timer('bpd174  ',1)
 
      if(NWRITELOG.eq.1) then
-       open(99, file="./js8.log", status="old", position="append", action="write")
-       write(99,*) '> bpd174 ', ipass, nharderrors, dmin
-       close(99) 
+       write(*,*) '<DecodeDebug> bpd174', ipass, nharderrors, dmin
+       flush(6)
      endif
 
      dmin=0.0
@@ -425,9 +421,8 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
      xsnr=-99.0
 
      if(NWRITELOG.eq.1) then
-       open(99, file="./js8.log", status="old", position="append", action="write")
-       write(99,*) '> osd174', ipass, nharderrors, dmin, nharderrors + dmin, sync
-       close(99) 
+       write(*,*) '<DecodeDebug> osd174', ipass, nharderrors, dmin, nharderrors + dmin, sync
+       flush(6)
      endif
 
      if(count(cw.eq.0).eq.174) cycle           !Reject the all-zero codeword
@@ -439,12 +434,8 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
         call chkcrc12a(decoded,nbadcrc)
 
         if(NWRITELOG.eq.1) then
-          open(99, file="./js8.log", status="old", position="append", action="write")
-          write(99,*) '> crc', decoded 
-          if(nbadcrc.eq.1) then
-            write(99,*) '> crc failed'
-          endif
-          close(99) 
+          write(*,*) '<DecodeDebug> crc', decoded, 'bad', nbadcrc
+          flush(6)
         endif
      else
         nharderrors=-1
@@ -459,7 +450,13 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
 
         message(1:12)=origmsg(1:12)
         call genjs8(message,mygrid6,bcontest,i3bit,msgsent,msgbits,itone)
-        if(lsubtract) call subtractjs8(dd0,itone,f1,xdt2)
+        if(lsubtract) then
+            if(NWRITELOG.eq.1) then
+                write(*,*) '<DecodeDebug> subtract', f1, xdt2, itone
+                flush(6)
+            endif
+            call subtractjs8(dd0,itone,f1,xdt2)
+        endif
         xsig=0.0
         xnoi=0.0
         do i=1,NN
@@ -477,6 +474,11 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
         msg37=origmsg//'               '
 
         msg37(22:22) = char(48 + i3bit)
+
+        if(NWRITELOG.eq.1) then
+            write(*,*) '<DecodeDebug> msg', msg37, 'snr', xsnr
+            flush(6)
+        endif
         
         return
      endif

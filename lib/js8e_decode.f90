@@ -92,9 +92,8 @@ contains
       call timer('syncjs8 ',1)
 
       if(NWRITELOG.eq.1) then
-        open(99, file="./js8.log", status="old", position="append", action="write")
-        write(99,*) ncand, "candidates"   
-        close(99) 
+        write(*,*) '<DecodeDebug>', ncand, "candidates"
+        flush(6)
       endif
 
       do icand=1,ncand
@@ -105,12 +104,15 @@ contains
         nsnr0=min(99,nint(10.0*log10(sync) - 25.5))    !### empirical ###
 
         if(NWRITELOG.eq.1) then
-          open(99, file="./js8.log", status="old", position="append", action="write")
-          write(99,*) 'icand', icand, f1, sync, xdt, xbase
-          close(99) 
+          write(*,*) '<DecodeDebug> candidate', icand, 'f1', f1, 'sync', sync, 'xdt', xdt, 'xbase', xbase
+          flush(6)
         endif
 
         call timer('js8dec  ',0)
+        ! for now, subtraction of slow is not possible
+        if(NSPS.gt.1920) then
+            lsubtract=.false.
+        endif
         call js8dec(dd,newdat,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &
              lapcqonly,napwid,lsubtract,nagain,iaptype,mycall12,mygrid6,   &
              hiscall12,bcontest,sync,f1,xdt,xbase,apsym,nharderrors,dmin,  &
@@ -121,9 +123,8 @@ contains
         hd=nharderrors+dmin
 
         if(NWRITELOG.eq.1) then
-          open(99, file="./js8.log", status="old", position="append", action="write")
-          write(99,*) 'icand', icand, hd, nbadcrc
-          close(99) 
+          write(*,*) '<DecodeDebug> candidate', icand, 'hard', hd, 'nbadcrc', nbadcrc
+          flush(6)
         endif
         
         call timer('js8dec  ',1)
@@ -144,9 +145,8 @@ contains
         endif
 
         if(NWRITELOG.eq.1) then
-          open(99, file="./js8.log", status="old", position="append", action="write")
-          write(99,*) '---'
-          close(99) 
+          write(*,*) '<DecodeDebug> ---'
+          flush(6)
         endif
       enddo
   enddo

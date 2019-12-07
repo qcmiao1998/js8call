@@ -134,9 +134,8 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
     n=ia + indx(iz+1-i) - 1
     if(red(n).lt.syncmin.or.isnan(red(n))) exit
     if(NWRITELOG.eq.1) then
-        open(99, file="./js8.log", status="old", position="append", action="write")
-        write(99,*) 'red candidate', red(n), n*df, (jpeak(n)-1)*tstep
-        close(99) 
+        write(*,*) '<DecodeDebug>', 'red candidate', red(n), n*df, (jpeak(n)-1)*tstep
+        flush(6)
     endif
     k=k+1
     candidate0(1,k)=n*df

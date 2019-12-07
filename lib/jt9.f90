@@ -223,7 +223,6 @@ program jt9
 
      do iblk=1,npts/kstep
         k=iblk*kstep
-        if(mode.eq.8 .and. k.gt.179712) exit
         call timer('read_wav',0)
         read(unit=wav%lun,end=3) shared_data%id2(k-kstep+1:k)
         go to 4
@@ -287,6 +286,10 @@ program jt9
      datetime="2013-Apr-16 15:13" !### Temp
      shared_data%params%datetime=transfer(datetime,shared_data%params%datetime)
      if(mode.eq.9 .and. fsplit.ne.2700) shared_data%params%nfa=fsplit
+     shared_data%params%kposA=0
+     shared_data%params%kposB=0
+     shared_data%params%kposC=0
+     shared_data%params%kposE=0
      shared_data%params%kszA=NMAX-1
      shared_data%params%kszB=NMAX-1
      shared_data%params%kszC=NMAX-1

@@ -147,11 +147,6 @@ subroutine ft8b(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
 ! hard sync sum - max is 21
   nsync=is1+is2+is3
 
-  ! debug
-  !open(99, file="./js8.log", status="old", position="append", action="write")
-  !write(99,*) ibest, nsync   
-  !close(99) 
-
   if(nsync .le. 6) then ! bail out
     call timer('badnsync', 0)
     nbadcrc=1
