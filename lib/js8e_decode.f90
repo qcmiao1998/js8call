@@ -109,10 +109,6 @@ contains
         endif
 
         call timer('js8dec  ',0)
-        ! for now, subtraction of slow is not possible
-        if(NSPS.gt.1920) then
-            lsubtract=.false.
-        endif
         call js8dec(dd,newdat,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &
              lapcqonly,napwid,lsubtract,nagain,iaptype,mycall12,mygrid6,   &
              hiscall12,bcontest,sync,f1,xdt,xbase,apsym,nharderrors,dmin,  &

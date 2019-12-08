@@ -95,8 +95,10 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   delfbest=0.
   ibest=0
 
-  write(*,*) '<DecodeDebug> downsampling', fs2, dt2
-  flush(6)
+  if(NWRITELOG.eq.1) then
+    write(*,*) '<DecodeDebug> downsampling', fs2, dt2
+    flush(6)
+  endif
 
   call timer('js8_down',0)
   call js8_downsample(dd0,newdat,f1,cd0)   !Mix f1 to baseband and downsample
