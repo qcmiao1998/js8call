@@ -7,6 +7,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   use js8b_decode
   use js8c_decode
   use js8e_decode
+  use js8i_decode
 
   include 'jt9com.f90'
   include 'timer_common.inc'
@@ -27,6 +28,10 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      integer :: decoded
   end type counting_js8e_decoder
 
+  type, extends(js8i_decoder) :: counting_js8i_decoder
+     integer :: decoded
+  end type counting_js8i_decoder
+
   real ss(184,NSMAX)
   logical baddata,newdat65,newdat9,single_decode,bVHF,bad0,newdat,trydecode
   integer*2 id0(NTMAX*12000)
@@ -40,6 +45,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   type(counting_js8b_decoder) :: my_js8b
   type(counting_js8c_decoder) :: my_js8c
   type(counting_js8e_decoder) :: my_js8e
+  type(counting_js8i_decoder) :: my_js8i
 
   !cast C character arrays to Fortran character strings
   datetime=transfer(params%datetime, datetime)
@@ -53,6 +59,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   my_js8b%decoded = 0
   my_js8c%decoded = 0
   my_js8e%decoded = 0
+  my_js8i%decoded = 0
 
   single_decode=iand(params%nexp_decode,32).ne.0
   bVHF=iand(params%nexp_decode,64).ne.0
@@ -73,6 +80,29 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
 
   write(*,1012) params%nsubmode, params%nsubmodes
 1012 format('<DecodeStarted>',2i4)
+
+  if(params%nmode.eq.8 .and. (params%nsubmode.eq.8 .or. iand(params%nsubmodes, 16).eq.16)) then
+! We're in JS8 mode I
+     call timer('decjs8i ',0)
+     newdat=params%newdat
+     write(*,*) '<DecodeDebug> mode I decode started'
+
+     ! copy the relevant frames for decoding
+     pos = max(0,params%kposI)
+     sz = max(0,params%kszI)
+     id0=0
+     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     
+     call my_js8i%decode(js8i_decoded,id0,params%nQSOProgress,params%nfqso,  &
+          params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
+          params%nexp_decode,params%ndepth,logical(params%nagain),           &
+          logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
+          mycall,mygrid,hiscall,hisgrid)
+
+     write(*,*) '<DecodeDebug> mode I decode finished'
+     
+     call timer('decjs8i ',1)
+  endif
 
   if(params%nmode.eq.8 .and. (params%nsubmode.eq.4 .or. iand(params%nsubmodes, 8).eq.8)) then
 ! We're in JS8 mode E
@@ -229,6 +259,7 @@ contains
     if(submode.eq.1) m=' B '
     if(submode.eq.2) m=' C '
     if(submode.eq.4) m=' E '
+    if(submode.eq.8) m=' I '
 
 
     i0=index(decoded0,';')
@@ -376,5 +407,31 @@ contains
 
     return
   end subroutine js8e_decoded
+
+  subroutine js8i_decoded (this,sync,snr,dt,freq,decoded,nap,qual)
+    use js8i_decode
+    implicit none
+
+    class(js8i_decoder), intent(inout) :: this
+    real, intent(in) :: sync
+    integer, intent(in) :: snr
+    real, intent(in) :: dt
+    real, intent(in) :: freq
+    character(len=37), intent(in) :: decoded
+    integer, intent(in) :: nap 
+    real, intent(in) :: qual 
+    integer :: submode
+    save
+
+    submode=8
+    call js8_decoded(sync, snr, dt, freq, decoded, nap, qual, submode)
+
+    select type(this)
+    type is (counting_js8i_decoder)
+       this%decoded = this%decoded + 1
+    end select
+
+    return
+  end subroutine js8i_decoded
 
 end subroutine multimode_decoder

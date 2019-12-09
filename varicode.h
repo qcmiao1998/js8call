@@ -28,7 +28,8 @@ public:
         JS8CallNormal    = 0,
         JS8CallFast      = 1,
         JS8CallTurbo     = 2,
-        JS8CallUltraSlow = 4
+        JS8CallSlow      = 4,
+        JS8CallUltra     = 8
     };
 
     // frame type transmitted via itype and decoded by the ft8 decoded

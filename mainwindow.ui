@@ -4778,10 +4778,11 @@ list. The list can be maintained in Settings (F2).</string>
      <addaction name="actionDeepDecode"/>
      <addaction name="actionDeepestDecode"/>
     </widget>
+    <addaction name="actionModeJS8Slow"/>
     <addaction name="actionModeJS8Normal"/>
     <addaction name="actionModeJS8Fast"/>
     <addaction name="actionModeJS8Turbo"/>
-    <addaction name="actionModeJS8UltraSlow"/>
+    <addaction name="actionModeJS8Ultra"/>
     <addaction name="separator"/>
     <addaction name="menu_Decode_Passes"/>
     <addaction name="actionModeMultiDecoder"/>
@@ -5712,7 +5713,7 @@ list. The list can be maintained in Settings (F2).</string>
     <string>JS8 (&amp;Turbo, 6s, 160Hz, ~40 WPM)</string>
    </property>
   </action>
-  <action name="actionModeJS8UltraSlow">
+  <action name="actionModeJS8Ultra">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -5761,6 +5762,14 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Enable Autoreply (&amp;AUTO)</string>
+   </property>
+  </action>
+  <action name="actionModeJS8Slow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>JS8 (&amp;Slow, 30s, 24Hz, ~8 WPM)</string>
    </property>
   </action>
  </widget>
