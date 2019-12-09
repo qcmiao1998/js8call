@@ -4225,7 +4225,7 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     }
 #endif
 
-#if JS8_ENABLE_JS8E
+#if JS8_ENABLE_JS8I
     if(couldDecodeI){
         DecodeParams d;
         d.submode = Varicode::JS8CallUltra;
