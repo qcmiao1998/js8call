@@ -4157,7 +4157,7 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     qint32 startE = -1;
     qint32 szE = -1;
     qint32 cycleE = -1;
-    if(JS8_DEBUG_DECODE) qDebug() << "? SLOW" << currentDecodeStartE << nextDecodeStartE;
+    if(JS8_DEBUG_DECODE) qDebug() << "? SLOW     " << currentDecodeStartE << nextDecodeStartE;
     bool couldDecodeE = isDecodeReady(Varicode::JS8CallSlow, k, k0, &currentDecodeStartE, &nextDecodeStartE, &startE, &szE, &cycleE);
     if(m_diskData){
         startE = 0;
@@ -4172,7 +4172,7 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     qint32 startI = -1;
     qint32 szI = -1;
     qint32 cycleI = -1;
-    if(JS8_DEBUG_DECODE) qDebug() << "? ULTRA" << currentDecodeStartI << nextDecodeStartI;
+    if(JS8_DEBUG_DECODE) qDebug() << "? ULTRA    " << currentDecodeStartI << nextDecodeStartI;
     bool couldDecodeI = isDecodeReady(Varicode::JS8CallUltra, k, k0, &currentDecodeStartI, &nextDecodeStartI, &startI, &szI, &cycleI);
     if(m_diskData){
         startI = 0;
