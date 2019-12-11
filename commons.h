@@ -14,7 +14,7 @@
 #define JS8_ALLOW_EXTENDED 1       // allow extended latin-1 capital charset
 
 #ifdef QT_DEBUG
-#define JS8_DEBUG_DECODE   1       // emit debug statements for the decode pipeline
+#define JS8_DEBUG_DECODE   0       // emit debug statements for the decode pipeline
 #else
 #define JS8_DEBUG_DECODE   0
 #endif
@@ -38,7 +38,7 @@
 #define JS8C_TX_SECONDS     6
 #define JS8C_START_DELAY_MS 100
 
-#define JS8E_SYMBOL_SAMPLES 4000
+#define JS8E_SYMBOL_SAMPLES 3840
 #define JS8E_TX_SECONDS     30
 #define JS8E_START_DELAY_MS 500
 

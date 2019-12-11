@@ -5769,7 +5769,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>JS8 (&amp;Slow, 30s, 24Hz, ~8 WPM)</string>
+    <string>JS8 (&amp;Slow, 30s, 25Hz, ~8 WPM)</string>
    </property>
   </action>
  </widget>

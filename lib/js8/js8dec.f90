@@ -466,6 +466,12 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
            ios=mod(itone(i)+4,7)
            xnoi=xnoi+s2(ios,i)**2
         enddo
+
+        if(NWRITELOG.eq.1) then
+            write(*,*) '<DecodeDebug> snr', xnoi, xsig, xbase, db(xsig/xbase), db(xsig/xbase - 1.0)
+            flush(6)
+        endif
+
         xsnr=0.001
         if(xnoi.gt.0 .and. xnoi.lt.xsig) xsnr=xsig/xnoi-1.0
         xsnr=10.0*log10(xsnr)-27.0
