@@ -476,7 +476,7 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
         if(xnoi.gt.0 .and. xnoi.lt.xsig) xsnr=xsig/xnoi-1.0
         xsnr=10.0*log10(xsnr)-27.0
         xsnr2=db(xsig/xbase - 1.0) - 32.0
-        if(.not.nagain) xsnr=xsnr2
+        if(.not.nagain) xsnr=min(xsnr, xsnr2)
         if(xsnr .lt. -28.0) xsnr=-28.0
 
         msg37=origmsg//'               '
