@@ -101,7 +101,6 @@ contains
         f1=candidate(1,icand)
         xdt=candidate(2,icand)
         xbase=10.0**(0.1*(sbase(nint(f1/(12000.0/NFFT1)))-40.0)) ! 3.125Hz
-        nsnr0=min(99,nint(10.0*log10(sync) - 25.5))    !### empirical ###
 
         if(NWRITELOG.eq.1) then
           write(*,*) '<DecodeDebug> candidate', icand, 'f1', f1, 'sync', sync, 'xdt', xdt, 'xbase', xbase
