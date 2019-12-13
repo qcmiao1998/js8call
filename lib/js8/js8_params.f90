@@ -1,1 +1,1 @@
-parameter (NWRITELOG=1)               !Write log file?
+parameter (NWRITELOG=0)               !Write log file?
