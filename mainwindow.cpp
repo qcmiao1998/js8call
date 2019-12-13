@@ -1196,6 +1196,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
                     setSubmode(submode);
                 });
             }
+
+            int tdrift = -int(items.last().tdrift * 1000);
+            auto qtrAction = menu->addAction(QString("Jump to %1 time drift").arg(tdrift));
+            connect(qtrAction, &QAction::triggered, this, [this, tdrift](){
+                setDrift(tdrift);
+            });
         }
 
         menu->addSeparator();
@@ -1431,6 +1437,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
                     setSubmode(submode);
                 });
             }
+
+            int tdrift = -int(m_callActivity[selectedCall].tdrift * 1000);
+            auto qtrAction = menu->addAction(QString("Jump to %1 time drift").arg(tdrift));
+            connect(qtrAction, &QAction::triggered, this, [this, tdrift](){
+                setDrift(tdrift);
+            });
 
             menu->addSeparator();
         }
