@@ -289,7 +289,6 @@ set (wsjt_FSRCS
   lib/jt4_decode.f90
   lib/jt65_decode.f90
   lib/jt65_mod.f90
-  lib/ft8_decode.f90
   lib/jt9_decode.f90
   lib/options.f90
   lib/packjt.f90
@@ -298,6 +297,8 @@ set (wsjt_FSRCS
   lib/timer_impl.f90
   lib/timer_module.f90
   lib/wavhdr.f90
+  lib/js8a_module.f90
+  lib/js8a_decode.f90
   lib/js8b_module.f90
   lib/js8b_decode.f90
   lib/js8c_module.f90
@@ -320,8 +321,6 @@ set (wsjt_FSRCS
   lib/averms.f90
   lib/azdist.f90
   lib/badmsg.f90
-  lib/ft8/baseline.f90
-  # lib/js8/baselinejs8.f90
   lib/bpdecode40.f90
   lib/bpdecode144.f90
   lib/ft8/bpdecode174.f90
@@ -386,17 +385,8 @@ set (wsjt_FSRCS
   lib/fqso_first.f90
   lib/freqcal.f90
   lib/ft8/ft8apset.f90
-  lib/ft8/ft8b.f90
-  # lib/js8/js8params.f90
-  # lib/js8/js8b.f90
-  lib/ft8/ft8code.f90
-  lib/ft8/ft8_downsample.f90
-  # lib/js8/js8_downsample.f90
-  lib/ft8/ft8sim.f90
   lib/ft8/genft8.f90
   lib/js8/genjs8.f90
-  lib/ft8/genft8refsig.f90
-  # lib/js8/genjs8refsig.f90
   lib/geodist.f90
   lib/getlags.f90
   lib/getmet4.f90
@@ -417,8 +407,7 @@ set (wsjt_FSRCS
   lib/jplsubs.f
   lib/jt9fano.f90
   lib/jtmsg.f90
-  lib/ldpcsim144.f90
-  lib/ft8/ldpcsim174.f90
+  lib/js8/ldpcsim174js8a.f90
   lib/js8/ldpcsim174js8b.f90
   lib/js8/ldpcsim174js8c.f90
   lib/js8/ldpcsim174js8e.f90
@@ -460,8 +449,6 @@ set (wsjt_FSRCS
   lib/spec9f.f90
   lib/stdmsg.f90
   lib/subtract65.f90
-  lib/ft8/subtractft8.f90
-  # lib/js8/subtractjs8.f90
   lib/sun.f90
   lib/symspec.f90
   lib/symspec2.f90
@@ -469,10 +456,6 @@ set (wsjt_FSRCS
   lib/sync4.f90
   lib/sync64.f90
   lib/sync65.f90
-  lib/ft8/sync8.f90
-  # lib/js8/syncjs8.f90
-  lib/ft8/sync8d.f90
-  # lib/js8/syncjs8d.f90
   lib/sync9.f90
   lib/sync9f.f90
   lib/sync9w.f90
@@ -997,8 +980,8 @@ endif (WIN32)
 add_library (wsjt_qtmm STATIC ${wsjt_qtmm_CXXSRCS} ${wsjt_qtmm_GENUISRCS})
 target_link_libraries (wsjt_qtmm Qt5::Multimedia)
 
-add_executable (ldpcsim174 lib/ft8/ldpcsim174.f90 wsjtx.rc)
-target_link_libraries (ldpcsim174 wsjt_fort wsjt_cxx)
+add_executable (ldpcsim174js8a lib/js8/ldpcsim174js8a.f90 wsjtx.rc)
+target_link_libraries (ldpcsim174js8a wsjt_fort wsjt_cxx)
 
 add_executable (ldpcsim174js8b lib/js8/ldpcsim174js8b.f90 wsjtx.rc)
 target_link_libraries (ldpcsim174js8b wsjt_fort wsjt_cxx)

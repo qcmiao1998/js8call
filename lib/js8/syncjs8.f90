@@ -144,7 +144,6 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   enddo
   ncand=k
 
-
 ! Save only the best of near-dupe freqs.  
   do i=1,ncand
      if(i.ge.2) then
@@ -158,23 +157,18 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
      endif
   enddo
 
-! Put nfqso at top of list
-  do i=1,ncand
-     if(abs(candidate0(1,i)-nfqso).lt.10.0) candidate0(1,i)=-candidate0(1,i)
-  enddo
-  
   fac=20.0/maxval(s)
   s=fac*s
 
 ! Sort by sync
 !  call indexx(candidate0(3,1:ncand),ncand,indx)
+
 ! Sort by frequency 
   call indexx(candidate0(1,1:ncand),ncand,indx)
+
   k=1
-!  do i=ncand,1,-1
   do i=1,ncand
      j=indx(i)
-!     if( candidate0(3,j) .ge. syncmin .and. candidate0(2,j).ge.-1.5 ) then
      if( candidate0(3,j) .ge. syncmin ) then
        candidate(1,k)=abs(candidate0(1,j))
        candidate(2,k)=candidate0(2,j)

@@ -3,7 +3,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   !$ use omp_lib
   use prog_args
   use timer_module, only: timer
-  use ft8_decode
+  use js8a_decode
   use js8b_decode
   use js8c_decode
   use js8e_decode
@@ -12,9 +12,9 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   include 'jt9com.f90'
   include 'timer_common.inc'
 
-  type, extends(ft8_decoder) :: counting_ft8_decoder
+  type, extends(js8a_decoder) :: counting_js8a_decoder
      integer :: decoded
-  end type counting_ft8_decoder
+  end type counting_js8a_decoder
 
   type, extends(js8b_decoder) :: counting_js8b_decoder
      integer :: decoded
@@ -41,7 +41,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   character(len=12) :: mycall, hiscall
   character(len=6) :: mygrid, hisgrid
   save
-  type(counting_ft8_decoder)  :: my_js8a
+  type(counting_js8a_decoder)  :: my_js8a
   type(counting_js8b_decoder) :: my_js8b
   type(counting_js8c_decoder) :: my_js8c
   type(counting_js8e_decoder) :: my_js8e
@@ -69,10 +69,6 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   
 10  nfail=0
   if(params%nmode.eq.8) then
-    c2fox='            '
-    g2fox='    '
-    nsnrfox=-99
-    nfreqfox=-99
     n30z=0
     nwrap=0
     nfox=0
@@ -235,10 +231,6 @@ contains
          ichar(w(4:4)).ge.ichar('0') .and. ichar(w(4:4)).le.ichar('9'))
 
     if(first) then
-       c2fox='            '
-       g2fox='    '
-       nsnrfox=-99
-       nfreqfox=-99
        n30z=0
        nwrap=0
        nfox=0
@@ -291,11 +283,6 @@ contains
           n30z=n30
           n30=n30+nwrap
           nfox=nfox+1
-          c2fox(nfox)=c2
-          g2fox(nfox)=g2
-          nsnrfox(nfox)=snr
-          nfreqfox(nfox)=nint(freq)
-          n30fox(nfox)=n30
        endif
     endif
     
@@ -305,10 +292,10 @@ contains
   end subroutine js8_decoded
 
   subroutine js8a_decoded (this,sync,snr,dt,freq,decoded,nap,qual)
-    use ft8_decode
+    use js8a_decode
     implicit none
 
-    class(ft8_decoder), intent(inout) :: this
+    class(js8a_decoder), intent(inout) :: this
     real, intent(in) :: sync
     integer, intent(in) :: snr
     real, intent(in) :: dt
@@ -323,7 +310,7 @@ contains
     call js8_decoded(sync, snr, dt, freq, decoded, nap, qual, submode)
 
     select type(this)
-    type is (counting_ft8_decoder)
+    type is (counting_js8a_decoder)
        this%decoded = this%decoded + 1
     end select
 

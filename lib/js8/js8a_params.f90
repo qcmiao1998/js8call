@@ -1,8 +1,8 @@
-parameter (NCOSTAS=2)                 !Which JS8 Costas Arrays to use (1=original, 2=three symmetrical costas)
+parameter (NCOSTAS=1)                 !Which JS8 Costas Arrays to use (1=original, 2=three symmetrical costas)
 
-parameter (NSPS=3840, NTXDUR=28, NDOWNSPS=32, NDD=90,  JZ=32)  !  25 Hz  3.125 baud  8 wpm -28.0dB (1.0Eb/N0) 25.28s
+parameter (NSPS=1920, NTXDUR=15, NDOWNSPS=32, NDD=100, JZ=62)  !  50 Hz  6.250 baud 16 wpm -25.0dB (1.0Eb/N0) 12.64s
 
-parameter (AZ=12000.0/(1.0*NSPS)*0.8d0) !Dedupe overlap in Hz
+parameter (AZ=12000.0/(1.0*NSPS)*0.8d0)  !Dedupe overlap in Hz
 parameter (ASTART=0.5)                   !Start delay in seconds
 parameter (ASYNCMIN=1.5)                 !Minimum Sync
 

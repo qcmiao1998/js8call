@@ -1,9 +1,10 @@
-program ldpcsim174
+program ldpcsim174js8
 ! End to end test of the (174,75)/crc12 encoder and decoder.
 use crc
 use packjt
 
-include 'ft8_params.f90'
+include 'js8_params.f90'
+include 'js8a_params.f90'
 
 character*22 msg,msgsent,msgreceived
 character*8 arg
@@ -234,4 +235,4 @@ do i=1,87
 enddo
 close(25)
 
-end program ldpcsim174
+end program ldpcsim174js8
