@@ -1,1 +1,1 @@
-../js8/js8_params.f90
+../js8/js8a_params.f90
