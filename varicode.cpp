@@ -260,6 +260,7 @@ QMap<QString, quint32> basecalls = {
     { "@RACES",     nbasecall + 40 }, // RACES GROUP
     { "@RAYNET",    nbasecall + 41 }, // RAYNET GROUP
     { "@RADAR",     nbasecall + 42 }, // RADAR GROUP
+    { "@SKYWARN",   nbasecall + 43 }, // SKYWARN GROUP
 };
 
 QMap<quint32, QString> cqs = {
