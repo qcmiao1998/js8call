@@ -193,6 +193,7 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
 
   if(NWRITELOG.eq.1) then
     write(*,*) '<DecodeDebug> sync', ibest, nsync
+    write(*,*) '<DecodeDebug> icos', icos7a
     flush(6)
   endif
 
