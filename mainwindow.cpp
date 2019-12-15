@@ -5201,12 +5201,12 @@ QString MainWindow::lookupCallInCompoundCache(QString const &call){
     return m_compoundCallCache.value(call, call);
 }
 
-void MainWindow::spotReport(int offset, int snr, QString callsign, QString grid){
+void MainWindow::spotReport(int submode, int offset, int snr, QString callsign, QString grid){
     if(!m_config.spot_to_reporting_networks()) return;
 
     Frequency frequency = m_freqNominal + offset;
 
-    m_spotClient->enqueueSpot(callsign, grid, frequency, snr);
+    m_spotClient->enqueueSpot(callsign, grid, submode, frequency, snr);
 }
 
 void MainWindow::spotCmd(CommandDetail cmd){
@@ -5217,7 +5217,7 @@ void MainWindow::spotCmd(CommandDetail cmd){
         cmdStr = Varicode::lstrip(cmd.cmd);
     }
 
-    m_spotClient->enqueueCmd(cmdStr, cmd.from, cmd.to, cmd.relayPath, cmd.text, cmd.grid, cmd.extra, m_freqNominal + cmd.freq, cmd.snr);
+    m_spotClient->enqueueCmd(cmdStr, cmd.from, cmd.to, cmd.relayPath, cmd.text, cmd.grid, cmd.extra, cmd.submode, m_freqNominal + cmd.freq, cmd.snr);
 }
 
 void MainWindow::pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid){
@@ -11678,7 +11678,7 @@ void MainWindow::processSpots() {
 
         qDebug() << "spotting call to reporting networks" << d.call << d.snr << d.freq;
 
-        spotReport(d.freq, d.snr, d.call, d.grid);
+        spotReport(d.submode, d.freq, d.snr, d.call, d.grid);
         pskLogReport("JS8", d.freq, d.snr, d.call, d.grid);
 
         sendNetworkMessage("RX.SPOT", "", {

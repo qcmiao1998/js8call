@@ -954,7 +954,7 @@ private:
   void rigFailure (QString const& reason);
   void spotSetLocal();
   void pskSetLocal ();
-  void spotReport(int offset, int snr, QString callsign, QString grid);
+  void spotReport(int submode, int offset, int snr, QString callsign, QString grid);
   void spotCmd(CommandDetail cmd);
   void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
