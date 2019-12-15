@@ -14,7 +14,7 @@ extern "C"
 {
   typedef struct rig RIG;
   struct rig_caps;
-  typedef int vfo_t;
+  typedef unsigned int vfo_t;
 }
 
 // hamlib transceiver and PTT mostly delegated directly to hamlib Rig class
