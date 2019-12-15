@@ -8131,7 +8131,10 @@ void MainWindow::sendHeartbeatAck(QString to, int snr, QString extra){
 
 void MainWindow::on_hbMacroButton_toggled(bool checked){
     if(checked){
-        clearCallsignSelected();
+        // only clear callsign if we do not allow hbs while in qso
+        if(m_config.heartbeat_qso_pause()){
+            clearCallsignSelected();
+        }
 
         if(m_hbInterval){
             m_nextHeartbeat = nextTransmitCycle().addSecs(m_hbInterval * 60);
