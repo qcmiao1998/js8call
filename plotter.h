@@ -83,6 +83,7 @@ public:
   void setRxBand(QString band);
   void setTurbo(bool turbo);
   void setFilter(int width);
+  void setFilterEnabled(bool enabled);
 #if JS8_USE_REFSPEC
   void setReference(bool b) {m_bReference = b;}
   bool Reference() const {return m_bReference;}
@@ -152,6 +153,7 @@ private:
   QString m_rxBand;
   QString m_redFile;
 
+  bool    m_filterEnabled;
   int     m_filterWidth;
   bool    m_turbo;
   bool    m_Running;

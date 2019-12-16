@@ -27,6 +27,9 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   m_palettes_path {":/Palettes"},
   m_ntr0 {0},
   m_n {0},
+  m_filterWidth {0},
+  m_filterWidthPrev {0},
+  m_filterEnabled {false},
   m_bHaveTransmitted {false}
 {
   ui->setupUi(this);
@@ -111,7 +114,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     ui->controls_widget->setVisible(!m_settings->value("HideControls", false).toBool());
     ui->cbControls->setChecked(!m_settings->value("HideControls", false).toBool());
 
-    setFilter(m_settings->value("FilterWidth", 0).toInt());
+    setFilter(m_settings->value("FilterWidth", 500).toInt());
     setFilterEnabled(m_settings->value("FilterEnabled", false).toBool());
   }
 
@@ -327,20 +330,25 @@ int WideGraph::Fmax()                                              //Fmax
 
 int WideGraph::filter()
 {
-    return m_filterEnabled ? m_filterWidth : 0;
+    return std::max(0, std::min(m_filterWidth, 5000));
+}
+
+bool WideGraph::filterEnabled()
+{
+    return m_filterEnabled;
 }
 
 void WideGraph::setFilter(int width){
-    if(width == m_filterWidth){
-        return;
-    }
-
     // update the filter history
     m_filterWidthPrev = m_filterWidth;
     m_filterWidth = width;
 
     // update the spinner UI
-    ui->filterSpinBox->setValue(width);
+    bool blocked = ui->filterSpinBox->blockSignals(true);
+    {
+        ui->filterSpinBox->setValue(width);
+    }
+    ui->filterSpinBox->blockSignals(blocked);
 
     // update the wide plot UI
     ui->widePlot->setFilter(width);
@@ -353,9 +361,18 @@ void WideGraph::setFilterMinimum(int width){
 void WideGraph::setFilterEnabled(bool enabled){
     m_filterEnabled = enabled;
 
-    // update the wide plot with the
-    ui->widePlot->setFilter(enabled ? m_filterWidth : 0);
+    // update the filter spinner
     ui->filterSpinBox->setEnabled(enabled);
+
+    // update the checkbox ui
+    bool blocked = ui->filterCheckBox->blockSignals(true);
+    {
+        ui->filterCheckBox->setChecked(enabled);
+    }
+    ui->filterCheckBox->blockSignals(blocked);
+
+    // update the wideplot
+    ui->widePlot->setFilterEnabled(enabled);
 }
 
 int WideGraph::fSpan()

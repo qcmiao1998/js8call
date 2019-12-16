@@ -34,6 +34,7 @@ public:
   int    Fmin();
   int    Fmax();
   int    filter();
+  bool   filterEnabled();
   void   setFilter(int width);
   void   setFilterMinimum(int width);
   void   setFilterEnabled(bool enabled);

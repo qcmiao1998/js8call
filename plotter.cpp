@@ -28,6 +28,7 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_plot2dGain {0},
   m_plot2dZero {0},
   m_nSubMode {0},
+  m_filterEnabled{false},
   m_filterWidth {0},
   m_turbo {false},
   m_Running {false},
@@ -123,7 +124,7 @@ void CPlotter::paintEvent(QPaintEvent *)                                // paint
     painter.drawPixmap(m_lastMouseX, 0, m_HoverOverlayPixmap);
   }
 
-  if(m_filterWidth > 0){
+  if(m_filterEnabled && m_filterWidth > 0){
     painter.drawPixmap(0, 0, m_FilterOverlayPixmap);
   }
 
@@ -531,7 +532,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       hoverPainter.drawText(fwidth + 5, m_h, QString("%1").arg(f));
 #endif
 
-      if(m_filterWidth > 0){
+      if(m_filterEnabled && m_filterWidth > 0){
           int filterStart=XfromFreq(m_rxFreq+bw/2-m_filterWidth/2);
           int filterEnd=XfromFreq(m_rxFreq+bw/2+m_filterWidth/2);
 
@@ -551,7 +552,6 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
           filterPainter.fillRect(0, 30, filterStart, m_h, blackMask);
           filterPainter.fillRect(filterEnd+1, 30, m_Size.width(), m_h, blackMask);
       }
-
   }
 }
 
@@ -818,6 +818,12 @@ void CPlotter::setTurbo(bool turbo)
 void CPlotter::setFilter(int width)
 {
   m_filterWidth=width;
+  DrawOverlay();
+  update();
+}
+
+void CPlotter::setFilterEnabled(bool enabled){
+  m_filterEnabled=enabled;
   DrawOverlay();
   update();
 }
