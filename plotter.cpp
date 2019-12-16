@@ -28,6 +28,7 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_plot2dGain {0},
   m_plot2dZero {0},
   m_nSubMode {0},
+  m_filterWidth {0},
   m_turbo {false},
   m_Running {false},
   m_paintEventBusy {false},
@@ -86,6 +87,8 @@ void CPlotter::resizeEvent(QResizeEvent* )                    //resizeEvent()
     m_h1=m_h-m_h2;
 //    m_line=0;
 
+    m_FilterOverlayPixmap = QPixmap(m_Size.width(), m_h);
+    m_FilterOverlayPixmap.fill(Qt::transparent);
     m_DialOverlayPixmap = QPixmap(m_Size.width(), m_h);
     m_DialOverlayPixmap.fill(Qt::transparent);
     m_HoverOverlayPixmap = QPixmap(m_Size.width(), m_h);
@@ -118,6 +121,10 @@ void CPlotter::paintEvent(QPaintEvent *)                                // paint
 
   if(m_lastMouseX >= 0 && m_lastMouseX != x){
     painter.drawPixmap(m_lastMouseX, 0, m_HoverOverlayPixmap);
+  }
+
+  if(m_filterWidth > 0){
+    painter.drawPixmap(0, 0, m_FilterOverlayPixmap);
   }
 
   m_paintEventBusy=false;
@@ -467,7 +474,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   }
 
 
-
+  // paint dials and filter overlays
   if(m_mode=="FT8"){
       int fwidth=XfromFreq(m_rxFreq+bw)-XfromFreq(m_rxFreq);
 #if TEST_FOX_WAVE_GEN
@@ -523,6 +530,28 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       hoverPainter.setFont(Font);
       hoverPainter.drawText(fwidth + 5, m_h, QString("%1").arg(f));
 #endif
+
+      if(m_filterWidth > 0){
+          int filterStart=XfromFreq(m_rxFreq+bw/2-m_filterWidth/2);
+          int filterEnd=XfromFreq(m_rxFreq+bw/2+m_filterWidth/2);
+
+          // TODO: make sure filter is visible before painting...
+
+          QPainter filterPainter(&m_FilterOverlayPixmap);
+          filterPainter.initFrom(this);
+          filterPainter.setCompositionMode(QPainter::CompositionMode_Source);
+          filterPainter.fillRect(0, 0, m_Size.width(), m_h, Qt::transparent);
+
+          QPen thinYellow(Qt::yellow, 1);
+          filterPainter.setPen(thinYellow);
+          filterPainter.drawLine(filterStart, 30, filterStart, m_h);
+          filterPainter.drawLine(filterEnd, 30, filterEnd, m_h);
+
+          QColor blackMask(0, 0, 0, 128);
+          filterPainter.fillRect(0, 30, filterStart, m_h, blackMask);
+          filterPainter.fillRect(filterEnd+1, 30, m_Size.width(), m_h, blackMask);
+      }
+
   }
 }
 
@@ -782,6 +811,13 @@ void CPlotter::setRxBand(QString band)
 void CPlotter::setTurbo(bool turbo)
 {
   m_turbo=turbo;
+  DrawOverlay();
+  update();
+}
+
+void CPlotter::setFilter(int width)
+{
+  m_filterWidth=width;
   DrawOverlay();
   update();
 }

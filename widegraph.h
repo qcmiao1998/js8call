@@ -33,6 +33,10 @@ public:
   int    nStartFreq();
   int    Fmin();
   int    Fmax();
+  int    filter();
+  void   setFilter(int width);
+  void   setFilterMinimum(int width);
+  void   setFilterEnabled(bool enabled);
   int    fSpan();
   void   saveSettings();
   void   setFsample(int n);
@@ -89,6 +93,8 @@ private slots:
   void on_zero2dSlider_valueChanged(int value);
   void on_smoSpinBox_valueChanged(int n);  
   void on_sbPercent2dPlot_valueChanged(int n);
+  void on_filterSpinBox_valueChanged(int n);
+  void on_filterCheckBox_toggled(bool b);
 
 private:
   void readPalette ();
@@ -102,6 +108,10 @@ private:
   WFPalette m_userPalette;
   QHash<QString, QVariant> m_fMinPerBand;
 
+  bool m_filterEnabled;
+
+  qint32 m_filterWidth;
+  qint32 m_filterWidthPrev;
   qint32 m_waterfallAvg;
   qint32 m_TRperiod;
   qint32 m_nsps;

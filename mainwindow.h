@@ -943,6 +943,7 @@ private:
   void statusChanged();
   void fixStop();
   int computePeriodForSubmode(int submode);
+  int computeBandwidthForSubmode(int submode);
   int computeStop(int submode, int period);
   //int computeCurrentCycle(int period);
   //int computeCycleStartForDecode(int cycle, int period);

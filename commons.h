@@ -84,19 +84,18 @@ extern struct dec_data {
   short int d2[NTMAX*RX_SAMPLE_RATE]; // sample frame buffer for sample collection
   struct
   {
-    int nutc;                   //UTC as integer, HHMM
-    bool ndiskdat;              //true ==> data read from *.wav file
-    int ntrperiod;              //TR period (seconds)
-    int nQSOProgress;           /* QSO state machine state */
-    int nfqso;                  //User-selected QSO freq (kHz)
-    int nftx;                   /* Transmit audio offset where
-                                   replies might be expected */
-    bool newdat;                //true ==> new data, must do long FFT
-    int npts8;                  //npts for c0() array
-    int nfa;                    //Low decode limit (Hz)
-    int nfSplit;                //JT65 | JT9 split frequency
-    int nfb;                    //High decode limit (Hz)
-    int ntol;                   //+/- decoding range around fQSO (Hz)
+    int nutc;                   // UTC as integer, HHMM
+    bool ndiskdat;              // true ==> data read from *.wav file
+    int ntrperiod;              // TR period (seconds)
+    int nQSOProgress;           // QSO state machine state
+    int nfqso;                  // User-selected QSO freq (kHz)
+    int nftx;                   // Transmit audio offset where replies might be expected
+    bool newdat;                // true ==> new data, must do long FFT
+    int npts8;                  // npts for c0() array
+    int nfa;                    // Low decode limit (Hz) (filter min)
+    int nfSplit;                // JT65 | JT9 split frequency
+    int nfb;                    // High decode limit (Hz) (filter max)
+    int ntol;                   // +/- decoding range around fQSO (Hz)
     int kin;                    // number of frames written to d2
     int kposA;                  // starting position of decode for submode A
     int kposB;                  // starting position of decode for submode B
@@ -109,8 +108,8 @@ extern struct dec_data {
     int kszE;                   // number of frames for decode for submode E
     int kszI;                   // number of frames for decode for submode I
     int nzhsym;                 // half symbol stop index
-    int nsubmode;
-    int nsubmodes;
+    int nsubmode;               // which submode to decode (-1 if using nsubmodes)
+    int nsubmodes;              // which submodes to decode
     bool nagain;
     int ndepth;
     bool lft8apon;

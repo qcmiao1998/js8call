@@ -10,6 +10,7 @@
 #include "SettingsGroup.hpp"
 
 #include "DriftingDateTime.h"
+#include "keyeater.h"
 
 #include "moc_widegraph.cpp"
 
@@ -34,6 +35,16 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   setWindowFlags (Qt::WindowCloseButtonHint | Qt::WindowMinimizeButtonHint);
   setMaximumWidth (MAX_SCREENSIZE);
   setMaximumHeight (880);
+
+  auto filterEscapeEater = new KeyPressEater();
+  connect(filterEscapeEater, &KeyPressEater::keyPressed, this, [this](QObject */*obj*/, QKeyEvent *e, bool *pProcessed){
+      if(e->key() != Qt::Key_Escape){
+          return;
+      }
+      setFilter(0);
+      if(pProcessed) *pProcessed=true;
+  });
+  ui->filterSpinBox->installEventFilter(filterEscapeEater);
 
   ui->widePlot->setCursor(Qt::CrossCursor);
   ui->widePlot->setMaximumHeight(800);
@@ -99,6 +110,9 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     setRxRange ();
     ui->controls_widget->setVisible(!m_settings->value("HideControls", false).toBool());
     ui->cbControls->setChecked(!m_settings->value("HideControls", false).toBool());
+
+    setFilter(m_settings->value("FilterWidth", 0).toInt());
+    setFilterEnabled(m_settings->value("FilterEnabled", false).toBool());
   }
 
   int index=0;
@@ -155,6 +169,8 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("HideControls", ui->controls_widget->isHidden ());
   m_settings->setValue ("FminPerBand", m_fMinPerBand);
   m_settings->setValue ("CenterOffset", ui->centerSpinBox->value());
+  m_settings->setValue ("FilterWidth", m_filterWidth);
+  m_settings->setValue ("FilterEnabled", m_filterEnabled);
 }
 
 void WideGraph::drawRed(int ia, int ib)
@@ -307,6 +323,39 @@ int WideGraph::Fmin()                                              //Fmin
 int WideGraph::Fmax()                                              //Fmax
 {
   return std::min(5000,ui->widePlot->Fmax());
+}
+
+int WideGraph::filter()
+{
+    return m_filterEnabled ? m_filterWidth : 0;
+}
+
+void WideGraph::setFilter(int width){
+    if(width == m_filterWidth){
+        return;
+    }
+
+    // update the filter history
+    m_filterWidthPrev = m_filterWidth;
+    m_filterWidth = width;
+
+    // update the spinner UI
+    ui->filterSpinBox->setValue(width);
+
+    // update the wide plot UI
+    ui->widePlot->setFilter(width);
+}
+
+void WideGraph::setFilterMinimum(int width){
+    ui->filterSpinBox->setMinimum(width);
+}
+
+void WideGraph::setFilterEnabled(bool enabled){
+    m_filterEnabled = enabled;
+
+    // update the wide plot with the
+    ui->widePlot->setFilter(enabled ? m_filterWidth : 0);
+    ui->filterSpinBox->setEnabled(enabled);
 }
 
 int WideGraph::fSpan()
@@ -566,6 +615,14 @@ void WideGraph::on_sbPercent2dPlot_valueChanged(int n)
 {
   m_Percent2DScreen=n;
   ui->widePlot->SetPercent2DScreen(n);
+}
+
+void WideGraph::on_filterSpinBox_valueChanged(int n){
+    setFilter(n);
+}
+
+void WideGraph::on_filterCheckBox_toggled(bool b){
+    setFilterEnabled(b);
 }
 
 void WideGraph::setRedFile(QString fRed)

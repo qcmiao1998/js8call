@@ -2534,6 +2534,18 @@ int MainWindow::computePeriodForSubmode(int submode){
     return 0;
 }
 
+int MainWindow::computeBandwidthForSubmode(int submode){
+    switch(submode){
+        case Varicode::JS8CallNormal: return 8 * RX_SAMPLE_RATE / JS8A_SYMBOL_SAMPLES;
+        case Varicode::JS8CallFast:   return 8 * RX_SAMPLE_RATE / JS8B_SYMBOL_SAMPLES;
+        case Varicode::JS8CallTurbo:  return 8 * RX_SAMPLE_RATE / JS8C_SYMBOL_SAMPLES;
+        case Varicode::JS8CallSlow:   return 8 * RX_SAMPLE_RATE / JS8E_SYMBOL_SAMPLES;
+        case Varicode::JS8CallUltra:  return 8 * RX_SAMPLE_RATE / JS8I_SYMBOL_SAMPLES;
+    }
+
+    return 0;
+}
+
 int MainWindow::computeStop(int submode, int period){
     int stop = 0;
 
@@ -4357,9 +4369,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nagain=0;
     dec_data.params.nzhsym=m_ihsym;
 
-    dec_data.params.nfa=m_wideGraph->nStartFreq();
-    dec_data.params.nfb=m_wideGraph->Fmax();
-
     if(dec_data.params.nagain==0 && dec_data.params.newdat==1 && (!m_diskData)) {
       qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
       int imin=ms/60000;
@@ -4406,6 +4415,13 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nfa=m_wideGraph->nStartFreq();
     dec_data.params.nfSplit=m_wideGraph->Fmin();
     dec_data.params.nfb=m_wideGraph->Fmax();
+
+    int filter = max(0, m_wideGraph->filter());
+    if(filter){
+        int f = currentFreqOffset() + computeBandwidthForSubmode(submode)/2;
+        dec_data.params.nfa=max(0, f - filter/2);
+        dec_data.params.nfb=min(f + filter/2, 5000);
+    }
 
     //if(m_mode=="FT8" and m_config.bHound() and !ui->cbRxAll->isChecked()) dec_data.params.nfb=1000;
     //if(m_mode=="FT8" and m_config.bFox()) dec_data.params.nfqso=200;
@@ -7534,6 +7550,8 @@ void MainWindow::on_actionJS8_triggered()
   updateModeButtonText();
 
   m_wideGraph->setSubMode(m_nSubMode);
+  m_wideGraph->setFilterMinimum(computeBandwidthForSubmode(m_nSubMode));
+
   bool bVHF=m_config.enable_VHF_features();
   enable_DXCC_entity (m_config.DXCC ());
   switch_mode (Modes::JS8);

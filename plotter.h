@@ -82,6 +82,7 @@ public:
   void setTol(int n);
   void setRxBand(QString band);
   void setTurbo(bool turbo);
+  void setFilter(int width);
 #if JS8_USE_REFSPEC
   void setReference(bool b) {m_bReference = b;}
   bool Reference() const {return m_bReference;}
@@ -135,6 +136,7 @@ private:
   qint32  m_ia;
   qint32  m_ib;
 
+  QPixmap m_FilterOverlayPixmap;
   QPixmap m_DialOverlayPixmap;
   QPixmap m_HoverOverlayPixmap;
   QPixmap m_WaterfallPixmap;
@@ -150,6 +152,7 @@ private:
   QString m_rxBand;
   QString m_redFile;
 
+  int     m_filterWidth;
   bool    m_turbo;
   bool    m_Running;
   bool    m_paintEventBusy;
