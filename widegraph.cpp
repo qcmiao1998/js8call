@@ -519,11 +519,13 @@ void WideGraph::setDialFreq(double d)                             //setDialFreq
 
 void WideGraph::setControlsVisible(bool visible)
 {
+  ui->cbControls->setChecked(!visible);
   ui->cbControls->setChecked(visible);
 }
 
 bool WideGraph::controlsVisible(){
-  return ui->cbControls->isChecked();
+  auto sizes = ui->splitter->sizes();
+  return ui->cbControls->isChecked() && sizes.last() > 0;
 }
 
 void WideGraph::setRxBand (QString const& band)
@@ -588,6 +590,15 @@ void WideGraph::on_cbRef_toggled(bool b)
 void WideGraph::on_cbControls_toggled(bool b)
 {
   ui->controls_widget->setVisible(b);
+
+  static int lastSize = ui->splitter->width()/4;
+  auto sizes = ui->splitter->sizes();
+  if(b){
+      ui->splitter->setSizes({ sizes.first(), lastSize });
+  } else {
+      // keep track of the last size of the control
+      lastSize = qMax(sizes.last(), 100);
+  }
 }
 
 void WideGraph::on_adjust_palette_push_button_clicked (bool)   //Adjust Palette
