@@ -33,10 +33,11 @@ public:
   int    nStartFreq();
   int    Fmin();
   int    Fmax();
-  int    filter();
+  int    filterMinimum();
+  int    filterMaximum();
   bool   filterEnabled();
-  void   setFilter(int width);
-  void   setFilterMinimum(int width);
+  void   setFilter(int a, int b);
+  void   setFilterMinimumBandwidth(int width);
   void   setFilterEnabled(bool enabled);
   int    fSpan();
   void   saveSettings();
@@ -81,7 +82,6 @@ private slots:
   void on_waterfallAvgSpinBox_valueChanged(int arg1);
   void on_bppSpinBox_valueChanged(int arg1);
   void on_spec2dComboBox_currentIndexChanged(const QString &arg1);
-  void on_fSplitSpinBox_valueChanged(int n);
   void on_fStartSpinBox_valueChanged(int n);
   void on_paletteComboBox_activated(const QString &palette);
   void on_cbFlatten_toggled(bool b);
@@ -94,7 +94,8 @@ private slots:
   void on_zero2dSlider_valueChanged(int value);
   void on_smoSpinBox_valueChanged(int n);  
   void on_sbPercent2dPlot_valueChanged(int n);
-  void on_filterSpinBox_valueChanged(int n);
+  void on_filterMinSpinBox_valueChanged(int n);
+  void on_filterMaxSpinBox_valueChanged(int n);
   void on_filterCheckBox_toggled(bool b);
 
 private:
@@ -111,8 +112,9 @@ private:
 
   bool m_filterEnabled;
 
-  qint32 m_filterWidth;
-  qint32 m_filterWidthPrev;
+  qint32 m_filterMinWidth;
+  qint32 m_filterMinimum;
+  qint32 m_filterMaximum;
   qint32 m_waterfallAvg;
   qint32 m_TRperiod;
   qint32 m_nsps;

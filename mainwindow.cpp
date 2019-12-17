@@ -4417,12 +4417,8 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nfb=m_wideGraph->Fmax();
 
     if(m_wideGraph->filterEnabled()){
-        int filter = max(0, m_wideGraph->filter());
-        if(filter){
-            int f = currentFreqOffset() + computeBandwidthForSubmode(submode)/2;
-            dec_data.params.nfa=max(0, f - filter/2);
-            dec_data.params.nfb=min(f + filter/2, 5000);
-        }
+        dec_data.params.nfa=max(0, m_wideGraph->filterMinimum());
+        dec_data.params.nfb=min(m_wideGraph->filterMaximum(), 5000);
     }
 
     //if(m_mode=="FT8" and m_config.bHound() and !ui->cbRxAll->isChecked()) dec_data.params.nfb=1000;
@@ -7552,7 +7548,7 @@ void MainWindow::on_actionJS8_triggered()
   updateModeButtonText();
 
   m_wideGraph->setSubMode(m_nSubMode);
-  m_wideGraph->setFilterMinimum(computeBandwidthForSubmode(m_nSubMode) + 2*rxThreshold(m_nSubMode));
+  m_wideGraph->setFilterMinimumBandwidth(computeBandwidthForSubmode(m_nSubMode) + 2*rxThreshold(m_nSubMode));
 
   bool bVHF=m_config.enable_VHF_features();
   enable_DXCC_entity (m_config.DXCC ());

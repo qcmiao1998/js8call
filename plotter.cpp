@@ -29,6 +29,7 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_plot2dZero {0},
   m_nSubMode {0},
   m_filterEnabled{false},
+  m_filterCenter {0},
   m_filterWidth {0},
   m_turbo {false},
   m_Running {false},
@@ -533,8 +534,9 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 #endif
 
       if(m_filterEnabled && m_filterWidth > 0){
-          int filterStart=XfromFreq(m_rxFreq+bw/2-m_filterWidth/2);
-          int filterEnd=XfromFreq(m_rxFreq+bw/2+m_filterWidth/2);
+          int center = m_filterCenter; // m_rxFreq+bw/2;
+          int filterStart=XfromFreq(center-m_filterWidth/2);
+          int filterEnd=XfromFreq(center+m_filterWidth/2);
 
           // TODO: make sure filter is visible before painting...
 
@@ -815,7 +817,13 @@ void CPlotter::setTurbo(bool turbo)
   update();
 }
 
-void CPlotter::setFilter(int width)
+void CPlotter::setFilterCenter(int center){
+  m_filterCenter=center;
+  DrawOverlay();
+  update();
+}
+
+void CPlotter::setFilterWidth(int width)
 {
   m_filterWidth=width;
   DrawOverlay();

@@ -27,8 +27,9 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   m_palettes_path {":/Palettes"},
   m_ntr0 {0},
   m_n {0},
-  m_filterWidth {0},
-  m_filterWidthPrev {0},
+  m_filterMinWidth {0},
+  m_filterMinimum {0},
+  m_filterMaximum {5000},
   m_filterEnabled {false},
   m_bHaveTransmitted {false}
 {
@@ -44,10 +45,11 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
       if(e->key() != Qt::Key_Escape){
           return;
       }
-      setFilter(0);
+      setFilter(0, 5000);
       if(pProcessed) *pProcessed=true;
   });
-  ui->filterSpinBox->installEventFilter(filterEscapeEater);
+  ui->filterMinSpinBox->installEventFilter(filterEscapeEater);
+  ui->filterMaxSpinBox->installEventFilter(filterEscapeEater);
 
   ui->widePlot->setCursor(Qt::CrossCursor);
   ui->widePlot->setMaximumHeight(800);
@@ -114,7 +116,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     ui->controls_widget->setVisible(!m_settings->value("HideControls", false).toBool());
     ui->cbControls->setChecked(!m_settings->value("HideControls", false).toBool());
 
-    setFilter(m_settings->value("FilterWidth", 500).toInt());
+    setFilter(m_settings->value("FilterMinimum", 500).toInt(), m_settings->value("FilterMaximum", 2500).toInt());
     setFilterEnabled(m_settings->value("FilterEnabled", false).toBool());
   }
 
@@ -172,7 +174,8 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("HideControls", ui->controls_widget->isHidden ());
   m_settings->setValue ("FminPerBand", m_fMinPerBand);
   m_settings->setValue ("CenterOffset", ui->centerSpinBox->value());
-  m_settings->setValue ("FilterWidth", m_filterWidth);
+  m_settings->setValue ("FilterMinimum", m_filterMinimum);
+  m_settings->setValue ("FilterMaximum", m_filterMaximum);
   m_settings->setValue ("FilterEnabled", m_filterEnabled);
 }
 
@@ -328,9 +331,14 @@ int WideGraph::Fmax()                                              //Fmax
   return std::min(5000,ui->widePlot->Fmax());
 }
 
-int WideGraph::filter()
+int WideGraph::filterMinimum()
 {
-    return std::max(0, std::min(m_filterWidth, 5000));
+    return std::max(0, m_filterMinimum);
+}
+
+int WideGraph::filterMaximum()
+{
+    return std::min(m_filterMaximum, 5000);
 }
 
 bool WideGraph::filterEnabled()
@@ -338,31 +346,50 @@ bool WideGraph::filterEnabled()
     return m_filterEnabled;
 }
 
-void WideGraph::setFilter(int width){
+void WideGraph::setFilter(int a, int b){
+    int low = std::min(a, b);
+    int high = std::max(a, b);
+
+    // ensure minimum filter width
+    if(high-low < m_filterMinWidth){
+        high = low + m_filterMinWidth;
+    }
+
     // update the filter history
-    m_filterWidthPrev = m_filterWidth;
-    m_filterWidth = width;
+    m_filterMinimum = low;
+    m_filterMaximum = high;
 
     // update the spinner UI
-    bool blocked = ui->filterSpinBox->blockSignals(true);
+    bool blocked = false;
+    blocked = ui->filterMinSpinBox->blockSignals(true);
     {
-        ui->filterSpinBox->setValue(width);
+        ui->filterMinSpinBox->setValue(low);
     }
-    ui->filterSpinBox->blockSignals(blocked);
+    ui->filterMinSpinBox->blockSignals(blocked);
+
+    blocked = ui->filterMaxSpinBox->blockSignals(true);
+    {
+        ui->filterMaxSpinBox->setValue(high);
+    }
+    ui->filterMaxSpinBox->blockSignals(blocked);
 
     // update the wide plot UI
-    ui->widePlot->setFilter(width);
+    int width = high - low;
+    ui->widePlot->setFilterCenter(low + width/2);
+    ui->widePlot->setFilterWidth(high - low);
 }
 
-void WideGraph::setFilterMinimum(int width){
-    ui->filterSpinBox->setMinimum(width);
+void WideGraph::setFilterMinimumBandwidth(int width){
+    m_filterMinWidth = width;
+    setFilter(m_filterMinimum, std::max(m_filterMinimum+width, m_filterMaximum));
 }
 
 void WideGraph::setFilterEnabled(bool enabled){
     m_filterEnabled = enabled;
 
     // update the filter spinner
-    ui->filterSpinBox->setEnabled(enabled);
+    ui->filterMinSpinBox->setEnabled(enabled);
+    ui->filterMaxSpinBox->setEnabled(enabled);
 
     // update the checkbox ui
     bool blocked = ui->filterCheckBox->blockSignals(true);
@@ -397,7 +424,6 @@ void WideGraph::setTxFreq(int n)                                   //setTxFreq
 void WideGraph::setMode(QString mode)                              //setMode
 {
   m_mode=mode;
-  ui->fSplitSpinBox->setEnabled(m_mode=="JT9+JT65");
   ui->widePlot->setMode(mode);
   ui->widePlot->DrawOverlay();
   ui->widePlot->update();
@@ -440,12 +466,6 @@ void WideGraph::on_spec2dComboBox_currentIndexChanged(const QString &arg1)
   replot();
 }
 
-void WideGraph::on_fSplitSpinBox_valueChanged(int n)              //fSplit
-{
-  if (m_rxBand != "60m") m_fMinPerBand[m_rxBand] = n;
-  setRxRange ();
-}
-
 void WideGraph::setFreq2(int rxFreq, int txFreq)                  //setFreq2
 {
   emit setFreq3(rxFreq,txFreq);
@@ -468,16 +488,6 @@ bool WideGraph::controlsVisible(){
 void WideGraph::setRxBand (QString const& band)
 {
   m_rxBand = band;
-  if ("60m" == m_rxBand)
-    {
-      ui->fSplitSpinBox->setEnabled (false);
-      ui->fSplitSpinBox->setValue (0);
-    }
-  else
-    {
-      ui->fSplitSpinBox->setValue (m_fMinPerBand.value (band, 2500).toUInt ());
-      ui->fSplitSpinBox->setEnabled (m_mode=="JT9+JT65");
-    }
   ui->widePlot->setRxBand(band);
   setRxRange ();
 }
@@ -634,8 +644,12 @@ void WideGraph::on_sbPercent2dPlot_valueChanged(int n)
   ui->widePlot->SetPercent2DScreen(n);
 }
 
-void WideGraph::on_filterSpinBox_valueChanged(int n){
-    setFilter(n);
+void WideGraph::on_filterMinSpinBox_valueChanged(int n){
+    setFilter(n, m_filterMaximum);
+}
+
+void WideGraph::on_filterMaxSpinBox_valueChanged(int n){
+    setFilter(m_filterMinimum, n);
 }
 
 void WideGraph::on_filterCheckBox_toggled(bool b){
