@@ -775,3 +775,8 @@ void WideGraph::setDrift(int n){
         ui->driftSpinBox->setValue(n);
     }
 }
+
+void WideGraph::setQSYEnabled(bool enabled){
+    ui->qsyPushButton->setEnabled(enabled);
+    ui->centerSpinBox->setEnabled(enabled);
+}

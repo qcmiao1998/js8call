@@ -9476,6 +9476,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
       }
       if (m_astroWidget) m_astroWidget->nominal_frequency (m_freqNominal, m_freqTxNominal);
   }
+
   // ensure frequency display is correct
   if (m_astroWidget && old_state.ptt () != s.ptt ()) setRig ();
 

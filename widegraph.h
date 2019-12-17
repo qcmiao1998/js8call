@@ -72,6 +72,7 @@ public slots:
   void setControlsVisible(bool visible);
   bool controlsVisible();
   void setDrift(int n);
+  void setQSYEnabled(bool enabled);
 
 protected:
   void keyPressEvent (QKeyEvent *e) override;

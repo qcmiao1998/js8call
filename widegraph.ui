@@ -160,7 +160,7 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-158</y>
+                <y>0</y>
                 <width>267</width>
                 <height>338</height>
                </rect>
@@ -169,7 +169,7 @@
                <item>
                 <widget class="QGroupBox" name="groupBox_7">
                  <property name="title">
-                  <string>Dial</string>
+                  <string>Offset</string>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
                   <item>
@@ -205,6 +205,9 @@
                  <layout class="QVBoxLayout" name="verticalLayout_9">
                   <item>
                    <widget class="QPushButton" name="qsyPushButton">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Adjust the dial frequency to center the current offset at the center of the bandpass (position defined below).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
                     <property name="text">
                      <string>QSY</string>
                     </property>
@@ -358,7 +361,7 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-435</y>
+                <y>0</y>
                 <width>267</width>
                 <height>615</height>
                </rect>
@@ -837,7 +840,7 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-32</y>
+                <y>0</y>
                 <width>281</width>
                 <height>198</height>
                </rect>
