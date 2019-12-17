@@ -93,6 +93,10 @@ public:
   void setVHF(bool bVHF);
   void setRedFile(QString fRed);
   bool scaleOK () const {return m_bScaleOK;}
+
+  int frequencyAt(int x){ return int(FreqfromX(x)); }
+
+
 signals:
   void freezeDecode1(int n);
   void setFreq1(int rxFreq, int txFreq);

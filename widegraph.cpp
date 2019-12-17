@@ -55,6 +55,41 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   ui->widePlot->setMaximumHeight(800);
   ui->widePlot->setCurrent(false);
 
+  ui->widePlot->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->widePlot, &CPlotter::customContextMenuRequested, this, [this](const QPoint &pos){
+      auto menu = new QMenu(this);
+
+      int f = ui->widePlot->frequencyAt(pos.x());
+
+      auto offsetAction = menu->addAction(QString("Set &Offset to %1").arg(f));
+      connect(offsetAction, &QAction::triggered, this, [this, f](){
+        ui->offsetSpinBox->setValue(f);
+      });
+
+      menu->addSeparator();
+
+      if(m_filterEnabled){
+          auto disableAction = menu->addAction(QString("&Disable Filter"));
+          connect(disableAction, &QAction::triggered, this, [this](){
+            ui->filterCheckBox->setChecked(false);
+          });
+      }
+
+      auto minAction = menu->addAction(QString("Set Filter &Minimum to %1").arg(f));
+      connect(minAction, &QAction::triggered, this, [this, f](){
+        ui->filterMinSpinBox->setValue(f);
+        ui->filterCheckBox->setChecked(true);
+      });
+
+      auto maxAction = menu->addAction(QString("Set Filter Ma&ximum to %1").arg(f));
+      connect(maxAction, &QAction::triggered, this, [this, f](){
+          ui->filterMaxSpinBox->setValue(f);
+          ui->filterCheckBox->setChecked(true);
+      });
+
+      menu->popup(ui->widePlot->mapToGlobal(pos));
+  });
+
   connect(ui->widePlot, SIGNAL(freezeDecode1(int)),this,
           SLOT(wideFreezeDecode(int)));
 
