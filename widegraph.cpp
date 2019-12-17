@@ -61,7 +61,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
 
       int f = ui->widePlot->frequencyAt(pos.x());
 
-      auto offsetAction = menu->addAction(QString("Set &Offset to %1").arg(f));
+      auto offsetAction = menu->addAction(QString("Set &Offset to %1 Hz").arg(f));
       connect(offsetAction, &QAction::triggered, this, [this, f](){
         ui->offsetSpinBox->setValue(f);
       });
@@ -75,13 +75,13 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
           });
       }
 
-      auto minAction = menu->addAction(QString("Set Filter &Minimum to %1").arg(f));
+      auto minAction = menu->addAction(QString("Set Filter &Minimum to %1 Hz").arg(f));
       connect(minAction, &QAction::triggered, this, [this, f](){
         ui->filterMinSpinBox->setValue(f);
         ui->filterCheckBox->setChecked(true);
       });
 
-      auto maxAction = menu->addAction(QString("Set Filter Ma&ximum to %1").arg(f));
+      auto maxAction = menu->addAction(QString("Set Filter Ma&ximum to %1 Hz").arg(f));
       connect(maxAction, &QAction::triggered, this, [this, f](){
           ui->filterMaxSpinBox->setValue(f);
           ui->filterCheckBox->setChecked(true);
