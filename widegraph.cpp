@@ -116,6 +116,11 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     ui->controls_widget->setVisible(!m_settings->value("HideControls", false).toBool());
     ui->cbControls->setChecked(!m_settings->value("HideControls", false).toBool());
 
+    auto splitState = m_settings->value("SplitState").toByteArray();
+    if(!splitState.isEmpty()){
+        ui->splitter->restoreState(splitState);
+    }
+
     setFilter(m_settings->value("FilterMinimum", 500).toInt(), m_settings->value("FilterMaximum", 2500).toInt());
     setFilterEnabled(m_settings->value("FilterEnabled", false).toBool());
   }
@@ -177,6 +182,7 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("FilterMinimum", m_filterMinimum);
   m_settings->setValue ("FilterMaximum", m_filterMaximum);
   m_settings->setValue ("FilterEnabled", m_filterEnabled);
+  m_settings->setValue ("SplitState", ui->splitter->saveState());
 }
 
 void WideGraph::drawRed(int ia, int ib)
@@ -663,4 +669,74 @@ void WideGraph::setRedFile(QString fRed)
 
 void WideGraph::setTurbo(bool turbo){
   ui->widePlot->setTurbo(turbo);
+}
+
+void WideGraph::on_driftSpinBox_valueChanged(int n){
+    if(n == DriftingDateTime::drift()){
+        return;
+    }
+
+    setDrift(n);
+}
+
+void WideGraph::on_driftSyncButton_clicked(){
+    auto now = QDateTime::currentDateTimeUtc();
+
+    int n = 0;
+    int nPos = m_TRperiod - (now.time().second() % m_TRperiod);
+    int nNeg = (now.time().second() % m_TRperiod) - m_TRperiod;
+
+    if(abs(nNeg) < nPos){
+        n = nNeg;
+    } else {
+        n = nPos;
+    }
+
+    setDrift(n * 1000);
+}
+
+void WideGraph::on_driftSyncEndButton_clicked(){
+    auto now = QDateTime::currentDateTimeUtc();
+
+    int n = 0;
+    int nPos = m_TRperiod - (now.time().second() % m_TRperiod);
+    int nNeg = (now.time().second() % m_TRperiod) - m_TRperiod;
+
+    if(abs(nNeg) < nPos){
+        n = nNeg + 2;
+    } else {
+        n = nPos - 2;
+    }
+
+    setDrift(n * 1000);
+}
+
+void WideGraph::on_driftSyncMinuteButton_clicked(){
+    auto now = QDateTime::currentDateTimeUtc();
+    int n = 0;
+    int s = now.time().second();
+
+    if(s < 30){
+        n = -s;
+    } else {
+        n = 60 - s;
+    }
+
+    setDrift(n * 1000);
+}
+
+void WideGraph::on_driftSyncResetButton_clicked(){
+    setDrift(0);
+}
+
+void WideGraph::setDrift(int n){
+    DriftingDateTime::setDrift(n);
+
+    qDebug() << qSetRealNumberPrecision(12) << "Drift milliseconds:" << n;
+    qDebug() << qSetRealNumberPrecision(12) << "Clock time:" << QDateTime::currentDateTimeUtc();
+    qDebug() << qSetRealNumberPrecision(12) << "Drifted time:" << DriftingDateTime::currentDateTimeUtc();
+
+    if(ui->driftSpinBox->value() != n){
+        ui->driftSpinBox->setValue(n);
+    }
 }

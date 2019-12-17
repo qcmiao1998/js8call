@@ -71,6 +71,7 @@ public slots:
   void setDialFreq(double d);
   void setControlsVisible(bool visible);
   bool controlsVisible();
+  void setDrift(int n);
 
 protected:
   void keyPressEvent (QKeyEvent *e) override;
@@ -97,6 +98,13 @@ private slots:
   void on_filterMinSpinBox_valueChanged(int n);
   void on_filterMaxSpinBox_valueChanged(int n);
   void on_filterCheckBox_toggled(bool b);
+
+  void on_driftSpinBox_valueChanged(int n);
+  void on_driftSyncButton_clicked();
+  void on_driftSyncEndButton_clicked();
+  void on_driftSyncMinuteButton_clicked();
+  void on_driftSyncResetButton_clicked();
+
 
 private:
   void readPalette ();

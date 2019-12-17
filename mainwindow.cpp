@@ -2192,8 +2192,7 @@ void MainWindow::writeSettings()
   m_settings->setValue("BandActivityVisible", ui->tableWidgetRXAll->isVisible());
   m_settings->setValue("BandHBActivityVisible", ui->actionShow_Band_Heartbeats_and_ACKs->isChecked());
   m_settings->setValue("TextVerticalSplitter", ui->textVerticalSplitter->saveState());
-  m_settings->setValue("ShowTimeDrift", ui->driftSyncFrame->isVisible());
-  m_settings->setValue("TimeDrift", ui->driftSpinBox->value());
+  m_settings->setValue("TimeDrift", DriftingDateTime::drift());
   m_settings->setValue("ShowTooltips", ui->actionShow_Tooltips->isChecked());
   m_settings->setValue("ShowStatusbar", ui->statusBar->isVisible());
   m_settings->setValue("RXActivity", ui->textEditRX->toHtml());
@@ -2340,8 +2339,7 @@ void MainWindow::readSettings()
   if(!verticalState.isEmpty()){
     ui->textVerticalSplitter->restoreState(verticalState);
   }
-  ui->driftSyncFrame->setVisible(m_settings->value("ShowTimeDrift", false).toBool());
-  ui->driftSpinBox->setValue(m_settings->value("TimeDrift", 0).toInt());
+  setDrift(m_settings->value("TimeDrift", 0).toInt());
   ui->actionShow_Tooltips->setChecked(m_settings->value("ShowTooltips", true).toBool());
   ui->actionShow_Statusbar->setChecked(m_settings->value("ShowStatusbar",true).toBool());
   ui->statusBar->setVisible(ui->actionShow_Statusbar->isChecked());
@@ -2841,8 +2839,6 @@ void MainWindow::on_menuWindow_aboutToShow(){
     ui->actionShow_Waterfall->setChecked(vsizes.last() > 0);
     ui->actionShow_Waterfall_Controls->setChecked(m_wideGraph->controlsVisible());
     ui->actionShow_Waterfall_Controls->setEnabled(ui->actionShow_Waterfall->isChecked());
-    ui->actionShow_Time_Drift_Controls->setChecked(ui->driftSyncFrame->isVisible());
-    ui->actionShow_Time_Drift_Controls->setEnabled(ui->actionShow_Waterfall->isChecked());
 
     QMenu * sortBandMenu = new QMenu(this->menuBar()); //ui->menuWindow);
     buildBandActivitySortByMenu(sortBandMenu);
@@ -3024,10 +3020,6 @@ void MainWindow::on_actionShow_Waterfall_triggered(bool checked){
 
 void MainWindow::on_actionShow_Waterfall_Controls_triggered(bool checked){
     m_wideGraph->setControlsVisible(checked);
-}
-
-void MainWindow::on_actionShow_Time_Drift_Controls_triggered(bool checked){
-    ui->driftSyncFrame->setVisible(checked);
 }
 
 void MainWindow::on_actionReset_Window_Sizes_triggered(){
@@ -9118,78 +9110,6 @@ void MainWindow::on_freeTextMsg_currentTextChanged (QString const& text)
 {
 }
 
-void MainWindow::on_driftSpinBox_valueChanged(int n){
-    if(n == DriftingDateTime::drift()){
-        return;
-    }
-
-    setDrift(n);
-}
-
-void MainWindow::on_driftSyncButton_clicked(){
-    auto now = QDateTime::currentDateTimeUtc();
-
-    int n = 0;
-    int nPos = m_TRperiod - (now.time().second() % m_TRperiod);
-    int nNeg = (now.time().second() % m_TRperiod) - m_TRperiod;
-
-    if(abs(nNeg) < nPos){
-        n = nNeg;
-    } else {
-        n = nPos;
-    }
-
-    setDrift(n * 1000);
-}
-
-void MainWindow::on_driftSyncEndButton_clicked(){
-    auto now = QDateTime::currentDateTimeUtc();
-
-    int n = 0;
-    int nPos = m_TRperiod - (now.time().second() % m_TRperiod);
-    int nNeg = (now.time().second() % m_TRperiod) - m_TRperiod;
-
-    if(abs(nNeg) < nPos){
-        n = nNeg + 2;
-    } else {
-        n = nPos - 2;
-    }
-
-    setDrift(n * 1000);
-}
-
-void MainWindow::on_driftSyncMinuteButton_clicked(){
-    auto now = QDateTime::currentDateTimeUtc();
-    int n = 0;
-    int s = now.time().second();
-
-    if(s < 30){
-        n = -s;
-    } else {
-        n = 60 - s;
-    }
-
-    setDrift(n * 1000);
-}
-
-void MainWindow::on_driftSyncResetButton_clicked(){
-    setDrift(0);
-    resetTimeDeltaAverage();
-}
-
-void MainWindow::setDrift(int n){
-    DriftingDateTime::setDrift(n);
-
-    qDebug() << qSetRealNumberPrecision(12) << "Average delta:" << m_timeDeltaMsMMA;
-    qDebug() << qSetRealNumberPrecision(12) << "Drift milliseconds:" << n;
-    qDebug() << qSetRealNumberPrecision(12) << "Clock time:" << QDateTime::currentDateTimeUtc();
-    qDebug() << qSetRealNumberPrecision(12) << "Drifted time:" << DriftingDateTime::currentDateTimeUtc();
-
-    if(ui->driftSpinBox->value() != n){
-        ui->driftSpinBox->setValue(n);
-    }
-}
-
 void MainWindow::on_rptSpinBox_valueChanged(int n)
 {
   int step=ui->rptSpinBox->singleStep();
@@ -10380,7 +10300,6 @@ void MainWindow::observeTimeDeltaForAverage(float delta){
     if(m_timeDeltaMsMMA < -(float)m_TRperiod || m_timeDeltaMsMMA > (float)m_TRperiod){
         resetTimeDeltaAverage();
     }
-    ui->driftAvgLabel->setText(QString("Avg Time Delta: %1 ms").arg((int)m_timeDeltaMsMMA));
 }
 
 void MainWindow::resetTimeDeltaAverage(){
@@ -10391,6 +10310,14 @@ void MainWindow::resetTimeDeltaAverage(){
     observeTimeDeltaForAverage(0);
 }
 
+
+void MainWindow::setDrift(int n){
+    // drifting functionality moved to the widegraph
+    m_wideGraph->setDrift(n);
+
+    // reset the average if we set a new drift
+    resetTimeDeltaAverage();
+}
 
 void MainWindow::processIdleActivity() {
     auto now = DriftingDateTime::currentDateTimeUtc();

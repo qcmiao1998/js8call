@@ -200,7 +200,6 @@ private slots:
   void on_actionShow_Call_Activity_triggered(bool checked);
   void on_actionShow_Waterfall_triggered(bool checked);
   void on_actionShow_Waterfall_Controls_triggered(bool checked);
-  void on_actionShow_Time_Drift_Controls_triggered(bool checked);
   void on_actionReset_Window_Sizes_triggered();
   void on_actionSettings_triggered();
   void openSettings(int tab=0);
@@ -356,11 +355,6 @@ private slots:
   int findFreeFreqOffset(int fmin, int fmax, int bw);
   void checkRepeat();
   QString calculateDistance(QString const& grid, int *pDistance=nullptr, int *pAzimuth=nullptr);
-  void on_driftSpinBox_valueChanged(int n);
-  void on_driftSyncButton_clicked();
-  void on_driftSyncEndButton_clicked();
-  void on_driftSyncMinuteButton_clicked();
-  void on_driftSyncResetButton_clicked();
   void setDrift(int n);
   void on_rptSpinBox_valueChanged(int n);
   void killFile();
