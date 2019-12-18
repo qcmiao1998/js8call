@@ -2340,6 +2340,7 @@ void MainWindow::readSettings()
     ui->textVerticalSplitter->restoreState(verticalState);
   }
   setDrift(m_settings->value("TimeDrift", 0).toInt());
+  ui->actionShow_Waterfall_Controls->setChecked(m_wideGraph->controlsVisible());
   ui->actionShow_Tooltips->setChecked(m_settings->value("ShowTooltips", true).toBool());
   ui->actionShow_Statusbar->setChecked(m_settings->value("ShowStatusbar",true).toBool());
   ui->statusBar->setVisible(ui->actionShow_Statusbar->isChecked());

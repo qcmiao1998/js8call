@@ -41,6 +41,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   setMaximumHeight (880);
 
   ui->splitter->setChildrenCollapsible(false);
+  ui->splitter->setCollapsible(ui->splitter->indexOf(ui->controls_widget), false);
   ui->splitter->updateGeometry();
 
   auto filterEscapeEater = new KeyPressEater();
