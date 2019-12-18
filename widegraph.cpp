@@ -40,6 +40,9 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   setMaximumWidth (MAX_SCREENSIZE);
   setMaximumHeight (880);
 
+  ui->splitter->setChildrenCollapsible(false);
+  ui->splitter->updateGeometry();
+
   auto filterEscapeEater = new KeyPressEater();
   connect(filterEscapeEater, &KeyPressEater::keyPressed, this, [this](QObject */*obj*/, QKeyEvent *e, bool *pProcessed){
       if(e->key() != Qt::Key_Escape){
