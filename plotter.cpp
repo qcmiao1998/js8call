@@ -550,7 +550,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
           filterPainter.drawLine(filterStart, 30, filterStart, m_h);
           filterPainter.drawLine(filterEnd, 30, filterEnd, m_h);
 
-          QColor blackMask(0, 0, 0, 128);
+          QColor blackMask(0, 0, 0, std::max(0, std::min(m_filterOpacity, 255)));
           filterPainter.fillRect(0, 30, filterStart, m_h, blackMask);
           filterPainter.fillRect(filterEnd+1, 30, m_Size.width(), m_h, blackMask);
       }
@@ -834,6 +834,12 @@ void CPlotter::setFilterEnabled(bool enabled){
   m_filterEnabled=enabled;
   DrawOverlay();
   update();
+}
+
+void CPlotter::setFilterOpacity(int alpha){
+    m_filterOpacity=alpha;
+    DrawOverlay();
+    update();
 }
 
 void CPlotter::setFlatten(bool b1, bool b2)

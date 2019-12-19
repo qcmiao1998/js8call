@@ -39,6 +39,7 @@ public:
   void   setFilter(int a, int b);
   void   setFilterMinimumBandwidth(int width);
   void   setFilterEnabled(bool enabled);
+  void   setFilterOpacityPercent(int n);
   int    fSpan();
   void   saveSettings();
   void   setFsample(int n);
@@ -99,6 +100,7 @@ private slots:
   void on_filterMinSpinBox_valueChanged(int n);
   void on_filterMaxSpinBox_valueChanged(int n);
   void on_filterCheckBox_toggled(bool b);
+  void on_filterOpacitySpinBox_valueChanged(int n);
 
   void on_driftSpinBox_valueChanged(int n);
   void on_driftSyncButton_clicked();

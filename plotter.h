@@ -85,6 +85,7 @@ public:
   void setFilterCenter(int center);
   void setFilterWidth(int width);
   void setFilterEnabled(bool enabled);
+  void setFilterOpacity(int alpha);
 #if JS8_USE_REFSPEC
   void setReference(bool b) {m_bReference = b;}
   bool Reference() const {return m_bReference;}
@@ -173,6 +174,7 @@ private:
 
   float   m_sum[2048];
 
+  qint32  m_filterOpacity;
   qint32  m_dBStepSize;
   qint32  m_FreqUnits;
   qint32  m_hdivs;

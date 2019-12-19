@@ -161,6 +161,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     }
 
     setFilter(m_settings->value("FilterMinimum", 500).toInt(), m_settings->value("FilterMaximum", 2500).toInt());
+    setFilterOpacityPercent(m_settings->value("FilterOpacityPercent", 50).toInt());
     setFilterEnabled(m_settings->value("FilterEnabled", false).toBool());
   }
 
@@ -213,14 +214,15 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("StartFreq", ui->widePlot->startFreq ());
   m_settings->setValue ("WaterfallPalette", m_waterfallPalette);
   m_settings->setValue ("UserPalette", QVariant::fromValue (m_userPalette.colours ()));
-  m_settings->setValue("Flatten",m_bFlatten);
-  m_settings->setValue("UseRef",m_bRef);
+  m_settings->setValue ("Flatten",m_bFlatten);
+  m_settings->setValue ("UseRef",m_bRef);
   m_settings->setValue ("HideControls", ui->controls_widget->isHidden ());
   m_settings->setValue ("FminPerBand", m_fMinPerBand);
   m_settings->setValue ("CenterOffset", ui->centerSpinBox->value());
   m_settings->setValue ("FilterMinimum", m_filterMinimum);
   m_settings->setValue ("FilterMaximum", m_filterMaximum);
   m_settings->setValue ("FilterEnabled", m_filterEnabled);
+  m_settings->setValue ("FilterOpacityPercent", ui->filterOpacitySpinBox->value());
   m_settings->setValue ("SplitState", ui->splitter->saveState());
 }
 
@@ -445,6 +447,18 @@ void WideGraph::setFilterEnabled(bool enabled){
 
     // update the wideplot
     ui->widePlot->setFilterEnabled(enabled);
+}
+
+void WideGraph::setFilterOpacityPercent(int n){
+    // update the spinbox
+    bool blocked = ui->filterOpacitySpinBox->blockSignals(true);
+    {
+        ui->filterOpacitySpinBox->setValue(n);
+    }
+    ui->filterOpacitySpinBox->blockSignals(blocked);
+
+    // update the wide plot
+    ui->widePlot->setFilterOpacity(int((float(n)/100.0)*255));
 }
 
 int WideGraph::fSpan()
@@ -710,6 +724,10 @@ void WideGraph::on_filterMaxSpinBox_valueChanged(int n){
 
 void WideGraph::on_filterCheckBox_toggled(bool b){
     setFilterEnabled(b);
+}
+
+void WideGraph::on_filterOpacitySpinBox_valueChanged(int n){
+    setFilterOpacityPercent(n);
 }
 
 void WideGraph::setRedFile(QString fRed)
