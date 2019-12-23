@@ -14,7 +14,11 @@ extern "C"
 {
   typedef struct rig RIG;
   struct rig_caps;
+#ifdef JS8_USE_LEGACY_HAMLIB
+  typedef int vfo_t;
+#else
   typedef unsigned int vfo_t;
+#endif
 }
 
 // hamlib transceiver and PTT mostly delegated directly to hamlib Rig class
