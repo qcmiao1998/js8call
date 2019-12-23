@@ -85,6 +85,12 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
         ui->filterCheckBox->setChecked(true);
       });
 
+      auto centerAction = menu->addAction(QString("Set Filter &Center to %1 Hz").arg(f));
+      connect(centerAction, &QAction::triggered, this, [this, f](){
+        ui->filterCenterSpinBox->setValue(f);
+        ui->filterCheckBox->setChecked(true);
+      });
+
       auto maxAction = menu->addAction(QString("Set Filter Ma&ximum to %1 Hz").arg(f));
       connect(maxAction, &QAction::triggered, this, [this, f](){
           ui->filterMaxSpinBox->setValue(f);
@@ -397,10 +403,12 @@ void WideGraph::setFilter(int a, int b){
     int low = std::min(a, b);
     int high = std::max(a, b);
 
+#if JS8_ENFORCE_MINIMUM_FILTER_BANDWIDTH
     // ensure minimum filter width
     if(high-low < m_filterMinWidth){
         high = low + m_filterMinWidth;
     }
+#endif
 
     int width = high - low;
     int center = low + width / 2;
@@ -430,6 +438,12 @@ void WideGraph::setFilter(int a, int b){
     }
     ui->filterCenterSpinBox->blockSignals(blocked);
 
+    blocked = ui->filterWidthSpinBox->blockSignals(true);
+    {
+        ui->filterWidthSpinBox->setValue(width);
+    }
+    ui->filterWidthSpinBox->blockSignals(blocked);
+
     // update the wide plot UI
     ui->widePlot->setFilterCenter(center);
     ui->widePlot->setFilterWidth(width);
@@ -447,6 +461,7 @@ void WideGraph::setFilterEnabled(bool enabled){
     ui->filterMinSpinBox->setEnabled(enabled);
     ui->filterMaxSpinBox->setEnabled(enabled);
     ui->filterCenterSpinBox->setEnabled(enabled);
+    ui->filterWidthSpinBox->setEnabled(enabled);
 
     // update the checkbox ui
     bool blocked = ui->filterCheckBox->blockSignals(true);
@@ -735,6 +750,10 @@ void WideGraph::on_filterMaxSpinBox_valueChanged(int n){
 void WideGraph::on_filterCenterSpinBox_valueChanged(int n){
     int delta = n - m_filterCenter;
     setFilter(m_filterMinimum + delta, m_filterMaximum + delta);
+}
+
+void WideGraph::on_filterWidthSpinBox_valueChanged(int n){
+    setFilter(m_filterCenter - n/2, m_filterCenter - n/2 + n);
 }
 
 void WideGraph::on_filterCheckBox_toggled(bool b){
