@@ -37,7 +37,6 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
 
   setWindowTitle (QApplication::applicationName () + " - " + tr ("Wide Graph"));
   setWindowFlags (Qt::WindowCloseButtonHint | Qt::WindowMinimizeButtonHint);
-  setMaximumWidth (MAX_SCREENSIZE);
   setMaximumHeight (880);
 
   ui->splitter->setChildrenCollapsible(false);
@@ -56,6 +55,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   ui->filterMaxSpinBox->installEventFilter(filterEscapeEater);
 
   ui->widePlot->setCursor(Qt::CrossCursor);
+  ui->widePlot->setMaximumWidth(MAX_SCREENSIZE);
   ui->widePlot->setMaximumHeight(800);
   ui->widePlot->setCurrent(false);
 
