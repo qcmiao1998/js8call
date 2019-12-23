@@ -11806,7 +11806,13 @@ void MainWindow::displayBandActivity() {
             auto leftLast = leftItems.last();
             auto rightLast = rightItems.last();
 
-            return leftLast.submode < rightLast.submode;
+            int leftSubmode = leftLast.submode;
+            int rightSubmode = rightLast.submode;
+
+            if(leftSubmode == Varicode::JS8CallSlow){ leftSubmode = -leftSubmode; }
+            if(rightSubmode == Varicode::JS8CallSlow){ rightSubmode = -rightSubmode; }
+
+            return leftSubmode < rightSubmode;
         };
 
         // compare offset
@@ -12124,7 +12130,13 @@ void MainWindow::displayCallActivity() {
             auto leftActivity = m_callActivity[left];
             auto rightActivity = m_callActivity[right];
 
-            return leftActivity.submode < rightActivity.submode;
+            int leftSubmode = leftActivity.submode;
+            int rightSubmode = rightActivity.submode;
+
+            if(leftSubmode == Varicode::JS8CallSlow){ leftSubmode = -leftSubmode; }
+            if(rightSubmode == Varicode::JS8CallSlow){ rightSubmode = -rightSubmode; }
+
+            return leftSubmode < rightSubmode;
         };
 
 
