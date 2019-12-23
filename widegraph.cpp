@@ -403,12 +403,10 @@ void WideGraph::setFilter(int a, int b){
     int low = std::min(a, b);
     int high = std::max(a, b);
 
-#if JS8_ENFORCE_MINIMUM_FILTER_BANDWIDTH
     // ensure minimum filter width
     if(high-low < m_filterMinWidth){
         high = low + m_filterMinWidth;
     }
-#endif
 
     int width = high - low;
     int center = low + width / 2;
@@ -740,11 +738,11 @@ void WideGraph::on_sbPercent2dPlot_valueChanged(int n)
 }
 
 void WideGraph::on_filterMinSpinBox_valueChanged(int n){
-    setFilter(n, m_filterMaximum);
+    setFilter(n, std::max(m_filterMaximum, n));
 }
 
 void WideGraph::on_filterMaxSpinBox_valueChanged(int n){
-    setFilter(m_filterMinimum, n);
+    setFilter(std::min(m_filterMinimum, n), n);
 }
 
 void WideGraph::on_filterCenterSpinBox_valueChanged(int n){
