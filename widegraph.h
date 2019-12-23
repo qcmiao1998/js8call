@@ -99,6 +99,7 @@ private slots:
   void on_sbPercent2dPlot_valueChanged(int n);
   void on_filterMinSpinBox_valueChanged(int n);
   void on_filterMaxSpinBox_valueChanged(int n);
+  void on_filterCenterSpinBox_valueChanged(int n);
   void on_filterCheckBox_toggled(bool b);
   void on_filterOpacitySpinBox_valueChanged(int n);
 
@@ -126,6 +127,7 @@ private:
   qint32 m_filterMinWidth;
   qint32 m_filterMinimum;
   qint32 m_filterMaximum;
+  qint32 m_filterCenter;
   qint32 m_waterfallAvg;
   qint32 m_TRperiod;
   qint32 m_nsps;

@@ -402,9 +402,13 @@ void WideGraph::setFilter(int a, int b){
         high = low + m_filterMinWidth;
     }
 
+    int width = high - low;
+    int center = low + width / 2;
+
     // update the filter history
     m_filterMinimum = low;
     m_filterMaximum = high;
+    m_filterCenter = center;
 
     // update the spinner UI
     bool blocked = false;
@@ -420,10 +424,15 @@ void WideGraph::setFilter(int a, int b){
     }
     ui->filterMaxSpinBox->blockSignals(blocked);
 
+    blocked = ui->filterCenterSpinBox->blockSignals(true);
+    {
+        ui->filterCenterSpinBox->setValue(center);
+    }
+    ui->filterCenterSpinBox->blockSignals(blocked);
+
     // update the wide plot UI
-    int width = high - low;
-    ui->widePlot->setFilterCenter(low + width/2);
-    ui->widePlot->setFilterWidth(high - low);
+    ui->widePlot->setFilterCenter(center);
+    ui->widePlot->setFilterWidth(width);
 }
 
 void WideGraph::setFilterMinimumBandwidth(int width){
@@ -437,6 +446,7 @@ void WideGraph::setFilterEnabled(bool enabled){
     // update the filter spinner
     ui->filterMinSpinBox->setEnabled(enabled);
     ui->filterMaxSpinBox->setEnabled(enabled);
+    ui->filterCenterSpinBox->setEnabled(enabled);
 
     // update the checkbox ui
     bool blocked = ui->filterCheckBox->blockSignals(true);
@@ -720,6 +730,11 @@ void WideGraph::on_filterMinSpinBox_valueChanged(int n){
 
 void WideGraph::on_filterMaxSpinBox_valueChanged(int n){
     setFilter(m_filterMinimum, n);
+}
+
+void WideGraph::on_filterCenterSpinBox_valueChanged(int n){
+    int delta = n - m_filterCenter;
+    setFilter(m_filterMinimum + delta, m_filterMaximum + delta);
 }
 
 void WideGraph::on_filterCheckBox_toggled(bool b){
