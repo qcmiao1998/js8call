@@ -4089,13 +4089,13 @@ bool MainWindow::decode(qint32 k){
     // TODO: what follows can likely be pulled out to an async process
     //
 
-    if(m_transmitting || !m_txFrameQueue.isEmpty()){
+    if(m_transmitting || !m_txFrameQueue.isEmpty() || m_txFrameCount > 0){
         // we used to use isMessageQueuedForTransmit, but it checks total frames, not queued frames
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused during transmit";
         return false;
     }
 
-    int threshold = 2000; // two seconds
+    int threshold = m_nSubMode == Varicode::JS8CallSlow ? 4000 : 2000; // two seconds
     if(isInDecodeDelayThreshold(threshold)){
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused for" << threshold << "ms after transmit stop";
         return false;
