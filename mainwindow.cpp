@@ -7544,11 +7544,7 @@ void MainWindow::on_actionJS8_triggered()
   updateModeButtonText();
 
   m_wideGraph->setSubMode(m_nSubMode);
-#if JS8_ENFORCE_MINIMUM_FILTER_BANDWIDTH
   m_wideGraph->setFilterMinimumBandwidth(computeBandwidthForSubmode(m_nSubMode) + 2*rxThreshold(m_nSubMode));
-#else
-  m_wideGraph->setFilterMinimumBandwidth(1);
-#endif
 
   bool bVHF=m_config.enable_VHF_features();
   enable_DXCC_entity (m_config.DXCC ());

@@ -52,7 +52,6 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
       if(pProcessed) *pProcessed=true;
   });
   ui->filterMinSpinBox->installEventFilter(filterEscapeEater);
-  ui->filterMaxSpinBox->installEventFilter(filterEscapeEater);
 
   ui->widePlot->setCursor(Qt::CrossCursor);
   ui->widePlot->setMaximumWidth(MAX_SCREENSIZE);
@@ -79,22 +78,27 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
           });
       }
 
-      auto minAction = menu->addAction(QString("Set Filter &Minimum to %1 Hz").arg(f));
-      connect(minAction, &QAction::triggered, this, [this, f](){
-        ui->filterMinSpinBox->setValue(f);
-        ui->filterCheckBox->setChecked(true);
-      });
-
       auto centerAction = menu->addAction(QString("Set Filter &Center to %1 Hz").arg(f));
       connect(centerAction, &QAction::triggered, this, [this, f](){
         ui->filterCenterSpinBox->setValue(f);
         ui->filterCheckBox->setChecked(true);
       });
 
-      auto maxAction = menu->addAction(QString("Set Filter Ma&ximum to %1 Hz").arg(f));
-      connect(maxAction, &QAction::triggered, this, [this, f](){
-          ui->filterMaxSpinBox->setValue(f);
-          ui->filterCheckBox->setChecked(true);
+      auto widthMenu = menu->addMenu("Set Filter &Width to...");
+      auto widths = QList<int>{ 25, 50, 75, 100, 250, 500, 750, 1000, 1500, 2000 };
+      foreach(auto width, widths){
+        if(width < m_filterMinWidth){ continue; }
+        auto widthAction = widthMenu->addAction(QString("%1 Hz").arg(width));
+        connect(widthAction, &QAction::triggered, this, [this, width](){
+            ui->filterWidthSpinBox->setValue(width);
+            ui->filterCheckBox->setChecked(true);
+        });
+      }
+
+      auto minAction = menu->addAction(QString("Set Filter &Minimum to %1 Hz").arg(f));
+      connect(minAction, &QAction::triggered, this, [this, f](){
+        ui->filterMinSpinBox->setValue(f);
+        ui->filterCheckBox->setChecked(true);
       });
 
       menu->popup(ui->widePlot->mapToGlobal(pos));
@@ -424,12 +428,6 @@ void WideGraph::setFilter(int a, int b){
     }
     ui->filterMinSpinBox->blockSignals(blocked);
 
-    blocked = ui->filterMaxSpinBox->blockSignals(true);
-    {
-        ui->filterMaxSpinBox->setValue(high);
-    }
-    ui->filterMaxSpinBox->blockSignals(blocked);
-
     blocked = ui->filterCenterSpinBox->blockSignals(true);
     {
         ui->filterCenterSpinBox->setValue(center);
@@ -449,6 +447,7 @@ void WideGraph::setFilter(int a, int b){
 
 void WideGraph::setFilterMinimumBandwidth(int width){
     m_filterMinWidth = width;
+    ui->filterWidthSpinBox->setMinimum(width);
     setFilter(m_filterMinimum, std::max(m_filterMinimum+width, m_filterMaximum));
 }
 
@@ -457,7 +456,6 @@ void WideGraph::setFilterEnabled(bool enabled){
 
     // update the filter spinner
     ui->filterMinSpinBox->setEnabled(enabled);
-    ui->filterMaxSpinBox->setEnabled(enabled);
     ui->filterCenterSpinBox->setEnabled(enabled);
     ui->filterWidthSpinBox->setEnabled(enabled);
 
@@ -738,11 +736,8 @@ void WideGraph::on_sbPercent2dPlot_valueChanged(int n)
 }
 
 void WideGraph::on_filterMinSpinBox_valueChanged(int n){
-    setFilter(n, std::max(m_filterMaximum, n));
-}
-
-void WideGraph::on_filterMaxSpinBox_valueChanged(int n){
-    setFilter(std::min(m_filterMinimum, n), n);
+    int delta = n - m_filterMinimum;
+    setFilter(m_filterMinimum + delta, m_filterMaximum + delta);
 }
 
 void WideGraph::on_filterCenterSpinBox_valueChanged(int n){
