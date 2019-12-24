@@ -178,7 +178,7 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-196</y>
+                <y>0</y>
                 <width>267</width>
                 <height>370</height>
                </rect>
@@ -199,7 +199,7 @@
                      <string> Hz</string>
                     </property>
                     <property name="prefix">
-                     <string>Offset </string>
+                     <string>Offset: </string>
                     </property>
                     <property name="maximum">
                      <number>5000</number>
@@ -243,7 +243,7 @@
                      <string> Hz</string>
                     </property>
                     <property name="prefix">
-                     <string>Center </string>
+                     <string>Center: </string>
                     </property>
                     <property name="minimum">
                      <number>500</number>
@@ -425,7 +425,7 @@
                      <string> Hz</string>
                     </property>
                     <property name="prefix">
-                     <string>Start </string>
+                     <string>Start: </string>
                     </property>
                     <property name="maximum">
                      <number>5000</number>
@@ -450,7 +450,7 @@
                      <string/>
                     </property>
                     <property name="prefix">
-                     <string>Bins/Pixel  </string>
+                     <string>Bins Per Pixel: </string>
                     </property>
                     <property name="minimum">
                      <number>1</number>
@@ -515,7 +515,7 @@
                        <enum>QAbstractSpinBox::PlusMinus</enum>
                       </property>
                       <property name="prefix">
-                       <string>N Avg </string>
+                       <string>Avg N: </string>
                       </property>
                       <property name="minimum">
                        <number>1</number>
@@ -593,7 +593,7 @@
                      <string/>
                     </property>
                     <property name="prefix">
-                     <string>Smooth  </string>
+                     <string>Smooth:  </string>
                     </property>
                     <property name="minimum">
                      <number>1</number>
@@ -948,7 +948,7 @@
                   <string> ms</string>
                  </property>
                  <property name="prefix">
-                  <string>Time Drift </string>
+                  <string>Time Drift: </string>
                  </property>
                  <property name="minimum">
                   <number>-30000</number>
