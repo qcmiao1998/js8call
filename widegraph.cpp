@@ -403,6 +403,11 @@ bool WideGraph::filterEnabled()
     return m_filterEnabled;
 }
 
+void WideGraph::setFilterCenter(int n){
+    int delta = n - m_filterCenter;
+    setFilter(m_filterMinimum + delta, m_filterMaximum + delta);
+}
+
 void WideGraph::setFilter(int a, int b){
     int low = std::min(a, b);
     int high = std::max(a, b);
@@ -741,8 +746,7 @@ void WideGraph::on_filterMinSpinBox_valueChanged(int n){
 }
 
 void WideGraph::on_filterCenterSpinBox_valueChanged(int n){
-    int delta = n - m_filterCenter;
-    setFilter(m_filterMinimum + delta, m_filterMaximum + delta);
+    setFilterCenter(n);
 }
 
 void WideGraph::on_filterWidthSpinBox_valueChanged(int n){

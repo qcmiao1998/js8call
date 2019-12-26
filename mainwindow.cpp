@@ -1186,6 +1186,13 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
             setFreqOffsetForRestore(selectedOffset, false);
         });
 
+        if(m_wideGraph->filterEnabled()){
+            auto filterQsyAction = menu->addAction(QString("Center filter at %1Hz").arg(selectedOffset));
+            connect(filterQsyAction, &QAction::triggered, this, [this, selectedOffset](){
+                m_wideGraph->setFilterCenter(selectedOffset);
+            });
+        }
+
         auto items = m_bandActivity.value(selectedOffset);
         if(!items.isEmpty()){
             int submode = items.last().submode;
@@ -1425,9 +1432,14 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
             auto qsyAction = menu->addAction(QString("Jump to %1Hz").arg(selectedOffset));
             connect(qsyAction, &QAction::triggered, this, [this, selectedOffset](){
                 setFreqOffsetForRestore(selectedOffset, false);
-                // TODO: prompt mode switch?
             });
 
+            if(m_wideGraph->filterEnabled()){
+                auto filterQsyAction = menu->addAction(QString("Center filter at %1Hz").arg(selectedOffset));
+                connect(filterQsyAction, &QAction::triggered, this, [this, selectedOffset](){
+                    m_wideGraph->setFilterCenter(selectedOffset);
+                });
+            }
 
             int submode = m_callActivity[selectedCall].submode;
             auto speed = submodeName(submode);

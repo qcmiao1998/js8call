@@ -36,6 +36,7 @@ public:
   int    filterMinimum();
   int    filterMaximum();
   bool   filterEnabled();
+  void   setFilterCenter(int n);
   void   setFilter(int a, int b);
   void   setFilterMinimumBandwidth(int width);
   void   setFilterEnabled(bool enabled);
