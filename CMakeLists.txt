@@ -1041,6 +1041,7 @@ add_executable (js8call MACOSX_BUNDLE
   wsjtx.rc
   ${WSJTX_ICON_FILE}
   ${wsjtx_RESOURCES_RCC}
+  images.qrc
   )
 
 if (WSJT_CREATE_WINMAIN)

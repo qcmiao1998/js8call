@@ -149,7 +149,8 @@ FORMS    += mainwindow.ui about.ui Configuration.ui widegraph.ui astro.ui \
     messagewindow.ui
 
 RC_FILE = wsjtx.rc
-RESOURCES = wsjtx.qrc
+RESOURCES = wsjtx.qrc \
+    images.qrc
 
 unix {
 LIBS += -L lib -ljt9

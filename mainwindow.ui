@@ -255,8 +255,22 @@
                       <height>30</height>
                      </size>
                     </property>
+                    <property name="autoFillBackground">
+                     <bool>false</bool>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QPushButton {
+	background-color:#000;
+	background-image:url(&quot;/images/up.png&quot;);
+	background-position: center center;
+	background-repeate:no-repeat;
+}</string>
+                    </property>
                     <property name="text">
-                     <string>^</string>
+                     <string/>
+                    </property>
+                    <property name="flat">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -268,8 +282,19 @@
                       <height>30</height>
                      </size>
                     </property>
+                    <property name="styleSheet">
+                     <string notr="true">QPushButton {
+	background-color:#000;
+	background-image:url(&quot;/images/down.png&quot;);
+	background-position: center center;
+	background-repeate:no-repeat;
+}</string>
+                    </property>
                     <property name="text">
-                     <string>v</string>
+                     <string/>
+                    </property>
+                    <property name="flat">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
