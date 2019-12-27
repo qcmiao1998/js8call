@@ -459,10 +459,11 @@ void WideGraph::setFilterMinimumBandwidth(int width){
 void WideGraph::setFilterEnabled(bool enabled){
     m_filterEnabled = enabled;
 
-    // update the filter spinner
-    ui->filterMinSpinBox->setEnabled(enabled);
+    // update the filter ui
     ui->filterCenterSpinBox->setEnabled(enabled);
+    ui->filterCenterSyncButton->setEnabled(enabled);
     ui->filterWidthSpinBox->setEnabled(enabled);
+    ui->filterMinSpinBox->setEnabled(enabled);
 
     // update the checkbox ui
     bool blocked = ui->filterCheckBox->blockSignals(true);
@@ -751,6 +752,10 @@ void WideGraph::on_filterCenterSpinBox_valueChanged(int n){
 
 void WideGraph::on_filterWidthSpinBox_valueChanged(int n){
     setFilter(m_filterCenter - n/2, m_filterCenter - n/2 + n);
+}
+
+void WideGraph::on_filterCenterSyncButton_clicked(){
+    setFilterCenter(ui->offsetSpinBox->value());
 }
 
 void WideGraph::on_filterCheckBox_toggled(bool b){
