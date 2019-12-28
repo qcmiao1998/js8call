@@ -12636,7 +12636,7 @@ void MainWindow::networkMessage(Message const &message)
     }
 
     if(type == "RX.GET_TEXT"){
-        sendNetworkMessage("RX.TEXT", ui->textEditRX->toPlainText(), {
+        sendNetworkMessage("RX.TEXT", ui->textEditRX->toPlainText().right(1024), {
             {"_ID", id},
         });
         return;
@@ -12647,7 +12647,7 @@ void MainWindow::networkMessage(Message const &message)
     // TX.SEND_MESSAGE
 
     if(type == "TX.GET_TEXT"){
-        sendNetworkMessage("TX.TEXT", ui->extFreeTextMsgEdit->toPlainText(), {
+        sendNetworkMessage("TX.TEXT", ui->extFreeTextMsgEdit->toPlainText().right(1024), {
             {"_ID", id},
         });
         return;
@@ -12655,7 +12655,7 @@ void MainWindow::networkMessage(Message const &message)
 
     if(type == "TX.SET_TEXT"){
         addMessageText(message.value(), true);
-        sendNetworkMessage("TX.TEXT", ui->extFreeTextMsgEdit->toPlainText(), {
+        sendNetworkMessage("TX.TEXT", ui->extFreeTextMsgEdit->toPlainText().right(1024), {
             {"_ID", id},
         });
         return;
