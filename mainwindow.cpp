@@ -4564,8 +4564,6 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
   ui->actionOpen->setEnabled(!b);
   ui->actionOpen_next_in_directory->setEnabled(!b);
   ui->actionDecode_remaining_files_in_directory->setEnabled(!b);
-
-  statusUpdate ();
 }
 
 /**
@@ -10210,6 +10208,7 @@ void MainWindow::callsignSelectedChanged(QString /*old*/, QString selectedCall){
     // immediately update the display);
     updateButtonDisplay();
     updateTextDisplay();
+    statusChanged();
 
     m_prevSelectedCallsign = selectedCall;
 }
@@ -10400,6 +10399,16 @@ void MainWindow::processRxActivity() {
 
     while (!m_rxActivityQueue.isEmpty()) {
         ActivityDetail d = m_rxActivityQueue.dequeue();
+
+        if(canSendNetworkMessage()){
+            sendNetworkMessage("RX.ACTIVITY", d.text, {
+                {"FREQ", QVariant(d.freq)},
+                {"SNR", QVariant(d.snr)},
+                {"SPEED", QVariant(d.submode)},
+                {"TDRIFT", QVariant(d.tdrift)},
+                {"UTC", QVariant(d.utcTimestamp.toMSecsSinceEpoch())}
+            });
+        }
 
         observeTimeDeltaForAverage(d.tdrift);
 
@@ -10918,17 +10927,21 @@ void MainWindow::processCommandActivity() {
             displayTextForFreq(ad.text, ad.freq, ad.utcTimestamp, false, true, false);
 
             // and send it to the network in case we want to interact with it from an external app...
-            sendNetworkMessage("RX.DIRECTED", ad.text, {
-                {"FROM", QVariant(d.from)},
-                {"TO", QVariant(d.to)},
-                {"CMD", QVariant(d.cmd)},
-                {"GRID", QVariant(d.grid)},
-                {"EXTRA", QVariant(d.extra)},
-                {"TEXT", QVariant(d.text)},
-                {"FREQ", QVariant(ad.freq)},
-                {"SNR", QVariant(ad.snr)},
-                {"UTC", QVariant(ad.utcTimestamp.toMSecsSinceEpoch())}
-            });
+            if(canSendNetworkMessage()){
+                sendNetworkMessage("RX.DIRECTED", ad.text, {
+                    {"FROM", QVariant(d.from)},
+                    {"TO", QVariant(d.to)},
+                    {"CMD", QVariant(d.cmd)},
+                    {"GRID", QVariant(d.grid)},
+                    {"EXTRA", QVariant(d.extra)},
+                    {"TEXT", QVariant(d.text)},
+                    {"FREQ", QVariant(ad.freq)},
+                    {"SNR", QVariant(ad.snr)},
+                    {"SPEED", QVariant(ad.submode)},
+                    {"TDRIFT", QVariant(ad.tdrift)},
+                    {"UTC", QVariant(ad.utcTimestamp.toMSecsSinceEpoch())}
+                });
+            }
 
             if(!isAllCall){
                 // if we've received a message to be displayed, we should bump the repeat buttons...
@@ -11656,13 +11669,15 @@ void MainWindow::processSpots() {
         spotReport(d.submode, d.freq, d.snr, d.call, d.grid);
         pskLogReport("JS8", d.freq, d.snr, d.call, d.grid);
 
-        sendNetworkMessage("RX.SPOT", "", {
-            {"DIAL", QVariant(dial)},
-            {"OFFSET", QVariant(d.freq)},
-            {"CALL", QVariant(d.call)},
-            {"SNR", QVariant(d.snr)},
-            {"GRID", QVariant(d.grid)},
-        });
+        if(canSendNetworkMessage()){
+            sendNetworkMessage("RX.SPOT", "", {
+                {"DIAL", QVariant(dial)},
+                {"OFFSET", QVariant(d.freq)},
+                {"CALL", QVariant(d.call)},
+                {"SNR", QVariant(d.snr)},
+                {"GRID", QVariant(d.grid)},
+            });
+        }
     }
 }
 
@@ -12704,6 +12719,10 @@ void MainWindow::networkMessage(Message const &message)
     qDebug() << "Unable to process networkMessage:" << type;
 }
 
+bool MainWindow::canSendNetworkMessage(){
+    return m_config.udpEnabled();
+}
+
 void MainWindow::sendNetworkMessage(QString const &type, QString const &message){
     if(!m_config.udpEnabled()){
         return;
@@ -12965,8 +12984,16 @@ void MainWindow::on_cbCQTx_toggled(bool b)
   setXIT (ui->TxFreqSpinBox->value ());
 }
 
-void MainWindow::statusUpdate () const
+void MainWindow::statusUpdate ()
 {
+    if(canSendNetworkMessage()){
+        sendNetworkMessage("STATION.STATUS", "", {
+            {"DIAL", QVariant(dialFrequency())},
+            {"OFFSET", QVariant(currentFreqOffset())},
+            {"SPEED", QVariant(m_nSubMode)},
+            {"SELECTED", QVariant(callsignSelected())},
+        });
+    }
 }
 
 void MainWindow::childEvent (QChildEvent * e)

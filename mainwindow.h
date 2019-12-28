@@ -404,6 +404,7 @@ private slots:
   void emitPTT(bool on);
   void emitTones();
   void networkMessage(Message const &message);
+  bool canSendNetworkMessage();
   void sendNetworkMessage(QString const &type, QString const &message);
   void sendNetworkMessage(QString const &type, QString const &message, const QMap<QString, QVariant> &params);
   void networkError (QString const&);
@@ -1029,7 +1030,7 @@ private:
   void resetHeartbeatTimer(bool stop);
   void subProcessFailed (QString program, QStringList args, int exitCode, int status, QString errorString);
   void subProcessError (QString program, QStringList arguments, int errorCode, QString errorString);
-  void statusUpdate () const;
+  void statusUpdate ();
   void update_watchdog_label ();
   void on_the_minute ();
   void tryBandHop();
