@@ -12054,6 +12054,8 @@ void MainWindow::displayBandActivity() {
 
         // Set the table palette for inactive selected row
         auto p = ui->tableWidgetRXAll->palette();
+        p.setColor(QPalette::Highlight, m_config.color_table_highlight());
+        p.setColor(QPalette::HighlightedText, m_config.color_table_foreground());
         p.setColor(QPalette::Inactive, QPalette::Highlight, p.color(QPalette::Active, QPalette::Highlight));
         ui->tableWidgetRXAll->setPalette(p);
 
@@ -12391,6 +12393,8 @@ void MainWindow::displayCallActivity() {
 
         // Set the table palette for inactive selected row
         auto p = ui->tableWidgetCalls->palette();
+        p.setColor(QPalette::Highlight, m_config.color_table_highlight());
+        p.setColor(QPalette::HighlightedText, m_config.color_table_foreground());
         p.setColor(QPalette::Inactive, QPalette::Highlight, p.color(QPalette::Active, QPalette::Highlight));
         ui->tableWidgetCalls->setPalette(p);
 
