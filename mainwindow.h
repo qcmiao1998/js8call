@@ -212,6 +212,8 @@ private slots:
   void resetPushButtonToggleText(QPushButton *btn);
   void on_monitorTxButton_clicked();
   void on_stopTxButton_clicked();
+  void on_dialFreqUpButton_clicked();
+  void on_dialFreqDownButton_clicked();
   void on_stopButton_clicked();
   void on_actionAdd_Log_Entry_triggered();
   void on_actionRelease_Notes_triggered ();

@@ -238,6 +238,9 @@
                 </item>
                 <item>
                  <layout class="QVBoxLayout" name="verticalLayout_16">
+                  <property name="spacing">
+                   <number>0</number>
+                  </property>
                   <property name="rightMargin">
                    <number>0</number>
                   </property>
@@ -245,15 +248,18 @@
                    <widget class="QPushButton" name="dialFreqUpButton">
                     <property name="minimumSize">
                      <size>
-                      <width>0</width>
-                      <height>0</height>
+                      <width>30</width>
+                      <height>24</height>
                      </size>
                     </property>
                     <property name="maximumSize">
                      <size>
                       <width>30</width>
-                      <height>30</height>
+                      <height>24</height>
                      </size>
+                    </property>
+                    <property name="cursor">
+                     <cursorShape>PointingHandCursor</cursorShape>
                     </property>
                     <property name="autoFillBackground">
                      <bool>false</bool>
@@ -261,40 +267,52 @@
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
 	background-color:#000;
-	background-image:url(&quot;/images/up.png&quot;);
+	background-image:url(&quot;:/images/artwork/up.png&quot;);
 	background-position: center center;
-	background-repeate:no-repeat;
+	background-repeat:no-repeat;
+	border:1px solid;
+	border-radius:2px;
+}
+
+QPushButton:pressed {
+	background-color:#222;	
 }</string>
-                    </property>
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="flat">
-                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QPushButton" name="dialFreqDownButton">
+                    <property name="minimumSize">
+                     <size>
+                      <width>30</width>
+                      <height>24</height>
+                     </size>
+                    </property>
                     <property name="maximumSize">
                      <size>
                       <width>30</width>
-                      <height>30</height>
+                      <height>24</height>
                      </size>
+                    </property>
+                    <property name="cursor">
+                     <cursorShape>PointingHandCursor</cursorShape>
+                    </property>
+                    <property name="autoFillBackground">
+                     <bool>false</bool>
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
 	background-color:#000;
-	background-image:url(&quot;/images/down.png&quot;);
+	background-image:url(&quot;:/images/artwork/down.png&quot;);
 	background-position: center center;
-	background-repeate:no-repeat;
+	background-repeat:no-repeat;
+	border:1px solid;
+	border-radius:2px;
+}
+
+QPushButton:pressed {
+	background-color:#222;	
 }</string>
-                    </property>
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="flat">
-                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>

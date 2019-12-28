@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/images">
-        <file alias="up.png">artwork/up.png</file>
-        <file alias="down.png">artwork/down.png</file>
+        <file>artwork/up.png</file>
+        <file>artwork/down.png</file>
     </qresource>
 </RCC>

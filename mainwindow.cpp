@@ -31,6 +31,7 @@
 #include <QSound>
 #include <QUdpSocket>
 #include <QVariant>
+#include <QPixmap>
 
 #include "revision_utils.hpp"
 #include "qt_helpers.hpp"
@@ -1581,6 +1582,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   gridButtonLayout->setColumnStretch(1, 1);
   gridButtonLayout->setColumnStretch(2, 1);
 
+  // dial up and down buttons sizes
+  ui->dialFreqUpButton->setFixedSize(30, 24);
+  ui->dialFreqDownButton->setFixedSize(30, 24);
 
   // Prepare spotting configuration...
   prepareSpotting();
@@ -3618,6 +3622,14 @@ void MainWindow::closeEvent(QCloseEvent * e)
 void MainWindow::on_labDialFreq_clicked()                       //dialFrequency
 {
     ui->bandComboBox->setFocus();
+}
+
+void MainWindow::on_dialFreqUpButton_clicked(){
+    setRig(m_freqNominal + 250);
+}
+
+void MainWindow::on_dialFreqDownButton_clicked(){
+    setRig(m_freqNominal - 250);
 }
 
 void MainWindow::on_stopButton_clicked()                       //stopButton

@@ -867,6 +867,9 @@ set (QT_MKSPECS_DIR ${QT_DATA_DIR}/mkspecs)
 set (CMAKE_AUTOMOC ON)
 include_directories (${CMAKE_CURRENT_BINARY_DIR})
 
+# Tell CMake to run rcc when necessary
+set (CMAKE_AUTORCC ON)
+
 # don't use Qt "keywords" signal, slot, emit in generated files to
 # avoid compatability issue with other libraries
 # ADD_DEFINITIONS (-DQT_NO_KEYWORDS)
