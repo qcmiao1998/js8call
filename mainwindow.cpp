@@ -6367,7 +6367,7 @@ void MainWindow::clearActivity(){
     resetTimeDeltaAverage();
 
     clearTableWidget(ui->tableWidgetCalls);
-    createAllcallTableRows(ui->tableWidgetCalls, "");
+    createGroupCallsignTableRows(ui->tableWidgetCalls, "");
 
     clearTableWidget(ui->tableWidgetRXAll);
 
@@ -6383,7 +6383,7 @@ void MainWindow::clearActivity(){
     displayActivity(true);
 }
 
-void MainWindow::createAllcallTableRows(QTableWidget *table, QString const &selectedCall){
+void MainWindow::createGroupCallsignTableRows(QTableWidget *table, QString const &selectedCall){
     int count = 0;
     auto now = DriftingDateTime::currentDateTimeUtc();
     int callsignAging = m_config.callsign_aging();
@@ -6427,10 +6427,12 @@ void MainWindow::createAllcallTableRows(QTableWidget *table, QString const &sele
 
         auto emptyItem = new QTableWidgetItem("");
         emptyItem->setData(Qt::UserRole, QVariant(group));
+        emptyItem->setToolTip(generateCallDetail(group));
         table->setItem(table->rowCount() - 1, 0, emptyItem);
 
         auto item = new QTableWidgetItem(group);
         item->setData(Qt::UserRole, QVariant(group));
+        item->setToolTip(generateCallDetail(group));
         table->setItem(table->rowCount() - 1, startCol, item);
         table->setSpan(table->rowCount() - 1, startCol, 1, table->columnCount());
 
@@ -7969,7 +7971,7 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
         m_heardGraphIncoming.clear();
         m_heardGraphOutgoing.clear();
         clearTableWidget((ui->tableWidgetCalls));
-        createAllcallTableRows(ui->tableWidgetCalls, "");
+        createGroupCallsignTableRows(ui->tableWidgetCalls, "");
         resetTimeDeltaAverage();
         displayCallActivity();
     }
@@ -9045,7 +9047,7 @@ void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*se
 }
 
 QString MainWindow::generateCallDetail(QString selectedCall){
-    if(selectedCall.isEmpty() || selectedCall.contains("@")){
+    if(selectedCall.isEmpty()){
         return "";
     }
 
@@ -9054,8 +9056,8 @@ QString MainWindow::generateCallDetail(QString selectedCall){
     QString heardby = m_heardGraphIncoming.value(selectedCall).values().join(", ");
     QStringList detail = {
         QString("<h1>%1</h1>").arg(selectedCall.toHtmlEscaped()),
-        QString("<p><strong>HEARING</strong>: %1</p>").arg(hearing.toHtmlEscaped()),
-        QString("<p><strong>HEARD BY</strong>: %1</p>").arg(heardby.toHtmlEscaped()),
+        hearing.isEmpty() ? "" : QString("<p><strong>HEARING</strong>: %1</p>").arg(hearing.toHtmlEscaped()),
+        heardby.isEmpty() ? "" : QString("<p><strong>HEARD BY</strong>: %1</p>").arg(heardby.toHtmlEscaped()),
     };
 
     return detail.join("\n");
@@ -12110,7 +12112,7 @@ void MainWindow::displayCallActivity() {
     {
         // Clear the table
         clearTableWidget(ui->tableWidgetCalls);
-        createAllcallTableRows(ui->tableWidgetCalls, selectedCall); // isAllCallIncluded(selectedCall)); // || isGroupCallIncluded(selectedCall));
+        createGroupCallsignTableRows(ui->tableWidgetCalls, selectedCall); // isAllCallIncluded(selectedCall)); // || isGroupCallIncluded(selectedCall));
 
         // Build the table
         QList < QString > keys = m_callActivity.keys();

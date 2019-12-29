@@ -141,7 +141,7 @@ public slots:
   void cacheActivity(QString key);
   void restoreActivity(QString key);
   void clearActivity();
-  void createAllcallTableRows(QTableWidget *table, const QString &selectedCall);
+  void createGroupCallsignTableRows(QTableWidget *table, const QString &selectedCall);
   void displayTextForFreq(QString text, int freq, QDateTime date, bool isTx, bool isNewLine, bool isLast);
   void writeNoticeTextToUI(QDateTime date, QString text);
   int writeMessageTextToUI(QDateTime date, QString text, int freq, bool isTx, int block=-1);
