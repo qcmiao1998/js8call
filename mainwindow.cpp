@@ -2382,7 +2382,7 @@ void MainWindow::readSettings()
   setFreqOffsetForRestore(m_settings->value("RxFreq",1500).toInt(), false);
 
   setSubmode(m_settings->value("SubMode", Varicode::JS8CallNormal).toInt());
-  ui->actionModeJS8HB->setChecked(m_nSubMode == Varicode::JS8CallNormal && m_settings->value("SubModeHB", false).toBool());
+  ui->actionModeJS8HB->setChecked((m_nSubMode == Varicode::JS8CallNormal || m_nSubMode == Varicode::JS8CallSlow) && m_settings->value("SubModeHB", false).toBool());
   ui->actionHeartbeatAcknowledgements->setChecked(m_settings->value("SubModeHBAck", false).toBool());
   ui->actionModeMultiDecoder->setChecked(m_settings->value("SubModeMultiDecode", true).toBool());
 
