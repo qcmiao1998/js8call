@@ -12048,7 +12048,7 @@ void MainWindow::displayBandActivity() {
 
         // Set table color
         auto style = QString("QTableWidget { background:%1; selection-background-color:%2; alternate-background-color:%1; color:%3; } "
-                             /*"QTableWidget::item:selected { background-color: palette(highlight); color: palette(highlightedText); }"*/);
+                             "QTableWidget::item:selected { background-color: %2; color: %3; }");
         style = style.arg(m_config.color_table_background().name());
         style = style.arg(m_config.color_table_highlight().name());
         style = style.arg(m_config.color_table_foreground().name());
@@ -12390,8 +12390,7 @@ void MainWindow::displayCallActivity() {
 
         // Set table color
         auto style = QString("QTableWidget { background:%1; selection-background-color:%2; alternate-background-color:%1; color:%3; } "
-                             /*"QTableWidget::item:selected { background-color: palette(highlight); color: palette(highlightedText); }"*/
-                             );
+                             "QTableWidget::item:selected { background-color: %2; color: %3; }");
         style = style.arg(m_config.color_table_background().name());
         style = style.arg(m_config.color_table_highlight().name());
         style = style.arg(m_config.color_table_foreground().name());
