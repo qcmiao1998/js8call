@@ -341,6 +341,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   QPen penGray(QColor(149, 165, 166), 3);
   QPen penBlue(Qt::blue, 3);
   QPen penIndigo(QColor(75, 0, 130), 3);
+  QPen penViolet(QColor(127, 0, 255), 3);
   QPen penYellow(Qt::yellow, 3);
   QPen penGreen(Qt::green, 3);
   QPen penRed(Qt::red, 3);
@@ -470,35 +471,38 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     painter0.drawLine(x1+1,28,x2-2,28);
   }
 
+#define JS8_DRAW_SUBBANDS 1
+#if JS8_DRAW_SUBBANDS
   for(int i = 500; i <= 3000; i += 500){
       x1=XfromFreq(i);
       x2=XfromFreq(i+500);
+
       if(x1<=m_w and x2>0) {
         switch(i){
         case 500:
-            painter0.setPen(penRed);
-            break;
-        case 1000:
             painter0.setPen(penOrange);
             break;
+        case 1000:
+            painter0.setPen(penBlue);
+            break;
         case 1500:
-            painter0.setPen(penYellow);
+            painter0.setPen(penBlue);
             break;
         case 2000:
             painter0.setPen(penGreen);
             break;
         case 2500:
-            painter0.setPen(penBlue);
+            painter0.setPen(penGreen);
             break;
         case 3000:
-            painter0.setPen(penIndigo);
+            painter0.setPen(penOrange);
             break;
         }
-
         painter0.drawLine(x1+1,26,x2-2,26);
         painter0.drawLine(x1+1,28,x2-2,28);
       }
   }
+#endif
 
   // paint dials and filter overlays
   if(m_mode=="FT8"){
