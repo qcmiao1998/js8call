@@ -10207,7 +10207,8 @@ void MainWindow::callsignSelectedChanged(QString /*old*/, QString selectedCall){
     ui->callDetailTextBrowser->setVisible(!selectedCall.isEmpty() && (!hearing.isEmpty() || !heardby.isEmpty()));
 #endif
 
-    // immediately update the display);
+    // immediately update the display
+    displayBandActivity();
     updateButtonDisplay();
     updateTextDisplay();
     statusChanged();
