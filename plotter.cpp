@@ -502,6 +502,8 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
         painter0.drawLine(x1+1,28,x2-2,28);
       }
   }
+  painter0.setPen(Qt::black);
+  painter0.drawLine(0, 29, w, 29);
 #endif
 
   // paint dials and filter overlays
