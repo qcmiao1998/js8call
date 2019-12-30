@@ -12009,7 +12009,6 @@ void MainWindow::displayBandActivity() {
                 if (isOffsetSelected) {
                     for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
                         ui->tableWidgetRXAll->item(row, i)->setSelected(true);
-                        ui->tableWidgetRXAll->item(row, i)->setBackground(QBrush(m_config.color_table_highlight()));
                     }
                 }
 
@@ -12367,7 +12366,6 @@ void MainWindow::displayCallActivity() {
             if (isCallSelected) {
                 for(int i = 0; i < ui->tableWidgetCalls->columnCount(); i++){
                     ui->tableWidgetCalls->item(row, i)->setSelected(true);
-                    ui->tableWidgetCalls->item(row, i)->setBackground(QBrush(m_config.color_table_highlight()));
                 }
             }
 
