@@ -10209,6 +10209,7 @@ void MainWindow::callsignSelectedChanged(QString /*old*/, QString selectedCall){
 
     // immediately update the display
     displayBandActivity();
+    displayCallActivity();
     updateButtonDisplay();
     updateTextDisplay();
     statusChanged();
