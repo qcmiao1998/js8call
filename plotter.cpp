@@ -337,11 +337,14 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   double df = m_binsPerPixel*m_fftBinWidth;
   QRect rect;
-  QPen penOrange(QColor(255,165,0),3);
-  QPen penBlue(QColor(149, 165, 166), 3);                 //Mark Tol range with green line
-  QPen penGreen(Qt::green, 3);                 //Mark Tol range with green line
-  QPen penRed(Qt::red, 3);                     //Mark Tx freq with red
-  QPen penYellow(QColor(243, 156, 18), 3);     //Mark band block freq with this pen
+  QPen penOrange(QColor(255, 165, 0),3);
+  QPen penGray(QColor(149, 165, 166), 3);
+  QPen penBlue(Qt::blue, 3);
+  QPen penIndigo(QColor(75, 0, 130), 3);
+  QPen penYellow(Qt::yellow, 3);
+  QPen penGreen(Qt::green, 3);
+  QPen penRed(Qt::red, 3);
+
   QPainter painter(&m_OverlayPixmap);
   painter.initFrom(this);
   QLinearGradient gradient(0, 0, 0 ,m_h2);     //fill background with gradient
@@ -454,7 +457,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   x1=XfromFreq(0);
   x2=XfromFreq(500);
   if(x1<=m_w and x2>0) {
-    painter0.setPen(penYellow);               //Mark bottom of sub-band
+    painter0.setPen(penGray);               //Mark bottom of sub-band
     painter0.drawLine(x1+1,26,x2-2,26);
     painter0.drawLine(x1+1,28,x2-2,28);
   }
@@ -462,19 +465,40 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   x1=XfromFreq(3500);
   x2=m_w;
   if(x1<=m_w and x2>0) {
-    painter0.setPen(penYellow);               //Mark top of sub-band
+    painter0.setPen(penGray);               //Mark top of sub-band
     painter0.drawLine(x1+1,26,x2-2,26);
     painter0.drawLine(x1+1,28,x2-2,28);
   }
 
-  x1=XfromFreq(500);
-  x2=XfromFreq(1000);
-  if(x1<=m_w and x2>0) {
-    painter0.setPen(penBlue);               //Mark ping range
-    painter0.drawLine(x1+1,26,x2-2,26);
-    painter0.drawLine(x1+1,28,x2-2,28);
-  }
+  for(int i = 500; i <= 3000; i += 500){
+      x1=XfromFreq(i);
+      x2=XfromFreq(i+500);
+      if(x1<=m_w and x2>0) {
+        switch(i){
+        case 500:
+            painter0.setPen(penRed);
+            break;
+        case 1000:
+            painter0.setPen(penOrange);
+            break;
+        case 1500:
+            painter0.setPen(penYellow);
+            break;
+        case 2000:
+            painter0.setPen(penGreen);
+            break;
+        case 2500:
+            painter0.setPen(penBlue);
+            break;
+        case 3000:
+            painter0.setPen(penIndigo);
+            break;
+        }
 
+        painter0.drawLine(x1+1,26,x2-2,26);
+        painter0.drawLine(x1+1,28,x2-2,28);
+      }
+  }
 
   // paint dials and filter overlays
   if(m_mode=="FT8"){
