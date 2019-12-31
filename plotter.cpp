@@ -337,7 +337,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   double df = m_binsPerPixel*m_fftBinWidth;
   QRect rect;
-  QPen penOrange(QColor(255, 165, 0),3);
+  QPen penOrange(QColor(230, 126, 34),3);
   QPen penGray(QColor(149, 165, 166), 3);
   QPen penLightBlue(QColor(52, 152, 219), 3);
   QPen penBlue(Qt::blue, 3);
@@ -346,6 +346,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   QPen penYellow(Qt::yellow, 3);
   QPen penLightGreen(QColor(46, 204, 113), 3);
   QPen penLightPurple(QColor(155, 89, 182), 3);
+  QPen penLightYellow(QColor(241, 196, 15), 3);
   QPen penGreen(Qt::green, 3);
   QPen penRed(Qt::red, 3);
 
@@ -483,7 +484,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       if(x1<=m_w and x2>0) {
         switch(i){
         case 500:
-            painter0.setPen(penOrange);
+            painter0.setPen(penLightYellow);
             break;
         case 1000:
             painter0.setPen(penLightGreen);
@@ -492,13 +493,13 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
             painter0.setPen(penLightGreen);
             break;
         case 2000:
-            painter0.setPen(penLightPurple);
+            painter0.setPen(penLightGreen);
             break;
         case 2500:
-            painter0.setPen(penLightPurple);
+            painter0.setPen(penLightYellow);
             break;
         case 3000:
-            painter0.setPen(penOrange);
+            painter0.setPen(penGray);
             break;
         }
         painter0.drawLine(x1+1,26,x2-2,26);
