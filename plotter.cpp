@@ -339,10 +339,13 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   QRect rect;
   QPen penOrange(QColor(255, 165, 0),3);
   QPen penGray(QColor(149, 165, 166), 3);
+  QPen penLightBlue(QColor(52, 152, 219), 3);
   QPen penBlue(Qt::blue, 3);
   QPen penIndigo(QColor(75, 0, 130), 3);
   QPen penViolet(QColor(127, 0, 255), 3);
   QPen penYellow(Qt::yellow, 3);
+  QPen penLightGreen(QColor(46, 204, 113), 3);
+  QPen penLightPurple(QColor(155, 89, 182), 3);
   QPen penGreen(Qt::green, 3);
   QPen penRed(Qt::red, 3);
 
@@ -483,16 +486,16 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
             painter0.setPen(penOrange);
             break;
         case 1000:
-            painter0.setPen(penBlue);
+            painter0.setPen(penLightGreen);
             break;
         case 1500:
-            painter0.setPen(penBlue);
+            painter0.setPen(penLightGreen);
             break;
         case 2000:
-            painter0.setPen(penGreen);
+            painter0.setPen(penLightPurple);
             break;
         case 2500:
-            painter0.setPen(penGreen);
+            painter0.setPen(penLightPurple);
             break;
         case 3000:
             painter0.setPen(penOrange);
