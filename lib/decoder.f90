@@ -34,6 +34,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
 
   real ss(184,NSMAX)
   logical baddata,newdat65,newdat9,single_decode,bVHF,bad0,newdat,trydecode
+  integer pos, sz
   integer*2 id0(NTMAX*12000)
   integer*2 id2(NTMAX*12000)
   type(params_block) :: params
@@ -67,7 +68,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   if(mod(params%nranera,2).eq.1) ntrials=3*10**(params%nranera/2)
   if(params%nranera.eq.0) ntrials=0
   
-10  nfail=0
+  nfail=0
   if(params%nmode.eq.8) then
     n30z=0
     nwrap=0

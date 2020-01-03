@@ -11,6 +11,7 @@ subroutine genjs8(msg,mygrid,bcontest,i3bit,msgsent,msgbits,itone)
   parameter (ND=58)                     !Data symbols
   parameter (NS=21)                     !Sync symbols (3 @ Costas 7x7)
   parameter (NN=NS+ND)                  !Total channel symbols (79)
+  parameter (NCOSTAS=1)
   
   character*68 alphabet
   character*22 msg,msgsent
