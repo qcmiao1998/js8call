@@ -83,11 +83,7 @@ extern "C" {
                 int* minw, float* px, float s[], float* df3, int* nhsym, int* npts8,
                 float *m_pxmax);
 
-  void genft8_(char* msg, char* MyGrid, bool* bcontest, int* i3bit, char* msgsent,
-               char ft8msgbits[], int itone[], fortran_charlen_t, fortran_charlen_t,
-               fortran_charlen_t);
-
-  void genjs8_(char* msg, char* MyGrid, bool* bcontest, int* i3bit, char* msgsent,
+  void genjs8_(char* msg, int* icos, char* MyGrid, bool* bcontest, int* i3bit, char* msgsent,
                char ft8msgbits[], int itone[], fortran_charlen_t, fortran_charlen_t,
                fortran_charlen_t);
 
@@ -5492,6 +5488,7 @@ void MainWindow::guiUpdate()
     if(m_tune) {
       itone[0]=0;
     } else if(m_modeTx=="FT8") {
+      int icos = 0;
       bool bcontest=false;
       char MyCall[6];
       char MyGrid[6];
@@ -5503,18 +5500,26 @@ void MainWindow::guiUpdate()
       //m_i3bit=0;
       char ft8msgbits[75 + 12]; //packed 75 bit ft8 message plus 12-bit CRC
 
+      // set which costas definition to use based on normal = old, the rest = new
       if(m_nSubMode == Varicode::JS8CallNormal){
           qDebug() << "gen ft8";
-          genft8_(message, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
-                  const_cast<int *> (itone), 22, 6, 22);
-      } else if (m_nSubMode == Varicode::JS8CallFast || m_nSubMode == Varicode::JS8CallTurbo || m_nSubMode == Varicode::JS8CallSlow || m_nSubMode == Varicode::JS8CallUltra){
+          icos=1;
+      } else if (m_nSubMode == Varicode::JS8CallSlow || m_nSubMode == Varicode::JS8CallFast || m_nSubMode == Varicode::JS8CallTurbo || m_nSubMode == Varicode::JS8CallUltra){
           qDebug() << "gen js8";
-          genjs8_(message, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
-                  const_cast<int *> (itone), 22, 6, 22);
+          icos=2;
       }
+
+      genjs8_(message, &icos, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
+              const_cast<int *> (itone), 22, 6, 22);
 
       qDebug() << "-> msg:" << message;
       qDebug() << "-> bit:" << m_i3bit;
+      for(int i = 0; i < 7; i++){
+        qDebug() << "-> tone" << i << "=" << itone[i];
+      }
+      for(int i = JS8_NUM_SYMBOLS-7; i < JS8_NUM_SYMBOLS; i++){
+        qDebug() << "-> tone" << i << "=" << itone[i];
+      }
 
       msgibits = m_i3bit;
       msgsent[22]=0;

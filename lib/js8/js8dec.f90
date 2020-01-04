@@ -55,6 +55,11 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
     icos7c = (/2,5,0,6,4,1,3/)                  !End Costas 7x7 tone pattern
   endif
 
+  if(NWRITELOG.eq.1) then
+    write(*,*) '<DecodeDebug> js8dec costas', icos7a, icos7b, icos7c
+    flush(6)
+  endif
+
   if(first) then
      mcq=2*mcq-1
      mde=2*mde-1
@@ -452,7 +457,8 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
         decoded=decoded0
 
         message(1:12)=origmsg(1:12)
-        call genjs8(message,mygrid6,bcontest,i3bit,msgsent,msgbits,itone)
+        icos=NCOSTAS
+        call genjs8(message,icos,mygrid6,bcontest,i3bit,msgsent,msgbits,itone)
         if(lsubtract) then
             if(NWRITELOG.eq.1) then
                 write(*,*) '<DecodeDebug> subtract', f1, xdt2, itone

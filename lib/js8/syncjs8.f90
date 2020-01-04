@@ -19,6 +19,7 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   equivalence (x,cx)
 
   integer icos7a(0:6), icos7b(0:6), icos7c(0:6)
+
   if(NCOSTAS.eq.1) then
     icos7a = (/4,2,5,6,1,3,0/)                  !Beginning Costas 7x7 tone pattern
     icos7b = (/4,2,5,6,1,3,0/)                  !Middle Costas 7x7 tone pattern
@@ -27,6 +28,12 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
     icos7a = (/0,6,2,3,5,4,1/)                  !Beginning Costas 7x7 tone pattern
     icos7b = (/1,5,0,2,3,6,4/)                  !Middle Costas 7x7 tone pattern
     icos7c = (/2,5,0,6,4,1,3/)                  !End Costas 7x7 tone pattern
+  endif
+
+
+  if(NWRITELOG.eq.1) then
+    write(*,*) '<DecodeDebug> syncjs8 costas', icos7a, icos7b, icos7c
+    flush(6)
   endif
 
 ! Compute symbol spectra, stepping by NSTEP steps.  
@@ -134,7 +141,7 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
     n=ia + indx(iz+1-i) - 1
     if(red(n).lt.syncmin.or.isnan(red(n))) exit
     if(NWRITELOG.eq.1) then
-        write(*,*) '<DecodeDebug>', 'red candidate', red(n), n*df, (jpeak(n)-1)*tstep
+        write(*,*) '<DecodeDebug> red candidate', red(n), n*df, (jpeak(n)-1)*tstep
         flush(6)
     endif
     k=k+1

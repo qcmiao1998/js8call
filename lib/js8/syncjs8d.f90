@@ -16,6 +16,7 @@ subroutine syncjs8d(cd0,i0,ctwk,itwk,sync)
   p(z1)=(real(z1)**2 + aimag(z1)**2)          !Statement function for power
 
   integer icos7a(0:6), icos7b(0:6), icos7c(0:6)
+
   if(NCOSTAS.eq.1) then
     icos7a = (/4,2,5,6,1,3,0/)                  !Beginning Costas 7x7 tone pattern
     icos7b = (/4,2,5,6,1,3,0/)                  !Middle Costas 7x7 tone pattern
@@ -24,6 +25,11 @@ subroutine syncjs8d(cd0,i0,ctwk,itwk,sync)
     icos7a = (/0,6,2,3,5,4,1/)                  !Beginning Costas 7x7 tone pattern
     icos7b = (/1,5,0,2,3,6,4/)                  !Middle Costas 7x7 tone pattern
     icos7c = (/2,5,0,6,4,1,3/)                  !End Costas 7x7 tone pattern
+  endif
+
+  if(NWRITELOG.eq.1) then
+    write(*,*) '<DecodeDebug> syncjs8d costas', icos7a, icos7b, icos7c
+    flush(6)
   endif
 
 ! Set some constants and compute the csync array.  

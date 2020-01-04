@@ -384,8 +384,6 @@ set (wsjt_FSRCS
   lib/ft8/foxgen_wrap.f90
   lib/fqso_first.f90
   lib/freqcal.f90
-  lib/ft8/ft8apset.f90
-  lib/ft8/genft8.f90
   lib/js8/genjs8.f90
   lib/geodist.f90
   lib/getlags.f90

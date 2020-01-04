@@ -1,4 +1,4 @@
-subroutine genjs8(msg,mygrid,bcontest,i3bit,msgsent,msgbits,itone)
+subroutine genjs8(msg,icos,mygrid,bcontest,i3bit,msgsent,msgbits,itone)
 
 ! Encode an JS8 message, producing array itone().
   
@@ -11,20 +11,20 @@ subroutine genjs8(msg,mygrid,bcontest,i3bit,msgsent,msgbits,itone)
   parameter (ND=58)                     !Data symbols
   parameter (NS=21)                     !Sync symbols (3 @ Costas 7x7)
   parameter (NN=NS+ND)                  !Total channel symbols (79)
-  parameter (NCOSTAS=1)
   
   character*68 alphabet
   character*22 msg,msgsent
   character*6 mygrid
   character*87 cbits
   logical bcontest,checksumok
+  integer icos
   integer*4 i4Msg6BitWords(12)                !72-bit message as 6-bit words
   integer*1 msgbits(KK),codeword(3*ND)
   integer*1, target:: i1Msg8BitBytes(11)
   integer itone(NN)
 
   integer icos7a(0:6), icos7b(0:6), icos7c(0:6)
-  if(NCOSTAS.eq.1) then
+  if(icos.eq.1) then                            !icos is used elsewhere as NCOSTAS parameter
     icos7a = (/4,2,5,6,1,3,0/)                  !Beginning Costas 7x7 tone pattern
     icos7b = (/4,2,5,6,1,3,0/)                  !Middle Costas 7x7 tone pattern
     icos7c = (/4,2,5,6,1,3,0/)                  !End Costas 7x7 tone pattern
