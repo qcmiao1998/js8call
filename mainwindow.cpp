@@ -4657,53 +4657,6 @@ void MainWindow::decodeCheckHangingDecoder(){
     initDecoderSubprocess();
 }
 
-void MainWindow::writeAllTxt(QString message, int bits)
-{
-  // Write decoded text to file "ALL.TXT".
-  QFile f {m_config.writeable_data_dir ().absoluteFilePath ("ALL.TXT")};
-      if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
-        QTextStream out(&f);
-        if(m_RxLog==1) {
-          out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
-              << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
-              << "JS8" << endl;
-          m_RxLog=0;
-        }
-        auto dt = DecodedText(message, bits, m_nSubMode);
-        out << dt.message() << endl;
-        f.close();
-      } else {
-        MessageBox::warning_message (this, tr ("File Open Error")
-                                     , tr ("Cannot open \"%1\" for append: %2")
-                                     .arg (f.fileName ()).arg (f.errorString ()));
-      }
-}
-
-void MainWindow::writeMsgTxt(QString message, int snr)
-{
-  // Write decoded text to file "DIRECTED.TXT".
-  QFile f {m_config.writeable_data_dir ().absoluteFilePath ("DIRECTED.TXT")};
-  if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
-        QTextStream out(&f);
-
-        QStringList output = {
-            DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss"),
-            Radio::frequency_MHz_string(m_freqNominal),
-            QString::number(currentFreqOffset()),
-            Varicode::formatSNR(snr),
-            message
-        };
-
-        out << output.join("\t") << endl;
-
-        f.close();
-    } else {
-        MessageBox::warning_message (this, tr ("File Open Error")
-                                     , tr ("Cannot open \"%1\" for append: %2")
-                                    .arg (f.fileName ()).arg (f.errorString ()));
-    }
-}
-
 QDateTime MainWindow::nextTransmitCycle(){
     auto timestamp = DriftingDateTime::currentDateTimeUtc();
 
@@ -9498,19 +9451,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
             }
 
             if(s.frequency () < 30000000u && !m_mode.startsWith ("WSPR")) {
-              // Write freq changes to ALL.TXT only below 30 MHz.
-              QFile f2 {m_config.writeable_data_dir ().absoluteFilePath ("ALL.TXT")};
-              if (f2.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
-                QTextStream out(&f2);
-                out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
-                    << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
-                    << "JS8" << endl;
-                f2.close();
-              } else {
-                MessageBox::warning_message (this, tr ("File Error")
-                                             ,tr ("Cannot open \"%1\" for append: %2")
-                                             .arg (f2.fileName ()).arg (f2.errorString ()));
-              }
+                write_frequency_entry("ALL.TXT");
             }
 
             if (m_config.spot_to_reporting_networks ()) {
@@ -13173,8 +13114,38 @@ void MainWindow::on_measure_check_box_stateChanged (int state)
   m_config.enable_calibration (Qt::Checked != state);
 }
 
+void MainWindow::write_frequency_entry (QString const& file_name){
+  if(!m_config.write_logs()){
+      return;
+  }
+
+  // Write freq changes to ALL.TXT only below 30 MHz.
+  QFile f2 {m_config.writeable_data_dir ().absoluteFilePath (file_name)};
+  if (f2.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
+    QTextStream out(&f2);
+    out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
+        << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
+        << "JS8" << endl;
+    f2.close();
+  } else {
+      auto const& message = tr ("Cannot open \"%1\" for append: %2")
+        .arg (f2.fileName ()).arg (f2.errorString ());
+#if QT_VERSION >= 0x050400
+      QTimer::singleShot (0, [=] {                   // don't block guiUpdate
+          MessageBox::warning_message (this, tr ("Log File Error"), message);
+        });
+#else
+      MessageBox::warning_message (this, tr ("Log File Error"), message);
+#endif
+  }
+}
+
 void MainWindow::write_transmit_entry (QString const& file_name)
 {
+  if(!m_config.write_logs()){
+      return;
+  }
+
   QFile f {m_config.writeable_data_dir ().absoluteFilePath (file_name)};
   if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
     {
@@ -13199,5 +13170,61 @@ void MainWindow::write_transmit_entry (QString const& file_name)
 #else
       MessageBox::warning_message (this, tr ("Log File Error"), message);
 #endif
+    }
+}
+
+
+void MainWindow::writeAllTxt(QString message, int bits)
+{
+  if(!m_config.write_logs()){
+      return;
+  }
+
+  // Write decoded text to file "ALL.TXT".
+  QFile f {m_config.writeable_data_dir ().absoluteFilePath ("ALL.TXT")};
+      if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
+        QTextStream out(&f);
+        if(m_RxLog==1) {
+          out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
+              << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
+              << "JS8" << endl;
+          m_RxLog=0;
+        }
+        auto dt = DecodedText(message, bits, m_nSubMode);
+        out << dt.message() << endl;
+        f.close();
+      } else {
+        MessageBox::warning_message (this, tr ("File Open Error")
+                                     , tr ("Cannot open \"%1\" for append: %2")
+                                     .arg (f.fileName ()).arg (f.errorString ()));
+      }
+}
+
+void MainWindow::writeMsgTxt(QString message, int snr)
+{
+  if(!m_config.write_logs()){
+      return;
+  }
+
+  // Write decoded text to file "DIRECTED.TXT".
+  QFile f {m_config.writeable_data_dir ().absoluteFilePath ("DIRECTED.TXT")};
+  if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
+        QTextStream out(&f);
+
+        QStringList output = {
+            DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss"),
+            Radio::frequency_MHz_string(m_freqNominal),
+            QString::number(currentFreqOffset()),
+            Varicode::formatSNR(snr),
+            message
+        };
+
+        out << output.join("\t") << endl;
+
+        f.close();
+    } else {
+        MessageBox::warning_message (this, tr ("File Open Error")
+                                     , tr ("Cannot open \"%1\" for append: %2")
+                                    .arg (f.fileName ()).arg (f.errorString ()));
     }
 }

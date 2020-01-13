@@ -129,6 +129,7 @@ public:
   qint32 RxBandwidth() const;
   double degrade() const;
   double txDelay() const;
+  bool write_logs() const;
   bool reset_activity() const;
   bool check_for_updates() const;
   bool id_after_73 () const;

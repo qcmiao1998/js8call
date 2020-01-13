@@ -39,7 +39,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget_2">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="stationTab">
           <attribute name="title">
@@ -281,8 +281,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>615</width>
-                <height>508</height>
+                <width>724</width>
+                <height>537</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -380,6 +380,13 @@
                    <widget class="QCheckBox" name="transmit_directed_check_box">
                     <property name="text">
                      <string>Immediately transmit CQ, Reply, Info, Saved, and Directed messages from the menu</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="write_logs_check_box">
+                    <property name="text">
+                     <string>Write log files (ALL.TXT, DIRECTED.TXT, etc) of decoded text</string>
                     </property>
                    </widget>
                   </item>
@@ -796,8 +803,8 @@ text message.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>616</width>
-                <height>331</height>
+                <width>738</width>
+                <height>461</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_16">
