@@ -12,6 +12,7 @@
 #define JS8_SINGLE_DECODE  0       // single submode decode per instantiation of the decoder
 #define JS8_DECODE_THREAD  1       // use a separate thread for decode process handling
 #define JS8_ALLOW_EXTENDED 1       // allow extended latin-1 capital charset
+#define JS8_SAVE_AUDIO     1       // enable the save menu
 
 #ifdef QT_DEBUG
 #define JS8_DEBUG_DECODE   0       // emit debug statements for the decode pipeline

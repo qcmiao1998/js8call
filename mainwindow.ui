@@ -4567,7 +4567,7 @@ list. The list can be maintained in Settings (F2).</string>
    </widget>
    <widget class="QMenu" name="menuSave">
     <property name="title">
-     <string>Old &amp;Save</string>
+     <string>&amp;Save</string>
     </property>
     <addaction name="actionNone"/>
     <addaction name="actionSave_decoded"/>
@@ -4722,6 +4722,7 @@ list. The list can be maintained in Settings (F2).</string>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
    <addaction name="menuModeJS8"/>
+   <addaction name="menuSave"/>
    <addaction name="menu_Log"/>
    <addaction name="menuWindow"/>
    <addaction name="menuControl"/>
@@ -4729,7 +4730,6 @@ list. The list can be maintained in Settings (F2).</string>
    <addaction name="menuView"/>
    <addaction name="menuMode"/>
    <addaction name="menuTools"/>
-   <addaction name="menuSave"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionExit">
@@ -4830,7 +4830,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>&amp;None</string>
+    <string>Disable audio savi&amp;ng</string>
    </property>
   </action>
   <action name="actionSave_all">

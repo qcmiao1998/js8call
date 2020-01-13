@@ -567,13 +567,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->actionNone->setActionGroup(saveGroup);
   ui->actionSave_decoded->setActionGroup(saveGroup);
   ui->actionSave_all->setActionGroup(saveGroup);
-  saveGroup->setVisible(false);
 
-  QActionGroup* DepthGroup = new QActionGroup(this);
-  ui->actionQuickDecode->setActionGroup(DepthGroup);
-  ui->actionMediumDecode->setActionGroup(DepthGroup);
-  ui->actionDeepDecode->setActionGroup(DepthGroup);
-  ui->actionDeepestDecode->setActionGroup(DepthGroup);
+  QActionGroup* depthGroup = new QActionGroup(this);
+  ui->actionQuickDecode->setActionGroup(depthGroup);
+  ui->actionMediumDecode->setActionGroup(depthGroup);
+  ui->actionDeepDecode->setActionGroup(depthGroup);
+  ui->actionDeepestDecode->setActionGroup(depthGroup);
 
   connect (ui->view_phase_response_action, &QAction::triggered, [this] () {
       if (!m_equalizationToolsDialog)
@@ -933,15 +932,20 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_wideGraph.data()->installEventFilter(new EscapeKeyPressEater());
   ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized();
   m_isWideGraphMDI = true;
-  ui->menuMode->setVisible(false);
+  ui->menuMode->setEnabled(false);
   ui->menuSave->setEnabled(false);
   ui->menuTools->setEnabled(false);
   ui->menuView->setEnabled(false);
+
+  if(JS8_SAVE_AUDIO){
+      ui->menuSave->setEnabled(true);
+  }
+
   foreach(auto action, ui->menuBar->actions()){
-      if(action->text() == "Old View") ui->menuBar->removeAction(action);
-      if(action->text() == "Old Mode") ui->menuBar->removeAction(action);
-      if(action->text() == "Old Tools") ui->menuBar->removeAction(action);
-      if(action->text() == "Old &Save") ui->menuBar->removeAction(action);
+      if(action->isEnabled()){
+          continue;
+      }
+      ui->menuBar->removeAction(action);
   }
   ui->dxCallEntry->clear();
   ui->dxGridEntry->clear();
@@ -4606,8 +4610,17 @@ void MainWindow::decodePrepareSaveAudio(int submode){
         m_bAltV=false;
         // the following is potential a threading hazard - not a good
         // idea to pass pointer to be processed in another thread
+        // TODO: use the detector mutex here to prevent threading issues
+        int pos = 0;
+        switch(submode){
+          case Varicode::JS8CallNormal: pos = dec_data.params.kposA; break;
+          case Varicode::JS8CallFast:   pos = dec_data.params.kposB; break;
+          case Varicode::JS8CallTurbo:  pos = dec_data.params.kposC; break;
+          case Varicode::JS8CallSlow:   pos = dec_data.params.kposE; break;
+          case Varicode::JS8CallUltra:  pos = dec_data.params.kposI; break;
+        }
         m_saveWAVWatcher.setFuture (QtConcurrent::run (std::bind (&MainWindow::save_wave_file,
-              this, m_fnameWE, &dec_data.d2[0], period, m_config.my_callsign(),
+              this, m_fnameWE, &dec_data.d2[pos], period, m_config.my_callsign(),
               m_config.my_grid(), m_mode, submode, m_freqNominal, m_hisCall, m_hisGrid)));
     }
 }
@@ -11350,6 +11363,8 @@ void MainWindow::processCommandActivity() {
 
                 auto from = params.value("FROM").toString().trimmed();
 
+                // TODO: group messaging - allow any message to a @GROUP to be retrieved by anybody
+
                 auto to = params.value("TO").toString().trimmed();
                 if(to != who && to != Radio::base_callsign(who)){
                     continue;
@@ -11389,6 +11404,8 @@ void MainWindow::processCommandActivity() {
             if(mid != -1){
                 reply = QString("%1 YES MSG ID %2").arg(replyPath).arg(mid);
             }
+
+            // TODO: group messaging - if a isGroupCall, check to see if there's a message id for the group and return it if there's not an individual message
 
             // if this is not an allcall and we have no messages, reply no.
             if(!isAllCall && reply.isEmpty()){
