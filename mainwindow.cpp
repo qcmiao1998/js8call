@@ -937,16 +937,18 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->menuTools->setEnabled(false);
   ui->menuView->setEnabled(false);
 
-  if(JS8_SAVE_AUDIO){
-      ui->menuSave->setEnabled(true);
-  }
+#if JS8_SAVE_AUDIO
+  ui->menuSave->setEnabled(true);
+#endif
 
+  // remove disabled menus from the menu bar
   foreach(auto action, ui->menuBar->actions()){
       if(action->isEnabled()){
           continue;
       }
       ui->menuBar->removeAction(action);
   }
+
   ui->dxCallEntry->clear();
   ui->dxGridEntry->clear();
 
@@ -4527,6 +4529,7 @@ void MainWindow::decodeStart(){
         if(JS8_DEBUG_DECODE) qDebug() << " --> B:" << dec_data.params.kposB << dec_data.params.kposB + dec_data.params.kszB << QString("(%1)").arg(dec_data.params.kszB);
         if(JS8_DEBUG_DECODE) qDebug() << " --> C:" << dec_data.params.kposC << dec_data.params.kposC + dec_data.params.kszC << QString("(%1)").arg(dec_data.params.kszC);
         if(JS8_DEBUG_DECODE) qDebug() << " --> E:" << dec_data.params.kposE << dec_data.params.kposE + dec_data.params.kszE << QString("(%1)").arg(dec_data.params.kszE);
+        if(JS8_DEBUG_DECODE) qDebug() << " --> I:" << dec_data.params.kposI << dec_data.params.kposI + dec_data.params.kszI << QString("(%1)").arg(dec_data.params.kszI);
 
         //newdat=1  ==> this is new data, must do the big FFT
         //nagain=1  ==> decode only at fQSO +/- Tol
