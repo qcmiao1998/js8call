@@ -6598,6 +6598,30 @@ void MainWindow::addMessageText(QString text, bool clear, bool selectFirstPlaceh
     ui->extFreeTextMsgEdit->setFocus();
 }
 
+void MainWindow::confirmThenEnqueueMessage(int timeout, int priority, QString message, int freq, Callback c){
+    SelfDestructMessageBox * m = new SelfDestructMessageBox(timeout,
+      "Autoreply Confirmation Required",
+      QString("A transmission is queued for autoreply:\n\n%1\n\nWould you like to send this transmission?").arg(message),
+      QMessageBox::Question,
+      QMessageBox::Yes | QMessageBox::No,
+      QMessageBox::No,
+      false,
+      this);
+
+    connect(m, &SelfDestructMessageBox::finished, this, [this, m, priority, message, freq, c](int result){
+        // make sure we delete the message box later...
+        m->deleteLater();
+
+        if(result != QMessageBox::Yes){
+            return;
+        }
+
+        enqueueMessage(priority, message, freq, c);
+    });
+
+    m->show();
+}
+
 void MainWindow::enqueueMessage(int priority, QString message, int freq, Callback c){
     m_txMessageQueue.enqueue(
         PrioritizedMessage{
@@ -8121,7 +8145,7 @@ void MainWindow::sendHeartbeat(){
         f = -1;
     }
 
-    enqueueMessage(PriorityLow + 1, message, f, [this](){ /* */ });
+    enqueueMessage(PriorityLow + 1, message, f, nullptr);
     processTxQueue();
 }
 
@@ -8135,8 +8159,14 @@ void MainWindow::sendHeartbeatAck(QString to, int snr, QString extra){
 
     auto f = m_config.heartbeat_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
 
-    enqueueMessage(PriorityLow + 1, message, f, [this](){ /* */ });
-    processTxQueue();
+    if(m_config.autoreply_confirmation()){
+        confirmThenEnqueueMessage(90, PriorityLow + 1, message, f, [this](){
+            processTxQueue();
+        });
+    } else {
+        enqueueMessage(PriorityLow + 1, message, f, nullptr);
+        processTxQueue();
+    }
 }
 
 void MainWindow::on_hbMacroButton_toggled(bool checked){
@@ -11195,6 +11225,7 @@ void MainWindow::processCommandActivity() {
                 extra = QString("MSG ID %1").arg(mid);
             }
 
+            // TODO: require confirmation?
             sendHeartbeatAck(d.from, d.snr, extra);
 
             if(isAllCall){
@@ -11440,9 +11471,7 @@ void MainWindow::processCommandActivity() {
         // do not queue for reply if there's a buffer open to us
         int bufferOffset = 0;
         if(hasExistingMessageBufferToMe(&bufferOffset)){
-
             qDebug() << "skipping reply due to open buffer" << bufferOffset << m_messageBuffer.count();
-
             continue;
         }
 
@@ -11455,7 +11484,11 @@ void MainWindow::processCommandActivity() {
         // unless, this is an allcall, to which we should be responding on a clear frequency offset
         // we always want to make sure that the directed cache has been updated at this point so we have the
         // most information available to make a frequency selection.
-        enqueueMessage(priority, reply, freq, nullptr);
+        if(m_config.autoreply_confirmation()){
+            confirmThenEnqueueMessage(90, priority, reply, freq, nullptr);
+        } else {
+            enqueueMessage(priority, reply, freq, nullptr);
+        }
     }
 }
 
@@ -12640,6 +12673,7 @@ void MainWindow::networkMessage(Message const &message)
         auto text = message.value();
         if(!text.isEmpty()){
             enqueueMessage(PriorityNormal, text, -1, nullptr);
+            processTxQueue();
             return;
         }
     }

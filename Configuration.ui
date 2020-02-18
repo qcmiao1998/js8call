@@ -39,7 +39,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget_2">
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="stationTab">
           <attribute name="title">
@@ -281,7 +281,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>724</width>
+                <width>615</width>
                 <height>537</height>
                </rect>
               </property>
@@ -873,34 +873,34 @@ text message.</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0">
+                  <item row="2" column="0">
                    <widget class="QCheckBox" name="relay_disabled_check_box">
                     <property name="text">
                      <string>Disable message relay (&gt;) when autoreply is enabled</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="0">
+                  <item row="3" column="0">
                    <widget class="QLabel" name="label_23">
                     <property name="text">
                      <string>Only autoreply to these callsigns (comma separated):</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="1">
+                  <item row="3" column="1">
                    <widget class="QLineEdit" name="auto_whitelist_line_edit"/>
                   </item>
-                  <item row="3" column="0">
+                  <item row="4" column="0">
                    <widget class="QLabel" name="label_15">
                     <property name="text">
                      <string>Never autoreply to these callsigns (comma separated):</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="1">
+                  <item row="4" column="1">
                    <widget class="QLineEdit" name="auto_blacklist_line_edit"/>
                   </item>
-                  <item row="4" column="0">
+                  <item row="5" column="0">
                    <widget class="QLabel" name="label_10">
                     <property name="text">
                      <string>Idle timeout - disable autoreply after:</string>
@@ -910,7 +910,7 @@ text message.</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="1">
+                  <item row="5" column="1">
                    <widget class="QSpinBox" name="tx_watchdog_spin_box">
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of minutes before unattended heartbeat transmissions are aborted.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -935,6 +935,13 @@ text message.</string>
                     </property>
                     <property name="value">
                      <number>60</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QCheckBox" name="autoreply_confirmation_check_box">
+                    <property name="text">
+                     <string>Ask for confirmation before sending autoreply transmissions</string>
                     </property>
                    </widget>
                   </item>
@@ -1527,7 +1534,7 @@ a few, particularly some Kenwood rigs, require it).</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>718</width>
+                <width>494</width>
                 <height>490</height>
                </rect>
               </property>
@@ -1931,8 +1938,8 @@ this setting allows you to select which audio input will be used
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>760</width>
-            <height>510</height>
+            <width>266</width>
+            <height>345</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -2318,7 +2325,7 @@ both here.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>746</width>
+            <width>508</width>
             <height>567</height>
            </rect>
           </property>
@@ -2843,8 +2850,8 @@ for assessing propagation and system performance.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>760</width>
-            <height>510</height>
+            <width>487</width>
+            <height>341</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -3180,8 +3187,8 @@ QListView::item:hover {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>760</width>
-            <height>510</height>
+            <width>163</width>
+            <height>99</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -3323,8 +3330,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>724</width>
-                <height>418</height>
+                <width>274</width>
+                <height>690</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_14">
@@ -4583,12 +4590,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
  </buttongroups>
 </ui>

@@ -149,6 +149,7 @@ public slots:
   bool isInDecodeDelayThreshold(int seconds);
   void prependMessageText(QString text);
   void addMessageText(QString text, bool clear=false, bool selectFirstPlaceholder=false);
+  void confirmThenEnqueueMessage(int timeout, int priority, QString message, int freq, Callback c);
   void enqueueMessage(int priority, QString message, int freq, Callback c);
   void resetMessage();
   void resetMessageUI();
