@@ -2383,8 +2383,8 @@ void MainWindow::readSettings()
   // set the frequency offset
   setFreqOffsetForRestore(m_settings->value("RxFreq",1500).toInt(), false);
 
-  setSubmode(m_settings->value("SubMode", Varicode::JS8CallNormal).toInt());
-  ui->actionModeJS8HB->setChecked((m_nSubMode == Varicode::JS8CallNormal || m_nSubMode == Varicode::JS8CallSlow) && m_settings->value("SubModeHB", false).toBool());
+  setSubmode(m_settings->value("SubMode", Varicode::JS8CallFast).toInt());
+  ui->actionModeJS8HB->setChecked(canEnableHeartbeat() && m_settings->value("SubModeHB", false).toBool());
   ui->actionHeartbeatAcknowledgements->setChecked(m_settings->value("SubModeHBAck", false).toBool());
   ui->actionModeMultiDecoder->setChecked(m_settings->value("SubModeMultiDecode", true).toBool());
 
@@ -7498,15 +7498,31 @@ void MainWindow::on_actionModeAutoreply_toggled(bool checked){
     on_actionJS8_triggered();
 }
 
+bool MainWindow::canEnableHeartbeat(){
+    if(m_nSubMode == Varicode::JS8CallFast){
+        return true;
+    }
+
+    if(m_nSubMode == Varicode::JS8CallNormal){
+        return true;
+    }
+
+    if(m_nSubMode == Varicode::JS8CallSlow){
+        return true;
+    }
+
+    return false;
+}
+
 void MainWindow::prepareHeartbeatMode(bool enabled){
-    // heartbeat is only available in HB mode
+    // heartbeat is only available in a supported HB mode
     ui->hbMacroButton->setVisible(enabled);
     if(!enabled){
         ui->hbMacroButton->setChecked(false);
     }
     ui->actionHeartbeat->setEnabled(enabled);
-    ui->actionModeJS8HB->setEnabled(m_nSubMode == Varicode::JS8CallNormal || m_nSubMode == Varicode::JS8CallSlow);
-    ui->actionHeartbeatAcknowledgements->setEnabled(ui->actionModeAutoreply->isChecked() && enabled);
+    ui->actionModeJS8HB->setEnabled(enabled && canEnableHeartbeat());
+    ui->actionHeartbeatAcknowledgements->setEnabled(enabled && ui->actionModeAutoreply->isChecked());
 
 #if 0
     //ui->actionCQ->setEnabled(!enabled);
@@ -7556,7 +7572,7 @@ void MainWindow::on_actionJS8_triggered()
   }
 
   // Only enable heartbeat for normal mode
-  ui->actionModeJS8HB->setEnabled(m_nSubMode == Varicode::JS8CallNormal || m_nSubMode == Varicode::JS8CallSlow);
+  ui->actionModeJS8HB->setEnabled(canEnableHeartbeat());
   prepareHeartbeatMode(ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked());
 
   //if(m_nSubMode != Varicode::JS8CallNormal){

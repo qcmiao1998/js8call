@@ -282,6 +282,7 @@ private slots:
   void on_actionHeartbeatAcknowledgements_toggled(bool checked);
   void on_actionModeMultiDecoder_toggled(bool checked);
   void on_actionModeAutoreply_toggled(bool checked);
+  bool canEnableHeartbeat();
   void prepareHeartbeatMode(bool enabled);
   void on_actionJS8_triggered();
   void on_TxFreqSpinBox_valueChanged(int arg1);
