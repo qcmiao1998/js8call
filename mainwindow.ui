@@ -1538,7 +1538,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
            </size>
           </property>
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send your station information&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send your station information message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>INFO</string>
@@ -1704,6 +1704,9 @@ color:#222;
             <width>0</width>
             <height>30</height>
            </size>
+          </property>
+          <property name="toolTip">
+           <string>Send your station status message</string>
           </property>
           <property name="text">
            <string>STATUS</string>
