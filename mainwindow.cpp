@@ -2801,6 +2801,17 @@ void MainWindow::on_menuModeJS8_aboutToShow(){
     ui->actionModeJS8Turbo->setEnabled(canChangeMode);
     ui->actionModeJS8Slow->setEnabled(canChangeMode);
     ui->actionModeJS8Ultra->setEnabled(canChangeMode);
+
+    // dynamically replace the autoreply menu item text
+    auto autoreplyText = ui->actionModeAutoreply->text();
+    if(m_config.autoreply_confirmation() && !autoreplyText.contains(" with Confirmation")){
+        autoreplyText.replace("Autoreply", "Autoreply with Confirmation");
+        ui->actionModeAutoreply->setText(autoreplyText);
+    }
+    else if(!m_config.autoreply_confirmation() && autoreplyText.contains(" with Confirmation")){
+        autoreplyText.replace(" with Confirmation", "");
+        ui->actionModeAutoreply->setText(autoreplyText);
+    }
 }
 
 void MainWindow::on_menuControl_aboutToShow(){
