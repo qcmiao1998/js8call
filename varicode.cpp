@@ -139,7 +139,7 @@ QRegularExpression directed_re("^"                    +
                                optional_cmd_pattern   +
                                optional_num_pattern);
 
-QRegularExpression heartbeat_re(R"(^\s*(?<type>CQ CQ CQ|CQ DX|CQ QRP|CQ CONTEST|CQ FIELD|CQ FD|CQ CQ|CQ|HB( AUTO)?( RELAY)?( SPOT)?)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
+QRegularExpression heartbeat_re(R"(^\s*(?<callsign>[@]ALLCALL\s+)?(?<type>CQ CQ CQ|CQ DX|CQ QRP|CQ CONTEST|CQ FIELD|CQ FD|CQ CQ|CQ|HB)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
 QRegularExpression compound_re("^\\s*[`]"              +
                                callsign_pattern        +
@@ -261,6 +261,8 @@ QMap<QString, quint32> basecalls = {
     { "@RAYNET",    nbasecall + 41 }, // RAYNET GROUP
     { "@RADAR",     nbasecall + 42 }, // RADAR GROUP
     { "@SKYWARN",   nbasecall + 43 }, // SKYWARN GROUP
+    { "@CQ",        nbasecall + 44 }, // CQ GROUP
+    { "@QSO",       nbasecall + 45 }, // QSO GROUP
 };
 
 QMap<quint32, QString> cqs = {
@@ -274,15 +276,16 @@ QMap<quint32, QString> cqs = {
     { 7, "CQ"},
 };
 
+/* status flags in HB messages are deprecated as of 2.2 */
 QMap<quint32, QString> hbs = {
-    { 0, "HB"  },                 // HB
-    { 1, "HB AUTO"  },            // HB AUTO
-    { 2, "HB AUTO RELAY"  },      // HB AUTO RELAY
-    { 3, "HB AUTO RELAY SPOT"  }, // HB AUTO RELAY SPOT
-    { 7, "HB AUTO SPOT"},         // HB AUTO       SPOT
-    { 4, "HB RELAY"  },           // HB      RELAY
-    { 5, "HB RELAY SPOT"  },      // HB      RELAY SPOT
-    { 6, "HB SPOT"  },            // HB            SPOT
+    { 0, "HB" }, // HB
+    { 1, "HB" }, // HB AUTO
+    { 2, "HB" }, // HB AUTO RELAY
+    { 3, "HB" }, // HB AUTO RELAY SPOT
+    { 4, "HB" }, // HB      RELAY
+    { 5, "HB" }, // HB      RELAY SPOT
+    { 6, "HB" }, // HB            SPOT
+    { 7, "HB" }, // HB AUTO       SPOT
 };
 
 
