@@ -8147,7 +8147,7 @@ void MainWindow::sendHeartbeat(){
     processTxQueue();
 }
 
-#define SEND_SNR_IN_ACK 1
+#define SEND_SNR_IN_ACK 0
 void MainWindow::sendHeartbeatAck(QString to, int snr, QString extra){
 #if SEND_SNR_IN_ACK
     auto message = QString("%1 ACK %2 %3").arg(to).arg(Varicode::formatSNR(snr)).arg(extra).trimmed();
