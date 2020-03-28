@@ -4889,6 +4889,8 @@ void MainWindow::processDecodedLine(QByteArray t){
             cmd.utcTimestamp = cd.utcTimestamp;
             cmd.tdrift = cd.tdrift;
             cmd.submode = cd.submode;
+
+            // TODO: check bits so we only auto respond to "finished" heartbeats
             m_rxCommandQueue.append(cmd);
 
             // notification for hb
@@ -10469,7 +10471,7 @@ void MainWindow::processRxActivity() {
             // if this is a _partial_ directed message, skip until the complete call comes through.
             continue;
 
-        } else if(d.isDirected && d.text.contains(": HB ")){ // TODO: HEARTBEAT
+        } else if(d.isDirected && (d.text.contains(": HB ") || d.text.contains(": @ALLCALL HB"))){ // TODO: HEARTBEAT
             // if this is a heartbeat, process elsewhere...
             continue;
         }
@@ -10881,7 +10883,7 @@ void MainWindow::processCommandActivity() {
         bool shouldDisplay = true;
 
         // don't display ping allcalls
-        if(isAllCall && (d.cmd != " " || ad.text.contains(": HB "))){
+        if(isAllCall && (d.cmd != " " || ad.text.contains(": HB ") || ad.text.contains(": @ALLCALL HB "))){
             shouldDisplay = false;
         }
 
