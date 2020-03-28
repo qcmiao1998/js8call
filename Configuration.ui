@@ -190,14 +190,14 @@
                   <string>Station Messages</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_4">
-                  <item row="1" column="1">
-                   <widget class="QLineEdit" name="reply_message_line_edit">
+                  <item row="4" column="1">
+                   <widget class="QLineEdit" name="status_message_line_edit">
                     <property name="text">
-                     <string>HW CPY?</string>
+                     <string>IDLE &lt;MYIDLE&gt; VERSION &lt;MYVERSION&gt;</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0">
+                  <item row="2" column="0">
                    <widget class="QLabel" name="label_17">
                     <property name="text">
                      <string>Reply Message:</string>
@@ -205,33 +205,61 @@
                    </widget>
                   </item>
                   <item row="0" column="0">
-                   <widget class="QLabel" name="label_19">
+                   <widget class="QLabel" name="label_28">
                     <property name="text">
-                     <string>CQ Message:</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QLineEdit" name="cq_message_line_edit">
-                    <property name="text">
-                     <string>CQCQCQ &lt;MYGRID4&gt;</string>
+                     <string>HB Message:</string>
                     </property>
                    </widget>
                   </item>
                   <item row="2" column="1">
-                   <widget class="QLineEdit" name="info_message_line_edit">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message that is transmitted in response to &amp;quot;@&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   <widget class="QLineEdit" name="reply_message_line_edit">
+                    <property name="text">
+                     <string>HW CPY?</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="0">
+                  <item row="0" column="1">
+                   <widget class="QLineEdit" name="hb_message_line_edit">
+                    <property name="text">
+                     <string>HB &lt;MYGRID4&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QLineEdit" name="cq_message_line_edit">
+                    <property name="text">
+                     <string>CQ CQ CQ &lt;MYGRID4&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
                    <widget class="QLabel" name="label_14">
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="text">
                      <string>Station Info (Rig, Antenna, Location, etc):</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="label_27">
+                    <property name="text">
+                     <string>Station Status (Weather, Idle Time, Version, etc):</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QLineEdit" name="info_message_line_edit">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Station location message that is transmitted in response to &amp;quot;@&amp;quot; directed queries.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_19">
+                    <property name="text">
+                     <string>CQ Message:</string>
                     </property>
                    </widget>
                   </item>
@@ -281,7 +309,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>615</width>
+                <width>724</width>
                 <height>537</height>
                </rect>
               </property>
@@ -1534,7 +1562,7 @@ a few, particularly some Kenwood rigs, require it).</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>494</width>
+                <width>718</width>
                 <height>490</height>
                </rect>
               </property>
@@ -1938,8 +1966,8 @@ this setting allows you to select which audio input will be used
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>266</width>
-            <height>345</height>
+            <width>760</width>
+            <height>510</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -2325,7 +2353,7 @@ both here.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>508</width>
+            <width>746</width>
             <height>567</height>
            </rect>
           </property>
@@ -2522,7 +2550,7 @@ comments field.</string>
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check to allow changes to grid, qtc, etc from external programs&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="text">
-                     <string>Accept Dynamic Station Information</string>
+                     <string>Accept Dynamic Station Information (Grid, Info, Status, etc)</string>
                     </property>
                    </widget>
                   </item>
@@ -2850,8 +2878,8 @@ for assessing propagation and system performance.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>487</width>
-            <height>341</height>
+            <width>760</width>
+            <height>510</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -3187,8 +3215,8 @@ QListView::item:hover {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>163</width>
-            <height>99</height>
+            <width>760</width>
+            <height>510</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -3330,8 +3358,8 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>274</width>
-                <height>690</height>
+                <width>724</width>
+                <height>418</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_14">
@@ -4401,9 +4429,11 @@ soundcard changes</string>
   <tabstop>grid_line_edit</tabstop>
   <tabstop>groups_line_edit</tabstop>
   <tabstop>avoid_allcall_check_box</tabstop>
+  <tabstop>hb_message_line_edit</tabstop>
   <tabstop>cq_message_line_edit</tabstop>
   <tabstop>reply_message_line_edit</tabstop>
   <tabstop>info_message_line_edit</tabstop>
+  <tabstop>status_message_line_edit</tabstop>
   <tabstop>scrollArea_2</tabstop>
   <tabstop>miles_check_box</tabstop>
   <tabstop>monitor_off_check_box</tabstop>
@@ -4521,6 +4551,22 @@ soundcard changes</string>
   <tabstop>sbBandwidth</tabstop>
   <tabstop>cbx4ToneSpacing</tabstop>
   <tabstop>sbNtrials</tabstop>
+  <tabstop>write_logs_check_box</tabstop>
+  <tabstop>scrollArea_11</tabstop>
+  <tabstop>heartbeat_anywhere_check_box</tabstop>
+  <tabstop>heartbeat_qso_pause_check_box</tabstop>
+  <tabstop>hb_blacklist_line_edit</tabstop>
+  <tabstop>autoreply_on_check_box</tabstop>
+  <tabstop>cqMessagesButton</tabstop>
+  <tabstop>relay_disabled_check_box</tabstop>
+  <tabstop>auto_whitelist_line_edit</tabstop>
+  <tabstop>auto_blacklist_line_edit</tabstop>
+  <tabstop>tx_watchdog_spin_box</tabstop>
+  <tabstop>autoreply_confirmation_check_box</tabstop>
+  <tabstop>notification_sound_output_combo_box</tabstop>
+  <tabstop>scrollArea_12</tabstop>
+  <tabstop>notifications_check_box</tabstop>
+  <tabstop>notifications_table_widget</tabstop>
  </tabstops>
  <resources/>
  <connections>

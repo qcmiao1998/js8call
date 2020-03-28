@@ -262,7 +262,10 @@ QMap<QString, quint32> basecalls = {
     { "@RADAR",     nbasecall + 42 }, // RADAR GROUP
     { "@SKYWARN",   nbasecall + 43 }, // SKYWARN GROUP
     { "@CQ",        nbasecall + 44 }, // CQ GROUP
-    { "@QSO",       nbasecall + 45 }, // QSO GROUP
+    { "@HB",        nbasecall + 45 }, // HB GROUP
+    { "@QSO",       nbasecall + 46 }, // QSO GROUP
+    { "@QSOPARTY",  nbasecall + 47 }, // QSO PARTY GROUP
+    { "@CONTEST",   nbasecall + 48 }, // CONTEST GROUP
 };
 
 QMap<quint32, QString> cqs = {
@@ -342,7 +345,7 @@ int dbmTomwatts(int dbm){
 QString Varicode::extendedChars(){
     static QString c;
     if(c.size() == 0){
-        for(int i = 0; i < JSC::prefixSize; i++){
+        for(quint32 i = 0; i < JSC::prefixSize; i++){
             if(JSC::prefix[i].size != 1){ continue; }
             c.append(QLatin1String(JSC::prefix[i].str, 1));
         }

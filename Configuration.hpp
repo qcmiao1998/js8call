@@ -116,6 +116,8 @@ public:
   int callsign_aging() const;
   QString eot() const;
   QString my_info () const;
+  QString my_status () const;
+  QString hb_message () const;
   QString cq_message () const;
   QString reply_message () const;
   QFont table_font() const;
@@ -255,9 +257,11 @@ public:
   // Set the dynamic grid which is only used if configuration setting is enabled.
   void set_dynamic_location (QString const&);
 
-  // Set the dynamic station qth message which is only used if configuration setting is enabled.
+  // Set the dynamic station info message which is only used if configuration setting is enabled.
   void set_dynamic_station_info(QString const& info);
 
+  // Set the dynamic station status message which is only used if configuration setting is enabled.
+  void set_dynamic_station_status(QString const& status);
 
   // This method queries if a CAT and PTT connection is operational.
   bool is_transceiver_online () const;

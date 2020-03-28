@@ -578,6 +578,7 @@ private:
   unsigned transceiver_command_number_;
   QString dynamic_grid_;
   QString dynamic_info_;
+  QString dynamic_status_;
 
   // configuration fields that we publish
   bool auto_switch_bands_;
@@ -591,7 +592,9 @@ private:
   QStringList secondary_highlight_words_;
   QString eot_;
   QString my_info_;
+  QString my_status_;
   QString cq_;
+  QString hb_;
   QString reply_;
   int callsign_aging_;
   int activity_aging_;
@@ -1070,6 +1073,21 @@ QString Configuration::my_info() const
     return info.trimmed();
 }
 
+QString Configuration::my_status() const
+{
+    auto status = m_->my_status_;
+    if(m_->use_dynamic_info_ && !m_->dynamic_status_.isEmpty()){
+        status = m_->dynamic_status_;
+    }
+
+    return status.trimmed();
+}
+
+QString Configuration::hb_message() const
+{
+    return m_->hb_.trimmed();
+}
+
 QString Configuration::cq_message() const
 {
     return m_->cq_.trimmed().replace("CQCQCQ", "CQ CQ CQ"); // deprecate legacy
@@ -1099,6 +1117,12 @@ void Configuration::set_dynamic_station_info(QString const& info)
 {
   m_->dynamic_info_ = info.trimmed ();
 }
+
+void Configuration::set_dynamic_station_status(QString const& status)
+{
+  m_->dynamic_status_ = status.trimmed ();
+}
+
 
 namespace
 {
@@ -1261,14 +1285,18 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   ui_->info_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->reply_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->cq_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
+  ui_->hb_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
+  ui_->status_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
   ui_->groups_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
 
   setUppercase(ui_->callsign_line_edit);
   setUppercase(ui_->grid_line_edit);
   setUppercase(ui_->add_macro_line_edit);
   setUppercase(ui_->info_message_line_edit);
+  setUppercase(ui_->status_message_line_edit);
   setUppercase(ui_->reply_message_line_edit);
   setUppercase(ui_->cq_message_line_edit);
+  setUppercase(ui_->hb_message_line_edit);
   setUppercase(ui_->groups_line_edit);
   setUppercase(ui_->auto_whitelist_line_edit);
 
@@ -1476,7 +1504,9 @@ void Configuration::impl::initialize_models ()
   ui_->secondaryHighlightLineEdit->setText(secondary_highlight_words_.join(", "));
   ui_->eot_line_edit->setText(eot_.trimmed().left(2));
   ui_->info_message_line_edit->setText (my_info_.toUpper());
+  ui_->status_message_line_edit->setText (my_status_.toUpper());
   ui_->cq_message_line_edit->setText(cq_.toUpper().replace("CQCQCQ", "CQ CQ CQ"));
+  ui_->hb_message_line_edit->setText(hb_.toUpper());
   ui_->reply_message_line_edit->setText (reply_.toUpper());
   ui_->use_dynamic_grid->setChecked(use_dynamic_info_);
 
@@ -1753,6 +1783,8 @@ void Configuration::impl::read_settings ()
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
   eot_ = settings_->value("EOTCharacter", QString{"\u2662"}).toString().trimmed().left(2);
   my_info_ = settings_->value("MyInfo", QString {}).toString();
+  my_status_ = settings_->value("MyStatus", QString {"IDLE <MYIDLE> VERSION <MYVERSION>"}).toString();
+  hb_ = settings_->value("HBMessage", QString {"HB <MYGRID4>"}).toString();
   cq_ = settings_->value("CQMessage", QString {"CQ CQ CQ <MYGRID4>"}).toString();
   reply_ = settings_->value("Reply", QString {"HW CPY?"}).toString();
   next_color_cq_ = color_cq_ = settings_->value("colorCQ","#66ff66").toString();
@@ -2070,7 +2102,9 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("SecondaryHighlightWords", secondary_highlight_words_);
   settings_->setValue ("EOTCharacter", eot_);
   settings_->setValue ("MyInfo", my_info_);
+  settings_->setValue ("MyStatus", my_status_);
   settings_->setValue ("CQMessage", cq_);
+  settings_->setValue ("HBMessage", hb_);
   settings_->setValue ("Reply", reply_);
   settings_->setValue ("CallsignAging", callsign_aging_);
   settings_->setValue ("ActivityAging", activity_aging_);
@@ -2435,6 +2469,12 @@ bool Configuration::impl::validate ()
       }
   }
 
+  auto hb = ui_->hb_message_line_edit->text().toUpper().trimmed();
+  if(!hb.isEmpty() && !(hb.startsWith("HB") || hb.contains(callsign))){
+      MessageBox::critical_message (this, QString("The HB message format is invalid. It must either start with \"HB\" or contain your callsign."));
+      return false;
+  }
+
   auto cq = ui_->cq_message_line_edit->text().toUpper().trimmed();
   if(!cq.isEmpty() && !(cq.startsWith("CQ") || cq.contains(callsign))){
       MessageBox::critical_message (this, QString("The CQ message format is invalid. It must either start with \"CQ\" or contain your callsign."));
@@ -2749,9 +2789,11 @@ void Configuration::impl::accept ()
   primary_highlight_words_ = splitWords(ui_->primaryHighlightLineEdit->text().toUpper().trimmed());
   secondary_highlight_words_ = splitWords(ui_->secondaryHighlightLineEdit->text().toUpper().trimmed());
   cq_ = ui_->cq_message_line_edit->text().toUpper();
+  hb_ = ui_->hb_message_line_edit->text().toUpper();
   reply_ = ui_->reply_message_line_edit->text().toUpper();
   eot_ = ui_->eot_line_edit->text().trimmed().left(2);
   my_info_ = ui_->info_message_line_edit->text().toUpper();
+  my_status_ = ui_->status_message_line_edit->text().toUpper();
   callsign_aging_ = ui_->callsign_aging_spin_box->value();
   activity_aging_ = ui_->activity_aging_spin_box->value();
   spot_to_reporting_networks_ = ui_->psk_reporter_check_box->isChecked ();

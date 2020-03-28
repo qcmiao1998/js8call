@@ -8127,10 +8127,15 @@ void MainWindow::sendHeartbeat(){
     QString mygrid = m_config.my_grid().left(4);
 
     QStringList parts;
-
     parts.append(QString("%1:").arg(mycall));
-    parts.append("HB");
-    parts.append(mygrid);
+
+    auto hb = m_config.hb_message();
+    if(hb.isEmpty()){
+        parts.append("HB");
+        parts.append(mygrid);
+    } else {
+        parts.append(hb);
+    }
 
     QString message = parts.join(" ").trimmed();
 
@@ -8282,6 +8287,17 @@ void MainWindow::on_infoMacroButton_clicked(){
     }
 
     addMessageText(QString("INFO %1").arg(replaceMacros(info, buildMacroValues(), true)));
+
+    if(m_config.transmit_directed()) toggleTx(true);
+}
+
+void MainWindow::on_statusMacroButton_clicked(){
+    QString status = m_config.my_status();
+    if(status.isEmpty()){
+        return;
+    }
+
+    addMessageText(QString("STATUS %1").arg(replaceMacros(status, buildMacroValues(), true)));
 
     if(m_config.transmit_directed()) toggleTx(true);
 }
@@ -8843,14 +8859,22 @@ void MainWindow::buildEditMenu(QMenu *menu, QTextEdit *edit){
 }
 
 QMap<QString, QString> MainWindow::buildMacroValues(){
+    auto lastActive = DriftingDateTime::currentDateTimeUtc().addSecs(-m_idleMinutes*60);
+    QString myIdle = since(lastActive).toUpper().replace("NOW", "0M");
+    QString myVersion = version().replace("-devel", "").replace("-rc", "");
+
     QMap<QString, QString> values = {
         {"<MYCALL>", m_config.my_callsign()},
         {"<MYGRID4>", m_config.my_grid().left(4)},
         {"<MYGRID12>", m_config.my_grid().left(12)},
         {"<MYINFO>", m_config.my_info()},
+        {"<MYHB>", m_config.hb_message()},
         {"<MYCQ>", m_config.cq_message()},
         {"<MYREPLY>", m_config.reply_message()},
-        {"<MYSTATUS>", generateStatus()},
+        {"<MYSTATUS>", m_config.my_status()},
+
+        {"<MYVERSION>", myVersion},
+        {"<MYIDLE>", myIdle},
     };
 
     auto selectedCall = callsignSelected();
@@ -8867,7 +8891,9 @@ QMap<QString, QString> MainWindow::buildMacroValues(){
 
     // these macros can have recursive macros
     values["<MYINFO>"]   = replaceMacros(values["<MYINFO>"], values, false);
+    values["<MYSTATUS>"]   = replaceMacros(values["<MYSTATUS>"], values, false);
     values["<MYCQ>"]    = replaceMacros(values["<MYCQ>"], values, false);
+    values["<MYHB>"]    = replaceMacros(values["<MYHB>"], values, false);
     values["<MYREPLY>"] = replaceMacros(values["<MYREPLY>"], values, false);
 
     return values;
@@ -9875,7 +9901,11 @@ void MainWindow::updateModeButtonText(){
     }
 
     if(autoreply){
-        modeText += QString("+AUTO");
+        if(m_config.autoreply_confirmation()){
+            modeText += QString("+AUTO+CONF");
+        } else {
+            modeText += QString("+AUTO");
+        }
     }
 
     if(heartbeat){
@@ -9894,12 +9924,14 @@ void MainWindow::updateButtonDisplay(){
     auto selectedCallsign = callsignSelected(true);
     bool emptyCallsign = selectedCallsign.isEmpty();
     bool emptyInfo = m_config.my_info().isEmpty();
+    bool emptyStatus = m_config.my_status().isEmpty();
 
     ui->hbMacroButton->setDisabled(isTransmitting);
     ui->cqMacroButton->setDisabled(isTransmitting);
     ui->replyMacroButton->setDisabled(isTransmitting || emptyCallsign);
     ui->snrMacroButton->setDisabled(isTransmitting || emptyCallsign);
     ui->infoMacroButton->setDisabled(isTransmitting || emptyInfo);
+    ui->statusMacroButton->setDisabled(isTransmitting || emptyStatus);
     ui->macrosMacroButton->setDisabled(isTransmitting);
     ui->queryButton->setDisabled(isTransmitting || emptyCallsign);
     ui->deselectButton->setDisabled(isTransmitting || emptyCallsign);
@@ -10711,44 +10743,6 @@ void MainWindow::processBufferedActivity() {
     }
 }
 
-QString MainWindow::generateStatus() {
-    auto lastActive = DriftingDateTime::currentDateTimeUtc().addSecs(-m_idleMinutes*60);
-    QString lastActiveString = since(lastActive).toUpper().replace("NOW", "0M");
-
-    QStringList status;
-    status.append(generateStatusFlags());
-
-    if(!lastActiveString.isEmpty()){
-        status.append(lastActiveString.trimmed());
-    }
-
-    status.append("V" + version().replace("-devel", "").replace("-rc", ""));
-
-    return status.join(" ").trimmed();
-}
-
-QStringList MainWindow::generateStatusFlags() {
-    QStringList flags;
-
-    if(ui->hbMacroButton->isChecked() && m_hbInterval > 0){
-        flags.append("HB");
-    }
-
-    if(ui->actionModeAutoreply->isChecked()){
-        flags.append("AUTO");
-    }
-
-    if(ui->actionModeAutoreply->isChecked() && !m_config.relay_off()){
-        flags.append("RELAY");
-    }
-
-    if(m_config.spot_to_reporting_networks()){
-        flags.append("SPOT");
-    }
-
-    return flags;
-}
-
 void MainWindow::processCommandActivity() {
 #if 0
     if (!m_txFrameQueue.isEmpty()) {
@@ -10999,7 +10993,12 @@ void MainWindow::processCommandActivity() {
 
         // QUERIED ACTIVE
         else if (d.cmd == " STATUS?" && !isAllCall) {
-            reply = QString("%1 STATUS %2").arg(d.from).arg(generateStatus());
+            QString status = m_config.my_status();
+            if (status.isEmpty()) {
+                continue;
+            }
+
+            reply = QString("%1 STATUS %2").arg(d.from).arg(replaceMacros(status, buildMacroValues(), true));
         }
 
         // QUERIED GRID
@@ -12578,6 +12577,21 @@ void MainWindow::networkMessage(Message const &message)
     if(type == "STATION.SET_INFO"){
         m_config.set_dynamic_station_info(message.value());
         sendNetworkMessage("STATION.INFO", m_config.my_info(), {
+            {"_ID", id},
+        });
+        return;
+    }
+
+    if(type == "STATION.GET_STATUS"){
+        sendNetworkMessage("STATION.STATUS", m_config.my_status(), {
+            {"_ID", id},
+        });
+        return;
+    }
+
+    if(type == "STATION.SET_STATUS"){
+        m_config.set_dynamic_station_status(message.value());
+        sendNetworkMessage("STATION.STATUS", m_config.my_status(), {
             {"_ID", id},
         });
         return;

@@ -322,6 +322,7 @@ private slots:
   void on_replyMacroButton_clicked();
   void on_snrMacroButton_clicked();
   void on_infoMacroButton_clicked();
+  void on_statusMacroButton_clicked();
   void setShowColumn(QString tableKey, QString columnKey, bool value);
   bool showColumn(QString tableKey, QString columnKey, bool default_=true);
   void buildShowColumnsMenu(QMenu *menu, QString tableKey);
@@ -992,8 +993,6 @@ private:
   void processIdleActivity();
   void processCompoundActivity();
   void processBufferedActivity();
-  QString generateStatus();
-  QStringList generateStatusFlags();
   void processCommandActivity();
   QString inboxPath();
   void refreshInboxCounts();
