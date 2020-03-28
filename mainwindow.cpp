@@ -2806,10 +2806,12 @@ void MainWindow::on_menuModeJS8_aboutToShow(){
     auto autoreplyText = ui->actionModeAutoreply->text();
     if(m_config.autoreply_confirmation() && !autoreplyText.contains(" with Confirmation")){
         autoreplyText.replace("Autoreply", "Autoreply with Confirmation");
+        autoreplyText.replace("&AUTO", "&AUTO+CONF");
         ui->actionModeAutoreply->setText(autoreplyText);
     }
     else if(!m_config.autoreply_confirmation() && autoreplyText.contains(" with Confirmation")){
         autoreplyText.replace(" with Confirmation", "");
+        autoreplyText.replace("+CONF", "");
         ui->actionModeAutoreply->setText(autoreplyText);
     }
 }
