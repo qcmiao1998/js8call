@@ -6619,13 +6619,12 @@ void MainWindow::confirmThenEnqueueMessage(int timeout, int priority, QString me
         // make sure we delete the message box later...
         m->deleteLater();
 
-        if(result != QMessageBox::Yes){
-            return;
+        if(m->result() == QMessageBox::Yes){
+            enqueueMessage(priority, message, freq, c);
         }
-
-        enqueueMessage(priority, message, freq, c);
     });
 
+    m->setWindowModality(Qt::NonModal);
     m->show();
 }
 
