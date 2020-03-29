@@ -15,11 +15,10 @@ SelfDestructMessageBox::SelfDestructMessageBox(
     m_text(text),
     m_show_countdown(show_countdown)
 {
+    setDefaultButton(defaultButton);
+
     connect(&m_timer, &QTimer::timeout, this, &SelfDestructMessageBox::tick);
     m_timer.setInterval(1000);
-
-    setDefaultButton(defaultButton);
-    connect(this->defaultButton(), &QPushButton::clicked, this, &SelfDestructMessageBox::accept);
 }
 
 void SelfDestructMessageBox::showEvent(QShowEvent* event)
@@ -35,10 +34,30 @@ void SelfDestructMessageBox::tick(){
     if(m_timeout){
         if(m_show_countdown){
             setText(m_text.arg(m_timeout));
+        } else {
+
+            // if we don't show the countdown in the text, show it on the default button
+            auto d = defaultButton();
+            if(d){
+                auto text = d->text();
+                if(text.contains(" (")){
+                    text = text.split(" (").first();
+                }
+
+                text = text.append(QString(" (%1) ").arg(m_timeout));
+                d->setText(text);
+            }
+
         }
         return;
     }
 
+    // stop the timer
     m_timer.stop();
-    accept();
+
+    // click the default
+    auto d = defaultButton();
+    if(d){
+        d->click();
+    }
 }
