@@ -813,7 +813,13 @@ bool Configuration::autoreply_on_at_startup () const {
 bool Configuration::autoreply_confirmation() const { return m_->autoreply_confirmation_; }
 bool Configuration::heartbeat_anywhere() const { return m_->heartbeat_anywhere_;}
 bool Configuration::heartbeat_qso_pause() const { return m_->heartbeat_qso_pause_;}
-bool Configuration::heartbeat_ack_snr() const { return m_->heartbeat_ack_snr_;}
+bool Configuration::heartbeat_ack_snr() const {
+#if JS8_HB_ACK_SNR_CONFIGURABLE
+    return m_->heartbeat_ack_snr_;
+#else
+    return true;
+#endif
+}
 bool Configuration::relay_off() const { return m_->relay_disabled_; }
 bool Configuration::monitor_off_at_startup () const {return m_->monitor_off_at_startup_;}
 bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->monitor_last_used_;}

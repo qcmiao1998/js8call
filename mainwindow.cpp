@@ -8167,9 +8167,13 @@ void MainWindow::sendHeartbeat(){
 }
 
 void MainWindow::sendHeartbeatAck(QString to, int snr, QString extra){
+#if JS8_HB_ACK_SNR_CONFIGURABLE
     auto message = m_config.heartbeat_ack_snr() ?
         QString("%1 SNR %2 %3").arg(to).arg(Varicode::formatSNR(snr)).arg(extra).trimmed() :
         QString("%1 ACK %2").arg(to).arg(extra).trimmed();
+#else
+    auto message = QString("%1 SNR %2 %3").arg(to).arg(Varicode::formatSNR(snr)).arg(extra).trimmed();
+#endif
 
     auto f = m_config.heartbeat_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
 

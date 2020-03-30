@@ -876,6 +876,7 @@ text message.</string>
                   </item>
                   <item>
                    <widget class="QCheckBox" name="heartbeat_ack_snr_check_box">
+                    <property name="visible"><bool>false</bool></property>
                     <property name="text">
                      <string>Send SNR report when acknowledging heartbeats</string>
                     </property>
