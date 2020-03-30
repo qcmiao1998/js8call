@@ -206,7 +206,9 @@
                   </item>
                   <item row="0" column="0">
                    <widget class="QLabel" name="label_28">
-                   <property name="visible"><bool>false</bool></property>
+                    <property name="visible">
+                     <bool>false</bool>
+                    </property>
                     <property name="text">
                      <string>HB Message:</string>
                     </property>
@@ -221,7 +223,9 @@
                   </item>
                   <item row="0" column="1">
                    <widget class="QLineEdit" name="hb_message_line_edit">
-                   <property name="visible"><bool>false</bool></property>
+                    <property name="visible">
+                     <bool>false</bool>
+                    </property>
                     <property name="text">
                      <string>HB &lt;MYGRID4&gt;</string>
                     </property>
@@ -871,6 +875,13 @@ text message.</string>
                    </widget>
                   </item>
                   <item>
+                   <widget class="QCheckBox" name="heartbeat_ack_snr_check_box">
+                    <property name="text">
+                     <string>Send SNR report when acknowledging heartbeats</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <layout class="QFormLayout" name="formLayout_16">
                     <property name="bottomMargin">
                      <number>0</number>
@@ -878,7 +889,7 @@ text message.</string>
                     <item row="0" column="0">
                      <widget class="QLabel" name="label_26">
                       <property name="text">
-                       <string>Never ACK heartbeats from these callsigns (comma separated):</string>
+                       <string>Never acknowledge heartbeats from these callsigns (comma separated):</string>
                       </property>
                      </widget>
                     </item>

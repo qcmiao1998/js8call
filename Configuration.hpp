@@ -143,6 +143,7 @@ public:
   bool autoreply_confirmation () const;
   bool heartbeat_anywhere() const;
   bool heartbeat_qso_pause() const;
+  bool heartbeat_ack_snr() const;
   bool relay_off() const;
   bool monitor_off_at_startup () const;
   bool monitor_last_used () const;
