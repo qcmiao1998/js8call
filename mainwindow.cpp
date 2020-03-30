@@ -10904,9 +10904,9 @@ void MainWindow::processCommandActivity() {
             c.movePosition(QTextCursor::End);
             ui->textEditRX->setTextCursor(c);
 
-            // ACKs are the most likely source of items to be overwritten (multiple responses at once)...
+            // ACKs and SNRs are the most likely source of items to be overwritten (multiple responses at once)...
             // so don't overwrite those (i.e., print each on a new line)
-            bool shouldOverwrite = (!d.cmd.contains(" ACK")); /* && isRecentOffset(d.freq);*/
+            bool shouldOverwrite = (!d.cmd.contains(" ACK") && !d.cmd.contains(" SNR")); /* && isRecentOffset(d.freq);*/
 
             if(shouldOverwrite && ui->textEditRX->find(d.utcTimestamp.time().toString(), QTextDocument::FindBackward)){
                 // ... maybe we could delete the last line that had this message on this frequency...
