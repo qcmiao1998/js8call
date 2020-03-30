@@ -50,9 +50,9 @@ QMap<QString, int> directed_cmds = {
     {" SNR?",          0  }, // query snr
     {"?",              0  }, // compat
 
-    {" DIT DIT",       1  }, // unused
+    {" DIT DIT",       1  }, // two bits
 
-    {" NACK",          2  }, // negative acknowledge
+
 
     {" HEARING?",      3  }, // query station calls heard
 
@@ -98,7 +98,10 @@ QMap<QString, int> directed_cmds = {
     {" NO",           26  }, // negative confirm
     {" YES",          27  }, // confirm
     {" 73",           28  }, // best regards, end of contact
-    {" ACK",          29  }, // acknowledge
+
+    {" NACK",          2  }, // negative acknowledge
+    {" ACK",          29  }, // acknowledge (digits deprecated in 2.2)
+
     {" AGN?",         30  }, // repeat message
     {"  ",            31  }, // send freetext (weird artifact)
     {" ",             31  }, // send freetext
@@ -114,7 +117,7 @@ QSet<int> autoreply_cmds = {0, 3, 4, 6, 9, 10, 11, 12, 13, 16, 30};
 QSet<int> buffered_cmds = {5, 9, 10, 11, 12, 13, 15, 24};
 
 // commands that may include an SNR value
-QSet<int> snr_cmds = {25, 29};
+QSet<int> snr_cmds = {25};
 
 // commands that are checksummed and their crc size
 QMap<int, int> checksum_cmds = {
@@ -132,7 +135,10 @@ QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
 QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|MSG TO[:]|SNR[?]|INFO[?]|GRID[?]|STATUS[?]|QUERY MSGS[?]|HEARING[?]|(?:(?:STATUS|HEARING|QUERY CALL|QUERY MSGS|QUERY|CMD|MSG|NACK|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|INFO|GRID|DIT DIT)(?=[ ]|$))|[?> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
-QString optional_num_pattern = QString("(?<num>(?<=SNR|\\bACK)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
+QString optional_num_pattern = QString("(?<num>(?:") +
+                                                 "(?<=SNR)\\s?[-+]?(?:3[01]|[0-2]?[0-9])"  + "|" +
+                                         "(?<=\\bDEADBEEF)\\s?[-+]?(?:3[01]|[0-2]?[0-9])"  +
+                                       "))?";
 
 QRegularExpression directed_re("^"                    +
                                callsign_pattern       +
@@ -279,7 +285,7 @@ QMap<quint32, QString> cqs = {
     { 7, "CQ"},
 };
 
-/* status flags in HB messages are deprecated as of 2.2 */
+// status flags in HB messages are deprecated as of 2.2, later versions will likely repurpose these flags
 QMap<quint32, QString> hbs = {
     { 0, "HB" }, // HB
     { 1, "HB" }, // HB AUTO
@@ -1156,8 +1162,8 @@ quint8 Varicode::packCmd(quint8 cmd, quint8 num, bool *pPackedNum){
         // 8 bits - 1 bit flag + 1 bit type + 6 bit number
         // [1][X][6]
         // X = 0 == SNR
-        // X = 1 == ACK
-        value = ((1 << 1) | (int)(cmdStr == " ACK")) << 6;
+        // X = 1 == DEADBEEF
+        value = ((1 << 1) | (int)(cmdStr == " DEADBEEF")) << 6;
         value = value + (num & ((1<<6)-1));
         if(pPackedNum) *pPackedNum = true;
     } else {
@@ -1174,7 +1180,12 @@ quint8 Varicode::unpackCmd(quint8 value, quint8 *pNum){
         if(pNum) *pNum = value & ((1<<6)-1);
 
         auto cmd = directed_cmds[" SNR"];
+
+        // sending digits with ACKS this way was deprecated in 2.2 (for reasons)
+        // so we zero them out when unpacking so we don't display them even if
+        // they were encoded that way.
         if(value & (1<<6)){
+            if(pNum) *pNum = 0;
             cmd = directed_cmds[" ACK"];
         }
         return cmd;
@@ -1393,7 +1404,7 @@ QString Varicode::packCompoundMessage(QString const &text, int *n){
 
     if (!cmd.isEmpty() && directed_cmds.contains(cmd) && Varicode::isCommandAllowed(cmd)){
         bool packedNum = false;
-        qint8 inum = Varicode::packNum(num, nullptr);
+        quint8 inum = Varicode::packNum(num, nullptr);
         extra = nusergrid + Varicode::packCmd(directed_cmds[cmd], inum, &packedNum);
 
         type = Varicode::FrameCompoundDirected;
@@ -1420,6 +1431,7 @@ QStringList Varicode::unpackCompoundMessage(const QString &text, quint8 *pType, 
     if(extra <= nbasegrid){
         unpacked.append(" " + Varicode::unpackGrid(extra));
     } else if (nusergrid <= extra && extra < nmaxgrid) {
+        // if this is a grid that is higer than the usergrid reference, treat this as an SNR command
         quint8 num = 0;
         auto cmd = Varicode::unpackCmd(extra - nusergrid, &num);
         auto cmdStr = directed_cmds.key(cmd);
@@ -1526,7 +1538,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &mycall
     }
     QString to = match.captured("callsign");
     QString cmd = match.captured("cmd");
-    QString num = match.captured("num");
+    QString num = match.captured("num").trimmed();
 
     // ensure we have a directed command
     if(cmd.isEmpty()){
@@ -1563,7 +1575,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &mycall
 
     // packing general number...
     bool numOK = false;
-    quint8 inum = Varicode::packNum(num.trimmed(), &numOK);
+    quint8 inum = Varicode::packNum(num, &numOK);
     if(numOK){
         if(pNum) *pNum = num;
     }
@@ -1640,6 +1652,12 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
     unpacked.append(from);
     unpacked.append(to);
     unpacked.append(cmd);
+
+    // this is a temporary HACK for ACKs - ack digits were deprecated in 2.2 (for reasons)
+    // this will prevent displaying the digits even when transmitted by a pre 2.2 station
+    if(cmd == " ACK"){
+        extra = 0;
+    }
 
     if(extra != 0){
         if(Varicode::isSNRCommand(cmd)){

@@ -8569,7 +8569,7 @@ void MainWindow::buildQueryMenu(QMenu * menu, QString call){
         if(m_config.transmit_directed()) toggleTx(true);
     });
 
-    auto stationIdleQueryAction = menu->addAction(QString("%1 STATUS? - What is the status of your station (auto, hb, version, etc)?").arg(call).trimmed());
+    auto stationIdleQueryAction = menu->addAction(QString("%1 STATUS? - What is your station status message?").arg(call).trimmed());
     stationIdleQueryAction->setDisabled(isAllCall);
     connect(stationIdleQueryAction, &QAction::triggered, this, [this](){
 
@@ -11289,14 +11289,6 @@ void MainWindow::processCommandActivity() {
 
             // notification for ack
             tryNotify("ack");
-
-            // make sure this is explicit
-            continue;
-        }
-
-        // PROCESS NACKS
-        else if (d.cmd == " NACK" && !isAllCall){
-            qDebug() << "skipping incoming nack" << d.text;
 
             // make sure this is explicit
             continue;
