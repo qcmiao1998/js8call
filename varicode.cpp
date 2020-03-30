@@ -145,7 +145,7 @@ QRegularExpression directed_re("^"                    +
                                optional_cmd_pattern   +
                                optional_num_pattern);
 
-QRegularExpression heartbeat_re(R"(^\s*(?<callsign>[@]ALLCALL\s+)?(?<type>CQ CQ CQ|CQ DX|CQ QRP|CQ CONTEST|CQ FIELD|CQ FD|CQ CQ|CQ|HB)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
+QRegularExpression heartbeat_re(R"(^\s*(?<callsign>[@](?:ALLCALL)\s+)?(?<type>CQ CQ CQ|CQ DX|CQ QRP|CQ CONTEST|CQ FIELD|CQ FD|CQ CQ|CQ|HB)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
 QRegularExpression compound_re("^\\s*[`]"              +
                                callsign_pattern        +

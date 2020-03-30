@@ -145,7 +145,10 @@ bool DecodedText::tryUnpackHeartbeat(){
         cmp.append(parts.at(1));
     }
     compound_ = cmp.join("/");
-    message_ = QString("%1: @ALLCALL %2 %3 ").arg(compound_).arg(isAlt ? Varicode::cqString(bits3) : Varicode::hbString(bits3)).arg(extra_);
+
+    auto to = "@ALLCALL";
+    auto hborcq = isAlt ? Varicode::cqString(bits3) : Varicode::hbString(bits3);
+    message_ = QString("%1: %2 %3 %4 ").arg(compound_).arg(to).arg(hborcq).arg(extra_);
     frameType_ = type;
     return true;
 }
