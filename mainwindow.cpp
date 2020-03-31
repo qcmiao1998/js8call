@@ -480,6 +480,18 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // notification audio operates in its own thread at a lower priority
   m_notification->moveToThread(&m_notificationAudioThread);
 
+  // move the aprs client to its own network thread at a lower priority
+  m_aprsClient->moveToThread(&m_networkThread);
+
+  // hook up the aprs client slots and signals and disposal
+  connect (this, &MainWindow::aprsClientEnqueueSpot, m_aprsClient, &APRSISClient::enqueueSpot);
+  connect (this, &MainWindow::aprsClientEnqueueThirdParty, m_aprsClient, &APRSISClient::enqueueThirdParty);
+  connect (this, &MainWindow::aprsClientSendReports, m_aprsClient, &APRSISClient::sendReports);
+  connect (this, &MainWindow::aprsClientSetLocalStation, m_aprsClient, &APRSISClient::setLocalStation);
+  connect (this, &MainWindow::aprsClientSetPaused, m_aprsClient, &APRSISClient::setPaused);
+  connect (this, &MainWindow::aprsClientSetServer, m_aprsClient, &APRSISClient::setServer);
+  connect (&m_networkThread, &QThread::finished, m_aprsClient, &QObject::deleteLater);
+
   // hook up sound output stream slots & signals and disposal
   connect (this, &MainWindow::initializeAudioOutputStream, m_soundOutput, &SoundOutput::setFormat);
   connect (m_soundOutput, &SoundOutput::error, this, &MainWindow::showSoundOutError);
@@ -814,6 +826,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   displayDialFrequency();
   readSettings();            //Restore user's setup params
 
+  m_networkThread.start(m_networkThreadPriority);
   m_audioThread.start (m_audioThreadPriority);
   m_notificationAudioThread.start(m_notificationAudioThreadPriority);
   m_decoder.start(m_decoderThreadPriority);
@@ -2170,6 +2183,9 @@ MainWindow::~MainWindow()
 
   fftwf_export_wisdom_to_filename(cfname);
 
+  m_networkThread.quit();
+  m_networkThread.wait();
+
   m_audioThread.quit ();
   m_audioThread.wait ();
 
@@ -2454,6 +2470,7 @@ void MainWindow::readSettings()
   m_audioThreadPriority = static_cast<QThread::Priority> (m_settings->value ("Audio/ThreadPriority", QThread::HighPriority).toInt () % 8);
   m_notificationAudioThreadPriority = static_cast<QThread::Priority> (m_settings->value ("Audio/NotificationThreadPriority", QThread::LowPriority).toInt () % 8);
   m_decoderThreadPriority = static_cast<QThread::Priority> (m_settings->value ("Audio/DecoderThreadPriority", QThread::HighPriority).toInt () % 8);
+  m_networkThreadPriority = static_cast<QThread::Priority> (m_settings->value ("Network/NetworkThreadPriority", QThread::LowPriority).toInt () % 8);
   m_settings->endGroup ();
 
   if(m_config.reset_activity()){
@@ -3156,11 +3173,11 @@ void MainWindow::prepareSpotting(){
         spotSetLocal();
         pskSetLocal();
         aprsSetLocal();
-        m_aprsClient->setServer(m_config.aprs_server_name(), m_config.aprs_server_port());
-        m_aprsClient->setPaused(false);
+        emit aprsClientSetServer(m_config.aprs_server_name(), m_config.aprs_server_port());
+        emit aprsClientSetPaused(false);
         ui->spotButton->setChecked(true);
     } else {
-        m_aprsClient->setPaused(true);
+        emit aprsClientSetPaused(true);
         ui->spotButton->setChecked(false);
     }
 }
@@ -5232,6 +5249,7 @@ void MainWindow::spotCmd(CommandDetail cmd){
 // KN4CRD: @APRSIS CMD :EMAIL-2  :email@domain.com booya{1
 void MainWindow::spotAprsCmd(CommandDetail cmd){
     if(!m_config.spot_to_reporting_networks()) return;
+    if(!m_config.spot_to_aprs()) return;
 
     if(cmd.cmd != " CMD") return;
 
@@ -5240,11 +5258,14 @@ void MainWindow::spotAprsCmd(CommandDetail cmd){
     auto by_call = Radio::base_callsign(m_config.my_callsign());
     auto from_call = Radio::base_callsign(cmd.from);
 
-    m_aprsClient->enqueueThirdParty(by_call, from_call, cmd.text);
+    // we use a queued signal here so we can process these spots in a network thread
+    // to prevent blocking the gui/decoder while waiting on TCP
+    emit aprsClientEnqueueThirdParty(by_call, from_call, cmd.text);
 }
 
 void MainWindow::spotAprsGrid(int offset, int snr, QString callsign, QString grid){
     if(!m_config.spot_to_reporting_networks()) return;
+    if(!m_config.spot_to_aprs()) return;
     if(grid.length() < 4) return;
 
     Frequency frequency = m_freqNominal + offset;
@@ -5257,7 +5278,9 @@ void MainWindow::spotAprsGrid(int offset, int snr, QString callsign, QString gri
     auto by_call = Radio::base_callsign(m_config.my_callsign());
     auto from_call = Radio::base_callsign(callsign);
 
-    m_aprsClient->enqueueSpot(by_call, from_call, grid, comment);
+    // we use a queued signal here so we can process these spots in a network thread
+    // to prevent blocking the gui/decoder while waiting on TCP
+    emit aprsClientEnqueueSpot(by_call, from_call, grid, comment);
 }
 
 void MainWindow::pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid){
@@ -7887,7 +7910,7 @@ void MainWindow::band_changed (Frequency f)
     m_bandEdited = false;
 
     psk_Reporter->sendReport();      // Upload any queued spots before changing band
-    m_aprsClient->sendReports();
+    emit aprsClientSendReports();    // Upload any queued spots before changing band
 
     if (!m_transmitting) monitor (true);
     if ("FreqCal" == m_mode)
@@ -9731,7 +9754,7 @@ void MainWindow::pskSetLocal ()
 
 void MainWindow::aprsSetLocal ()
 {
-  m_aprsClient->setLocalStation("APJ8CL", QString::number(APRSISClient::hashCallsign("APJ8CL")));
+  emit aprsClientSetLocalStation("APJ8CL", QString::number(APRSISClient::hashCallsign("APJ8CL")));
 }
 
 void MainWindow::transmitDisplay (bool transmitting)

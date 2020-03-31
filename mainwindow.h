@@ -7,6 +7,8 @@
 #include <QtGui>
 #endif
 #include <QThread>
+#include <QMutex>
+#include <QMutexLocker>
 #include <QTimer>
 #include <QDateTime>
 #include <QList>
@@ -434,6 +436,13 @@ private slots:
   void refreshTextDisplay();
 
 private:
+  Q_SIGNAL void aprsClientEnqueueSpot(QString by_call, QString from_call, QString grid, QString comment);
+  Q_SIGNAL void aprsClientEnqueueThirdParty(QString by_call, QString from_call, QString text);
+  Q_SIGNAL void aprsClientSetServer(QString host, quint16 port);
+  Q_SIGNAL void aprsClientSetPaused(bool paused);
+  Q_SIGNAL void aprsClientSetLocalStation(QString mycall, QString passcode);
+  Q_SIGNAL void aprsClientSendReports();
+
   Q_SIGNAL void decodedLineReady(QByteArray t);
   Q_SIGNAL void playNotification(const QString &name);
   Q_SIGNAL void initializeNotificationAudioOutputStream(const QAudioDeviceInfo &, unsigned, unsigned) const;
@@ -505,6 +514,8 @@ private:
   SoundOutput * m_soundOutput;
   NotificationAudio * m_notification;
 
+  QMutex m_networkThreadMutex;
+  QThread m_networkThread;
   QThread m_audioThread;
   QThread m_notificationAudioThread;
   Decoder m_decoder;
@@ -904,6 +915,7 @@ private:
   QThread::Priority m_audioThreadPriority;
   QThread::Priority m_notificationAudioThreadPriority;
   QThread::Priority m_decoderThreadPriority;
+  QThread::Priority m_networkThreadPriority;
   bool m_bandEdited;
   bool m_splitMode;
   bool m_monitoring;

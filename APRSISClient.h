@@ -20,6 +20,13 @@ public:
     static QString stripSSID(QString call);
     static QString replaceCallsignSuffixWithSSID(QString call, QString base);
 
+    bool isPasscodeValid(){ return m_localPasscode == QString::number(hashCallsign(m_localCall)); }
+
+    void enqueueRaw(QString aprsFrame);
+    void processQueue(bool disconnect=true);
+
+public slots:
+
     void setServer(QString host, quint16 port){
         if(state() == QTcpSocket::ConnectedState){
             disconnectFromHost();
@@ -40,15 +47,9 @@ public:
         m_localPasscode = passcode;
     }
 
-    bool isPasscodeValid(){ return m_localPasscode == QString::number(hashCallsign(m_localCall)); }
-
     void enqueueSpot(QString by_call, QString from_call, QString grid, QString comment);
     void enqueueThirdParty(QString by_call, QString from_call, QString text);
-    void enqueueRaw(QString aprsFrame);
 
-    void processQueue(bool disconnect=true);
-
-public slots:
     void sendReports(){
         if(m_paused) return;
 

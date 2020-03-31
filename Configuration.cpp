@@ -434,6 +434,8 @@ private:
   void delete_stations ();
   void insert_station ();
 
+  Q_SLOT void on_psk_reporter_check_box_toggled(bool checked);
+  Q_SLOT void on_enable_aprs_spotting_check_box_toggled(bool checked);
   Q_SLOT void on_notifications_check_box_toggled(bool checked);
   Q_SLOT void on_font_push_button_clicked ();
   Q_SLOT void on_tableFontButton_clicked();
@@ -640,6 +642,7 @@ private:
   bool id_after_73_;
   bool tx_qsy_allowed_;
   bool spot_to_reporting_networks_;
+  bool spot_to_aprs_;
   bool transmit_directed_;
   bool autoreply_on_at_startup_;
   bool autoreply_confirmation_;
@@ -799,6 +802,11 @@ void Configuration::set_spot_to_reporting_networks (bool spot)
         m_->spot_to_reporting_networks_ = spot;
         m_->write_settings();
     }
+}
+
+bool Configuration::spot_to_aprs() const
+{
+    return spot_to_reporting_networks() && m_->spot_to_aprs_;
 }
 
 bool Configuration::transmit_directed() const { return m_->transmit_directed_; }
@@ -1544,6 +1552,7 @@ void Configuration::impl::initialize_models ()
   ui_->CW_id_after_73_check_box->setChecked (id_after_73_);
   ui_->tx_qsy_check_box->setChecked (tx_qsy_allowed_);
   ui_->psk_reporter_check_box->setChecked (spot_to_reporting_networks_);
+  ui_->enable_aprs_spotting_check_box->setChecked(spot_to_aprs_);
   ui_->transmit_directed_check_box->setChecked(transmit_directed_);
   ui_->autoreply_on_check_box->setChecked (autoreply_on_at_startup_);
   ui_->autoreply_confirmation_check_box->setChecked (autoreply_confirmation_);
@@ -1974,6 +1983,7 @@ void Configuration::impl::read_settings ()
   monitor_off_at_startup_ = settings_->value ("MonitorOFF", false).toBool ();
   monitor_last_used_ = settings_->value ("MonitorLastUsed", false).toBool ();
   spot_to_reporting_networks_ = settings_->value ("PSKReporter", true).toBool ();
+  spot_to_aprs_ = settings_->value("SpotToAPRS", true).toBool();
   write_logs_ = settings_->value("WriteLogs", true).toBool();
   reset_activity_ = settings_->value("ResetActivity", false).toBool();
   check_for_updates_ = settings_->value("CheckForUpdates", true).toBool();
@@ -2189,6 +2199,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MonitorOFF", monitor_off_at_startup_);
   settings_->setValue ("MonitorLastUsed", monitor_last_used_);
   settings_->setValue ("PSKReporter", spot_to_reporting_networks_);
+  settings_->setValue ("SpotToAPRS", spot_to_aprs_);
   settings_->setValue ("WriteLogs", write_logs_);
   settings_->setValue ("ResetActivity", reset_activity_);
   settings_->setValue ("CheckForUpdates", check_for_updates_);
@@ -2803,6 +2814,7 @@ void Configuration::impl::accept ()
   callsign_aging_ = ui_->callsign_aging_spin_box->value();
   activity_aging_ = ui_->activity_aging_spin_box->value();
   spot_to_reporting_networks_ = ui_->psk_reporter_check_box->isChecked ();
+  spot_to_aprs_ = ui_->enable_aprs_spotting_check_box->isChecked();
   id_interval_ = ui_->CW_id_interval_spin_box->value ();
   ntrials_ = ui_->sbNtrials->value ();
   txDelay_ = ui_->sbTxDelay->value ();
@@ -2967,6 +2979,19 @@ void Configuration::impl::reject ()
     }
 
   QDialog::reject ();
+}
+
+void Configuration::impl::on_psk_reporter_check_box_toggled(bool checked){
+    ui_->enable_aprs_spotting_check_box->setEnabled(checked);
+
+    bool spot = ui_->enable_aprs_spotting_check_box->isChecked();
+    ui_->aprs_server_line_edit->setEnabled(spot && checked);
+    ui_->aprs_server_port_spin_box->setEnabled(spot && checked);
+}
+
+void Configuration::impl::on_enable_aprs_spotting_check_box_toggled(bool checked){
+    ui_->aprs_server_line_edit->setEnabled(checked);
+    ui_->aprs_server_port_spin_box->setEnabled(checked);
 }
 
 void Configuration::impl::on_notifications_check_box_toggled(bool checked){

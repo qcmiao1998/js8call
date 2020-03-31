@@ -2368,9 +2368,9 @@ both here.</string>
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-60</y>
+            <y>0</y>
             <width>746</width>
-            <height>682</height>
+            <height>667</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_30">
@@ -2618,23 +2618,24 @@ This is used for reverse ping analysis which is very useful
 for assessing propagation and system performance.</string>
                 </property>
                 <property name="text">
-                 <string>Enable spotting to reporting networks (JS8NET, APRSIS, PSKReporter, etc)</string>
+                 <string>Enable spotting to reporting networks (JS8NET, PSKReporter, etc)</string>
                 </property>
                 <property name="checked">
                  <bool>true</bool>
                 </property>
                </widget>
               </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QGroupBox" name="groupBox_8">
-             <property name="title">
-              <string>APRSIS Spotting</string>
-             </property>
-             <layout class="QFormLayout" name="formLayout_18">
-              <item row="0" column="0">
+              <item row="1" column="0">
+               <widget class="QCheckBox" name="enable_aprs_spotting_check_box">
+                <property name="text">
+                 <string>Enable spotting @APRSIS messages to the APRS-IS network</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
                <layout class="QFormLayout" name="formLayout_17">
                 <property name="fieldGrowthPolicy">
                  <enum>QFormLayout::AllNonFixedFieldsGrow</enum>

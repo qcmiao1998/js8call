@@ -138,6 +138,7 @@ public:
   bool tx_qsy_allowed () const;
   bool spot_to_reporting_networks () const;
   void set_spot_to_reporting_networks (bool);
+  bool spot_to_aprs() const;
   bool transmit_directed() const;
   bool autoreply_on_at_startup () const;
   bool autoreply_confirmation () const;
