@@ -35,16 +35,15 @@ public:
         m_paused = paused;
     }
 
-    void setLocalStation(QString mycall, QString mygrid, QString passcode){
+    void setLocalStation(QString mycall, QString passcode){
         m_localCall = mycall;
-        m_localGrid = mygrid;
         m_localPasscode = passcode;
     }
 
     bool isPasscodeValid(){ return m_localPasscode == QString::number(hashCallsign(m_localCall)); }
 
-    void enqueueSpot(QString theircall, QString grid, QString comment);
-    void enqueueThirdParty(QString theircall, QString payload);
+    void enqueueSpot(QString by_call, QString from_call, QString grid, QString comment);
+    void enqueueThirdParty(QString by_call, QString from_call, QString text);
     void enqueueRaw(QString aprsFrame);
 
     void processQueue(bool disconnect=true);
@@ -58,7 +57,6 @@ public slots:
 
 private:
     QString m_localCall;
-    QString m_localGrid;
     QString m_localPasscode;
 
     QQueue<QPair<QString, QDateTime>> m_frameQueue;

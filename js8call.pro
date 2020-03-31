@@ -91,7 +91,8 @@ SOURCES += \
     WaveUtils.cpp \
     ProcessThread.cpp \
     DecoderThread.cpp \
-    Decoder.cpp
+    Decoder.cpp \
+    APRSISClient.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -133,7 +134,8 @@ HEADERS  += qt_helpers.hpp \
     WaveUtils.h \
     ProcessThread.h \
     DecoderThread.h \
-    Decoder.h
+    Decoder.h \
+    APRSISClient.h
 
 
 INCLUDEPATH += qmake_only

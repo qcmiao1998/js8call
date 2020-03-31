@@ -437,6 +437,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         this}},
   m_n3fjpClient { new TCPClient{this}},
   m_spotClient { new SpotClient{m_messageClient, this}},
+  m_aprsClient {new APRSISClient{"rotate.aprs2.net", 14580, this}},
   psk_Reporter {new PSK_Reporter {m_messageClient, this}},
   m_i3bit {0},
   m_manual {&m_network_manager},
@@ -3154,8 +3155,12 @@ void MainWindow::prepareSpotting(){
     if(m_config.spot_to_reporting_networks ()){
         spotSetLocal();
         pskSetLocal();
+        aprsSetLocal();
+        m_aprsClient->setServer(m_config.aprs_server_name(), m_config.aprs_server_port());
+        m_aprsClient->setPaused(false);
         ui->spotButton->setChecked(true);
     } else {
+        m_aprsClient->setPaused(true);
         ui->spotButton->setChecked(false);
     }
 }
@@ -5222,6 +5227,37 @@ void MainWindow::spotCmd(CommandDetail cmd){
     }
 
     m_spotClient->enqueueCmd(cmdStr, cmd.from, cmd.to, cmd.relayPath, cmd.text, cmd.grid, cmd.extra, cmd.submode, m_freqNominal + cmd.freq, cmd.snr);
+}
+
+// KN4CRD: @APRSIS CMD :EMAIL-2  :email@domain.com booya{1
+void MainWindow::spotAprsCmd(CommandDetail cmd){
+    if(!m_config.spot_to_reporting_networks()) return;
+
+    if(cmd.cmd != " CMD") return;
+
+    qDebug() << "APRSISClient Enqueueing Third Party Text" << cmd.from << cmd.text;
+
+    auto by_call = Radio::base_callsign(m_config.my_callsign());
+    auto from_call = Radio::base_callsign(cmd.from);
+
+    m_aprsClient->enqueueThirdParty(by_call, from_call, cmd.text);
+}
+
+void MainWindow::spotAprsGrid(int offset, int snr, QString callsign, QString grid){
+    if(!m_config.spot_to_reporting_networks()) return;
+    if(grid.length() < 4) return;
+
+    Frequency frequency = m_freqNominal + offset;
+
+    auto comment = QString("%1MHz %2dB").arg(Radio::frequency_MHz_string(frequency)).arg(Varicode::formatSNR(snr));
+    if(callsign.contains("/")){
+        comment = QString("%1 %2").arg(callsign).arg(comment);
+    }
+
+    auto by_call = Radio::base_callsign(m_config.my_callsign());
+    auto from_call = Radio::base_callsign(callsign);
+
+    m_aprsClient->enqueueSpot(by_call, from_call, grid, comment);
 }
 
 void MainWindow::pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid){
@@ -7851,6 +7887,8 @@ void MainWindow::band_changed (Frequency f)
     m_bandEdited = false;
 
     psk_Reporter->sendReport();      // Upload any queued spots before changing band
+    m_aprsClient->sendReports();
+
     if (!m_transmitting) monitor (true);
     if ("FreqCal" == m_mode)
       {
@@ -9526,6 +9564,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
             if (m_config.spot_to_reporting_networks ()) {
               spotSetLocal();
               pskSetLocal();
+              aprsSetLocal();
             }
             statusChanged();
             m_wideGraph->setDialFreq(m_freqNominal / 1.e6);
@@ -9688,6 +9727,11 @@ void MainWindow::pskSetLocal ()
 {
   auto info = replaceMacros(m_config.my_info(), buildMacroValues(), true);
   psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (), info, QString {"JS8Call v" + version() }.simplified ());
+}
+
+void MainWindow::aprsSetLocal ()
+{
+  m_aprsClient->setLocalStation("APJ8CL", QString::number(APRSISClient::hashCallsign("APJ8CL")));
 }
 
 void MainWindow::transmitDisplay (bool transmitting)
@@ -10839,6 +10883,11 @@ void MainWindow::processCommandActivity() {
                 cd.tdrift = d.tdrift;
                 cd.submode = d.submode;
 
+                // PROCESS GRID SPOTS TO APRSIS FOR EVERYONE
+                if(d.to == "@APRSIS"){
+                    spotAprsGrid(cd.freq, cd.snr, cd.call, cd.grid);
+                }
+
                 logCallActivity(cd, true);
             }
         }
@@ -10846,6 +10895,11 @@ void MainWindow::processCommandActivity() {
         // PROCESS @JS8NET AND @APRSIS SPOTS FOR EVERYONE
         if (d.to == "@JS8NET" || d.to == "@APRSIS"){
             spotCmd(d);
+        }
+
+        // PROCESS @APRSIS CMD SPOTS FOR EVERYONE
+        if (d.to == "@APRSIS"){
+            spotAprsCmd(d);
         }
 
         // PREPARE CMD TEXT STRING

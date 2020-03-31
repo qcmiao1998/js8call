@@ -206,28 +206,31 @@ QString APRSISClient::replaceCallsignSuffixWithSSID(QString call, QString base){
     return call;
 }
 
-void APRSISClient::enqueueSpot(QString theircall, QString grid, QString comment){
-    if(m_localCall.isEmpty()) return;
-
-    auto geo = APRSISClient::grid2aprs(grid);
-    auto spotFrame = QString("%1>APRS,%2,TCPIP*:=%3/%4nJS8 %5\n");
-    spotFrame = spotFrame.arg(theircall);
-    spotFrame = spotFrame.arg(stripSSID(m_localCall));
-    spotFrame = spotFrame.arg(geo.first);
-    spotFrame = spotFrame.arg(geo.second);
-    spotFrame = spotFrame.arg(comment.left(43));
-    enqueueRaw(spotFrame);
-}
-
-void APRSISClient::enqueueThirdParty(QString theircall, QString payload){
+void APRSISClient::enqueueSpot(QString by_call, QString from_call, QString grid, QString comment){
     if(!isPasscodeValid()){
         return;
     }
 
-    auto frame = QString("%1>APRS,%2,TCPIP*:%3\n");
-    frame = frame.arg(theircall);
-    frame = frame.arg(stripSSID(m_localCall));
-    frame = frame.arg(payload);
+    auto geo = APRSISClient::grid2aprs(grid);
+    auto spotFrame = QString("%1>APJ8CL,qAS,%2:=%3/%4G#JS8 %5\n");
+    spotFrame = spotFrame.arg(from_call);
+    spotFrame = spotFrame.arg(by_call);
+    spotFrame = spotFrame.arg(geo.first);
+    spotFrame = spotFrame.arg(geo.second);
+    spotFrame = spotFrame.arg(comment.left(42));
+    enqueueRaw(spotFrame);
+}
+
+void APRSISClient::enqueueThirdParty(QString by_call, QString from_call, QString text){
+    if(!isPasscodeValid()){
+        return;
+    }
+
+    auto frame = QString("%1>APJ8CL,qAS,%2:%3\n");
+    frame = frame.arg(from_call);
+    frame = frame.arg(by_call);
+    frame = frame.arg(text);
+
     enqueueRaw(frame);
 }
 

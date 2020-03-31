@@ -678,7 +678,6 @@ private:
   QString opCall_;
   QString ptt_command_;
   QString aprs_server_name_;
-  QString aprs_passcode_;
   port_type aprs_server_port_;
 
   QString udp_server_name_;
@@ -859,7 +858,6 @@ QString Configuration::opCall() const {return m_->opCall_;}
 QString Configuration::ptt_command() const { return m_->ptt_command_.trimmed();}
 QString Configuration::aprs_server_name () const {return m_->aprs_server_name_;}
 auto Configuration::aprs_server_port () const -> port_type {return m_->aprs_server_port_;}
-QString Configuration::aprs_passcode() const { return m_->aprs_passcode_; }
 QString Configuration::udp_server_name () const {return m_->udp_server_name_;}
 auto Configuration::udp_server_port () const -> port_type {return m_->udp_server_port_;}
 bool Configuration::accept_udp_requests () const {return m_->accept_udp_requests_;}
@@ -1609,7 +1607,6 @@ void Configuration::impl::initialize_models ()
   ui_->ptt_command_line_edit->setText(ptt_command_);
   ui_->aprs_server_line_edit->setText (aprs_server_name_);
   ui_->aprs_server_port_spin_box->setValue (aprs_server_port_);
-  ui_->aprs_passcode_line_edit->setText(aprs_passcode_);
   ui_->udp_server_line_edit->setText (udp_server_name_);
   ui_->udp_server_port_spin_box->setValue (udp_server_port_);
   ui_->accept_udp_requests_check_box->setChecked (accept_udp_requests_);
@@ -2060,7 +2057,6 @@ void Configuration::impl::read_settings ()
   ptt_command_ = settings_->value("PTTCommand", "").toString();
   aprs_server_name_ = settings_->value ("aprsServer", "rotate.aprs2.net").toString ();
   aprs_server_port_ = settings_->value ("aprsServerPort", 14580).toUInt ();
-  aprs_passcode_ = settings_->value ("aprsPasscode", "").toString();
   udp_server_name_ = settings_->value ("UDPServer", "127.0.0.1").toString ();
   udp_server_port_ = settings_->value ("UDPServerPort", 2242).toUInt ();
   n3fjp_server_name_ = settings_->value ("N3FJPServer", "127.0.0.1").toString ();
@@ -2246,7 +2242,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("PTTCommand", ptt_command_);
   settings_->setValue ("aprsServer", aprs_server_name_);
   settings_->setValue ("aprsServerPort", aprs_server_port_);
-  settings_->setValue ("aprsPasscode", aprs_passcode_);
   settings_->setValue ("UDPServer", udp_server_name_);
   settings_->setValue ("UDPServerPort", udp_server_port_);
   settings_->setValue ("N3FJPServer", n3fjp_server_name_);
@@ -2861,7 +2856,6 @@ void Configuration::impl::accept ()
   ptt_command_ = ui_->ptt_command_line_edit->text();
   aprs_server_name_ = ui_->aprs_server_line_edit->text();
   aprs_server_port_ = ui_->aprs_server_port_spin_box->value();
-  aprs_passcode_ = ui_->aprs_passcode_line_edit->text();
 
   auto newUdpEnabled = ui_->udpEnable->isChecked();
   auto new_server = ui_->udp_server_line_edit->text ();
