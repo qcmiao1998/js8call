@@ -45,6 +45,7 @@ QString alphanumeric = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ /@"}; // callsign 
 QMap<QString, int> directed_cmds = {
     // any changes here need to be made also in the directed regular xpression for parsing
     // ?*^&@
+    {" HEARTBEAT",    -1 }, // this is my heartbeat (unused except for faux processing of HBs as directed commands)
     {" HB",           -1 }, // this is my heartbeat (unused except for faux processing of HBs as directed commands)
 
     {" SNR?",          0  }, // query snr
@@ -143,7 +144,7 @@ QRegularExpression directed_re("^"                    +
                                optional_cmd_pattern   +
                                optional_num_pattern);
 
-QRegularExpression heartbeat_re(R"(^\s*(?<callsign>[@](?:ALLCALL)\s+)?(?<type>CQ CQ CQ|CQ DX|CQ QRP|CQ CONTEST|CQ FIELD|CQ FD|CQ CQ|CQ|HB)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
+QRegularExpression heartbeat_re(R"(^\s*(?<callsign>[@](?:ALLCALL|HB)\s+)?(?<type>CQ CQ CQ|CQ DX|CQ QRP|CQ CONTEST|CQ FIELD|CQ FD|CQ CQ|CQ|HB|HEARTBEAT)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
 QRegularExpression compound_re("^\\s*[`]"              +
                                callsign_pattern        +
@@ -288,6 +289,8 @@ QMap<quint32, QString> cqs = {
 };
 
 // status flags in HB messages are deprecated as of 2.2, later versions will likely repurpose these flags
+// keep in mind if you change any of these to not start with HB you'll have to address the packHeartbeatMessage
+// and how the function computes the isAlt flag.
 QMap<quint32, QString> hbs = {
     { 0, "HB" }, // HB
     { 1, "HB" }, // HB AUTO

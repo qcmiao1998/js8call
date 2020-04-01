@@ -4916,7 +4916,7 @@ void MainWindow::processDecodedLine(QByteArray t){
             // convert HEARTBEAT to a directed command and process...
             cmd.from = cd.call;
             cmd.to = "@ALLCALL";
-            cmd.cmd = " HB";
+            cmd.cmd = " HEARTBEAT";
             cmd.snr = cd.snr;
             cmd.bits = cd.bits;
             cmd.grid = cd.grid;
@@ -7589,6 +7589,12 @@ void MainWindow::prepareHeartbeatMode(bool enabled){
     ui->actionModeJS8HB->setEnabled(canCurrentModeSendHeartbeat());
     ui->actionHeartbeatAcknowledgements->setEnabled(enabled && ui->actionModeAutoreply->isChecked());
 
+    if(enabled){
+        m_config.addGroup("@HB");
+    } else {
+        m_config.removeGroup("@HB");
+    }
+
 #if 0
     //ui->actionCQ->setEnabled(!enabled);
     //ui->actionFocus_Message_Reply_Area->setEnabled(!enabled);
@@ -8204,9 +8210,13 @@ void MainWindow::sendHeartbeat(){
     QStringList parts;
     parts.append(QString("%1:").arg(mycall));
 
+#if JS8_CUSTOMIZE_HB
     auto hb = m_config.hb_message();
+#else
+    auto hb = QString{};
+#endif
     if(hb.isEmpty()){
-        parts.append("HB");
+        parts.append("HEARTBEAT");
         parts.append(mygrid);
     } else {
         parts.append(hb);
@@ -10950,7 +10960,7 @@ void MainWindow::processCommandActivity() {
 
         // we're only responding to allcalls if we are participating in the allcall group
         // but, don't avoid for heartbeats...those are technically allcalls but are processed differently
-        if(isAllCall && m_config.avoid_allcall() && d.cmd != " HB"){
+        if(isAllCall && m_config.avoid_allcall() && d.cmd != " HB" && d.cmd != " HEARTBEAT"){
             continue;
         }
 
@@ -11294,7 +11304,7 @@ void MainWindow::processCommandActivity() {
 
         // PROCESS ACTIVE HEARTBEAT
         // if we have hb mode enabled and auto reply enabled <del>and auto ack enabled and no callsign is selected</del> update: if we're in HB mode, doesn't matter if a callsign is selected.
-        else if (d.cmd == " HB" && canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked() && ui->actionModeAutoreply->isChecked() && ui->actionHeartbeatAcknowledgements->isChecked()){
+        else if ((d.cmd == " HB" || d.cmd == " HEARTBEAT") && canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked() && ui->actionModeAutoreply->isChecked() && ui->actionHeartbeatAcknowledgements->isChecked()){
             // check to make sure we aren't pausing HB transmissions (ACKs) while a callsign is selected
             if(m_config.heartbeat_qso_pause() && !selectedCallsign.isEmpty()){
                 qDebug() << "hb paused during qso";

@@ -146,10 +146,21 @@ bool DecodedText::tryUnpackHeartbeat(){
     }
     compound_ = cmp.join("/");
 
-    auto to = "@ALLCALL";
-    auto hborcq = isAlt ? Varicode::cqString(bits3) : Varicode::hbString(bits3);
-    message_ = QString("%1: %2 %3 %4 ").arg(compound_).arg(to).arg(hborcq).arg(extra_);
-    frameType_ = type;
+    if(isAlt){
+        auto sbits3 = Varicode::cqString(bits3);
+        message_ = QString("%1: @ALLCALL %2 %3 ").arg(compound_).arg(sbits3).arg(extra_);
+        frameType_ = type;
+    } else {
+        auto sbits3 = Varicode::hbString(bits3);
+        if(sbits3 == "HB"){
+            message_ = QString("%1: @HB HEARTBEAT %2 ").arg(compound_).arg(extra_);
+            frameType_ = type;
+        } else {
+            message_ = QString("%1: @HB %2 %3 ").arg(compound_).arg(sbits3).arg(extra_);
+            frameType_ = type;
+        }
+    }
+
     return true;
 }
 
