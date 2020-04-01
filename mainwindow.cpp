@@ -2266,7 +2266,6 @@ void MainWindow::writeSettings()
   m_settings->setValue ("JT65AP", ui->actionEnable_AP_JT65->isChecked ());
   m_settings->setValue("SortBy", QVariant(m_sortCache));
   m_settings->setValue("ShowColumns", QVariant(m_showColumnsCache));
-  m_settings->setValue("ShowHBBandActivity", m_hbInterval);
   m_settings->setValue("HBInterval", m_hbInterval);
   m_settings->setValue("CQInterval", m_cqInterval);
 
@@ -11820,9 +11819,10 @@ void MainWindow::processTxQueue(){
     addMessageText(message.message, true);
 
     // check to see if this is a high priority message, or if we have autoreply enabled, or if this is a ping and the ping button is enabled
-    if(message.priority >= PriorityHigh   ||
-       message.message.contains(" HB ")   ||
-       message.message.contains(" ACK ")  ||
+    if(message.priority >= PriorityHigh          ||
+       message.message.contains(" HEARTBEAT ")   ||
+       message.message.contains(" HB ")          ||
+       message.message.contains(" ACK ")         ||
        ui->actionModeAutoreply->isChecked()
     ){
         // then try to set the frequency...
@@ -11994,7 +11994,7 @@ void MainWindow::displayBandActivity() {
                     // hide heartbeat items
                     if (!ui->actionShow_Band_Heartbeats_and_ACKs->isChecked()){
                         // hide heartbeats and acks if we have heartbeating hidden
-                        if(item.text.contains(" HB ") || item.text.contains(" ACK ")){
+                        if(item.text.contains(" @HB ") || item.text.contains(" HEARTBEAT ") || item.text.contains(" ACK ")){
                             shouldDisplay = false;
 
                             // hide the previous item if this it shouldn't be displayed either...
