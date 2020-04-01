@@ -52,8 +52,6 @@ QMap<QString, int> directed_cmds = {
 
     {" DIT DIT",       1  }, // two bits
 
-
-
     {" HEARING?",      3  }, // query station calls heard
 
     {" GRID?",         4  }, // query grid
@@ -272,6 +270,10 @@ QMap<QString, quint32> basecalls = {
     { "@QSO",       nbasecall + 46 }, // QSO GROUP
     { "@QSOPARTY",  nbasecall + 47 }, // QSO PARTY GROUP
     { "@CONTEST",   nbasecall + 48 }, // CONTEST GROUP
+    { "@FIELDDAY",  nbasecall + 49 }, // FIELD DAY GROUP
+    { "@SOTA",      nbasecall + 50 }, // SOTA GROUP
+    { "@IOTA",      nbasecall + 51 }, // IOTA GROUP
+    { "@POTA",      nbasecall + 52 }, // POTA GROUP
 };
 
 QMap<quint32, QString> cqs = {
