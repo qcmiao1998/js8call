@@ -190,14 +190,11 @@ QString APRSISClient::stripSSID(QString call){
 
 QString APRSISClient::replaceCallsignSuffixWithSSID(QString call, QString base){
     if(call != base){
-        QRegularExpression re("[/](?<ssid>(P|\\d+))");
+        QRegularExpression re("[/](?<ssid>(\\d+))");
         auto matcher = re.globalMatch(call);
         if(matcher.hasNext()){
             auto match = matcher.next();
             auto ssid = match.captured("ssid");
-            if(ssid == "P"){
-                ssid = "16";
-            }
             call = base + "-" + ssid;
         } else {
             call = base;
