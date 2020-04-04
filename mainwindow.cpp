@@ -435,6 +435,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         version (), revision (),
         m_config.udp_server_name (), m_config.udp_server_port (),
         this}},
+  m_messageServer { new MessageServer(this) },
   m_n3fjpClient { new TCPClient{this}},
   m_spotClient { new SpotClient{m_messageClient, this}},
   m_aprsClient {new APRSISClient{"rotate.aprs2.net", 14580, this}},
@@ -480,8 +481,19 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // notification audio operates in its own thread at a lower priority
   m_notification->moveToThread(&m_notificationAudioThread);
 
-  // move the aprs client to its own network thread at a lower priority
+  // move the aprs client and the message server to its own network thread at a lower priority
   m_aprsClient->moveToThread(&m_networkThread);
+  m_messageServer->moveToThread(&m_networkThread);
+
+  // hook up the message server slots and signals and disposal
+  connect (m_messageServer, &MessageServer::error, this, &MainWindow::udpNetworkError);
+  connect (m_messageServer, &MessageServer::message, this, &MainWindow::networkMessage);
+  connect (this, &MainWindow::apiSetServer, m_messageServer, &MessageServer::setServer);
+  connect (this, &MainWindow::apiStartServer, m_messageServer, &MessageServer::start);
+  connect (this, &MainWindow::apiStopServer, m_messageServer, &MessageServer::stop);
+  connect (&m_config, &Configuration::tcp_server_changed, m_messageServer, &MessageServer::setServerHost);
+  connect (&m_config, &Configuration::tcp_server_port_changed, m_messageServer, &MessageServer::setServerPort);
+  connect (&m_networkThread, &QThread::finished, m_messageServer, &QObject::deleteLater);
 
   // hook up the aprs client slots and signals and disposal
   connect (this, &MainWindow::aprsClientEnqueueSpot, m_aprsClient, &APRSISClient::enqueueSpot);
@@ -536,9 +548,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (m_logDlg.data (), &LogQSO::acceptQSO, this, &MainWindow::acceptQSO);
   connect (this, &MainWindow::finished, m_logDlg.data (), &LogQSO::close);
 
-
   // Network message handlers
-  connect (m_messageClient, &MessageClient::error, this, &MainWindow::networkError);
+  connect (m_messageClient, &MessageClient::error, this, &MainWindow::udpNetworkError);
   connect (m_messageClient, &MessageClient::message, this, &MainWindow::networkMessage);
 
 #if 0
@@ -1005,7 +1016,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   // prep
   prepareHeartbeatMode(canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked());
-  prepareSpotting();
 
   auto enterFilter = new EnterKeyPressEater();
   connect(enterFilter, &EnterKeyPressEater::enterKeyPressed, this, [this](QObject *, QKeyEvent *, bool *pProcessed){
@@ -1595,6 +1605,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->dialFreqDownButton->setFixedSize(30, 24);
 
   // Prepare spotting configuration...
+  prepareApi();
   prepareSpotting();
 
   displayActivity(true);
@@ -3107,6 +3118,7 @@ void MainWindow::openSettings(int tab){
 
         enable_DXCC_entity (m_config.DXCC ());  // sets text window proportions and (re)inits the logbook
 
+        prepareApi();
         prepareSpotting();
 
         if(m_config.restart_audio_input ()) {
@@ -3167,6 +3179,16 @@ void MainWindow::openSettings(int tab){
     }
 }
 
+void MainWindow::prepareApi(){
+    bool enabled = true;
+    if(enabled){
+        emit apiSetServer("0.0.0.0", 2442);
+        emit apiStartServer();
+    } else {
+        emit apiStopServer();
+    }
+}
+
 void MainWindow::prepareSpotting(){
     if(m_config.spot_to_reporting_networks ()){
         spotSetLocal();
@@ -3186,6 +3208,7 @@ void MainWindow::on_spotButton_clicked(bool checked){
     m_config.set_spot_to_reporting_networks(checked);
 
     // 2. prepare
+    prepareApi();
     prepareSpotting();
 }
 
@@ -3400,6 +3423,12 @@ void MainWindow::updateCurrentBand(){
     m_wideGraph->setRxBand (band_name);
 
     qDebug() << "setting band" << band_name;
+    sendNetworkMessage("RIG.FREQ", "", {
+        {"_ID", QVariant(-1)},
+        {"BAND", QVariant(band_name)},
+        {"DIAL", QVariant((quint64)dialFrequency())},
+        {"OFFSET", QVariant((quint64)currentFreqOffset())}
+    });
     m_lastBand = band_name;
 
     band_changed(dial_frequency);
@@ -7330,6 +7359,7 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
   // Log to JS8Call API
   if(m_config.udpEnabled()){
       sendNetworkMessage("LOG.QSO", QString(ADIF), {
+          {"_ID", QVariant(-1)},
           {"UTC.ON", QVariant(QSO_date_on.toMSecsSinceEpoch())},
           {"UTC.OFF", QVariant(QSO_date_off.toMSecsSinceEpoch())},
           {"CALL", QVariant(call)},
@@ -10518,6 +10548,7 @@ void MainWindow::processRxActivity() {
 
         if(canSendNetworkMessage()){
             sendNetworkMessage("RX.ACTIVITY", d.text, {
+                {"_ID", QVariant(-1)},
                 {"FREQ", QVariant(d.freq)},
                 {"SNR", QVariant(d.snr)},
                 {"SPEED", QVariant(d.submode)},
@@ -11017,6 +11048,7 @@ void MainWindow::processCommandActivity() {
             // and send it to the network in case we want to interact with it from an external app...
             if(canSendNetworkMessage()){
                 sendNetworkMessage("RX.DIRECTED", ad.text, {
+                    {"_ID", QVariant(-1)},
                     {"FROM", QVariant(d.from)},
                     {"TO", QVariant(d.to)},
                     {"CMD", QVariant(d.cmd)},
@@ -11763,6 +11795,7 @@ void MainWindow::processSpots() {
 
         if(canSendNetworkMessage()){
             sendNetworkMessage("RX.SPOT", "", {
+                {"_ID", QVariant(-1)},
                 {"DIAL", QVariant(dial)},
                 {"OFFSET", QVariant(d.freq)},
                 {"CALL", QVariant(d.call)},
@@ -12552,6 +12585,7 @@ void MainWindow::emitPTT(bool on){
 
     // emit to network
     sendNetworkMessage("RIG.PTT", on ? "on" : "off", {
+        {"_ID", QVariant(-1)},
         {"PTT", QVariant(on)},
         {"UTC", QVariant(DriftingDateTime::currentDateTimeUtc().toMSecsSinceEpoch())},
     });
@@ -12570,11 +12604,12 @@ void MainWindow::emitTones(){
     }
 
     sendNetworkMessage("TX.FRAME", "", {
+        {"_ID", QVariant(-1)},
         {"TONES", t}
     });
 }
 
-void MainWindow::networkMessage(Message const &message)
+void MainWindow::udpNetworkMessage(Message const &message)
 {
     if(!m_config.udpEnabled()){
         return;
@@ -12584,16 +12619,33 @@ void MainWindow::networkMessage(Message const &message)
         return;
     }
 
+    networkMessage(message);
+}
+
+void MainWindow::tcpNetworkMessage(Message const &message)
+{
+    // if(!m_config.tcpEnabled()){
+    //     return;
+    // }
+    //
+    // if(!m_config.accept_tcp_requests()){
+    //     return;
+    // }
+
+    networkMessage(message);
+}
+
+void MainWindow::networkMessage(Message const &message)
+{
     auto type = message.type();
 
     if(type == "PING"){
         return;
     }
 
-    qDebug() << "try processing network message" << type;
+    auto id = message.id();
 
-    auto params = message.params();
-    auto id = params.value("_ID", QVariant(0));
+    qDebug() << "try processing network message" << type << id;
 
     // Inspired by FLDigi
     // TODO: MAIN.RX - Turn on RX
@@ -12840,23 +12892,27 @@ bool MainWindow::canSendNetworkMessage(){
 }
 
 void MainWindow::sendNetworkMessage(QString const &type, QString const &message){
-    if(!m_config.udpEnabled()){
+    if(!canSendNetworkMessage()){
         return;
     }
 
-    m_messageClient->send(Message(type, message));
+    auto m = Message(type, message);
+    m_messageClient->send(m);
+    m_messageServer->send(m);
 }
 
 void MainWindow::sendNetworkMessage(QString const &type, QString const &message, QMap<QString, QVariant> const &params)
 {
-    if(!m_config.udpEnabled()){
+    if(!canSendNetworkMessage()){
         return;
     }
 
-    m_messageClient->send(Message(type, message, params));
+    auto m = Message(type, message, params);
+    m_messageClient->send(m);
+    m_messageServer->send(m);
 }
 
-void MainWindow::networkError (QString const& e)
+void MainWindow::udpNetworkError (QString const& e)
 {
   if(!m_config.udpEnabled()){
     return;
@@ -12865,7 +12921,7 @@ void MainWindow::networkError (QString const& e)
   if(!m_config.accept_udp_requests()){
     return;
   }
-  if (m_splash && m_splash->isVisible ()) m_splash->hide ();
+
   if (MessageBox::Retry == MessageBox::warning_message (this, tr ("Network Error")
                                                         , tr ("Error: %1\nUDP server %2:%3")
                                                         .arg (e)
@@ -12878,6 +12934,32 @@ void MainWindow::networkError (QString const& e)
       // retry server lookup
       m_messageClient->set_server (m_config.udp_server_name ());
     }
+}
+
+void MainWindow::tcpNetworkError (QString const& e)
+{
+    /*
+  if(!m_config.tcpEnabled()){
+    return;
+  }
+
+  if(!m_config.accept_tcp_requests()){
+    return;
+  }
+
+  if (MessageBox::Retry == MessageBox::warning_message (this, tr ("Network Error")
+                                                        , tr ("Error: %1\nTCP server %2:%3")
+                                                        .arg (e)
+                                                        .arg (m_config.tcp_server_name ())
+                                                        .arg (m_config.tcp_server_port ())
+                                                        , QString {}
+                                                        , MessageBox::Cancel | MessageBox::Retry
+                                                        , MessageBox::Cancel))
+    {
+      // retry server lookup
+      //m_messageClient->set_server (m_config.udp_server_name ());
+    }
+    */
 }
 
 void MainWindow::on_syncSpinBox_valueChanged(int n)

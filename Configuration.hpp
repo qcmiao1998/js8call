@@ -328,10 +328,12 @@ public:
   Q_SIGNAL void colors_changed ();
 
   //
-  // This signal is emitted when the UDP server changes
+  // This signal is emitted when the UDP & TCP server changes
   //
-  Q_SIGNAL void udp_server_changed (QString const& udp_server);
-  Q_SIGNAL void udp_server_port_changed (port_type server_port);
+  Q_SIGNAL void udp_server_changed (QString const& host);
+  Q_SIGNAL void udp_server_port_changed (port_type port);
+  Q_SIGNAL void tcp_server_changed (QString const& host);
+  Q_SIGNAL void tcp_server_port_changed (port_type port);
 
   // This signal is emitted when the band schedule changes
   Q_SIGNAL void band_schedule_changed (StationList &stations);

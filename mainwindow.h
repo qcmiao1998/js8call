@@ -46,6 +46,7 @@
 #include "qpriorityqueue.h"
 #include "varicode.h"
 #include "MessageClient.hpp"
+#include "MessageServer.h"
 #include "TCPClient.h"
 #include "SpotClient.h"
 #include "APRSISClient.h"
@@ -207,6 +208,7 @@ private slots:
   void on_actionReset_Window_Sizes_triggered();
   void on_actionSettings_triggered();
   void openSettings(int tab=0);
+  void prepareApi();
   void prepareSpotting();
   void on_spotButton_clicked(bool checked);
   void on_monitorButton_clicked (bool);
@@ -409,11 +411,14 @@ private slots:
   void on_cbTx6_toggled(bool b);
   void emitPTT(bool on);
   void emitTones();
+  void udpNetworkMessage(Message const &message);
+  void tcpNetworkMessage(Message const &message);
   void networkMessage(Message const &message);
   bool canSendNetworkMessage();
   void sendNetworkMessage(QString const &type, QString const &message);
   void sendNetworkMessage(QString const &type, QString const &message, const QMap<QString, QVariant> &params);
-  void networkError (QString const&);
+  void udpNetworkError (QString const&);
+  void tcpNetworkError (QString const&);
   void on_ClrAvgButton_clicked();
   void on_syncSpinBox_valueChanged(int n);
   void on_TxPowerComboBox_currentIndexChanged(const QString &arg1);
@@ -436,6 +441,10 @@ private slots:
   void refreshTextDisplay();
 
 private:
+  Q_SIGNAL void apiSetServer(QString host, quint16 port);
+  Q_SIGNAL void apiStartServer();
+  Q_SIGNAL void apiStopServer();
+
   Q_SIGNAL void aprsClientEnqueueSpot(QString by_call, QString from_call, QString grid, QString comment);
   Q_SIGNAL void aprsClientEnqueueThirdParty(QString by_call, QString from_call, QString text);
   Q_SIGNAL void aprsClientSetServer(QString host, quint16 port);
@@ -932,6 +941,7 @@ private:
   double m_toneSpacing;
   int m_firstDecode;
   MessageClient * m_messageClient;
+  MessageServer * m_messageServer;
   TCPClient * m_n3fjpClient;
   PSK_Reporter *psk_Reporter;
   SpotClient *m_spotClient;

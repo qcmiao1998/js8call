@@ -53,6 +53,21 @@ Message::Message(QString const &type, QString const &value,  QMap<QString, QVari
     }
 }
 
+int Message::ensureId(){
+    // if a non-zero id exists, we're good
+    if(params_.contains("_ID")){
+        auto id = params_.value("_ID", 0).toInt();
+        if(id != 0){
+            return id;
+        }
+    }
+
+    // otherwise, generate one
+    auto id = DriftingDateTime::currentMSecsSinceEpoch()-EPOCH;
+    params_["_ID"] = QString::number(id);
+    return id;
+}
+
 void Message::read(const QJsonObject &json){
     if(json.contains("type") && json["type"].isString()){
         type_ = json["type"].toString();

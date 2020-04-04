@@ -92,7 +92,8 @@ SOURCES += \
     ProcessThread.cpp \
     DecoderThread.cpp \
     Decoder.cpp \
-    APRSISClient.cpp
+    APRSISClient.cpp \
+    MessageServer.cpp
 
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
@@ -135,7 +136,8 @@ HEADERS  += qt_helpers.hpp \
     ProcessThread.h \
     DecoderThread.h \
     Decoder.h \
-    APRSISClient.h
+    APRSISClient.h \
+    MessageServer.h
 
 
 INCLUDEPATH += qmake_only

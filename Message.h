@@ -29,7 +29,8 @@ public:
 
     QString value() const { return value_; }
     void setValue(QString value){ value_ = value; }
-
+    int id() const { return params_.value("_ID").toInt(); }
+    int ensureId();
     QMap<QString, QVariant> params() const { return params_; }
 
 private:

@@ -180,6 +180,7 @@ set (wsjt_qt_CXXSRCS
   NetworkMessage.cpp
   Message.cpp
   MessageClient.cpp
+  MessageServer.cpp
   TCPClient.cpp
   LettersSpinBox.cpp
   HintedSpinBox.cpp
