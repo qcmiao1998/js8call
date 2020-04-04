@@ -21,7 +21,7 @@
 #include "Message.h"
 #include "DriftingDateTime.h"
 
-const quint32 EPOCH = 1499299200000; // July 6, 2017
+const qint64 EPOCH = 1499299200000; // July 6, 2017
 
 #if USE_SNOWFLAKE
 quint64 snowflake(quint64 epoch, quint16 machine, quint16 sequence){
@@ -48,15 +48,15 @@ Message::Message(QString const &type, QString const &value,  QMap<QString, QVari
     value_{ value },
     params_{ params }
 {
-    if(params_.value("_ID", 0).toInt() == 0){
+    if(params_.value("_ID", 0).toLongLong() == 0){
         params_["_ID"] = QString::number(DriftingDateTime::currentMSecsSinceEpoch()-EPOCH);
     }
 }
 
-int Message::ensureId(){
+qint64 Message::ensureId(){
     // if a non-zero id exists, we're good
     if(params_.contains("_ID")){
-        auto id = params_.value("_ID", 0).toInt();
+        auto id = params_.value("_ID", 0).toLongLong();
         if(id != 0){
             return id;
         }
