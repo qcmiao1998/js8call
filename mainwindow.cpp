@@ -488,11 +488,13 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // hook up the message server slots and signals and disposal
   connect (m_messageServer, &MessageServer::error, this, &MainWindow::udpNetworkError);
   connect (m_messageServer, &MessageServer::message, this, &MainWindow::networkMessage);
+  connect (this, &MainWindow::apiSetMaxConnections, m_messageServer, &MessageServer::setMaxConnections);
   connect (this, &MainWindow::apiSetServer, m_messageServer, &MessageServer::setServer);
   connect (this, &MainWindow::apiStartServer, m_messageServer, &MessageServer::start);
   connect (this, &MainWindow::apiStopServer, m_messageServer, &MessageServer::stop);
   connect (&m_config, &Configuration::tcp_server_changed, m_messageServer, &MessageServer::setServerHost);
   connect (&m_config, &Configuration::tcp_server_port_changed, m_messageServer, &MessageServer::setServerPort);
+  connect (&m_config, &Configuration::tcp_max_connections_changed, m_messageServer, &MessageServer::setMaxConnections);
   connect (&m_networkThread, &QThread::finished, m_messageServer, &QObject::deleteLater);
 
   // hook up the aprs client slots and signals and disposal
@@ -3180,9 +3182,13 @@ void MainWindow::openSettings(int tab){
 }
 
 void MainWindow::prepareApi(){
-    bool enabled = true;
+    // the udp api is prepared by default (always listening)
+
+    // so, we just need to prepare the tcp api
+    bool enabled = m_config.tcpEnabled();
     if(enabled){
-        emit apiSetServer("0.0.0.0", 2442);
+        emit apiSetMaxConnections(m_config.tcp_max_connections());
+        emit apiSetServer(m_config.tcp_server_name(), m_config.tcp_server_port());
         emit apiStartServer();
     } else {
         emit apiStopServer();
@@ -12624,13 +12630,13 @@ void MainWindow::udpNetworkMessage(Message const &message)
 
 void MainWindow::tcpNetworkMessage(Message const &message)
 {
-    // if(!m_config.tcpEnabled()){
-    //     return;
-    // }
-    //
-    // if(!m_config.accept_tcp_requests()){
-    //     return;
-    // }
+    if(!m_config.tcpEnabled()){
+        return;
+    }
+
+    if(!m_config.accept_tcp_requests()){
+        return;
+    }
 
     networkMessage(message);
 }
@@ -12888,7 +12894,7 @@ void MainWindow::networkMessage(Message const &message)
 }
 
 bool MainWindow::canSendNetworkMessage(){
-    return m_config.udpEnabled();
+    return m_config.udpEnabled() || m_config.tcpEnabled();
 }
 
 void MainWindow::sendNetworkMessage(QString const &type, QString const &message){
@@ -12897,8 +12903,14 @@ void MainWindow::sendNetworkMessage(QString const &type, QString const &message)
     }
 
     auto m = Message(type, message);
-    m_messageClient->send(m);
-    m_messageServer->send(m);
+
+    if(m_config.udpEnabled()){
+        m_messageClient->send(m);
+    }
+
+    if(m_config.tcpEnabled()){
+        m_messageServer->send(m);
+    }
 }
 
 void MainWindow::sendNetworkMessage(QString const &type, QString const &message, QMap<QString, QVariant> const &params)
@@ -12908,12 +12920,19 @@ void MainWindow::sendNetworkMessage(QString const &type, QString const &message,
     }
 
     auto m = Message(type, message, params);
-    m_messageClient->send(m);
-    m_messageServer->send(m);
+
+    if(m_config.udpEnabled()){
+        m_messageClient->send(m);
+    }
+
+    if(m_config.tcpEnabled()){
+        m_messageServer->send(m);
+    }
 }
 
 void MainWindow::udpNetworkError (QString const& e)
 {
+    /*
   if(!m_config.udpEnabled()){
     return;
   }
@@ -12934,6 +12953,7 @@ void MainWindow::udpNetworkError (QString const& e)
       // retry server lookup
       m_messageClient->set_server (m_config.udp_server_name ());
     }
+    */
 }
 
 void MainWindow::tcpNetworkError (QString const& e)

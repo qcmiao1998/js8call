@@ -188,6 +188,8 @@ public:
   port_type aprs_server_port () const;
   QString udp_server_name () const;
   port_type udp_server_port () const;
+  QString tcp_server_name () const;
+  port_type tcp_server_port () const;
   QString n1mm_server_name () const;
   port_type n1mm_server_port () const;
   bool valid_n1mm_info () const;
@@ -197,9 +199,10 @@ public:
   bool valid_n3fjp_info () const;
   bool broadcast_to_n3fjp() const;
   bool accept_udp_requests () const;
-  bool udpWindowToFront () const;
-  bool udpWindowRestore () const;
+  bool accept_tcp_requests () const;
   bool udpEnabled () const;
+  bool tcpEnabled () const;
+  int tcp_max_connections () const;
   Bands * bands ();
   Bands const * bands () const;
   IARURegions::Region region () const;
@@ -334,6 +337,7 @@ public:
   Q_SIGNAL void udp_server_port_changed (port_type port);
   Q_SIGNAL void tcp_server_changed (QString const& host);
   Q_SIGNAL void tcp_server_port_changed (port_type port);
+  Q_SIGNAL void tcp_max_connections_changed (int n);
 
   // This signal is emitted when the band schedule changes
   Q_SIGNAL void band_schedule_changed (StationList &stations);

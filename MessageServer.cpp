@@ -20,8 +20,13 @@ bool MessageServer::start()
     }
 
     auto address = QHostAddress();
-    if(!address.setAddress(m_host)){
+    if(m_host.isEmpty() || !address.setAddress(m_host)){
         qDebug() << "MessageServer address invalid:" << m_host << m_port;
+        return false;
+    }
+
+    if(m_port <= 0){
+        qDebug() << "MessageServer port invalid:" << m_host << m_port;
         return false;
     }
 
@@ -67,6 +72,33 @@ void MessageServer::setPause(bool paused)
     }
 }
 
+void MessageServer::setMaxConnections(int n){
+    // set the maximum number of connections allowed
+    m_maxConnections = n;
+
+    // then, prune old ones greater than the max (fifo)
+    pruneConnections();
+}
+
+int MessageServer::activeConnections(){
+   int i = 0;
+   foreach(auto client, m_clients){
+       if(client->isConnected()) i++;
+   }
+   return i;
+}
+
+void MessageServer::pruneConnections(){
+    // keep only the n most recent connections (fifo)
+    if(m_maxConnections && m_maxConnections < activeConnections()){
+        for(int i = m_maxConnections; i < activeConnections(); i++){
+            auto client = m_clients.first();
+            client->close();
+            m_clients.removeFirst();
+        }
+    }
+}
+
 void MessageServer::send(const Message &message){
     foreach(auto client, m_clients){
         if(!client->awaitingResponse(message.id())){
@@ -90,6 +122,13 @@ void MessageServer::incomingConnection(qintptr handle)
         m_clients.removeFirst();
     }
 #endif
+
+    if(m_maxConnections && m_maxConnections <= activeConnections()){
+        qDebug() << "MessageServer connections full, dropping incoming connection";
+        client->send(Message("API.ERROR", "Connections Full"));
+        client->close();
+        return;
+    }
 
     m_clients.append(client);
 }
@@ -167,12 +206,12 @@ void Client::readyRead(){
         QJsonParseError e;
         QJsonDocument d = QJsonDocument::fromJson(msg, &e);
         if(e.error != QJsonParseError::NoError){
-            //Q_EMIT self_->error(QString {"MessageClient json parse error:  %1"}.arg(e.errorString()));
+            send({"API.ERROR", "Invalid JSON (unparsable)"});
             return;
         }
 
         if(!d.isObject()){
-            //Q_EMIT self_->error(QString {"MessageClient json parse error: json is not an object"});
+            send({"API.ERROR", "Invalid JSON (not an object)"});
             return;
         }
 

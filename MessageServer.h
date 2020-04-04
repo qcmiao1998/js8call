@@ -19,6 +19,8 @@ public:
     virtual ~MessageServer();
 
 protected:
+    int activeConnections();
+    void pruneConnections();
     void incomingConnection(qintptr handle);
 
 signals:
@@ -30,6 +32,7 @@ public slots:
     void setPause(bool paused);
     bool start();
     void stop();
+    void setMaxConnections(int n);
     void setServerHost(const QString &host){ setServer(host, m_port); }
     void setServerPort(quint16 port){ setServer(m_host, port); }
     void send(Message const &message);
@@ -38,6 +41,7 @@ private:
     bool m_paused;
     QString m_host;
     quint16 m_port;
+    int m_maxConnections;
 
     QList<Client*> m_clients;
 };

@@ -441,6 +441,7 @@ private slots:
   void refreshTextDisplay();
 
 private:
+  Q_SIGNAL void apiSetMaxConnections(int n);
   Q_SIGNAL void apiSetServer(QString host, quint16 port);
   Q_SIGNAL void apiStartServer();
   Q_SIGNAL void apiStopServer();

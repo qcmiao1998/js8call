@@ -685,6 +685,8 @@ private:
 
   QString udp_server_name_;
   port_type udp_server_port_;
+  QString tcp_server_name_;
+  port_type tcp_server_port_;
   QString n3fjp_server_name_;
   port_type n3fjp_server_port_;
   bool broadcast_to_n3fjp_;
@@ -692,9 +694,10 @@ private:
   port_type n1mm_server_port_;
   bool broadcast_to_n1mm_;
   bool accept_udp_requests_;
-  bool udpWindowToFront_;
-  bool udpWindowRestore_;
+  bool accept_tcp_requests_;
   bool udpEnabled_;
+  bool tcpEnabled_;
+  int tcpMaxConnections_;
   DataMode data_mode_;
   bool pwrBandTxMemory_;
   bool pwrBandTuneMemory_;
@@ -868,16 +871,19 @@ QString Configuration::aprs_server_name () const {return m_->aprs_server_name_;}
 auto Configuration::aprs_server_port () const -> port_type {return m_->aprs_server_port_;}
 QString Configuration::udp_server_name () const {return m_->udp_server_name_;}
 auto Configuration::udp_server_port () const -> port_type {return m_->udp_server_port_;}
+QString Configuration::tcp_server_name () const {return m_->tcp_server_name_;}
+auto Configuration::tcp_server_port () const -> port_type {return m_->tcp_server_port_;}
 bool Configuration::accept_udp_requests () const {return m_->accept_udp_requests_;}
+bool Configuration::accept_tcp_requests () const {return m_->accept_tcp_requests_;}
 QString Configuration::n3fjp_server_name () const {return m_->n3fjp_server_name_;}
 auto Configuration::n3fjp_server_port () const -> port_type {return m_->n3fjp_server_port_;}
 bool Configuration::broadcast_to_n3fjp () const {return m_->broadcast_to_n3fjp_;}
 QString Configuration::n1mm_server_name () const {return m_->n1mm_server_name_;}
 auto Configuration::n1mm_server_port () const -> port_type {return m_->n1mm_server_port_;}
 bool Configuration::broadcast_to_n1mm () const {return m_->broadcast_to_n1mm_;}
-bool Configuration::udpWindowToFront () const {return m_->udpWindowToFront_;}
-bool Configuration::udpWindowRestore () const {return m_->udpWindowRestore_;}
 bool Configuration::udpEnabled () const {return m_->udpEnabled_;}
+bool Configuration::tcpEnabled () const {return m_->tcpEnabled_;}
+int Configuration::tcp_max_connections() const { return m_->tcpMaxConnections_; }
 Bands * Configuration::bands () {return &m_->bands_;}
 Bands const * Configuration::bands () const {return &m_->bands_;}
 StationList * Configuration::stations () {return &m_->stations_;}
@@ -1618,16 +1624,19 @@ void Configuration::impl::initialize_models ()
   ui_->aprs_server_port_spin_box->setValue (aprs_server_port_);
   ui_->udp_server_line_edit->setText (udp_server_name_);
   ui_->udp_server_port_spin_box->setValue (udp_server_port_);
+  ui_->tcp_server_line_edit->setText (tcp_server_name_);
+  ui_->tcp_server_port_spin_box->setValue (tcp_server_port_);
   ui_->accept_udp_requests_check_box->setChecked (accept_udp_requests_);
+  ui_->accept_tcp_requests_check_box->setChecked (accept_tcp_requests_);
   ui_->n3fjp_server_name_line_edit->setText (n3fjp_server_name_);
   ui_->n3fjp_server_port_spin_box->setValue (n3fjp_server_port_);
   ui_->enable_n3fjp_broadcast_check_box->setChecked (broadcast_to_n3fjp_);
   ui_->n1mm_server_name_line_edit->setText (n1mm_server_name_);
   ui_->n1mm_server_port_spin_box->setValue (n1mm_server_port_);
   ui_->enable_n1mm_broadcast_check_box->setChecked (broadcast_to_n1mm_);
-  ui_->udpWindowToFront->setChecked(udpWindowToFront_);
+  ui_->tcpEnable->setChecked(tcpEnabled_);
   ui_->udpEnable->setChecked(udpEnabled_);
-  ui_->udpWindowRestore->setChecked(udpWindowRestore_);
+  ui_->tcp_max_connections_spin_box->setValue(tcpMaxConnections_);
   ui_->calibration_intercept_spin_box->setValue (calibration_.intercept);
   ui_->calibration_slope_ppm_spin_box->setValue (calibration_.slope_ppm);
 
@@ -2069,6 +2078,8 @@ void Configuration::impl::read_settings ()
   aprs_server_port_ = settings_->value ("aprsServerPort", 14580).toUInt ();
   udp_server_name_ = settings_->value ("UDPServer", "127.0.0.1").toString ();
   udp_server_port_ = settings_->value ("UDPServerPort", 2242).toUInt ();
+  tcp_server_name_ = settings_->value ("TCPServer", "127.0.0.1").toString ();
+  tcp_server_port_ = settings_->value ("TCPServerPort", 2442).toUInt ();
   n3fjp_server_name_ = settings_->value ("N3FJPServer", "127.0.0.1").toString ();
   n3fjp_server_port_ = settings_->value ("N3FJPServerPort", 1100).toUInt ();
   broadcast_to_n3fjp_ = settings_->value ("BroadcastToN3FJP", false).toBool ();
@@ -2076,9 +2087,10 @@ void Configuration::impl::read_settings ()
   n1mm_server_port_ = settings_->value ("N1MMServerPort", 2333).toUInt ();
   broadcast_to_n1mm_ = settings_->value ("BroadcastToN1MM", false).toBool ();
   accept_udp_requests_ = settings_->value ("AcceptUDPRequests", false).toBool ();
+  accept_tcp_requests_ = settings_->value ("AcceptTCPRequests", false).toBool ();
   udpEnabled_ = settings_->value("UDPEnabled", false).toBool();
-  udpWindowToFront_ = settings_->value ("udpWindowToFront",false).toBool ();
-  udpWindowRestore_ = settings_->value ("udpWindowRestore",false).toBool ();
+  tcpEnabled_ = settings_->value("TCPEnabled", false).toBool();
+  tcpMaxConnections_ = settings_->value("TCPMaxConnections", 1).toInt();
   calibration_.intercept = settings_->value ("CalibrationIntercept", 0.).toDouble ();
   calibration_.slope_ppm = settings_->value ("CalibrationSlopePPM", 0.).toDouble ();
   pwrBandTxMemory_ = settings_->value("pwrBandTxMemory",false).toBool ();
@@ -2255,6 +2267,8 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("aprsServerPort", aprs_server_port_);
   settings_->setValue ("UDPServer", udp_server_name_);
   settings_->setValue ("UDPServerPort", udp_server_port_);
+  settings_->setValue ("TCPServer", tcp_server_name_);
+  settings_->setValue ("TCPServerPort", tcp_server_port_);
   settings_->setValue ("N3FJPServer", n3fjp_server_name_);
   settings_->setValue ("N3FJPServerPort", n3fjp_server_port_);
   settings_->setValue ("BroadcastToN3FJP", broadcast_to_n3fjp_);
@@ -2262,9 +2276,10 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("N1MMServerPort", n1mm_server_port_);
   settings_->setValue ("BroadcastToN1MM", broadcast_to_n1mm_);
   settings_->setValue ("AcceptUDPRequests", accept_udp_requests_);
+  settings_->setValue ("AcceptTCPRequests", accept_tcp_requests_);
   settings_->setValue ("UDPEnabled", udpEnabled_);
-  settings_->setValue ("udpWindowToFront", udpWindowToFront_);
-  settings_->setValue ("udpWindowRestore", udpWindowRestore_);
+  settings_->setValue ("TCPEnabled", tcpEnabled_);
+  settings_->setValue ("TCPMaxConnections", tcpMaxConnections_);
   settings_->setValue ("CalibrationIntercept", calibration_.intercept);
   settings_->setValue ("CalibrationSlopePPM", calibration_.slope_ppm);
   settings_->setValue ("pwrBandTxMemory", pwrBandTxMemory_);
@@ -2870,23 +2885,48 @@ void Configuration::impl::accept ()
   aprs_server_port_ = ui_->aprs_server_port_spin_box->value();
 
   auto newUdpEnabled = ui_->udpEnable->isChecked();
-  auto new_server = ui_->udp_server_line_edit->text ();
-  if (new_server != udp_server_name_ || newUdpEnabled != udpEnabled_)
+  auto newUdpServer = ui_->udp_server_line_edit->text ();
+  if (newUdpServer != udp_server_name_ || newUdpEnabled != udpEnabled_)
     {
-      udp_server_name_ = new_server;
+      udp_server_name_ = newUdpServer;
       udpEnabled_ = newUdpEnabled;
 
-      Q_EMIT self_->udp_server_changed (udpEnabled_ ? new_server : "");
+      Q_EMIT self_->udp_server_changed (udpEnabled_ ? newUdpServer : "");
     }
 
-  auto new_port = ui_->udp_server_port_spin_box->value ();
-  if (new_port != udp_server_port_)
+  auto newUdpPort = ui_->udp_server_port_spin_box->value ();
+  if (newUdpPort != udp_server_port_)
     {
-      udp_server_port_ = new_port;
-      Q_EMIT self_->udp_server_port_changed (new_port);
+      udp_server_port_ = newUdpPort;
+      Q_EMIT self_->udp_server_port_changed (newUdpPort);
     }
+
+  auto newTcpEnabled = ui_->tcpEnable->isChecked();
+  auto newTcpServer = ui_->tcp_server_line_edit->text ();
+  if (newTcpServer != tcp_server_name_ || newTcpEnabled != tcpEnabled_)
+    {
+      tcp_server_name_ = newTcpServer;
+      tcpEnabled_ = newTcpEnabled;
+
+      Q_EMIT self_->tcp_server_changed (tcpEnabled_ ? newTcpServer : "");
+    }
+
+  auto newTcpPort = ui_->tcp_server_port_spin_box->value ();
+  if (newTcpPort != tcp_server_port_)
+    {
+      tcp_server_port_ = newTcpPort;
+      Q_EMIT self_->tcp_server_port_changed (newTcpPort);
+    }
+
+  auto newTcpMaxConnections = ui_->tcp_max_connections_spin_box->value();
+  if(newTcpMaxConnections != tcpMaxConnections_){
+      tcpMaxConnections_ = newTcpMaxConnections;
+      Q_EMIT self_->tcp_max_connections_changed (newTcpMaxConnections);
+  }
 
   accept_udp_requests_ = ui_->accept_udp_requests_check_box->isChecked ();
+  accept_tcp_requests_ = ui_->accept_tcp_requests_check_box->isChecked ();
+
   auto new_n3fjp_server = ui_->n3fjp_server_name_line_edit->text ();
   n3fjp_server_name_ = new_n3fjp_server;
   auto new_n3fjp_port = ui_->n3fjp_server_port_spin_box->value ();
@@ -2898,10 +2938,6 @@ void Configuration::impl::accept ()
   auto new_n1mm_port = ui_->n1mm_server_port_spin_box->value ();
   n1mm_server_port_ = new_n1mm_port;
   broadcast_to_n1mm_ = ui_->enable_n1mm_broadcast_check_box->isChecked ();
-
-  udpWindowToFront_ = ui_->udpWindowToFront->isChecked ();
-  udpWindowRestore_ = ui_->udpWindowRestore->isChecked ();
-
 
   if (macros_.stringList () != next_macros_.stringList ())
     {
