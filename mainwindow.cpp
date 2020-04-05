@@ -12984,6 +12984,7 @@ void MainWindow::networkMessage(Message const &message)
             {"_ID", id},
             {"MESSAGES", l},
         });
+        return;
     }
 
     if(type == "INBOX.STORE_MESSAGE"){
@@ -13012,6 +13013,7 @@ void MainWindow::networkMessage(Message const &message)
             {"_ID", id},
             {"ID", mid},
         });
+        return;
     }
 
     // WINDOW.RAISE
