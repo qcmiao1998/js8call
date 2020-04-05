@@ -153,8 +153,8 @@ public slots:
   bool isInDecodeDelayThreshold(int seconds);
   void prependMessageText(QString text);
   void addMessageText(QString text, bool clear=false, bool selectFirstPlaceholder=false);
-  void confirmThenEnqueueMessage(int timeout, int priority, QString message, int freq, Callback c);
-  void enqueueMessage(int priority, QString message, int freq, Callback c);
+  void confirmThenEnqueueMessage(int timeout, int priority, QString message, int offset, Callback c);
+  void enqueueMessage(int priority, QString message, int offset, Callback c);
   void resetMessage();
   void resetMessageUI();
   void restoreMessage();
@@ -741,7 +741,8 @@ private:
     QString call;
     QString through;
     QString grid;
-    int freq;
+    int dial;
+    int offset;
     QDateTime cqTimestamp;
     QDateTime ackTimestamp;
     QDateTime utcTimestamp;
@@ -758,7 +759,8 @@ private:
     QString from;
     QString to;
     QString cmd;
-    int freq;
+    int dial;
+    int offset;
     QDateTime utcTimestamp;
     int snr;
     int bits;
@@ -778,7 +780,8 @@ private:
     bool isDirected;
     bool isBuffered;
     int bits;
-    int freq;
+    int dial;
+    int offset;
     QString text;
     QDateTime utcTimestamp;
     int snr;
@@ -825,7 +828,7 @@ private:
       QDateTime date;
       int priority;
       QString message;
-      int freq;
+      int offset;
       Callback callback;
 
       friend bool operator <(PrioritizedMessage const &a, PrioritizedMessage const &b){
@@ -981,11 +984,11 @@ private:
   void spotSetLocal();
   void pskSetLocal ();
   void aprsSetLocal ();
-  void spotReport(int submode, int offset, int snr, QString callsign, QString grid);
+  void spotReport(int submode, int dial, int offset, int snr, QString callsign, QString grid);
   void spotCmd(CommandDetail cmd);
   void spotAprsCmd(CommandDetail cmd);
-  void pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid);
-  void spotAprsGrid(int offset, int snr, QString callsign, QString grid);
+  void pskLogReport(QString mode, int dial, int offset, int snr, QString callsign, QString grid);
+  void spotAprsGrid(int dial, int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
   void setSubmode(int submode);
   int submodeNameToSubmode(QString speed);

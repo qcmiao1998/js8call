@@ -69,7 +69,7 @@ void SpotClient::enqueueLocalSpot(QString callsign, QString grid, QString info, 
     m_queue.enqueue(m.toJson());
 }
 
-void SpotClient::enqueueSpot(QString callsign, QString grid, int submode, int frequency, int snr){
+void SpotClient::enqueueSpot(QString callsign, QString grid, int submode, int dial, int offset, int snr){
     auto m = Message("RX.SPOT", "", {
          {"BY", QVariant(QMap<QString, QVariant>{
               {"CALLSIGN", QVariant(m_call)},
@@ -77,7 +77,9 @@ void SpotClient::enqueueSpot(QString callsign, QString grid, int submode, int fr
          })},
          {"CALLSIGN", QVariant(callsign)},
          {"GRID", QVariant(grid)},
-         {"FREQ", QVariant(frequency)},
+         {"FREQ", QVariant(dial+offset)},
+         {"DIAL", QVariant(dial)},
+         {"OFFSET", QVariant(offset)},
          {"SNR", QVariant(snr)},
          {"SPEED", QVariant(submode)},
     });
@@ -85,7 +87,7 @@ void SpotClient::enqueueSpot(QString callsign, QString grid, int submode, int fr
     m_queue.enqueue(m.toJson());
 }
 
-void SpotClient::enqueueCmd(QString cmd, QString from, QString to, QString relayPath, QString text, QString grid, QString extra, int submode, int frequency, int snr){
+void SpotClient::enqueueCmd(QString cmd, QString from, QString to, QString relayPath, QString text, QString grid, QString extra, int submode, int dial, int offset, int snr){
     auto m = Message("RX.DIRECTED", "", {
          {"BY", QVariant(QMap<QString, QVariant>{
               {"CALLSIGN", QVariant(m_call)},
@@ -98,7 +100,9 @@ void SpotClient::enqueueCmd(QString cmd, QString from, QString to, QString relay
          {"TEXT", QVariant(text)},
          {"GRID", QVariant(grid)},
          {"EXTRA", QVariant(extra)},
-         {"FREQ", QVariant(frequency)},
+         {"FREQ", QVariant(dial+offset)},
+         {"DIAL", QVariant(dial)},
+         {"OFFSET", QVariant(offset)},
          {"SNR", QVariant(snr)},
          {"SPEED", QVariant(submode)},
     });

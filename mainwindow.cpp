@@ -1452,7 +1452,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     bool missingCallsign = selectedCall.isEmpty();
 
     if(!missingCallsign && !isAllCall){
-        int selectedOffset = m_callActivity[selectedCall].freq;
+        int selectedOffset = m_callActivity[selectedCall].offset;
         if(selectedOffset != -1){
             auto qsyAction = menu->addAction(QString("Jump to %1Hz").arg(selectedOffset));
             connect(qsyAction, &QAction::triggered, this, [this, selectedOffset](){
@@ -1975,7 +1975,8 @@ void MainWindow::initializeDummyData(){
         CallDetail cd = {};
         cd.call = call;
         cd.through = i == 2 ? "KN4CRD" : "";
-        cd.freq = 500 + 100*i;
+        cd.dial = 7078000;
+        cd.offset = 500 + 100*i;
         cd.snr = i == 3 ? -100 : i;
         cd.ackTimestamp = i == 1 ? dt.addSecs(-900) : QDateTime{};
         cd.utcTimestamp = dt;
@@ -1987,7 +1988,8 @@ void MainWindow::initializeDummyData(){
         ActivityDetail ad = {};
         ad.bits = Varicode::JS8CallFirst | Varicode::JS8CallLast;
         ad.snr = i == 3 ? -100 : i;
-        ad.freq = 500 + 100*i;
+        ad.dial = 7078000;
+        ad.offset = 500 + 100*i;
         ad.text = QString("%1: %2 TEST MESSAGE").arg(call).arg(m_config.my_callsign());
         ad.utcTimestamp = dt;
         ad.submode = cd.submode;
@@ -2001,7 +2003,8 @@ void MainWindow::initializeDummyData(){
     ActivityDetail adHB1 = {};
     adHB1.bits = Varicode::JS8CallFirst;
     adHB1.snr = 0;
-    adHB1.freq = 750;
+    adHB1.dial = 7078000;
+    adHB1.offset = 750;
     adHB1.text = QString("KN4CRD: HB AUTO EM73");
     adHB1.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
     adHB1.submode = Varicode::JS8CallNormal;
@@ -2010,7 +2013,8 @@ void MainWindow::initializeDummyData(){
     ActivityDetail adHB2 = {};
     adHB2.bits = Varicode::JS8CallLast;
     adHB2.snr = 0;
-    adHB2.freq = 750;
+    adHB2.dial = 7078000;
+    adHB2.offset = 750;
     adHB2.text = QString(" MSG ID 1");
     adHB2.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
     adHB2.submode = Varicode::JS8CallNormal;
@@ -2320,7 +2324,8 @@ void MainWindow::writeSettings()
       m_settings->setValue(cd.call.trimmed(), QVariantMap{
         {"snr", QVariant(cd.snr)},
         {"grid", QVariant(cd.grid)},
-        {"freq", QVariant(cd.freq)},
+        {"dial", QVariant(cd.dial)},
+        {"freq", QVariant(cd.offset)},
         {"tdrift", QVariant(cd.tdrift)},
 #if CACHE_CALL_DATETIME_AS_STRINGS
         {"ackTimestamp", QVariant(cd.ackTimestamp.toString("yyyy-MM-dd hh:mm:ss"))},
@@ -2495,6 +2500,7 @@ void MainWindow::readSettings()
 
           auto snr = values.value("snr", -64).toInt();
           auto grid = values.value("grid", "").toString();
+          auto dial = values.value("dial", 0).toInt();
           auto freq = values.value("freq", 0).toInt();
           auto tdrift = values.value("tdrift", 0).toFloat();
 
@@ -2517,7 +2523,8 @@ void MainWindow::readSettings()
           cd.call = call;
           cd.snr = snr;
           cd.grid = grid;
-          cd.freq = freq;
+          cd.dial = dial;
+          cd.offset = freq;
           cd.tdrift = tdrift;
           cd.ackTimestamp = ackTimestamp;
           cd.utcTimestamp = utcTimestamp;
@@ -3432,6 +3439,7 @@ void MainWindow::updateCurrentBand(){
     sendNetworkMessage("RIG.FREQ", "", {
         {"_ID", QVariant(-1)},
         {"BAND", QVariant(band_name)},
+        {"FREQ", QVariant((quint64)dialFrequency() + currentFreqOffset())},
         {"DIAL", QVariant((quint64)dialFrequency())},
         {"OFFSET", QVariant((quint64)currentFreqOffset())}
     });
@@ -4889,7 +4897,8 @@ void MainWindow::processDecodedLine(QByteArray t){
     d.isCompound = decodedtext.isCompound();
     d.isDirected = decodedtext.isDirectedMessage();
     d.bits = decodedtext.bits();
-    d.freq = offset;
+    d.dial = dialFrequency();
+    d.offset = offset;
     d.text = decodedtext.message();
     d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
     d.snr = decodedtext.snr();
@@ -4899,16 +4908,16 @@ void MainWindow::processDecodedLine(QByteArray t){
 
     // if we have any "first" frame, and a buffer is already established, clear it...
     int prevBufferOffset = -1;
-    if(((d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst) && hasExistingMessageBuffer(decodedtext.submode(), d.freq, true, &prevBufferOffset)){
+    if(((d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst) && hasExistingMessageBuffer(decodedtext.submode(), d.offset, true, &prevBufferOffset)){
         qDebug() << "first message encountered, clearing existing buffer" << prevBufferOffset;
-        m_messageBuffer.remove(d.freq);
+        m_messageBuffer.remove(d.offset);
     }
 
     // if we have a data frame, and a message buffer has been established, buffer it...
-    if(hasExistingMessageBuffer(decodedtext.submode(), d.freq, true, &prevBufferOffset) && !decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
-        qDebug() << "buffering data" << d.freq << d.text;
+    if(hasExistingMessageBuffer(decodedtext.submode(), d.offset, true, &prevBufferOffset) && !decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
+        qDebug() << "buffering data" << d.dial << d.offset << d.text;
         d.isBuffered = true;
-        m_messageBuffer[d.freq].msgs.append(d);
+        m_messageBuffer[d.offset].msgs.append(d);
         // TODO: incremental display if it's "to" me.
     }
 
@@ -4928,7 +4937,8 @@ void MainWindow::processDecodedLine(QByteArray t){
     cd.call = decodedtext.compoundCall();
     cd.grid = decodedtext.extra(); // compound calls via pings may contain grid...
     cd.snr = decodedtext.snr();
-    cd.freq = decodedtext.frequencyOffset();
+    cd.dial = dialFrequency();
+    cd.offset = decodedtext.frequencyOffset();
     cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
     cd.bits = decodedtext.bits();
     cd.tdrift = decodedtext.dt();
@@ -4954,7 +4964,8 @@ void MainWindow::processDecodedLine(QByteArray t){
             cmd.snr = cd.snr;
             cmd.bits = cd.bits;
             cmd.grid = cd.grid;
-            cmd.freq = cd.freq;
+            cmd.dial = cd.dial;
+            cmd.offset = cd.offset;
             cmd.utcTimestamp = cd.utcTimestamp;
             cmd.tdrift = cd.tdrift;
             cmd.submode = cd.submode;
@@ -4967,10 +4978,10 @@ void MainWindow::processDecodedLine(QByteArray t){
         }
 
     } else {
-        qDebug() << "buffering compound call" << cd.freq << cd.call << cd.bits;
+        qDebug() << "buffering compound call" << cd.offset << cd.call << cd.bits;
 
-        hasExistingMessageBuffer(cd.submode, cd.freq, true, nullptr);
-        m_messageBuffer[cd.freq].compound.append(cd);
+        hasExistingMessageBuffer(cd.submode, cd.offset, true, nullptr);
+        m_messageBuffer[cd.offset].compound.append(cd);
     }
   }
 #endif
@@ -4985,7 +4996,8 @@ void MainWindow::processDecodedLine(QByteArray t){
       cmd.from = parts.at(0);
       cmd.to = parts.at(1);
       cmd.cmd = parts.at(2);
-      cmd.freq = decodedtext.frequencyOffset();
+      cmd.dial = dialFrequency();
+      cmd.offset = decodedtext.frequencyOffset();
       cmd.snr = decodedtext.snr();
       cmd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
       cmd.bits = decodedtext.bits();
@@ -4995,7 +5007,7 @@ void MainWindow::processDecodedLine(QByteArray t){
 
       // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
       if((Varicode::isCommandBuffered(cmd.cmd) && (cmd.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) || cmd.from == "<....>" || cmd.to == "<....>"){
-        qDebug() << "buffering cmd" << cmd.freq << cmd.cmd << cmd.from << cmd.to;
+        qDebug() << "buffering cmd" << cmd.dial << cmd.offset << cmd.cmd << cmd.from << cmd.to;
 
         // log complete buffered callsigns immediately
         if(cmd.from != "<....>" && cmd.to != "<....>"){
@@ -5003,7 +5015,8 @@ void MainWindow::processDecodedLine(QByteArray t){
             cmdcd.call = cmd.from;
             cmdcd.bits = cmd.bits;
             cmdcd.snr = cmd.snr;
-            cmdcd.freq = cmd.freq;
+            cmdcd.dial = cmd.dial;
+            cmdcd.offset = cmd.offset;
             cmdcd.utcTimestamp = cmd.utcTimestamp;
             cmdcd.ackTimestamp = cmd.to == m_config.my_callsign() ? cmd.utcTimestamp : QDateTime{};
             cmdcd.tdrift = cmd.tdrift;
@@ -5013,14 +5026,14 @@ void MainWindow::processDecodedLine(QByteArray t){
         }
 
         // merge any existing buffer to this frequency
-        hasExistingMessageBuffer(cmd.submode, cmd.freq, true, nullptr);
+        hasExistingMessageBuffer(cmd.submode, cmd.offset, true, nullptr);
 
         if(cmd.to == m_config.my_callsign()){
             d.shouldDisplay = true;
         }
 
-        m_messageBuffer[cmd.freq].cmd = cmd;
-        m_messageBuffer[cmd.freq].msgs.clear();
+        m_messageBuffer[cmd.offset].cmd = cmd;
+        m_messageBuffer[cmd.offset].msgs.clear();
       } else {
         m_rxCommandQueue.append(cmd);
       }
@@ -5039,7 +5052,8 @@ void MainWindow::processDecodedLine(QByteArray t){
           td.call = cmd.to;
           td.grid = "";
           td.snr = snr;
-          td.freq = cmd.freq;
+          td.dial = cmd.dial;
+          td.offset = cmd.offset;
           td.utcTimestamp = cmd.utcTimestamp;
           td.tdrift = cmd.tdrift;
           td.submode = cmd.submode;
@@ -5261,12 +5275,10 @@ QString MainWindow::lookupCallInCompoundCache(QString const &call){
     return m_compoundCallCache.value(call, call);
 }
 
-void MainWindow::spotReport(int submode, int offset, int snr, QString callsign, QString grid){
+void MainWindow::spotReport(int submode, int dial, int offset, int snr, QString callsign, QString grid){
     if(!m_config.spot_to_reporting_networks()) return;
 
-    Frequency frequency = m_freqNominal + offset;
-
-    m_spotClient->enqueueSpot(callsign, grid, submode, frequency, snr);
+    m_spotClient->enqueueSpot(callsign, grid, submode, dial, offset, snr);
 }
 
 void MainWindow::spotCmd(CommandDetail cmd){
@@ -5277,7 +5289,7 @@ void MainWindow::spotCmd(CommandDetail cmd){
         cmdStr = Varicode::lstrip(cmd.cmd);
     }
 
-    m_spotClient->enqueueCmd(cmdStr, cmd.from, cmd.to, cmd.relayPath, cmd.text, cmd.grid, cmd.extra, cmd.submode, m_freqNominal + cmd.freq, cmd.snr);
+    m_spotClient->enqueueCmd(cmdStr, cmd.from, cmd.to, cmd.relayPath, cmd.text, cmd.grid, cmd.extra, cmd.submode, cmd.dial, cmd.offset, cmd.snr);
 }
 
 // KN4CRD: @APRSIS CMD :EMAIL-2  :email@domain.com booya{1
@@ -5298,12 +5310,12 @@ void MainWindow::spotAprsCmd(CommandDetail cmd){
     emit aprsClientEnqueueThirdParty(by_call, from_call, cmd.text);
 }
 
-void MainWindow::spotAprsGrid(int offset, int snr, QString callsign, QString grid){
+void MainWindow::spotAprsGrid(int dial, int offset, int snr, QString callsign, QString grid){
     if(!m_config.spot_to_reporting_networks()) return;
     if(!m_config.spot_to_aprs()) return;
     if(grid.length() < 4) return;
 
-    Frequency frequency = m_freqNominal + offset;
+    Frequency frequency = dial + offset;
 
     auto comment = QString("%1MHz %2dB").arg(Radio::frequency_MHz_string(frequency)).arg(Varicode::formatSNR(snr));
     if(callsign.contains("/")){
@@ -5318,10 +5330,10 @@ void MainWindow::spotAprsGrid(int offset, int snr, QString callsign, QString gri
     emit aprsClientEnqueueSpot(by_call, from_call, grid, comment);
 }
 
-void MainWindow::pskLogReport(QString mode, int offset, int snr, QString callsign, QString grid){
+void MainWindow::pskLogReport(QString mode, int dial, int offset, int snr, QString callsign, QString grid){
     if(!m_config.spot_to_reporting_networks()) return;
 
-    Frequency frequency = m_freqNominal + offset;
+    Frequency frequency = dial + offset;
 
     psk_Reporter->addRemoteStation(
        callsign,
@@ -6699,7 +6711,7 @@ void MainWindow::addMessageText(QString text, bool clear, bool selectFirstPlaceh
     ui->extFreeTextMsgEdit->setFocus();
 }
 
-void MainWindow::confirmThenEnqueueMessage(int timeout, int priority, QString message, int freq, Callback c){
+void MainWindow::confirmThenEnqueueMessage(int timeout, int priority, QString message, int offset, Callback c){
     SelfDestructMessageBox * m = new SelfDestructMessageBox(timeout,
       "Autoreply Confirmation Required",
       QString("A transmission is queued for autoreply:\n\n%1\n\nWould you like to send this transmission?").arg(message),
@@ -6709,12 +6721,12 @@ void MainWindow::confirmThenEnqueueMessage(int timeout, int priority, QString me
       false,
       this);
 
-    connect(m, &SelfDestructMessageBox::finished, this, [this, m, priority, message, freq, c](int result){
+    connect(m, &SelfDestructMessageBox::finished, this, [this, m, priority, message, offset, c](int result){
         // make sure we delete the message box later...
         m->deleteLater();
 
         if(m->result() == QMessageBox::Yes){
-            enqueueMessage(priority, message, freq, c);
+            enqueueMessage(priority, message, offset, c);
         }
     });
 
@@ -6722,10 +6734,10 @@ void MainWindow::confirmThenEnqueueMessage(int timeout, int priority, QString me
     m->show();
 }
 
-void MainWindow::enqueueMessage(int priority, QString message, int freq, Callback c){
+void MainWindow::enqueueMessage(int priority, QString message, int offset, Callback c){
     m_txMessageQueue.enqueue(
         PrioritizedMessage{
-            DriftingDateTime::currentDateTimeUtc(), priority, message, freq, c
+            DriftingDateTime::currentDateTimeUtc(), priority, message, offset, c
         }
     );
 }
@@ -7363,7 +7375,7 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
   m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), mode, submode, grid, date, name, comments);
 
   // Log to JS8Call API
-  if(m_config.udpEnabled()){
+  if(canSendNetworkMessage()){
       sendNetworkMessage("LOG.QSO", QString(ADIF), {
           {"_ID", QVariant(-1)},
           {"UTC.ON", QVariant(QSO_date_on.toMSecsSinceEpoch())},
@@ -9516,14 +9528,14 @@ void MainWindow::qsy(int hzDelta){
             continue;
         }
         newActivity[offset - hzDelta] = m_bandActivity[offset];
-        newActivity[offset - hzDelta].last().freq -= hzDelta;
+        newActivity[offset - hzDelta].last().offset -= hzDelta;
     }
     m_bandActivity.clear();
     m_bandActivity.unite(newActivity);
 
     // adjust call activity frequencies
     foreach(auto call, m_callActivity.keys()){
-        m_callActivity[call].freq -= hzDelta;
+        m_callActivity[call].offset -= hzDelta;
     }
 
     displayActivity(true);
@@ -10300,7 +10312,7 @@ QString MainWindow::callsignSelected(bool useInputText){
             auto d = m_callActivity[call];
 
             // if this callsign is at a frequency within the threshold limit of the selected offset
-            if(selectedOffset - threshold <= d.freq && d.freq <= selectedOffset + threshold){
+            if(selectedOffset - threshold <= d.offset && d.offset <= selectedOffset + threshold){
                 return d.call;
             }
         }
@@ -10528,7 +10540,8 @@ void MainWindow::processIdleActivity() {
         d.utcTimestamp = last.utcTimestamp;
         d.snr = last.snr;
         d.tdrift = last.tdrift;
-        d.freq = last.freq;
+        d.dial = last.dial;
+        d.offset = last.offset;
         d.submode = last.submode;
 
         if(hasExistingMessageBuffer(d.submode, offset, false, nullptr)){
@@ -10555,7 +10568,9 @@ void MainWindow::processRxActivity() {
         if(canSendNetworkMessage()){
             sendNetworkMessage("RX.ACTIVITY", d.text, {
                 {"_ID", QVariant(-1)},
-                {"FREQ", QVariant(d.freq)},
+                {"FREQ", QVariant(d.dial + d.offset)},
+                {"DIAL", QVariant(d.dial)},
+                {"OFFSET", QVariant(d.offset)},
                 {"SNR", QVariant(d.snr)},
                 {"SPEED", QVariant(d.submode)},
                 {"TDRIFT", QVariant(d.tdrift)},
@@ -10567,10 +10582,10 @@ void MainWindow::processRxActivity() {
 
         // use the actual frequency and check its delta from our current frequency
         // meaning, if our current offset is 1502 and the d.freq is 1492, the delta is <= 10;
-        bool shouldDisplay = abs(d.freq - freqOffset) <= rxThreshold(d.submode);
+        bool shouldDisplay = abs(d.offset - freqOffset) <= rxThreshold(d.submode);
 
-        int prevOffset = d.freq;
-        if(hasExistingMessageBuffer(d.submode, d.freq, false, &prevOffset) && (
+        int prevOffset = d.offset;
+        if(hasExistingMessageBuffer(d.submode, d.offset, false, &prevOffset) && (
                 (m_messageBuffer[prevOffset].cmd.to == m_config.my_callsign()) ||
                 // (isAllCallIncluded(m_messageBuffer[prevOffset].cmd.to))     || // uncomment this if we want to incrementally print allcalls
                 (isGroupCallIncluded(m_messageBuffer[prevOffset].cmd.to))
@@ -10589,7 +10604,7 @@ void MainWindow::processRxActivity() {
                 d.utcTimestamp = qMin(d.utcTimestamp, lastCompound.utcTimestamp);
             }
 
-        } else if(hasClosedExistingMessageBuffer(d.freq)){
+        } else if(hasClosedExistingMessageBuffer(d.offset)){
             // incremental typeahead should just be displayed...
             // TODO: should the buffer be reopened?
             shouldDisplay = true;
@@ -10611,7 +10626,8 @@ void MainWindow::processRxActivity() {
                 if(d.text.startsWith(theirCall) && d.text.mid(theirCall.length(), 1) == ":"){
                     CallDetail cd = {};
                     cd.call = theirCall;
-                    cd.freq = d.freq;
+                    cd.dial = d.dial;
+                    cd.offset = d.offset;
                     cd.snr = d.snr;
                     cd.bits = d.bits;
                     cd.tdrift = d.tdrift;
@@ -10641,19 +10657,19 @@ void MainWindow::processRxActivity() {
         }
 
         // log it to the display!
-        displayTextForFreq(d.text, d.freq, d.utcTimestamp, false, isFirst, isLast);
+        displayTextForFreq(d.text, d.offset, d.utcTimestamp, false, isFirst, isLast);
 
         // if we've received a message to be displayed, we should bump the repeat buttons...
         resetAutomaticIntervalTransmissions(true, false);
 
         if(isLast){
-            clearOffsetDirected(d.freq);
+            clearOffsetDirected(d.offset);
         }
 
         if(isLast && !d.isBuffered){
             // buffered commands need the rxFrameBlockNumbers cache so it can fixup its display
             // all other "last" data frames can clear the rxFrameBlockNumbers cache so the next message will be on a new line.
-            m_rxFrameBlockNumbers.remove(d.freq);
+            m_rxFrameBlockNumbers.remove(d.offset);
         }
     }
 
@@ -10898,7 +10914,7 @@ void MainWindow::processCommandActivity() {
         bool isAllCall = isAllCallIncluded(d.to);
         bool isGroupCall = isGroupCallIncluded(d.to);
 
-        qDebug() << "try processing command" << d.from << d.to << d.cmd << d.freq << d.grid << d.extra << isAllCall << isGroupCall;
+        qDebug() << "try processing command" << d.from << d.to << d.cmd << d.dial << d.offset << d.grid << d.extra << isAllCall << isGroupCall;
 
         // if we need a compound callsign but never got one...skip
         if (d.from == "<....>" || d.to == "<....>") {
@@ -10918,7 +10934,8 @@ void MainWindow::processCommandActivity() {
         cd.call = d.from;
         cd.grid = d.grid;
         cd.snr = d.snr;
-        cd.freq = d.freq;
+        cd.dial = d.dial;
+        cd.offset = d.offset;
         cd.bits = d.bits;
         cd.ackTimestamp = d.text.contains(": ACK") || toMe ? d.utcTimestamp : QDateTime{};
         cd.utcTimestamp = d.utcTimestamp;
@@ -10946,7 +10963,8 @@ void MainWindow::processCommandActivity() {
                 CallDetail cd = {};
                 cd.bits = d.bits;
                 cd.call = d.from;
-                cd.freq = d.freq;
+                cd.dial = d.dial;
+                cd.offset = d.offset;
                 cd.grid = grid;
                 cd.snr = d.snr;
                 cd.utcTimestamp = d.utcTimestamp;
@@ -10955,7 +10973,7 @@ void MainWindow::processCommandActivity() {
 
                 // PROCESS GRID SPOTS TO APRSIS FOR EVERYONE
                 if(d.to == "@APRSIS"){
-                    spotAprsGrid(cd.freq, cd.snr, cd.call, cd.grid);
+                    spotAprsGrid(cd.dial, cd.offset, cd.snr, cd.call, cd.grid);
                 }
 
                 logCallActivity(cd, true);
@@ -11011,7 +11029,8 @@ void MainWindow::processCommandActivity() {
         ad.isFree = true;
         ad.isDirected = true;
         ad.bits = d.bits;
-        ad.freq = d.freq;
+        ad.dial = d.dial;
+        ad.offset = d.offset;
         ad.snr = d.snr;
         ad.text = text;
         ad.utcTimestamp = d.utcTimestamp;
@@ -11049,7 +11068,7 @@ void MainWindow::processCommandActivity() {
             }
 
             // log it to the display!
-            displayTextForFreq(ad.text, ad.freq, ad.utcTimestamp, false, true, false);
+            displayTextForFreq(ad.text, ad.offset, ad.utcTimestamp, false, true, false);
 
             // and send it to the network in case we want to interact with it from an external app...
             if(canSendNetworkMessage()){
@@ -11061,7 +11080,9 @@ void MainWindow::processCommandActivity() {
                     {"GRID", QVariant(d.grid)},
                     {"EXTRA", QVariant(d.extra)},
                     {"TEXT", QVariant(d.text)},
-                    {"FREQ", QVariant(ad.freq)},
+                    {"FREQ", QVariant(ad.dial+ad.offset)},
+                    {"DIAL", QVariant(ad.dial)},
+                    {"OFFSET", QVariant(ad.offset)},
                     {"SNR", QVariant(ad.snr)},
                     {"SPEED", QVariant(ad.submode)},
                     {"TDRIFT", QVariant(ad.tdrift)},
@@ -11222,7 +11243,8 @@ void MainWindow::processCommandActivity() {
                     CallDetail cd = {};
                     cd.call = call;
                     cd.snr = -64;
-                    cd.freq = d.freq;
+                    cd.dial = d.dial;
+                    cd.offset = d.offset;
                     cd.through = d.from;
                     cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
                     cd.tdrift = d.tdrift;
@@ -11276,7 +11298,8 @@ void MainWindow::processCommandActivity() {
                         CommandDetail rd = {};
                         rd.bits = d.bits;
                         rd.cmd = first;
-                        rd.freq = d.freq;
+                        rd.dial = d.dial;
+                        rd.offset = d.offset;
                         rd.from = d.from; // note, MSG and QUERY commands are not set with from as the relay path.
                         rd.relayPath = d.relayPath;
                         rd.text = relayedCmds.join(" "); //d.text;
@@ -11316,7 +11339,8 @@ void MainWindow::processCommandActivity() {
             cd.bits = d.bits;
             cd.cmd = d.cmd;
             cd.extra = d.extra;
-            cd.freq = d.freq;
+            cd.dial = d.dial;
+            cd.offset = d.offset;
             cd.from = d.from;
             cd.grid = d.grid;
             cd.relayPath = d.relayPath;
@@ -11649,14 +11673,16 @@ void MainWindow::refreshInboxCounts(){
             if(!m_callActivity.contains(from)){
                 auto utc = params.value("UTC").toString();
                 auto snr = params.value("SNR").toInt();
-                auto freq = params.value("OFFSET").toInt();
+                auto dial = params.value("DIAL").toInt();
+                auto offset = params.value("OFFSET").toInt();
                 auto tdrift = params.value("TDRIFT").toInt();
                 auto submode = params.value("SUBMODE").toInt();
 
                 CallDetail cd;
                 cd.call = from;
                 cd.snr = snr;
-                cd.freq = freq;
+                cd.dial = dial;
+                cd.offset = offset;
                 cd.tdrift = tdrift;
                 cd.utcTimestamp = QDateTime::fromString(utc, "yyyy-MM-dd hh:mm:ss");
                 cd.utcTimestamp.setUtcOffset(0);
@@ -11695,16 +11721,15 @@ int MainWindow::addCommandToStorage(QString type, CommandDetail d){
         return -1;
     }
 
-    auto df = dialFrequency();
-
     QMap<QString, QVariant> v = {
         {"UTC", QVariant(d.utcTimestamp.toString("yyyy-MM-dd hh:mm:ss"))},
         {"TO", QVariant(d.to)},
         {"FROM", QVariant(d.from)},
         {"PATH", QVariant(d.relayPath)},
-        {"DIAL", QVariant((quint64)df)},
         {"TDRIFT", QVariant(d.tdrift)},
-        {"OFFSET", QVariant(d.freq)},
+        {"FREQ", QVariant(d.dial+d.offset)},
+        {"DIAL", QVariant(d.dial)},
+        {"OFFSET", QVariant(d.offset)},
         {"CMD", QVariant(d.cmd)},
         {"SNR", QVariant(d.snr)},
         {"SUBMODE", QVariant(d.submode)},
@@ -11785,25 +11810,23 @@ void MainWindow::processSpots() {
         return;
     }
 
-    // Get the dial frequency to report
-    auto dial = dialFrequency();
-
     while(!m_rxCallQueue.isEmpty()){
         CallDetail d = m_rxCallQueue.dequeue();
         if(d.call.isEmpty()){
             continue;
         }
 
-        qDebug() << "spotting call to reporting networks" << d.call << d.snr << d.freq;
+        qDebug() << "spotting call to reporting networks" << d.call << d.snr << d.dial << d.offset;
 
-        spotReport(d.submode, d.freq, d.snr, d.call, d.grid);
-        pskLogReport("JS8", d.freq, d.snr, d.call, d.grid);
+        spotReport(d.submode, d.dial, d.offset, d.snr, d.call, d.grid);
+        pskLogReport("JS8", d.dial, d.offset, d.snr, d.call, d.grid);
 
         if(canSendNetworkMessage()){
             sendNetworkMessage("RX.SPOT", "", {
                 {"_ID", QVariant(-1)},
-                {"DIAL", QVariant(dial)},
-                {"OFFSET", QVariant(d.freq)},
+                {"FREQ", QVariant(d.dial+d.offset)},
+                {"DIAL", QVariant(d.dial)},
+                {"OFFSET", QVariant(d.offset)},
                 {"CALL", QVariant(d.call)},
                 {"SNR", QVariant(d.snr)},
                 {"GRID", QVariant(d.grid)},
@@ -11827,7 +11850,7 @@ void MainWindow::processTxQueue(){
     auto head = m_txMessageQueue.head();
 
     // decide if it's ok to transmit...
-    int f = head.freq;
+    int f = head.offset;
     if(f == -1){
         f = currentFreqOffset();
     }
@@ -12257,7 +12280,7 @@ void MainWindow::displayCallActivity() {
             auto leftActivity = m_callActivity[left];
             auto rightActivity = m_callActivity[right];
 
-            return leftActivity.freq < rightActivity.freq;
+            return leftActivity.offset < rightActivity.offset;
         };
 
         auto compareDistance = [this, reverse](const QString left, QString right) {
@@ -12413,8 +12436,8 @@ void MainWindow::displayCallActivity() {
                 auto snrText = Varicode::formatSNR(d.snr);
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(snrText.isEmpty() ? "" : QString("%1 dB").arg(snrText)));
 
-                auto offsetItem = new QTableWidgetItem(QString("%1 Hz").arg(d.freq));
-                offsetItem->setData(Qt::UserRole, QVariant(d.freq));
+                auto offsetItem = new QTableWidgetItem(QString("%1 Hz").arg(d.offset));
+                offsetItem->setData(Qt::UserRole, QVariant(d.offset));
                 ui->tableWidgetCalls->setItem(row, col++, offsetItem);
 
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 ms").arg((int)(1000*d.tdrift))));
@@ -12598,7 +12621,7 @@ void MainWindow::emitPTT(bool on){
 }
 
 void MainWindow::emitTones(){
-    if(!m_config.udpEnabled()){
+    if(!canSendNetworkMessage()){
         return;
     }
 
@@ -12668,6 +12691,7 @@ void MainWindow::networkMessage(Message const &message)
     if(type == "RIG.GET_FREQ"){
         sendNetworkMessage("RIG.FREQ", "", {
             {"_ID", id},
+            {"FREQ", QVariant((quint64)dialFrequency() + currentFreqOffset())},
             {"DIAL", QVariant((quint64)dialFrequency())},
             {"OFFSET", QVariant((quint64)currentFreqOffset())}
         });
@@ -12797,7 +12821,9 @@ void MainWindow::networkMessage(Message const &message)
             auto d = activity.last();
 
             QMap<QString, QVariant> detail;
-            detail["FREQ"] = QVariant(d.freq);
+            detail["FREQ"] = QVariant(d.dial + d.offset);
+            detail["DIAL"] = QVariant(d.dial);
+            detail["OFFSET"] = QVariant(d.offset);
             detail["TEXT"] = QVariant(d.text);
             detail["SNR"] = QVariant(d.snr);
             detail["UTC"] = QVariant(d.utcTimestamp.toMSecsSinceEpoch());
@@ -13206,6 +13232,7 @@ void MainWindow::statusUpdate ()
 {
     if(canSendNetworkMessage()){
         sendNetworkMessage("STATION.STATUS", "", {
+            {"FREQ", QVariant(dialFrequency() + currentFreqOffset())},
             {"DIAL", QVariant(dialFrequency())},
             {"OFFSET", QVariant(currentFreqOffset())},
             {"SPEED", QVariant(m_nSubMode)},
