@@ -4950,8 +4950,26 @@ void MainWindow::processDecodedLine(QByteArray t){
             // this is a cq with a standard or compound call, ala "KN4CRD/P: @ALLCALL CQ CQ CQ"
             cd.cqTimestamp = DriftingDateTime::currentDateTimeUtc();
 
-            // it is not processed elsewhere, so we need to just log it here.
-            logCallActivity(cd, true);
+            // convert CQ to a directed command and process...
+            cmd.from = cd.call;
+            cmd.to = "@ALLCALL";
+            cmd.cmd = " CQ";
+            cmd.snr = cd.snr;
+            cmd.bits = cd.bits;
+            cmd.grid = cd.grid;
+            cmd.dial = cd.dial;
+            cmd.offset = cd.offset;
+            cmd.utcTimestamp = cd.utcTimestamp;
+            cmd.tdrift = cd.tdrift;
+            cmd.submode = cd.submode;
+            cmd.text = decodedtext.message();
+
+            // TODO: check bits so we only auto respond to "finished" cqs
+            m_rxCommandQueue.append(cmd);
+
+            // since this is no longer processed here we omit logging it here.
+            // if we change this behavior, we'd change this back to logging here.
+            // logCallActivity(cd, true);
 
             // notification for cq
             tryNotify("cq");
@@ -11035,7 +11053,7 @@ void MainWindow::processCommandActivity() {
 
         // we're only responding to allcalls if we are participating in the allcall group
         // but, don't avoid for heartbeats...those are technically allcalls but are processed differently
-        if(isAllCall && m_config.avoid_allcall() && d.cmd != " HB" && d.cmd != " HEARTBEAT"){
+        if(isAllCall && m_config.avoid_allcall() && d.cmd != " CQ" && d.cmd != " HB" && d.cmd != " HEARTBEAT"){
             continue;
         }
 
@@ -11416,6 +11434,12 @@ void MainWindow::processCommandActivity() {
                 m_txAllcallCommandCache.insert(d.from, new QDateTime(now), 5);
             }
 
+            continue;
+        }
+
+        // PROCESS CQ
+        else if (d.cmd == " CQ"){
+            qDebug() << "skipping incoming cq" << d.text;
             continue;
         }
 

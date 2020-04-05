@@ -30,6 +30,10 @@ class Client(object):
         if not typ:
             return
 
+        if typ in ('RX.ACTIVITY',):
+            # skip
+            return
+
         print('->', typ)
 
         if value:

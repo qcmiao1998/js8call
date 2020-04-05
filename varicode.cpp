@@ -47,6 +47,7 @@ QMap<QString, int> directed_cmds = {
     // ?*^&@
     {" HEARTBEAT",    -1 }, // this is my heartbeat (unused except for faux processing of HBs as directed commands)
     {" HB",           -1 }, // this is my heartbeat (unused except for faux processing of HBs as directed commands)
+    {" CQ",           -1 }, // this is my cq (unused except for faux processing of CQs as directed commands)
 
     {" SNR?",          0  }, // query snr
     {"?",              0  }, // compat
