@@ -273,15 +273,6 @@ bool DecodedText::tryUnpackFastData(){
         return false;
     }
 
-    if(
-        submode_ != Varicode::JS8CallFast  &&
-        submode_ != Varicode::JS8CallTurbo &&
-        submode_ != Varicode::JS8CallSlow  &&
-        submode_ != Varicode::JS8CallUltra
-    ){
-        return false;
-    }
-
     QString data = Varicode::unpackFastDataMessage(m);
 
     if(data.isEmpty()){

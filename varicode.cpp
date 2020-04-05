@@ -1789,6 +1789,7 @@ QString packCompressedMessage(const QString &input, QVector<bool> prefix, int *n
     return frame;
 }
 
+// TODO: DEPRECATED in 2.2 (we will eventually stop transmitting these frames)
 // pack data message using 70 bits available flagged as data by the first 2 bits
 QString Varicode::packDataMessage(const QString &input, int *n){
    QString huffFrame;
@@ -1808,6 +1809,7 @@ QString Varicode::packDataMessage(const QString &input, int *n){
    }
 }
 
+// TODO: DEPRECATED in 2.2 (still available for decoding legacy frames, but will eventually no longer be decodable)
 // unpack data message using 70 bits available flagged as data by the first 2 bits
 QString Varicode::unpackDataMessage(const QString &text){
     QString unpacked;
@@ -2039,6 +2041,7 @@ QList<QPair<QString, int>> Varicode::buildMessageFrames(QString const& mycall,
           int m = 0;
           bool fastDataFrame = false;
           QString datFrame;
+          // TODO: DEPRECATED in 2.2 (the following release will remove transmission of these frames)
           if(submode == Varicode::JS8CallNormal){
               datFrame = Varicode::packDataMessage(line, &m);
               fastDataFrame = false;
