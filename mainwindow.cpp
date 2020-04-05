@@ -4959,7 +4959,7 @@ void MainWindow::processDecodedLine(QByteArray t){
         } else {
             // convert HEARTBEAT to a directed command and process...
             cmd.from = cd.call;
-            cmd.to = "@ALLCALL";
+            cmd.to = "@HB";
             cmd.cmd = " HEARTBEAT";
             cmd.snr = cd.snr;
             cmd.bits = cd.bits;
