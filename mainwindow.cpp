@@ -11013,6 +11013,26 @@ void MainWindow::processCommandActivity() {
         // log the text to directed txt log
         writeMsgTxt(text, d.snr);
 
+        // write all directed messages to api
+        if(canSendNetworkMessage()){
+            sendNetworkMessage("RX.DIRECTED", text, {
+                {"_ID", QVariant(-1)},
+                {"FROM", QVariant(d.from)},
+                {"TO", QVariant(d.to)},
+                {"CMD", QVariant(d.cmd)},
+                {"GRID", QVariant(d.grid)},
+                {"EXTRA", QVariant(d.extra)},
+                {"TEXT", QVariant(text)},
+                {"FREQ", QVariant(d.dial+d.offset)},
+                {"DIAL", QVariant(d.dial)},
+                {"OFFSET", QVariant(d.offset)},
+                {"SNR", QVariant(d.snr)},
+                {"SPEED", QVariant(d.submode)},
+                {"TDRIFT", QVariant(d.tdrift)},
+                {"UTC", QVariant(d.utcTimestamp.toMSecsSinceEpoch())}
+            });
+        }
+
         // we're only responding to allcalls if we are participating in the allcall group
         // but, don't avoid for heartbeats...those are technically allcalls but are processed differently
         if(isAllCall && m_config.avoid_allcall() && d.cmd != " HB" && d.cmd != " HEARTBEAT"){
@@ -11070,9 +11090,10 @@ void MainWindow::processCommandActivity() {
             // log it to the display!
             displayTextForFreq(ad.text, ad.offset, ad.utcTimestamp, false, true, false);
 
+            /*
             // and send it to the network in case we want to interact with it from an external app...
             if(canSendNetworkMessage()){
-                sendNetworkMessage("RX.DIRECTED", ad.text, {
+                sendNetworkMessage("RX.DIRECTED.ME", ad.text, {
                     {"_ID", QVariant(-1)},
                     {"FROM", QVariant(d.from)},
                     {"TO", QVariant(d.to)},
@@ -11089,6 +11110,7 @@ void MainWindow::processCommandActivity() {
                     {"UTC", QVariant(ad.utcTimestamp.toMSecsSinceEpoch())}
                 });
             }
+            */
 
             if(!isAllCall){
                 // if we've received a message to be displayed, we should bump the repeat buttons...
