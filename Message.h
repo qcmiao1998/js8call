@@ -23,6 +23,7 @@ public:
     void write(QJsonObject &json) const;
 
     QByteArray toJson() const;
+    QVariantMap toVariantMap() const;
 
     QString type() const { return type_; }
     void setType(QString type){ type_ = type; }

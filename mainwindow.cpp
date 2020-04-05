@@ -12952,6 +12952,67 @@ void MainWindow::networkMessage(Message const &message)
         return;
     }
 
+    // INBOX.GET_MESSAGES
+    // INBOX.STORE_MESSAGE
+    if(type == "INBOX.GET_MESSAGES"){
+        QString selectedCall = message.params().value("CALLSIGN", "").toString();
+        if(selectedCall.isEmpty()){
+            selectedCall = "%";
+        }
+
+        Inbox inbox(inboxPath());
+        if(!inbox.open()){
+            return;
+        }
+
+        QList<QPair<int, Message> > msgs;
+        msgs.append(inbox.values("STORE", "$.params.TO", selectedCall, 0, 1000));
+        msgs.append(inbox.values("READ", "$.params.FROM", selectedCall, 0, 1000));
+        foreach(auto pair, inbox.values("UNREAD", "$.params.FROM", selectedCall, 0, 1000)){
+            msgs.append(pair);
+        }
+        qStableSort(msgs.begin(), msgs.end(), [](QPair<int, Message> const &a, QPair<int, Message> const &b){
+            return a.second.params().value("UTC") > b.second.params().value("UTC");
+        });
+
+        QVariantList l;
+        foreach(auto pair, msgs){
+            l << pair.second.toVariantMap();
+        }
+
+        sendNetworkMessage("INBOX.MESSAGES", "", {
+            {"_ID", id},
+            {"MESSAGES", l},
+        });
+    }
+
+    if(type == "INBOX.STORE_MESSAGE"){
+        QString selectedCall = message.params().value("CALLSIGN", "").toString();
+        if(selectedCall.isEmpty()){
+            return;
+        }
+
+        QString text = message.params().value("TEXT", "").toString();
+        if(text.isEmpty()){
+            return;
+        }
+
+        CommandDetail d = {};
+        d.cmd = " MSG ";
+        d.to = selectedCall;
+        d.from = m_config.my_callsign();
+        d.relayPath = d.from;
+        d.text = text;
+        d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+        d.submode = m_nSubMode;
+
+        auto mid = addCommandToStorage("STORE", d);
+
+        sendNetworkMessage("INBOX.MESSAGE", "", {
+            {"_ID", id},
+            {"ID", mid},
+        });
+    }
 
     // WINDOW.RAISE
 

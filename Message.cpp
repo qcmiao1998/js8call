@@ -105,3 +105,11 @@ QByteArray Message::toJson() const {
     QJsonDocument d(o);
     return d.toJson(QJsonDocument::Compact);
 }
+
+QVariantMap Message::toVariantMap() const {
+    QVariantMap m;
+    m["type"] = QVariant(type_);
+    m["value"] = QVariant(value_);
+    m["params"] = QVariant(params_);
+    return m;
+}
