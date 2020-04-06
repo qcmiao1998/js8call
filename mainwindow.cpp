@@ -7655,11 +7655,13 @@ void MainWindow::prepareHeartbeatMode(bool enabled){
     ui->actionModeJS8HB->setEnabled(canCurrentModeSendHeartbeat());
     ui->actionHeartbeatAcknowledgements->setEnabled(enabled && ui->actionModeAutoreply->isChecked());
 
+#if 0
     if(enabled){
         m_config.addGroup("@HB");
     } else {
         m_config.removeGroup("@HB");
     }
+#endif
 
 #if 0
     //ui->actionCQ->setEnabled(!enabled);
