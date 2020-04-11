@@ -504,6 +504,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (this, &MainWindow::aprsClientSetLocalStation, m_aprsClient, &APRSISClient::setLocalStation);
   connect (this, &MainWindow::aprsClientSetPaused, m_aprsClient, &APRSISClient::setPaused);
   connect (this, &MainWindow::aprsClientSetServer, m_aprsClient, &APRSISClient::setServer);
+  connect (this, &MainWindow::aprsClientSetSkipPercent, m_aprsClient, &APRSISClient::setSkipPercent);
   connect (&m_networkThread, &QThread::finished, m_aprsClient, &QObject::deleteLater);
 
   // hook up sound output stream slots & signals and disposal
@@ -3207,6 +3208,7 @@ void MainWindow::prepareSpotting(){
         spotSetLocal();
         pskSetLocal();
         aprsSetLocal();
+        emit aprsClientSetSkipPercent(0.25);
         emit aprsClientSetServer(m_config.aprs_server_name(), m_config.aprs_server_port());
         emit aprsClientSetPaused(false);
         ui->spotButton->setChecked(true);

@@ -27,6 +27,10 @@ public:
 
 public slots:
 
+    void setSkipPercent(float skipPercent){
+        m_skipPercent = skipPercent;
+    }
+
     void setServer(QString host, quint16 port){
         if(state() == QTcpSocket::ConnectedState){
             disconnectFromHost();
@@ -65,6 +69,7 @@ private:
     quint16 m_port;
     QTimer m_timer;
     bool m_paused;
+    float m_skipPercent;
 };
 
 #endif // APRSISCLIENT_H

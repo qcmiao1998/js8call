@@ -301,7 +301,7 @@ void APRSISClient::processQueue(bool disconnect){
         }
 
         // random delay 25% of the time for throttling (a skip will add 60 seconds to the processing time)
-        if(qrand() % 100 <= 25){
+        if(m_skipPercent > 0 && qrand() % 100 <= int(m_skipPercent*100)){
             qDebug() << "APRSISClient Throttle: Skipping Frame";
             delayed.enqueue(m_frameQueue.dequeue());
             continue;

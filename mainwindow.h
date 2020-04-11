@@ -448,6 +448,7 @@ private:
 
   Q_SIGNAL void aprsClientEnqueueSpot(QString by_call, QString from_call, QString grid, QString comment);
   Q_SIGNAL void aprsClientEnqueueThirdParty(QString by_call, QString from_call, QString text);
+  Q_SIGNAL void aprsClientSetSkipPercent(float skipPercent);
   Q_SIGNAL void aprsClientSetServer(QString host, quint16 port);
   Q_SIGNAL void aprsClientSetPaused(bool paused);
   Q_SIGNAL void aprsClientSetLocalStation(QString mycall, QString passcode);
