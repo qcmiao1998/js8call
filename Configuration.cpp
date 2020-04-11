@@ -590,6 +590,7 @@ private:
   QStringList auto_whitelist_;
   QStringList auto_blacklist_;
   QStringList hb_blacklist_;
+  QStringList spot_blacklist_;
   QStringList primary_highlight_words_;
   QStringList secondary_highlight_words_;
   QString eot_;
@@ -1066,9 +1067,12 @@ QSet<QString> Configuration::auto_blacklist() const {
     return QSet<QString>::fromList(m_->auto_blacklist_);
 }
 
-
 QSet<QString> Configuration::hb_blacklist() const {
     return QSet<QString>::fromList(m_->hb_blacklist_);
+}
+
+QSet<QString> Configuration::spot_blacklist() const {
+    return QSet<QString>::fromList(m_->spot_blacklist_);
 }
 
 QSet<QString> Configuration::primary_highlight_words() const {
@@ -1520,6 +1524,7 @@ void Configuration::impl::initialize_models ()
   ui_->auto_whitelist_line_edit->setText(auto_whitelist_.join(", "));
   ui_->auto_blacklist_line_edit->setText(auto_blacklist_.join(", "));
   ui_->hb_blacklist_line_edit->setText(hb_blacklist_.join(", "));
+  ui_->spot_blacklist_line_edit->setText(spot_blacklist_.join(", "));
   ui_->primaryHighlightLineEdit->setText(primary_highlight_words_.join(", "));
   ui_->secondaryHighlightLineEdit->setText(secondary_highlight_words_.join(", "));
   ui_->eot_line_edit->setText(eot_.trimmed().left(2));
@@ -1801,6 +1806,7 @@ void Configuration::impl::read_settings ()
   auto_whitelist_ = settings_->value("AutoWhitelist", QStringList{}).toStringList();
   auto_blacklist_ = settings_->value("AutoBlacklist", QStringList{}).toStringList();
   hb_blacklist_ = settings_->value("HBBlacklist", QStringList{}).toStringList();
+  spot_blacklist_ = settings_->value("SpotBlacklist", QStringList{}).toStringList();
   primary_highlight_words_ = settings_->value("PrimaryHighlightWords", QStringList{}).toStringList();
   secondary_highlight_words_ = settings_->value("SecondaryHighlightWords", QStringList{}).toStringList();
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
@@ -2126,6 +2132,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("AutoWhitelist", auto_whitelist_);
   settings_->setValue ("AutoBlacklist", auto_blacklist_);
   settings_->setValue ("HBBlacklist", hb_blacklist_);
+  settings_->setValue ("SpotBlacklist", spot_blacklist_);
   settings_->setValue ("PrimaryHighlightWords", primary_highlight_words_);
   settings_->setValue ("SecondaryHighlightWords", secondary_highlight_words_);
   settings_->setValue ("EOTCharacter", eot_);
@@ -2818,6 +2825,7 @@ void Configuration::impl::accept ()
   auto_whitelist_ = splitWords(ui_->auto_whitelist_line_edit->text().toUpper().trimmed());
   auto_blacklist_ = splitWords(ui_->auto_blacklist_line_edit->text().toUpper().trimmed());
   hb_blacklist_ = splitWords(ui_->hb_blacklist_line_edit->text().toUpper().trimmed());
+  spot_blacklist_ = splitWords(ui_->spot_blacklist_line_edit->text().toUpper().trimmed());
   primary_highlight_words_ = splitWords(ui_->primaryHighlightLineEdit->text().toUpper().trimmed());
   secondary_highlight_words_ = splitWords(ui_->secondaryHighlightLineEdit->text().toUpper().trimmed());
   cq_ = ui_->cq_message_line_edit->text().toUpper();

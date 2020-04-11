@@ -5295,12 +5295,14 @@ QString MainWindow::lookupCallInCompoundCache(QString const &call){
 
 void MainWindow::spotReport(int submode, int dial, int offset, int snr, QString callsign, QString grid){
     if(!m_config.spot_to_reporting_networks()) return;
+    if(m_config.spot_blacklist().contains(callsign) || m_config.spot_blacklist().contains(Radio::base_callsign(callsign))) return;
 
     m_spotClient->enqueueSpot(callsign, grid, submode, dial, offset, snr);
 }
 
 void MainWindow::spotCmd(CommandDetail cmd){
     if(!m_config.spot_to_reporting_networks()) return;
+    if(m_config.spot_blacklist().contains(cmd.from) || m_config.spot_blacklist().contains(Radio::base_callsign(cmd.from))) return;
 
     QString cmdStr = cmd.cmd;
     if(!cmdStr.trimmed().isEmpty()){
@@ -5314,6 +5316,7 @@ void MainWindow::spotCmd(CommandDetail cmd){
 void MainWindow::spotAprsCmd(CommandDetail cmd){
     if(!m_config.spot_to_reporting_networks()) return;
     if(!m_config.spot_to_aprs()) return;
+    if(m_config.spot_blacklist().contains(cmd.from) || m_config.spot_blacklist().contains(Radio::base_callsign(cmd.from))) return;
 
     if(cmd.cmd != " CMD") return;
 
@@ -5331,6 +5334,7 @@ void MainWindow::spotAprsCmd(CommandDetail cmd){
 void MainWindow::spotAprsGrid(int dial, int offset, int snr, QString callsign, QString grid){
     if(!m_config.spot_to_reporting_networks()) return;
     if(!m_config.spot_to_aprs()) return;
+    if(m_config.spot_blacklist().contains(callsign) || m_config.spot_blacklist().contains(Radio::base_callsign(callsign))) return;
     if(grid.length() < 4) return;
 
     Frequency frequency = dial + offset;
@@ -5350,6 +5354,7 @@ void MainWindow::spotAprsGrid(int dial, int offset, int snr, QString callsign, Q
 
 void MainWindow::pskLogReport(QString mode, int dial, int offset, int snr, QString callsign, QString grid){
     if(!m_config.spot_to_reporting_networks()) return;
+    if(m_config.spot_blacklist().contains(callsign) || m_config.spot_blacklist().contains(Radio::base_callsign(callsign))) return;
 
     Frequency frequency = dial + offset;
 
@@ -11861,6 +11866,10 @@ void MainWindow::processSpots() {
     while(!m_rxCallQueue.isEmpty()){
         CallDetail d = m_rxCallQueue.dequeue();
         if(d.call.isEmpty()){
+            continue;
+        }
+
+        if(m_config.spot_blacklist().contains(d.call) || m_config.spot_blacklist().contains(Radio::base_callsign(d.call))){
             continue;
         }
 

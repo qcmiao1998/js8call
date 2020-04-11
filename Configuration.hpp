@@ -110,6 +110,7 @@ public:
   QSet<QString> auto_whitelist() const;
   QSet<QString> auto_blacklist() const;
   QSet<QString> hb_blacklist() const;
+  QSet<QString> spot_blacklist() const;
   QSet<QString> primary_highlight_words() const;
   QSet<QString> secondary_highlight_words() const;
   int activity_aging() const;

@@ -315,7 +315,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>615</width>
+                <width>724</width>
                 <height>537</height>
                </rect>
               </property>
@@ -837,8 +837,8 @@ text message.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>674</width>
-                <height>360</height>
+                <width>738</width>
+                <height>461</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -2461,7 +2461,7 @@ comments field.</string>
             <x>0</x>
             <y>0</y>
             <width>746</width>
-            <height>722</height>
+            <height>753</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_30">
@@ -2570,6 +2570,16 @@ for assessing propagation and system performance.</string>
                  </widget>
                 </item>
                </layout>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_31">
+                <property name="text">
+                 <string>Never send spotting reports from these callsigns (comma separated):</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QLineEdit" name="spot_blacklist_line_edit"/>
               </item>
              </layout>
             </widget>
