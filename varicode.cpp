@@ -276,6 +276,8 @@ QMap<QString, quint32> basecalls = {
     { "@SOTA",      nbasecall + 50 }, // SOTA GROUP
     { "@IOTA",      nbasecall + 51 }, // IOTA GROUP
     { "@POTA",      nbasecall + 52 }, // POTA GROUP
+    { "@QRP",       nbasecall + 53 }, // QRP GROUP
+    { "@QRO",       nbasecall + 54 }, // QRO GROUP
 };
 
 QMap<quint32, QString> cqs = {
