@@ -162,6 +162,7 @@ public slots:
   bool ensureCallsignSet(bool alert=true);
   bool ensureKeyNotStuck(QString const& text);
   bool ensureNotIdle();
+  bool ensureCanTransmit();
   bool ensureCreateMessageReady(const QString &text);
   QString createMessage(QString const& text, bool *pDisableTypeahead);
   QString appendMessage(QString const& text, bool isData, bool *pDisableTypeahead);
@@ -216,7 +217,6 @@ private slots:
   void on_autoButton_clicked (bool);
   void on_labDialFreq_clicked();
   void resetPushButtonToggleText(QPushButton *btn);
-  void on_monitorTxButton_clicked();
   void on_stopTxButton_clicked();
   void on_dialFreqUpButton_clicked();
   void on_dialFreqDownButton_clicked();
@@ -288,6 +288,7 @@ private slots:
   void on_actionModeMultiDecoder_toggled(bool checked);
   void on_actionModeAutoreply_toggled(bool checked);
   bool canCurrentModeSendHeartbeat();
+  void prepareMonitorControls();
   void prepareHeartbeatMode(bool enabled);
   void on_actionJS8_triggered();
   void on_TxFreqSpinBox_valueChanged(int arg1);

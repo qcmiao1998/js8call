@@ -148,6 +148,7 @@ public:
   bool heartbeat_ack_snr() const;
   bool relay_off() const;
   bool monitor_off_at_startup () const;
+  bool transmit_off_at_startup () const;
   bool monitor_last_used () const;
   bool log_as_DATA () const;
   bool report_in_comments () const;

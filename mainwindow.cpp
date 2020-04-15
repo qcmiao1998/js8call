@@ -1018,6 +1018,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   }
 
   // prep
+  prepareMonitorControls();
   prepareHeartbeatMode(canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked());
 
   auto enterFilter = new EnterKeyPressEater();
@@ -3302,6 +3303,10 @@ void MainWindow::on_monitorButton_toggled(bool checked){
 
 void MainWindow::on_monitorTxButton_toggled(bool checked){
     resetPushButtonToggleText(ui->monitorTxButton);
+
+    if(!checked){
+        on_stopTxButton_clicked();
+    }
 }
 
 void MainWindow::on_tuneButton_toggled(bool checked){
@@ -5957,6 +5962,7 @@ void MainWindow::startTx()
       return;
   }
 #endif
+
   auto text = ui->extFreeTextMsgEdit->toPlainText();
   if(!ensureCreateMessageReady(text)){
     return;
@@ -5989,18 +5995,21 @@ void MainWindow::startTx()
 
 void MainWindow::startTx2()
 {
-  if (!m_modulator->isActive ()) { // TODO - not thread safe
-    double fSpread=0.0;
-    double snr=99.0;
-    QString t=ui->tx5->currentText();
-    if(t.mid(0,1)=="#") fSpread=t.mid(1,5).toDouble();
-    m_modulator->setSpread(fSpread); // TODO - not thread safe
-    t=ui->tx6->text();
-    if(t.mid(0,1)=="#") snr=t.mid(1,5).toDouble();
-    if(snr>0.0 or snr < -50.0) snr=99.0;
-    transmit (snr);
-    ui->signal_meter_widget->setValue(0,0);
+  // cannot start transmitting while the modulator is active
+  if (m_modulator->isActive ()) {
+    return;
   }
+
+  double fSpread=0.0;
+  double snr=99.0;
+  QString t=ui->tx5->currentText();
+  if(t.mid(0,1)=="#") fSpread=t.mid(1,5).toDouble();
+  m_modulator->setSpread(fSpread); // TODO - not thread safe
+  t=ui->tx6->text();
+  if(t.mid(0,1)=="#") snr=t.mid(1,5).toDouble();
+  if(snr>0.0 or snr < -50.0) snr=99.0;
+  transmit (snr);
+  ui->signal_meter_widget->setValue(0,0);
 }
 
 void MainWindow::stopTx()
@@ -6786,6 +6795,7 @@ void MainWindow::resetMessageUI(){
     ui->extFreeTextMsg->clear();
     ui->extFreeTextMsgEdit->clear();
     ui->extFreeTextMsgEdit->setReadOnly(false);
+
     update_dynamic_property (ui->extFreeTextMsgEdit, "transmitting", false);
 
     if(ui->startTxButton->isChecked()){
@@ -6831,8 +6841,17 @@ bool MainWindow::ensureNotIdle(){
     return false;
 }
 
+bool MainWindow::ensureCanTransmit(){
+    return ui->monitorTxButton->isChecked();
+}
+
 bool MainWindow::ensureCreateMessageReady(const QString &text){
     if(text.isEmpty()){
+        return false;
+    }
+
+    if(!ensureCanTransmit()){
+        on_stopTxButton_clicked();
         return false;
     }
 
@@ -6850,7 +6869,9 @@ bool MainWindow::ensureCreateMessageReady(const QString &text){
         on_stopTxButton_clicked();
 
         ui->monitorButton->setChecked(false);
+        ui->monitorTxButton->setChecked(false);
         on_monitorButton_clicked(false);
+        on_monitorTxButton_toggled(false);
 
         foreach(auto obj, this->children()){
             if(obj->isWidgetType()){
@@ -7312,16 +7333,6 @@ QString MainWindow::calculateDistance(QString const& value, int *pDistance, int 
 void MainWindow::on_startTxButton_toggled(bool checked)
 {
     if(checked){
-        // auto text = ui->extFreeTextMsgEdit->toPlainText();
-        // if(ensureCreateMessageReady(text)){
-        //
-        //     auto txText = createMessage(text);
-        //     if(txText != text){
-        //         ui->extFreeTextMsgEdit->setPlainText(txText);
-        //     }
-        //
-        //     startTx();
-        // }
         startTx();
     } else {
         resetMessage();
@@ -7659,6 +7670,11 @@ bool MainWindow::canCurrentModeSendHeartbeat(){
     }
 
     return false;
+}
+
+void MainWindow::prepareMonitorControls(){
+    // on_monitorButton_toggled(!m_config.monitor_off_at_startup());
+    ui->monitorTxButton->setChecked(!m_config.transmit_off_at_startup());
 }
 
 void MainWindow::prepareHeartbeatMode(bool enabled){
@@ -9448,11 +9464,6 @@ void MainWindow::resetPushButtonToggleText(QPushButton *btn){
 #endif
 }
 
-void MainWindow::on_monitorTxButton_clicked(){
-    ui->monitorTxButton->setChecked(false);
-    on_stopTxButton_clicked();
-}
-
 void MainWindow::on_stopTxButton_clicked()                    //Stop Tx
 {
   if (m_tune) stop_tuning ();
@@ -9646,6 +9657,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
     {
       // initializing
       on_monitorButton_clicked (!m_config.monitor_off_at_startup ());
+      on_monitorTxButton_toggled (!m_config.transmit_off_at_startup ());
     }
 
   if (s.frequency () != old_state.frequency () || s.split () != m_splitMode)
@@ -9853,8 +9865,6 @@ void MainWindow::aprsSetLocal ()
 
 void MainWindow::transmitDisplay (bool transmitting)
 {
-  ui->monitorTxButton->setChecked(transmitting);
-
   if (transmitting == m_transmitting) {
     if (transmitting) {
       ui->signal_meter_widget->setValue(0,0);
@@ -10061,6 +10071,7 @@ int MainWindow::rxSnrThreshold(int submode){
 void MainWindow::displayTransmit(){
     // Transmit Activity
     update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
+    update_dynamic_property (ui->monitorTxButton, "transmitting", m_transmitting);
 }
 
 void MainWindow::updateModeButtonText(){
@@ -10147,10 +10158,11 @@ void MainWindow::updateRepeatButtonDisplay(){
 }
 
 void MainWindow::updateTextDisplay(){
+    bool canTransmit = ensureCanTransmit();
     bool isTransmitting = isMessageQueuedForTransmit();
     bool emptyText = ui->extFreeTextMsgEdit->toPlainText().isEmpty();
 
-    ui->startTxButton->setDisabled(isTransmitting || emptyText);
+    ui->startTxButton->setDisabled(!canTransmit || isTransmitting || emptyText);
 
     if(m_txTextDirty){
         // debounce frame and word count
@@ -10262,7 +10274,12 @@ void MainWindow::updateTextStatsDisplay(QString text, int count){
 }
 
 void MainWindow::updateTxButtonDisplay(){
-    // update transmit button
+    // can we transmit at all?
+    bool canTransmit = ensureCanTransmit();
+
+    qDebug() << "can transmit?" << canTransmit << m_tune << isMessageQueuedForTransmit();
+
+    // if we're tuning or have a message queued
     if(m_tune || isMessageQueuedForTransmit()){
         int count = m_txFrameCount;
 
@@ -10307,8 +10324,7 @@ void MainWindow::updateTxButtonDisplay(){
             buttonText = "Send";
         }
         ui->startTxButton->setText(buttonText);
-
-        ui->startTxButton->setEnabled(m_txFrameCountEstimate > 0);
+        ui->startTxButton->setEnabled(canTransmit && m_txFrameCountEstimate > 0);
         ui->startTxButton->setFlat(false);
     }
 }

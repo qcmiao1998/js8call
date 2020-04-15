@@ -652,6 +652,7 @@ private:
   bool heartbeat_ack_snr_;
   bool relay_disabled_;
   bool monitor_off_at_startup_;
+  bool transmit_off_at_startup_;
   bool monitor_last_used_;
   bool log_as_DATA_;
   bool report_in_comments_;
@@ -833,6 +834,7 @@ bool Configuration::heartbeat_ack_snr() const {
 }
 bool Configuration::relay_off() const { return m_->relay_disabled_; }
 bool Configuration::monitor_off_at_startup () const {return m_->monitor_off_at_startup_;}
+bool Configuration::transmit_off_at_startup () const { return m_->transmit_off_at_startup_; }
 bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->monitor_last_used_;}
 bool Configuration::log_as_DATA () const { return false; }
 bool Configuration::report_in_comments () const {return m_->report_in_comments_;}
@@ -1572,6 +1574,7 @@ void Configuration::impl::initialize_models ()
   ui_->heartbeat_ack_snr_check_box->setChecked(heartbeat_ack_snr_);
   ui_->relay_disabled_check_box->setChecked(relay_disabled_);
   ui_->monitor_off_check_box->setChecked (monitor_off_at_startup_);
+  ui_->transmit_off_check_box->setChecked (transmit_off_at_startup_);
   ui_->monitor_last_used_check_box->setChecked (monitor_last_used_);
   ui_->log_as_RTTY_check_box->setChecked (log_as_DATA_);
   ui_->stations_table_view->setEnabled(ui_->auto_switch_bands_check_box->isChecked());
@@ -1996,6 +1999,7 @@ void Configuration::impl::read_settings ()
   heartbeat_ack_snr_ = settings_->value("HeartbeatAckSNR", false).toBool();
   relay_disabled_ = settings_->value ("RelayOFF", false).toBool ();
   monitor_off_at_startup_ = settings_->value ("MonitorOFF", false).toBool ();
+  transmit_off_at_startup_ = settings_->value ("TransmitOFF", false).toBool ();
   monitor_last_used_ = settings_->value ("MonitorLastUsed", false).toBool ();
   spot_to_reporting_networks_ = settings_->value ("PSKReporter", true).toBool ();
   spot_to_aprs_ = settings_->value("SpotToAPRS", true).toBool();
@@ -2216,6 +2220,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("HeartbeatAckSNR", heartbeat_ack_snr_);
   settings_->setValue ("RelayOFF", relay_disabled_);
   settings_->setValue ("MonitorOFF", monitor_off_at_startup_);
+  settings_->setValue ("TransmitOFF", transmit_off_at_startup_);
   settings_->setValue ("MonitorLastUsed", monitor_last_used_);
   settings_->setValue ("PSKReporter", spot_to_reporting_networks_);
   settings_->setValue ("SpotToAPRS", spot_to_aprs_);
@@ -2857,6 +2862,7 @@ void Configuration::impl::accept ()
   heartbeat_ack_snr_ = ui_->heartbeat_ack_snr_check_box->isChecked();
   relay_disabled_ = ui_->relay_disabled_check_box->isChecked();
   monitor_off_at_startup_ = ui_->monitor_off_check_box->isChecked ();
+  transmit_off_at_startup_ = ui_->transmit_off_check_box->isChecked ();
   monitor_last_used_ = ui_->monitor_last_used_check_box->isChecked ();
   type_2_msg_gen_ = static_cast<Type2MsgGen> (ui_->type_2_msg_gen_combo_box->currentIndex ());
   log_as_DATA_ = ui_->log_as_RTTY_check_box->isChecked ();

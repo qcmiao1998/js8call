@@ -672,11 +672,15 @@ QPushButton:checked {
                 </property>
                 <property name="font">
                  <font>
-                  <pointsize>9</pointsize>
+                  <weight>50</weight>
+                  <bold>false</bold>
                  </font>
                 </property>
                 <property name="visible">
                  <bool>true</bool>
+                </property>
+                <property name="toolTip">
+                 <string>Enable or disable the transmitter</string>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
@@ -688,6 +692,10 @@ QPushButton:checked {
  }
 
 QPushButton:checked { 
+  background-color:#22FF22;
+}
+
+QPushButton[transmitting=&quot;true&quot;] {
   background-color:#FF2222;
 }</string>
                 </property>
@@ -696,6 +704,9 @@ QPushButton:checked {
                 </property>
                 <property name="checkable">
                  <bool>true</bool>
+                </property>
+                <property name="checked">
+                 <bool>false</bool>
                 </property>
                 <property name="flat">
                  <bool>false</bool>
@@ -751,6 +762,9 @@ QPushButton:checked {
                 </property>
                 <property name="checkable">
                  <bool>true</bool>
+                </property>
+                <property name="checked">
+                 <bool>false</bool>
                 </property>
                 <property name="flat">
                  <bool>false</bool>
