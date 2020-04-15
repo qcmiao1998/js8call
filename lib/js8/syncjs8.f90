@@ -46,7 +46,7 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
      ib=ia+NSPS-1
      x(1:NSPS)=fac*dd(ia:ib)
      x(NSPS+1:)=0.
-     call four2a(x,NFFT1,1,-1,0)              !r2c FFT
+     call four2a(cx,NFFT1,1,-1,0)              !r2c FFT
      do i=1,NH1
         s(i,j)=real(cx(i))**2 + aimag(cx(i))**2
      enddo
