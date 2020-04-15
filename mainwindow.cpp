@@ -10290,8 +10290,6 @@ void MainWindow::updateTxButtonDisplay(){
     // can we transmit at all?
     bool canTransmit = ensureCanTransmit();
 
-    qDebug() << "can transmit?" << canTransmit << m_tune << isMessageQueuedForTransmit();
-
     // if we're tuning or have a message queued
     if(m_tune || isMessageQueuedForTransmit()){
         int count = m_txFrameCount;
