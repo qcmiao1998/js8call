@@ -12,7 +12,11 @@
 
 extern "C"
 {
+#ifdef JS8_USE_LEGACY_HAMLIB
   typedef struct rig RIG;
+#else
+  typedef struct s_rig RIG;
+#endif
   struct rig_caps;
 #ifdef JS8_USE_LEGACY_HAMLIB
   typedef int vfo_t;
