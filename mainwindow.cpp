@@ -2878,13 +2878,26 @@ void MainWindow::on_menuControl_aboutToShow(){
 #if __APPLE__
     rebuildMacQAction(ui->menuControl, ui->actionCQ);
 #endif
+
+    ui->actionEnable_Monitor_RX->setChecked(ui->monitorButton->isChecked());
+    ui->actionEnable_Transmitter_TX->setChecked(ui->monitorTxButton->isChecked());
+    ui->actionEnable_Reporting_SPOT->setChecked(ui->spotButton->isChecked());
 }
 
 void MainWindow::on_actionCheck_for_Updates_triggered(){
     checkVersion(true);
 }
 
-void MainWindow::on_actionEnable_Spotting_toggled(bool checked){
+void MainWindow::on_actionEnable_Monitor_RX_toggled(bool checked){
+    ui->monitorButton->setChecked(checked);
+}
+
+void MainWindow::on_actionEnable_Transmitter_TX_toggled(bool checked){
+    ui->monitorTxButton->setChecked(checked);
+}
+
+
+void MainWindow::on_actionEnable_Reporting_SPOT_toggled(bool checked){
     ui->spotButton->setChecked(checked);
 }
 

@@ -4715,6 +4715,10 @@ list. The list can be maintained in Settings (F2).</string>
      <addaction name="actionFocus_Band_Activity_Table"/>
      <addaction name="actionFocus_Call_Activity_Table"/>
     </widget>
+    <addaction name="actionEnable_Monitor_RX"/>
+    <addaction name="actionEnable_Transmitter_TX"/>
+    <addaction name="actionEnable_Reporting_SPOT"/>
+    <addaction name="separator"/>
     <addaction name="actionSetFrequency"/>
     <addaction name="actionSetOffset"/>
     <addaction name="menuFocus"/>
@@ -5723,6 +5727,30 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>JS8 (&amp;Slow, 30s, 25Hz, ~8 WPM)</string>
+   </property>
+  </action>
+  <action name="actionEnable_Monitor_RX">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Receiver (&amp;RX)</string>
+   </property>
+  </action>
+  <action name="actionEnable_Transmitter_TX">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Transmitter (&amp;TX)</string>
+   </property>
+  </action>
+  <action name="actionEnable_Reporting_SPOT">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Reporting (&amp;SPOT)</string>
    </property>
   </action>
  </widget>

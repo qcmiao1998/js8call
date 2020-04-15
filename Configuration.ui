@@ -357,7 +357,7 @@
                      <string>Don't start decoding until the monitor button is clicked.</string>
                     </property>
                     <property name="text">
-                     <string>Mon&amp;itor (RX) off at startup</string>
+                     <string>Receiver (RX) off at startup</string>
                     </property>
                     <property name="checked">
                      <bool>false</bool>
@@ -367,7 +367,7 @@
                   <item>
                    <widget class="QCheckBox" name="transmit_off_check_box">
                     <property name="text">
-                     <string>Transmit (TX) off at startup</string>
+                     <string>Transmitter (TX) off at startup</string>
                     </property>
                    </widget>
                   </item>
