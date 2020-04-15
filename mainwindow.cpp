@@ -4634,6 +4634,8 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
   if(m_decoderBusy){
     tx_status_label.setText("Decoding");
     m_decoderBusyStartTime = DriftingDateTime::currentDateTimeUtc();
+    m_decoderBusyFreq = dialFrequency();
+    m_decoderBusyBand = m_config.bands()->find (m_decoderBusyFreq);
   }
   ui->actionOpen->setEnabled(!b);
   ui->actionOpen_next_in_directory->setEnabled(!b);
@@ -4865,6 +4867,13 @@ void MainWindow::processDecodedLine(QByteArray t){
   }
 
   // log valid frames to ALL.txt (and correct their timestamp format)
+  auto freq = dialFrequency();
+
+  // if we changed frequencies, use the old frequency that we started the decode with
+  if(m_decoderBusyFreq != freq){
+      freq = m_decoderBusyFreq;
+  }
+
   auto date = DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd");
   auto time = rawText.left(2) + ":" + rawText.mid(2, 2) + ":" + rawText.mid(4, 2);
   writeAllTxt(date + " " + time + rawText.mid(7) + " " + decodedtext.message(), decodedtext.bits());
@@ -4899,7 +4908,7 @@ void MainWindow::processDecodedLine(QByteArray t){
     d.isCompound = decodedtext.isCompound();
     d.isDirected = decodedtext.isDirectedMessage();
     d.bits = decodedtext.bits();
-    d.dial = dialFrequency();
+    d.dial = freq;
     d.offset = offset;
     d.text = decodedtext.message();
     d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
@@ -4939,7 +4948,7 @@ void MainWindow::processDecodedLine(QByteArray t){
     cd.call = decodedtext.compoundCall();
     cd.grid = decodedtext.extra(); // compound calls via pings may contain grid...
     cd.snr = decodedtext.snr();
-    cd.dial = dialFrequency();
+    cd.dial = freq;
     cd.offset = decodedtext.frequencyOffset();
     cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
     cd.bits = decodedtext.bits();
@@ -5016,7 +5025,7 @@ void MainWindow::processDecodedLine(QByteArray t){
       cmd.from = parts.at(0);
       cmd.to = parts.at(1);
       cmd.cmd = parts.at(2);
-      cmd.dial = dialFrequency();
+      cmd.dial = freq;
       cmd.offset = decodedtext.frequencyOffset();
       cmd.snr = decodedtext.snr();
       cmd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();

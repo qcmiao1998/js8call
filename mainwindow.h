@@ -609,6 +609,8 @@ private:
   bool    m_diskData;
   bool    m_loopall;
   bool    m_decoderBusy;
+  QString m_decoderBusyBand;
+  Radio::Frequency m_decoderBusyFreq;
   QDateTime m_decoderBusyStartTime;
   bool    m_auto;
   bool    m_restart;
