@@ -10505,7 +10505,7 @@ bool MainWindow::isMyCallIncluded(const QString &text){
 }
 
 bool MainWindow::isAllCallIncluded(const QString &text){
-    return text.contains("@ALLCALL");
+    return text.contains("@ALLCALL") || text.contains("@HB");
 }
 
 bool MainWindow::isGroupCallIncluded(const QString &text){
@@ -11122,7 +11122,7 @@ void MainWindow::processCommandActivity() {
         bool shouldDisplay = true;
 
         // don't display ping allcalls
-        if(isAllCall && (d.cmd != " " || ad.text.contains(": HB ") || ad.text.contains(": @ALLCALL HB "))){
+        if(isAllCall && (d.cmd != " " || ad.text.contains("@HB HEARTBEAT"))){
             shouldDisplay = false;
         }
 
