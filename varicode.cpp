@@ -135,10 +135,7 @@ QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
 QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|MSG TO[:]|SNR[?]|INFO[?]|GRID[?]|STATUS[?]|QUERY MSGS[?]|HEARING[?]|(?:(?:STATUS|HEARING|QUERY CALL|QUERY MSGS|QUERY|CMD|MSG|NACK|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|INFO|GRID|DIT DIT)(?=[ ]|$))|[?> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
-QString optional_num_pattern = QString("(?<num>(?:") +
-                                                 "(?<=SNR)\\s?[-+]?(?:3[01]|[0-2]?[0-9])"  + "|" +
-                                         "(?<=\\bDEADBEEF)\\s?[-+]?(?:3[01]|[0-2]?[0-9])"  +
-                                       "))?";
+QString optional_num_pattern = QString("(?<num>(?<=SNR)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
 
 QRegularExpression directed_re("^"                    +
                                callsign_pattern       +
@@ -1546,7 +1543,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &mycall
     }
     QString to = match.captured("callsign");
     QString cmd = match.captured("cmd");
-    QString num = match.captured("num").trimmed();
+    QString num = match.captured("num");
 
     // ensure we have a directed command
     if(cmd.isEmpty()){
@@ -1583,7 +1580,7 @@ QString Varicode::packDirectedMessage(const QString &text, const QString &mycall
 
     // packing general number...
     bool numOK = false;
-    quint8 inum = Varicode::packNum(num, &numOK);
+    quint8 inum = Varicode::packNum(num.trimmed(), &numOK);
     if(numOK){
         if(pNum) *pNum = num;
     }
