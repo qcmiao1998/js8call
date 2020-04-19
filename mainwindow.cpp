@@ -11043,8 +11043,8 @@ void MainWindow::processCommandActivity() {
             }
         }
 
-        // PROCESS @JS8NET AND @APRSIS SPOTS FOR EVERYONE
-        if (d.to == "@JS8NET" || d.to == "@APRSIS"){
+        // PROCESS @JS8NET, @APRSIS, AND OTHER GROUP SPOTS FOR EVERYONE
+        if (d.to.startsWith("@")){
             spotCmd(d);
         }
 
