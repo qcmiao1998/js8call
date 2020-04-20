@@ -1992,8 +1992,8 @@ void Configuration::impl::read_settings ()
   type_2_msg_gen_ = settings_->value ("Type2MsgGen", QVariant::fromValue (Configuration::type_2_msg_3_full)).value<Configuration::Type2MsgGen> ();
 
   transmit_directed_ = settings_->value ("TransmitDirected", true).toBool();
-  autoreply_on_at_startup_ = settings_->value ("AutoreplyOnAtStartup", false).toBool ();
-  autoreply_confirmation_ = settings_->value ("AutoreplyConfirmation", false).toBool ();
+  autoreply_on_at_startup_ = settings_->value ("AutoreplyOnAtStartup", true).toBool ();
+  autoreply_confirmation_ = settings_->value ("AutoreplyConfirmation", true).toBool ();
   heartbeat_anywhere_ = settings_->value("BeaconAnywhere", false).toBool();
   heartbeat_qso_pause_ = settings_->value("HeartbeatQSOPause", true).toBool();
   heartbeat_ack_snr_ = settings_->value("HeartbeatAckSNR", false).toBool();
