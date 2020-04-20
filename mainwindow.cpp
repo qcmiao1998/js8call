@@ -4204,8 +4204,11 @@ bool MainWindow::decode(qint32 k){
     // TODO: what follows can likely be pulled out to an async process
     //
 
-    if(m_transmitting || !m_txFrameQueue.isEmpty() || m_txFrameCount > 0){
-        // we used to use isMessageQueuedForTransmit, but it checks total frames, not queued frames
+    // pause decoder if we are currently transmitting
+    if(m_transmitting){
+        // we used to use isMessageQueuedForTransmit, and some form of checking for queued messages
+        // but, that just caused problems with missing decodes, so we only pause if we are actually
+        // actively transmitting.
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused during transmit";
         return false;
     }
