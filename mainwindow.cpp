@@ -967,6 +967,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
 #if JS8_SAVE_AUDIO
   ui->menuSave->setEnabled(true);
+#else
+  ui->menuFile->removeAction(ui->actionOpen);
+  ui->menuFile->removeAction(ui->actionOpen_next_in_directory);
+  ui->menuFile->removeAction(ui->actionDecode_remaining_files_in_directory);
 #endif
 
   // remove disabled menus from the menu bar
