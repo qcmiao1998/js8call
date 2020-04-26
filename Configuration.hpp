@@ -116,6 +116,7 @@ public:
   int activity_aging() const;
   int callsign_aging() const;
   QString eot() const;
+  QString mfi() const;
   QString my_info () const;
   QString my_status () const;
   QString hb_message () const;

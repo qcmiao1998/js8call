@@ -10601,7 +10601,7 @@ void MainWindow::processIdleActivity() {
             continue;
         }
 
-        if(last.text == " . . . "){
+        if(last.text == m_config.mfi()){
             continue;
         }
 
@@ -10610,7 +10610,7 @@ void MainWindow::processIdleActivity() {
         }
 
         ActivityDetail d = {};
-        d.text = " . . . ";
+        d.text = m_config.mfi();
         d.isFree = true;
         d.utcTimestamp = last.utcTimestamp;
         d.snr = last.snr;

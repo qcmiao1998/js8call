@@ -594,6 +594,7 @@ private:
   QStringList primary_highlight_words_;
   QStringList secondary_highlight_words_;
   QString eot_;
+  QString mfi_;
   QString my_info_;
   QString my_status_;
   QString cq_;
@@ -1089,6 +1090,10 @@ QString Configuration::eot() const {
     return m_->eot_;
 }
 
+QString Configuration::mfi() const {
+    return m_->mfi_;
+}
+
 QString Configuration::my_info() const
 {
     auto info = m_->my_info_;
@@ -1529,7 +1534,8 @@ void Configuration::impl::initialize_models ()
   ui_->spot_blacklist_line_edit->setText(spot_blacklist_.join(", "));
   ui_->primaryHighlightLineEdit->setText(primary_highlight_words_.join(", "));
   ui_->secondaryHighlightLineEdit->setText(secondary_highlight_words_.join(", "));
-  ui_->eot_line_edit->setText(eot_.trimmed().left(2));
+  ui_->eot_line_edit->setText(eot_);
+  ui_->mfi_line_edit->setText(mfi_);
   ui_->info_message_line_edit->setText (my_info_.toUpper());
   ui_->status_message_line_edit->setText (my_status_.toUpper());
   ui_->cq_message_line_edit->setText(cq_.toUpper().replace("CQCQCQ", "CQ CQ CQ"));
@@ -1814,7 +1820,8 @@ void Configuration::impl::read_settings ()
   secondary_highlight_words_ = settings_->value("SecondaryHighlightWords", QStringList{}).toStringList();
   callsign_aging_ = settings_->value ("CallsignAging", 0).toInt ();
   activity_aging_ = settings_->value ("ActivityAging", 2).toInt ();
-  eot_ = settings_->value("EOTCharacter", QString{"\u2662"}).toString().trimmed().left(2);
+  eot_ = settings_->value("EOTCharacter", QString{"\u2662"}).toString();
+  mfi_ = settings_->value("MFICharacter", QString{"\u2026\u2026"}).toString();
   my_info_ = settings_->value("MyInfo", QString {}).toString();
   my_status_ = settings_->value("MyStatus", QString {"IDLE <MYIDLE> VERSION <MYVERSION>"}).toString();
   hb_ = settings_->value("HBMessage", QString {"HB <MYGRID4>"}).toString();
@@ -2140,6 +2147,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("PrimaryHighlightWords", primary_highlight_words_);
   settings_->setValue ("SecondaryHighlightWords", secondary_highlight_words_);
   settings_->setValue ("EOTCharacter", eot_);
+  settings_->setValue ("MFICharacter", mfi_);
   settings_->setValue ("MyInfo", my_info_);
   settings_->setValue ("MyStatus", my_status_);
   settings_->setValue ("CQMessage", cq_);
@@ -2836,7 +2844,8 @@ void Configuration::impl::accept ()
   cq_ = ui_->cq_message_line_edit->text().toUpper();
   hb_ = ui_->hb_message_line_edit->text().toUpper();
   reply_ = ui_->reply_message_line_edit->text().toUpper();
-  eot_ = ui_->eot_line_edit->text().trimmed().left(2);
+  eot_ = ui_->eot_line_edit->text();
+  mfi_ = ui_->mfi_line_edit->text();
   my_info_ = ui_->info_message_line_edit->text().toUpper();
   my_status_ = ui_->status_message_line_edit->text().toUpper();
   callsign_aging_ = ui_->callsign_aging_spin_box->value();
