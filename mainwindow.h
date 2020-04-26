@@ -194,6 +194,7 @@ private slots:
   void on_actionEnable_Monitor_RX_toggled(bool checked);
   void on_actionEnable_Transmitter_TX_toggled(bool checked);
   void on_actionEnable_Reporting_SPOT_toggled(bool checked);
+  void on_actionEnable_Tuning_Tone_TUNE_toggled(bool checked);
   void on_menuWindow_aboutToShow();
   void on_actionFocus_Message_Receive_Area_triggered();
   void on_actionFocus_Message_Reply_Area_triggered();

@@ -2891,6 +2891,7 @@ void MainWindow::on_menuControl_aboutToShow(){
     ui->actionEnable_Monitor_RX->setChecked(ui->monitorButton->isChecked());
     ui->actionEnable_Transmitter_TX->setChecked(ui->monitorTxButton->isChecked());
     ui->actionEnable_Reporting_SPOT->setChecked(ui->spotButton->isChecked());
+    ui->actionEnable_Tuning_Tone_TUNE->setChecked(ui->tuneButton->isChecked());
 }
 
 void MainWindow::on_actionCheck_for_Updates_triggered(){
@@ -2908,6 +2909,11 @@ void MainWindow::on_actionEnable_Transmitter_TX_toggled(bool checked){
 
 void MainWindow::on_actionEnable_Reporting_SPOT_toggled(bool checked){
     ui->spotButton->setChecked(checked);
+}
+
+void MainWindow::on_actionEnable_Tuning_Tone_TUNE_toggled(bool checked){
+    ui->tuneButton->setChecked(checked);
+    on_tuneButton_clicked(checked);
 }
 
 void MainWindow::on_menuWindow_aboutToShow(){

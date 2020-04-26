@@ -4718,6 +4718,7 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionEnable_Monitor_RX"/>
     <addaction name="actionEnable_Transmitter_TX"/>
     <addaction name="actionEnable_Reporting_SPOT"/>
+    <addaction name="actionEnable_Tuning_Tone_TUNE"/>
     <addaction name="separator"/>
     <addaction name="actionSetFrequency"/>
     <addaction name="actionSetOffset"/>
@@ -5751,6 +5752,14 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Enable Reporting (&amp;SPOT)</string>
+   </property>
+  </action>
+  <action name="actionEnable_Tuning_Tone_TUNE">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Tuning Tone (T&amp;UNE)</string>
    </property>
   </action>
  </widget>
