@@ -12518,7 +12518,12 @@ void MainWindow::displayCallActivity() {
 
             auto iconItem = new QTableWidgetItem(hasMessage ? "\u2691" : hasACK ? "\u2605" : hasCQ ? "\u260E" : hasThrough ? "\u269F" : "");
             iconItem->setData(Qt::UserRole, QVariant(d.call));
-            iconItem->setToolTip(hasMessage ? "Message Available" : hasACK ? "Hearing Your Station" : hasCQ ? "Calling CQ" : hasThrough ? QString("Heard Through %1 Relay)").arg(d.through) : "");
+            iconItem->setToolTip(
+                hasMessage ? "Message Available" :
+                hasACK ? QString("Hearing Your Station (%1)").arg(since(d.ackTimestamp)) :
+                hasCQ ? QString("Calling CQ (%1)").arg(since(d.cqTimestamp)) :
+                hasThrough ? QString("Heard Through Relay (%1)").arg(d.through) :
+                "");
             iconItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
             ui->tableWidgetCalls->setItem(row, col++, iconItem);
             if(hasMessage || hasACK || hasCQ || hasThrough){
