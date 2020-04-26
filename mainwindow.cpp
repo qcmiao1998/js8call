@@ -1031,6 +1031,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
           if(pProcessed) *pProcessed = false;
           return;
       }
+
       if(ui->extFreeTextMsgEdit->isReadOnly()){
           if(pProcessed) *pProcessed = false;
           return;
@@ -1039,6 +1040,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       if(pProcessed) *pProcessed = true;
 
       if(ui->extFreeTextMsgEdit->toPlainText().trimmed().isEmpty()){
+          return;
+      }
+
+      if(!ensureCanTransmit()){
           return;
       }
 
