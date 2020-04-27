@@ -1,5 +1,6 @@
 #include "widegraph.h"
 
+
 #include <algorithm>
 #include <QApplication>
 #include <QSettings>
@@ -31,7 +32,8 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   m_filterMinimum {0},
   m_filterMaximum {5000},
   m_filterEnabled {false},
-  m_bHaveTransmitted {false}
+  m_bHaveTransmitted {false},
+  m_dist { 0.0, 0.1 }
 {
   ui->setupUi(this);
 
@@ -164,6 +166,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     setRxRange ();
     ui->controls_widget->setVisible(!m_settings->value("HideControls", false).toBool());
     ui->cbControls->setChecked(!m_settings->value("HideControls", false).toBool());
+    ui->fpsSpinBox->setValue(m_settings->value ("WaterfallFPS", 4).toInt());
 
     auto splitState = m_settings->value("SplitState").toByteArray();
     if(!splitState.isEmpty()){
@@ -189,6 +192,10 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   ui->paletteComboBox->addItem (user_defined);
   if (user_defined == m_waterfallPalette) ui->paletteComboBox->setCurrentIndex(index);
   readPalette ();
+
+  connect(&m_drawTimer, &QTimer::timeout, this, &WideGraph::draw);
+  m_drawTimer.setSingleShot(true);
+  m_drawTimer.start(100);   //### Don't change the 100 ms! ###
 }
 
 WideGraph::~WideGraph ()
@@ -234,6 +241,7 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("FilterEnabled", m_filterEnabled);
   m_settings->setValue ("FilterOpacityPercent", ui->filterOpacitySpinBox->value());
   m_settings->setValue ("SplitState", ui->splitter->saveState());
+  m_settings->setValue ("WaterfallFPS", ui->fpsSpinBox->value());
 }
 
 void WideGraph::drawRed(int ia, int ib)
@@ -244,9 +252,12 @@ void WideGraph::drawRed(int ia, int ib)
 void WideGraph::dataSink2(float s[], float df3, int ihsym, int ndiskdata)  //dataSink2
 {
   static float splot[NSMAX];
+
+  QMutexLocker lock(&m_drawLock);
+
   int nbpp = ui->widePlot->binsPerPixel();
 
-//Average spectra over specified number, m_waterfallAvg
+  //Average spectra over specified number, m_waterfallAvg
   if (m_n==0) {
     for (int i=0; i<NSMAX; i++)
       splot[i]=s[i];
@@ -256,43 +267,112 @@ void WideGraph::dataSink2(float s[], float df3, int ihsym, int ndiskdata)  //dat
   }
   m_n++;
 
-  if (m_n>=m_waterfallAvg) {
-    for (int i=0; i<NSMAX; i++)
-        splot[i] /= m_n;        //Normalize the average
-    m_n=0;
-    int i=int(ui->widePlot->startFreq()/df3 + 0.5);
-    int jz=5000.0/(nbpp*df3);
-		if(jz>MAX_SCREENSIZE) jz=MAX_SCREENSIZE;
-    m_jz=jz;
-    for (int j=0; j<jz; j++) {
-      float ss=0.0;
-      float smax=0;
-      for (int k=0; k<nbpp; k++) {
-        float sp=splot[i++];
-        ss += sp;
-        smax=qMax(smax,sp);
-      }
-//      swide[j]=nbpp*smax;
-      swide[j]=nbpp*ss;
+  if (m_n<m_waterfallAvg) {
+      return;
+  }
+
+  for (int i=0; i<NSMAX; i++){
+    splot[i] /= m_n;        //Normalize the average
+  }
+
+  m_n=0;
+  int i=int(ui->widePlot->startFreq()/df3 + 0.5);
+  int jz=5000.0/(nbpp*df3);
+  if(jz>MAX_SCREENSIZE) jz=MAX_SCREENSIZE;
+  m_jz=jz;
+  for (int j=0; j<jz; j++) {
+    float ss=0.0;
+    float smax=0;
+    for (int k=0; k<nbpp; k++) {
+      float sp=splot[i++];
+      ss += sp;
+      smax=qMax(smax,sp);
     }
 
-// Time according to this computer
-    qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
-    int ntr = (ms/1000) % m_TRperiod;
-    if((ndiskdata && ihsym <= m_waterfallAvg) || (!ndiskdata && ntr<m_ntr0)) {
-      float flagValue=1.0e30;
-      if(m_bHaveTransmitted) flagValue=2.0e30;
-      for(int i=0; i<MAX_SCREENSIZE; i++) {
-        swide[i] = flagValue;
-      }
-      for(int i=0; i<NSMAX; i++) {
-        splot[i] = flagValue;
-      }
-      m_bHaveTransmitted=false;
-    }
-    m_ntr0=ntr;
-    ui->widePlot->draw(swide,true,false);
+    // swide[j]=nbpp*smax;
+    swide[j]=nbpp*ss;
   }
+
+  // Time according to this computer
+  qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
+  int ntr = (ms/1000) % m_TRperiod;
+  if((ndiskdata && ihsym <= m_waterfallAvg) || (!ndiskdata && ntr<m_ntr0)) {
+    float flagValue=1.0e30;
+    if(m_bHaveTransmitted) flagValue=2.0e30;
+    for(int i=0; i<MAX_SCREENSIZE; i++) {
+      swide[i] = flagValue;
+    }
+    for(int i=0; i<NSMAX; i++) {
+      splot[i] = flagValue;
+    }
+    m_bHaveTransmitted=false;
+  }
+  m_ntr0=ntr;
+
+  // draw this one here too...
+  // ui->widePlot->draw(swide,true,false);
+
+  // copy swide around
+  // {
+  //   memcpy(swide2, swide, sizeof(swide[0])*MAX_SCREENSIZE);
+  // }
+}
+
+void WideGraph::draw(){
+    static const quint64 buf = 10;
+    static quint64 lastLoop;
+
+    quint64 fps = qMax(1, qMin(ui->fpsSpinBox->value(), 100));
+    quint64 loopMs = 1000/fps * m_waterfallAvg;
+    quint64 thisLoop = QDateTime::currentMSecsSinceEpoch();
+    if(lastLoop == 0){
+        lastLoop = thisLoop;
+    }
+    quint64 delta = thisLoop - lastLoop;
+    if(delta > (loopMs + buf)){
+      qDebug() << "widegraph overrun" << (delta-loopMs);
+    }
+    lastLoop = thisLoop;
+
+    // do the drawing
+    drawSwide();
+
+    // compute the processing time and adjust loop to hit the next 100ms
+    auto endLoop = QDateTime::currentMSecsSinceEpoch();
+    auto processingTime = endLoop - thisLoop;
+    auto nextLoopMs = 0;
+    if(processingTime < loopMs){
+        nextLoopMs = loopMs - processingTime;
+    }
+    m_drawTimer.start(nextLoopMs);
+}
+
+void WideGraph::drawSwide(){
+    static bool lastSwideGreen = false;
+
+    if(m_paused){
+        return;
+    }
+
+    QMutexLocker lock(&m_drawLock);
+
+    float swideLocal[MAX_SCREENSIZE];
+    memcpy(swideLocal, swide, sizeof(swide[0])*MAX_SCREENSIZE);
+
+    bool thisSwideGreen = swideLocal[0] >1.e29;
+    for(int i = 0; i < MAX_SCREENSIZE; i++){
+        if(swideLocal[i] == 0.0){
+            swideLocal[i] += m_dist(m_gen);
+        }
+#if 0
+        else if (lastSwideGreen && thisSwideGreen){
+            swideLocal[i] = m_dist(m_gen);
+        }
+#endif
+    }
+
+    ui->widePlot->draw(swideLocal,true,false);
+    lastSwideGreen = thisSwideGreen;
 }
 
 void WideGraph::on_bppSpinBox_valueChanged(int n)                            //bpp
@@ -695,7 +775,6 @@ void WideGraph::on_gain2dSlider_valueChanged(int value)               //Gain2
   ui->widePlot->setPlot2dGain(value);
   if(ui->widePlot->scaleOK ()) {
     ui->widePlot->draw(swide,false,false);
-    if(m_mode=="QRA64") ui->widePlot->draw(swide,false,true);
   }
 }
 
@@ -704,7 +783,6 @@ void WideGraph::on_zero2dSlider_valueChanged(int value)               //Zero2
   ui->widePlot->setPlot2dZero(value);
   if(ui->widePlot->scaleOK ()) {
     ui->widePlot->draw(swide,false,false);
-    if(m_mode=="QRA64") ui->widePlot->draw(swide,false,true);
   }
 }
 

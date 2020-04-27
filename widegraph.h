@@ -2,10 +2,18 @@
 #ifndef WIDEGRAPH_H
 #define WIDEGRAPH_H
 
+
+#include <random>
+#include <iterator>
+#include <iostream>
+
 #include <QDialog>
 #include <QScopedPointer>
 #include <QDir>
 #include <QHash>
+#include <QTimer>
+#include <QMutex>
+#include <QMutexLocker>
 #include <QVariant>
 #include "WFPalette.hpp"
 
@@ -75,12 +83,16 @@ public slots:
   bool controlsVisible();
   void setDrift(int n);
   void setQSYEnabled(bool enabled);
+  void setPaused(bool paused){ m_paused = paused; }
 
 protected:
   void keyPressEvent (QKeyEvent *e) override;
   void closeEvent (QCloseEvent *) override;
 
 private slots:
+  void draw();
+  void drawSwide();
+
   void on_qsyPushButton_clicked();
   void on_offsetSpinBox_valueChanged(int n);
   void on_waterfallAvgSpinBox_valueChanged(int arg1);
@@ -141,14 +153,21 @@ private:
   qint32 m_jz=MAX_SCREENSIZE;
   qint32 m_n;
 
+  bool   m_paused;
   bool   m_bFlatten;
   bool   m_bRef;
   bool   m_bHaveTransmitted;    //Set true at end of a WSPR transmission
+
+  QTimer m_drawTimer;
+  QMutex m_drawLock;
 
   QString m_rxBand;
   QString m_mode;
   QString m_modeTx;
   QString m_waterfallPalette;  
+
+  std::default_random_engine m_gen;
+  std::normal_distribution<double> m_dist;
 };
 
 #endif // WIDEGRAPH_H

@@ -172,12 +172,13 @@ void CPlotter::draw(float swide[], bool bScroll, bool bRed)
 
   if(bScroll and swide[0]<1.e29) {
     flat4_(swide,&iz,&m_Flatten);
-    if(!m_bReplot) flat4_(&dec_data.savg[j0],&jz,&m_Flatten);
+    //if(!m_bReplot) flat4_(&dec_data.savg[j0],&jz,&m_Flatten);
   }
 
   ymin=1.e30;
   if(swide[0]>1.e29 and swide[0]< 1.5e30) painter1.setPen(Qt::green); // horizontal line
   if(swide[0]>1.4e30) painter1.setPen(Qt::yellow);
+
   if(!m_bReplot) {
     m_j=0;
     int irow=-1;

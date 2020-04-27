@@ -3280,6 +3280,10 @@ void MainWindow::on_monitorButton_clicked (bool checked)
 void MainWindow::monitor (bool state)
 {
   ui->monitorButton->setChecked (state);
+
+  // make sure widegraph is running if we are monitoring, otherwise pause it.
+  m_wideGraph->setPaused(!state);
+
   if (state) {
     m_diskData = false; // no longer reading WAV files
     if (!m_monitoring) Q_EMIT resumeAudioInputStream ();

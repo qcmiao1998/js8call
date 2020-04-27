@@ -177,8 +177,8 @@
              <widget class="QWidget" name="scrollAreaWidgetContents_2">
               <property name="geometry">
                <rect>
-                <x>-3</x>
-                <y>-163</y>
+                <x>0</x>
+                <y>0</y>
                 <width>270</width>
                 <height>372</height>
                </rect>
@@ -427,9 +427,9 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>0</y>
+                <y>-193</y>
                 <width>267</width>
-                <height>691</height>
+                <height>723</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -527,9 +527,28 @@
                <item>
                 <widget class="QGroupBox" name="groupBox_4">
                  <property name="title">
-                  <string>Averaging</string>
+                  <string>Scrolling &amp;&amp; Averaging</string>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_7">
+                  <item>
+                   <widget class="QSpinBox" name="fpsSpinBox">
+                    <property name="suffix">
+                     <string> fps</string>
+                    </property>
+                    <property name="prefix">
+                     <string>Scroll Speed: </string>
+                    </property>
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>100</number>
+                    </property>
+                    <property name="value">
+                     <number>10</number>
+                    </property>
+                   </widget>
+                  </item>
                   <item>
                    <layout class="QHBoxLayout" name="horizontalLayout_3">
                     <item>
