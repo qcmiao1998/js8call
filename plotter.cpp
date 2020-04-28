@@ -172,7 +172,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool bRed)
 
   if(bScroll and swide[0]<1.e29) {
     flat4_(swide,&iz,&m_Flatten);
-    //if(!m_bReplot) flat4_(&dec_data.savg[j0],&jz,&m_Flatten);
+    // if(!m_bReplot) flat4_(&dec_data.savg[j0],&jz,&m_Flatten);
   }
 
   ymin=1.e30;

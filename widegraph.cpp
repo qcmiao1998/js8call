@@ -293,29 +293,18 @@ void WideGraph::dataSink2(float s[], float df3, int ihsym, int ndiskdata)  //dat
     swide[j]=nbpp*ss;
   }
 
-  // Time according to this computer
+  // draw the tr cycle horizontal lines if needed
   qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
   int ntr = (ms/1000) % m_TRperiod;
   if((ndiskdata && ihsym <= m_waterfallAvg) || (!ndiskdata && ntr<m_ntr0)) {
     float flagValue=1.0e30;
     if(m_bHaveTransmitted) flagValue=2.0e30;
-    for(int i=0; i<MAX_SCREENSIZE; i++) {
-      swide[i] = flagValue;
-    }
     for(int i=0; i<NSMAX; i++) {
       splot[i] = flagValue;
     }
     m_bHaveTransmitted=false;
   }
   m_ntr0=ntr;
-
-  // draw this one here too...
-  // ui->widePlot->draw(swide,true,false);
-
-  // copy swide around
-  // {
-  //   memcpy(swide2, swide, sizeof(swide[0])*MAX_SCREENSIZE);
-  // }
 }
 
 void WideGraph::draw(){
@@ -348,8 +337,6 @@ void WideGraph::draw(){
 }
 
 void WideGraph::drawSwide(){
-    static bool lastSwideGreen = false;
-
     if(m_paused){
         return;
     }
@@ -357,22 +344,29 @@ void WideGraph::drawSwide(){
     QMutexLocker lock(&m_drawLock);
 
     float swideLocal[MAX_SCREENSIZE];
-    memcpy(swideLocal, swide, sizeof(swide[0])*MAX_SCREENSIZE);
 
-    bool thisSwideGreen = swideLocal[0] >1.e29;
-    for(int i = 0; i < MAX_SCREENSIZE; i++){
-        if(swideLocal[i] == 0.0){
-            swideLocal[i] += m_dist(m_gen);
-        }
-#if 0
-        else if (lastSwideGreen && thisSwideGreen){
-            swideLocal[i] = m_dist(m_gen);
-        }
-#endif
+    // draw the tr cycle horizontal lines if needed
+    static int lastSecondInPeriod = 0;
+    qint64 now (DriftingDateTime::currentMSecsSinceEpoch ());
+    unsigned secondInToday ((now % 86400000LL) / 1000);
+    int secondInPeriod = secondInToday % m_TRperiod;
+    if(secondInPeriod < lastSecondInPeriod) {
+      float flagValue=1.0e30;
+      for(int i = 0; i < MAX_SCREENSIZE; i++) {
+        swideLocal[i] = flagValue;
+      }
+      ui->widePlot->draw(swideLocal,true,false);
     }
+    lastSecondInPeriod=secondInPeriod;
 
+    // then, draw the data
+    memcpy(swideLocal, swide, sizeof(swide[0])*MAX_SCREENSIZE);
+    // for(int i = 0; i < MAX_SCREENSIZE; i++){
+    //     if(swideLocal[i] <= 1.0){
+    //         swideLocal[i] += m_dist(m_gen);
+    //     }
+    // }
     ui->widePlot->draw(swideLocal,true,false);
-    lastSwideGreen = thisSwideGreen;
 }
 
 void WideGraph::on_bppSpinBox_valueChanged(int n)                            //bpp
@@ -427,7 +421,6 @@ void WideGraph::keyPressEvent(QKeyEvent *e)                                 //F1
 void WideGraph::setRxFreq(int n)                                           //setRxFreq
 {
   ui->widePlot->setRxFreq(n);
-  ui->widePlot->draw(swide,false,false);
   ui->offsetSpinBox->setValue(n);
 }
 
