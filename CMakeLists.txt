@@ -468,7 +468,6 @@ set (wsjt_FSRCS
   lib/unpackmsg144.f90
   lib/update_recent_calls.f90
   lib/update_hasharray.f90
-  lib/ft8/watterson.f90
   lib/wav11.f90
   lib/wav12.f90
   lib/xcor.f90

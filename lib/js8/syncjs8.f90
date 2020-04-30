@@ -114,7 +114,8 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
         sync_bc=t/t0
 
         !sync2d(i,j)=max(max(max(sync_abc, sync_ab), sync_ac), sync_bc)
-        sync2d(i,j)=max(sync_abc, sync_ab, sync_bc)
+        !sync2d(i,j)=max(sync_abc, sync_ab, sync_bc)
+        sync2d(i,j)=max(sync_abc, sync_bc)
      enddo
   enddo
 
@@ -128,8 +129,14 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
 
   iz=ib-ia+1
   call indexx(red(ia:ib),iz,indx)
+
+  npctile=nint(0.40*iz)
+  if(npctile.lt.1) then ! bail
+      ncand=0
+      return;
+  endif
   
-  ibase=indx(nint(0.40*iz)) - 1 + ia
+  ibase=indx(npctile) - 1 + ia
   if(ibase.lt.1) ibase=1
   if(ibase.gt.nh1) ibase=nh1
   base=red(ibase)
@@ -157,6 +164,10 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
         do j=1,i-1
            fdiff=abs(candidate0(1,i))-abs(candidate0(1,j))
            if(abs(fdiff).lt.AZ) then                                     ! note: this dedupe difference is dependent on symbol spacing
+              if(NWRITELOG.eq.1) then
+                  write(*,*) '<DecodeDebug> candidate dupe', fdiff, candidate0(1,i), candidate0(1,j)
+                  flush(6)
+              endif
               if(candidate0(3,i).ge.candidate0(3,j)) candidate0(3,j)=0.
               if(candidate0(3,i).lt.candidate0(3,j)) candidate0(3,i)=0.
            endif
@@ -177,9 +188,8 @@ subroutine syncjs8(dd,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   do i=1,ncand
      j=indx(i)
      if( candidate0(3,j) .ge. syncmin ) then
+       candidate(2:3,k)=candidate0(2:3,j)
        candidate(1,k)=abs(candidate0(1,j))
-       candidate(2,k)=candidate0(2,j)
-       candidate(3,k)=candidate0(3,j)
        k=k+1
      endif
   enddo

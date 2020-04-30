@@ -32,7 +32,7 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   integer naptypes(0:5,4) ! (nQSOProgress, decoding pass)  maximum of 4 passes for now
   integer*1, target:: i1hiscall(12)
   complex cd0(0:NP-1)
-  complex ctwk(4*NSPS/NDOWN)
+  complex ctwk(7*NSPS/NDOWN)
   complex csymb(NDOWNSPS)
   logical first,newdat,lsubtract,lapon,lapcqonly,nagain
   equivalence (s1,s1sort)
@@ -100,8 +100,8 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   delfbest=0.
   ibest=0
 
-  if(NWRITELOG.eq.1) then
-    write(*,*) '<DecodeDebug> downsampling', fs2, dt2
+  if(NWRITELOG.eq.0) then
+    write(*,*) '<DecodeDebug> downsampling', f1, fs2, dt2
     flush(6)
   endif
 
@@ -120,7 +120,7 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
 
   do idt=i0-NQSYMBOL,i0+NQSYMBOL             !Search over +/- one quarter symbol
      call syncjs8d(cd0,idt,ctwk,0,sync)
-     if(NWRITELOG.eq.1) then
+     if(NWRITELOG.eq.0) then
          write(*,*) '<DecodeDebug> ', 'idt', idt, 'sync', sync
          flush(6)
      endif
@@ -131,7 +131,7 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   enddo
   xdt2=ibest*dt2                           !Improved estimate for DT
 
-  if(NWRITELOG.eq.1) then
+  if(NWRITELOG.eq.0) then
     write(*,*) '<DecodeDebug> ', 'xdt2', xdt2, 'ibest', ibest
     flush(6)
   endif
@@ -144,12 +144,12 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
     delf=ifr*0.5
     dphi=twopi*delf*dt2
     phi=0.0
-    do i=1,(4*NSPS/NDOWN)
+    do i=1,7*NSPS/NDOWN
       ctwk(i)=cmplx(cos(phi),sin(phi))
       phi=mod(phi+dphi,twopi)
     enddo
     call syncjs8d(cd0,i0,ctwk,1,sync)
-    if(NWRITELOG.eq.1) then
+    if(NWRITELOG.eq.0) then
         write(*,*) '<DecodeDebug> ', 'df', delf, 'sync', sync
         flush(6)
     endif
@@ -164,7 +164,7 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   xdt=xdt2
   f1=f1+delfbest                           !Improved estimate of DF
 
-  if(NWRITELOG.eq.1) then
+  if(NWRITELOG.eq.0) then
     write(*,*) '<DecodeDebug> ', 'twk', xdt, f1, smax
     flush(6)
   endif
@@ -267,43 +267,43 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
 !     r2=log(b2+b3+b6+b7)-log(b0+b1+b4+b5)
 !     r4=log(b4+b5+b6+b7)-log(b0+b1+b2+b3)
 
-     if(nQSOProgress .eq. 0 .or. nQSOProgress .eq. 5) then
-! When bits 88:115 are set as ap bits, bit 115 lives in symbol 39 along
-! with no-ap bits 116 and 117. Take care of metrics for bits 116 and 117.
-        if(j.eq.39) then  ! take care of bits that live in symbol 39
-           if(apsym(28).lt.0) then
-              bmetap(i2)=max(ps(2),ps(3))-max(ps(0),ps(1))
-              bmetap(i1)=max(ps(1),ps(3))-max(ps(0),ps(2))
-           else 
-              bmetap(i2)=max(ps(6),ps(7))-max(ps(4),ps(5))
-              bmetap(i1)=max(ps(5),ps(7))-max(ps(4),ps(6))
-           endif
-        endif
-     endif
-
-! When bits 116:143 are set as ap bits, bit 115 lives in symbol 39 along
-! with ap bits 116 and 117. Take care of metric for bit 115.
-        if(j.eq.39) then  ! take care of bit 115
-           iii=2*(apsym(29)+1)/2 + (apsym(30)+1)/2  ! known values of bits 116 & 117
-           if(iii.eq.0) bmetap(i4)=ps(4)-ps(0)
-           if(iii.eq.1) bmetap(i4)=ps(5)-ps(1)
-           if(iii.eq.2) bmetap(i4)=ps(6)-ps(2)
-           if(iii.eq.3) bmetap(i4)=ps(7)-ps(3)
-        endif
-
-! bit 144 lives in symbol 48 and will be 1 if it is set as an ap bit.
-! take care of metrics for bits 142 and 143
-     if(j.eq.48) then  ! bit 144 is always 1
-       bmetap(i4)=max(ps(5),ps(7))-max(ps(1),ps(3))
-       bmetap(i2)=max(ps(3),ps(7))-max(ps(1),ps(5))
-     endif 
- 
-! bit 154 lives in symbol 52 and will be 0 if it is set as an ap bit
-! take care of metrics for bits 155 and 156
-     if(j.eq.52) then  ! bit 154 will be 0 if it is set as an ap bit.
-        bmetap(i2)=max(ps(2),ps(3))-max(ps(0),ps(1))
-        bmetap(i1)=max(ps(1),ps(3))-max(ps(0),ps(2))
-     endif  
+!      if(nQSOProgress .eq. 0 .or. nQSOProgress .eq. 5) then
+! ! When bits 88:115 are set as ap bits, bit 115 lives in symbol 39 along
+! ! with no-ap bits 116 and 117. Take care of metrics for bits 116 and 117.
+!         if(j.eq.39) then  ! take care of bits that live in symbol 39
+!            if(apsym(28).lt.0) then
+!               bmetap(i2)=max(ps(2),ps(3))-max(ps(0),ps(1))
+!               bmetap(i1)=max(ps(1),ps(3))-max(ps(0),ps(2))
+!            else 
+!               bmetap(i2)=max(ps(6),ps(7))-max(ps(4),ps(5))
+!               bmetap(i1)=max(ps(5),ps(7))-max(ps(4),ps(6))
+!            endif
+!         endif
+!      endif
+! 
+! ! When bits 116:143 are set as ap bits, bit 115 lives in symbol 39 along
+! ! with ap bits 116 and 117. Take care of metric for bit 115.
+!         if(j.eq.39) then  ! take care of bit 115
+!            iii=2*(apsym(29)+1)/2 + (apsym(30)+1)/2  ! known values of bits 116 & 117
+!            if(iii.eq.0) bmetap(i4)=ps(4)-ps(0)
+!            if(iii.eq.1) bmetap(i4)=ps(5)-ps(1)
+!            if(iii.eq.2) bmetap(i4)=ps(6)-ps(2)
+!            if(iii.eq.3) bmetap(i4)=ps(7)-ps(3)
+!         endif
+! 
+! ! bit 144 lives in symbol 48 and will be 1 if it is set as an ap bit.
+! ! take care of metrics for bits 142 and 143
+!      if(j.eq.48) then  ! bit 144 is always 1
+!        bmetap(i4)=max(ps(5),ps(7))-max(ps(1),ps(3))
+!        bmetap(i2)=max(ps(3),ps(7))-max(ps(1),ps(5))
+!      endif 
+!  
+! ! bit 154 lives in symbol 52 and will be 0 if it is set as an ap bit
+! ! take care of metrics for bits 155 and 156
+!      if(j.eq.52) then  ! bit 154 will be 0 if it is set as an ap bit.
+!         bmetap(i2)=max(ps(2),ps(3))-max(ps(0),ps(1))
+!         bmetap(i1)=max(ps(1),ps(3))-max(ps(0),ps(2))
+!      endif  
 
   enddo
 
