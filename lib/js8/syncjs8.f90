@@ -116,8 +116,7 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
         sync_bc=t/t0
 
         !sync2d(i,j)=max(max(max(sync_abc, sync_ab), sync_ac), sync_bc)
-        !sync2d(i,j)=max(sync_abc, sync_ab, sync_bc)
-        sync2d(i,j)=max(sync_abc, sync_bc)
+        sync2d(i,j)=max(sync_abc, sync_ab, sync_bc)
      enddo
   enddo
 
