@@ -10,7 +10,7 @@ subroutine js8_downsample(dd,newdat,f0,c1)
 
   complex c1(0:NDFFT2-1)
   complex cx(0:NDFFT1/2)
-  real dd(NMAX),x(NDFFT1),taper(0:NDD)
+  real*4 dd(NMAX),x(NDFFT1),taper(0:NDD)
   equivalence (x,cx)
   data first/.true./
   save cx,first,taper

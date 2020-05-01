@@ -2,12 +2,11 @@ subroutine syncjs8d(cd0,icos,i0,ctwk,itwk,sync)
 ! Compute sync power for a complex, downsampled JS8 signal.
 
   !include 'js8_params.f90'
-
   parameter(NP=NMAX/NDOWN, NP2=NN*NDOWNSPS)
   complex cd0(0:NP-1)
-  complex csynca(7*NDOWNSPS),csyncb(7*NDOWNSPS),csyncc(7*NDOWNSPS)
-  complex csync2(7*NDOWNSPS)
-  complex ctwk(7*NDOWNSPS)
+  complex csynca(0:6,NDOWNSPS),csyncb(0:6,NDOWNSPS),csyncc(0:6,NDOWNSPS)
+  complex csync2(NDOWNSPS)
+  complex ctwk(NDOWNSPS)
   complex z1,z2,z3
   logical first
   integer icos
@@ -42,20 +41,18 @@ subroutine syncjs8d(cd0,icos,i0,ctwk,itwk,sync)
     taus=NDOWNSPS*dt2                       !Symbol duration
     baud=1.0/taus                           !Keying rate
 
-    phia=0.0
-    phib=0.0
-    phic=0.0
-
     do i=0,6
+      phia=0.0
+      phib=0.0
+      phic=0.0
       dphia=twopi*icos7a(i)*baud*dt2
       dphib=twopi*icos7b(i)*baud*dt2
       dphic=twopi*icos7c(i)*baud*dt2
 
       do j=1,NDOWNSPS
-        k=i*NDOWNSPS+j
-        csynca(k)=cmplx(cos(phia),sin(phia)) !Waveform for Beginning 7x7 Costas array
-        csyncb(k)=cmplx(cos(phib),sin(phib)) !Waveform for Middle 7x7 Costas array
-        csyncc(k)=cmplx(cos(phic),sin(phic)) !Waveform for End 7x7 Costas array
+        csynca(i,j)=cmplx(cos(phia),sin(phia)) !Waveform for Beginning 7x7 Costas array
+        csyncb(i,j)=cmplx(cos(phib),sin(phib)) !Waveform for Middle 7x7 Costas array
+        csyncc(i,j)=cmplx(cos(phic),sin(phic)) !Waveform for End 7x7 Costas array
         phia=mod(phia+dphia,twopi)
         phib=mod(phib+dphib,twopi)
         phic=mod(phia+dphic,twopi)
@@ -81,17 +78,17 @@ subroutine syncjs8d(cd0,icos,i0,ctwk,itwk,sync)
     z2=0.
     z3=0.
 
-    csync2=csynca
-    if(itwk.eq.1) csync2=ctwk*csynca
-    if(i1.ge.0 .and. i1+NDOWNSPS-1.le.NP2-1) z1=sum(cd0(i1:i1+7*NDOWNSPS-1)*conjg(csync2))
+    csync2=csynca(i,1:NDOWNSPS)
+    if(itwk.eq.1) csync2=ctwk*csync2
+    if(i1.ge.0 .and. i1+NDOWNSPS-1.le.NP2-1) z1=sum(cd0(i1:i1+NDOWNSPS-1)*conjg(csync2))
 
-    csync2=csyncb
-    if(itwk.eq.1) csync2=ctwk*csyncb
-    if(i2.ge.0 .and. i2+NDOWNSPS-1.le.NP2-1) z2=sum(cd0(i2:i2+7*NDOWNSPS-1)*conjg(csync2))
+    csync2=csyncb(i,1:NDOWNSPS)
+    if(itwk.eq.1) csync2=ctwk*csync2
+    if(i2.ge.0 .and. i2+NDOWNSPS-1.le.NP2-1) z2=sum(cd0(i2:i2+NDOWNSPS-1)*conjg(csync2))
 
-    csync2=csyncc
-    if(itwk.eq.1) csync2=ctwk*csyncc
-    if(i3.ge.0 .and. i3+NDOWNSPS-1.le.NP2-1) z3=sum(cd0(i3:i3+7*NDOWNSPS-1)*conjg(csync2))
+    csync2=csyncc(i,1:NDOWNSPS)
+    if(itwk.eq.1) csync2=ctwk*csync2
+    if(i3.ge.0 .and. i3+NDOWNSPS-1.le.NP2-1) z3=sum(cd0(i3:i3+NDOWNSPS-1)*conjg(csync2))
 
     sync = sync + p(z1) + p(z2) + p(z3)
 

@@ -149,7 +149,7 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
     if(k.ge.200) exit
     n=ia + indx(iz+1-i) - 1
     if(red(n).lt.syncmin.or.isnan(red(n))) exit
-    if(NWRITELOG.eq.0) then
+    if(NWRITELOG.eq.1) then
         write(*,*) '<DecodeDebug> red candidate', red(n), n*df, (jpeak(n)-1)*tstep
         flush(6)
     endif
