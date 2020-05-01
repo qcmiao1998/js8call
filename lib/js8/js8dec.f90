@@ -1,4 +1,4 @@
-subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
+subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
      napwid,lsubtract,nagain,iaptype,mycall12,mygrid6,hiscall12,bcontest,    &
      sync0,f1,xdt,xbase,apsym,nharderrors,dmin,nbadcrc,ipass,iera,msg37,xsnr)  
 
@@ -45,7 +45,7 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   save nappasses,naptypes
 
   integer icos7a(0:6), icos7b(0:6), icos7c(0:6)
-  if(NCOSTAS.eq.1) then
+  if(icos.eq.1) then
     icos7a = (/4,2,5,6,1,3,0/)                  !Beginning Costas 7x7 tone pattern
     icos7b = (/4,2,5,6,1,3,0/)                  !Middle Costas 7x7 tone pattern
     icos7c = (/4,2,5,6,1,3,0/)                  !End Costas 7x7 tone pattern
@@ -119,7 +119,7 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
   endif
 
   do idt=i0-NQSYMBOL,i0+NQSYMBOL             !Search over +/- one quarter symbol
-     call syncjs8d(cd0,idt,ctwk,0,sync)
+     call syncjs8d(cd0,icos,idt,ctwk,0,sync)
      if(NWRITELOG.eq.0) then
          write(*,*) '<DecodeDebug> ', 'idt', idt, 'sync', sync
          flush(6)
@@ -148,7 +148,7 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
       ctwk(i)=cmplx(cos(phi),sin(phi))
       phi=mod(phi+dphi,twopi)
     enddo
-    call syncjs8d(cd0,i0,ctwk,1,sync)
+    call syncjs8d(cd0,icos,i0,ctwk,1,sync)
     if(NWRITELOG.eq.0) then
         write(*,*) '<DecodeDebug> ', 'df', delf, 'sync', sync
         flush(6)
@@ -169,7 +169,7 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
     flush(6)
   endif
 
-  call syncjs8d(cd0,i0,ctwk,2,sync)
+  call syncjs8d(cd0,icos,i0,ctwk,2,sync)
 
   j=0
   do k=1,NN
@@ -247,63 +247,63 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
      bmetb(i1)=r1
 
 ! Metric for Cauchy noise
-!     r1=log(ps(1)**3+ps(3)**3+ps(5)**3+ps(7)**3)- &
-!        log(ps(0)**3+ps(2)**3+ps(4)**3+ps(6)**3)
-!     r2=log(ps(2)**3+ps(3)**3+ps(6)**3+ps(7)**3)- &
-!        log(ps(0)**3+ps(1)**3+ps(4)**3+ps(5)**3)
-!     r4=log(ps(4)**3+ps(5)**3+ps(6)**3+ps(7)**3)- &
-!        log(ps(0)**3+ps(1)**3+ps(2)**3+ps(3)**3)
+     r1=log(ps(1)**3+ps(3)**3+ps(5)**3+ps(7)**3)- &
+        log(ps(0)**3+ps(2)**3+ps(4)**3+ps(6)**3)
+     r2=log(ps(2)**3+ps(3)**3+ps(6)**3+ps(7)**3)- &
+        log(ps(0)**3+ps(1)**3+ps(4)**3+ps(5)**3)
+     r4=log(ps(4)**3+ps(5)**3+ps(6)**3+ps(7)**3)- &
+        log(ps(0)**3+ps(1)**3+ps(2)**3+ps(3)**3)
 ! Metric for AWGN, no fading
-!     bscale=2.5
-!     b0=bessi0(bscale*ps(0))
-!     b1=bessi0(bscale*ps(1))
-!     b2=bessi0(bscale*ps(2))
-!     b3=bessi0(bscale*ps(3))
-!     b4=bessi0(bscale*ps(4))
-!     b5=bessi0(bscale*ps(5))
-!     b6=bessi0(bscale*ps(6))
-!     b7=bessi0(bscale*ps(7))
-!     r1=log(b1+b3+b5+b7)-log(b0+b2+b4+b6)
-!     r2=log(b2+b3+b6+b7)-log(b0+b1+b4+b5)
-!     r4=log(b4+b5+b6+b7)-log(b0+b1+b2+b3)
+     bscale=2.5
+     b0=bessi0(bscale*ps(0))
+     b1=bessi0(bscale*ps(1))
+     b2=bessi0(bscale*ps(2))
+     b3=bessi0(bscale*ps(3))
+     b4=bessi0(bscale*ps(4))
+     b5=bessi0(bscale*ps(5))
+     b6=bessi0(bscale*ps(6))
+     b7=bessi0(bscale*ps(7))
+     r1=log(b1+b3+b5+b7)-log(b0+b2+b4+b6)
+     r2=log(b2+b3+b6+b7)-log(b0+b1+b4+b5)
+     r4=log(b4+b5+b6+b7)-log(b0+b1+b2+b3)
 
-!      if(nQSOProgress .eq. 0 .or. nQSOProgress .eq. 5) then
-! ! When bits 88:115 are set as ap bits, bit 115 lives in symbol 39 along
-! ! with no-ap bits 116 and 117. Take care of metrics for bits 116 and 117.
-!         if(j.eq.39) then  ! take care of bits that live in symbol 39
-!            if(apsym(28).lt.0) then
-!               bmetap(i2)=max(ps(2),ps(3))-max(ps(0),ps(1))
-!               bmetap(i1)=max(ps(1),ps(3))-max(ps(0),ps(2))
-!            else 
-!               bmetap(i2)=max(ps(6),ps(7))-max(ps(4),ps(5))
-!               bmetap(i1)=max(ps(5),ps(7))-max(ps(4),ps(6))
-!            endif
-!         endif
-!      endif
-! 
-! ! When bits 116:143 are set as ap bits, bit 115 lives in symbol 39 along
-! ! with ap bits 116 and 117. Take care of metric for bit 115.
-!         if(j.eq.39) then  ! take care of bit 115
-!            iii=2*(apsym(29)+1)/2 + (apsym(30)+1)/2  ! known values of bits 116 & 117
-!            if(iii.eq.0) bmetap(i4)=ps(4)-ps(0)
-!            if(iii.eq.1) bmetap(i4)=ps(5)-ps(1)
-!            if(iii.eq.2) bmetap(i4)=ps(6)-ps(2)
-!            if(iii.eq.3) bmetap(i4)=ps(7)-ps(3)
-!         endif
-! 
-! ! bit 144 lives in symbol 48 and will be 1 if it is set as an ap bit.
-! ! take care of metrics for bits 142 and 143
-!      if(j.eq.48) then  ! bit 144 is always 1
-!        bmetap(i4)=max(ps(5),ps(7))-max(ps(1),ps(3))
-!        bmetap(i2)=max(ps(3),ps(7))-max(ps(1),ps(5))
-!      endif 
-!  
-! ! bit 154 lives in symbol 52 and will be 0 if it is set as an ap bit
-! ! take care of metrics for bits 155 and 156
-!      if(j.eq.52) then  ! bit 154 will be 0 if it is set as an ap bit.
-!         bmetap(i2)=max(ps(2),ps(3))-max(ps(0),ps(1))
-!         bmetap(i1)=max(ps(1),ps(3))-max(ps(0),ps(2))
-!      endif  
+      if(nQSOProgress .eq. 0 .or. nQSOProgress .eq. 5) then
+ ! When bits 88:115 are set as ap bits, bit 115 lives in symbol 39 along
+ ! with no-ap bits 116 and 117. Take care of metrics for bits 116 and 117.
+         if(j.eq.39) then  ! take care of bits that live in symbol 39
+            if(apsym(28).lt.0) then
+               bmetap(i2)=max(ps(2),ps(3))-max(ps(0),ps(1))
+               bmetap(i1)=max(ps(1),ps(3))-max(ps(0),ps(2))
+            else 
+               bmetap(i2)=max(ps(6),ps(7))-max(ps(4),ps(5))
+               bmetap(i1)=max(ps(5),ps(7))-max(ps(4),ps(6))
+            endif
+         endif
+      endif
+ 
+ ! When bits 116:143 are set as ap bits, bit 115 lives in symbol 39 along
+ ! with ap bits 116 and 117. Take care of metric for bit 115.
+         if(j.eq.39) then  ! take care of bit 115
+            iii=2*(apsym(29)+1)/2 + (apsym(30)+1)/2  ! known values of bits 116 & 117
+            if(iii.eq.0) bmetap(i4)=ps(4)-ps(0)
+            if(iii.eq.1) bmetap(i4)=ps(5)-ps(1)
+            if(iii.eq.2) bmetap(i4)=ps(6)-ps(2)
+            if(iii.eq.3) bmetap(i4)=ps(7)-ps(3)
+         endif
+ 
+ ! bit 144 lives in symbol 48 and will be 1 if it is set as an ap bit.
+ ! take care of metrics for bits 142 and 143
+      if(j.eq.48) then  ! bit 144 is always 1
+        bmetap(i4)=max(ps(5),ps(7))-max(ps(1),ps(3))
+        bmetap(i2)=max(ps(3),ps(7))-max(ps(1),ps(5))
+      endif 
+  
+ ! bit 154 lives in symbol 52 and will be 0 if it is set as an ap bit
+ ! take care of metrics for bits 155 and 156
+      if(j.eq.52) then  ! bit 154 will be 0 if it is set as an ap bit.
+         bmetap(i2)=max(ps(2),ps(3))-max(ps(0),ps(1))
+         bmetap(i1)=max(ps(1),ps(3))-max(ps(0),ps(2))
+      endif  
 
   enddo
 
@@ -457,7 +457,6 @@ subroutine js8dec(dd0,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
         decoded=decoded0
 
         message(1:12)=origmsg(1:12)
-        icos=NCOSTAS
         call genjs8(message,icos,mygrid6,bcontest,i3bit,msgsent,msgbits,itone)
         if(lsubtract) then
             if(NWRITELOG.eq.1) then

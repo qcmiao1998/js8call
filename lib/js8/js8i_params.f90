@@ -2,7 +2,7 @@ parameter (NCOSTAS=2)                 !Which JS8 Costas Arrays to use (1=origina
 
 parameter (NSPS=384,  NTXDUR=4,  NDOWNSPS=12, NDD=125, JZ=250) ! 250 Hz  31.25 baud 60 wpm -18.0dB (1.0Eb/N0)  2.52s
 
-parameter (AZ=12000.0/(1.0*NSPS)*0.8d0) !Dedupe overlap in Hz
+parameter (AZ=12000.0/(1.0*NSPS)*0.64d0)!Dedupe overlap in Hz
 parameter (ASTART=0.1)                  !Start delay in seconds
 parameter (ASYNCMIN=1.5)                !Minimum Sync
 

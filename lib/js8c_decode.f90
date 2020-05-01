@@ -48,6 +48,7 @@ contains
     integer allsnrs(100)
     save s,dd
 
+    icos=int(NCOSTAS)
     bcontest=iand(nexp_decode,128).ne.0
     this%callback => callback
     write(datetime,1001) nutc        !### TEMPORARY ###
@@ -86,7 +87,7 @@ contains
       endif 
 
       call timer('syncjs8 ',0)
-      call syncjs8(dd,ifa,ifb,syncmin,nfqso,s,candidate,ncand,sbase)
+      call syncjs8(dd,icos,ifa,ifb,syncmin,nfqso,s,candidate,ncand,sbase)
       call timer('syncjs8 ',1)
 
       if(NWRITELOG.eq.1) then
@@ -106,7 +107,7 @@ contains
         endif
 
         call timer('js8dec  ',0)
-        call js8dec(dd,newdat,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &
+        call js8dec(dd,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &
              lapcqonly,napwid,lsubtract,nagain,iaptype,mycall12,mygrid6,   &
              hiscall12,bcontest,sync,f1,xdt,xbase,apsym,nharderrors,dmin,  &
              nbadcrc,iappass,iera,msg37,xsnr)

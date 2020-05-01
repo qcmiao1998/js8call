@@ -1,4 +1,4 @@
-subroutine syncjs8d(cd0,i0,ctwk,itwk,sync)
+subroutine syncjs8d(cd0,icos,i0,ctwk,itwk,sync)
 ! Compute sync power for a complex, downsampled JS8 signal.
 
   !include 'js8_params.f90'
@@ -17,7 +17,7 @@ subroutine syncjs8d(cd0,i0,ctwk,itwk,sync)
 
   integer icos7a(0:6), icos7b(0:6), icos7c(0:6)
 
-  if(NCOSTAS.eq.1) then
+  if(icos.eq.1) then
     icos7a = (/4,2,5,6,1,3,0/)                  !Beginning Costas 7x7 tone pattern
     icos7b = (/4,2,5,6,1,3,0/)                  !Middle Costas 7x7 tone pattern
     icos7c = (/4,2,5,6,1,3,0/)                  !End Costas 7x7 tone pattern

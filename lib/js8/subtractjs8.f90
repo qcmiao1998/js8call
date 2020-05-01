@@ -6,10 +6,11 @@ subroutine subtractjs8(dd,itone,f0,dt)
 ! Complex amp      : cfilt(t) = LPF[ dd(t)*CONJG(cref(t)) ]
 ! Subtract         : dd(t)    = dd(t) - 2*REAL{cref*cfilt}
 
+  parameter (NSHIFT=0)
   parameter (NFRAME=NSPS*NN)
   parameter (NFFT=NMAX, NFILT=1400)
 
-  real dd(NMAX), window(-NFILT/2:NFILT/2)
+  real*4 dd(NMAX), window(-NFILT/2:NFILT/2)
   complex cref,camp,cfilt,cw
   integer itone(NN)
   logical first
@@ -38,36 +39,51 @@ subroutine subtractjs8(dd,itone,f0,dt)
   endif
 
   if(first) then
-! Create and normalize the filter
+      ! Create and normalize the filter
       if(NWRITELOG.eq.1) then
           write(*,*) '<DecodeDebug> creating and normalizing filter'
           flush(6)
       endif
 
-      pi=4.0*atan(1.0)
-      fac=1.0/float(NFFT)
-      sum=0.0
-      do j=-NFILT/2,NFILT/2
-         window(j)=cos(pi*j/NFILT)**2
-         sum=sum+window(j)
-      enddo
-
-      cw=0.
-      ! this ultimately shifts 1/2 of the window out of computation
-      ! since it's multiplied against cfilt whiich will only have amp
-      ! values for NFRAME length, which will always be > 20000 samples
-      ! longer than the NFRAME.
-      ! cw(1:NFILT+1)=window/sum
-      ! cw=cshift(cw,NFILT/2+1)
-      cw(1:NFILT/2)=window(1:NFILT/2)
-      ! we really don't even need the second half of the window.
-      ! start=NMAX-NFILT/2
-      ! end=NMAX-NFILT+1
-      ! cw(start:end)=window(-NFILT/2:1)
-      cw=cw/sum
-      call four2a(cw,NFFT,1,-1,1)
-      cw=cw*fac
-      first=.false.
+      if(NSHIFT.ne.1) then
+        pi=4.0*atan(1.0)
+        fac=1.0/float(NFFT)
+        sum=0.0
+        do j=-NFILT/2,NFILT/2
+            window(j)=cos(pi*j/NFILT)**2
+            sum=sum+window(j)
+        enddo
+        cw=0.
+        cw(1:NFILT+1)=window/sum
+        cw=cshift(cw,NFILT/2+1)
+        call four2a(cw,NFFT,1,-1,1)
+        cw=cw*fac
+        first=.false.
+      else
+        pi=4.0*atan(1.0)
+        fac=1.0/float(NFFT)
+        sum=0.0
+        do j=-NFILT/2,NFILT/2
+           window(j)=cos(pi*j/NFILT)**2
+           sum=sum+window(j)
+        enddo
+        cw=0.
+        ! this ultimately shifts 1/2 of the window out of computation
+        ! since it's multiplied against cfilt whiich will only have amp
+        ! values for NFRAME length, which will always be > 20000 samples
+        ! longer than the NFRAME.
+        ! cw(1:NFILT+1)=window/sum
+        ! cw=cshift(cw,NFILT/2+1)
+        cw(1:NFILT/2)=window(1:NFILT/2)
+        ! we really don't even need the second half of the window.
+        ! start=NMAX-NFILT/2
+        ! end=NMAX-NFILT+1
+        ! cw(start:end)=window(-NFILT/2:1)
+        cw=cw/sum
+        call four2a(cw,NFFT,1,-1,1)
+        cw=cw*fac
+        first=.false.
+      endif
   endif
 
   if(NWRITELOG.eq.1) then
