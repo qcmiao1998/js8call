@@ -10,6 +10,7 @@ subroutine syncjs8d(cd0,icos,i0,ctwk,itwk,sync)
   complex ctwk(7*NDOWNSPS)
   complex z1,z2,z3
   logical first
+  integer icos
   data first/.true./
   save first,twopi,csynca,csyncb,csyncc
 

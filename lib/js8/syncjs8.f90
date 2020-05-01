@@ -12,6 +12,7 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   real candidate0(3,200)
   real candidate(3,200)
   real dd(NMAX)
+  integer icos
   integer jpeak(NH1)
   integer indx(NH1)
   integer ii(1)
@@ -52,6 +53,7 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
      enddo
      savg=savg + s(1:NH1,j)                   !Average spectrum
   enddo
+
   call baselinejs8(savg,nfa,nfb,sbase)
 
   ia=max(1,nint(nfa/df)) ! min freq
@@ -147,7 +149,7 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
     if(k.ge.200) exit
     n=ia + indx(iz+1-i) - 1
     if(red(n).lt.syncmin.or.isnan(red(n))) exit
-    if(NWRITELOG.eq.1) then
+    if(NWRITELOG.eq.0) then
         write(*,*) '<DecodeDebug> red candidate', red(n), n*df, (jpeak(n)-1)*tstep
         flush(6)
     endif
@@ -158,6 +160,11 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   enddo
   ncand=k
 
+! Put nfqso at top of list
+  do i=1,ncand
+     if(abs(candidate0(1,i)-nfqso).lt.10.0) candidate0(1,i)=-candidate0(1,i)
+  enddo
+
 ! Save only the best of near-dupe freqs.  
   do i=1,ncand
      if(i.ge.2) then
@@ -165,7 +172,7 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
            fdiff=abs(candidate0(1,i))-abs(candidate0(1,j))
            if(abs(fdiff).lt.AZ) then                                     ! note: this dedupe difference is dependent on symbol spacing
               if(NWRITELOG.eq.1) then
-                  write(*,*) '<DecodeDebug> candidate dupe', fdiff, candidate0(1,i), candidate0(1,j)
+                  write(*,*) '<DecodeDebug> dupe', fdiff, candidate0(1,i), candidate0(3,i), candidate0(1,j), candidate0(3,j)
                   flush(6)
               endif
               if(candidate0(3,i).ge.candidate0(3,j)) candidate0(3,j)=0.
