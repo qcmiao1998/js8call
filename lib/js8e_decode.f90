@@ -82,7 +82,11 @@ contains
         if(ndecodes.eq.0) cycle
         lsubtract=.true.
       elseif(ipass.eq.3) then
+        n3=ndecodes
         if((ndecodes-n2).eq.0) cycle
+        lsubtract=.true. 
+      elseif(ipass.eq.4) then
+        if((ndecodes-n3).eq.0) cycle
         lsubtract=.false. 
       endif 
 
