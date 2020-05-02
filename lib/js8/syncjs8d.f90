@@ -1,13 +1,14 @@
-subroutine syncjs8d(cd0,icos,i0,ctwk,itwk,sync)
+subroutine syncjs8d(cd0,icos,i0,delf,sync)
 ! Compute sync power for a complex, downsampled JS8 signal.
 
   !include 'js8_params.f90'
   parameter(NP=NMAX/NDOWN, NP2=NN*NDOWNSPS)
   complex cd0(0:NP-1)
   complex csynca(0:6,NDOWNSPS),csyncb(0:6,NDOWNSPS),csyncc(0:6,NDOWNSPS)
-  complex csync2(NDOWNSPS)
+  complex csync2a(NDOWNSPS),csync2b(NDOWNSPS),csync2c(NDOWNSPS)
   complex ctwk(NDOWNSPS)
   complex z1,z2,z3
+  real delf
   logical first
   integer icos
   data first/.true./
@@ -67,8 +68,26 @@ subroutine syncjs8d(cd0,icos,i0,ctwk,itwk,sync)
     first=.false.
   endif
 
-  sync=0
+  ! compute the ctwk samples at the delta frequency to by used to detect peaks
+  ! at frequencies +/- delf so we can align the decoder for the best possible
+  ! chance at decoding.
+  !
+  ! NOTE: this does not need to compute the entire set of samples for the 
+  !       costas arrays...it only needs to do it for the delta frequency
+  !       whose conjugate is multiplied against each csync arrays for those 
+  !       coastas signals
+  if(delf.ne.0.0) then
+    fs2=12000.0/NDOWN
+    dt2=1.0/fs2
+    dphi=twopi*delf*dt2
+    phi=0.0
+    do i=1,NDOWNSPS
+      ctwk(i)=cmplx(cos(phi),sin(phi))
+      phi=mod(phi+dphi,twopi)
+    enddo
+  endif
 
+  sync=0
   do i=0,6
     i1=i0+i*NDOWNSPS
     i2=i1+36*NDOWNSPS
@@ -78,17 +97,17 @@ subroutine syncjs8d(cd0,icos,i0,ctwk,itwk,sync)
     z2=0.
     z3=0.
 
-    csync2=csynca(i,1:NDOWNSPS)
-    if(itwk.eq.1) csync2=ctwk*csync2
-    if(i1.ge.0 .and. i1+NDOWNSPS-1.le.NP2-1) z1=sum(cd0(i1:i1+NDOWNSPS-1)*conjg(csync2))
+    csync2a=csynca(i,1:NDOWNSPS)
+    if(delf.ne.0.0) csync2a=ctwk*csync2a
+    if(i1.ge.0 .and. i1+NDOWNSPS-1.le.NP2-1) z1=sum(cd0(i1:i1+NDOWNSPS-1)*conjg(csync2a))
 
-    csync2=csyncb(i,1:NDOWNSPS)
-    if(itwk.eq.1) csync2=ctwk*csync2
-    if(i2.ge.0 .and. i2+NDOWNSPS-1.le.NP2-1) z2=sum(cd0(i2:i2+NDOWNSPS-1)*conjg(csync2))
+    csync2b=csyncb(i,1:NDOWNSPS)
+    if(delf.ne.0.0) csync2b=ctwk*csync2b
+    if(i2.ge.0 .and. i2+NDOWNSPS-1.le.NP2-1) z2=sum(cd0(i2:i2+NDOWNSPS-1)*conjg(csync2b))
 
-    csync2=csyncc(i,1:NDOWNSPS)
-    if(itwk.eq.1) csync2=ctwk*csync2
-    if(i3.ge.0 .and. i3+NDOWNSPS-1.le.NP2-1) z3=sum(cd0(i3:i3+NDOWNSPS-1)*conjg(csync2))
+    csync2c=csyncc(i,1:NDOWNSPS)
+    if(delf.ne.0.0) csync2c=ctwk*csync2c
+    if(i3.ge.0 .and. i3+NDOWNSPS-1.le.NP2-1) z3=sum(cd0(i3:i3+NDOWNSPS-1)*conjg(csync2c))
 
     sync = sync + p(z1) + p(z2) + p(z3)
 

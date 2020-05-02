@@ -33,7 +33,6 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
   integer naptypes(0:5,4) ! (nQSOProgress, decoding pass)  maximum of 4 passes for now
   integer*1, target:: i1hiscall(12)
   complex cd0(0:NP-1)
-  complex ctwk(NDOWNSPS)
   complex csymb(NDOWNSPS)
   complex cs(0:7, NN)
   logical first,newdat,lsubtract,lapon,lapcqonly,nagain
@@ -120,7 +119,7 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
   endif
 
   do idt=i0-NQSYMBOL,i0+NQSYMBOL             !Search over +/- one quarter symbol
-     call syncjs8d(cd0,icos,idt,ctwk,0,sync)
+     call syncjs8d(cd0,icos,idt,0.0,sync)
   
      if(NWRITELOG.eq.1) then
          write(*,*) '<DecodeDebug> idt', idt, 'sync', sync
@@ -146,23 +145,9 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
 
   ! Search over +/- 1/2*nfsrch Hz (i.e., +/- 2.5Hz)
   do ifr=-NFSRCH,NFSRCH
-    ! compute the ctwk samples at the delta frequency to by used in syncjs8d
-    ! to detect peaks at frequencies +/- 2.5 Hz so we can align the decoder
-    ! for the best possible chance at decoding.
-    !
-    ! NOTE: this does not need to compute the entire set of samples for the 
-    !       costas arrays...it only needs to do it for the delta frequency
-    !       whose conjugate is multiplied against each csync array in syncjs8d
-
     delf=ifr*0.5
-    dphi=twopi*delf*dt2
-    phi=0.0
-    do i=1,NDOWNSPS
-      ctwk(i)=cmplx(cos(phi),sin(phi))
-      phi=mod(phi+dphi,twopi)
-    enddo
 
-    call syncjs8d(cd0,icos,i0,ctwk,1,sync)
+    call syncjs8d(cd0,icos,i0,delf,sync)
 
     if(NWRITELOG.eq.1) then
         write(*,*) '<DecodeDebug> df', delf, 'sync', sync
@@ -188,7 +173,7 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
     flush(6)
   endif
 
-  call syncjs8d(cd0,icos,i0,ctwk,0,sync)
+  call syncjs8d(cd0,icos,i0,0.0,sync)
 
   if(NWRITELOG.eq.1) then
     write(*,*) '<DecodeDebug> ibest', ibest
@@ -199,7 +184,6 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
   do k=1,NN
     i1=ibest+(k-1)*NDOWNSPS
     csymb=cmplx(0.0,0.0)
-    !if( i1.ge.1 .and. i1+31 .le. NP2 ) csymb=cd0(i1:i1+31)
     if( i1.ge.0 .and. i1+(NDOWNSPS-1) .le. NP2-1 ) csymb=cd0(i1:i1+(NDOWNSPS-1))
     call four2a(csymb,NDOWNSPS,1,-1,1)
     s2(0:7,k)=abs(csymb(1:8))/1e3
