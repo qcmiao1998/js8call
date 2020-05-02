@@ -5,12 +5,13 @@ subroutine js8_downsample(dd,newdat,f0,c1)
   !include 'js8_params.f90'
 
   parameter (NDFFT1=NSPS*NDD, NDFFT2=NDFFT1/NDOWN) ! Downconverted FFT Size - 192000/60 = 3200
+  parameter (NTAPER=1) ! Should we taper the downsample?
   
   logical newdat,first
 
   complex c1(0:NDFFT2-1)
   complex cx(0:NDFFT1/2)
-  real*4 dd(NMAX),x(NDFFT1),taper(0:NDD)
+  real dd(NMAX),x(NDFFT1),taper(0:NDD)
   equivalence (x,cx)
   data first/.true./
   save cx,first,taper
@@ -22,6 +23,7 @@ subroutine js8_downsample(dd,newdat,f0,c1)
      enddo
      first=.false.
   endif
+
   if(newdat) then
      if(NWRITELOG.eq.1) then
        write(*,*) '<DecodeDebug> newdat', NMAX, NDFFT1
@@ -54,8 +56,12 @@ subroutine js8_downsample(dd,newdat,f0,c1)
    c1(k)=cx(i)
    k=k+1
   enddo
-  c1(0:NDD)=c1(0:NDD)*taper(NDD:0:-1)
-  c1(k-1-NDD:k-1)=c1(k-1-NDD:k-1)*taper
+
+  if(NTAPER.eq.1) then
+    c1(0:NDD)=c1(0:NDD)*taper(NDD:0:-1)
+    c1(k-1-NDD:k-1)=c1(k-1-NDD:k-1)*taper
+  endif
+
   c1=cshift(c1,i0-ib)
   call four2a(c1,NDFFT2,1,1,1)            !c2c FFT back to time domain
   fac=1.0/sqrt(float(NDFFT1)*NDFFT2)

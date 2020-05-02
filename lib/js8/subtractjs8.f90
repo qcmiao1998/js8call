@@ -45,7 +45,7 @@ subroutine subtractjs8(dd,itone,f0,dt)
           flush(6)
       endif
 
-      if(NSHIFT.ne.1) then
+      if(NSHIFT.eq.0) then
         pi=4.0*atan(1.0)
         fac=1.0/float(NFFT)
         sum=0.0

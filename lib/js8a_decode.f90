@@ -35,7 +35,7 @@ contains
     procedure(js8a_decode_callback) :: callback
     real s(NH1,NHSYM)
     real sbase(NH1)
-    real candidate(3,200)
+    real candidate(3,NMAXCAND)
     real dd(NMAX)
     logical, intent(in) :: lft8apon,lapcqonly,nagain
     logical newdat,lsubtract,ldupe,bcontest
@@ -97,6 +97,16 @@ contains
       if(NWRITELOG.eq.1) then
         write(*,*) '<DecodeDebug>', ncand, "candidates"
         flush(6)
+
+        do icand=1,ncand
+            sync=candidate(3,icand)
+            f1=candidate(1,icand)
+            xdt=candidate(2,icand)
+            xbase=10.0**(0.1*(sbase(nint(f1/(12000.0/NFFT1)))-40.0)) ! 3.125Hz
+
+            write(*,*) '<DecodeDebug> candidate', icand, 'f1', f1, 'sync', sync, 'xdt', xdt, 'xbase', xbase
+            flush(6)
+        enddo
       endif
 
       do icand=1,ncand

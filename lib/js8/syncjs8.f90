@@ -9,8 +9,8 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   real x(NFFT1)
   real sync2d(NH1,-JZ:JZ)
   real red(NH1)
-  real candidate0(3,200)
-  real candidate(3,200)
+  real candidate0(3,NMAXCAND)
+  real candidate(3,NMAXCAND)
   real dd(NMAX)
   integer icos
   integer jpeak(NH1)
@@ -144,15 +144,20 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   red=red/base
 
   k=0
-  do i=1,min(200,iz)
-    if(k.ge.200) exit
+  do i=1,min(iz,NMAXCAND)
+    if(k.ge.NMAXCAND) exit
+
     n=ia + indx(iz+1-i) - 1
+
     if(red(n).lt.syncmin.or.isnan(red(n))) exit
+    
     if(NWRITELOG.eq.1) then
         write(*,*) '<DecodeDebug> red candidate', red(n), n*df, (jpeak(n)-1)*tstep
         flush(6)
     endif
+    
     k=k+1
+    
     candidate0(1,k)=n*df
     candidate0(2,k)=(jpeak(n)-1)*tstep
     candidate0(3,k)=red(n)
@@ -181,14 +186,13 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
      if(abs(candidate0(1,i)-nfqso).lt.10.0) candidate0(1,i)=-candidate0(1,i)
   enddo
 
-
   fac=20.0/maxval(s)
   s=fac*s
 
-! Sort by sync
-!  call indexx(candidate0(3,1:ncand),ncand,indx)
-
-! Sort by frequency 
+  ! Sort by sync
+  ! call indexx(candidate0(3,1:ncand),ncand,indx)
+  
+  ! Sort by frequency 
   call indexx(candidate0(1,1:ncand),ncand,indx)
 
   k=1

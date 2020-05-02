@@ -32,7 +32,7 @@ subroutine syncjs8d(cd0,icos,i0,ctwk,itwk,sync)
     flush(6)
   endif
 
-! Set some constants and compute the csync array.  
+  ! Set some constants and compute the csync array.  
   if( first ) then
     twopi=8.0*atan(1.0)
 
@@ -58,7 +58,7 @@ subroutine syncjs8d(cd0,icos,i0,ctwk,itwk,sync)
         phic=mod(phia+dphic,twopi)
 
         if(NWRITELOG.eq.1) then
-            write(*,*) '<DecodeDebug> computing costas waveforms', k, i, j, phia, phib, phic, dphia, dphib, dphic
+            write(*,*) '<DecodeDebug> computing costas waveforms', i, j, phia, phib, phic, dphia, dphib, dphic
             flush(6)
         endif
       enddo

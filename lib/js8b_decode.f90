@@ -35,7 +35,7 @@ contains
     procedure(js8b_decode_callback) :: callback
     real s(NH1,NHSYM)
     real sbase(NH1)
-    real candidate(3,200)
+    real candidate(3,NMAXCAND)
     real dd(NMAX)
     logical, intent(in) :: lft8apon,lapcqonly,nagain
     logical newdat,lsubtract,ldupe,bcontest

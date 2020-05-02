@@ -111,8 +111,7 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
   call js8_downsample(dd0,newdat,f1,cd0)   !Mix f1 to baseband and downsample
   call timer('js8_down',1)
 
-  xdt=xdt+ASTART
-  i0=nint(xdt*fs2)                   !Initial guess for start of signal
+  i0=nint((xdt+ASTART)*fs2)                   !Initial guess for start of signal
   smax=0.0
 
   if(NWRITELOG.eq.1) then
@@ -122,28 +121,31 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
 
   do idt=i0-NQSYMBOL,i0+NQSYMBOL             !Search over +/- one quarter symbol
      call syncjs8d(cd0,icos,idt,ctwk,0,sync)
+  
      if(NWRITELOG.eq.1) then
-         write(*,*) '<DecodeDebug> ', 'idt', idt, 'sync', sync
+         write(*,*) '<DecodeDebug> idt', idt, 'sync', sync
          flush(6)
      endif
+     
      if(sync.gt.smax) then
         smax=sync
         ibest=idt
      endif
   enddo
+
   xdt2=ibest*dt2                           !Improved estimate for DT
 
   if(NWRITELOG.eq.1) then
-    write(*,*) '<DecodeDebug> ', 'xdt2', xdt2, 'ibest', ibest
+    write(*,*) '<DecodeDebug> xdt2', xdt2, 'ibest', ibest
     flush(6)
   endif
 
-! Now peak up in frequency
+  ! Now peak up in frequency
   i0=nint(xdt2*fs2)
   smax=0.0
 
-  do ifr=-5,5                              !Search over +/- 2.5 Hz
-
+  ! Search over +/- 1/2*nfsrch Hz (i.e., +/- 2.5Hz)
+  do ifr=-NFSRCH,NFSRCH
     ! compute the ctwk samples at the delta frequency to by used in syncjs8d
     ! to detect peaks at frequencies +/- 2.5 Hz so we can align the decoder
     ! for the best possible chance at decoding.
@@ -151,6 +153,7 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
     ! NOTE: this does not need to compute the entire set of samples for the 
     !       costas arrays...it only needs to do it for the delta frequency
     !       whose conjugate is multiplied against each csync array in syncjs8d
+
     delf=ifr*0.5
     dphi=twopi*delf*dt2
     phi=0.0
@@ -160,18 +163,23 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
     enddo
 
     call syncjs8d(cd0,icos,i0,ctwk,1,sync)
+
     if(NWRITELOG.eq.1) then
-        write(*,*) '<DecodeDebug> ', 'df', delf, 'sync', sync
+        write(*,*) '<DecodeDebug> df', delf, 'sync', sync
         flush(6)
     endif
+
     if( sync .gt. smax ) then
       smax=sync
       delfbest=delf
     endif
   enddo
+
   a=0.0
   a(1)=-delfbest
+
   call twkfreq1(cd0,NP2,fs2,a,cd0)
+
   xdt=xdt2
   f1=f1+delfbest                           !Improved estimate of DF
 
@@ -197,7 +205,7 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
     s2(0:7,k)=abs(csymb(1:8))/1e3
   enddo  
 
-! sync quality check
+  ! sync quality check
   is1=0
   is2=0
   is3=0
@@ -209,7 +217,8 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
     ip=maxloc(s2(:,k+72))
     if(icos7c(k-1).eq.(ip(1)-1)) is3=is3+1
   enddo
-! hard sync sum - max is 21
+
+  ! hard sync sum - max is 21
   nsync=is1+is2+is3
 
   if(NWRITELOG.eq.1) then
@@ -222,10 +231,12 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
     call timer('badnsync', 0)
     nbadcrc=1
     call timer('badnsync', 1)
+
     if(NWRITELOG.eq.1) then
-        write(*,*) '<DecodeDebug> bad sync', nsync
+        write(*,*) '<DecodeDebug> bad sync', f1, xdt, nsync
         flush(6)
     endif
+
     return
   endif
 
@@ -239,6 +250,7 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
   enddo  
 
   call indexx(s1sort,8*ND,indxs1)
+
   xmeds1=s1sort(indxs1(nint(0.5*8*ND)))
   s1=s1/xmeds1
 
@@ -340,25 +352,21 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
   llra=scalefac*bmetap  ! llr's for use with ap
   apmag=scalefac*(maxval(abs(bmetap))*1.01)
 
-! pass #
-!------------------------------
-!   1        regular decoding
-!   2        erase 24
-!   3        erase 48
-!   4        ap pass 1
-!   5        ap pass 2
-!   6        ap pass 3
-!   7        ap pass 4, etc.
+  ! pass #
+  !------------------------------
+  !   1        regular decoding
+  !   2        erase 24
+  !   3        erase 48
+  !   4        ap pass 1
+  !   5        ap pass 2
+  !   6        ap pass 3
+  !   7        ap pass 4, etc.
 
-  !if(lapon) then 
-  !   if(.not.lapcqonly) then
-  !      npasses=4+nappasses(nQSOProgress)
-  !   else
-  !      npasses=5 
-  !   endif
-  !else
-     npasses=4
-  !endif
+  if(lapon) then 
+    npasses=4+nappasses(nQSOProgress)
+  else
+    npasses=4 
+  endif
 
   do ipass=1,npasses 
                
