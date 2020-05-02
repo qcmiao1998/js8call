@@ -3,7 +3,7 @@
 # Run test cases using the media files and the js8 cli decoder
 
 JS8=~/js8call-prefix/build/js8
-#JS8_ALT=/opt/js8call/bin/js8
+JS8_ALT=/opt/js8call/bin/js8
 
 PWD=$(pwd)
 
@@ -32,12 +32,16 @@ do
     fi
 
     if [ "$JS8_ALT" != "" ]; then
-        echo "--> js8 alt got $OUT_ALT expected $EXPECTED"
-        echo
+        if [ "$OUT" != "$OUT_ALT" ]; then
+            echo "--> js8 alt got $OUT_ALT expected $EXPECTED"
+        fi
     fi
+
+    echo
 done
 
 echo ---
+echo
 echo $((pass+fail)) total tests run
 echo $pass passed
 echo $fail failed
