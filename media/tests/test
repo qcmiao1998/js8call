@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Run test cases using the media files and the js8 cli decoder
+
+JS8=~/js8call-prefix/build/js8
+#JS8=/opt/js8call/bin/js8
+
+PWD=$(pwd)
+
+declare -i pass=0
+declare -i fail=0
+
+for f in *.wav 
+do
+
+    MODE=$(echo $f | cut -f 1 -d '_')
+    DEPTH=$(echo $f | cut -f 2 -d '_')
+    EXPECTED=$(echo $f | cut -f 3 -d '_' | cut -f 1 -d '.')
+
+    OUT=$($JS8 -8 -b $MODE -d $DEPTH $PWD/$f | tail -n 1 | awk '{print $(NF)}' | sed -E 's/\s//g')
+
+    echo -n $f...
+
+    if [ "$OUT" == "$EXPECTED" ]; then
+
+        echo PASS.
+
+        pass=$((pass+1))
+
+    else
+        
+        echo FAIL got $OUT expected $EXPECTED;
+
+        fail=$((fail+1))
+
+    fi
+done
+
+echo ---
+echo $((pass+fail)) total tests run
+echo $pass passed
+echo $fail failed
+
+rm timer.out jt9_wisdom.dat
