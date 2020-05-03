@@ -22,7 +22,7 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
   real llr(3*ND),llra(3*ND),llr0(3*ND),llr1(3*ND),llrap(3*ND)           !Soft symbols
   real dd0(NMAX)
   integer icos
-  integer*1 decoded(KK),decoded0(KK),apmask(3*ND),cw(3*ND)
+  integer*1 decoded(KK),decoded0(KK),cw(3*ND)
   integer*1 msgbits(KK)
   integer apsym(KK)
   integer mcq(28),mde(28),mrrr(16),m73(16),mrr73(16)
@@ -74,15 +74,15 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
      nappasses(4)=4
      nappasses(5)=3
 
-! iaptype
-!------------------------
-!   1        CQ     ???    ???
-!   2        MyCall ???    ???
-!   3        MyCall DxCall ???
-!   4        MyCall DxCall RRR
-!   5        MyCall DxCall 73
-!   6        MyCall DxCall RR73
-!   7        ???    DxCall ???
+     ! iaptype
+     !------------------------
+     !   1        CQ     ???    ???
+     !   2        MyCall ???    ???
+     !   3        MyCall DxCall ???
+     !   4        MyCall DxCall RRR
+     !   5        MyCall DxCall 73
+     !   6        MyCall DxCall RR73
+     !   7        ???    DxCall ???
 
      naptypes(0,1:4)=(/1,2,0,0/)
      naptypes(1,1:4)=(/2,3,0,0/)
@@ -359,63 +359,13 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
      if(ipass.eq.3) llr(1:24)=0. 
      if(ipass.eq.4) llr(1:48)=0. 
      if(ipass.le.4) then
-        apmask=0
         llrap=llr
         iaptype=0
      endif
         
-     !if(ipass .gt. 4) then
-     !   if(.not.lapcqonly) then
-     !      iaptype=naptypes(nQSOProgress,ipass-4)
-     !   else
-     !      iaptype=1
-     !   endif
-     !   if(iaptype.ge.3 .and. (abs(f1-nfqso).gt.napwid .and. abs(f1-nftx).gt.napwid) ) cycle 
-     !   if(iaptype.eq.1 .or. iaptype.eq.2 ) then ! AP,???,??? 
-     !      apmask=0
-     !      apmask(88:115)=1    ! first 28 bits are AP
-     !      apmask(144)=1       ! not free text
-     !      llrap=llr
-     !      if(iaptype.eq.1) llrap(88:115)=apmag*mcq
-     !      if(iaptype.eq.2) llrap(88:115)=apmag*apsym(1:28)
-     !      llrap(116:117)=llra(116:117)  
-     !      llrap(142:143)=llra(142:143)
-     !      llrap(144)=-apmag
-     !   endif
-     !   if(iaptype.eq.3) then   ! mycall, dxcall, ???
-     !      apmask=0
-     !      apmask(88:115)=1   ! mycall
-     !      apmask(116:143)=1  ! hiscall
-     !      apmask(144)=1      ! not free text
-     !      llrap=llr
-     !      llrap(88:143)=apmag*apsym(1:56)
-     !      llrap(144)=-apmag
-     !   endif
-     !   if(iaptype.eq.4 .or. iaptype.eq.5 .or. iaptype.eq.6) then  
-     !      apmask=0
-     !      apmask(88:115)=1   ! mycall
-     !      apmask(116:143)=1  ! hiscall
-     !      apmask(144:159)=1  ! RRR or 73 or RR73
-     !      llrap=llr
-     !      llrap(88:143)=apmag*apsym(1:56)
-     !      if(iaptype.eq.4) llrap(144:159)=apmag*mrrr 
-     !      if(iaptype.eq.5) llrap(144:159)=apmag*m73 
-     !      if(iaptype.eq.6) llrap(144:159)=apmag*mrr73 
-     !   endif
-     !   if(iaptype.eq.7) then   ! ???, dxcall, ???
-     !      apmask=0
-     !      apmask(116:143)=1  ! hiscall
-     !      apmask(144)=1      ! not free text
-     !      llrap=llr
-     !      llrap(115)=llra(115)
-     !      llrap(116:143)=apmag*apsym(29:56)
-     !      llrap(144)=-apmag
-     !   endif
-     !endif
-
      cw=0
      call timer('bpd174  ',0)
-     call bpdecode174(llrap,apmask,max_iterations,decoded,cw,nharderrors,  &
+     call bpdecode174(llrap,max_iterations,decoded,cw,nharderrors,  &
           niterations)
      call timer('bpd174  ',1)
 
@@ -425,7 +375,7 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
      endif
 
      dmin=0.0
-     if(ndepth.eq.3 .and. nharderrors.lt.0) then
+     if(ndepth.ge.3 .and. nharderrors.lt.0) then
         ndeep=3
         if(abs(nfqso-f1).le.napwid .or. abs(nftx-f1).le.napwid) then
           if((ipass.eq.3 .or. ipass.eq.4) .and. .not.nagain) then
@@ -436,7 +386,7 @@ subroutine js8dec(dd0,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly
         endif
         if(nagain) ndeep=5
         call timer('osd174  ',0)
-        call osd174(llrap,apmask,ndeep,decoded,cw,nharderrors,dmin)
+        call osd174(llrap,ndeep,decoded,cw,nharderrors,dmin)
         call timer('osd174  ',1)
      endif
      nbadcrc=1

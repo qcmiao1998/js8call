@@ -65,12 +65,15 @@ contains
        ifb=nfqso+10
     endif
 
-! For now:
-! ndepth=1: no subtraction, 1 pass, belief propagation only
-! ndepth=2: subtraction, 3 passes, belief propagation only
-! ndepth=3: subtraction, 3 passes, bp+osd
+    ! For now:
+    ! ndepth=1: no subtraction, 1 pass, belief propagation only
+    ! ndepth=2: subtraction, 3 passes, belief propagation only
+    ! ndepth=3: subtraction, 3 passes, bp+osd
+    ! ndepth=4: subtraction, 4 passes, bp+osd
     if(ndepth.eq.1) npass=1
-    if(ndepth.ge.2) npass=3
+    if(ndepth.eq.2) npass=3
+    if(ndepth.ge.3) npass=4
+
     do ipass=1,npass
       newdat=.true.  ! Is this a problem? I hijacked newdat.
       syncmin=ASYNCMIN

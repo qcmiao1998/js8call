@@ -1,9 +1,9 @@
-subroutine bpdecode174(llr,apmask,maxiterations,decoded,cw,nharderror,iter)
+subroutine bpdecode174(llr,maxiterations,decoded,cw,nharderror,iter)
 !
 ! A log-domain belief propagation decoder for the (174,87) code.
 !
 integer, parameter:: N=174, K=87, M=N-K
-integer*1 codeword(N),cw(N),apmask(N)
+integer*1 codeword(N),cw(N)
 integer  colorder(N)
 integer*1 decoded(K)
 integer Nm(7,M)  ! 5, 6, or 7 bits per check 
@@ -323,11 +323,7 @@ do iter=0,maxiterations
 
 ! Update bit log likelihood ratios (tov=0 in iteration 0).
   do i=1,N
-    if( apmask(i) .ne. 1 ) then
-      zn(i)=llr(i)+sum(tov(1:ncw,i))
-    else
-      zn(i)=llr(i)
-    endif
+    zn(i)=llr(i)+sum(tov(1:ncw,i))
   enddo
 
 ! Check to see if we have a codeword (check before we do any iteration).

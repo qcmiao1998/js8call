@@ -1,10 +1,9 @@
-subroutine osd174(llr,apmask,ndeep,decoded,cw,nhardmin,dmin)
+subroutine osd174(llr,ndeep,decoded,cw,nhardmin,dmin)
 !
 ! An ordered-statistics decoder for the (174,87) code.
 ! 
 include "ldpc_174_87_params.f90"
 
-integer*1 apmask(N),apmaskr(N)
 integer*1 gen(K,N)
 integer*1 genmrb(K,N),g2(N,K)
 integer*1 temp(K),m0(K),me(K),mi(K),misub(K),e2sub(N-K),e2(N-K),ui(N-K)
@@ -37,7 +36,6 @@ endif
 
 ! Re-order received vector to place systematic msg bits at the end.
 rx=llr(colorder+1) 
-apmaskr=apmask(colorder+1)
 
 ! Hard decisions on the received word.
 hdec=0            
@@ -90,7 +88,6 @@ hdec=hdec(indices)   ! hard decisions from received symbols
 m0=hdec(1:K)         ! zero'th order message
 absrx=absrx(indices) 
 rx=rx(indices)       
-apmaskr=apmaskr(indices)
 
 call mrbencode(m0,c0,g2,N,K)
 nxor=ieor(c0,hdec)
@@ -151,7 +148,6 @@ do iorder=1,nord
       do n1=iflag,iend,-1
          mi=misub
          mi(n1)=1
-         if(any(iand(apmaskr(1:K),mi).eq.1)) cycle
          ntotal=ntotal+1
          me=ieor(m0,mi)
          if(n1.eq.iflag) then
@@ -222,7 +218,7 @@ if(npre2.eq.1) then
                mi=misub               
                mi(in1)=1
                mi(in2)=1
-               if(sum(mi).lt.nord+npre1+npre2.or.any(iand(apmaskr(1:K),mi).eq.1)) cycle
+               if(sum(mi).lt.nord+npre1+npre2) cycle
                me=ieor(m0,mi)
                call mrbencode(me,ce,g2,N,K)
                nxor=ieor(ce,hdec)
