@@ -20,7 +20,7 @@ subroutine subtractjs8(dd,itone,f0,dt)
 
   nstart=dt*12000+1
 
-  if(NWRITELOG.eq.1) then
+  if(NWRITELOG.eq.0) then
       write(*,*) '<DecodeDebug> generating reference signal', nstart
       flush(6)
   endif
@@ -33,14 +33,14 @@ subroutine subtractjs8(dd,itone,f0,dt)
     if(id.ge.1.and.id.le.NMAX) camp(i)=dd(id)*conjg(cref(i))
   enddo
 
-  if(NWRITELOG.eq.1) then
+  if(NWRITELOG.eq.0) then
       write(*,*) '<DecodeDebug> filtering', NFFT
       flush(6)
   endif
 
   if(first) then
       ! Create and normalize the filter
-      if(NWRITELOG.eq.1) then
+      if(NWRITELOG.eq.0) then
           write(*,*) '<DecodeDebug> creating and normalizing filter'
           flush(6)
       endif
@@ -54,8 +54,16 @@ subroutine subtractjs8(dd,itone,f0,dt)
             sum=sum+window(j)
         enddo
         cw=0.
-        cw(1:NFILT+1)=window/sum
-        cw=cshift(cw,NFILT/2+1)
+        window=window/sum
+
+        ! windows struggles with this cshift...i'm not sure why!?
+        !cw(1:NFILT+1)=window
+        !cw=cshift(cw,NFILT/2+1)
+        ! so, this should be the same computation result
+        cw(1:NFILT/2)=window(1:NFILT/2)
+        cw(NFILT/2:NFILT+1)=0
+        cw(NMAX-NFILT/2:NMAX)=window(-NFILT/2:0)
+
         call four2a(cw,NFFT,1,-1,1)
         cw=cw*fac
         first=.false.
@@ -86,7 +94,7 @@ subroutine subtractjs8(dd,itone,f0,dt)
       endif
   endif
 
-  if(NWRITELOG.eq.1) then
+  if(NWRITELOG.eq.0) then
       write(*,*) '<DecodeDebug> generating complex amplitude'
       flush(6)
   endif
@@ -97,7 +105,7 @@ subroutine subtractjs8(dd,itone,f0,dt)
   cfilt(1:NFFT)=cfilt(1:NFFT)*cw(1:NFFT)
   call four2a(cfilt,NFFT,1,1,1)
 
-  if(NWRITELOG.eq.1) then
+  if(NWRITELOG.eq.0) then
       write(*,*) '<DecodeDebug> subtracting filtered reference', NFFT
       flush(6)
   endif
