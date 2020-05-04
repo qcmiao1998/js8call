@@ -45,66 +45,68 @@ QString alphanumeric = {"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ /@"}; // callsign 
 QMap<QString, int> directed_cmds = {
     // any changes here need to be made also in the directed regular xpression for parsing
     // ?*^&@
-    {" HEARTBEAT",    -1 }, // this is my heartbeat (unused except for faux processing of HBs as directed commands)
-    {" HB",           -1 }, // this is my heartbeat (unused except for faux processing of HBs as directed commands)
-    {" CQ",           -1 }, // this is my cq (unused except for faux processing of CQs as directed commands)
+    {" HEARTBEAT",     -1 }, // this is my heartbeat (unused except for faux processing of HBs as directed commands)
+    {" HB",            -1 }, // this is my heartbeat (unused except for faux processing of HBs as directed commands)
+    {" CQ",            -1 }, // this is my cq (unused except for faux processing of CQs as directed commands)
 
-    {" SNR?",          0  }, // query snr
-    {"?",              0  }, // compat
+    {" SNR?",           0  }, // query snr
+    {"?",               0  }, // compat
 
-    {" DIT DIT",       1  }, // two bits
+    {" DIT DIT",        1  }, // two bits
 
-    {" HEARING?",      3  }, // query station calls heard
+    {" HEARING?",       3  }, // query station calls heard
 
-    {" GRID?",         4  }, // query grid
+    {" GRID?",          4  }, // query grid
 
-    {">",              5  }, // relay message
+    {">",               5  }, // relay message
 
-    {" STATUS?",       6  }, // query idle message
+    {" STATUS?",        6  }, // query idle message
 
-    {" STATUS",        7  }, // this is my status
+    {" STATUS",         7  }, // this is my status
 
-    {" HEARING",       8  }, // these are the stations i'm hearing
+    {" HEARING",        8  }, // these are the stations i'm hearing
 
-    {" MSG",           9  }, // this is a complete message
+    {" MSG",            9  }, // this is a complete message
 
-    {" MSG TO:",      10  }, // store message at a station
+    {" MSG TO:",       10  }, // store message at a station
 
-    {" QUERY",        11  }, // generic query
+    {" QUERY",         11  }, // generic query
 
-    {" QUERY MSGS",   12  }, // do you have any stored messages?
-    {" QUERY MSGS?",  12  }, // do you have any stored messages?
+    {" QUERY MSGS",    12  }, // do you have any stored messages?
+    {" QUERY MSGS?",   12  }, // do you have any stored messages?
 
-    {" QUERY CALL",   13  }, // can you transmit a ping to callsign?
+    {" QUERY CALL",    13  }, // can you transmit a ping to callsign?
 
-    // {" ",          14  }, // reserved
+    // {" ",           14  }, // reserved
 
-    {" GRID",         15  }, // this is my current grid locator
+    {" GRID",          15  }, // this is my current grid locator
 
-    {" INFO?",        16  }, // what is your info message?
-    {" INFO",         17  }, // this is my info message
+    {" INFO?",         16  }, // what is your info message?
+    {" INFO",          17  }, // this is my info message
 
-    {" FB",           18  }, // fine business
-    {" HW CPY?",      19  }, // how do you copy?
-    {" SK",           20  }, // end of contact
-    {" RR",           21  }, // roger roger
+    {" FB",            18  }, // fine business
+    {" HW CPY?",       19  }, // how do you copy?
+    {" SK",            20  }, // end of contact
+    {" RR",            21  }, // roger roger
 
-    {" QSL?",         22  }, // do you copy?
-    {" QSL",          23  }, // i copy
+    {" QSL?",          22  }, // do you copy?
+    {" QSL",           23  }, // i copy
 
-    {" CMD",          24  }, // command
+    {" CMD",           24  }, // command
 
-    {" SNR",          25  }, // seen a station at the provided snr
-    {" NO",           26  }, // negative confirm
-    {" YES",          27  }, // confirm
-    {" 73",           28  }, // best regards, end of contact
+    {" SNR",           25  }, // seen a station at the provided snr
+    {" NO",            26  }, // negative confirm
+    {" YES",           27  }, // confirm
+    {" 73",            28  }, // best regards, end of contact
 
-    {" NACK",          2  }, // negative acknowledge
-    {" ACK",          29  }, // acknowledge (digits deprecated in 2.2)
+    {" NACK",           2  }, // negative acknowledge
+    {" ACK",           14  }, // acknowledge (was reserved in 2.1)
 
-    {" AGN?",         30  }, // repeat message
-    {"  ",            31  }, // send freetext (weird artifact)
-    {" ",             31  }, // send freetext
+    {" HEARTBEAT SNR", 29  }, // (was ACK in 2.1, now deprecated)
+
+    {" AGN?",          30  }, // repeat message
+    {"  ",             31  }, // send freetext (weird artifact)
+    {" ",              31  }, // send freetext
 };
 
 // commands allowed to be processed
@@ -117,7 +119,7 @@ QSet<int> autoreply_cmds = {0, 3, 4, 6, 9, 10, 11, 12, 13, 16, 30};
 QSet<int> buffered_cmds = {5, 9, 10, 11, 12, 13, 15, 24};
 
 // commands that may include an SNR value
-QSet<int> snr_cmds = {25};
+QSet<int> snr_cmds = {25, 29};
 
 // commands that are checksummed and their crc size
 QMap<int, int> checksum_cmds = {
@@ -132,7 +134,7 @@ QMap<int, int> checksum_cmds = {
 };
 
 QString callsign_pattern = QString("(?<callsign>[@]?[A-Z0-9/]+)");
-QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|MSG TO[:]|SNR[?]|INFO[?]|GRID[?]|STATUS[?]|QUERY MSGS[?]|HEARING[?]|(?:(?:STATUS|HEARING|QUERY CALL|QUERY MSGS|QUERY|CMD|MSG|NACK|ACK|73|YES|NO|SNR|QSL|RR|SK|FB|INFO|GRID|DIT DIT)(?=[ ]|$))|[?> ]))?");
+QString optional_cmd_pattern = QString("(?<cmd>\\s?(?:AGN[?]|QSL[?]|HW CPY[?]|MSG TO[:]|SNR[?]|INFO[?]|GRID[?]|STATUS[?]|QUERY MSGS[?]|HEARING[?]|(?:(?:STATUS|HEARING|QUERY CALL|QUERY MSGS|QUERY|CMD|MSG|NACK|ACK|73|YES|NO|HEARTBEAT SNR|SNR|QSL|RR|SK|FB|INFO|GRID|DIT DIT)(?=[ ]|$))|[?> ]))?");
 QString optional_grid_pattern = QString("(?<grid>\\s?[A-R]{2}[0-9]{2})?");
 QString optional_extended_grid_pattern = QString("^(?<grid>\\s?(?:[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)*))?");
 QString optional_num_pattern = QString("(?<num>(?<=SNR)\\s?[-+]?(?:3[01]|[0-2]?[0-9]))?");
@@ -142,7 +144,7 @@ QRegularExpression directed_re("^"                    +
                                optional_cmd_pattern   +
                                optional_num_pattern);
 
-QRegularExpression heartbeat_re(R"(^\s*(?<callsign>[@](?:ALLCALL|HB)\s+)?(?<type>CQ CQ CQ|CQ DX|CQ QRP|CQ CONTEST|CQ FIELD|CQ FD|CQ CQ|CQ|HB|HEARTBEAT)(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
+QRegularExpression heartbeat_re(R"(^\s*(?<callsign>[@](?:ALLCALL|HB)\s+)?(?<type>CQ CQ CQ|CQ DX|CQ QRP|CQ CONTEST|CQ FIELD|CQ FD|CQ CQ|CQ|HB|HEARTBEAT(?!\s+SNR))(?:\s(?<grid>[A-R]{2}[0-9]{2}))?\b)");
 
 QRegularExpression compound_re("^\\s*[`]"              +
                                callsign_pattern        +
@@ -1168,7 +1170,7 @@ quint8 Varicode::packCmd(quint8 cmd, quint8 num, bool *pPackedNum){
         // [1][X][6]
         // X = 0 == SNR
         // X = 1 == DEADBEEF
-        value = ((1 << 1) | (int)(cmdStr == " DEADBEEF")) << 6;
+        value = ((1 << 1) | (int)(cmdStr == " HEARTBEAT SNR")) << 6;
         value = value + (num & ((1<<6)-1));
         if(pPackedNum) *pPackedNum = true;
     } else {
@@ -1190,8 +1192,7 @@ quint8 Varicode::unpackCmd(quint8 value, quint8 *pNum){
         // so we zero them out when unpacking so we don't display them even if
         // they were encoded that way.
         if(value & (1<<6)){
-            if(pNum) *pNum = 0;
-            cmd = directed_cmds[" ACK"];
+            cmd = directed_cmds[" HEARTBEAT SNR"];
         }
         return cmd;
     } else {
@@ -1657,12 +1658,6 @@ QStringList Varicode::unpackDirectedMessage(const QString &text, quint8 *pType){
     unpacked.append(from);
     unpacked.append(to);
     unpacked.append(cmd);
-
-    // this is a temporary HACK for ACKs - ack digits were deprecated in 2.2 (for reasons)
-    // this will prevent displaying the digits even when transmitted by a pre 2.2 station
-    if(cmd == " ACK"){
-        extra = 0;
-    }
 
     if(extra != 0){
         if(Varicode::isSNRCommand(cmd)){

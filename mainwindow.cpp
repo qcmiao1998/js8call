@@ -6691,7 +6691,7 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
 
     // fixup duplicate acks
     auto tc = c.document()->find(text);
-    if(!tc.isNull() && tc.selectedText() == text && text.contains(" ACK ")){
+    if(!tc.isNull() && tc.selectedText() == text && (text.contains(" ACK ") || text.contains(" HEARTBEAT SNR "))){
         tc.select(QTextCursor::BlockUnderCursor);
 
         if(tc.selectedText().trimmed().startsWith(date.time().toString())){
@@ -8378,7 +8378,7 @@ void MainWindow::sendHeartbeatAck(QString to, int snr, QString extra){
         QString("%1 SNR %2 %3").arg(to).arg(Varicode::formatSNR(snr)).arg(extra).trimmed() :
         QString("%1 ACK %2").arg(to).arg(extra).trimmed();
 #else
-    auto message = QString("%1 SNR %2 %3").arg(to).arg(Varicode::formatSNR(snr)).arg(extra).trimmed();
+    auto message = QString("%1 HEARTBEAT SNR %2 %3").arg(to).arg(Varicode::formatSNR(snr)).arg(extra).trimmed();
 #endif
 
     auto f = m_config.heartbeat_anywhere() ? -1 : findFreeFreqOffset(500, 1000, 50);
@@ -11504,6 +11504,12 @@ void MainWindow::processCommandActivity() {
             continue;
         }
 
+        // PROCESS HEARTBEAT SNR
+        else if (d.cmd == " HEARTBEAT SNR"){
+            qDebug() << "skipping incoming hb snr" << d.text;
+            continue;
+        }
+
         // PROCESS CQ
         else if (d.cmd == " CQ"){
             qDebug() << "skipping incoming cq" << d.text;
@@ -12174,7 +12180,7 @@ void MainWindow::displayBandActivity() {
                     // hide heartbeat items
                     if (!ui->actionShow_Band_Heartbeats_and_ACKs->isChecked()){
                         // hide heartbeats and acks if we have heartbeating hidden
-                        if(item.text.contains(" @HB ") || item.text.contains(" HEARTBEAT ") || item.text.contains(" ACK ")){
+                        if(item.text.contains(" @HB ") || item.text.contains(" HEARTBEAT ")){
                             shouldDisplay = false;
 
                             // hide the previous item if this it shouldn't be displayed either...
