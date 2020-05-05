@@ -177,10 +177,21 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      write(*,*) '<DecodeDebug> mode A decode started'
 
      ! copy the relevant frames for decoding
-     pos = max(0,params%kposA)
-     sz = max(0,params%kszA)
+     pos = int(max(0,params%kposA))
+     sz = int(max(0,params%kszA))
      id0=0
-     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     imax=int(NTMAX*12000)
+
+     if((imax-pos).lt.sz) then
+       ! this means that the first part of the id0 is at the end of the buffer
+       ! and the second half is at the beginning of the buffer
+       firstsize=int(imax-pos)-1
+       secondsize=int(sz-firstsize)+1
+       id0(1:firstsize+1)=id2(pos+1:pos+firstsize+1)
+       id0(firstsize+1:firstsize+secondsize+1)=id2(1:secondsize+1)
+     else
+       id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     endif
      
      call my_js8a%decode(js8a_decoded,id0,params%nQSOProgress,params%nfqso,  &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &

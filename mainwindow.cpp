@@ -4266,6 +4266,27 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     // enqueue those decodes that are "ready"
     // on an interval, issue a decode
 
+    static qint32 lastDecodeStartA = -1;
+    qint32 startA = -1;
+    qint32 szA = -1;
+    qint32 cycleA = -1;
+    bool couldDecodeA = false;
+    qint32 oneSecondFrames = computeFramesPerCycleForDecode(Varicode::JS8CallNormal)/computePeriodForSubmode(Varicode::JS8CallNormal);
+    if(lastDecodeStartA == -1 || k < k0 || k - lastDecodeStartA > oneSecondFrames){
+        startA = k-computeFramesNeededForDecode(Varicode::JS8CallNormal);
+
+        if(startA < 0){
+            // TODO: decoder doesn't copy wrap around ranges
+            startA += m_detector->period() * RX_SAMPLE_RATE;
+        }
+
+        szA = computeFramesNeededForDecode(Varicode::JS8CallNormal);
+        lastDecodeStartA = k;
+        couldDecodeA = true;
+        qDebug() << "? NORMAL        " << startA << k << k0;
+    }
+
+#if 0
     static qint32 currentDecodeStartA = -1;
     static qint32 nextDecodeStartA = -1;
     qint32 startA = -1;
@@ -4278,6 +4299,7 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
         szA = NTMAX*RX_SAMPLE_RATE-1;
         couldDecodeA = true;
     }
+#endif
 
     static qint32 currentDecodeStartB = -1;
     static qint32 nextDecodeStartB = -1;
@@ -4334,6 +4356,9 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
         couldDecodeI = true;
     }
 #endif
+
+
+    couldDecodeB = couldDecodeC = couldDecodeE = false;
 
     int decodes = 0;
 
@@ -4699,7 +4724,13 @@ void MainWindow::decodeDone ()
   m_nclearave=0;
   m_RxLog=0;
   m_blankLine=true;
-  m_messageDupeCache.clear();
+
+  static int dupeClearI = 0;
+  if(dupeClearI > 2*m_TRperiod){
+    m_messageDupeCache.clear();
+    dupeClearI = 0;
+  }
+  dupeClearI++;
 
   decodeBusy(false);
 }

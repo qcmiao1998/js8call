@@ -97,6 +97,7 @@ extern struct dec_data {
     int nfSplit;                // JT65 | JT9 split frequency
     int nfb;                    // High decode limit (Hz) (filter max)
     int ntol;                   // +/- decoding range around fQSO (Hz)
+    bool synconly;              // only compute sync candidates
     int kin;                    // number of frames written to d2
     int kposA;                  // starting position of decode for submode A
     int kposB;                  // starting position of decode for submode B
