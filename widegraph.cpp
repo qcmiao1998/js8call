@@ -244,9 +244,9 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("WaterfallFPS", ui->fpsSpinBox->value());
 }
 
-void WideGraph::drawRed(int ia, int ib)
+void WideGraph::drawLine(const QColor &color, int ia, int ib)
 {
-  ui->widePlot->drawRed(ia,ib,swide);
+  ui->widePlot->drawLine(color, ia, ib);
 }
 
 void WideGraph::dataSink2(float s[], float df3, int ihsym, int ndiskdata)  //dataSink2

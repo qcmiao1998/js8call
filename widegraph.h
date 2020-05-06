@@ -63,7 +63,7 @@ public:
   int    smoothYellow();
   void   setRxBand (QString const& band);
   void   setWSPRtransmitted();
-  void   drawRed(int ia, int ib);
+  void   drawLine(const QColor &color, int ia, int ib);
   void   setVHF(bool bVHF);
   void   setRedFile(QString fRed);
   void   setTurbo(bool turbo);

@@ -277,42 +277,22 @@ void CPlotter::draw(float swide[], bool bScroll, bool bRed)
     painter2D.drawText(x1-4,y,"73");
   }
 
-    if(bRed) {
-      std::ifstream f;
-      f.open(m_redFile.toLatin1());
-      if(f) {
-        int x,y;
-        float freq,sync;
-        float slimit=6.0;
-        QPen pen0(Qt::red,1);
-        painter1.setPen(pen0);
-        for(int i=0; i<99999; i++) {
-          f >> freq >> sync;
-          if(f.eof()) break;
-          x=XfromFreq(freq);
-          y=(sync-slimit)*3.0;
-          if(y>0) {
-            if(y>15.0) y=15.0;
-            if(x>=0 and x<=m_w) {
-              painter1.setPen(pen0);
-              painter1.drawLine(x,0,x,y);
-            }
-          }
-        }
-        f.close();
-      }
-//      m_bDecodeFinished=false;
-    }
-
   update();                                    //trigger a new paintEvent
   m_bScaleOK=true;
 }
 
-void CPlotter::drawRed(int ia, int ib, float swide[])
+void CPlotter::drawLine(const QColor &color, int ia, int ib)
 {
-  m_ia=ia;
-  m_ib=ib;
-  draw(swide,false,true);
+  int x1=XfromFreq(ia);
+  int x2=XfromFreq(ib);
+
+  QPen pen0(color, 1);
+
+  QPainter painter1(&m_WaterfallPixmap);
+  painter1.setPen(pen0);
+  painter1.drawLine(qMin(x1, x2),4,qMax(x1, x2),4);
+  painter1.drawLine(qMin(x1, x2),0,qMin(x1, x2),9);
+  painter1.drawLine(qMax(x1, x2),0,qMax(x1, x2),9);
 }
 
 void CPlotter::replot()

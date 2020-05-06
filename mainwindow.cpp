@@ -4461,6 +4461,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder skipping at least 1 decode cycle" << "count" << count << "max" << maxDecodes;
     }
 
+    dec_data.params.synconly = true;
     dec_data.params.nsubmodes = 0;
 
     while(!m_decoderQueue.isEmpty()){
@@ -4872,6 +4873,54 @@ void MainWindow::processDecodedLine(QByteArray t){
   bool bAvgMsg=false;
   int navg=0;
   if(t.indexOf("<DecodeDebug>") >= 0) {
+    if(t.indexOf("f1") >= 0){
+      auto segs =  QString(t.trimmed()).split(QRegExp("[\\s\\t]+"), QString::SkipEmptyParts);
+      if(!segs.isEmpty()){
+          auto f1 = QString(segs.at(4));
+          auto f = int(f1.toFloat());
+
+          auto s1 = QString(segs.at(6));
+          auto s = int(s1.toFloat());
+
+          auto xdt1 = QString(segs.at(8));
+          auto xdt = int(xdt1.toFloat());
+
+          if(abs(xdt) <= 1.28){
+              //if(s > 7 && s < 10){
+              //  m_wideGraph->drawLine(QColor(Qt::white), f, f + computeBandwidthForSubmode(m_nSubMode));
+              //} else if (s < 15){
+              //  m_wideGraph->drawLine(QColor(Qt::darkMagenta), f, f + computeBandwidthForSubmode(m_nSubMode));
+              //} else {
+                /*
+                int secs = DriftingDateTime::currentDateTimeUtc().secsTo(nextTransmitCycle());
+                int txtime = computeFramesNeededForDecode(m_nSubMode)/RX_SAMPLE_RATE;
+                qDebug() << "seconds til transmit" << secs << "time offset" << xdt << "potential drift" << (secs-xdt)*1000;
+                setDrift((secs+xdt-txtime)*1000);
+                */
+              auto now = QDateTime::currentDateTimeUtc();
+
+              int n = 0;
+              int nPos = m_TRperiod - (now.time().second() % m_TRperiod);
+              int nNeg = (now.time().second() % m_TRperiod) - m_TRperiod;
+
+              if(abs(nNeg) < nPos){
+                  n = nNeg;
+              } else {
+                  n = nPos;
+              }
+
+
+                int xdtmin = qMin(n*1000, (int)DriftingDateTime::drift());
+                int xdtmax = qMax(n*1000, (int)DriftingDateTime::drift());
+                setDrift(xdtmin + (xdtmax-xdtmin)/2);
+
+                m_wideGraph->drawLine(QColor(Qt::red), f, f + computeBandwidthForSubmode(m_nSubMode));
+              //}
+          }
+      }
+    }
+
+
     if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
     return;
   }
@@ -4882,7 +4931,6 @@ void MainWindow::processDecodedLine(QByteArray t){
   }
 
   if(t.indexOf("<DecodeFinished>") >= 0) {
-    if(m_mode=="QRA64") m_wideGraph->drawRed(0,0);
     m_bDecoded = t.mid(16).trimmed().toInt() > 0;
     int mswait=3*1000*m_TRperiod/4;
     if(!m_diskData) killFileTimer.start(mswait); //Kill in 3/4 period

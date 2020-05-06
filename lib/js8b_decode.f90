@@ -114,7 +114,7 @@ contains
         endif
 
         call timer('js8dec  ',0)
-        call js8dec(dd,icos,newdat,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &
+        call js8dec(dd,icos,newdat,.false.,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &
              lapcqonly,napwid,lsubtract,nagain,iaptype,mycall12,mygrid6,   &
              hiscall12,bcontest,sync,f1,xdt,xbase,apsym,nharderrors,dmin,  &
              nbadcrc,iappass,iera,msg37,xsnr)

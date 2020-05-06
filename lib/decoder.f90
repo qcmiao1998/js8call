@@ -197,7 +197,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
-          mycall,mygrid,hiscall,hisgrid)
+          mycall,mygrid,hiscall,hisgrid,logical(params%synconly))
 
      write(*,*) '<DecodeDebug> mode A decode finished'
 
