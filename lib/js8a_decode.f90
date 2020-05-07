@@ -25,7 +25,7 @@ contains
 
   subroutine decode(this,callback,iwave,nQSOProgress,nfqso,nftx,newdat,  &
        nutc,nfa,nfb,nexp_decode,ndepth,nagain,lft8apon,lapcqonly,napwid, &
-       mycall12,mygrid6,hiscall12,hisgrid6,synconly)
+       mycall12,mygrid6,hiscall12,hisgrid6,syncStats)
 !    use wavhdr
     use timer_module, only: timer
 !    type(hdr) h
@@ -38,7 +38,7 @@ contains
     real candidate(3,NMAXCAND)
     real dd(NMAX)
     logical, intent(in) :: lft8apon,lapcqonly,nagain
-    logical newdat,lsubtract,ldupe,bcontest,synconly
+    logical newdat,lsubtract,ldupe,bcontest,syncStats
     character*12 mycall12, hiscall12
     character*6 mygrid6,hisgrid6
     integer*2 iwave(NMAX)
@@ -93,31 +93,9 @@ contains
         lsubtract=.false. 
       endif 
 
-      if(synconly) then
-        if(NWRITELOG.eq.0) then
-            write(*,*) '<DecodeDebug> synconly'
-            flush(6)
-        endif
-      endif
-
       call timer('syncjs8 ',0)
       call syncjs8(dd,icos,ifa,ifb,syncmin,nfqso,s,candidate,ncand,sbase)
       call timer('syncjs8 ',1)
-
-      !if(NWRITELOG.eq.0) then
-      !  write(*,*) '<DecodeDebug>', ncand, "candidates"
-      !  flush(6)
-
-      !  do icand=1,ncand
-      !      sync=candidate(3,icand)
-      !      f1=candidate(1,icand)
-      !      xdt=candidate(2,icand)
-      !      xbase=10.0**(0.1*(sbase(nint(f1/(12000.0/NFFT1)))-40.0)) ! 3.125Hz
-
-      !      write(*,*) '<DecodeDebug> candidate', icand, 'f1', f1, 'sync', sync, 'xdt', xdt, 'xbase', xbase
-      !      flush(6)
-      !  enddo
-      !endif
 
       do icand=1,ncand
         sync=candidate(3,icand)
@@ -131,7 +109,7 @@ contains
         endif
 
         call timer('js8dec  ',0)
-        call js8dec(dd,icos,newdat,synconly,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &
+        call js8dec(dd,icos,newdat,syncStats,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &
              lapcqonly,napwid,lsubtract,nagain,iaptype,mycall12,mygrid6,   &
              hiscall12,bcontest,sync,f1,xdt,xbase,apsym,nharderrors,dmin,  &
              nbadcrc,iappass,iera,msg37,xsnr)

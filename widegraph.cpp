@@ -356,6 +356,8 @@ void WideGraph::drawSwide(){
         swideLocal[i] = flagValue;
       }
       ui->widePlot->draw(swideLocal,true,false);
+    } else if(lastSecondInPeriod != secondInPeriod) {
+      drawLine(Qt::gray, ui->widePlot->startFreq(), 10);
     }
     lastSecondInPeriod=secondInPeriod;
 

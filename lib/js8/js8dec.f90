@@ -1,4 +1,4 @@
-subroutine js8dec(dd0,icos,newdat,synconly,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
+subroutine js8dec(dd0,icos,newdat,syncStats,nQSOProgress,nfqso,nftx,ndepth,lapon,lapcqonly,   &
      napwid,lsubtract,nagain,iaptype,mycall12,mygrid6,hiscall12,bcontest,    &
      sync0,f1,xdt,xbase,apsym,nharderrors,dmin,nbadcrc,ipass,iera,msg37,xsnr)  
 
@@ -14,7 +14,7 @@ subroutine js8dec(dd0,icos,newdat,synconly,nQSOProgress,nfqso,nftx,ndepth,lapon,
   character*12 mycall12,hiscall12
   character*6 mycall6,mygrid6,hiscall6,c1,c2
   character*87 cbits
-  logical bcontest,synconly
+  logical bcontest,syncStats
   real a(5)
   real s1(0:7,ND),s2(0:7,NN),s1sort(8*ND)
   real ps(0:7),psl(0:7)
@@ -224,8 +224,8 @@ subroutine js8dec(dd0,icos,newdat,synconly,nQSOProgress,nfqso,nftx,ndepth,lapon,
     return
   endif
 
-  if(synconly) then
-    write(*,*) '<DecodeDebug> candidate X ', 'f1', f1, 'sync', nsync, 'xdt', xdt
+  if(syncStats) then
+    write(*,*) '<DecodeDebug> candidate ', NSUBMODE, 'f1', f1, 'sync', nsync, 'xdt', xdt
     flush(6)
   endif
 
@@ -422,9 +422,8 @@ subroutine js8dec(dd0,icos,newdat,synconly,nQSOProgress,nfqso,nftx,ndepth,lapon,
      i3bit=4*decoded(73) + 2*decoded(74) + decoded(75)
 
      if(nbadcrc.eq.0) then
-
-        if(synconly) then
-            write(*,*) '<DecodeDebug> decode X ', 'f1', f1, 'sync', (sync*10), 'xdt', xdt2
+        if(syncStats) then
+            write(*,*) '<DecodeDebug> decode ', NSUBMODE, 'f1', f1, 'sync', (sync*10), 'xdt', xdt2
             flush(6)
         endif
 

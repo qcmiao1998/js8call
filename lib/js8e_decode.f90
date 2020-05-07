@@ -25,7 +25,7 @@ contains
 
   subroutine decode(this,callback,iwave,nQSOProgress,nfqso,nftx,newdat,  &
        nutc,nfa,nfb,nexp_decode,ndepth,nagain,lft8apon,lapcqonly,napwid, &
-       mycall12,mygrid6,hiscall12,hisgrid6)
+       mycall12,mygrid6,hiscall12,hisgrid6,syncStats)
 !    use wavhdr
     use timer_module, only: timer
 !    type(hdr) h
@@ -38,7 +38,7 @@ contains
     real candidate(3,NMAXCAND)
     real dd(NMAX)
     logical, intent(in) :: lft8apon,lapcqonly,nagain
-    logical newdat,lsubtract,ldupe,bcontest
+    logical newdat,lsubtract,ldupe,bcontest,syncStats
     character*12 mycall12, hiscall12
     character*6 mygrid6,hisgrid6
     integer*2 iwave(NMAX)
@@ -114,7 +114,7 @@ contains
         endif
 
         call timer('js8dec  ',0)
-        call js8dec(dd,icos,newdat,.false.,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &
+        call js8dec(dd,icos,newdat,syncStats,nQSOProgress,nfqso,nftx,ndepth,lft8apon,       &
              lapcqonly,napwid,lsubtract,nagain,iaptype,mycall12,mygrid6,   &
              hiscall12,bcontest,sync,f1,xdt,xbase,apsym,nharderrors,dmin,  &
              nbadcrc,iappass,iera,msg37,xsnr)

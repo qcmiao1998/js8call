@@ -94,7 +94,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
-          mycall,mygrid,hiscall,hisgrid)
+          mycall,mygrid,hiscall,hisgrid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode I decode finished'
      
@@ -117,7 +117,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
-          mycall,mygrid,hiscall,hisgrid)
+          mycall,mygrid,hiscall,hisgrid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode E decode finished'
      
@@ -140,7 +140,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
-          mycall,mygrid,hiscall,hisgrid)
+          mycall,mygrid,hiscall,hisgrid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode C decode finished'
      
@@ -163,7 +163,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
-          mycall,mygrid,hiscall,hisgrid)
+          mycall,mygrid,hiscall,hisgrid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode B decode finished'
      
@@ -197,7 +197,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
-          mycall,mygrid,hiscall,hisgrid,logical(params%synconly))
+          mycall,mygrid,hiscall,hisgrid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode A decode finished'
 
@@ -207,7 +207,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   write(*,*) '<DecodeDebug> finished'
   call flush(6)
 
-  ndecoded = my_js8a%decoded + my_js8b%decoded + my_js8c%decoded + my_js8e%decoded
+  ndecoded = my_js8a%decoded + my_js8b%decoded + my_js8c%decoded + my_js8e%decoded + my_js8i%decoded
   !call sleep_msec(3000)
   write(*,1010) ndecoded
 1010 format('<DecodeFinished>',i4)
