@@ -20,7 +20,7 @@ subroutine subtractjs8(dd,itone,f0,dt)
 
   nstart=dt*12000+1
 
-  if(NWRITELOG.eq.0) then
+  if(NWRITELOG.eq.1) then
       write(*,*) '<DecodeDebug> generating reference signal', nstart
       flush(6)
   endif
@@ -33,14 +33,14 @@ subroutine subtractjs8(dd,itone,f0,dt)
     if(id.ge.1.and.id.le.NMAX) camp(i)=dd(id)*conjg(cref(i))
   enddo
 
-  if(NWRITELOG.eq.0) then
+  if(NWRITELOG.eq.1) then
       write(*,*) '<DecodeDebug> filtering', NFFT
       flush(6)
   endif
 
   if(first) then
       ! Create and normalize the filter
-      if(NWRITELOG.eq.0) then
+      if(NWRITELOG.eq.1) then
           write(*,*) '<DecodeDebug> creating and normalizing filter'
           flush(6)
       endif
@@ -94,7 +94,7 @@ subroutine subtractjs8(dd,itone,f0,dt)
       endif
   endif
 
-  if(NWRITELOG.eq.0) then
+  if(NWRITELOG.eq.1) then
       write(*,*) '<DecodeDebug> generating complex amplitude'
       flush(6)
   endif
@@ -105,7 +105,7 @@ subroutine subtractjs8(dd,itone,f0,dt)
   cfilt(1:NFFT)=cfilt(1:NFFT)*cw(1:NFFT)
   call four2a(cfilt,NFFT,1,1,1)
 
-  if(NWRITELOG.eq.0) then
+  if(NWRITELOG.eq.1) then
       write(*,*) '<DecodeDebug> subtracting filtered reference', NFFT
       flush(6)
   endif

@@ -225,7 +225,7 @@ subroutine js8dec(dd0,icos,newdat,syncStats,nQSOProgress,nfqso,nftx,ndepth,lapon
   endif
 
   if(syncStats) then
-    write(*,*) '<DecodeDebug> candidate ', NSUBMODE, 'f1', f1, 'sync', nsync, 'xdt', xdt
+    write(*,*) '<DecodeSyncStat> candidate ', NSUBMODE, 'f1', f1, 'sync', nsync, 'xdt', xdt
     flush(6)
   endif
 
@@ -423,7 +423,7 @@ subroutine js8dec(dd0,icos,newdat,syncStats,nQSOProgress,nfqso,nftx,ndepth,lapon
 
      if(nbadcrc.eq.0) then
         if(syncStats) then
-            write(*,*) '<DecodeDebug> decode ', NSUBMODE, 'f1', f1, 'sync', (sync*10), 'xdt', xdt2
+            write(*,*) '<DecodeSyncStat> decode ', NSUBMODE, 'f1', f1, 'sync', (sync*10), 'xdt', xdt2
             flush(6)
         endif
 

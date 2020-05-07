@@ -4874,71 +4874,81 @@ void MainWindow::processDecodedLine(QByteArray t){
   static bool hasNewDrift = false;
   static int newDrift = 0;
 
-  if(t.indexOf("<DecodeDebug>") >= 0) {
-    if(t.indexOf("f1") >= 0){
+  if(t.indexOf("<DecodeSyncStat>") >= 0) {
       auto segs =  QString(t.trimmed()).split(QRegExp("[\\s\\t]+"), QString::SkipEmptyParts);
-      if(!segs.isEmpty()){
-          auto m1 = QString(segs.at(2));
-          auto m = int(m1.toInt());
-          auto period = computePeriodForSubmode(m);
+      if(segs.isEmpty()){
+          return;
+      }
 
-          auto f1 = QString(segs.at(4));
-          auto f = int(f1.toFloat());
+      auto m1 = QString(segs.at(2));
+      auto m = int(m1.toInt());
+      auto period = computePeriodForSubmode(m);
 
-          auto s1 = QString(segs.at(6));
-          auto s = int(s1.toFloat());
+      auto f1 = QString(segs.at(4));
+      auto f = int(f1.toFloat());
 
-          auto xdt1 = QString(segs.at(8));
-          auto xdt = int(xdt1.toFloat());
+      auto s1 = QString(segs.at(6));
+      auto s = int(s1.toFloat());
 
-          if(abs(xdt) <= 2){
-              if(s < 10){
-                m_wideGraph->drawLine(QColor(Qt::darkCyan), f, f + computeBandwidthForSubmode(m));
-              } else if (s <= 21){
-                m_wideGraph->drawLine(QColor(Qt::white), f, f + computeBandwidthForSubmode(m));
-              }
-          }
+      auto xdt1 = QString(segs.at(8));
+      auto xdt = int(xdt1.toFloat());
 
-          if(t.contains("decode")){
-              auto now = QDateTime::currentDateTimeUtc();
-
-              float n = 0;
-              float nPos = period - (now.time().second() % period);
-              float nNeg = (now.time().second() % period) - period;
-
-              if(qAbs(nNeg) < nPos){
-                  n = nNeg;
-              } else {
-                  n = nPos;
-              }
-
-              n -= (float)period;
-              n += computeFramesNeededForDecode(m)/RX_SAMPLE_RATE;
-              n -= xdt/2;
-
-              int xdtmin = qMin(n*1000, (float)DriftingDateTime::drift());
-              int xdtmax = qMax(n*1000, (float)DriftingDateTime::drift());
-
-              m_wideGraph->drawLine(QColor(Qt::red), f, f + computeBandwidthForSubmode(m));
-
-              int oldNewDrift = newDrift;
-              newDrift = (xdtmin + (xdtmax-xdtmin)/2);
-              newDrift = qMin(oldNewDrift, newDrift) + (qMax(oldNewDrift, newDrift)-qMin(oldNewDrift, newDrift))/2;
-              hasNewDrift = true;
+      // only draw candidates
+      if(abs(xdt) <= 2){
+          if(s < 10){
+            m_wideGraph->drawLine(QColor(Qt::darkCyan), f, f + computeBandwidthForSubmode(m));
+          } else if (s <= 21){
+            m_wideGraph->drawLine(QColor(Qt::white), f, f + computeBandwidthForSubmode(m));
           }
       }
-  }
 
-  if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
-    return;
+      if(!t.contains("decode")){
+          return;
+      }
+
+      // but use decodes for drift
+      auto now = QDateTime::currentDateTimeUtc();
+
+      float n = 0;
+      float nPos = period - (now.time().second() % period);
+      float nNeg = (now.time().second() % period) - period;
+
+      if(qAbs(nNeg) < nPos){
+          n = nNeg;
+      } else {
+          n = nPos;
+      }
+
+      n -= (float)period;
+      n += computeFramesNeededForDecode(m)/RX_SAMPLE_RATE;
+      n -= xdt;
+
+      int xdtmin = qMin(n*1000, (float)DriftingDateTime::drift());
+      int xdtmax = qMax(n*1000, (float)DriftingDateTime::drift());
+
+      m_wideGraph->drawLine(QColor(Qt::red), f, f + computeBandwidthForSubmode(m));
+
+      int oldNewDrift = newDrift;
+      newDrift = (xdtmin + (xdtmax-xdtmin)/2);
+      newDrift = qMin(oldNewDrift, newDrift) + (qMax(oldNewDrift, newDrift)-qMin(oldNewDrift, newDrift))/2;
+      hasNewDrift = true;
+
+      if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
+
+      return;
   }
 
   if(t.indexOf("<DecodeStarted>") >= 0) {
-    if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
-    return;
+      if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
+      return;
+  }
+
+  if(t.indexOf("<DecodeDebug>") >= 0) {
+      return;
   }
 
   if(t.indexOf("<DecodeFinished>") >= 0) {
+    // TODO: decide if we should adjust here...
     if(hasNewDrift){
         static int driftN = 1;
         newDrift = ((driftN-1)*DriftingDateTime::drift() + newDrift)/driftN;
