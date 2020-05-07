@@ -225,7 +225,7 @@ subroutine js8dec(dd0,icos,newdat,synconly,nQSOProgress,nfqso,nftx,ndepth,lapon,
   endif
 
   if(synconly) then
-    write(*,*) '<DecodeDebug> candidate X ', 'f', f1, 'sync', nsync, 'xdt', xdt
+    write(*,*) '<DecodeDebug> candidate X ', 'f1', f1, 'sync', nsync, 'xdt', xdt
     flush(6)
   endif
 
@@ -424,9 +424,8 @@ subroutine js8dec(dd0,icos,newdat,synconly,nQSOProgress,nfqso,nftx,ndepth,lapon,
      if(nbadcrc.eq.0) then
 
         if(synconly) then
-            write(*,*) '<DecodeDebug> decode X ', 'f1', f1, 'sync', sync, 'xdt', xdt2
+            write(*,*) '<DecodeDebug> decode X ', 'f1', f1, 'sync', (sync*10), 'xdt', xdt2
             flush(6)
-            return
         endif
 
         decoded0=decoded

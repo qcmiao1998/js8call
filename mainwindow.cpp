@@ -4872,6 +4872,10 @@ void MainWindow::processDecodedLine(QByteArray t){
 
   bool bAvgMsg=false;
   int navg=0;
+
+  static bool hasNewDrift = false;
+  static int newDrift = 0;
+
   if(t.indexOf("<DecodeDebug>") >= 0) {
     if(t.indexOf("f1") >= 0){
       auto segs =  QString(t.trimmed()).split(QRegExp("[\\s\\t]+"), QString::SkipEmptyParts);
@@ -4885,37 +4889,36 @@ void MainWindow::processDecodedLine(QByteArray t){
           auto xdt1 = QString(segs.at(8));
           auto xdt = int(xdt1.toFloat());
 
-          if(abs(xdt) <= 1.28){
-              //if(s > 7 && s < 10){
-              //  m_wideGraph->drawLine(QColor(Qt::white), f, f + computeBandwidthForSubmode(m_nSubMode));
-              //} else if (s < 15){
-              //  m_wideGraph->drawLine(QColor(Qt::darkMagenta), f, f + computeBandwidthForSubmode(m_nSubMode));
-              //} else {
-                /*
-                int secs = DriftingDateTime::currentDateTimeUtc().secsTo(nextTransmitCycle());
-                int txtime = computeFramesNeededForDecode(m_nSubMode)/RX_SAMPLE_RATE;
-                qDebug() << "seconds til transmit" << secs << "time offset" << xdt << "potential drift" << (secs-xdt)*1000;
-                setDrift((secs+xdt-txtime)*1000);
-                */
+          if(abs(xdt) <= 2){
+              if(s < 10){
+                m_wideGraph->drawLine(QColor(Qt::darkCyan), f, f + computeBandwidthForSubmode(m_nSubMode));
+              } else if (s <= 21){
+                m_wideGraph->drawLine(QColor(Qt::white), f, f + computeBandwidthForSubmode(m_nSubMode));
+              }
+          }
+
+          if(t.contains("decode X")){
               auto now = QDateTime::currentDateTimeUtc();
 
-              int n = 0;
-              int nPos = m_TRperiod - (now.time().second() % m_TRperiod);
-              int nNeg = (now.time().second() % m_TRperiod) - m_TRperiod;
+              float n = 0;
+              float nPos = m_TRperiod - (now.time().second() % m_TRperiod);
+              float nNeg = (now.time().second() % m_TRperiod) - m_TRperiod;
+              float offset = m_TRperiod - computeFramesNeededForDecode(m_nSubMode)/RX_SAMPLE_RATE + xdt;
 
-              if(abs(nNeg) < nPos){
-                  n = nNeg;
+              if(qAbs(nNeg) < nPos){
+                  n = nNeg + offset;
               } else {
-                  n = nPos;
+                  n = nPos - offset;
               }
 
+              int xdtmin = qMin(n*1000, (float)DriftingDateTime::drift());
+              int xdtmax = qMax(n*1000, (float)DriftingDateTime::drift());
 
-                int xdtmin = qMin(n*1000, (int)DriftingDateTime::drift());
-                int xdtmax = qMax(n*1000, (int)DriftingDateTime::drift());
-                setDrift(xdtmin + (xdtmax-xdtmin)/2);
-
-                m_wideGraph->drawLine(QColor(Qt::red), f, f + computeBandwidthForSubmode(m_nSubMode));
-              //}
+              m_wideGraph->drawLine(QColor(Qt::red), f, f + computeBandwidthForSubmode(m_nSubMode));
+              int oldNewDrift = newDrift;
+              newDrift = (xdtmin + (xdtmax-xdtmin)/2);
+              newDrift = qMin(oldNewDrift, newDrift) + (qMax(oldNewDrift, newDrift)-qMin(oldNewDrift, newDrift))/2;
+              hasNewDrift = true;
           }
       }
     }
@@ -4931,6 +4934,14 @@ void MainWindow::processDecodedLine(QByteArray t){
   }
 
   if(t.indexOf("<DecodeFinished>") >= 0) {
+
+    if(hasNewDrift){
+        int oldDrift = DriftingDateTime::drift();
+        newDrift = qMin(oldDrift, newDrift) + (qMax(oldDrift, newDrift)-qMin(oldDrift, newDrift))/2;
+        setDrift(newDrift);
+        hasNewDrift = false;
+    }
+
     m_bDecoded = t.mid(16).trimmed().toInt() > 0;
     int mswait=3*1000*m_TRperiod/4;
     if(!m_diskData) killFileTimer.start(mswait); //Kill in 3/4 period
