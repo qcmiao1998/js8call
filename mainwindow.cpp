@@ -4939,6 +4939,7 @@ void MainWindow::processDecodedLine(QByteArray t){
         int oldDrift = DriftingDateTime::drift();
         newDrift = qMin(oldDrift, newDrift) + (qMax(oldDrift, newDrift)-qMin(oldDrift, newDrift))/2;
         setDrift(newDrift);
+        writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Drift: %1").arg(newDrift));
         hasNewDrift = false;
     }
 
