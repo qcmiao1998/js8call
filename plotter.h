@@ -90,7 +90,8 @@ public:
   void setReference(bool b) {m_bReference = b;}
   bool Reference() const {return m_bReference;}
 #endif
-  void drawLine(const QColor &color, int ia, int ib);
+  void drawDecodeLine(const QColor &color, int ia, int ib);
+  void drawHorizontalLine(const QColor &color, int x, int width);
   void setVHF(bool bVHF);
   void setRedFile(QString fRed);
   bool scaleOK () const {return m_bScaleOK;}

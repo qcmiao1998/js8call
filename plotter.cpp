@@ -281,7 +281,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool bRed)
   m_bScaleOK=true;
 }
 
-void CPlotter::drawLine(const QColor &color, int ia, int ib)
+void CPlotter::drawDecodeLine(const QColor &color, int ia, int ib)
 {
   int x1=XfromFreq(ia);
   int x2=XfromFreq(ib);
@@ -293,6 +293,15 @@ void CPlotter::drawLine(const QColor &color, int ia, int ib)
   painter1.drawLine(qMin(x1, x2),4,qMax(x1, x2),4);
   painter1.drawLine(qMin(x1, x2),0,qMin(x1, x2),9);
   painter1.drawLine(qMax(x1, x2),0,qMax(x1, x2),9);
+}
+
+void CPlotter::drawHorizontalLine(const QColor &color, int x, int width)
+{
+  QPen pen0(color, 1);
+
+  QPainter painter1(&m_WaterfallPixmap);
+  painter1.setPen(pen0);
+  painter1.drawLine(x,0,width <= 0 ? m_w : x+width,0);
 }
 
 void CPlotter::replot()

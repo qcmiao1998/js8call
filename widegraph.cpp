@@ -246,7 +246,7 @@ void WideGraph::saveSettings()                                           //saveS
 
 void WideGraph::drawLine(const QColor &color, int ia, int ib)
 {
-  ui->widePlot->drawLine(color, ia, ib);
+  ui->widePlot->drawDecodeLine(color, ia, ib);
 }
 
 void WideGraph::dataSink2(float s[], float df3, int ihsym, int ndiskdata)  //dataSink2
@@ -357,7 +357,7 @@ void WideGraph::drawSwide(){
       }
       ui->widePlot->draw(swideLocal,true,false);
     } else if(lastSecondInPeriod != secondInPeriod) {
-      drawLine(Qt::gray, ui->widePlot->startFreq(), 10);
+      ui->widePlot->drawHorizontalLine(Qt::white, 0, 5);
     }
     lastSecondInPeriod=secondInPeriod;
 

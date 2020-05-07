@@ -4914,7 +4914,7 @@ void MainWindow::processDecodedLine(QByteArray t){
 
               n -= (float)period;
               n += computeFramesNeededForDecode(m)/RX_SAMPLE_RATE;
-              n -= xdt;
+              n -= xdt/2;
 
               int xdtmin = qMin(n*1000, (float)DriftingDateTime::drift());
               int xdtmax = qMax(n*1000, (float)DriftingDateTime::drift());
