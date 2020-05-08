@@ -88,7 +88,18 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      pos = max(0,params%kposI)
      sz = max(0,params%kszI)
      id0=0
-     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     imax=int(NTMAX*12000)
+
+     if((imax-pos).lt.sz) then
+       ! this means that the first part of the id0 is at the end of the buffer
+       ! and the second half is at the beginning of the buffer
+       firstsize=int(imax-pos)-1
+       secondsize=int(sz-firstsize)+1
+       id0(1:firstsize+1)=id2(pos+1:pos+firstsize+1)
+       id0(firstsize+1:firstsize+secondsize+1)=id2(1:secondsize+1)
+     else
+       id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     endif
      
      call my_js8i%decode(js8i_decoded,id0,params%nQSOProgress,params%nfqso,  &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
@@ -111,7 +122,18 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      pos = max(0,params%kposE)
      sz = max(0,params%kszE)
      id0=0
-     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     imax=int(NTMAX*12000)
+
+     if((imax-pos).lt.sz) then
+       ! this means that the first part of the id0 is at the end of the buffer
+       ! and the second half is at the beginning of the buffer
+       firstsize=int(imax-pos)-1
+       secondsize=int(sz-firstsize)+1
+       id0(1:firstsize+1)=id2(pos+1:pos+firstsize+1)
+       id0(firstsize+1:firstsize+secondsize+1)=id2(1:secondsize+1)
+     else
+       id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     endif
      
      call my_js8e%decode(js8e_decoded,id0,params%nQSOProgress,params%nfqso,  &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
@@ -134,7 +156,18 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      pos = max(0,params%kposC)
      sz = max(0,params%kszC)
      id0=0
-     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     imax=int(NTMAX*12000)
+
+     if((imax-pos).lt.sz) then
+       ! this means that the first part of the id0 is at the end of the buffer
+       ! and the second half is at the beginning of the buffer
+       firstsize=int(imax-pos)-1
+       secondsize=int(sz-firstsize)+1
+       id0(1:firstsize+1)=id2(pos+1:pos+firstsize+1)
+       id0(firstsize+1:firstsize+secondsize+1)=id2(1:secondsize+1)
+     else
+       id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     endif
      
      call my_js8c%decode(js8c_decoded,id0,params%nQSOProgress,params%nfqso,  &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
@@ -157,7 +190,18 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      pos = max(0,params%kposB)
      sz = max(0,params%kszB)
      id0=0
-     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     imax=int(NTMAX*12000)
+
+     if((imax-pos).lt.sz) then
+       ! this means that the first part of the id0 is at the end of the buffer
+       ! and the second half is at the beginning of the buffer
+       firstsize=int(imax-pos)-1
+       secondsize=int(sz-firstsize)+1
+       id0(1:firstsize+1)=id2(pos+1:pos+firstsize+1)
+       id0(firstsize+1:firstsize+secondsize+1)=id2(1:secondsize+1)
+     else
+       id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     endif
      
      call my_js8b%decode(js8b_decoded,id0,params%nQSOProgress,params%nfqso,  &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
