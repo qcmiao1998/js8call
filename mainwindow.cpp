@@ -4340,7 +4340,9 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     int decodes = 0;
 
     // when no other mode is being decoded, do a sync stats decode for normal mode
-    if(!couldDecodeA && !couldDecodeB && !couldDecodeC && !couldDecodeE){
+    bool experiment = true;
+
+    if(experiment){
         static qint32 lastDecodeStartA = -1;
         qint32 oneSecondFramesA = computeFramesPerCycleForDecode(Varicode::JS8CallNormal)/computePeriodForSubmode(Varicode::JS8CallNormal);
         if(lastDecodeStartA == -1 || k < k0 || k - lastDecodeStartA > oneSecondFramesA){
@@ -4355,6 +4357,8 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
             lastDecodeStartA = k;
             couldDecodeA = true;
         }
+
+        couldDecodeB = couldDecodeC = couldDecodeE = false;
 
 #if 0
         static qint32 lastDecodeStartB = -1;
@@ -4492,7 +4496,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     QMutexLocker mutex(m_detector->getMutex());
 
     if(m_decoderBusy){
-        int seconds = m_decoderBusyStartTime.secsTo(DriftingDateTime::currentDateTimeUtc());
+        int seconds = m_decoderBusyStartTime.secsTo(QDateTime::currentDateTimeUtc());
         if(seconds > 60){
             if(JS8_DEBUG_DECODE) qDebug() << "--> decoder should be killed!" << QString("(%1 seconds)").arg(seconds);
         } else if(seconds > 30){
@@ -4761,7 +4765,7 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
   m_decoderBusy=b;
   if(m_decoderBusy){
     tx_status_label.setText("Decoding");
-    m_decoderBusyStartTime = DriftingDateTime::currentDateTimeUtc();
+    m_decoderBusyStartTime = QDateTime::currentDateTimeUtc(); //DriftingDateTime::currentDateTimeUtc();
     m_decoderBusyFreq = dialFrequency();
     m_decoderBusyBand = m_config.bands()->find (m_decoderBusyFreq);
   }
@@ -4844,7 +4848,7 @@ void MainWindow::decodeCheckHangingDecoder(){
         return;
     }
 
-    if(!m_decoderBusyStartTime.isValid() || m_decoderBusyStartTime.secsTo(DriftingDateTime::currentDateTimeUtc()) < 60){
+    if(!m_decoderBusyStartTime.isValid() || m_decoderBusyStartTime.secsTo(QDateTime::currentDateTimeUtc()) < 60){
         return;
     }
 
@@ -4975,37 +4979,27 @@ void MainWindow::processDecodedLine(QByteArray t){
       // draw decodes
       m_wideGraph->drawLine(QColor(Qt::red), f, f + computeBandwidthForSubmode(m));
 
-#if 0
-      // but use decodes for drift
-      if(m == Varicode::JS8CallNormal){
+#if 1
+      // use normal decodes for auto drift if we haven't already defined a new drift for this period
+      if(/*!hasNewDrift && */ (m == Varicode::JS8CallSlow || m == Varicode::JS8CallNormal)){
           auto now = QDateTime::currentDateTimeUtc();
           float n = 0;
-          float nPos = period - ((now.time().second()) % period);
           float nNeg = ((now.time().second()) % period) - period;
-
+          float nPos = period - ((now.time().second()) % period);
           if(qAbs(nNeg) < nPos){
-              n = nNeg;
+              n = nNeg + 1;
           } else {
-              n = nPos;
+              n = nPos - 1;
           }
 
-          int offset = period - computeFramesNeededForDecode(m)/RX_SAMPLE_RATE;
-          n -= offset;
-          n -= xdt-1.0;
+          // subtract to the previous period
+          n -= (float)period;
 
-          //n += period;
-          // n -= computeFramesNeededForDecode(m)/RX_SAMPLE_RATE;
-          // n += xdt;
+          // subtract the actual tx duration
+          n += computeFramesNeededForDecode(m)/RX_SAMPLE_RATE;
 
-      //// // auto now = QDateTime::currentDateTimeUtc();
-      //// // float n = 0;
-      //// // float s = now.time().second() + now.time().msec()/1000.0;
-      //// //
-      //// // if(s < 30){
-      //// //     n = -s;
-      //// // } else {
-      //// //     n = 60 - s;
-      //// // }
+          // subtract the time delta
+          n -= xdt;
 
           int xdtmin = qMin(n*1000, (float)DriftingDateTime::drift());
           int xdtmax = qMax(n*1000, (float)DriftingDateTime::drift());
@@ -5032,6 +5026,12 @@ void MainWindow::processDecodedLine(QByteArray t){
   }
 
   if(t.indexOf("<DecodeFinished>") >= 0) {
+    int msec = m_decoderBusyStartTime.msecsTo(QDateTime::currentDateTimeUtc());
+    qDebug() << "Decoder Duration:" << msec;
+    if(msec >= 1000){
+        writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Decoder Duration: %1").arg(msec));
+    }
+
     // TODO: decide if we should adjust here...
     if(hasNewDrift){
         static int driftN = 1;
