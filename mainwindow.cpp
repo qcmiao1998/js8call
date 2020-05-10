@@ -4343,20 +4343,51 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     bool experiment = true;
 
     if(experiment){
-        static qint32 lastDecodeStartA = -1;
-        qint32 oneSecondFramesA = computeFramesPerCycleForDecode(Varicode::JS8CallNormal)/computePeriodForSubmode(Varicode::JS8CallNormal);
-        if(lastDecodeStartA == -1 || k < k0 || k - lastDecodeStartA > oneSecondFramesA){
-            startA = k-computeFramesNeededForDecode(Varicode::JS8CallNormal);
+        static qint32 lastDecodeStartA = 0;
 
+        qint32 maxSamples = m_detector->period()*RX_SAMPLE_RATE;
+        qint32 oneSecondSamples = RX_SAMPLE_RATE;
+
+        // when we've incremented at least one second into the future
+        qint32 incrementedBy = k - lastDecodeStartA;
+        if(k < lastDecodeStartA){
+            incrementedBy = maxSamples - lastDecodeStartA + k;
+        }
+
+        if(incrementedBy >= oneSecondSamples){
+            //startA = lastDecodeStartA + oneSecondSamples;
+            //szA = computeFramesNeededForDecode(Varicode::JS8CallNormal) + oneSecondSamples;
+            //lastDecodeStartA +=
+
+            startA = k - incrementedBy - computeFramesNeededForDecode(Varicode::JS8CallNormal);
             if(startA < 0){
-                // decoder wraps around ranges
-                startA += m_detector->period() * RX_SAMPLE_RATE;
+                startA += maxSamples;
             }
 
-            szA = computeFramesNeededForDecode(Varicode::JS8CallNormal);
+            szA = incrementedBy + computeFramesNeededForDecode(Varicode::JS8CallNormal);
+
+            qDebug() << "A: start:" << startA << "sz:" << szA << "stop:" << startA + szA;
+
             lastDecodeStartA = k;
             couldDecodeA = true;
         }
+
+
+
+
+        //qint32 oneSecondFramesA = computeFramesPerCycleForDecode(Varicode::JS8CallNormal)/computePeriodForSubmode(Varicode::JS8CallNormal);
+        //if(lastDecodeStartA == -1 || k < k0 || k - lastDecodeStartA > oneSecondFramesA){
+        //    startA = k-computeFramesNeededForDecode(Varicode::JS8CallNormal);
+        //
+        //    if(startA < 0){
+        //        // decoder wraps around ranges
+        //        startA += m_detector->period() * RX_SAMPLE_RATE;
+        //    }
+        //
+        //    szA = computeFramesNeededForDecode(Varicode::JS8CallNormal);
+        //    lastDecodeStartA = k;
+        //    couldDecodeA = true;
+        //}
 
         couldDecodeB = couldDecodeC = couldDecodeE = false;
 
@@ -4979,7 +5010,7 @@ void MainWindow::processDecodedLine(QByteArray t){
       // draw decodes
       m_wideGraph->drawLine(QColor(Qt::red), f, f + computeBandwidthForSubmode(m));
 
-#if 1
+#if 0
       // use normal decodes for auto drift if we haven't already defined a new drift for this period
       if(/*!hasNewDrift && */ (m == Varicode::JS8CallSlow || m == Varicode::JS8CallNormal)){
           auto now = QDateTime::currentDateTimeUtc();
