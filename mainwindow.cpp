@@ -4282,75 +4282,20 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     qint32 szC = -1;
     qint32 cycleC = -1;
 
+#if JS8_ENABLE_JS8E
     bool couldDecodeE = false;
     qint32 startE = -1;
     qint32 szE = -1;
     qint32 cycleE = -1;
+#endif
 
+#if JS8_ENABLE_JS8I
     bool couldDecodeI = false;
     qint32 startI = -1;
     qint32 szI = -1;
     qint32 cycleI = -1;
+#endif
 
-    //unsigned msInPeriod ((QDateTime::currentMSecsSinceEpoch() % 86400000LL) % (15 * 1000));
-    // k - (msInPeriod*RX_SAMPLE_RATE/1000) <- samples since beginning of period
-    //static qint32 lastDecodeStartK = -1;
-    //if(lastDecodeStartK == -1){
-    //    qint32 cycleStartK = computeCycleForDecode(Varicode::JS8CallNormal, k) * computeFramesPerCycleForDecode(Varicode::JS8CallNormal);
-    //    qint32 secondStartK = ((k - cycleStartK) / RX_SAMPLE_RATE) * RX_SAMPLE_RATE;
-    //    lastDecodeStartK = secondStartK;
-    //}
-    static qint32 lastDecodeStartK = -1;
-    static qint32 lastDecodeStartSec = -1;
-    qint32 maxSamples = NTMAX*RX_SAMPLE_RATE;
-    qint32 oneSecondSamples = RX_SAMPLE_RATE;
-
-    // compute how much we've incremented since the last decode ready event
-    qint32 incrementedBy = k - lastDecodeStartK;
-    if(k < lastDecodeStartK){
-        incrementedBy = maxSamples - lastDecodeStartK + k;
-    }
-
-    // if we've advanced in time enough since the last decode
-    int thisSec = DriftingDateTime::currentDateTimeUtc().time().second();
-    if(incrementedBy >= oneSecondSamples && lastDecodeStartSec != thisSec){
-        qDebug() << "ready to detect decode" << incrementedBy;
-
-        // start at now and subtract the frames in one cycle...
-        // for normal mode this allows us to look through the last 15 seconds of data
-        // + the amount that we've just incremented (say if we were caught in a decode)
-        // to search for decodable signals... and we do this _every_ second!
-        szA = computeFramesPerCycleForDecode(Varicode::JS8CallNormal) + incrementedBy;
-        startA = k - szA;
-
-        // when the start position is negative, we need to start at the end of the
-        // buffer and wrap around. the decoder knows how to do the wrap around, so
-        // all we need to do is
-        if(startA < 0){
-            startA += maxSamples;
-        }
-
-        // the decoder is going to look +/- 2.48 seconds... so this may partial decode
-        // up to 2.48 seconds in the future...meaning if we're doing this every second
-        // we may actually decode this same signal 2-3 more times... but we have a
-        // message decode dedupe that should prevent any issues with dupes out of the
-        // decoder when this happens.
-        couldDecodeA = true;
-        lastDecodeStartK = k;
-        lastDecodeStartSec = thisSec;
-
-        // TODO: remove this after testing
-        m_wideGraph->drawHorizontalLine(QColor(Qt::yellow), 0, 25);
-    }
-
-
-
-
-
-
-
-
-#if JS8_LEGACY_DECODE_READY
     static qint32 currentDecodeStartA = -1;
     static qint32 nextDecodeStartA = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? NORMAL   " << currentDecodeStartA << nextDecodeStartA;
@@ -4404,10 +4349,152 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
         couldDecodeI = true;
     }
 #endif
+
+    if(couldDecodeA){
+        DecodeParams d;
+        d.submode = Varicode::JS8CallNormal;
+        d.cycle = cycleA;
+        d.start = startA;
+        d.sz = szA;
+        m_decoderQueue.append(d);
+        decodes++;
+    }
+
+    if(couldDecodeB){
+        DecodeParams d;
+        d.submode = Varicode::JS8CallFast;
+        d.cycle = cycleB;
+        d.start = startB;
+        d.sz = szB;
+        m_decoderQueue.append(d);
+        decodes++;
+    }
+
+    if(couldDecodeC){
+        DecodeParams d;
+        d.submode = Varicode::JS8CallTurbo;
+        d.cycle = cycleC;
+        d.start = startC;
+        d.sz = szC;
+        m_decoderQueue.append(d);
+        decodes++;
+    }
+
+#if JS8_ENABLE_JS8E
+    if(couldDecodeE){
+        DecodeParams d;
+        d.submode = Varicode::JS8CallSlow;
+        d.cycle = cycleE;
+        d.start = startE;
+        d.sz = szE;
+        m_decoderQueue.append(d);
+        decodes++;
+    }
 #endif
 
-#define JS8_TIMING_EXPERIMENT 0
-#if JS8_TIMING_EXPERIMENT
+#if JS8_ENABLE_JS8I
+    if(couldDecodeI){
+        DecodeParams d;
+        d.submode = Varicode::JS8CallUltra;
+        d.cycle = cycleI;
+        d.start = startI;
+        d.sz = szI;
+        m_decoderQueue.append(d);
+        decodes++;
+    }
+#endif
+
+    return decodes > 0;
+}
+
+/**
+ * @brief MainWindow::decodeEnqueueReadyExperiment
+ *        compute the available decoder ranges that can be processed and
+ *        place them in the decode queue
+ *
+ *        experiment with decoding on a much shorter interval than usual
+ *
+ * @param k - the current frame count
+ * @param k0 - the previous frame count
+ * @return true if decoder ranges were queued, false otherwise
+ */
+bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 k0){
+    //unsigned msInPeriod ((QDateTime::currentMSecsSinceEpoch() % 86400000LL) % (15 * 1000));
+    // k - (msInPeriod*RX_SAMPLE_RATE/1000) <- samples since beginning of period
+    //static qint32 lastDecodeStartK = -1;
+    //if(lastDecodeStartK == -1){
+    //    qint32 cycleStartK = computeCycleForDecode(Varicode::JS8CallNormal, k) * computeFramesPerCycleForDecode(Varicode::JS8CallNormal);
+    //    qint32 secondStartK = ((k - cycleStartK) / RX_SAMPLE_RATE) * RX_SAMPLE_RATE;
+    //    lastDecodeStartK = secondStartK;
+    //}
+
+    static qint32 lastDecodeStartK = -1;
+    static qint32 lastDecodeStartSec = -1;
+
+    int decodes = 0;
+    qint32 startA = 0;
+    qint32 szA = 0;
+    qint32 maxSamples = NTMAX*RX_SAMPLE_RATE;
+    qint32 oneSecondSamples = RX_SAMPLE_RATE;
+
+    // compute how much we've incremented since the last decode ready event
+    qint32 incrementedBy = k - lastDecodeStartK;
+    if(k < lastDecodeStartK){
+        incrementedBy = maxSamples - lastDecodeStartK + k;
+    }
+
+    // if we've advanced in time enough since the last decode
+    int thisSec = DriftingDateTime::currentDateTimeUtc().time().second();
+    if(incrementedBy >= oneSecondSamples){ // && lastDecodeStartSec != thisSec){
+        qDebug() << "ready to detect decode" << incrementedBy;
+
+        QList<int> submodes = {
+            //Varicode::JS8CallSlow,
+            Varicode::JS8CallNormal,
+            //Varicode::JS8CallFast,
+            //Varicode::JS8CallTurbo
+        };
+        foreach(auto submode, submodes){
+
+            // start at now and subtract the frames in one cycle...
+            // for normal mode this allows us to look through the last 15 seconds of data
+            // + the amount that we've just incremented (say if we were caught in a decode)
+            // to search for decodable signals... and we do this _every_ second!
+            //szA = computeFramesPerCycleForDecode(submode) + incrementedBy;
+            szA = computeFramesNeededForDecode(submode);
+            startA = k - szA;
+
+            // when the start position is negative, we need to start at the end of the
+            // buffer and wrap around. the decoder knows how to do the wrap around, so
+            // all we need to do is
+            if(startA < 0){
+                startA += maxSamples;
+            }
+
+            // create the decode params and queue it
+            DecodeParams d;
+            d.submode = submode;
+            d.start = startA;
+            d.sz = szA;
+            m_decoderQueue.append(d);
+            decodes++;
+        }
+
+        // the decoder is going to look +/- multiple seconds... so this may partial decode
+        // up to a few seconds in the future...meaning if we're doing this every second
+        // we may actually decode this same signal 2-3 more times... but we have a
+        // message decode dedupe that should prevent any issues with dupes out of the
+        // decoder when this happens.
+        lastDecodeStartK = k;
+        lastDecodeStartSec = thisSec;
+
+        // TODO: remove this after testing
+        m_wideGraph->drawHorizontalLine(QColor(Qt::yellow), 0, 25);
+    }
+
+    return decodes > 0;
+
+#if 0
     // when no other mode is being decoded, do a sync stats decode for normal mode
     bool experiment = true;
 
@@ -4527,61 +4614,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     }
 #endif
 
-    if(couldDecodeA){
-        DecodeParams d;
-        d.submode = Varicode::JS8CallNormal;
-        d.cycle = cycleA;
-        d.start = startA;
-        d.sz = szA;
-        m_decoderQueue.append(d);
-        decodes++;
-    }
-
-    if(couldDecodeB){
-        DecodeParams d;
-        d.submode = Varicode::JS8CallFast;
-        d.cycle = cycleB;
-        d.start = startB;
-        d.sz = szB;
-        m_decoderQueue.append(d);
-        decodes++;
-    }
-
-    if(couldDecodeC){
-        DecodeParams d;
-        d.submode = Varicode::JS8CallTurbo;
-        d.cycle = cycleC;
-        d.start = startC;
-        d.sz = szC;
-        m_decoderQueue.append(d);
-        decodes++;
-    }
-
-#if JS8_ENABLE_JS8E
-    if(couldDecodeE){
-        DecodeParams d;
-        d.submode = Varicode::JS8CallSlow;
-        d.cycle = cycleE;
-        d.start = startE;
-        d.sz = szE;
-        m_decoderQueue.append(d);
-        decodes++;
-    }
-#endif
-
-#if JS8_ENABLE_JS8I
-    if(couldDecodeI){
-        DecodeParams d;
-        d.submode = Varicode::JS8CallUltra;
-        d.cycle = cycleI;
-        d.start = startI;
-        d.sz = szI;
-        m_decoderQueue.append(d);
-        decodes++;
-    }
-#endif
-
-    return decodes > 0;
 }
 
 /**
@@ -4685,7 +4717,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
     int period = computePeriodForSubmode(submode);
 
-    dec_data.params.syncStats = true;
+    dec_data.params.syncStats = m_wideGraph->shouldDisplayDecodeAttempts();
     dec_data.params.npts8=(m_ihsym*m_nsps)/16;
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
@@ -5039,8 +5071,10 @@ void MainWindow::processDecodedLine(QByteArray t){
   bool bAvgMsg=false;
   int navg=0;
 
+#if JS8_TIME_DRIFT_EXPERIMENT
   static bool hasNewDrift = false;
   static int newDrift = 0;
+#endif
 
   if(t.indexOf("<DecodeSyncStat>") >= 0) {
       auto segs =  QString(t.trimmed()).split(QRegExp("[\\s\\t]+"), QString::SkipEmptyParts);
@@ -5048,9 +5082,12 @@ void MainWindow::processDecodedLine(QByteArray t){
           return;
       }
 
+      if(!m_wideGraph->shouldDisplayDecodeAttempts()){
+          return;
+      }
+
       auto m1 = QString(segs.at(2));
       auto m = int(m1.toInt());
-      auto period = computePeriodForSubmode(m);
 
       auto f1 = QString(segs.at(4));
       auto f = int(f1.toFloat());
@@ -5079,7 +5116,7 @@ void MainWindow::processDecodedLine(QByteArray t){
       // draw decodes
       m_wideGraph->drawDecodeLine(QColor(Qt::red), f, f + computeBandwidthForSubmode(m));
 
-#if 0
+#if JS8_TIME_DRIFT_EXPERIMENT
       // use normal decodes for auto drift if we haven't already defined a new drift for this period
       if(/*!hasNewDrift && */ (m == Varicode::JS8CallSlow || m == Varicode::JS8CallNormal)){
           auto now = QDateTime::currentDateTimeUtc();
@@ -5127,12 +5164,9 @@ void MainWindow::processDecodedLine(QByteArray t){
 
   if(t.indexOf("<DecodeFinished>") >= 0) {
     int msec = m_decoderBusyStartTime.msecsTo(QDateTime::currentDateTimeUtc());
-    qDebug() << "Decoder Duration:" << msec;
-    if(msec >= 1000){
-        writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Decoder Duration: %1").arg(msec));
-    }
+    if(JS8_DEBUG_DECODE) qDebug() << "decode duration" << msec << "ms";
 
-    // TODO: decide if we should adjust here...
+#if JS8_TIME_DRIFT_EXPERIMENT
     if(hasNewDrift){
         static int driftN = 1;
         newDrift = ((driftN-1)*DriftingDateTime::drift() + newDrift)/driftN;
@@ -5141,6 +5175,7 @@ void MainWindow::processDecodedLine(QByteArray t){
         writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Drift: %1").arg(newDrift));
         hasNewDrift = false;
     }
+#endif
 
     m_bDecoded = t.mid(16).trimmed().toInt() > 0;
     int mswait=3*1000*m_TRperiod/4;

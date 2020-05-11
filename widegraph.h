@@ -68,6 +68,7 @@ public:
   void   setVHF(bool bVHF);
   void   setRedFile(QString fRed);
   void   setTurbo(bool turbo);
+  bool   shouldDisplayDecodeAttempts();
 
 signals:
   void freezeDecode2(int n);

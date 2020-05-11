@@ -244,6 +244,7 @@ private slots:
   bool decode(qint32 k);
   bool isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurrentDecodeStart, qint32 *pNextDecodeStart, qint32 *pStart, qint32 *pSz, qint32 *pCycle);
   bool decodeEnqueueReady(qint32 k, qint32 k0);
+  bool decodeEnqueueReadyExperiment(qint32 k, qint32 k0);
   bool decodeProcessQueue(qint32 *pSubmode);
   void decodeStart();
   void decodePrepareSaveAudio(int submode);

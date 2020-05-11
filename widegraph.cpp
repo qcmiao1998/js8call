@@ -167,6 +167,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     ui->controls_widget->setVisible(!m_settings->value("HideControls", false).toBool());
     ui->cbControls->setChecked(!m_settings->value("HideControls", false).toBool());
     ui->fpsSpinBox->setValue(m_settings->value ("WaterfallFPS", 4).toInt());
+    ui->decodeAttemptCheckBox->setChecked(m_settings->value("DisplayDecodeAttempts", false).toBool());
 
     auto splitState = m_settings->value("SplitState").toByteArray();
     if(!splitState.isEmpty()){
@@ -242,6 +243,11 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("FilterOpacityPercent", ui->filterOpacitySpinBox->value());
   m_settings->setValue ("SplitState", ui->splitter->saveState());
   m_settings->setValue ("WaterfallFPS", ui->fpsSpinBox->value());
+  m_settings->setValue ("DisplayDecodeAttempts", ui->decodeAttemptCheckBox->isChecked());
+}
+
+bool WideGraph::shouldDisplayDecodeAttempts(){
+    return ui->decodeAttemptCheckBox->isChecked();
 }
 
 void WideGraph::drawDecodeLine(const QColor &color, int ia, int ib)
