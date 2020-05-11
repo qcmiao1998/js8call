@@ -4921,12 +4921,15 @@ void MainWindow::decodeDone ()
   m_RxLog=0;
   m_blankLine=true;
 
-  static int dupeClearI = 0;
-  if(dupeClearI > 2*m_TRperiod){
-    m_messageDupeCache.clear();
-    dupeClearI = 0;
+  // cleanup old cached messages (messages > submode period old)
+  for (auto it = m_messageDupeCache.begin(); it != m_messageDupeCache.end();){
+      auto cached = it.value();
+      if (cached.date.secsTo(QDateTime::currentDateTimeUtc()) > computePeriodForSubmode(cached.submode)){
+          it = m_messageDupeCache.erase(it);
+      } else {
+          ++it;
+      }
   }
-  dupeClearI++;
 
   decodeBusy(false);
 }
@@ -5201,25 +5204,38 @@ void MainWindow::processDecodedLine(QByteArray t){
   }
 
   auto rawText = QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"});
+
   DecodedText decodedtext {rawText, "FT8" == m_mode &&
         ui->cbVHFcontest->isChecked(), m_config.my_grid ()};
 
-  bool bValidFrame = decodedtext.snr() >= rxSnrThreshold(decodedtext.submode());
 
-  // dupe check
+  // frames are also valid if they pass our dupe check (haven't seen the same frame in the past 1/2 decode period)
   auto frame = decodedtext.message();
   auto frameOffset = decodedtext.frequencyOffset();
-  if(m_messageDupeCache.contains(frame)){
-      // check to see if the frequency is near our previous frame
-      auto cachedFreq = m_messageDupeCache.value(frame, 0);
-      if(qAbs(cachedFreq - frameOffset) <= rxThreshold(decodedtext.submode())){
-        qDebug() << "duplicate frame from" << cachedFreq << "and" << frameOffset;
-        bValidFrame = false;
+  auto frameDedupeKey = QString("%1:%2").arg(decodedtext.submode()).arg(frame);
+  if(m_messageDupeCache.contains(frameDedupeKey)){
+      auto cached = m_messageDupeCache.value(frameDedupeKey);
+
+      // check to see if the time since last seen is > 1/2 decode period
+      auto cachedDate = cached.date;
+      if(cachedDate.secsTo(QDateTime::currentDateTimeUtc()) < 0.5*computePeriodForSubmode(decodedtext.submode())){
+          qDebug() << "duplicate frame at" << cachedDate << "using key" << frameDedupeKey;
+          return;
       }
-  } else {
-      // cache for this decode cycle
-      m_messageDupeCache[frame] = frameOffset;
+
+      // check to see if the frequency is near our previous frame
+      auto cachedFreq = cached.freq;
+      if(qAbs(cachedFreq - frameOffset) <= rxThreshold(decodedtext.submode())){
+        qDebug() << "duplicate frame from" << cachedFreq << "and" << frameOffset << "using key" << frameDedupeKey;
+        return;
+      }
+
+      // huzzah!
+      // if we make it here, the cache is invalid and will be bumped when we cache the new frame below
   }
+
+  // frames are valid if they meet our minimum rx threshold for the submode
+  bool bValidFrame = decodedtext.snr() >= rxSnrThreshold(decodedtext.submode());
 
   qDebug() << "valid" << bValidFrame << submodeName(decodedtext.submode()) << "decoded text" << decodedtext.message();
 
@@ -5227,6 +5243,9 @@ void MainWindow::processDecodedLine(QByteArray t){
   if(!bValidFrame) {
       return;
   }
+
+  // if the frame is valid, cache it!
+  m_messageDupeCache[frameDedupeKey] = {QDateTime::currentDateTimeUtc(), decodedtext.submode(), frameOffset};
 
   // log valid frames to ALL.txt (and correct their timestamp format)
   auto freq = dialFrequency();

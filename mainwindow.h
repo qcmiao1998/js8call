@@ -859,8 +859,14 @@ private:
       int sz;
   };
 
+  struct CachedFrame {
+    QDateTime date;
+    int submode;
+    int freq;
+  };
+
   QQueue<DecodeParams> m_decoderQueue;
-  QMap<QString, int> m_messageDupeCache; // message frame -> freq offset seen
+  QMap<QString, CachedFrame> m_messageDupeCache; // message frame -> date seen, submode seen, freq offset seen
   QMap<QString, QVariant> m_showColumnsCache; // table column:key -> show boolean
   QMap<QString, QVariant> m_sortCache; // table key -> sort by
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent
