@@ -690,6 +690,10 @@ void WideGraph::readPalette ()                                   //readPalette
     }
 }
 
+QVector<QColor> const& WideGraph::colors(){
+    return ui->widePlot->colors();
+}
+
 void WideGraph::on_paletteComboBox_activated (QString const& palette)    //palette selector
 {
   m_waterfallPalette = palette;

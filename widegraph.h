@@ -69,6 +69,7 @@ public:
   void   setRedFile(QString fRed);
   void   setTurbo(bool turbo);
   bool   shouldDisplayDecodeAttempts();
+  QVector<QColor> const& colors();
 
 signals:
   void freezeDecode2(int n);

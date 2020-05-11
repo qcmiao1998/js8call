@@ -879,6 +879,10 @@ void CPlotter::setTol(int n)                                 //setTol()
   DrawOverlay();
 }
 
+QVector<QColor> const& CPlotter::colors(){
+    return g_ColorTbl;
+}
+
 void CPlotter::setColours(QVector<QColor> const& cl)
 {
   g_ColorTbl = cl;

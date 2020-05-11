@@ -77,6 +77,7 @@ public:
   void setBreadth(qint32 w) {m_w = w;}
   qint32 breadth() const {return m_w;}
   float fSpan() const {return m_fSpan;}
+  QVector<QColor> const& colors();
   void setColours(QVector<QColor> const& cl);
   void setFlatten(bool b1, bool b2);
   void setTol(int n);
