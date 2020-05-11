@@ -4418,17 +4418,14 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
  * @param k0 - the previous frame count
  * @return true if decoder ranges were queued, false otherwise
  */
-bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 k0){
-    //unsigned msInPeriod ((QDateTime::currentMSecsSinceEpoch() % 86400000LL) % (15 * 1000));
-    // k - (msInPeriod*RX_SAMPLE_RATE/1000) <- samples since beginning of period
-    //static qint32 lastDecodeStartK = -1;
+bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
+    static qint32 lastDecodeStartK = -1;
     //if(lastDecodeStartK == -1){
     //    qint32 cycleStartK = computeCycleForDecode(Varicode::JS8CallNormal, k) * computeFramesPerCycleForDecode(Varicode::JS8CallNormal);
     //    qint32 secondStartK = ((k - cycleStartK) / RX_SAMPLE_RATE) * RX_SAMPLE_RATE;
     //    lastDecodeStartK = secondStartK;
     //}
 
-    static qint32 lastDecodeStartK = -1;
     static qint32 lastDecodeStartSec = -1;
 
     int decodes = 0;
@@ -4460,7 +4457,7 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 k0){
             // for normal mode this allows us to look through the last 15 seconds of data
             // + the amount that we've just incremented (say if we were caught in a decode)
             // to search for decodable signals... and we do this _every_ second!
-            //szA = computeFramesPerCycleForDecode(submode) + incrementedBy;
+            // szA = computeFramesPerCycleForDecode(submode) + incrementedBy;
             szA = computeFramesNeededForDecode(submode);
             startA = k - szA;
 

@@ -93,6 +93,11 @@ contains
         lsubtract=.false. 
       endif 
 
+      if(NWRITELOG.eq.1) then
+        write(*,*) '<DecodeDebug> pass', ipass, 'of', npass, 'subtract', lsubtract
+        flush(6)
+      endif
+
       call timer('syncjs8 ',0)
       call syncjs8(dd,icos,ifa,ifb,syncmin,nfqso,s,candidate,ncand,sbase)
       call timer('syncjs8 ',1)
