@@ -4265,14 +4265,94 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     // compute the next decode for each submode
     // enqueue those decodes that are "ready"
     // on an interval, issue a decode
+    int decodes = 0;
 
-    static qint32 currentDecodeStartA = -1;
-    static qint32 nextDecodeStartA = -1;
+    bool couldDecodeA = false;
     qint32 startA = -1;
     qint32 szA = -1;
     qint32 cycleA = -1;
-    bool couldDecodeA = false;
 
+    bool couldDecodeB = false;
+    qint32 startB = -1;
+    qint32 szB = -1;
+    qint32 cycleB = -1;
+
+    bool couldDecodeC = false;
+    qint32 startC = -1;
+    qint32 szC = -1;
+    qint32 cycleC = -1;
+
+    bool couldDecodeE = false;
+    qint32 startE = -1;
+    qint32 szE = -1;
+    qint32 cycleE = -1;
+
+    bool couldDecodeI = false;
+    qint32 startI = -1;
+    qint32 szI = -1;
+    qint32 cycleI = -1;
+
+    //unsigned msInPeriod ((QDateTime::currentMSecsSinceEpoch() % 86400000LL) % (15 * 1000));
+    // k - (msInPeriod*RX_SAMPLE_RATE/1000) <- samples since beginning of period
+    //static qint32 lastDecodeStartK = -1;
+    //if(lastDecodeStartK == -1){
+    //    qint32 cycleStartK = computeCycleForDecode(Varicode::JS8CallNormal, k) * computeFramesPerCycleForDecode(Varicode::JS8CallNormal);
+    //    qint32 secondStartK = ((k - cycleStartK) / RX_SAMPLE_RATE) * RX_SAMPLE_RATE;
+    //    lastDecodeStartK = secondStartK;
+    //}
+    static qint32 lastDecodeStartK = -1;
+    static qint32 lastDecodeStartSec = -1;
+    qint32 maxSamples = NTMAX*RX_SAMPLE_RATE;
+    qint32 oneSecondSamples = RX_SAMPLE_RATE;
+
+    // compute how much we've incremented since the last decode ready event
+    qint32 incrementedBy = k - lastDecodeStartK;
+    if(k < lastDecodeStartK){
+        incrementedBy = maxSamples - lastDecodeStartK + k;
+    }
+
+    // if we've advanced in time enough since the last decode
+    int thisSec = DriftingDateTime::currentDateTimeUtc().time().second();
+    if(incrementedBy >= oneSecondSamples && lastDecodeStartSec != thisSec){
+        qDebug() << "ready to detect decode" << incrementedBy;
+
+        // start at now and subtract the frames in one cycle...
+        // for normal mode this allows us to look through the last 15 seconds of data
+        // + the amount that we've just incremented (say if we were caught in a decode)
+        // to search for decodable signals... and we do this _every_ second!
+        szA = computeFramesPerCycleForDecode(Varicode::JS8CallNormal) + incrementedBy;
+        startA = k - szA;
+
+        // when the start position is negative, we need to start at the end of the
+        // buffer and wrap around. the decoder knows how to do the wrap around, so
+        // all we need to do is
+        if(startA < 0){
+            startA += maxSamples;
+        }
+
+        // the decoder is going to look +/- 2.48 seconds... so this may partial decode
+        // up to 2.48 seconds in the future...meaning if we're doing this every second
+        // we may actually decode this same signal 2-3 more times... but we have a
+        // message decode dedupe that should prevent any issues with dupes out of the
+        // decoder when this happens.
+        couldDecodeA = true;
+        lastDecodeStartK = k;
+        lastDecodeStartSec = thisSec;
+
+        // TODO: remove this after testing
+        m_wideGraph->drawHorizontalLine(QColor(Qt::yellow), 0, 25);
+    }
+
+
+
+
+
+
+
+
+#if JS8_LEGACY_DECODE_READY
+    static qint32 currentDecodeStartA = -1;
+    static qint32 nextDecodeStartA = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? NORMAL   " << currentDecodeStartA << nextDecodeStartA;
     couldDecodeA = isDecodeReady(Varicode::JS8CallNormal, k, k0, &currentDecodeStartA, &nextDecodeStartA, &startA, &szA, &cycleA);
     if(m_diskData){
@@ -4283,11 +4363,8 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
 
     static qint32 currentDecodeStartB = -1;
     static qint32 nextDecodeStartB = -1;
-    qint32 startB = -1;
-    qint32 szB = -1;
-    qint32 cycleB = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? FAST     " << currentDecodeStartB << nextDecodeStartB;
-    bool couldDecodeB = isDecodeReady(Varicode::JS8CallFast, k, k0, &currentDecodeStartB, &nextDecodeStartB, &startB, &szB, &cycleB);
+    couldDecodeB = isDecodeReady(Varicode::JS8CallFast, k, k0, &currentDecodeStartB, &nextDecodeStartB, &startB, &szB, &cycleB);
     if(m_diskData){
         startB = 0;
         szB = NTMAX*RX_SAMPLE_RATE-1;
@@ -4296,11 +4373,8 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
 
     static qint32 currentDecodeStartC = -1;
     static qint32 nextDecodeStartC = -1;
-    qint32 startC = -1;
-    qint32 szC = -1;
-    qint32 cycleC = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? TURBO    " << currentDecodeStartC << nextDecodeStartC;
-    bool couldDecodeC = isDecodeReady(Varicode::JS8CallTurbo, k, k0, &currentDecodeStartC, &nextDecodeStartC, &startC, &szC, &cycleC);
+    couldDecodeC = isDecodeReady(Varicode::JS8CallTurbo, k, k0, &currentDecodeStartC, &nextDecodeStartC, &startC, &szC, &cycleC);
     if(m_diskData){
         startC = 0;
         szC = NTMAX*RX_SAMPLE_RATE-1;
@@ -4310,11 +4384,8 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
 #if JS8_ENABLE_JS8E
     static qint32 currentDecodeStartE = -1;
     static qint32 nextDecodeStartE = -1;
-    qint32 startE = -1;
-    qint32 szE = -1;
-    qint32 cycleE = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? SLOW     " << currentDecodeStartE << nextDecodeStartE;
-    bool couldDecodeE = isDecodeReady(Varicode::JS8CallSlow, k, k0, &currentDecodeStartE, &nextDecodeStartE, &startE, &szE, &cycleE);
+    couldDecodeE = isDecodeReady(Varicode::JS8CallSlow, k, k0, &currentDecodeStartE, &nextDecodeStartE, &startE, &szE, &cycleE);
     if(m_diskData){
         startE = 0;
         szE = NTMAX*RX_SAMPLE_RATE-1;
@@ -4325,20 +4396,18 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
 #if JS8_ENABLE_JS8I
     static qint32 currentDecodeStartI = -1;
     static qint32 nextDecodeStartI = -1;
-    qint32 startI = -1;
-    qint32 szI = -1;
-    qint32 cycleI = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? ULTRA    " << currentDecodeStartI << nextDecodeStartI;
-    bool couldDecodeI = isDecodeReady(Varicode::JS8CallUltra, k, k0, &currentDecodeStartI, &nextDecodeStartI, &startI, &szI, &cycleI);
+    couldDecodeI = isDecodeReady(Varicode::JS8CallUltra, k, k0, &currentDecodeStartI, &nextDecodeStartI, &startI, &szI, &cycleI);
     if(m_diskData){
         startI = 0;
         szI = NTMAX*RX_SAMPLE_RATE-1;
         couldDecodeI = true;
     }
 #endif
+#endif
 
-    int decodes = 0;
-
+#define JS8_TIMING_EXPERIMENT 0
+#if JS8_TIMING_EXPERIMENT
     // when no other mode is being decoded, do a sync stats decode for normal mode
     bool experiment = true;
 
@@ -4355,25 +4424,24 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
         }
 
         if(incrementedBy >= oneSecondSamples){
+            // we've incremented at least one second, so look backwards
+
+
             //startA = lastDecodeStartA + oneSecondSamples;
             //szA = computeFramesNeededForDecode(Varicode::JS8CallNormal) + oneSecondSamples;
             //lastDecodeStartA +=
-
-            startA = k - incrementedBy - computeFramesNeededForDecode(Varicode::JS8CallNormal);
-            if(startA < 0){
-                startA += maxSamples;
-            }
-
-            szA = incrementedBy + computeFramesNeededForDecode(Varicode::JS8CallNormal);
-
-            qDebug() << "A: start:" << startA << "sz:" << szA << "stop:" << startA + szA;
-
-            lastDecodeStartA = k;
-            couldDecodeA = true;
+            // startA = k - incrementedBy - computeFramesNeededForDecode(Varicode::JS8CallNormal);
+            // if(startA < 0){
+            //     startA += maxSamples;
+            // }
+            //
+            // szA = incrementedBy + computeFramesNeededForDecode(Varicode::JS8CallNormal);
+            //
+            // qDebug() << "A: start:" << startA << "sz:" << szA << "stop:" << startA + szA;
+            //
+            // lastDecodeStartA = k;
+            // couldDecodeA = true;
         }
-
-
-
 
         //qint32 oneSecondFramesA = computeFramesPerCycleForDecode(Varicode::JS8CallNormal)/computePeriodForSubmode(Varicode::JS8CallNormal);
         //if(lastDecodeStartA == -1 || k < k0 || k - lastDecodeStartA > oneSecondFramesA){
@@ -4457,6 +4525,7 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
 #endif
 #endif
     }
+#endif
 
     if(couldDecodeA){
         DecodeParams d;
@@ -4995,11 +5064,11 @@ void MainWindow::processDecodedLine(QByteArray t){
       // draw candidates
       if(abs(xdt) <= 2){
           if(s < 10){
-            m_wideGraph->drawLine(QColor(Qt::darkCyan), f, f + computeBandwidthForSubmode(m));
+            m_wideGraph->drawDecodeLine(QColor(Qt::darkCyan), f, f + computeBandwidthForSubmode(m));
           } else if (s <= 15){
-            m_wideGraph->drawLine(QColor(Qt::cyan), f, f + computeBandwidthForSubmode(m));
+            m_wideGraph->drawDecodeLine(QColor(Qt::cyan), f, f + computeBandwidthForSubmode(m));
           } else if (s <= 21){
-            m_wideGraph->drawLine(QColor(Qt::white), f, f + computeBandwidthForSubmode(m));
+            m_wideGraph->drawDecodeLine(QColor(Qt::white), f, f + computeBandwidthForSubmode(m));
           }
       }
 
@@ -5008,7 +5077,7 @@ void MainWindow::processDecodedLine(QByteArray t){
       }
 
       // draw decodes
-      m_wideGraph->drawLine(QColor(Qt::red), f, f + computeBandwidthForSubmode(m));
+      m_wideGraph->drawDecodeLine(QColor(Qt::red), f, f + computeBandwidthForSubmode(m));
 
 #if 0
       // use normal decodes for auto drift if we haven't already defined a new drift for this period

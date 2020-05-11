@@ -244,9 +244,13 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("WaterfallFPS", ui->fpsSpinBox->value());
 }
 
-void WideGraph::drawLine(const QColor &color, int ia, int ib)
+void WideGraph::drawDecodeLine(const QColor &color, int ia, int ib)
 {
   ui->widePlot->drawDecodeLine(color, ia, ib);
+}
+
+void WideGraph::drawHorizontalLine(const QColor &color, int x, int width){
+    ui->widePlot->drawHorizontalLine(color, x, width);
 }
 
 void WideGraph::dataSink2(float s[], float df3, int ihsym, int ndiskdata)  //dataSink2
@@ -357,7 +361,7 @@ void WideGraph::drawSwide(){
       }
       ui->widePlot->draw(swideLocal,true,false);
     } else if(lastSecondInPeriod != secondInPeriod) {
-      ui->widePlot->drawHorizontalLine(Qt::white, 0, 5);
+      //ui->widePlot->drawHorizontalLine(Qt::white, 0, 5);
     }
     lastSecondInPeriod=secondInPeriod;
 

@@ -138,7 +138,6 @@ unsigned Detector::secondInPeriod () const
   // we take the time of the data as the following assuming no latency
   // delivering it to us (not true but close enough for us)
   qint64 now (DriftingDateTime::currentMSecsSinceEpoch ());
-
   unsigned secondInToday ((now % 86400000LL) / 1000);
   return secondInToday % m_period;
 }
