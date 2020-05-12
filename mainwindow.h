@@ -854,7 +854,6 @@ private:
 
   struct DecodeParams {
       int submode;
-      int cycle;
       int start;
       int sz;
   };
@@ -990,6 +989,7 @@ private:
   //int computeCurrentCycle(int period);
   //int computeCycleStartForDecode(int cycle, int period);
   int computeCycleForDecode(int submode, int k);
+  int computeAltCycleForDecode(int submode, int k, int offsetFrames);
   int computeFramesPerCycleForDecode(int submode);
   int computeFramesNeededForDecode(int submode);
   bool shortList(QString callsign);

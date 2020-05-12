@@ -2636,20 +2636,40 @@ int MainWindow::computeStop(int submode, int period){
     return stop;
 }
 
-// int MainWindow::computeCurrentCycle(int period){
-//     return m_detector->secondInPeriod() / period;
-// }
-//
-// int MainWindow::computeCycleStartForDecode(int cycle, int period){
-//     qint32 samplesPerCycle = period * RX_SAMPLE_RATE;
-//     return cycle * samplesPerCycle;
-// }
-
+/**
+ * @brief MainWindow::computeCycleForDecode
+ *
+ *          compute which cycle we are currently in based on a submode frames per cycle and our current k position
+ *
+ * @param submode
+ * @param k
+ * @return
+ */
 int MainWindow::computeCycleForDecode(int submode, int k){
-    qint32 maxFrames = m_detector->period() * RX_SAMPLE_RATE;
+    qint32 maxFrames = NTMAX * RX_SAMPLE_RATE;
     qint32 cycleFrames = computeFramesPerCycleForDecode(submode);
     qint32 currentCycle = (k / cycleFrames) % (maxFrames / cycleFrames); // we mod here so we loop back to zero correctly
     return currentCycle;
+}
+
+/**
+ * @brief MainWindow::computeAltCycleForDecode
+ *
+ *          compute an alternate cycle offset by a specific number of frames
+ *
+ *          e.g., if we want the 0 cycle to start at second 5, we'd provide an offset of 5*RX_SAMPLE_RATE
+ *
+ * @param submode
+ * @param k
+ * @param offsetFrames
+ * @return
+ */
+int MainWindow::computeAltCycleForDecode(int submode, int k, int offsetFrames){
+    int altK = k - offsetFrames;
+    if(altK < 0){
+        altK += NTMAX * RX_SAMPLE_RATE;
+    }
+    return computeCycleForDecode(submode, altK);
 }
 
 int MainWindow::computeFramesPerCycleForDecode(int submode){
@@ -4214,10 +4234,19 @@ bool MainWindow::decode(qint32 k){
         return false;
     }
 
-    bool ready = decodeEnqueueReady(k, kZero);
+    bool ready = false;
+
+#if JS8_USE_EXPERIMENTAL_DECODE_TIMING
+    ready = decodeEnqueueReady(k, kZero);
     if(ready || !m_decoderQueue.isEmpty()){
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder is ready to be run with" << m_decoderQueue.count() << "decode periods";
     }
+#else
+    ready = decodeEnqueueReadyExperiment(k, kZero);
+    if(ready || !m_decoderQueue.isEmpty()){
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder is ready to be run with" << m_decoderQueue.count() << "decode periods";
+    }
+#endif
 
     //
     // TODO: what follows can likely be pulled out to an async process
@@ -4353,7 +4382,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     if(couldDecodeA){
         DecodeParams d;
         d.submode = Varicode::JS8CallNormal;
-        d.cycle = cycleA;
         d.start = startA;
         d.sz = szA;
         m_decoderQueue.append(d);
@@ -4363,7 +4391,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     if(couldDecodeB){
         DecodeParams d;
         d.submode = Varicode::JS8CallFast;
-        d.cycle = cycleB;
         d.start = startB;
         d.sz = szB;
         m_decoderQueue.append(d);
@@ -4373,7 +4400,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     if(couldDecodeC){
         DecodeParams d;
         d.submode = Varicode::JS8CallTurbo;
-        d.cycle = cycleC;
         d.start = startC;
         d.sz = szC;
         m_decoderQueue.append(d);
@@ -4384,7 +4410,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     if(couldDecodeE){
         DecodeParams d;
         d.submode = Varicode::JS8CallSlow;
-        d.cycle = cycleE;
         d.start = startE;
         d.sz = szE;
         m_decoderQueue.append(d);
@@ -4396,7 +4421,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     if(couldDecodeI){
         DecodeParams d;
         d.submode = Varicode::JS8CallUltra;
-        d.cycle = cycleI;
         d.start = startI;
         d.sz = szI;
         m_decoderQueue.append(d);
@@ -4419,7 +4443,77 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
  * @return true if decoder ranges were queued, false otherwise
  */
 bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
+    // TODO: make this non-static field of MainWindow?
+    // map of last decode positions for each submode
+    static QMap<qint32, qint32> lastDecodeStartMap;
+
+    // TODO: make this non-static field of MainWindow?
+    // map of submodes to decode + optional alternate decode positions
+    static QMap<qint32, QList<qint32>> submodes = {
+        {Varicode::JS8CallSlow,   {0}},
+        {Varicode::JS8CallNormal, {0}},
+        {Varicode::JS8CallFast,   {0, 5}},
+        {Varicode::JS8CallTurbo,  {0, 3}},
+    };
+
+    static qint32 maxSamples = NTMAX*RX_SAMPLE_RATE;
+    static qint32 oneSecondSamples = RX_SAMPLE_RATE;
+
+    int decodes = 0;
+
+    // do we have a better way to check this?
+    bool multi = ui->actionModeMultiDecoder->isChecked();
+
+    foreach(auto submode, submodes.keys()){
+        // skip if multi is disabled and this mode is not the current submode
+        if(!multi && submode != m_nSubMode){
+            continue;
+        }
+
+        // check alternate decode positions
+        foreach(auto alt, submodes.value(submode)){
+            qint32 cycle = computeAltCycleForDecode(submode, k, alt*oneSecondSamples);
+            qint32 cycleFrames = computeFramesPerCycleForDecode(submode);
+            qint32 cycleFramesNeeded = computeFramesNeededForDecode(submode) - oneSecondSamples;
+            qint32 cycleFramesReady = k - (cycle * cycleFrames);
+
+            if(!lastDecodeStartMap.contains(submode)){
+                lastDecodeStartMap[submode] = cycle * cycleFrames;
+            }
+
+            qint32 lastDecodeStart = lastDecodeStartMap[submode];
+            qint32 incrementedBy = k - lastDecodeStart;
+            if(k < lastDecodeStart){
+                incrementedBy = maxSamples - lastDecodeStart + k;
+            }
+
+            if(JS8_DEBUG_DECODE) qDebug() << submodeName(submode) << "alt" << alt << "cycle" << cycle << "cycle frames" << cycleFrames << "cycle start" << cycle*cycleFrames << "cycle end" << (cycle+1)*cycleFrames << "k" << k << "frames ready" << cycleFramesReady << "incremeted by" << incrementedBy;
+
+            if(incrementedBy >= oneSecondSamples && cycleFramesReady >= cycleFramesNeeded){
+                DecodeParams d;
+                d.submode = submode;
+                d.start = cycle*cycleFrames;
+                d.sz = cycleFramesReady;
+                m_decoderQueue.append(d);
+                decodes++;
+
+                // keep track of last decode start position
+                lastDecodeStartMap[submode] = k;
+            }
+        }
+    }
+
+    // TODO: debug
+    if(decodes > 0 && m_wideGraph->shouldDisplayDecodeAttempts()){
+        m_wideGraph->drawHorizontalLine(QColor(Qt::yellow), 0, 5);
+    }
+
+    return decodes > 0;
+}
+
+#if 0
     static qint32 lastDecodeStartK = -1;
+
     //if(lastDecodeStartK == -1){
     //    qint32 cycleStartK = computeCycleForDecode(Varicode::JS8CallNormal, k) * computeFramesPerCycleForDecode(Varicode::JS8CallNormal);
     //    qint32 secondStartK = ((k - cycleStartK) / RX_SAMPLE_RATE) * RX_SAMPLE_RATE;
@@ -4612,6 +4706,7 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
 #endif
 
 }
+#endif
 
 /**
  * @brief MainWindow::decodeProcessQueue
@@ -8144,19 +8239,11 @@ void MainWindow::on_actionJS8_triggered()
   if(m_isWideGraphMDI) m_wideGraph->show();
   ui->decodedTextLabel2->setText("  UTC   dB   DT Freq    Message");
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
-#if JS8_RING_BUFFER
+
   Q_ASSERT(NTMAX == 60);
   m_wideGraph->setPeriod(m_TRperiod, m_nsps);
-#if JS8_ENABLE_JS8E && !JS8E_IS_ULTRA
   m_detector->setTRPeriod(NTMAX); // TODO - not thread safe
-#else
-  m_detector->setTRPeriod(NTMAX / 2); // TODO - not thread safe
-#endif
 
-#else
-  m_wideGraph->setPeriod(m_TRperiod, m_nsps);
-  m_detector->setTRPeriod(m_TRperiod); // TODO - not thread safe
-#endif
   ui->label_7->setText("Rx Frequency");
   if(m_config.bFox()) {
     ui->label_6->setText("Stations calling DXpedition " + m_config.my_callsign());
