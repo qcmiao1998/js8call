@@ -132,6 +132,7 @@ public slots:
   void readFromStdout(QProcess * proc);
   void setXIT(int n, Frequency base = 0u);
   void qsy(int hzDelta);
+  void drifted(int prev, int cur);
   void setFreqOffsetForRestore(int freq, bool shouldRestore);
   bool tryRestoreFreqOffset();
   void setFreq4(int rxFreq, int txFreq);
@@ -615,6 +616,7 @@ private:
   bool    m_loopall;
   bool    m_decoderBusy;
   QString m_decoderBusyBand;
+  QMap<qint32, qint32> m_lastDecodeStartMap;
   Radio::Frequency m_decoderBusyFreq;
   QDateTime m_decoderBusyStartTime;
   bool    m_auto;
@@ -991,6 +993,7 @@ private:
   int computeCycleForDecode(int submode, int k);
   int computeAltCycleForDecode(int submode, int k, int offsetFrames);
   int computeFramesPerCycleForDecode(int submode);
+  int computePeriodStartDelayForDecode(int submode);
   int computeFramesNeededForDecode(int submode);
   bool shortList(QString callsign);
   void transmit (double snr = 99.);

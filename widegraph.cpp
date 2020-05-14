@@ -921,6 +921,8 @@ void WideGraph::on_driftSyncResetButton_clicked(){
 }
 
 void WideGraph::setDrift(int n){
+    int prev = drift();
+
     DriftingDateTime::setDrift(n);
 
     qDebug() << qSetRealNumberPrecision(12) << "Drift milliseconds:" << n;
@@ -930,6 +932,12 @@ void WideGraph::setDrift(int n){
     if(ui->driftSpinBox->value() != n){
         ui->driftSpinBox->setValue(n);
     }
+
+    emit drifted(prev, n);
+}
+
+int WideGraph::drift(){
+    return DriftingDateTime::drift();
 }
 
 void WideGraph::setQSYEnabled(bool enabled){

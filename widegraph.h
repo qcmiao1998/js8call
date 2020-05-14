@@ -77,6 +77,7 @@ signals:
   void setXIT2(int n);
   void setFreq3(int rxFreq, int txFreq);
   void qsy(int hzDelta);
+  void drifted(int prev, int cur);
 
 public slots:
   void wideFreezeDecode(int n);
@@ -85,6 +86,7 @@ public slots:
   void setControlsVisible(bool visible);
   bool controlsVisible();
   void setDrift(int n);
+  int drift();
   void setQSYEnabled(bool enabled);
   void setPaused(bool paused){ m_paused = paused; }
 

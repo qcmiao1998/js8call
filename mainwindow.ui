@@ -4749,10 +4749,12 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="separator"/>
     <addaction name="menu_Decode_Passes"/>
     <addaction name="actionModeMultiDecoder"/>
+    <addaction name="actionModeAutoSync"/>
     <addaction name="separator"/>
     <addaction name="actionModeAutoreply"/>
     <addaction name="actionModeJS8HB"/>
     <addaction name="actionHeartbeatAcknowledgements"/>
+    <addaction name="separator"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
@@ -5760,6 +5762,14 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Enable Tuning Tone (T&amp;UNE)</string>
+   </property>
+  </action>
+  <action name="actionModeAutoSync">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Automatic Synchronization (S&amp;YNC)</string>
    </property>
   </action>
  </widget>
