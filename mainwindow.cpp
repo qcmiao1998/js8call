@@ -2692,16 +2692,21 @@ int MainWindow::computePeriodStartDelayForDecode(int submode){
     return delay;
 }
 
-int MainWindow::computeFramesNeededForDecode(int submode){
+int MainWindow::computeFramesPerSymbolForDecode(int submode){
     int symbolSamples = 0;
-    float threshold = 0.0;
     switch(submode){
-        case Varicode::JS8CallNormal:    symbolSamples = JS8A_SYMBOL_SAMPLES; threshold = JS8A_START_DELAY_MS/1000.0 + 0.5; break;
-        case Varicode::JS8CallFast:      symbolSamples = JS8B_SYMBOL_SAMPLES; threshold = JS8B_START_DELAY_MS/1000.0 + 0.5; break;
-        case Varicode::JS8CallTurbo:     symbolSamples = JS8C_SYMBOL_SAMPLES; threshold = JS8C_START_DELAY_MS/1000.0 + 0.5; break;
-        case Varicode::JS8CallSlow:      symbolSamples = JS8E_SYMBOL_SAMPLES; threshold = JS8E_START_DELAY_MS/1000.0 + 0.5; break;
-        case Varicode::JS8CallUltra:     symbolSamples = JS8I_SYMBOL_SAMPLES; threshold = JS8I_START_DELAY_MS/1000.0 + 0.5; break;
+        case Varicode::JS8CallNormal:    symbolSamples = JS8A_SYMBOL_SAMPLES; break;
+        case Varicode::JS8CallFast:      symbolSamples = JS8B_SYMBOL_SAMPLES; break;
+        case Varicode::JS8CallTurbo:     symbolSamples = JS8C_SYMBOL_SAMPLES; break;
+        case Varicode::JS8CallSlow:      symbolSamples = JS8E_SYMBOL_SAMPLES; break;
+        case Varicode::JS8CallUltra:     symbolSamples = JS8I_SYMBOL_SAMPLES; break;
     }
+    return symbolSamples;
+}
+
+int MainWindow::computeFramesNeededForDecode(int submode){
+    float threshold = 0.5 + computePeriodStartDelayForDecode(submode)/1000.0;
+    int symbolSamples = computeFramesPerSymbolForDecode(submode);
     return int(qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)));
 }
 
@@ -4485,6 +4490,9 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
     // do we have a better way to check this?
     bool everySecond = ui->actionModeAutoSync->isChecked();
 
+    // do we need to process alternate positions?
+    bool skipAlt = true;
+
     foreach(auto submode, submodes.keys()){
         // skip if multi is disabled and this mode is not the current submode
         if(!multi && submode != m_nSubMode){
@@ -4498,9 +4506,14 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
                 continue;
             }
 
+            // skip alt decode positions if needed
+            if(skipAlt && alt != 0){
+                continue;
+            }
+
             qint32 cycle = computeAltCycleForDecode(submode, k, alt*oneSecondSamples);
             qint32 cycleFrames = computeFramesPerCycleForDecode(submode);
-            qint32 cycleFramesNeeded = computeFramesNeededForDecode(submode) - oneSecondSamples;
+            qint32 cycleFramesNeeded = computeFramesPerSymbolForDecode(submode)*JS8_NUM_SYMBOLS; //computeFramesNeededForDecode(submode) - oneSecondSamples;
             qint32 cycleFramesReady = k - (cycle * cycleFrames);
 
             if(!m_lastDecodeStartMap.contains(submode)){
@@ -4529,7 +4542,7 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
                 // keep track of last decode position
                 m_lastDecodeStartMap[submode] = k;
             }
-            else if(incrementedBy >= oneSecondSamples && cycleFramesReady >= cycleFramesNeeded){
+            else if(incrementedBy >= oneSecondSamples && (cycleFramesReady >= cycleFramesNeeded || cycleFramesReady < oneSecondSamples)){
                 DecodeParams d;
                 d.submode = submode;
                 d.start = cycle*cycleFrames;
@@ -4541,11 +4554,6 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
                 m_lastDecodeStartMap[submode] = k;
             }
         }
-    }
-
-    // TODO: debug
-    if(decodes > 0 && m_wideGraph->shouldDisplayDecodeAttempts()){
-        m_wideGraph->drawHorizontalLine(QColor(Qt::yellow), 0, 5);
     }
 
     return decodes > 0;
@@ -5340,6 +5348,10 @@ void MainWindow::processDecodedLine(QByteArray t){
   }
 
   if(t.indexOf("<DecodeStarted>") >= 0) {
+      if(m_wideGraph->shouldDisplayDecodeAttempts()){
+          m_wideGraph->drawHorizontalLine(QColor(Qt::yellow), 0, 5);
+      }
+
       if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
       return;
   }

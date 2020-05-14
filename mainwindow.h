@@ -994,6 +994,7 @@ private:
   int computeAltCycleForDecode(int submode, int k, int offsetFrames);
   int computeFramesPerCycleForDecode(int submode);
   int computePeriodStartDelayForDecode(int submode);
+  int computeFramesPerSymbolForDecode(int submode);
   int computeFramesNeededForDecode(int submode);
   bool shortList(QString callsign);
   void transmit (double snr = 99.);
