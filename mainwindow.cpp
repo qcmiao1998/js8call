@@ -5572,7 +5572,7 @@ void MainWindow::processDecodedLine(QByteArray t){
     d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
     d.snr = decodedtext.snr();
     d.isBuffered = false;
-    d.tdrift = decodedtext.dt();
+    d.tdrift = ui->actionModeAutoSync->isChecked() ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
     d.submode = decodedtext.submode();
 
     // if we have any "first" frame, and a buffer is already established, clear it...
@@ -5610,7 +5610,7 @@ void MainWindow::processDecodedLine(QByteArray t){
     cd.offset = decodedtext.frequencyOffset();
     cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
     cd.bits = decodedtext.bits();
-    cd.tdrift = decodedtext.dt();
+    cd.tdrift = ui->actionModeAutoSync->isChecked() ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
     cd.submode = decodedtext.submode();
 
     // Only respond to HEARTBEATS...remember that CQ messages are "Alt" pings
@@ -5689,7 +5689,7 @@ void MainWindow::processDecodedLine(QByteArray t){
       cmd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
       cmd.bits = decodedtext.bits();
       cmd.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
-      cmd.tdrift = decodedtext.dt();
+      cmd.tdrift = ui->actionModeAutoSync->isChecked() ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
       cmd.submode = decodedtext.submode();
 
       // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
