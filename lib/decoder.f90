@@ -90,6 +90,10 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      id0=0
      imax=int(NTMAX*12000)
 
+     if(params%syncStats) then
+        write(*,*) '<DecodeDebug> sync start', pos, sz
+     endif
+
      if((imax-pos).lt.sz) then
        ! this means that the first part of the id0 is at the end of the buffer
        ! and the second half is at the beginning of the buffer
@@ -123,6 +127,10 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      sz = max(0,params%kszE)
      id0=0
      imax=int(NTMAX*12000)
+
+     if(params%syncStats) then
+        write(*,*) '<DecodeDebug> sync start', pos, sz
+     endif
 
      if((imax-pos).lt.sz) then
        ! this means that the first part of the id0 is at the end of the buffer
@@ -158,6 +166,10 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      id0=0
      imax=int(NTMAX*12000)
 
+     if(params%syncStats) then
+        write(*,*) '<DecodeDebug> sync start', pos, sz
+     endif
+
      if((imax-pos).lt.sz) then
        ! this means that the first part of the id0 is at the end of the buffer
        ! and the second half is at the beginning of the buffer
@@ -192,6 +204,10 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      id0=0
      imax=int(NTMAX*12000)
 
+     if(params%syncStats) then
+        write(*,*) '<DecodeDebug> sync start', pos, sz
+     endif
+
      if((imax-pos).lt.sz) then
        ! this means that the first part of the id0 is at the end of the buffer
        ! and the second half is at the beginning of the buffer
@@ -225,6 +241,10 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      sz = int(max(0,params%kszA))
      id0=0
      imax=int(NTMAX*12000)
+
+     if(params%syncStats) then
+        write(*,*) '<DecodeDebug> sync start', pos, sz
+     endif
 
      if((imax-pos).lt.sz) then
        ! this means that the first part of the id0 is at the end of the buffer
