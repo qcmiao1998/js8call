@@ -2722,7 +2722,7 @@ void MainWindow::dataSink(qint64 frames)
         k0 = k;
     }
 
-    qDebug() << "k" << k << "k0" << k0 << "delta" << k-k0;
+    //qDebug() << "k" << k << "k0" << k0 << "delta" << k-k0;
 
 #if JS8_USE_REFSPEC
     QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("refspec.dat"))};
@@ -5279,26 +5279,17 @@ void MainWindow::processDecodedLine(QByteArray t){
       //   3) compute the delta
       //   4) apply the drift
 
-      /// if(!m_lastDecodeStartMap.contains(m)){
-      ///     return;
-      /// }
-
-      // this is where we started the decode
-      static qint32 oneSecondSamples = RX_SAMPLE_RATE;
-      static qint32 maxSamples = NTMAX * RX_SAMPLE_RATE;
-
       int periodMs = 1000 * computePeriodForSubmode(m);
 
-      auto now = QDateTime::currentDateTimeUtc();
-      writeNoticeTextToUI(now, QString("Decode at %1 (kin: %2, lastDecoded: %3)").arg(syncStart).arg(dec_data.params.kin).arg(m_lastDecodeStartMap.value(m)));
+      //writeNoticeTextToUI(now, QString("Decode at %1 (kin: %2, lastDecoded: %3)").arg(syncStart).arg(dec_data.params.kin).arg(m_lastDecodeStartMap.value(m)));
 
       float expectedStartDelay = computePeriodStartDelayForDecode(m)/1000.0;
 
       float decodedSignalTime = (float)syncStart/(float)RX_SAMPLE_RATE;
 
-      writeNoticeTextToUI(now, QString("--> started at %1 seconds into the start of my drifted minute").arg(decodedSignalTime));
+      //writeNoticeTextToUI(now, QString("--> started at %1 seconds into the start of my drifted minute").arg(decodedSignalTime));
 
-      writeNoticeTextToUI(now, QString("--> we add a time delta of %1 seconds into the start of the cycle").arg(xdt));
+      //writeNoticeTextToUI(now, QString("--> we add a time delta of %1 seconds into the start of the cycle").arg(xdt));
 
       // adjust for expected start delay
       decodedSignalTime -= expectedStartDelay;
@@ -5313,13 +5304,13 @@ void MainWindow::processDecodedLine(QByteArray t){
           decodedSignalTime -= 60.0;
       }
 
-      writeNoticeTextToUI(now, QString("--> so signal adjusted started at %1 seconds into the start of my drifted minute").arg(decodedSignalTime));
+      //writeNoticeTextToUI(now, QString("--> so signal adjusted started at %1 seconds into the start of my drifted minute").arg(decodedSignalTime));
 
       int decodedSignalTimeMs = 1000 * decodedSignalTime;
       int cycleStartTimeMs = (decodedSignalTimeMs / periodMs) * periodMs;
       int driftMs = cycleStartTimeMs - decodedSignalTimeMs;
 
-      writeNoticeTextToUI(now, QString("--> which is a drift adjustment of %1 milliseconds").arg(driftMs));
+      //writeNoticeTextToUI(now, QString("--> which is a drift adjustment of %1 milliseconds").arg(driftMs));
 
       // if we have a large negative offset (say -14000), use the positive inverse of +1000
       if(driftMs + periodMs < qAbs(driftMs)){
@@ -5330,7 +5321,7 @@ void MainWindow::processDecodedLine(QByteArray t){
           driftMs -= periodMs;
       }
 
-      writeNoticeTextToUI(now, QString("--> which is a corrected drift adjustment of %1 milliseconds").arg(driftMs));
+      //writeNoticeTextToUI(now, QString("--> which is a corrected drift adjustment of %1 milliseconds").arg(driftMs));
 
       int newDrift = DriftingDateTime::drift() + driftMs;
       if(newDrift < 0){
@@ -5339,85 +5330,9 @@ void MainWindow::processDecodedLine(QByteArray t){
           newDrift %= periodMs;
       }
 
-      writeNoticeTextToUI(now, QString("--> which is rounded to a total drift of %1 milliseconds for this period").arg(newDrift));
+      //writeNoticeTextToUI(now, QString("--> which is rounded to a total drift of %1 milliseconds for this period").arg(newDrift));
 
       driftQueue.append(newDrift);
-
-      /// qint32 cycle = computeCycleForDecode(m, syncStart);
-      /// qint32 cycleFrames = computeFramesPerCycleForDecode(m);
-      /// qint32 cycleStart = cycle*cycleFrames;
-      ///
-      /// writeNoticeTextToUI(now, QString("--> cycle started at %1 and is %2 frames long").arg(cycleStart).arg(cycleFrames));
-      /// writeNoticeTextToUI(now, QString("--> decode delta from cycle start is %1 frames and is %2 milliseconds after cycle start").arg(syncStart - cycleStart).arg(1000*float(syncStart-cycleStart)/RX_SAMPLE_RATE));
-      /// writeNoticeTextToUI(now, QString("--> decode time delta is %1 milliseconds").arg(xdtMs));
-
-      // TODO: we're assuming 1 second decoding at this point
-      /// qint32 cycleFrames = computeFramesPerCycleForDecode(m);
-      /// qint32 startK = syncStart;
-      /// // qint32 startK = m_lastDecodeStartMap.value(m) - cycleFrames;
-      /// // if(startK < 0){
-      /// //     startK += maxSamples;
-      /// // }
-      /// qint32 cycle = computeCycleForDecode(m, startK);
-      /// qint32 framesIntoCycle = startK - cycle*cycleFrames;
-      ///
-      /// // TODO: do we need to know the *lastDecode* drift setting or is it safe to use this?
-      /// // float currentDriftSeconds = m_wideGraph->drift()/1000.0;
-      ///
-      /// // compute the relative seconds into the cycle
-      /// float secondsIntoCycle = (float)framesIntoCycle/(float)oneSecondSamples;
-      ///
-      /// // if we have any drift applied currently, add that to the cycle seconds since the cycle is relative
-      /// // float adjustedSecondsIntoCycle = secondsIntoCycle - currentDriftSeconds;
-      ///
-      /// // compute new drift adjustment
-      /// int periodMs = computePeriodForSubmode(m) * 1000;
-      /// int newDrift = (-secondsIntoCycle*1000)-xdtMs);
-      ///
-      /// int pos = newDrift + periodMs;
-      /// int neg = newDrift - periodMs;
-      /// if(qAbs(neg) < qAbs(pos)){
-      ///     newDrift = neg;
-      /// } else {
-      ///     newDrift = pos;
-      /// }
-      ///
-      /// writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Decode at startK %4 and %1 seconds into cycle %5 with dt of %2 milliseconds should adjust drift by %3").arg(secondsIntoCycle).arg(xdtMs).arg(newDrift).arg(startK).arg(cycle));
-
-      /// setDrift(newDrift);
-
-
-#if JS8_TIME_DRIFT_EXPERIMENT
-      // use normal decodes for auto drift if we haven't already defined a new drift for this period
-      if(/*!hasNewDrift && */ (m == Varicode::JS8CallSlow || m == Varicode::JS8CallNormal)){
-          auto now = QDateTime::currentDateTimeUtc();
-          float n = 0;
-          float nNeg = ((now.time().second()) % period) - period;
-          float nPos = period - ((now.time().second()) % period);
-          if(qAbs(nNeg) < nPos){
-              n = nNeg + 1;
-          } else {
-              n = nPos - 1;
-          }
-
-          // subtract to the previous period
-          n -= (float)period;
-
-          // subtract the actual tx duration
-          n += computeFramesNeededForDecode(m)/RX_SAMPLE_RATE;
-
-          // subtract the time delta
-          n -= xdt;
-
-          int xdtmin = qMin(n*1000, (float)DriftingDateTime::drift());
-          int xdtmax = qMax(n*1000, (float)DriftingDateTime::drift());
-
-          int oldNewDrift = newDrift;
-          newDrift = (xdtmin + (xdtmax-xdtmin)/2);
-          newDrift = qMin(oldNewDrift, newDrift) + (qMax(oldNewDrift, newDrift)-qMin(oldNewDrift, newDrift))/2;
-          hasNewDrift = true;
-      }
-#endif
 
       if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
 
@@ -5451,7 +5366,7 @@ void MainWindow::processDecodedLine(QByteArray t){
 
         setDrift(driftAvg);
 
-        writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Drift: %1").arg(driftAvg));
+        //writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Automatic Drift: %1").arg(driftAvg));
     }
 
     m_bDecoded = t.mid(16).trimmed().toInt() > 0;
