@@ -5769,7 +5769,7 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Enable Automatic Synchronization (S&amp;YNC)</string>
+    <string>Enable Automatic Timing Synchronization (S&amp;YNC)</string>
    </property>
   </action>
  </widget>
