@@ -13,7 +13,7 @@
 #define JS8_DECODE_THREAD  1       // use a separate thread for decode process handling
 #define JS8_ALLOW_EXTENDED 1       // allow extended latin-1 capital charset
 #define JS8_SAVE_AUDIO     0       // enable the save menu
-#define JS8_AUTO_SYNC      0       // enable the experimental auto sync feature
+#define JS8_AUTO_SYNC      1       // enable the experimental auto sync feature
 
 #ifdef QT_DEBUG
 #define JS8_DEBUG_DECODE   0       // emit debug statements for the decode pipeline
