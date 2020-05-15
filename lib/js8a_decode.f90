@@ -108,7 +108,7 @@ contains
         xdt=candidate(2,icand)
         xbase=10.0**(0.1*(sbase(nint(f1/(12000.0/NFFT1)))-40.0)) ! 3.125Hz
 
-        if(NWRITELOG.eq.0) then
+        if(NWRITELOG.eq.1) then
           write(*,*) '<DecodeDebug> candidate', icand, 'f1', f1, 'sync', sync, 'xdt', xdt, 'xbase', xbase
           flush(6)
         endif

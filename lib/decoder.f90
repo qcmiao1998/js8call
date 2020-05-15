@@ -91,7 +91,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      imax=int(NTMAX*12000)
 
      if(params%syncStats) then
-        write(*,*) '<DecodeDebug> sync start', pos, sz
+        write(*,*) '<DecodeSyncMeta> sync start', pos, sz
      endif
 
      if((imax-pos).lt.sz) then
@@ -129,7 +129,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      imax=int(NTMAX*12000)
 
      if(params%syncStats) then
-        write(*,*) '<DecodeDebug> sync start', pos, sz
+        write(*,*) '<DecodeSyncMeta> sync start', pos, sz
      endif
 
      if((imax-pos).lt.sz) then
@@ -167,7 +167,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      imax=int(NTMAX*12000)
 
      if(params%syncStats) then
-        write(*,*) '<DecodeDebug> sync start', pos, sz
+        write(*,*) '<DecodeSyncMeta> sync start', pos, sz
      endif
 
      if((imax-pos).lt.sz) then
@@ -205,7 +205,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      imax=int(NTMAX*12000)
 
      if(params%syncStats) then
-        write(*,*) '<DecodeDebug> sync start', pos, sz
+        write(*,*) '<DecodeSyncMeta> sync start', pos, sz
      endif
 
      if((imax-pos).lt.sz) then
@@ -243,7 +243,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      imax=int(NTMAX*12000)
 
      if(params%syncStats) then
-        write(*,*) '<DecodeDebug> sync start', pos, sz
+        write(*,*) '<DecodeSyncMeta> sync start', pos, sz
      endif
 
      if((imax-pos).lt.sz) then

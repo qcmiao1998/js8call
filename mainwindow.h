@@ -616,7 +616,7 @@ private:
   bool    m_loopall;
   bool    m_decoderBusy;
   QString m_decoderBusyBand;
-  QMap<qint32, qint32> m_lastDecodeStartMap;
+  QMap<qint32, qint32> m_lastDecodeStartMap;  // submode, decode k start position
   Radio::Frequency m_decoderBusyFreq;
   QDateTime m_decoderBusyStartTime;
   bool    m_auto;

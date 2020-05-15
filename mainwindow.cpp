@@ -1022,6 +1022,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if(!JS8_ENABLE_JS8I){
       ui->actionModeJS8Ultra->setVisible(false);
   }
+  if(!JS8_AUTO_SYNC){
+      ui->actionModeAutoSync->setVisible(false);
+      ui->actionModeAutoSync->setEnabled(false);
+      ui->actionModeAutoSync->setChecked(false);
+  }
 
   // prep
   prepareMonitorControls();
@@ -4284,6 +4289,11 @@ bool MainWindow::decode(qint32 k){
         return false;
     }
 
+    if(m_decoderBusyStartTime.isValid() && m_decoderBusyStartTime.msecsTo(QDateTime::currentDateTimeUtc()) < 1000){
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused for 1000 ms after last decode start";
+        return false;
+    }
+
     int threshold = m_nSubMode == Varicode::JS8CallSlow ? 4000 : 2000; // two seconds
     if(isInDecodeDelayThreshold(threshold)){
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused for" << threshold << "ms after transmit stop";
@@ -4491,7 +4501,7 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
     bool everySecond = ui->actionModeAutoSync->isChecked();
 
     // do we need to process alternate positions?
-    bool skipAlt = true;
+    bool skipAlt = false;
 
     foreach(auto submode, submodes.keys()){
         // skip if multi is disabled and this mode is not the current submode
@@ -4542,7 +4552,10 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
                 // keep track of last decode position
                 m_lastDecodeStartMap[submode] = k;
             }
-            else if(incrementedBy >= oneSecondSamples && (cycleFramesReady >= cycleFramesNeeded || cycleFramesReady < oneSecondSamples)){
+            else if(
+                (incrementedBy >= 2*oneSecondSamples && cycleFramesReady >= cycleFramesNeeded ) ||
+                (incrementedBy >= oneSecondSamples && cycleFramesReady < 1.25*oneSecondSamples)
+            ){
                 DecodeParams d;
                 d.submode = submode;
                 d.start = cycle*cycleFrames;
@@ -5209,7 +5222,7 @@ void MainWindow::readFromStdout(QProcess * proc)                             //r
 }
 
 void MainWindow::processDecodedLine(QByteArray t){
-  qDebug() << "JS8: " << QString(t);
+  if(JS8_DEBUG_DECODE) qDebug() << "JS8: " << QString(t);
 
   bool bAvgMsg=false;
   int navg=0;
@@ -5217,7 +5230,7 @@ void MainWindow::processDecodedLine(QByteArray t){
   static QList<int> driftQueue;
 
   static qint32 syncStart = -1;
-  if(t.indexOf("<DecodeDebug> sync start") >= 0){
+  if(t.indexOf("<DecodeSyncMeta> sync start") >= 0){
       auto segs =  QString(t.trimmed()).split(QRegExp("[\\s\\t]+"), QString::SkipEmptyParts);
       if(segs.isEmpty()){
           return;
@@ -5414,9 +5427,8 @@ void MainWindow::processDecodedLine(QByteArray t){
 
 
   // frames are also valid if they pass our dupe check (haven't seen the same frame in the past 1/2 decode period)
-  auto frame = decodedtext.message();
   auto frameOffset = decodedtext.frequencyOffset();
-  auto frameDedupeKey = QString("%1:%2").arg(decodedtext.submode()).arg(frame);
+  auto frameDedupeKey = QString("%1:%2").arg(decodedtext.submode()).arg(decodedtext.frame());
   if(m_messageDupeCache.contains(frameDedupeKey)){
       auto cached = m_messageDupeCache.value(frameDedupeKey);
 
