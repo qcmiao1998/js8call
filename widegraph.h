@@ -84,6 +84,8 @@ public slots:
   void wideFreezeDecode(int n);
   void setFreq2(int rxFreq, int txFreq);
   void setDialFreq(double d);
+  void setTimeControlsVisible(bool visible);
+  bool timeControlsVisible();
   void setControlsVisible(bool visible);
   bool controlsVisible();
   void setDrift(int n);

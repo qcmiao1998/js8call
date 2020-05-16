@@ -2398,6 +2398,7 @@ void MainWindow::readSettings()
   }
   setDrift(m_settings->value("TimeDrift", 0).toInt());
   ui->actionShow_Waterfall_Controls->setChecked(m_wideGraph->controlsVisible());
+  ui->actionShow_Waterfall_Time_Drift_Controls->setChecked(m_wideGraph->timeControlsVisible());
   ui->actionShow_Tooltips->setChecked(m_settings->value("ShowTooltips", true).toBool());
   ui->actionShow_Statusbar->setChecked(m_settings->value("ShowStatusbar",true).toBool());
   ui->statusBar->setVisible(ui->actionShow_Statusbar->isChecked());
@@ -2969,8 +2970,8 @@ void MainWindow::on_menuWindow_aboutToShow(){
     auto vsizes = ui->mainSplitter->sizes();
     ui->actionShow_Frequency_Clock->setChecked(vsizes.first() > 0);
     ui->actionShow_Waterfall->setChecked(vsizes.last() > 0);
-    ui->actionShow_Waterfall_Controls->setChecked(m_wideGraph->controlsVisible());
-    ui->actionShow_Waterfall_Controls->setEnabled(ui->actionShow_Waterfall->isChecked());
+    ui->actionShow_Waterfall_Controls->setChecked(ui->actionShow_Waterfall->isChecked() && m_wideGraph->controlsVisible());
+    ui->actionShow_Waterfall_Time_Drift_Controls->setChecked(ui->actionShow_Waterfall->isChecked() && m_wideGraph->timeControlsVisible());
 
     QMenu * sortBandMenu = new QMenu(this->menuBar()); //ui->menuWindow);
     buildBandActivitySortByMenu(sortBandMenu);
@@ -3168,6 +3169,16 @@ void MainWindow::on_actionShow_Waterfall_triggered(bool checked){
 
 void MainWindow::on_actionShow_Waterfall_Controls_triggered(bool checked){
     m_wideGraph->setControlsVisible(checked);
+    if(checked && !ui->bandHorizontalWidget->isVisible()){
+        on_actionShow_Waterfall_triggered(checked);
+    }
+}
+
+void MainWindow::on_actionShow_Waterfall_Time_Drift_Controls_triggered(bool checked){
+    m_wideGraph->setTimeControlsVisible(checked);
+    if(checked && !ui->bandHorizontalWidget->isVisible()){
+        on_actionShow_Waterfall_triggered(checked);
+    }
 }
 
 void MainWindow::on_actionReset_Window_Sizes_triggered(){

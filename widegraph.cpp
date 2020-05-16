@@ -708,10 +708,20 @@ void WideGraph::setDialFreq(double d)                             //setDialFreq
   ui->widePlot->setDialFreq(d);
 }
 
+void WideGraph::setTimeControlsVisible(bool visible){
+    setControlsVisible(visible);
+    ui->tabWidget->setCurrentWidget(ui->timingTab);
+}
+
+bool WideGraph::timeControlsVisible(){
+   return controlsVisible() && ui->tabWidget->currentWidget() == ui->timingTab;
+}
+
 void WideGraph::setControlsVisible(bool visible)
 {
   ui->cbControls->setChecked(!visible);
   ui->cbControls->setChecked(visible);
+  ui->tabWidget->setCurrentWidget(ui->controlTab);
 }
 
 bool WideGraph::controlsVisible(){
