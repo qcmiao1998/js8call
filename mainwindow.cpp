@@ -5281,7 +5281,7 @@ void MainWindow::processDecodedLine(QByteArray t){
           return;
       }
 
-      if(m != Varicode::JS8CallNormal){
+      if(m != Varicode::JS8CallNormal && m != Varicode::JS8CallSlow){
           return;
       }
       // if we're here at this point, we _should_ be operating a decode every second
