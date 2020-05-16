@@ -1022,11 +1022,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if(!JS8_ENABLE_JS8I){
       ui->actionModeJS8Ultra->setVisible(false);
   }
-  if(!JS8_AUTO_SYNC){
-      ui->actionModeAutoSync->setVisible(false);
-      ui->actionModeAutoSync->setEnabled(false);
-      ui->actionModeAutoSync->setChecked(false);
-  }
 
   // prep
   prepareMonitorControls();
@@ -2275,7 +2270,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("SubModeHB", ui->actionModeJS8HB->isChecked());
   m_settings->setValue("SubModeHBAck", ui->actionHeartbeatAcknowledgements->isChecked());
   m_settings->setValue("SubModeMultiDecode", ui->actionModeMultiDecoder->isChecked());
-  m_settings->setValue("SubModeAutoSync", ui->actionModeAutoSync->isChecked());
   m_settings->setValue("DTtol",m_DTtol);
   m_settings->setValue("Ftol", ui->sbFtol->value ());
   m_settings->setValue("MinSync",m_minSync);
@@ -2432,7 +2426,6 @@ void MainWindow::readSettings()
   ui->actionModeJS8HB->setChecked(m_settings->value("SubModeHB", false).toBool());
   ui->actionHeartbeatAcknowledgements->setChecked(m_settings->value("SubModeHBAck", false).toBool());
   ui->actionModeMultiDecoder->setChecked(m_settings->value("SubModeMultiDecode", true).toBool());
-  ui->actionModeAutoSync->setChecked(m_settings->value("SubModeAutoSync", false).toBool());
 
   ui->sbFtol->setValue (m_settings->value("Ftol", 20).toInt());
   m_minSync=m_settings->value("MinSync",0).toInt();
@@ -4498,7 +4491,7 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
     bool multi = ui->actionModeMultiDecoder->isChecked();
 
     // do we have a better way to check this?
-    bool everySecond = ui->actionModeAutoSync->isChecked();
+    bool everySecond = m_wideGraph->shouldAutoSync();
 
     // do we need to process alternate positions?
     bool skipAlt = false;
@@ -4870,7 +4863,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
     int period = computePeriodForSubmode(submode);
 
-    dec_data.params.syncStats = (m_wideGraph->shouldDisplayDecodeAttempts() || ui->actionModeAutoSync->isChecked());
+    dec_data.params.syncStats = (m_wideGraph->shouldDisplayDecodeAttempts() || m_wideGraph->shouldAutoSync());
     dec_data.params.npts8=(m_ihsym*m_nsps)/16;
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
@@ -5248,7 +5241,7 @@ void MainWindow::processDecodedLine(QByteArray t){
       }
 
       // only continue if we should either display decode attempts or if we should try to auto sync
-      if(!m_wideGraph->shouldDisplayDecodeAttempts() && !ui->actionModeAutoSync->isChecked()){
+      if(!m_wideGraph->shouldDisplayDecodeAttempts() && !m_wideGraph->shouldAutoSync()){
           return;
       }
 
@@ -5284,7 +5277,7 @@ void MainWindow::processDecodedLine(QByteArray t){
       m_wideGraph->drawDecodeLine(QColor(Qt::red), f, f + computeBandwidthForSubmode(m));
 
       // compute time drift if needed
-      if(!ui->actionModeAutoSync->isChecked()){
+      if(!m_wideGraph->shouldAutoSync()){
           return;
       }
 
@@ -5511,7 +5504,7 @@ void MainWindow::processDecodedLine(QByteArray t){
     d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
     d.snr = decodedtext.snr();
     d.isBuffered = false;
-    d.tdrift = ui->actionModeAutoSync->isChecked() ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
+    d.tdrift = m_wideGraph->shouldAutoSync() ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
     d.submode = decodedtext.submode();
 
     // if we have any "first" frame, and a buffer is already established, clear it...
@@ -5549,7 +5542,7 @@ void MainWindow::processDecodedLine(QByteArray t){
     cd.offset = decodedtext.frequencyOffset();
     cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
     cd.bits = decodedtext.bits();
-    cd.tdrift = ui->actionModeAutoSync->isChecked() ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
+    cd.tdrift = m_wideGraph->shouldAutoSync() ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
     cd.submode = decodedtext.submode();
 
     // Only respond to HEARTBEATS...remember that CQ messages are "Alt" pings
@@ -5628,7 +5621,7 @@ void MainWindow::processDecodedLine(QByteArray t){
       cmd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
       cmd.bits = decodedtext.bits();
       cmd.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
-      cmd.tdrift = ui->actionModeAutoSync->isChecked() ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
+      cmd.tdrift = m_wideGraph->shouldAutoSync() ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
       cmd.submode = decodedtext.submode();
 
       // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
@@ -6457,7 +6450,7 @@ void MainWindow::guiUpdate()
     auto drift = DriftingDateTime::drift();
     QDateTime t = DriftingDateTime::currentDateTimeUtc();
     QStringList parts;
-    parts << (t.time().toString() + (!drift ? " " : QString(" (%1%2ms)").arg(drift > 0 ? "+" : "").arg(drift)));
+    parts << (t.time().toString() + (!drift ? " " : QString(" (%1%2ms%3)").arg(drift > 0 ? "+" : "").arg(drift).arg(m_wideGraph->shouldAutoSync() ? " auto" : "")));
     parts << t.date().toString("yyyy MMM dd");
     ui->labUTC->setText(parts.join("\n"));
 
@@ -10668,7 +10661,6 @@ void MainWindow::updateModeButtonText(){
     auto selectedCallsign = callsignSelected();
 
     auto multi = ui->actionModeMultiDecoder->isChecked();
-    auto autosync = ui->actionModeAutoSync->isChecked();
     auto autoreply = ui->actionModeAutoreply->isChecked();
     auto heartbeat = ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked();
     auto ack = autoreply && ui->actionHeartbeatAcknowledgements->isChecked() && (!m_config.heartbeat_qso_pause() || selectedCallsign.isEmpty());
@@ -10676,10 +10668,6 @@ void MainWindow::updateModeButtonText(){
     auto modeText = submodeName(m_nSubMode);
     if(multi){
         modeText += QString("+MULTI");
-    }
-
-    if(autosync){
-        modeText += QString("+SYNC");
     }
 
     if(autoreply){

@@ -4749,7 +4749,6 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="separator"/>
     <addaction name="menu_Decode_Passes"/>
     <addaction name="actionModeMultiDecoder"/>
-    <addaction name="actionModeAutoSync"/>
     <addaction name="separator"/>
     <addaction name="actionModeAutoreply"/>
     <addaction name="actionModeJS8HB"/>

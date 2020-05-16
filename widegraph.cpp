@@ -250,6 +250,19 @@ bool WideGraph::shouldDisplayDecodeAttempts(){
     return ui->decodeAttemptCheckBox->isChecked();
 }
 
+bool WideGraph::shouldAutoSync(){
+    return ui->autoDriftButton->isChecked();
+}
+
+void WideGraph::on_autoDriftButton_checked(bool checked){
+    auto text = ui->autoDriftButton->text();
+    if(checked){
+        ui->autoDriftButton->setText(text.replace("Start", "Stop"));
+    } else {
+        ui->autoDriftButton->setText(text.replace("Stop", "Start"));
+    }
+}
+
 void WideGraph::drawDecodeLine(const QColor &color, int ia, int ib)
 {
   ui->widePlot->drawDecodeLine(color, ia, ib);

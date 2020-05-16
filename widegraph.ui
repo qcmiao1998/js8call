@@ -427,8 +427,8 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-371</y>
-                <width>267</width>
+                <y>0</y>
+                <width>240</width>
                 <height>742</height>
                </rect>
               </property>
@@ -976,7 +976,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>281</width>
-                <height>198</height>
+                <height>234</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout">
@@ -1017,6 +1017,22 @@
                  </property>
                  <property name="singleStep">
                   <number>100</number>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="autoDriftButton">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Start Automatic Drift Sync</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>

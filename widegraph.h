@@ -69,6 +69,7 @@ public:
   void   setRedFile(QString fRed);
   void   setTurbo(bool turbo);
   bool   shouldDisplayDecodeAttempts();
+  bool   shouldAutoSync();
   QVector<QColor> const& colors();
 
 signals:
@@ -122,6 +123,7 @@ private slots:
   void on_filterCheckBox_toggled(bool b);
   void on_filterOpacitySpinBox_valueChanged(int n);
 
+  void on_autoDriftButton_checked(bool checked);
   void on_driftSpinBox_valueChanged(int n);
   void on_driftSyncButton_clicked();
   void on_driftSyncEndButton_clicked();
