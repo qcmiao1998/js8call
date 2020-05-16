@@ -5281,9 +5281,13 @@ void MainWindow::processDecodedLine(QByteArray t){
           return;
       }
 
+      // TODO: can we do this for FAST & TURBO
+      // if fast/turbo is observed and we're in a period post 15 seconds (i.e., second 18 turbo decode)
+      // then make the drift relative to the first cycle instead
       if(m != Varicode::JS8CallNormal && m != Varicode::JS8CallSlow){
           return;
       }
+
       // if we're here at this point, we _should_ be operating a decode every second
       //
       // so we need to figure out where:
@@ -5374,6 +5378,9 @@ void MainWindow::processDecodedLine(QByteArray t){
         static int driftN = 1;
         static int driftAvg = DriftingDateTime::drift();
 
+        // let the widegraph know for timing control
+        m_wideGraph->notifyDriftedSignalsDecoded(driftQueue.count());
+
         while(!driftQueue.isEmpty()){
             int newDrift = driftQueue.first();
             driftQueue.removeFirst();
@@ -5383,6 +5390,7 @@ void MainWindow::processDecodedLine(QByteArray t){
         }
 
         setDrift(driftAvg);
+
 
         //writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Automatic Drift: %1").arg(driftAvg));
     }

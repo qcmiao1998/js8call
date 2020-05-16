@@ -90,6 +90,7 @@ public slots:
   int drift();
   void setQSYEnabled(bool enabled);
   void setPaused(bool paused){ m_paused = paused; }
+  void notifyDriftedSignalsDecoded(int signalsDecoded);
 
 protected:
   void keyPressEvent (QKeyEvent *e) override;
@@ -164,6 +165,9 @@ private:
   bool   m_bFlatten;
   bool   m_bRef;
   bool   m_bHaveTransmitted;    //Set true at end of a WSPR transmission
+
+  QTimer m_autoSyncTimer;
+  int m_autoSyncTimeLeft;
 
   QTimer m_drawTimer;
   QMutex m_drawLock;

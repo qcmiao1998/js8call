@@ -168,6 +168,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     ui->cbControls->setChecked(!m_settings->value("HideControls", false).toBool());
     ui->fpsSpinBox->setValue(m_settings->value ("WaterfallFPS", 4).toInt());
     ui->decodeAttemptCheckBox->setChecked(m_settings->value("DisplayDecodeAttempts", false).toBool());
+    ui->autoDriftAutoStopCheckBox->setChecked(m_settings->value ("StopAutoSyncOnDecode", true).toBool());
 
     auto splitState = m_settings->value("SplitState").toByteArray();
     if(!splitState.isEmpty()){
@@ -244,6 +245,7 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("SplitState", ui->splitter->saveState());
   m_settings->setValue ("WaterfallFPS", ui->fpsSpinBox->value());
   m_settings->setValue ("DisplayDecodeAttempts", ui->decodeAttemptCheckBox->isChecked());
+  m_settings->setValue ("StopAutoSyncOnDecode", ui->autoDriftAutoStopCheckBox->isChecked());
 }
 
 bool WideGraph::shouldDisplayDecodeAttempts(){
@@ -254,12 +256,58 @@ bool WideGraph::shouldAutoSync(){
     return ui->autoDriftButton->isChecked();
 }
 
+void WideGraph::notifyDriftedSignalsDecoded(int /*signalsDecoded*/){
+    if(ui->autoDriftAutoStopCheckBox->isChecked()){
+        ui->autoDriftButton->setChecked(false);
+    }
+}
+
 void WideGraph::on_autoDriftButton_toggled(bool checked){
+    static bool connected = false;
+    if(!connected){
+        connect(&m_autoSyncTimer, &QTimer::timeout, this, [this](){
+            // if auto drift isn't checked, don't worry about this...
+            if(!ui->autoDriftButton->isChecked()){
+                return;
+            }
+
+            // uncheck after timeout
+            if(m_autoSyncTimeLeft == 0){
+                ui->autoDriftButton->setChecked(false);
+                return;
+            }
+
+            // set new text and decrement timeleft
+            auto text = ui->autoDriftButton->text();
+            auto newText = QString("%1 (%2)").arg(text.left(text.indexOf("(")).trimmed()).arg(m_autoSyncTimeLeft--);
+            ui->autoDriftButton->setText(newText);
+        });
+        connected = true;
+    }
+
+    // if in the future we want to auto sync timeout after a time period
+    bool autoSyncTimeout = false;
+
     auto text = ui->autoDriftButton->text();
-    if(checked){
-        ui->autoDriftButton->setText(text.replace("Start", "Stop"));
+
+    if(autoSyncTimeout){
+        if(checked){
+            m_autoSyncTimeLeft = 120;
+            m_autoSyncTimer.setInterval(1000);
+            m_autoSyncTimer.start();
+            ui->autoDriftButton->setText(QString("%1 (%2)").arg(text.replace("Start", "Stop")).arg(m_autoSyncTimeLeft--));
+        } else {
+            m_autoSyncTimeLeft = 0;
+            m_autoSyncTimer.stop();
+            ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Stop", "Start"));
+        }
+        return;
     } else {
-        ui->autoDriftButton->setText(text.replace("Stop", "Start"));
+        if(checked){
+            ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Start", "Stop"));
+        } else {
+            ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Stop", "Start"));
+        }
     }
 }
 
