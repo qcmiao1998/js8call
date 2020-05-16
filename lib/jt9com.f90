@@ -18,6 +18,7 @@
      integer(c_int) :: nfsplit
      integer(c_int) :: nfb
      integer(c_int) :: ntol
+     logical(c_bool) :: syncStats
      integer(c_int) :: kin
      integer(c_int) :: kposA
      integer(c_int) :: kposB

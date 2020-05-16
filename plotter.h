@@ -77,6 +77,7 @@ public:
   void setBreadth(qint32 w) {m_w = w;}
   qint32 breadth() const {return m_w;}
   float fSpan() const {return m_fSpan;}
+  QVector<QColor> const& colors();
   void setColours(QVector<QColor> const& cl);
   void setFlatten(bool b1, bool b2);
   void setTol(int n);
@@ -90,7 +91,8 @@ public:
   void setReference(bool b) {m_bReference = b;}
   bool Reference() const {return m_bReference;}
 #endif
-  void drawRed(int ia, int ib, float swide[]);
+  void drawDecodeLine(const QColor &color, int ia, int ib);
+  void drawHorizontalLine(const QColor &color, int x, int width);
   void setVHF(bool bVHF);
   void setRedFile(QString fRed);
   bool scaleOK () const {return m_bScaleOK;}

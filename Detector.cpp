@@ -43,18 +43,9 @@ bool Detector::reset ()
 
 void Detector::clear ()
 {
-  QMutexLocker mutex(&m_lock);
-
 #if JS8_RING_BUFFER
-  // set index to roughly where we are in time (1ms resolution)
-  qint64 now (DriftingDateTime::currentMSecsSinceEpoch ());
-  unsigned msInPeriod ((now % 86400000LL) % (m_period * 1000));
-  int prevKin = dec_data.params.kin;
-  dec_data.params.kin = qMin ((msInPeriod * m_frameRate) / 1000, static_cast<unsigned> (sizeof (dec_data.d2) / sizeof (dec_data.d2[0])));
-  m_bufferPos = 0;
-  m_ns=secondInPeriod();
-  memset(dec_data.d2, 0, sizeof(dec_data.d2));
-  qDebug() << "advancing detector buffer from" << prevKin << "to" << dec_data.params.kin << "delta" << dec_data.params.kin - prevKin;
+  resetBufferPosition();
+  resetBufferContent();
 #else
   dec_data.params.kin = 0;
   m_bufferPos = 0;
@@ -62,6 +53,63 @@ void Detector::clear ()
 
   // fill buffer with zeros (G4WJS commented out because it might cause decoder hangs)
   // qFill (dec_data.d2, dec_data.d2 + sizeof (dec_data.d2) / sizeof (dec_data.d2[0]), 0);
+}
+
+/**
+ * shift the elements of an array left by n items using a temporary array for efficient moving
+ *
+ * this function moves the leading n elements to the end of the array
+ *
+ * the temporary array needs to be allocated to accept at least n items
+ */
+template<typename T> void rotate_array_left(T array[], qint64 size, T temp[], qint64 n) {
+    memcpy(temp, array, n * sizeof(T));                  // temporarily save leading n elements
+    memmove(array, array + n, (size - n) * sizeof(T));   // shift array to the left
+    memmove(array + size - n, temp, n * sizeof(T));      // append saved
+}
+
+/**
+ * shift the elements of an array right by n items using a temporary array for efficient moving
+ *
+ * this function moves the trailing n elements to the start of the array
+ *
+ * the temporary array needs to be allocated to accept at least n items
+ */
+template<typename T> void rotate_array_right(T array[], qint64 size, T temp[], qint64 n) {
+    memcpy(temp, array + size - n, n * sizeof(T));      // temporarily save trailing n elements
+    memmove(array + n, array, (size - n) * sizeof(T));  // shift array to the right
+    memcpy(array, temp, n * sizeof(T));                 // prepend saved
+}
+
+void Detector::resetBufferPosition(){
+    // temporary buffer for efficient copies
+    static short int d0[NTMAX*RX_SAMPLE_RATE];
+
+    QMutexLocker mutex(&m_lock);
+
+    // set index to roughly where we are in time (1ms resolution)
+    qint64 now (DriftingDateTime::currentMSecsSinceEpoch ());
+    unsigned msInPeriod ((now % 86400000LL) % (m_period * 1000));
+    int prevKin = dec_data.params.kin;
+    dec_data.params.kin = qMin ((msInPeriod * m_frameRate) / 1000, static_cast<unsigned> (sizeof (dec_data.d2) / sizeof (dec_data.d2[0])));
+    m_bufferPos = 0;
+    m_ns=secondInPeriod();
+    int delta = dec_data.params.kin - prevKin;
+    qDebug() << "advancing detector buffer from" << prevKin << "to" << dec_data.params.kin << "delta" << delta;
+
+    // rotate buffer moving the contents that were at prevKin to the new kin position
+    if(delta < 0){
+        rotate_array_left<short int>(dec_data.d2, NTMAX*RX_SAMPLE_RATE, d0, -delta);
+    } else {
+        rotate_array_right<short int>(dec_data.d2, NTMAX*RX_SAMPLE_RATE, d0, delta);
+    }
+}
+
+void Detector::resetBufferContent(){
+    QMutexLocker mutex(&m_lock);
+
+    memset(dec_data.d2, 0, sizeof(dec_data.d2));
+    qDebug() << "clearing detector buffer content";
 }
 
 qint64 Detector::writeData (char const * data, qint64 maxSize)
@@ -138,7 +186,6 @@ unsigned Detector::secondInPeriod () const
   // we take the time of the data as the following assuming no latency
   // delivering it to us (not true but close enough for us)
   qint64 now (DriftingDateTime::currentMSecsSinceEpoch ());
-
   unsigned secondInToday ((now % 86400000LL) / 1000);
   return secondInToday % m_period;
 }

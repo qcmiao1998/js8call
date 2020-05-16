@@ -21,8 +21,8 @@ program jt9
 !### ndepth was defined as 60001.  Why???
   integer :: arglen,stat,offset,remain,mode=0,flow=200,fsplit=2700,          &
        fhigh=4000,nrxfreq=1500,ntrperiod=1,ndepth=1,nexp_decode=0
-  logical :: read_files = .true., tx9 = .false., display_help = .false.
-  type (option) :: long_options(21) = [ &
+  logical :: read_files = .true., tx9 = .false., display_help = .false., syncStats = .false.
+  type (option) :: long_options(22) = [ &
     option ('help', .false., 'h', 'Display this help message', ''),          &
     option ('shmem',.true.,'s','Use shared memory for sample data','KEY'),   &
     option ('tr-period', .true., 'p', 'Tx/Rx period, default MINUTES=1',     &
@@ -50,6 +50,7 @@ program jt9
     !option ('jt65', .false., '6', 'JT65 mode', ''),                          &
     !option ('jt9', .false., '9', 'JT9 mode', ''),                            &
     option ('js8', .false., '8', 'JS8 mode', ''),                            &
+    option ('syncStats', .false., 'y', 'Sync only', ''),                            &
     !option ('jt4', .false., '4', 'JT4 mode', ''),                            &
     !option ('qra64', .false., 'q', 'QRA64 mode', ''),                        &
     option ('sub-mode', .true., 'b', 'Sub mode, default SUBMODE=A', 'A'),    &
@@ -118,6 +119,8 @@ program jt9
         !   if (mode.lt.9.or.mode.eq.65) mode = mode + 9
         case ('8')
            mode = 8
+        case ('y')
+           syncStats = .true.
         case ('T')
            tx9 = .true.
         case ('w')
@@ -254,6 +257,7 @@ program jt9
      shared_data%params%ljt65apon=.true.
      shared_data%params%napwid=75
      shared_data%params%dttol=3.
+     shared_data%params%syncStats=syncStats
 
 !     shared_data%params%minsync=0       !### TEST ONLY
 !     shared_data%params%nfqso=1500     !### TEST ONLY
@@ -290,10 +294,12 @@ program jt9
      shared_data%params%kposB=0
      shared_data%params%kposC=0
      shared_data%params%kposE=0
+     shared_data%params%kposI=0
      shared_data%params%kszA=NMAX-1
      shared_data%params%kszB=NMAX-1
      shared_data%params%kszC=NMAX-1
      shared_data%params%kszE=NMAX-1
+     shared_data%params%kszI=NMAX-1
      call multimode_decoder(shared_data%ss,shared_data%id2,shared_data%params,nfsample)
   enddo
 

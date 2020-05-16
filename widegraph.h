@@ -63,10 +63,14 @@ public:
   int    smoothYellow();
   void   setRxBand (QString const& band);
   void   setWSPRtransmitted();
-  void   drawRed(int ia, int ib);
+  void   drawDecodeLine(const QColor &color, int ia, int ib);
+  void   drawHorizontalLine(const QColor &color, int x, int width);
   void   setVHF(bool bVHF);
   void   setRedFile(QString fRed);
   void   setTurbo(bool turbo);
+  bool   shouldDisplayDecodeAttempts();
+  bool   shouldAutoSync();
+  QVector<QColor> const& colors();
 
 signals:
   void freezeDecode2(int n);
@@ -74,6 +78,7 @@ signals:
   void setXIT2(int n);
   void setFreq3(int rxFreq, int txFreq);
   void qsy(int hzDelta);
+  void drifted(int prev, int cur);
 
 public slots:
   void wideFreezeDecode(int n);
@@ -82,8 +87,10 @@ public slots:
   void setControlsVisible(bool visible);
   bool controlsVisible();
   void setDrift(int n);
+  int drift();
   void setQSYEnabled(bool enabled);
   void setPaused(bool paused){ m_paused = paused; }
+  void notifyDriftedSignalsDecoded(int signalsDecoded);
 
 protected:
   void keyPressEvent (QKeyEvent *e) override;
@@ -117,6 +124,7 @@ private slots:
   void on_filterCheckBox_toggled(bool b);
   void on_filterOpacitySpinBox_valueChanged(int n);
 
+  void on_autoDriftButton_toggled(bool checked);
   void on_driftSpinBox_valueChanged(int n);
   void on_driftSyncButton_clicked();
   void on_driftSyncEndButton_clicked();
@@ -157,6 +165,9 @@ private:
   bool   m_bFlatten;
   bool   m_bRef;
   bool   m_bHaveTransmitted;    //Set true at end of a WSPR transmission
+
+  QTimer m_autoSyncTimer;
+  int m_autoSyncTimeLeft;
 
   QTimer m_drawTimer;
   QMutex m_drawLock;

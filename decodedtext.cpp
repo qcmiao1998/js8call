@@ -26,6 +26,7 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
   , isAlt_(false)
   , bits_{0}
   , submode_{ string_.mid(column_mode + padding_, 3).trimmed().at(0).cell() - 'A' }
+  , frame_ { string_.mid (column_qsoText + padding_, 12).trimmed () }
 {
     if(message_.length() >= 1) {
         message_ = message_.left (21).remove (QRegularExpression {"[<>]"});
@@ -71,7 +72,8 @@ DecodedText::DecodedText (QString const& js8callmessage, int bits, int submode):
     isHeartbeat_(false),
     isAlt_(false),
     bits_(bits),
-    submode_(submode)
+    submode_(submode),
+    frame_(js8callmessage)
 {
     is_standard_ = QRegularExpression("^(CQ|DE|QRZ)\\s").match(message_).hasMatch();
 

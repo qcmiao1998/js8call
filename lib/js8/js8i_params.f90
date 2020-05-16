@@ -1,3 +1,4 @@
+parameter (NSUBMODE=8)
 parameter (NCOSTAS=2)                 !Which JS8 Costas Arrays to use (1=original, 2=three symmetrical costas)
 
 parameter (NSPS=384,  NTXDUR=4,  NDOWNSPS=12, NDD=125, JZ=250) ! 250 Hz  31.25 baud 60 wpm -18.0dB (1.0Eb/N0)  2.52s

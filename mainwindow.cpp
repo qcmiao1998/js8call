@@ -810,6 +810,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   connect(m_wideGraph.data(), &WideGraph::qsy, this, &MainWindow::qsy);
 
+  connect(m_wideGraph.data(), &WideGraph::drifted, this, &MainWindow::drifted);
+
   decodeBusy(false);
   QString t1[28]={"1 uW","2 uW","5 uW","10 uW","20 uW","50 uW","100 uW","200 uW","500 uW",
                   "1 mW","2 mW","5 mW","10 mW","20 mW","50 mW","100 mW","200 mW","500 mW",
@@ -2636,36 +2638,73 @@ int MainWindow::computeStop(int submode, int period){
     return stop;
 }
 
-// int MainWindow::computeCurrentCycle(int period){
-//     return m_detector->secondInPeriod() / period;
-// }
-//
-// int MainWindow::computeCycleStartForDecode(int cycle, int period){
-//     qint32 samplesPerCycle = period * RX_SAMPLE_RATE;
-//     return cycle * samplesPerCycle;
-// }
-
+/**
+ * @brief MainWindow::computeCycleForDecode
+ *
+ *          compute which cycle we are currently in based on a submode frames per cycle and our current k position
+ *
+ * @param submode
+ * @param k
+ * @return
+ */
 int MainWindow::computeCycleForDecode(int submode, int k){
-    qint32 maxFrames = m_detector->period() * RX_SAMPLE_RATE;
+    qint32 maxFrames = NTMAX * RX_SAMPLE_RATE;
     qint32 cycleFrames = computeFramesPerCycleForDecode(submode);
     qint32 currentCycle = (k / cycleFrames) % (maxFrames / cycleFrames); // we mod here so we loop back to zero correctly
     return currentCycle;
+}
+
+/**
+ * @brief MainWindow::computeAltCycleForDecode
+ *
+ *          compute an alternate cycle offset by a specific number of frames
+ *
+ *          e.g., if we want the 0 cycle to start at second 5, we'd provide an offset of 5*RX_SAMPLE_RATE
+ *
+ * @param submode
+ * @param k
+ * @param offsetFrames
+ * @return
+ */
+int MainWindow::computeAltCycleForDecode(int submode, int k, int offsetFrames){
+    int altK = k - offsetFrames;
+    if(altK < 0){
+        altK += NTMAX * RX_SAMPLE_RATE;
+    }
+    return computeCycleForDecode(submode, altK);
 }
 
 int MainWindow::computeFramesPerCycleForDecode(int submode){
     return computePeriodForSubmode(submode) * RX_SAMPLE_RATE;
 }
 
-int MainWindow::computeFramesNeededForDecode(int submode){
-    int symbolSamples = 0;
-    float threshold = 0.0;
+int MainWindow::computePeriodStartDelayForDecode(int submode){
+    int delay = 0;
     switch(submode){
-        case Varicode::JS8CallNormal:    symbolSamples = JS8A_SYMBOL_SAMPLES; threshold = JS8A_START_DELAY_MS/1000.0 + 0.5; break;
-        case Varicode::JS8CallFast:      symbolSamples = JS8B_SYMBOL_SAMPLES; threshold = JS8B_START_DELAY_MS/1000.0 + 0.5; break;
-        case Varicode::JS8CallTurbo:     symbolSamples = JS8C_SYMBOL_SAMPLES; threshold = JS8C_START_DELAY_MS/1000.0 + 0.5; break;
-        case Varicode::JS8CallSlow:      symbolSamples = JS8E_SYMBOL_SAMPLES; threshold = JS8E_START_DELAY_MS/1000.0 + 0.5; break;
-        case Varicode::JS8CallUltra:     symbolSamples = JS8I_SYMBOL_SAMPLES; threshold = JS8I_START_DELAY_MS/1000.0 + 0.5; break;
+        case Varicode::JS8CallNormal:    delay = JS8A_START_DELAY_MS; break;
+        case Varicode::JS8CallFast:      delay = JS8B_START_DELAY_MS; break;
+        case Varicode::JS8CallTurbo:     delay = JS8C_START_DELAY_MS; break;
+        case Varicode::JS8CallSlow:      delay = JS8E_START_DELAY_MS; break;
+        case Varicode::JS8CallUltra:     delay = JS8I_START_DELAY_MS; break;
     }
+    return delay;
+}
+
+int MainWindow::computeFramesPerSymbolForDecode(int submode){
+    int symbolSamples = 0;
+    switch(submode){
+        case Varicode::JS8CallNormal:    symbolSamples = JS8A_SYMBOL_SAMPLES; break;
+        case Varicode::JS8CallFast:      symbolSamples = JS8B_SYMBOL_SAMPLES; break;
+        case Varicode::JS8CallTurbo:     symbolSamples = JS8C_SYMBOL_SAMPLES; break;
+        case Varicode::JS8CallSlow:      symbolSamples = JS8E_SYMBOL_SAMPLES; break;
+        case Varicode::JS8CallUltra:     symbolSamples = JS8I_SYMBOL_SAMPLES; break;
+    }
+    return symbolSamples;
+}
+
+int MainWindow::computeFramesNeededForDecode(int submode){
+    float threshold = 0.5 + computePeriodStartDelayForDecode(submode)/1000.0;
+    int symbolSamples = computeFramesPerSymbolForDecode(submode);
     return int(qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)));
 }
 
@@ -2685,6 +2724,8 @@ void MainWindow::dataSink(qint64 frames)
         ja = k;
         k0 = k;
     }
+
+    //qDebug() << "k" << k << "k0" << k0 << "delta" << k-k0;
 
 #if JS8_USE_REFSPEC
     QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("refspec.dat"))};
@@ -4214,10 +4255,19 @@ bool MainWindow::decode(qint32 k){
         return false;
     }
 
-    bool ready = decodeEnqueueReady(k, kZero);
+    bool ready = false;
+
+#if JS8_USE_EXPERIMENTAL_DECODE_TIMING
+    ready = decodeEnqueueReady(k, kZero);
     if(ready || !m_decoderQueue.isEmpty()){
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder is ready to be run with" << m_decoderQueue.count() << "decode periods";
     }
+#else
+    ready = decodeEnqueueReadyExperiment(k, kZero);
+    if(ready || !m_decoderQueue.isEmpty()){
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder is ready to be run with" << m_decoderQueue.count() << "decode periods";
+    }
+#endif
 
     //
     // TODO: what follows can likely be pulled out to an async process
@@ -4229,6 +4279,11 @@ bool MainWindow::decode(qint32 k){
         // but, that just caused problems with missing decodes, so we only pause if we are actually
         // actively transmitting.
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused during transmit";
+        return false;
+    }
+
+    if(m_decoderBusyStartTime.isValid() && m_decoderBusyStartTime.msecsTo(QDateTime::currentDateTimeUtc()) < 1000){
+        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder paused for 1000 ms after last decode start";
         return false;
     }
 
@@ -4265,14 +4320,41 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     // compute the next decode for each submode
     // enqueue those decodes that are "ready"
     // on an interval, issue a decode
+    int decodes = 0;
 
-    static qint32 currentDecodeStartA = -1;
-    static qint32 nextDecodeStartA = -1;
+    bool couldDecodeA = false;
     qint32 startA = -1;
     qint32 szA = -1;
     qint32 cycleA = -1;
+
+    bool couldDecodeB = false;
+    qint32 startB = -1;
+    qint32 szB = -1;
+    qint32 cycleB = -1;
+
+    bool couldDecodeC = false;
+    qint32 startC = -1;
+    qint32 szC = -1;
+    qint32 cycleC = -1;
+
+#if JS8_ENABLE_JS8E
+    bool couldDecodeE = false;
+    qint32 startE = -1;
+    qint32 szE = -1;
+    qint32 cycleE = -1;
+#endif
+
+#if JS8_ENABLE_JS8I
+    bool couldDecodeI = false;
+    qint32 startI = -1;
+    qint32 szI = -1;
+    qint32 cycleI = -1;
+#endif
+
+    static qint32 currentDecodeStartA = -1;
+    static qint32 nextDecodeStartA = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? NORMAL   " << currentDecodeStartA << nextDecodeStartA;
-    bool couldDecodeA = isDecodeReady(Varicode::JS8CallNormal, k, k0, &currentDecodeStartA, &nextDecodeStartA, &startA, &szA, &cycleA);
+    couldDecodeA = isDecodeReady(Varicode::JS8CallNormal, k, k0, &currentDecodeStartA, &nextDecodeStartA, &startA, &szA, &cycleA);
     if(m_diskData){
         startA = 0;
         szA = NTMAX*RX_SAMPLE_RATE-1;
@@ -4281,11 +4363,8 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
 
     static qint32 currentDecodeStartB = -1;
     static qint32 nextDecodeStartB = -1;
-    qint32 startB = -1;
-    qint32 szB = -1;
-    qint32 cycleB = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? FAST     " << currentDecodeStartB << nextDecodeStartB;
-    bool couldDecodeB = isDecodeReady(Varicode::JS8CallFast, k, k0, &currentDecodeStartB, &nextDecodeStartB, &startB, &szB, &cycleB);
+    couldDecodeB = isDecodeReady(Varicode::JS8CallFast, k, k0, &currentDecodeStartB, &nextDecodeStartB, &startB, &szB, &cycleB);
     if(m_diskData){
         startB = 0;
         szB = NTMAX*RX_SAMPLE_RATE-1;
@@ -4294,11 +4373,8 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
 
     static qint32 currentDecodeStartC = -1;
     static qint32 nextDecodeStartC = -1;
-    qint32 startC = -1;
-    qint32 szC = -1;
-    qint32 cycleC = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? TURBO    " << currentDecodeStartC << nextDecodeStartC;
-    bool couldDecodeC = isDecodeReady(Varicode::JS8CallTurbo, k, k0, &currentDecodeStartC, &nextDecodeStartC, &startC, &szC, &cycleC);
+    couldDecodeC = isDecodeReady(Varicode::JS8CallTurbo, k, k0, &currentDecodeStartC, &nextDecodeStartC, &startC, &szC, &cycleC);
     if(m_diskData){
         startC = 0;
         szC = NTMAX*RX_SAMPLE_RATE-1;
@@ -4308,11 +4384,8 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
 #if JS8_ENABLE_JS8E
     static qint32 currentDecodeStartE = -1;
     static qint32 nextDecodeStartE = -1;
-    qint32 startE = -1;
-    qint32 szE = -1;
-    qint32 cycleE = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? SLOW     " << currentDecodeStartE << nextDecodeStartE;
-    bool couldDecodeE = isDecodeReady(Varicode::JS8CallSlow, k, k0, &currentDecodeStartE, &nextDecodeStartE, &startE, &szE, &cycleE);
+    couldDecodeE = isDecodeReady(Varicode::JS8CallSlow, k, k0, &currentDecodeStartE, &nextDecodeStartE, &startE, &szE, &cycleE);
     if(m_diskData){
         startE = 0;
         szE = NTMAX*RX_SAMPLE_RATE-1;
@@ -4323,11 +4396,8 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
 #if JS8_ENABLE_JS8I
     static qint32 currentDecodeStartI = -1;
     static qint32 nextDecodeStartI = -1;
-    qint32 startI = -1;
-    qint32 szI = -1;
-    qint32 cycleI = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? ULTRA    " << currentDecodeStartI << nextDecodeStartI;
-    bool couldDecodeI = isDecodeReady(Varicode::JS8CallUltra, k, k0, &currentDecodeStartI, &nextDecodeStartI, &startI, &szI, &cycleI);
+    couldDecodeI = isDecodeReady(Varicode::JS8CallUltra, k, k0, &currentDecodeStartI, &nextDecodeStartI, &startI, &szI, &cycleI);
     if(m_diskData){
         startI = 0;
         szI = NTMAX*RX_SAMPLE_RATE-1;
@@ -4335,12 +4405,9 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     }
 #endif
 
-    int decodes = 0;
-
     if(couldDecodeA){
         DecodeParams d;
         d.submode = Varicode::JS8CallNormal;
-        d.cycle = cycleA;
         d.start = startA;
         d.sz = szA;
         m_decoderQueue.append(d);
@@ -4350,7 +4417,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     if(couldDecodeB){
         DecodeParams d;
         d.submode = Varicode::JS8CallFast;
-        d.cycle = cycleB;
         d.start = startB;
         d.sz = szB;
         m_decoderQueue.append(d);
@@ -4360,7 +4426,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     if(couldDecodeC){
         DecodeParams d;
         d.submode = Varicode::JS8CallTurbo;
-        d.cycle = cycleC;
         d.start = startC;
         d.sz = szC;
         m_decoderQueue.append(d);
@@ -4371,7 +4436,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     if(couldDecodeE){
         DecodeParams d;
         d.submode = Varicode::JS8CallSlow;
-        d.cycle = cycleE;
         d.start = startE;
         d.sz = szE;
         m_decoderQueue.append(d);
@@ -4383,7 +4447,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     if(couldDecodeI){
         DecodeParams d;
         d.submode = Varicode::JS8CallUltra;
-        d.cycle = cycleI;
         d.start = startI;
         d.sz = szI;
         m_decoderQueue.append(d);
@@ -4393,6 +4456,311 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
 
     return decodes > 0;
 }
+
+/**
+ * @brief MainWindow::decodeEnqueueReadyExperiment
+ *        compute the available decoder ranges that can be processed and
+ *        place them in the decode queue
+ *
+ *        experiment with decoding on a much shorter interval than usual
+ *
+ * @param k - the current frame count
+ * @param k0 - the previous frame count
+ * @return true if decoder ranges were queued, false otherwise
+ */
+bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
+    // TODO: make this non-static field of MainWindow?
+    // map of last decode positions for each submode
+    // static QMap<qint32, qint32> m_lastDecodeStartMap;
+
+    // TODO: make this non-static field of MainWindow?
+    // map of submodes to decode + optional alternate decode positions
+    static QMap<qint32, QList<qint32>> submodes = {
+        {Varicode::JS8CallSlow,   {0}},
+        {Varicode::JS8CallNormal, {0}},
+        {Varicode::JS8CallFast,   {0, 5}},
+        {Varicode::JS8CallTurbo,  {0, 3}},
+    };
+
+    static qint32 maxSamples = NTMAX*RX_SAMPLE_RATE;
+    static qint32 oneSecondSamples = RX_SAMPLE_RATE;
+
+    int decodes = 0;
+
+    // do we have a better way to check this?
+    bool multi = ui->actionModeMultiDecoder->isChecked();
+
+    // do we have a better way to check this?
+    bool everySecond = m_wideGraph->shouldAutoSync();
+
+    // do we need to process alternate positions?
+    bool skipAlt = false;
+
+    foreach(auto submode, submodes.keys()){
+        // skip if multi is disabled and this mode is not the current submode
+        if(!multi && submode != m_nSubMode){
+            continue;
+        }
+
+        // check all alternate decode positions
+        foreach(auto alt, submodes.value(submode)){
+            // skip alts if we are decoding every second
+            if(everySecond && alt != 0){
+                continue;
+            }
+
+            // skip alt decode positions if needed
+            if(skipAlt && alt != 0){
+                continue;
+            }
+
+            qint32 cycle = computeAltCycleForDecode(submode, k, alt*oneSecondSamples);
+            qint32 cycleFrames = computeFramesPerCycleForDecode(submode);
+            qint32 cycleFramesNeeded = computeFramesPerSymbolForDecode(submode)*JS8_NUM_SYMBOLS; //computeFramesNeededForDecode(submode) - oneSecondSamples;
+            qint32 cycleFramesReady = k - (cycle * cycleFrames);
+
+            if(!m_lastDecodeStartMap.contains(submode)){
+                m_lastDecodeStartMap[submode] = cycle * cycleFrames;
+            }
+
+            qint32 lastDecodeStart = m_lastDecodeStartMap[submode];
+            qint32 incrementedBy = k - lastDecodeStart;
+            if(k < lastDecodeStart){
+                incrementedBy = maxSamples - lastDecodeStart + k;
+            }
+
+            if(JS8_DEBUG_DECODE) qDebug() << submodeName(submode) << "alt" << alt << "cycle" << cycle << "cycle frames" << cycleFrames << "cycle start" << cycle*cycleFrames << "cycle end" << (cycle+1)*cycleFrames << "k" << k << "frames ready" << cycleFramesReady << "incremeted by" << incrementedBy;
+
+            if(everySecond && incrementedBy >= oneSecondSamples){
+                DecodeParams d;
+                d.submode = submode;
+                d.sz = cycleFrames;
+                d.start = k - d.sz;
+                if(d.start < 0){
+                    d.start += maxSamples;
+                }
+                m_decoderQueue.append(d);
+                decodes++;
+
+                // keep track of last decode position
+                m_lastDecodeStartMap[submode] = k;
+            }
+            else if(
+                (incrementedBy >= 2*oneSecondSamples && cycleFramesReady >= cycleFramesNeeded ) ||
+                (incrementedBy >= oneSecondSamples && cycleFramesReady < 1.25*oneSecondSamples)
+            ){
+                DecodeParams d;
+                d.submode = submode;
+                d.start = cycle*cycleFrames;
+                d.sz = cycleFramesReady;
+                m_decoderQueue.append(d);
+                decodes++;
+
+                // keep track of last decode position
+                m_lastDecodeStartMap[submode] = k;
+            }
+        }
+    }
+
+    return decodes > 0;
+}
+
+#if 0
+    static qint32 lastDecodeStartK = -1;
+
+    //if(lastDecodeStartK == -1){
+    //    qint32 cycleStartK = computeCycleForDecode(Varicode::JS8CallNormal, k) * computeFramesPerCycleForDecode(Varicode::JS8CallNormal);
+    //    qint32 secondStartK = ((k - cycleStartK) / RX_SAMPLE_RATE) * RX_SAMPLE_RATE;
+    //    lastDecodeStartK = secondStartK;
+    //}
+
+    static qint32 lastDecodeStartSec = -1;
+
+    int decodes = 0;
+    qint32 startA = 0;
+    qint32 szA = 0;
+    qint32 maxSamples = NTMAX*RX_SAMPLE_RATE;
+    qint32 oneSecondSamples = RX_SAMPLE_RATE;
+
+    // compute how much we've incremented since the last decode ready event
+    qint32 incrementedBy = k - lastDecodeStartK;
+    if(k < lastDecodeStartK){
+        incrementedBy = maxSamples - lastDecodeStartK + k;
+    }
+
+    // if we've advanced in time enough since the last decode
+    int thisSec = DriftingDateTime::currentDateTimeUtc().time().second();
+    if(incrementedBy >= oneSecondSamples){ // && lastDecodeStartSec != thisSec){
+        qDebug() << "ready to detect decode" << incrementedBy;
+
+        QList<int> submodes = {
+            //Varicode::JS8CallSlow,
+            Varicode::JS8CallNormal,
+            //Varicode::JS8CallFast,
+            //Varicode::JS8CallTurbo
+        };
+        foreach(auto submode, submodes){
+
+            // start at now and subtract the frames in one cycle...
+            // for normal mode this allows us to look through the last 15 seconds of data
+            // + the amount that we've just incremented (say if we were caught in a decode)
+            // to search for decodable signals... and we do this _every_ second!
+            // szA = computeFramesPerCycleForDecode(submode) + incrementedBy;
+            szA = computeFramesNeededForDecode(submode);
+            startA = k - szA;
+
+            // when the start position is negative, we need to start at the end of the
+            // buffer and wrap around. the decoder knows how to do the wrap around, so
+            // all we need to do is
+            if(startA < 0){
+                startA += maxSamples;
+            }
+
+            // create the decode params and queue it
+            DecodeParams d;
+            d.submode = submode;
+            d.start = startA;
+            d.sz = szA;
+            m_decoderQueue.append(d);
+            decodes++;
+        }
+
+        // the decoder is going to look +/- multiple seconds... so this may partial decode
+        // up to a few seconds in the future...meaning if we're doing this every second
+        // we may actually decode this same signal 2-3 more times... but we have a
+        // message decode dedupe that should prevent any issues with dupes out of the
+        // decoder when this happens.
+        lastDecodeStartK = k;
+        lastDecodeStartSec = thisSec;
+
+        // TODO: remove this after testing
+        m_wideGraph->drawHorizontalLine(QColor(Qt::yellow), 0, 25);
+    }
+
+    return decodes > 0;
+
+#if 0
+    // when no other mode is being decoded, do a sync stats decode for normal mode
+    bool experiment = true;
+
+    if(experiment){
+        static qint32 lastDecodeStartA = 0;
+
+        qint32 maxSamples = m_detector->period()*RX_SAMPLE_RATE;
+        qint32 oneSecondSamples = RX_SAMPLE_RATE;
+
+        // when we've incremented at least one second into the future
+        qint32 incrementedBy = k - lastDecodeStartA;
+        if(k < lastDecodeStartA){
+            incrementedBy = maxSamples - lastDecodeStartA + k;
+        }
+
+        if(incrementedBy >= oneSecondSamples){
+            // we've incremented at least one second, so look backwards
+
+
+            //startA = lastDecodeStartA + oneSecondSamples;
+            //szA = computeFramesNeededForDecode(Varicode::JS8CallNormal) + oneSecondSamples;
+            //lastDecodeStartA +=
+            // startA = k - incrementedBy - computeFramesNeededForDecode(Varicode::JS8CallNormal);
+            // if(startA < 0){
+            //     startA += maxSamples;
+            // }
+            //
+            // szA = incrementedBy + computeFramesNeededForDecode(Varicode::JS8CallNormal);
+            //
+            // qDebug() << "A: start:" << startA << "sz:" << szA << "stop:" << startA + szA;
+            //
+            // lastDecodeStartA = k;
+            // couldDecodeA = true;
+        }
+
+        //qint32 oneSecondFramesA = computeFramesPerCycleForDecode(Varicode::JS8CallNormal)/computePeriodForSubmode(Varicode::JS8CallNormal);
+        //if(lastDecodeStartA == -1 || k < k0 || k - lastDecodeStartA > oneSecondFramesA){
+        //    startA = k-computeFramesNeededForDecode(Varicode::JS8CallNormal);
+        //
+        //    if(startA < 0){
+        //        // decoder wraps around ranges
+        //        startA += m_detector->period() * RX_SAMPLE_RATE;
+        //    }
+        //
+        //    szA = computeFramesNeededForDecode(Varicode::JS8CallNormal);
+        //    lastDecodeStartA = k;
+        //    couldDecodeA = true;
+        //}
+
+        couldDecodeB = couldDecodeC = couldDecodeE = false;
+
+#if 0
+        static qint32 lastDecodeStartB = -1;
+        qint32 oneSecondFramesB = computeFramesPerCycleForDecode(Varicode::JS8CallFast)/computePeriodForSubmode(Varicode::JS8CallFast);
+        if(lastDecodeStartB == -1 || k < k0 || k - lastDecodeStartB > oneSecondFramesB){
+            startB = k-computeFramesNeededForDecode(Varicode::JS8CallFast);
+
+            if(startB < 0){
+                // decoder wraps around ranges
+                startB += m_detector->period() * RX_SAMPLE_RATE;
+            }
+
+            szB = computeFramesNeededForDecode(Varicode::JS8CallFast);
+            lastDecodeStartB = k;
+            couldDecodeB = true;
+        }
+
+        static qint32 lastDecodeStartC = -1;
+        qint32 oneSecondFramesC = computeFramesPerCycleForDecode(Varicode::JS8CallTurbo)/computePeriodForSubmode(Varicode::JS8CallTurbo);
+        if(lastDecodeStartC == -1 || k < k0 || k - lastDecodeStartC > oneSecondFramesC){
+            startC = k-computeFramesNeededForDecode(Varicode::JS8CallTurbo);
+
+            if(startC < 0){
+                // decoder wraps around ranges
+                startC += m_detector->period() * RX_SAMPLE_RATE;
+            }
+
+            szC = computeFramesNeededForDecode(Varicode::JS8CallTurbo);
+            lastDecodeStartC = k;
+            couldDecodeC = true;
+        }
+
+#if JS8_ENABLE_JS8E
+        static qint32 lastDecodeStartE = -1;
+        qint32 oneSecondFramesE = computeFramesPerCycleForDecode(Varicode::JS8CallSlow)/computePeriodForSubmode(Varicode::JS8CallSlow);
+        if(lastDecodeStartE == -1 || k < k0 || k - lastDecodeStartE > oneSecondFramesE){
+            startE = k-computeFramesNeededForDecode(Varicode::JS8CallSlow);
+
+            if(startE < 0){
+                // decoder wraps around ranges
+                startE += m_detector->period() * RX_SAMPLE_RATE;
+            }
+
+            szE = computeFramesNeededForDecode(Varicode::JS8CallSlow);
+            lastDecodeStartE = k;
+            couldDecodeE = true;
+        }
+#endif
+
+#if JS8_ENABLE_JS8I
+        static qint32 lastDecodeStartI = -1;
+        qint32 oneSecondFramesI = computeFramesPerCycleForDecode(Varicode::JS8CallUltra)/computePeriodForSubmode(Varicode::JS8CallUltra);
+        if(lastDecodeStartI == -1 || k < k0 || k - lastDecodeStartI > oneSecondFramesI){
+            startI = k-computeFramesNeededForDecode(Varicode::JS8CallUltra);
+
+            if(startI < 0){
+                // decoder wraps around ranges
+                startI += m_detector->period() * RX_SAMPLE_RATE;
+            }
+
+            szI = computeFramesNeededForDecode(Varicode::JS8CallUltra);
+            lastDecodeStartI = k;
+            couldDecodeI = true;
+        }
+#endif
+#endif
+    }
+#endif
+
+}
+#endif
 
 /**
  * @brief MainWindow::decodeProcessQueue
@@ -4406,7 +4774,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     QMutexLocker mutex(m_detector->getMutex());
 
     if(m_decoderBusy){
-        int seconds = m_decoderBusyStartTime.secsTo(DriftingDateTime::currentDateTimeUtc());
+        int seconds = m_decoderBusyStartTime.secsTo(QDateTime::currentDateTimeUtc());
         if(seconds > 60){
             if(JS8_DEBUG_DECODE) qDebug() << "--> decoder should be killed!" << QString("(%1 seconds)").arg(seconds);
         } else if(seconds > 30){
@@ -4436,6 +4804,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder skipping at least 1 decode cycle" << "count" << count << "max" << maxDecodes;
     }
 
+    // default to no submodes being decoded, then bitwise OR the modes together to decode them all at once
     dec_data.params.nsubmodes = 0;
 
     while(!m_decoderQueue.isEmpty()){
@@ -4494,6 +4863,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
     int period = computePeriodForSubmode(submode);
 
+    dec_data.params.syncStats = (m_wideGraph->shouldDisplayDecodeAttempts() || m_wideGraph->shouldAutoSync());
     dec_data.params.npts8=(m_ihsym*m_nsps)/16;
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
@@ -4673,7 +5043,7 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
   m_decoderBusy=b;
   if(m_decoderBusy){
     tx_status_label.setText("Decoding");
-    m_decoderBusyStartTime = DriftingDateTime::currentDateTimeUtc();
+    m_decoderBusyStartTime = QDateTime::currentDateTimeUtc(); //DriftingDateTime::currentDateTimeUtc();
     m_decoderBusyFreq = dialFrequency();
     m_decoderBusyBand = m_config.bands()->find (m_decoderBusyFreq);
   }
@@ -4699,7 +5069,16 @@ void MainWindow::decodeDone ()
   m_nclearave=0;
   m_RxLog=0;
   m_blankLine=true;
-  m_messageDupeCache.clear();
+
+  // cleanup old cached messages (messages > submode period old)
+  for (auto it = m_messageDupeCache.begin(); it != m_messageDupeCache.end();){
+      auto cached = it.value();
+      if (cached.date.secsTo(QDateTime::currentDateTimeUtc()) > computePeriodForSubmode(cached.submode)){
+          it = m_messageDupeCache.erase(it);
+      } else {
+          ++it;
+      }
+  }
 
   decodeBusy(false);
 }
@@ -4750,7 +5129,7 @@ void MainWindow::decodeCheckHangingDecoder(){
         return;
     }
 
-    if(!m_decoderBusyStartTime.isValid() || m_decoderBusyStartTime.secsTo(DriftingDateTime::currentDateTimeUtc()) < 60){
+    if(!m_decoderBusyStartTime.isValid() || m_decoderBusyStartTime.secsTo(QDateTime::currentDateTimeUtc()) < 60){
         return;
     }
 
@@ -4836,22 +5215,186 @@ void MainWindow::readFromStdout(QProcess * proc)                             //r
 }
 
 void MainWindow::processDecodedLine(QByteArray t){
-  qDebug() << "JS8: " << QString(t);
+  if(JS8_DEBUG_DECODE) qDebug() << "JS8: " << QString(t);
 
   bool bAvgMsg=false;
   int navg=0;
-  if(t.indexOf("<DecodeDebug>") >= 0) {
-    if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
-    return;
+
+  static QList<int> driftQueue;
+
+  static qint32 syncStart = -1;
+  if(t.indexOf("<DecodeSyncMeta> sync start") >= 0){
+      auto segs =  QString(t.trimmed()).split(QRegExp("[\\s\\t]+"), QString::SkipEmptyParts);
+      if(segs.isEmpty()){
+          return;
+      }
+
+      auto spos = segs.at(3);
+      syncStart = spos.toInt();
+      return;
+  }
+
+  if(t.indexOf("<DecodeSyncStat>") >= 0) {
+      auto segs =  QString(t.trimmed()).split(QRegExp("[\\s\\t]+"), QString::SkipEmptyParts);
+      if(segs.isEmpty()){
+          return;
+      }
+
+      // only continue if we should either display decode attempts or if we should try to auto sync
+      if(!m_wideGraph->shouldDisplayDecodeAttempts() && !m_wideGraph->shouldAutoSync()){
+          return;
+      }
+
+      auto m1 = QString(segs.at(2));
+      auto m = int(m1.toInt());
+
+      auto f1 = QString(segs.at(4));
+      auto f = int(f1.toFloat());
+
+      auto s1 = QString(segs.at(6));
+      auto s = int(s1.toFloat());
+
+      auto xdt1 = QString(segs.at(8));
+      auto xdt = xdt1.toFloat();
+      auto xdtMs = int(xdt*1000);
+
+      // draw candidates
+      if(abs(xdtMs) <= 2000){
+          if(s < 10){
+            m_wideGraph->drawDecodeLine(QColor(Qt::darkCyan), f, f + computeBandwidthForSubmode(m));
+          } else if (s <= 15){
+            m_wideGraph->drawDecodeLine(QColor(Qt::cyan), f, f + computeBandwidthForSubmode(m));
+          } else if (s <= 21){
+            m_wideGraph->drawDecodeLine(QColor(Qt::white), f, f + computeBandwidthForSubmode(m));
+          }
+      }
+
+      if(!t.contains("decode")){
+          return;
+      }
+
+      // draw decodes
+      m_wideGraph->drawDecodeLine(QColor(Qt::red), f, f + computeBandwidthForSubmode(m));
+
+      // compute time drift if needed
+      if(!m_wideGraph->shouldAutoSync()){
+          return;
+      }
+
+      // TODO: can we do this for FAST & TURBO
+      // if fast/turbo is observed and we're in a period post 15 seconds (i.e., second 18 turbo decode)
+      // then make the drift relative to the first cycle instead
+      if(m != Varicode::JS8CallNormal && m != Varicode::JS8CallSlow){
+          return;
+      }
+
+      // if we're here at this point, we _should_ be operating a decode every second
+      //
+      // so we need to figure out where:
+      //
+      //   1) this current decode started
+      //   2) when that cycle _should_ have started
+      //   3) compute the delta
+      //   4) apply the drift
+
+      int periodMs = 1000 * computePeriodForSubmode(m);
+
+      //writeNoticeTextToUI(now, QString("Decode at %1 (kin: %2, lastDecoded: %3)").arg(syncStart).arg(dec_data.params.kin).arg(m_lastDecodeStartMap.value(m)));
+
+      float expectedStartDelay = computePeriodStartDelayForDecode(m)/1000.0;
+
+      float decodedSignalTime = (float)syncStart/(float)RX_SAMPLE_RATE;
+
+      //writeNoticeTextToUI(now, QString("--> started at %1 seconds into the start of my drifted minute").arg(decodedSignalTime));
+
+      //writeNoticeTextToUI(now, QString("--> we add a time delta of %1 seconds into the start of the cycle").arg(xdt));
+
+      // adjust for expected start delay
+      decodedSignalTime -= expectedStartDelay;
+
+      // adjust for time delta
+      decodedSignalTime += xdt;
+
+      // ensure that we are within a 60 second minute
+      if(decodedSignalTime < 0){
+          decodedSignalTime += 60.0;
+      } else if(decodedSignalTime > 60){
+          decodedSignalTime -= 60.0;
+      }
+
+      //writeNoticeTextToUI(now, QString("--> so signal adjusted started at %1 seconds into the start of my drifted minute").arg(decodedSignalTime));
+
+      int decodedSignalTimeMs = 1000 * decodedSignalTime;
+      int cycleStartTimeMs = (decodedSignalTimeMs / periodMs) * periodMs;
+      int driftMs = cycleStartTimeMs - decodedSignalTimeMs;
+
+      //writeNoticeTextToUI(now, QString("--> which is a drift adjustment of %1 milliseconds").arg(driftMs));
+
+      // if we have a large negative offset (say -14000), use the positive inverse of +1000
+      if(driftMs + periodMs < qAbs(driftMs)){
+          driftMs += periodMs;
+      }
+      // if we have a large positive offset (say 14000, use the negative inverse of -1000)
+      else if(qAbs(driftMs - periodMs) < driftMs){
+          driftMs -= periodMs;
+      }
+
+      //writeNoticeTextToUI(now, QString("--> which is a corrected drift adjustment of %1 milliseconds").arg(driftMs));
+
+      int newDrift = DriftingDateTime::drift() + driftMs;
+      if(newDrift < 0){
+          newDrift %= -periodMs;
+      } else {
+          newDrift %= periodMs;
+      }
+
+      //writeNoticeTextToUI(now, QString("--> which is rounded to a total drift of %1 milliseconds for this period").arg(newDrift));
+
+      driftQueue.append(newDrift);
+
+      if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
+
+      return;
   }
 
   if(t.indexOf("<DecodeStarted>") >= 0) {
-    if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
-    return;
+      if(m_wideGraph->shouldDisplayDecodeAttempts()){
+          m_wideGraph->drawHorizontalLine(QColor(Qt::yellow), 0, 5);
+      }
+
+      if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
+      return;
+  }
+
+  if(t.indexOf("<DecodeDebug>") >= 0) {
+      return;
   }
 
   if(t.indexOf("<DecodeFinished>") >= 0) {
-    if(m_mode=="QRA64") m_wideGraph->drawRed(0,0);
+    int msec = m_decoderBusyStartTime.msecsTo(QDateTime::currentDateTimeUtc());
+    if(JS8_DEBUG_DECODE) qDebug() << "decode duration" << msec << "ms";
+
+    if(!driftQueue.isEmpty()){
+        static int driftN = 1;
+        static int driftAvg = DriftingDateTime::drift();
+
+        // let the widegraph know for timing control
+        m_wideGraph->notifyDriftedSignalsDecoded(driftQueue.count());
+
+        while(!driftQueue.isEmpty()){
+            int newDrift = driftQueue.first();
+            driftQueue.removeFirst();
+
+            driftAvg = ((driftN-1)*driftAvg + newDrift)/driftN;
+            if(driftN < 60) driftN++; // cap it to 60 observations
+        }
+
+        setDrift(driftAvg);
+
+
+        //writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Automatic Drift: %1").arg(driftAvg));
+    }
+
     m_bDecoded = t.mid(16).trimmed().toInt() > 0;
     int mswait=3*1000*m_TRperiod/4;
     if(!m_diskData) killFileTimer.start(mswait); //Kill in 3/4 period
@@ -4879,25 +5422,37 @@ void MainWindow::processDecodedLine(QByteArray t){
   }
 
   auto rawText = QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"});
+
   DecodedText decodedtext {rawText, "FT8" == m_mode &&
         ui->cbVHFcontest->isChecked(), m_config.my_grid ()};
 
-  bool bValidFrame = decodedtext.snr() >= rxSnrThreshold(decodedtext.submode());
 
-  // dupe check
-  auto frame = decodedtext.message();
+  // frames are also valid if they pass our dupe check (haven't seen the same frame in the past 1/2 decode period)
   auto frameOffset = decodedtext.frequencyOffset();
-  if(m_messageDupeCache.contains(frame)){
-      // check to see if the frequency is near our previous frame
-      auto cachedFreq = m_messageDupeCache.value(frame, 0);
-      if(qAbs(cachedFreq - frameOffset) <= rxThreshold(decodedtext.submode())){
-        qDebug() << "duplicate frame from" << cachedFreq << "and" << frameOffset;
-        bValidFrame = false;
+  auto frameDedupeKey = QString("%1:%2").arg(decodedtext.submode()).arg(decodedtext.frame());
+  if(m_messageDupeCache.contains(frameDedupeKey)){
+      auto cached = m_messageDupeCache.value(frameDedupeKey);
+
+      // check to see if the time since last seen is > 1/2 decode period
+      auto cachedDate = cached.date;
+      if(cachedDate.secsTo(QDateTime::currentDateTimeUtc()) < 0.5*computePeriodForSubmode(decodedtext.submode())){
+          qDebug() << "duplicate frame at" << cachedDate << "using key" << frameDedupeKey;
+          return;
       }
-  } else {
-      // cache for this decode cycle
-      m_messageDupeCache[frame] = frameOffset;
+
+      // check to see if the frequency is near our previous frame
+      auto cachedFreq = cached.freq;
+      if(qAbs(cachedFreq - frameOffset) <= rxThreshold(decodedtext.submode())){
+        qDebug() << "duplicate frame from" << cachedFreq << "and" << frameOffset << "using key" << frameDedupeKey;
+        return;
+      }
+
+      // huzzah!
+      // if we make it here, the cache is invalid and will be bumped when we cache the new frame below
   }
+
+  // frames are valid if they meet our minimum rx threshold for the submode
+  bool bValidFrame = decodedtext.snr() >= rxSnrThreshold(decodedtext.submode());
 
   qDebug() << "valid" << bValidFrame << submodeName(decodedtext.submode()) << "decoded text" << decodedtext.message();
 
@@ -4905,6 +5460,9 @@ void MainWindow::processDecodedLine(QByteArray t){
   if(!bValidFrame) {
       return;
   }
+
+  // if the frame is valid, cache it!
+  m_messageDupeCache[frameDedupeKey] = {QDateTime::currentDateTimeUtc(), decodedtext.submode(), frameOffset};
 
   // log valid frames to ALL.txt (and correct their timestamp format)
   auto freq = dialFrequency();
@@ -4954,7 +5512,7 @@ void MainWindow::processDecodedLine(QByteArray t){
     d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
     d.snr = decodedtext.snr();
     d.isBuffered = false;
-    d.tdrift = decodedtext.dt();
+    d.tdrift = m_wideGraph->shouldAutoSync() ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
     d.submode = decodedtext.submode();
 
     // if we have any "first" frame, and a buffer is already established, clear it...
@@ -4992,7 +5550,7 @@ void MainWindow::processDecodedLine(QByteArray t){
     cd.offset = decodedtext.frequencyOffset();
     cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
     cd.bits = decodedtext.bits();
-    cd.tdrift = decodedtext.dt();
+    cd.tdrift = m_wideGraph->shouldAutoSync() ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
     cd.submode = decodedtext.submode();
 
     // Only respond to HEARTBEATS...remember that CQ messages are "Alt" pings
@@ -5071,7 +5629,7 @@ void MainWindow::processDecodedLine(QByteArray t){
       cmd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
       cmd.bits = decodedtext.bits();
       cmd.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
-      cmd.tdrift = decodedtext.dt();
+      cmd.tdrift = m_wideGraph->shouldAutoSync() ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
       cmd.submode = decodedtext.submode();
 
       // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
@@ -5900,7 +6458,7 @@ void MainWindow::guiUpdate()
     auto drift = DriftingDateTime::drift();
     QDateTime t = DriftingDateTime::currentDateTimeUtc();
     QStringList parts;
-    parts << (t.time().toString() + (!drift ? " " : QString(" (%1%2ms)").arg(drift > 0 ? "+" : "").arg(drift)));
+    parts << (t.time().toString() + (!drift ? " " : QString(" (%1%2ms%3)").arg(drift > 0 ? "+" : "").arg(drift).arg(m_wideGraph->shouldAutoSync() ? " auto" : "")));
     parts << t.date().toString("yyyy MMM dd");
     ui->labUTC->setText(parts.join("\n"));
 
@@ -7803,19 +8361,11 @@ void MainWindow::on_actionJS8_triggered()
   if(m_isWideGraphMDI) m_wideGraph->show();
   ui->decodedTextLabel2->setText("  UTC   dB   DT Freq    Message");
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
-#if JS8_RING_BUFFER
+
   Q_ASSERT(NTMAX == 60);
   m_wideGraph->setPeriod(m_TRperiod, m_nsps);
-#if JS8_ENABLE_JS8E && !JS8E_IS_ULTRA
   m_detector->setTRPeriod(NTMAX); // TODO - not thread safe
-#else
-  m_detector->setTRPeriod(NTMAX / 2); // TODO - not thread safe
-#endif
 
-#else
-  m_wideGraph->setPeriod(m_TRperiod, m_nsps);
-  m_detector->setTRPeriod(m_TRperiod); // TODO - not thread safe
-#endif
   ui->label_7->setText("Rx Frequency");
   if(m_config.bFox()) {
     ui->label_6->setText("Stations calling DXpedition " + m_config.my_callsign());
@@ -9623,6 +10173,12 @@ void MainWindow::qsy(int hzDelta){
     displayActivity(true);
 }
 
+void MainWindow::drifted(int /*prev*/, int /*cur*/){
+    // here we reset the buffer position without clearing the buffer
+    // this makes the detected emit the correct k when drifting time
+    m_detector->resetBufferPosition();
+}
+
 void MainWindow::setFreqOffsetForRestore(int freq, bool shouldRestore){
     setFreq4(freq, freq);
     if(shouldRestore){
@@ -10137,6 +10693,7 @@ void MainWindow::updateModeButtonText(){
             modeText += QString("+HB");
         }
     }
+
     ui->modeButton->setText(modeText);
 }
 

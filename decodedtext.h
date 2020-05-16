@@ -41,6 +41,7 @@ public:
   bool tryUnpackFastData();
 
   quint8 frameType() const { return frameType_; }
+  QString frame() const { return frame_; }
 
   QString extra() const { return extra_; }
   QString compoundCall() const { return compound_; }
@@ -113,6 +114,7 @@ private:
   bool is_standard_;
   int bits_;
   int submode_;
+  QString frame_;
 };
 
 #endif // DECODEDTEXT_H

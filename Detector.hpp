@@ -35,6 +35,9 @@ public:
   Q_SLOT void setBlockSize (unsigned);
 
   void clear ();		// discard buffer contents
+  void resetBufferPosition();
+  void resetBufferContent();
+
   unsigned secondInPeriod () const;
 
 protected:

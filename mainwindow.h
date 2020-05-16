@@ -132,6 +132,7 @@ public slots:
   void readFromStdout(QProcess * proc);
   void setXIT(int n, Frequency base = 0u);
   void qsy(int hzDelta);
+  void drifted(int prev, int cur);
   void setFreqOffsetForRestore(int freq, bool shouldRestore);
   bool tryRestoreFreqOffset();
   void setFreq4(int rxFreq, int txFreq);
@@ -244,6 +245,7 @@ private slots:
   bool decode(qint32 k);
   bool isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurrentDecodeStart, qint32 *pNextDecodeStart, qint32 *pStart, qint32 *pSz, qint32 *pCycle);
   bool decodeEnqueueReady(qint32 k, qint32 k0);
+  bool decodeEnqueueReadyExperiment(qint32 k, qint32 k0);
   bool decodeProcessQueue(qint32 *pSubmode);
   void decodeStart();
   void decodePrepareSaveAudio(int submode);
@@ -614,6 +616,7 @@ private:
   bool    m_loopall;
   bool    m_decoderBusy;
   QString m_decoderBusyBand;
+  QMap<qint32, qint32> m_lastDecodeStartMap;  // submode, decode k start position
   Radio::Frequency m_decoderBusyFreq;
   QDateTime m_decoderBusyStartTime;
   bool    m_auto;
@@ -853,13 +856,18 @@ private:
 
   struct DecodeParams {
       int submode;
-      int cycle;
       int start;
       int sz;
   };
 
+  struct CachedFrame {
+    QDateTime date;
+    int submode;
+    int freq;
+  };
+
   QQueue<DecodeParams> m_decoderQueue;
-  QMap<QString, int> m_messageDupeCache; // message frame -> freq offset seen
+  QMap<QString, CachedFrame> m_messageDupeCache; // message frame -> date seen, submode seen, freq offset seen
   QMap<QString, QVariant> m_showColumnsCache; // table column:key -> show boolean
   QMap<QString, QVariant> m_sortCache; // table key -> sort by
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent
@@ -983,7 +991,10 @@ private:
   //int computeCurrentCycle(int period);
   //int computeCycleStartForDecode(int cycle, int period);
   int computeCycleForDecode(int submode, int k);
+  int computeAltCycleForDecode(int submode, int k, int offsetFrames);
   int computeFramesPerCycleForDecode(int submode);
+  int computePeriodStartDelayForDecode(int submode);
+  int computeFramesPerSymbolForDecode(int submode);
   int computeFramesNeededForDecode(int submode);
   bool shortList(QString callsign);
   void transmit (double snr = 99.);

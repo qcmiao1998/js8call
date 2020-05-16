@@ -88,13 +88,28 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      pos = max(0,params%kposI)
      sz = max(0,params%kszI)
      id0=0
-     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     imax=int(NTMAX*12000)
+
+     if(params%syncStats) then
+        write(*,*) '<DecodeSyncMeta> sync start', pos, sz
+     endif
+
+     if((imax-pos).lt.sz) then
+       ! this means that the first part of the id0 is at the end of the buffer
+       ! and the second half is at the beginning of the buffer
+       firstsize=int(imax-pos)-1
+       secondsize=int(sz-firstsize)+1
+       id0(1:firstsize+1)=id2(pos+1:pos+firstsize+1)
+       id0(firstsize+1:firstsize+secondsize+1)=id2(1:secondsize+1)
+     else
+       id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     endif
      
      call my_js8i%decode(js8i_decoded,id0,params%nQSOProgress,params%nfqso,  &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
-          mycall,mygrid,hiscall,hisgrid)
+          mycall,mygrid,hiscall,hisgrid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode I decode finished'
      
@@ -111,13 +126,28 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      pos = max(0,params%kposE)
      sz = max(0,params%kszE)
      id0=0
-     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     imax=int(NTMAX*12000)
+
+     if(params%syncStats) then
+        write(*,*) '<DecodeSyncMeta> sync start', pos, sz
+     endif
+
+     if((imax-pos).lt.sz) then
+       ! this means that the first part of the id0 is at the end of the buffer
+       ! and the second half is at the beginning of the buffer
+       firstsize=int(imax-pos)-1
+       secondsize=int(sz-firstsize)+1
+       id0(1:firstsize+1)=id2(pos+1:pos+firstsize+1)
+       id0(firstsize+1:firstsize+secondsize+1)=id2(1:secondsize+1)
+     else
+       id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     endif
      
      call my_js8e%decode(js8e_decoded,id0,params%nQSOProgress,params%nfqso,  &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
-          mycall,mygrid,hiscall,hisgrid)
+          mycall,mygrid,hiscall,hisgrid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode E decode finished'
      
@@ -134,13 +164,28 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      pos = max(0,params%kposC)
      sz = max(0,params%kszC)
      id0=0
-     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     imax=int(NTMAX*12000)
+
+     if(params%syncStats) then
+        write(*,*) '<DecodeSyncMeta> sync start', pos, sz
+     endif
+
+     if((imax-pos).lt.sz) then
+       ! this means that the first part of the id0 is at the end of the buffer
+       ! and the second half is at the beginning of the buffer
+       firstsize=int(imax-pos)-1
+       secondsize=int(sz-firstsize)+1
+       id0(1:firstsize+1)=id2(pos+1:pos+firstsize+1)
+       id0(firstsize+1:firstsize+secondsize+1)=id2(1:secondsize+1)
+     else
+       id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     endif
      
      call my_js8c%decode(js8c_decoded,id0,params%nQSOProgress,params%nfqso,  &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
-          mycall,mygrid,hiscall,hisgrid)
+          mycall,mygrid,hiscall,hisgrid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode C decode finished'
      
@@ -157,13 +202,28 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      pos = max(0,params%kposB)
      sz = max(0,params%kszB)
      id0=0
-     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     imax=int(NTMAX*12000)
+
+     if(params%syncStats) then
+        write(*,*) '<DecodeSyncMeta> sync start', pos, sz
+     endif
+
+     if((imax-pos).lt.sz) then
+       ! this means that the first part of the id0 is at the end of the buffer
+       ! and the second half is at the beginning of the buffer
+       firstsize=int(imax-pos)-1
+       secondsize=int(sz-firstsize)+1
+       id0(1:firstsize+1)=id2(pos+1:pos+firstsize+1)
+       id0(firstsize+1:firstsize+secondsize+1)=id2(1:secondsize+1)
+     else
+       id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     endif
      
      call my_js8b%decode(js8b_decoded,id0,params%nQSOProgress,params%nfqso,  &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
-          mycall,mygrid,hiscall,hisgrid)
+          mycall,mygrid,hiscall,hisgrid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode B decode finished'
      
@@ -177,16 +237,31 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
      write(*,*) '<DecodeDebug> mode A decode started'
 
      ! copy the relevant frames for decoding
-     pos = max(0,params%kposA)
-     sz = max(0,params%kszA)
+     pos = int(max(0,params%kposA))
+     sz = int(max(0,params%kszA))
      id0=0
-     id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     imax=int(NTMAX*12000)
+
+     if(params%syncStats) then
+        write(*,*) '<DecodeSyncMeta> sync start', pos, sz
+     endif
+
+     if((imax-pos).lt.sz) then
+       ! this means that the first part of the id0 is at the end of the buffer
+       ! and the second half is at the beginning of the buffer
+       firstsize=int(imax-pos)-1
+       secondsize=int(sz-firstsize)+1
+       id0(1:firstsize+1)=id2(pos+1:pos+firstsize+1)
+       id0(firstsize+1:firstsize+secondsize+1)=id2(1:secondsize+1)
+     else
+       id0(1:sz+1)=id2(pos+1:pos+sz+1)
+     endif
      
      call my_js8a%decode(js8a_decoded,id0,params%nQSOProgress,params%nfqso,  &
           params%nftx,newdat,params%nutc,params%nfa,params%nfb,              &
           params%nexp_decode,params%ndepth,logical(params%nagain),           &
           logical(params%lft8apon),logical(params%lapcqonly),params%napwid,  &
-          mycall,mygrid,hiscall,hisgrid)
+          mycall,mygrid,hiscall,hisgrid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode A decode finished'
 
@@ -196,7 +271,7 @@ subroutine multimode_decoder(ss,id2,params,nfsample)
   write(*,*) '<DecodeDebug> finished'
   call flush(6)
 
-  ndecoded = my_js8a%decoded + my_js8b%decoded + my_js8c%decoded + my_js8e%decoded
+  ndecoded = my_js8a%decoded + my_js8b%decoded + my_js8c%decoded + my_js8e%decoded + my_js8i%decoded
   !call sleep_msec(3000)
   write(*,1010) ndecoded
 1010 format('<DecodeFinished>',i4)

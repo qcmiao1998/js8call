@@ -13,6 +13,7 @@
 #define JS8_DECODE_THREAD  1       // use a separate thread for decode process handling
 #define JS8_ALLOW_EXTENDED 1       // allow extended latin-1 capital charset
 #define JS8_SAVE_AUDIO     0       // enable the save menu
+#define JS8_AUTO_SYNC      1       // enable the experimental auto sync feature
 
 #ifdef QT_DEBUG
 #define JS8_DEBUG_DECODE   0       // emit debug statements for the decode pipeline
@@ -97,6 +98,7 @@ extern struct dec_data {
     int nfSplit;                // JT65 | JT9 split frequency
     int nfb;                    // High decode limit (Hz) (filter max)
     int ntol;                   // +/- decoding range around fQSO (Hz)
+    bool syncStats;              // only compute sync candidates
     int kin;                    // number of frames written to d2
     int kposA;                  // starting position of decode for submode A
     int kposB;                  // starting position of decode for submode B
