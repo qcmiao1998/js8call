@@ -428,7 +428,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>240</width>
+                <width>267</width>
                 <height>742</height>
                </rect>
               </property>
@@ -976,7 +976,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>281</width>
-                <height>234</height>
+                <height>252</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout">
@@ -1021,6 +1021,13 @@
                 </widget>
                </item>
                <item>
+                <widget class="Line" name="line_2">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="QPushButton" name="autoDriftButton">
                  <property name="minimumSize">
                   <size>
@@ -1029,10 +1036,17 @@
                   </size>
                  </property>
                  <property name="text">
-                  <string>Start Automatic Drift Sync</string>
+                  <string>Start Automatic Sync Time Drift</string>
                  </property>
                  <property name="checkable">
                   <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="Line" name="line">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
                  </property>
                 </widget>
                </item>

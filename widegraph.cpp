@@ -254,7 +254,7 @@ bool WideGraph::shouldAutoSync(){
     return ui->autoDriftButton->isChecked();
 }
 
-void WideGraph::on_autoDriftButton_checked(bool checked){
+void WideGraph::on_autoDriftButton_toggled(bool checked){
     auto text = ui->autoDriftButton->text();
     if(checked){
         ui->autoDriftButton->setText(text.replace("Start", "Stop"));
