@@ -4682,6 +4682,7 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="separator"/>
     <addaction name="actionShow_Waterfall"/>
     <addaction name="actionShow_Waterfall_Controls"/>
+    <addaction name="actionShow_Waterfall_Time_Drift_Controls"/>
     <addaction name="separator"/>
     <addaction name="actionShow_Fullscreen"/>
     <addaction name="actionShow_Statusbar"/>
@@ -4715,6 +4716,16 @@ list. The list can be maintained in Settings (F2).</string>
      <addaction name="actionFocus_Band_Activity_Table"/>
      <addaction name="actionFocus_Call_Activity_Table"/>
     </widget>
+    <widget class="QMenu" name="menuClear_Activity">
+     <property name="title">
+      <string>Clear &amp;Activity...</string>
+     </property>
+     <addaction name="actionClear_All_Activity"/>
+     <addaction name="separator"/>
+     <addaction name="actionClear_Band_Activity"/>
+     <addaction name="actionClear_RX_Activity"/>
+     <addaction name="actionClear_Call_Activity"/>
+    </widget>
     <addaction name="actionEnable_Monitor_RX"/>
     <addaction name="actionEnable_Transmitter_TX"/>
     <addaction name="actionEnable_Reporting_SPOT"/>
@@ -4727,6 +4738,7 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionHeartbeat"/>
     <addaction name="actionCQ"/>
     <addaction name="separator"/>
+    <addaction name="menuClear_Activity"/>
    </widget>
    <widget class="QMenu" name="menuModeJS8">
     <property name="title">
@@ -5443,7 +5455,7 @@ list. The list can be maintained in Settings (F2).</string>
   </action>
   <action name="actionReset_Window_Sizes">
    <property name="text">
-    <string>Reset Frame Sizes</string>
+    <string>Reset Frame Si&amp;zes</string>
    </property>
   </action>
   <action name="actionSort_Band_Activity">
@@ -5769,6 +5781,37 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Enable Automatic Timing Synchronization (S&amp;YNC)</string>
+   </property>
+  </action>
+  <action name="actionShow_Waterfall_Time_Drift_Controls">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Time &amp;Drift Controls...</string>
+   </property>
+  </action>
+  <action name="actionClear_All_Activity">
+   <property name="text">
+    <string>Clear &amp;All Activity</string>
+   </property>
+  </action>
+  <action name="actionClear_Band_Activity">
+   <property name="text">
+    <string>Clear &amp;Band Activity</string>
+   </property>
+  </action>
+  <action name="actionClear_RX_Activity">
+   <property name="text">
+    <string>Clear &amp;RX Activity</string>
+   </property>
+  </action>
+  <action name="actionClear_Call_Activity">
+   <property name="text">
+    <string>Clear &amp;Call Activity</string>
    </property>
   </action>
  </widget>

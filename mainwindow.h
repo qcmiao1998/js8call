@@ -146,6 +146,9 @@ public slots:
   void cacheActivity(QString key);
   void restoreActivity(QString key);
   void clearActivity();
+  void clearBandActivity();
+  void clearRXActivity();
+  void clearCallActivity();
   void createGroupCallsignTableRows(QTableWidget *table, const QString &selectedCall);
   void displayTextForFreq(QString text, int freq, QDateTime date, bool isTx, bool isNewLine, bool isLast);
   void writeNoticeTextToUI(QDateTime date, QString text);
@@ -201,6 +204,10 @@ private slots:
   void on_actionFocus_Message_Reply_Area_triggered();
   void on_actionFocus_Band_Activity_Table_triggered();
   void on_actionFocus_Call_Activity_Table_triggered();
+  void on_actionClear_All_Activity_triggered();
+  void on_actionClear_Band_Activity_triggered();
+  void on_actionClear_RX_Activity_triggered();
+  void on_actionClear_Call_Activity_triggered();
   void on_actionSetOffset_triggered();
   void on_actionShow_Fullscreen_triggered(bool checked);
   void on_actionShow_Statusbar_triggered(bool checked);

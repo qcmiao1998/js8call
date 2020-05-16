@@ -3023,6 +3023,22 @@ void MainWindow::on_actionFocus_Call_Activity_Table_triggered(){
     ui->tableWidgetCalls->setFocus();
 }
 
+void MainWindow::on_actionClear_All_Activity_triggered(){
+    clearActivity();
+}
+
+void MainWindow::on_actionClear_Band_Activity_triggered(){
+    clearBandActivity();
+}
+
+void MainWindow::on_actionClear_RX_Activity_triggered(){
+    clearRXActivity();
+}
+
+void MainWindow::on_actionClear_Call_Activity_triggered(){
+    clearCallActivity();
+}
+
 void MainWindow::on_actionSetOffset_triggered(){
     bool ok = false;
     auto currentFreq = currentFreqOffset();
@@ -7071,28 +7087,40 @@ void MainWindow::restoreActivity(QString key){
 
 void MainWindow::clearActivity(){
     qDebug() << "clear activity";
-    m_bandActivity.clear();
-    m_callActivity.clear();
+
     m_callSeenHeartbeat.clear();
     m_compoundCallCache.clear();
     m_rxCallCache.clear();
     m_rxCallQueue.clear();
     m_rxRecentCache.clear();
     m_rxDirectedCache.clear();
-    m_rxFrameBlockNumbers.clear();
-    m_rxActivityQueue.clear();
     m_rxCommandQueue.clear();
     m_lastTxMessage.clear();
-    m_heardGraphIncoming.clear();
-    m_heardGraphOutgoing.clear();
 
     refreshInboxCounts();
     resetTimeDeltaAverage();
 
-    clearTableWidget(ui->tableWidgetCalls);
-    createGroupCallsignTableRows(ui->tableWidgetCalls, "");
+    clearBandActivity();
+    clearRXActivity();
+    clearCallActivity();
 
+    displayActivity(true);
+}
+
+void MainWindow::clearBandActivity(){
+    qDebug() << "clear band activity";
+    m_bandActivity.clear();
     clearTableWidget(ui->tableWidgetRXAll);
+
+    resetTimeDeltaAverage();
+    displayBandActivity();
+}
+
+void MainWindow::clearRXActivity(){
+    qDebug() << "clear rx activity";
+
+    m_rxFrameBlockNumbers.clear();
+    m_rxActivityQueue.clear();
 
     ui->textEditRX->clear();
     ui->freeTextMsg->clear();
@@ -7102,8 +7130,21 @@ void MainWindow::clearActivity(){
     ui->extFreeTextMsgEdit->clear();
     ui->extFreeTextMsgEdit->setReadOnly(false);
     update_dynamic_property(ui->extFreeTextMsgEdit, "transmitting", false);
+}
 
-    displayActivity(true);
+void MainWindow::clearCallActivity(){
+    qDebug() << "clear call activity";
+
+    m_callActivity.clear();
+
+    m_heardGraphIncoming.clear();
+    m_heardGraphOutgoing.clear();
+
+    clearTableWidget(ui->tableWidgetCalls);
+    createGroupCallsignTableRows(ui->tableWidgetCalls, "");
+
+    resetTimeDeltaAverage();
+    displayCallActivity();
 }
 
 void MainWindow::createGroupCallsignTableRows(QTableWidget *table, QString const &selectedCall){
@@ -8726,21 +8767,12 @@ void MainWindow::on_rbFreeText_clicked(bool checked)
 void MainWindow::on_clearAction_triggered(QObject * sender){
     // TODO: jsherer - abstract this into a tableWidgetRXAllReset function
     if(sender == ui->tableWidgetRXAll){
-        m_bandActivity.clear();
-        clearTableWidget(ui->tableWidgetRXAll);
-        resetTimeDeltaAverage();
-        displayBandActivity();
+        clearBandActivity();
     }
 
     // TODO: jsherer - abstract this into a tableWidgetCallsReset function
     if(sender == ui->tableWidgetCalls){
-        m_callActivity.clear();
-        m_heardGraphIncoming.clear();
-        m_heardGraphOutgoing.clear();
-        clearTableWidget((ui->tableWidgetCalls));
-        createGroupCallsignTableRows(ui->tableWidgetCalls, "");
-        resetTimeDeltaAverage();
-        displayCallActivity();
+        clearCallActivity();
     }
 
     if(sender == ui->extFreeTextMsgEdit){
@@ -8749,10 +8781,7 @@ void MainWindow::on_clearAction_triggered(QObject * sender){
     }
 
     if(sender == ui->textEditRX){
-        // TODO: jsherer - move these
-        ui->textEditRX->clear();
-        m_rxFrameBlockNumbers.clear();
-        m_rxActivityQueue.clear();
+        clearRXActivity();
     }
 }
 
