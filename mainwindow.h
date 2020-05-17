@@ -833,8 +833,8 @@ private:
   QString m_totalTxMessage;
   QDateTime m_lastTxStartTime;
   QDateTime m_lastTxStopTime;
-  int m_timeDeltaMsMMA;
-  int m_timeDeltaMsMMA_N;
+  int m_driftMsMMA;
+  int m_driftMsMMA_N;
 
   enum Priority {
     PriorityLow    =   10,
@@ -1044,7 +1044,6 @@ private:
   void markOffsetDirected(int offset, bool isAllCall);
   void clearOffsetDirected(int offset);
   void processActivity(bool force=false);
-  void observeTimeDeltaForAverage(float delta);
   void resetTimeDeltaAverage();
   void processRxActivity();
   void processIdleActivity();

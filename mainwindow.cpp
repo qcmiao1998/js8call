@@ -5402,8 +5402,10 @@ void MainWindow::processDecodedLine(QByteArray t){
     if(JS8_DEBUG_DECODE) qDebug() << "decode duration" << msec << "ms";
 
     if(!driftQueue.isEmpty()){
-        static int driftN = 1;
-        static int driftAvg = DriftingDateTime::drift();
+        if(m_driftMsMMA_N == 0){
+            m_driftMsMMA_N = 1;
+            m_driftMsMMA = DriftingDateTime::drift();
+        }
 
         // let the widegraph know for timing control
         m_wideGraph->notifyDriftedSignalsDecoded(driftQueue.count());
@@ -5412,12 +5414,11 @@ void MainWindow::processDecodedLine(QByteArray t){
             int newDrift = driftQueue.first();
             driftQueue.removeFirst();
 
-            driftAvg = ((driftN-1)*driftAvg + newDrift)/driftN;
-            if(driftN < 60) driftN++; // cap it to 60 observations
+            m_driftMsMMA = ((m_driftMsMMA_N-1)*m_driftMsMMA + newDrift)/m_driftMsMMA_N;
+            if(m_driftMsMMA_N < 60) m_driftMsMMA_N++; // cap it to 60 observations
         }
 
-        setDrift(driftAvg);
-
+        setDrift(m_driftMsMMA);
 
         //writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Automatic Drift: %1").arg(driftAvg));
     }
@@ -11157,40 +11158,13 @@ void MainWindow::processActivity(bool force) {
     m_rxDirty = false;
 }
 
-void MainWindow::observeTimeDeltaForAverage(float delta){
-    // delta can only be +/- the TR period
-    delta = qMax(-(float)m_TRperiod, qMin(delta, (float)m_TRperiod));
-
-    // compute average drift
-    if(m_timeDeltaMsMMA_N == 0){
-        m_timeDeltaMsMMA_N++;
-        m_timeDeltaMsMMA = (int)(delta*1000);
-    } else {
-        m_timeDeltaMsMMA_N++;
-        m_timeDeltaMsMMA = (((m_timeDeltaMsMMA_N-1)*m_timeDeltaMsMMA) + (int)(delta*1000))/ min(m_timeDeltaMsMMA_N, 100);
-    }
-
-    // display average
-    if(m_timeDeltaMsMMA < -(float)m_TRperiod || m_timeDeltaMsMMA > (float)m_TRperiod){
-        resetTimeDeltaAverage();
-    }
-}
-
 void MainWindow::resetTimeDeltaAverage(){
-    m_timeDeltaMsMMA = 0;
-    m_timeDeltaMsMMA_N = 0;
-
-    // observe zero for reset
-    observeTimeDeltaForAverage(0);
+    m_driftMsMMA = 0;
+    m_driftMsMMA_N = 1;
 }
-
 
 void MainWindow::setDrift(int n){
-    // drifting functionality moved to the widegraph
     m_wideGraph->setDrift(n);
-
-    // reset the average if we set a new drift
-    resetTimeDeltaAverage();
 }
 
 void MainWindow::processIdleActivity() {
@@ -11259,8 +11233,6 @@ void MainWindow::processRxActivity() {
                 {"UTC", QVariant(d.utcTimestamp.toMSecsSinceEpoch())}
             });
         }
-
-        observeTimeDeltaForAverage(d.tdrift);
 
         // use the actual frequency and check its delta from our current frequency
         // meaning, if our current offset is 1502 and the d.freq is 1492, the delta is <= 10;
