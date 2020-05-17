@@ -4505,8 +4505,8 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
     static QMap<qint32, QList<qint32>> submodes = {
         {Varicode::JS8CallSlow,   {0}},
         {Varicode::JS8CallNormal, {0}},
-        {Varicode::JS8CallFast,   {0, 5}}, // NORMAL: 0, 10, 20    --- ALT: 15, 25
-        {Varicode::JS8CallTurbo,  {0, 3}}, // NORMAL: 0, 6, 12, 18 --- ALT: 15, 21, 27
+        {Varicode::JS8CallFast,   {0}}, // NORMAL: 0, 10, 20    --- ALT: 15, 25
+        {Varicode::JS8CallTurbo,  {0}}, // NORMAL: 0, 6, 12, 18 --- ALT: 15, 21, 27
 #if JS8_ENABLE_JS8I
         {Varicode::JS8CallUltra,  {0, 1}},
 #endif
@@ -4562,7 +4562,7 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
                 incrementedBy = maxSamples - lastDecodeStart + k;
             }
 
-            if(alt > 0 || JS8_DEBUG_DECODE) qDebug() << submodeName(submode) << "alt" << alt << "cycle" << cycle << "cycle frames" << cycleFrames << "cycle start" << cycle*cycleFrames << "cycle end" << (cycle+1)*cycleFrames << "k" << k << "frames ready" << cycleFramesReady << "incremeted by" << incrementedBy;
+            if(JS8_DEBUG_DECODE) qDebug() << submodeName(submode) << "alt" << alt << "cycle" << cycle << "cycle frames" << cycleFrames << "cycle start" << cycle*cycleFrames << "cycle end" << (cycle+1)*cycleFrames << "k" << k << "frames ready" << cycleFramesReady << "incremeted by" << incrementedBy;
 
             if(everySecond && incrementedBy >= oneSecondSamples){
                 DecodeParams d;
