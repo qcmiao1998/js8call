@@ -4508,7 +4508,7 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
         {Varicode::JS8CallFast,   {0}}, // NORMAL: 0, 10, 20    --- ALT: 15, 25
         {Varicode::JS8CallTurbo,  {0}}, // NORMAL: 0, 6, 12, 18 --- ALT: 15, 21, 27
 #if JS8_ENABLE_JS8I
-        {Varicode::JS8CallUltra,  {0, 1}},
+        {Varicode::JS8CallUltra,  {0}},
 #endif
     };
 
