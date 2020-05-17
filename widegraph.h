@@ -69,7 +69,8 @@ public:
   void   setRedFile(QString fRed);
   void   setTurbo(bool turbo);
   bool   shouldDisplayDecodeAttempts();
-  bool   shouldAutoSync();
+  bool   shouldAutoSyncSubmode(int submode);
+  bool   isAutoSyncEnabled();
   QVector<QColor> const& colors();
 
 signals:
@@ -170,6 +171,7 @@ private:
 
   QTimer m_autoSyncTimer;
   int m_autoSyncTimeLeft;
+  int m_autoSyncDecodesLeft;
 
   QTimer m_drawTimer;
   QMutex m_drawLock;

@@ -12,6 +12,7 @@
 
 #include "DriftingDateTime.h"
 #include "keyeater.h"
+#include "varicode.h"
 
 #include "moc_widegraph.cpp"
 
@@ -169,6 +170,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     ui->fpsSpinBox->setValue(m_settings->value ("WaterfallFPS", 4).toInt());
     ui->decodeAttemptCheckBox->setChecked(m_settings->value("DisplayDecodeAttempts", false).toBool());
     ui->autoDriftAutoStopCheckBox->setChecked(m_settings->value ("StopAutoSyncOnDecode", true).toBool());
+    ui->autoDriftStopSpinBox->setValue(m_settings->value ("StopAutoSyncAfter", 1).toInt());
 
     auto splitState = m_settings->value("SplitState").toByteArray();
     if(!splitState.isEmpty()){
@@ -246,18 +248,33 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("WaterfallFPS", ui->fpsSpinBox->value());
   m_settings->setValue ("DisplayDecodeAttempts", ui->decodeAttemptCheckBox->isChecked());
   m_settings->setValue ("StopAutoSyncOnDecode", ui->autoDriftAutoStopCheckBox->isChecked());
+  m_settings->setValue ("StopAutoSyncAfter", ui->autoDriftStopSpinBox->value());
 }
 
 bool WideGraph::shouldDisplayDecodeAttempts(){
     return ui->decodeAttemptCheckBox->isChecked();
 }
 
-bool WideGraph::shouldAutoSync(){
-    return ui->autoDriftButton->isChecked();
+bool WideGraph::isAutoSyncEnabled(){
+    return ui->autoDriftButton->isChecked() && m_autoSyncDecodesLeft > 0;
 }
 
-void WideGraph::notifyDriftedSignalsDecoded(int /*signalsDecoded*/){
-    if(ui->autoDriftAutoStopCheckBox->isChecked()){
+bool WideGraph::shouldAutoSyncSubmode(int submode){
+    return isAutoSyncEnabled() && (
+           submode == Varicode::JS8CallSlow
+        || submode == Varicode::JS8CallNormal
+    //  || submode == Varicode::JS8CallFast
+    //  || submode == Varicode::JS8CallTurbo
+    //  || submode == Varicode::JS8CallUltra
+    );
+}
+
+void WideGraph::notifyDriftedSignalsDecoded(int signalsDecoded){
+    //qDebug() << "decoded" << signalsDecoded << "with" << m_autoSyncDecodesLeft << "left";
+
+    m_autoSyncDecodesLeft -= signalsDecoded;
+
+    if(ui->autoDriftAutoStopCheckBox->isChecked() && m_autoSyncDecodesLeft <= 0){
         ui->autoDriftButton->setChecked(false);
     }
 }
@@ -304,9 +321,13 @@ void WideGraph::on_autoDriftButton_toggled(bool checked){
         return;
     } else {
         if(checked){
+            m_autoSyncDecodesLeft = ui->autoDriftStopSpinBox->value();
             ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Start", "Stop"));
+            ui->autoDriftStopSpinBox->setEnabled(false);
         } else {
+            m_autoSyncDecodesLeft = 0;
             ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Stop", "Start"));
+            ui->autoDriftStopSpinBox->setEnabled(true);
         }
     }
 }

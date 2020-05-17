@@ -179,7 +179,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>323</width>
+                <width>521</width>
                 <height>372</height>
                </rect>
               </property>
@@ -428,7 +428,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>323</width>
+                <width>521</width>
                 <height>742</height>
                </rect>
               </property>
@@ -974,9 +974,9 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>0</y>
-                <width>337</width>
-                <height>351</height>
+                <y>-73</y>
+                <width>521</width>
+                <height>356</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout">
@@ -1052,14 +1052,31 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QCheckBox" name="autoDriftAutoStopCheckBox">
-                    <property name="text">
-                     <string>Stop Automatic Drift After First Decode</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
+                   <layout class="QFormLayout" name="formLayout_4">
+                    <item row="0" column="0">
+                     <widget class="QCheckBox" name="autoDriftAutoStopCheckBox">
+                      <property name="text">
+                       <string>Stop Automatic Drift After:</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="1">
+                     <widget class="QSpinBox" name="autoDriftStopSpinBox">
+                      <property name="suffix">
+                       <string> decode(s)</string>
+                      </property>
+                      <property name="minimum">
+                       <number>1</number>
+                      </property>
+                      <property name="maximum">
+                       <number>1024</number>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </item>
                  </layout>
                 </widget>
