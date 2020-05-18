@@ -4364,12 +4364,10 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     qint32 szC = -1;
     qint32 cycleC = -1;
 
-#if JS8_ENABLE_JS8E
     bool couldDecodeE = false;
     qint32 startE = -1;
     qint32 szE = -1;
     qint32 cycleE = -1;
-#endif
 
 #if JS8_ENABLE_JS8I
     bool couldDecodeI = false;
@@ -4408,7 +4406,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
         couldDecodeC = true;
     }
 
-#if JS8_ENABLE_JS8E
     static qint32 currentDecodeStartE = -1;
     static qint32 nextDecodeStartE = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? SLOW     " << currentDecodeStartE << nextDecodeStartE;
@@ -4418,7 +4415,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
         szE = NTMAX*RX_SAMPLE_RATE-1;
         couldDecodeE = true;
     }
-#endif
 
 #if JS8_ENABLE_JS8I
     static qint32 currentDecodeStartI = -1;
@@ -4459,7 +4455,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
         decodes++;
     }
 
-#if JS8_ENABLE_JS8E
     if(couldDecodeE){
         DecodeParams d;
         d.submode = Varicode::JS8CallSlow;
@@ -4468,7 +4463,6 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
         m_decoderQueue.append(d);
         decodes++;
     }
-#endif
 
 #if JS8_ENABLE_JS8I
     if(couldDecodeI){
@@ -4633,7 +4627,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
     bool multi = ui->actionModeMultiDecoder->isChecked();
     if(multi){
-        maxDecodes = JS8_ENABLE_JS8E ? 4 : 3;
+        maxDecodes = JS8_ENABLE_JS8I ? 5 : 4;
     }
 
     int count = m_decoderQueue.count();
@@ -4673,13 +4667,11 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
             dec_data.params.kszC = params.sz;
             dec_data.params.nsubmodes |= (params.submode << 1);
             break;
-#if JS8_ENABLE_JS8E
         case Varicode::JS8CallSlow:
             dec_data.params.kposE = params.start;
             dec_data.params.kszE = params.sz;
             dec_data.params.nsubmodes |= (params.submode << 1);
             break;
-#endif
 #if JS8_ENABLE_JS8I
         case Varicode::JS8CallUltra:
             dec_data.params.kposI = params.start;
