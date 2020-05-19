@@ -450,7 +450,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_hbPaused { false },
   m_hbInterval {0},
   m_cqInterval {0},
-  m_cqPaused { false }
+  m_cqPaused { false },
+  m_driftMsMMA { 0 },
+  m_driftMsMMA_N { 0 }
 {
   ui->setupUi(this);
 
@@ -5049,7 +5051,7 @@ void MainWindow::processDecodedLine(QByteArray t){
   bool bAvgMsg=false;
   int navg=0;
 
-  static QList<int> driftQueue;
+  static QList<qint32> driftQueue;
 
   static qint32 syncStart = -1;
   if(t.indexOf("<DecodeSyncMeta> sync start") >= 0){
@@ -5138,15 +5140,22 @@ void MainWindow::processDecodedLine(QByteArray t){
         m_wideGraph->notifyDriftedSignalsDecoded(driftQueue.count());
 
         while(!driftQueue.isEmpty()){
-            int newDrift = driftQueue.first();
+            qint32 newDrift = driftQueue.first();
             driftQueue.removeFirst();
 
-            m_driftMsMMA = ((m_driftMsMMA_N-1)*m_driftMsMMA + newDrift)/m_driftMsMMA_N;
+            m_driftMsMMA = (((m_driftMsMMA_N-1) * m_driftMsMMA) + newDrift) / m_driftMsMMA_N;
             if(m_driftMsMMA_N < 60) m_driftMsMMA_N++; // cap it to 60 observations
         }
 
-        setDrift(m_driftMsMMA);
+        qint32 driftLimitMs = computePeriodForSubmode(Varicode::JS8CallNormal) * 1000;
+        qint32 newDriftMs = m_driftMsMMA;
+        if(newDriftMs < 0){
+            newDriftMs = -((-newDriftMs) % driftLimitMs);
+        } else {
+            newDriftMs = ((newDriftMs) % driftLimitMs);
+        }
 
+        setDrift(m_driftMsMMA);
         //writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Automatic Drift: %1").arg(driftAvg));
     }
 
@@ -5231,7 +5240,7 @@ void MainWindow::processDecodedLine(QByteArray t){
       //   3) compute the delta
       //   4) apply the drift
 
-      int periodMs = 1000 * computePeriodForSubmode(m);
+      qint32 periodMs = 1000 * computePeriodForSubmode(m);
 
       //writeNoticeTextToUI(now, QString("Decode at %1 (kin: %2, lastDecoded: %3)").arg(syncStart).arg(dec_data.params.kin).arg(m_lastDecodeStartMap.value(m)));
 
@@ -5258,9 +5267,9 @@ void MainWindow::processDecodedLine(QByteArray t){
 
       //writeNoticeTextToUI(now, QString("--> so signal adjusted started at %1 seconds into the start of my drifted minute").arg(decodedSignalTime));
 
-      int decodedSignalTimeMs = 1000 * decodedSignalTime;
-      int cycleStartTimeMs = (decodedSignalTimeMs / periodMs) * periodMs;
-      int driftMs = cycleStartTimeMs - decodedSignalTimeMs;
+      qint32 decodedSignalTimeMs = 1000 * decodedSignalTime;
+      qint32 cycleStartTimeMs = (decodedSignalTimeMs / periodMs) * periodMs;
+      qint32 driftMs = cycleStartTimeMs - decodedSignalTimeMs;
 
       //writeNoticeTextToUI(now, QString("--> which is a drift adjustment of %1 milliseconds").arg(driftMs));
 
@@ -5275,7 +5284,7 @@ void MainWindow::processDecodedLine(QByteArray t){
 
       //writeNoticeTextToUI(now, QString("--> which is a corrected drift adjustment of %1 milliseconds").arg(driftMs));
 
-      int newDrift = DriftingDateTime::drift() + driftMs;
+      qint32 newDrift = DriftingDateTime::drift() + driftMs;
       if(newDrift < 0){
           newDrift %= -periodMs;
       } else {
@@ -10958,7 +10967,7 @@ void MainWindow::processActivity(bool force) {
 
 void MainWindow::resetTimeDeltaAverage(){
     m_driftMsMMA = 0;
-    m_driftMsMMA_N = 1;
+    m_driftMsMMA_N = 0;
 }
 
 void MainWindow::setDrift(int n){

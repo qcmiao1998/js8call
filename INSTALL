@@ -28,7 +28,7 @@ JS8Call depends on:
 
 #### 18.04 LTS:
 
-sudo apt install build-essential git automake cmake clang gfortran libfftw3-dev git libgfortran3 libusb-1.0-dev autoconf libtool texinfo qt5-default qtmultimedia5-dev libqt5multimedia5-plugins libqt5serialport5-dev libudev-dev pkg-config
+sudo apt install build-essential git automake cmake clang gfortran libfftw3-dev git libgfortran5 libusb-1.0-0-dev autoconf libtool texinfo qt5-default qtmultimedia5-dev libqt5multimedia5-plugins libqt5serialport5-dev libudev-dev pkg-config
 
 #### 20.04 LTS:
 

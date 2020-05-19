@@ -256,7 +256,14 @@ bool WideGraph::shouldDisplayDecodeAttempts(){
 }
 
 bool WideGraph::isAutoSyncEnabled(){
-    return ui->autoDriftButton->isChecked() && m_autoSyncDecodesLeft > 0;
+    // enabled if we're auto drifting
+    // and we are not auto stopping
+    // or if we are auto stopping,
+    // we have auto sync decodes left
+    return ui->autoDriftButton->isChecked() && (
+        !ui->autoDriftAutoStopCheckBox->isChecked() ||
+        m_autoSyncDecodesLeft > 0
+    );
 }
 
 bool WideGraph::shouldAutoSyncSubmode(int submode){

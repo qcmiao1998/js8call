@@ -833,8 +833,8 @@ private:
   QString m_totalTxMessage;
   QDateTime m_lastTxStartTime;
   QDateTime m_lastTxStopTime;
-  int m_driftMsMMA;
-  int m_driftMsMMA_N;
+  qint32 m_driftMsMMA;
+  qint32 m_driftMsMMA_N;
 
   enum Priority {
     PriorityLow    =   10,
