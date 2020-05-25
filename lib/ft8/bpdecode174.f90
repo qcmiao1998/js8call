@@ -395,3 +395,53 @@ enddo
 nharderror=-1
 return
 end subroutine bpdecode174
+
+subroutine pltanh(x,y)
+  isign=+1
+  z=x
+  if( x.lt.0 ) then
+    isign=-1
+    z=abs(x)
+  endif
+  if( z.le. 0.8 ) then
+    y=0.83*x
+    return
+  elseif( z.le. 1.6 ) then
+    y=isign*(0.322*z+0.4064)
+    return  
+  elseif( z.le. 3.0 ) then
+    y=isign*(0.0524*z+0.8378)
+    return
+  elseif( z.lt. 7.0 ) then
+    y=isign*(0.0012*z+0.9914)
+    return
+  else
+    y=isign*0.9998
+    return
+  endif
+end subroutine pltanh
+
+subroutine platanh(x,y)
+  isign=+1
+  z=x
+  if( x.lt.0 ) then
+    isign=-1
+    z=abs(x)
+  endif
+  if( z.le. 0.664 ) then
+    y=x/0.83
+    return
+  elseif( z.le. 0.9217 ) then
+    y=isign*(z-0.4064)/0.322
+    return
+  elseif( z.le. 0.9951 ) then
+    y=isign*(z-0.8378)/0.0524
+    return
+  elseif( z.le. 0.9998 ) then
+    y=isign*(z-0.9914)/0.0012
+    return
+  else
+    y=isign*7.0
+    return
+  endif
+end subroutine platanh

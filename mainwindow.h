@@ -33,7 +33,6 @@
 #include "Modes.hpp"
 #include "FrequencyList.hpp"
 #include "Configuration.hpp"
-#include "WSPRBandHopping.hpp"
 #include "Transceiver.hpp"
 #include "DisplayManual.hpp"
 #include "psk_reporter.h"
@@ -58,7 +57,6 @@
 #define NUM_JT4_SYMBOLS 206                //(72+31)*2, embedded sync
 #define NUM_JT65_SYMBOLS 126               //63 data + 63 sync
 #define NUM_JT9_SYMBOLS 85                 //69 data + 16 sync
-#define NUM_WSPR_SYMBOLS 162               //(50+31)*2, embedded sync
 #define NUM_WSPR_LF_SYMBOLS 412            //300 data + 109 sync + 3 ramp
 #define NUM_ISCAT_SYMBOLS 1291             //30*11025/256
 #define NUM_MSK144_SYMBOLS 144             //s8 + d48 + s8 + d80
@@ -86,9 +84,7 @@ class Transceiver;
 class MessageAveraging;
 class MessageClient;
 class QTime;
-class WSPRBandHopping;
 class HelpTextWindow;
-class WSPRNet;
 class SoundOutput;
 class Modulator;
 class SoundInput;
@@ -513,8 +509,6 @@ private:
 
   // other windows
   Configuration m_config;
-  WSPRBandHopping m_WSPR_band_hopping;
-  bool m_WSPR_tx_next;
   MessageBox m_rigErrorMessageBox;
   QScopedPointer<EqualizationToolsDialog> m_equalizationToolsDialog;
 
@@ -591,7 +585,6 @@ private:
   qint32  m_dBm;
   qint32  m_pctx;
   qint32  m_nseq;
-  qint32  m_nWSPRdecodes;
   qint32  m_k0;
   qint32  m_kdone;
   qint32  m_nPick;

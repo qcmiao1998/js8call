@@ -231,7 +231,6 @@ set (wsjtx_CXXSRCS
   about.cpp
   astro.cpp
   messageaveraging.cpp
-  WsprTxScheduler.cpp
   varicode.cpp
   jsc.cpp
   jsc_list.cpp
@@ -247,8 +246,6 @@ set (wsjtx_CXXSRCS
   mainwindow.cpp
   Configuration.cpp
   main.cpp
-  wsprnet.cpp
-  WSPRBandHopping.cpp
   TransmitTextEdit.cpp
   WaveUtils.cpp
   WaveFile.cpp
@@ -286,11 +283,6 @@ set (wsjt_FSRCS
   lib/fftw3mod.f90
   lib/hashing.f90
   lib/iso_c_utilities.f90
-  lib/jt4.f90
-  lib/jt4_decode.f90
-  lib/jt65_decode.f90
-  lib/jt65_mod.f90
-  lib/jt9_decode.f90
   lib/options.f90
   lib/packjt.f90
   lib/readwav.f90
@@ -310,10 +302,7 @@ set (wsjt_FSRCS
   lib/js8i_decode.f90
 
   # remaining non-module sources
-  lib/addit.f90
-  lib/afc65b.f90
   lib/afc9.f90
-  lib/ana64.f90
   lib/ana932.f90
   lib/analytic.f90
   lib/astro.f90
@@ -322,52 +311,31 @@ set (wsjt_FSRCS
   lib/averms.f90
   lib/azdist.f90
   lib/badmsg.f90
-  lib/bpdecode40.f90
-  lib/bpdecode144.f90
   lib/ft8/bpdecode174.f90
   lib/baddata.f90
   lib/calibrate.f90
   lib/ccf2.f90
-  lib/ccf65.f90
   lib/ft8/chkcrc12a.f90
   lib/chkcall.f90
   lib/chkhist.f90
   lib/chkmsg.f90
-  lib/chkss2.f90
   lib/ft8/compress.f90
   lib/coord.f90
   lib/db.f90
-  lib/decode4.f90
-  lib/decode65a.f90
-  lib/decode65b.f90
-  lib/decode9w.f90
   lib/decoder.f90
   lib/deep4.f90
   lib/deg2grid.f90
   lib/degrade_snr.f90
-  lib/demod64a.f90
   lib/determ.f90
-  lib/downsam9.f90
-  lib/encode232.f90
-  lib/encode4.f90
-  lib/encode_msk40.f90
-  lib/encode_msk144.f90
   lib/ft8/encode174.f90
   lib/entail.f90
   lib/ephem.f90
-  lib/extract.f90
-  lib/extract4.f90
-  lib/extractmessage144.f90
   lib/ft8/extractmessage174.f90
   lib/fano232.f90
-  lib/fast9.f90
-  lib/fchisq.f90
   lib/fchisq0.f90
-  lib/fchisq65.f90
   lib/fil3.f90
   lib/fil3c.f90
   lib/fil4.f90
-  lib/fil6521.f90
   lib/filbig.f90
   lib/ft8/filt8.f90
   lib/fitcal.f90
@@ -376,9 +344,7 @@ set (wsjt_FSRCS
   lib/flat1b.f90
   lib/flat2.f90
   lib/flat4.f90
-  lib/flat65.f90
   lib/fmtmsg.f90
-  lib/foldspec9f.f90
   lib/four2a.f90
   lib/ft8/foxfilt.f90
   lib/ft8/foxgen.f90
@@ -390,28 +356,18 @@ set (wsjt_FSRCS
   lib/getlags.f90
   lib/getmet4.f90
   lib/graycode.f90
-  lib/graycode65.f90
-  lib/grayline.f90
   lib/grid2deg.f90
   lib/ft8/h1.f90
   lib/hash.f90
-  lib/hint65.f90
   lib/indexx.f90
   lib/init_random_seed.f90
-  lib/interleave4.f90
-  lib/interleave63.f90
-  lib/interleave9.f90
-  lib/inter_wspr.f90
-  lib/iscat.f90
   lib/jplsubs.f
-  lib/jt9fano.f90
   lib/jtmsg.f90
   lib/js8/ldpcsim174js8a.f90
   lib/js8/ldpcsim174js8b.f90
   lib/js8/ldpcsim174js8c.f90
   lib/js8/ldpcsim174js8e.f90
   lib/js8/ldpcsim174js8i.f90
-  lib/ldpcsim40.f90
   lib/libration.f90
   lib/lorentzian.f90
   lib/lpf1.f90
@@ -422,50 +378,27 @@ set (wsjt_FSRCS
   lib/move.f90
   lib/ft8/osd174.f90
   lib/pctile.f90
-  lib/peakdt9.f90
   lib/peakup.f90
   lib/plotsave.f90
   lib/polyfit.f90
   lib/prog_args.f90
   lib/ps4.f90
-  lib/qra64a.f90
   lib/refspectrum.f90
   lib/savec2.f90
   lib/sec_midn.f90
-  lib/setup65.f90
-  lib/sh65.f90
-  lib/sh65snr.f90
   lib/slasubs.f
   lib/sleep_msec.f90
   lib/slope.f90
   lib/smo.f90
   lib/smo121.f90
-  lib/softsym.f90
-  lib/softsym9f.f90
-  lib/softsym9w.f90
   lib/shell.f90
-  lib/spec64.f90
-  lib/spec9f.f90
   lib/stdmsg.f90
-  lib/subtract65.f90
   lib/sun.f90
   lib/symspec.f90
-  lib/symspec2.f90
-  lib/symspec65.f90
-  lib/sync4.f90
-  lib/sync64.f90
-  lib/sync65.f90
-  lib/sync9.f90
-  lib/sync9f.f90
-  lib/sync9w.f90
-  lib/synciscat.f90
   lib/timf2.f90
-  lib/to_contest_msg.f90
   lib/tweak1.f90
   lib/twkfreq.f90
   lib/ft8/twkfreq1.f90
-  lib/twkfreq65.f90
-  lib/unpackmsg144.f90
   lib/update_recent_calls.f90
   lib/update_hasharray.f90
   lib/wav11.f90
@@ -474,8 +407,6 @@ set (wsjt_FSRCS
   lib/xcor4.f90
   lib/wqdecode.f90
   lib/wqencode.f90
-  lib/wspr_downsample.f90
-  lib/zplot9.f90
   )
 
 # temporary workaround for a gfortran v7.3 ICE on Fedora 27 64-bit

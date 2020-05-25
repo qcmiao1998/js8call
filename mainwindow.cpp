@@ -53,7 +53,6 @@
 #include "StationList.hpp"
 #include "LiveFrequencyValidator.hpp"
 #include "MessageClient.hpp"
-#include "wsprnet.h"
 #include "signalmeter.h"
 #include "HelpTextWindow.hpp"
 #include "Audio/BWFFile.hpp"
@@ -271,8 +270,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_settings_read {false},
   ui(new Ui::MainWindow),
   m_config {temp_directory, m_settings, this},
-  m_WSPR_band_hopping {m_settings, &m_config, this},
-  m_WSPR_tx_next {false},
   m_rigErrorMessageBox {MessageBox::Critical, tr ("Rig Control Error")
       , MessageBox::Cancel | MessageBox::Ok | MessageBox::Retry},
   m_isWideGraphMDI {false},
@@ -311,7 +308,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_nclearave {1},
   m_pctx {0},
   m_nseq {0},
-  m_nWSPRdecodes {0},
   m_k0 {9999999},
   m_nPick {0},
   m_frequency_list_fcal_iter {m_config.frequencies ()->begin ()},
@@ -556,14 +552,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // Network message handlers
   connect (m_messageClient, &MessageClient::error, this, &MainWindow::udpNetworkError);
   connect (m_messageClient, &MessageClient::message, this, &MainWindow::networkMessage);
-
-#if 0
-  // Hook up WSPR band hopping
-  connect (ui->band_hopping_schedule_push_button, &QPushButton::clicked
-           , &m_WSPR_band_hopping, &WSPRBandHopping::show_dialog);
-  connect (ui->sbTxPercent, static_cast<void (QSpinBox::*) (int)> (&QSpinBox::valueChanged)
-           , &m_WSPR_band_hopping, &WSPRBandHopping::set_tx_percent);
-#endif
 
   // decoder queue handler
   //connect (&m_decodeThread, &QThread::finished, m_notification, &QObject::deleteLater);
@@ -13617,14 +13605,6 @@ void MainWindow::WSPR_history(Frequency dialFreq, int ndecodes)
 
 void MainWindow::uploadResponse(QString response)
 {
-  if (response == "done") {
-    m_uploading=false;
-  } else {
-    if (response.startsWith ("Upload Failed")) {
-      m_uploading=false;
-    }
-    qDebug () << "WSPRnet.org status:" << response;
-  }
 }
 
 void MainWindow::on_TxPowerComboBox_currentIndexChanged(const QString &arg1)

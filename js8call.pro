@@ -61,10 +61,10 @@ SOURCES += \
   Configuration.cpp	psk_reporter.cpp AudioDevice.cpp \
   Modulator.cpp Detector.cpp logqso.cpp displaytext.cpp \
   getfile.cpp soundout.cpp soundin.cpp meterwidget.cpp signalmeter.cpp \
-  WFPalette.cpp plotter.cpp widegraph.cpp about.cpp WsprTxScheduler.cpp mainwindow.cpp \
-  main.cpp decodedtext.cpp wsprnet.cpp messageaveraging.cpp \
+  WFPalette.cpp plotter.cpp widegraph.cpp about.cpp mainwindow.cpp \
+  main.cpp decodedtext.cpp messageaveraging.cpp \
   Modes.cpp \
-  WSPRBandHopping.cpp MessageAggregator.cpp qt_helpers.cpp\
+  MessageAggregator.cpp qt_helpers.cpp\
   MultiSettings.cpp PhaseEqualizationDialog.cpp IARURegions.cpp MessageBox.cpp \
   EqualizationToolsDialog.cpp \
     varicode.cpp \
@@ -105,10 +105,10 @@ HEADERS  += qt_helpers.hpp \
   FrequencyLineEdit.hpp AudioDevice.hpp Detector.hpp Modulator.hpp psk_reporter.h \
   Transceiver.hpp TransceiverBase.hpp TransceiverFactory.hpp PollingTransceiver.hpp \
   EmulateSplitTransceiver.hpp DXLabSuiteCommanderTransceiver.hpp HamlibTransceiver.hpp \
-  Configuration.hpp wsprnet.h signalmeter.h meterwidget.h \
+  Configuration.hpp signalmeter.h meterwidget.h \
   logbook/logbook.h logbook/countrydat.h logbook/countriesworked.h logbook/adif.h \
-  messageaveraging.h Modes.hpp WSPRBandHopping.hpp \
-  WsprTxScheduler.h MultiSettings.hpp PhaseEqualizationDialog.hpp \
+  messageaveraging.h Modes.hpp \
+  MultiSettings.hpp PhaseEqualizationDialog.hpp \
   IARURegions.hpp MessageBox.hpp EqualizationToolsDialog.hpp \
     qorderedmap.h \
     varicode.h \
