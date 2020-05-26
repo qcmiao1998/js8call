@@ -95,7 +95,6 @@ extern struct dec_data {
     bool newdat;                // true ==> new data, must do long FFT
     int npts8;                  // npts for c0() array
     int nfa;                    // Low decode limit (Hz) (filter min)
-    int nfSplit;                // JT65 | JT9 split frequency
     int nfb;                    // High decode limit (Hz) (filter max)
     int ntol;                   // +/- decoding range around fQSO (Hz)
     bool syncStats;              // only compute sync candidates

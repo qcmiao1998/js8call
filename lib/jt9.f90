@@ -19,7 +19,7 @@ program jt9
   character(len=500) optarg, infile
   character wisfile*80
 !### ndepth was defined as 60001.  Why???
-  integer :: arglen,stat,offset,remain,mode=0,flow=200,fsplit=2700,          &
+  integer :: arglen,stat,offset,remain,mode=0,flow=200,          &
        fhigh=4000,nrxfreq=1500,ntrperiod=1,ndepth=1,nexp_decode=0
   logical :: read_files = .true., tx9 = .false., display_help = .false., syncStats = .false.
   type (option) :: long_options(22) = [ &
@@ -105,8 +105,6 @@ program jt9
            read (optarg(:arglen), *) nrxfreq
         case ('L')
            read (optarg(:arglen), *) flow
-        case ('S')
-           read (optarg(:arglen), *) fsplit
         case ('H')
            read (optarg(:arglen), *) fhigh
         !case ('q')
@@ -247,7 +245,6 @@ program jt9
      shared_data%params%newdat=.true.
      shared_data%params%npts8=74736
      shared_data%params%nfa=flow
-     shared_data%params%nfsplit=fsplit
      shared_data%params%nfb=fhigh
      shared_data%params%ntol=20
      shared_data%params%kin=64800
@@ -289,7 +286,6 @@ program jt9
      shared_data%params%nsubmode=nsubmode
      datetime="2013-Apr-16 15:13" !### Temp
      shared_data%params%datetime=transfer(datetime,shared_data%params%datetime)
-     if(mode.eq.9 .and. fsplit.ne.2700) shared_data%params%nfa=fsplit
      shared_data%params%kposA=0
      shared_data%params%kposB=0
      shared_data%params%kposC=0

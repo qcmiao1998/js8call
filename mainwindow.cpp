@@ -4731,9 +4731,8 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.ndiskdat=0;
     if(m_diskData) dec_data.params.ndiskdat=1;
 
-    dec_data.params.nfa=m_wideGraph->nStartFreq();
-    dec_data.params.nfSplit=m_wideGraph->Fmin();
-    dec_data.params.nfb=m_wideGraph->Fmax();
+    dec_data.params.nfa=0;
+    dec_data.params.nfb=5000;
 
     if(m_wideGraph->filterEnabled()){
         int low = max(0, m_wideGraph->filterMinimum());
