@@ -285,6 +285,9 @@
                       <property name="enabled">
                        <bool>false</bool>
                       </property>
+                      <property name="toolTip">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set the software filter center in Hz. This filter prevents signals outside the filter range from being processed by the decoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                         <horstretch>2</horstretch>
@@ -337,6 +340,9 @@
                     <property name="suffix">
                      <string> Hz</string>
                     </property>
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set the software filter width in Hz. This filter prevents signals outside the filter range from being processed by the decoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
                     <property name="prefix">
                      <string>Width: </string>
                     </property>
@@ -354,7 +360,7 @@
                      <bool>false</bool>
                     </property>
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set the software filter width in Hz. This filter prevents signals outside the filter range from being processed by the decoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set the software filter minimum in Hz. This filter prevents signals outside the filter range from being processed by the decoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="buttonSymbols">
                      <enum>QAbstractSpinBox::PlusMinus</enum>
@@ -379,7 +385,39 @@
                     </property>
                    </widget>
                   </item>
-                 </layout>
+                  <item>
+                   <widget class="QSpinBox" name="filterMaxSpinBox">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set the software filter maximum in Hz. This filter prevents signals outside the filter range from being processed by the decoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="buttonSymbols">
+                     <enum>QAbstractSpinBox::PlusMinus</enum>
+                    </property>
+                    <property name="specialValueText">
+                     <string/>
+                    </property>
+                    <property name="suffix">
+                     <string> Hz</string>
+                    </property>
+                    <property name="prefix">
+                     <string>Max:  </string>
+                    </property>
+                    <property name="maximum">
+                     <number>5000</number>
+                    </property>
+                    <property name="singleStep">
+                     <number>1</number>
+                    </property>
+                    <property name="value">
+                     <number>500</number>
+                    </property>
+                   </widget>
+                  </item>
+
+    </layout>
                 </widget>
                </item>
                <item>

@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include <QDialog>
+#include <QEvent>
 #include <QScopedPointer>
 #include <QDir>
 #include <QHash>
@@ -25,6 +26,32 @@ namespace Ui {
 
 class QSettings;
 class Configuration;
+
+class FocusEater : public QObject
+{
+   Q_OBJECT
+public:
+   explicit FocusEater(QObject* parent = nullptr) : QObject(parent)
+   {
+   }
+
+   virtual bool eventFilter(QObject *obj, QEvent *event) override
+   {
+      Q_UNUSED(obj)
+      if (event->type() == QEvent::FocusIn){
+         emit focused(obj);
+      }
+      else if (event->type() == QEvent::FocusOut){
+         emit blurred(obj);
+      }
+
+      return false;
+   }
+
+signals:
+   void focused(QObject *obj);
+   void blurred(QObject *obj);
+};
 
 class WideGraph : public QDialog
 {
@@ -121,6 +148,7 @@ private slots:
   void on_smoSpinBox_valueChanged(int n);  
   void on_sbPercent2dPlot_valueChanged(int n);
   void on_filterMinSpinBox_valueChanged(int n);
+  void on_filterMaxSpinBox_valueChanged(int n);
   void on_filterCenterSpinBox_valueChanged(int n);
   void on_filterWidthSpinBox_valueChanged(int n);
   void on_filterCenterSyncButton_clicked();
