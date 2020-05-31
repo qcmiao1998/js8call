@@ -403,8 +403,6 @@ set (wsjt_FSRCS
   lib/update_hasharray.f90
   lib/wav11.f90
   lib/wav12.f90
-  lib/xcor.f90
-  lib/xcor4.f90
   lib/wqdecode.f90
   lib/wqencode.f90
   )
