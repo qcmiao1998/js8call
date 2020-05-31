@@ -38,7 +38,6 @@
 #include "psk_reporter.h"
 #include "logbook/logbook.h"
 #include "commons.h"
-#include "astro.h"
 #include "MessageBox.hpp"
 #include "NetworkAccessManager.hpp"
 #include "qorderedmap.h"
@@ -491,7 +490,6 @@ private:
   Q_SIGNAL void toggleShorthand () const;
 
 private:
-  void astroUpdate ();
   void writeAllTxt(QString message, int bits);
   void writeMsgTxt(QString message, int snr);
   void hideMenus(bool b);
@@ -515,7 +513,6 @@ private:
   bool m_isWideGraphMDI;
   QScopedPointer<WideGraph> m_wideGraph;
   QScopedPointer<LogQSO> m_logDlg;
-  QScopedPointer<Astro> m_astroWidget;
   QScopedPointer<HelpTextWindow> m_shortcuts;
   QScopedPointer<HelpTextWindow> m_prefixes;
   QScopedPointer<HelpTextWindow> m_mouseCmnds;
@@ -546,7 +543,6 @@ private:
 
   Frequency m_freqNominal;
   Frequency m_freqTxNominal;
-  Astro::Correction m_astroCorrection;
 
   double  m_s6;
   double  m_tRemaining;

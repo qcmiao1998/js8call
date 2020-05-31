@@ -51,7 +51,7 @@ SOURCES += \
 	logbook/countrydat.cpp \
 	logbook/countriesworked.cpp \
   logbook/logbook.cpp \
-  astro.cpp Radio.cpp NetworkServerLookup.cpp revision_utils.cpp \
+  Radio.cpp NetworkServerLookup.cpp revision_utils.cpp \
   Transceiver.cpp TransceiverBase.cpp TransceiverFactory.cpp \
   PollingTransceiver.cpp EmulateSplitTransceiver.cpp LettersSpinBox.cpp \
   HRDTransceiver.cpp DXLabSuiteCommanderTransceiver.cpp \
@@ -98,7 +98,7 @@ SOURCES += \
 HEADERS  += qt_helpers.hpp \
   pimpl_h.hpp pimpl_impl.hpp \
   Radio.hpp NetworkServerLookup.hpp revision_utils.hpp \
-  mainwindow.h plotter.h soundin.h soundout.h astro.h \
+  mainwindow.h plotter.h soundin.h soundout.h \
   about.h WFPalette.hpp widegraph.h getfile.h decodedtext.h \
   commons.h sleep.h displaytext.h logqso.h LettersSpinBox.hpp \
   Bands.hpp FrequencyList.hpp StationList.hpp ForeignKeyDelegate.hpp FrequencyItemDelegate.hpp LiveFrequencyValidator.hpp \
@@ -147,7 +147,7 @@ SOURCES += killbyname.cpp OmniRigTransceiver.cpp
 HEADERS += OmniRigTransceiver.hpp
 }
 
-FORMS    += mainwindow.ui about.ui Configuration.ui widegraph.ui astro.ui \
+FORMS    += mainwindow.ui about.ui Configuration.ui widegraph.ui \
     logqso.ui wf_palette_design_dialog.ui messageaveraging.ui \
     messagereplydialog.ui \
     messagewindow.ui

@@ -105,13 +105,7 @@ extern "C" {
   void refspectrum_(short int d2[], bool* bclearrefspec,
                     bool* brefspec, bool* buseref, const char* c_fname, fortran_charlen_t);
 
-  void freqcal_(short d2[], int* k, int* nkhz,int* noffset, int* ntol,
-                char line[], fortran_charlen_t);
-
   void fix_contest_msg_(char* MyGrid, char* msg, fortran_charlen_t, fortran_charlen_t);
-
-  void calibrate_(char data_dir[], int* iz, double* a, double* b, double* rms,
-                  double* sigmaa, double* sigmab, int* irc, fortran_charlen_t);
 
   void foxgen_();
 
@@ -2197,7 +2191,6 @@ void MainWindow::tryBandHop(){
 //--------------------------------------------------- MainWindow destructor
 MainWindow::~MainWindow()
 {
-  m_astroWidget.reset ();
   QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("wsjtx_wisdom.dat"))};
   QByteArray cfname=fname.toLocal8Bit();
 
@@ -2228,7 +2221,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("MRUdir", m_path);
   m_settings->setValue("DXcall",ui->dxCallEntry->text());
   m_settings->setValue("DXgrid",ui->dxGridEntry->text());
-  m_settings->setValue ("AstroDisplayed", m_astroWidget && m_astroWidget->isVisible());
   m_settings->setValue ("MsgAvgDisplayed", m_msgAvgWidget && m_msgAvgWidget->isVisible());
   m_settings->setValue ("FreeText", ui->freeTextMsg->currentText ());
   m_settings->setValue("ShowMenus",ui->cbMenus->isChecked());
@@ -3762,7 +3754,6 @@ void MainWindow::closeEvent(QCloseEvent * e)
   m_valid = false;              // suppresses subprocess errors
   m_config.transceiver_offline ();
   writeSettings ();
-  m_astroWidget.reset ();
   m_guiTimer.stop ();
   m_prefixes.reset ();
   m_shortcuts.reset ();
@@ -3834,47 +3825,6 @@ void MainWindow::on_actionLocal_User_Guide_triggered()
 
 void MainWindow::on_actionSolve_FreqCal_triggered()
 {
-  QString dpath{QDir::toNativeSeparators(m_config.writeable_data_dir().absolutePath()+"/")};
-  char data_dir[512];
-  int len=dpath.length();
-  int iz,irc;
-  double a,b,rms,sigmaa,sigmab;
-  strncpy(data_dir,dpath.toLatin1(),len);
-  calibrate_(data_dir,&iz,&a,&b,&rms,&sigmaa,&sigmab,&irc,len);
-  QString t2;
-  if(irc==-1) t2="Cannot open " + dpath + "fmt.all";
-  if(irc==-2) t2="Cannot open " + dpath + "fcal2.out";
-  if(irc==-3) t2="Insufficient data in fmt.all";
-  if(irc==-4) t2 = tr ("Invalid data in fmt.all at line %1").arg (iz);
-  if(irc>0 or rms>1.0) t2="Check fmt.all for possible bad data.";
-  if (irc < 0 || irc > 0 || rms > 1.) {
-    MessageBox::warning_message (this, "Calibration Error", t2);
-  }
-  else if (MessageBox::Apply == MessageBox::query_message (this
-                                                           , tr ("Good Calibration Solution")
-                                                           , tr ("<pre>"
-                                                                 "%1%L2 ±%L3 ppm\n"
-                                                                 "%4%L5 ±%L6 Hz\n\n"
-                                                                 "%7%L8\n"
-                                                                 "%9%L10 Hz"
-                                                                 "</pre>")
-                                                           .arg ("Slope: ", 12).arg (b, 0, 'f', 3).arg (sigmab, 0, 'f', 3)
-                                                           .arg ("Intercept: ", 12).arg (a, 0, 'f', 2).arg (sigmaa, 0, 'f', 2)
-                                                           .arg ("N: ", 12).arg (iz)
-                                                           .arg ("StdDev: ", 12).arg (rms, 0, 'f', 2)
-                                                           , QString {}
-                                                           , MessageBox::Cancel | MessageBox::Apply)) {
-    m_config.set_calibration (Configuration::CalibrationParams {a, b});
-    if (MessageBox::Yes == MessageBox::query_message (this
-                                                      , tr ("Delete Calibration Measurements")
-                                                      , tr ("The \"fmt.all\" file will be renamed as \"fmt.bak\""))) {
-      // rename fmt.all as we have consumed the resulting calibration
-      // solution
-      auto const& backup_file_name = m_config.writeable_data_dir ().absoluteFilePath ("fmt.bak");
-      QFile::remove (backup_file_name);
-      QFile::rename (m_config.writeable_data_dir ().absoluteFilePath ("fmt.all"), backup_file_name);
-    }
-  }
 }
 
 void MainWindow::on_actionCopyright_Notice_triggered()
@@ -3946,27 +3896,6 @@ void MainWindow::hideMenus(bool checked)
 
 void MainWindow::on_actionAstronomical_data_toggled (bool checked)
 {
-  if (checked)
-    {
-      m_astroWidget.reset (new Astro {m_settings, &m_config});
-
-      // hook up termination signal
-      connect (this, &MainWindow::finished, m_astroWidget.data (), &Astro::close);
-      connect (m_astroWidget.data (), &Astro::tracking_update, [this] {
-          m_astroCorrection = {};
-          setRig ();
-          setXIT (ui->TxFreqSpinBox->value ());
-          displayDialFrequency ();
-        });
-      m_astroWidget->showNormal();
-      m_astroWidget->raise ();
-      m_astroWidget->activateWindow ();
-      m_astroWidget->nominal_frequency (m_freqNominal, m_freqTxNominal);
-    }
-  else
-    {
-      m_astroWidget.reset ();
-    }
 }
 
 void MainWindow::on_actionFox_Log_triggered()
@@ -6234,8 +6163,6 @@ void MainWindow::guiUpdate()
     } else {
         progressBar.setValue(0);
     }
-
-    astroUpdate ();
 
     if(m_transmitting) {
       char s[41];
@@ -9976,8 +9903,7 @@ void MainWindow::setXIT(int n, Frequency base)
       // All conditions are met, reset the transceiver Tx dial
       // frequency
       m_freqTxNominal = base + m_XIT;
-      if (m_astroWidget) m_astroWidget->nominal_frequency (m_freqNominal, m_freqTxNominal);
-      Q_EMIT m_config.transceiver_tx_frequency (m_freqTxNominal + m_astroCorrection.tx);
+      Q_EMIT m_config.transceiver_tx_frequency (m_freqTxNominal);
     }
 
   //Now set the audio Tx freq
@@ -10091,7 +10017,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
       m_splitMode = s.split ();
       if (!s.ptt ())
         {
-          m_freqNominal = s.frequency () - m_astroCorrection.rx;
+          m_freqNominal = s.frequency ();
           if (old_freqNominal != m_freqNominal)
             {
               m_freqTxNominal = m_freqNominal;
@@ -10125,14 +10051,12 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
             m_wideGraph->setDialFreq(m_freqNominal / 1.e6);
           }
       } else {
-        m_freqTxNominal = s.split () ? s.tx_frequency () - m_astroCorrection.tx : s.frequency ();
+        m_freqTxNominal = s.split () ? s.tx_frequency () : s.frequency ();
       }
-      if (m_astroWidget) m_astroWidget->nominal_frequency (m_freqNominal, m_freqTxNominal);
   }
 
   // ensure frequency display is correct
-  if (m_astroWidget && old_state.ptt () != s.ptt ()) setRig ();
-
+  // setRig();
   updateCurrentBand();
   displayDialFrequency ();
   update_dynamic_property (ui->readFreq, "state", "ok");
@@ -13634,90 +13558,25 @@ void MainWindow::on_pbTxNext_clicked(bool b)
   m_txNext=b;
 }
 
-void MainWindow::astroUpdate ()
-{
-  if (m_astroWidget)
-    {
-      // no Doppler correction while CTRL pressed allows manual tuning
-      if (Qt::ControlModifier & QApplication::queryKeyboardModifiers ()) return;
-
-      auto correction = m_astroWidget->astroUpdate(DriftingDateTime::currentDateTimeUtc (),
-                                                   m_config.my_grid(), m_hisGrid,
-                                                   m_freqNominal,
-                                                   "Echo" == m_mode, m_transmitting,
-                                                   !m_config.tx_qsy_allowed (), m_TRperiod);
-      // no Doppler correction in Tx if rig can't do it
-      if (m_transmitting && !m_config.tx_qsy_allowed ()) return;
-      if (!m_astroWidget->doppler_tracking ()) return;
-      if ((m_monitoring || m_transmitting)
-          // no Doppler correction below 6m
-          && m_freqNominal >= 50000000
-          && m_config.split_mode ())
-        {
-          // adjust for rig resolution
-          if (m_config.transceiver_resolution () > 2)
-            {
-              correction.rx = (correction.rx + 50) / 100 * 100;
-              correction.tx = (correction.tx + 50) / 100 * 100;
-            }
-          else if (m_config.transceiver_resolution () > 1)
-            {
-              correction.rx = (correction.rx + 10) / 20 * 20;
-              correction.tx = (correction.tx + 10) / 20 * 20;
-            }
-          else if (m_config.transceiver_resolution () > 0)
-            {
-              correction.rx = (correction.rx + 5) / 10 * 10;
-              correction.tx = (correction.tx + 5) / 10 * 10;
-            }
-          else if (m_config.transceiver_resolution () < -2)
-            {
-              correction.rx = correction.rx / 100 * 100;
-              correction.tx = correction.tx / 100 * 100;
-            }
-          else if (m_config.transceiver_resolution () < -1)
-            {
-              correction.rx = correction.rx / 20 * 20;
-              correction.tx = correction.tx / 20 * 20;
-            }
-          else if (m_config.transceiver_resolution () < 0)
-            {
-              correction.rx = correction.rx / 10 * 10;
-              correction.tx = correction.tx / 10 * 10;
-            }
-          m_astroCorrection = correction;
-        }
-      else
-        {
-          m_astroCorrection = {};
-        }
-
-      setRig ();
-    }
-}
-
 void MainWindow::setRig (Frequency f)
 {
   if (f)
-    {
+  {
       m_freqNominal = f;
       m_freqTxNominal = m_freqNominal;
-      if (m_astroWidget) m_astroWidget->nominal_frequency (m_freqNominal, m_freqTxNominal);
-    }
-  if (m_mode == "FreqCal"
-      && m_frequency_list_fcal_iter != m_config.frequencies ()->end ()) {
-    m_freqNominal = m_frequency_list_fcal_iter->frequency_ - ui->RxFreqSpinBox->value ();
   }
+
   if(m_transmitting && !m_config.tx_qsy_allowed ()) return;
+
   if ((m_monitoring || m_transmitting) && m_config.transceiver_online ())
     {
       if (m_transmitting && m_config.split_mode ())
         {
-          Q_EMIT m_config.transceiver_tx_frequency (m_freqTxNominal + m_astroCorrection.tx);
+          Q_EMIT m_config.transceiver_tx_frequency (m_freqTxNominal);
         }
       else
         {
-          Q_EMIT m_config.transceiver_frequency (m_freqNominal + m_astroCorrection.rx);
+          Q_EMIT m_config.transceiver_frequency (m_freqNominal);
         }
     }
 }

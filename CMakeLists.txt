@@ -229,7 +229,6 @@ set (wsjtx_CXXSRCS
   plotter.cpp
   widegraph.cpp
   about.cpp
-  astro.cpp
   messageaveraging.cpp
   varicode.cpp
   jsc.cpp
@@ -302,130 +301,79 @@ set (wsjt_FSRCS
   lib/js8i_decode.f90
 
   # remaining non-module sources
-  lib/afc9.f90
-  lib/ana932.f90
-  lib/analytic.f90
-  lib/astro.f90
-  lib/astrosub.f90
-  lib/astro0.f90
-  lib/averms.f90
   lib/azdist.f90
-  lib/badmsg.f90
   lib/ft8/bpdecode174.f90
   lib/baddata.f90
-  lib/calibrate.f90
-  lib/ccf2.f90
   lib/ft8/chkcrc12a.f90
-  lib/chkcall.f90
-  lib/chkhist.f90
   lib/chkmsg.f90
   lib/ft8/compress.f90
   lib/coord.f90
   lib/db.f90
   lib/decoder.f90
-  lib/deep4.f90
   lib/deg2grid.f90
   lib/degrade_snr.f90
   lib/determ.f90
   lib/ft8/encode174.f90
-  lib/entail.f90
-  lib/ephem.f90
   lib/ft8/extractmessage174.f90
-  lib/fano232.f90
-  lib/fchisq0.f90
-  lib/fil3.f90
-  lib/fil3c.f90
   lib/fil4.f90
   lib/filbig.f90
   lib/ft8/filt8.f90
-  lib/fitcal.f90
   lib/flat1.f90
   lib/flat1a.f90
   lib/flat1b.f90
-  lib/flat2.f90
   lib/flat4.f90
   lib/fmtmsg.f90
   lib/four2a.f90
   lib/ft8/foxfilt.f90
   lib/ft8/foxgen.f90
   lib/ft8/foxgen_wrap.f90
-  lib/fqso_first.f90
-  lib/freqcal.f90
   lib/js8/genjs8.f90
   lib/geodist.f90
-  lib/getlags.f90
-  lib/getmet4.f90
-  lib/graycode.f90
   lib/grid2deg.f90
   lib/ft8/h1.f90
   lib/hash.f90
   lib/indexx.f90
   lib/init_random_seed.f90
-  lib/jplsubs.f
-  lib/jtmsg.f90
   lib/js8/ldpcsim174js8a.f90
   lib/js8/ldpcsim174js8b.f90
   lib/js8/ldpcsim174js8c.f90
   lib/js8/ldpcsim174js8e.f90
   lib/js8/ldpcsim174js8i.f90
-  lib/libration.f90
-  lib/lorentzian.f90
-  lib/lpf1.f90
-  lib/mixlpf.f90
-  lib/makepings.f90
-  lib/moondopjpl.f90
   lib/morse.f90
   lib/move.f90
   lib/ft8/osd174.f90
   lib/pctile.f90
-  lib/peakup.f90
   lib/plotsave.f90
   lib/polyfit.f90
   lib/prog_args.f90
-  lib/ps4.f90
   lib/refspectrum.f90
   lib/savec2.f90
   lib/sec_midn.f90
-  lib/slasubs.f
   lib/sleep_msec.f90
-  lib/slope.f90
   lib/smo.f90
   lib/smo121.f90
   lib/shell.f90
   lib/stdmsg.f90
-  lib/sun.f90
   lib/symspec.f90
   lib/timf2.f90
-  lib/tweak1.f90
   lib/twkfreq.f90
   lib/ft8/twkfreq1.f90
-  lib/update_recent_calls.f90
-  lib/update_hasharray.f90
-  lib/wav11.f90
   lib/wav12.f90
-  lib/wqdecode.f90
-  lib/wqencode.f90
   )
 
 # temporary workaround for a gfortran v7.3 ICE on Fedora 27 64-bit
-set_source_files_properties (lib/slasubs.f PROPERTIES COMPILE_FLAGS -O2)
 
 set (sqlite3_CSRCS
   vendor/sqlite3/sqlite3.c
   )
 
 set (wsjt_CSRCS
-  lib/sgran.c
-  lib/golay24_table.c
   lib/gran.c
-  lib/igray.c
   lib/init_random_seed.c
   lib/ldpc32_table.c
   lib/nhash.c
   lib/tab.c
-  lib/tmoonsub.c
   lib/usleep.c
-  lib/vit213.c
   lib/wisdom.c
   ${ldpc_CSRCS}
   )
@@ -438,7 +386,6 @@ set (wsjtx_UISRCS
   mainwindow.ui
   messagewindow.ui
   about.ui
-  astro.ui
   messageaveraging.ui
   widegraph.ui
   logqso.ui
