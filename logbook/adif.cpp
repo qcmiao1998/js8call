@@ -393,6 +393,7 @@ bool ADIF::addQSOToFile(QByteArray const& ADIF_record)
             out << "JS8Call ADIF Export<eoh>" << endl;  // new file
 
         out << ADIF_record << " <eor>" << endl;
+        out.flush();
         f2.close();
     }
     return true;
