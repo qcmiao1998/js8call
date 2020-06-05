@@ -318,6 +318,7 @@ void LogQSO::accept()
     QTextStream out(&f);
     out << logEntryItems.join(",") << endl;
     out.flush();
+    flushFileBuffer(f);
     f.close();
   }
 

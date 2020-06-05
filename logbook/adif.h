@@ -18,6 +18,8 @@
 #include <QtGui>
 #endif
 
+#include "fileutils.h"
+
 class QDateTime;
 
 extern const QStringList ADIF_FIELDS;

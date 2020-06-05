@@ -394,6 +394,7 @@ bool ADIF::addQSOToFile(QByteArray const& ADIF_record)
 
         out << ADIF_record << " <eor>" << endl;
         out.flush();
+        flushFileBuffer(f2);
         f2.close();
     }
     return true;

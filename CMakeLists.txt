@@ -215,6 +215,7 @@ set (wsjtx_CXXSRCS
   logbook/countrydat.cpp
   logbook/countriesworked.cpp
   logbook/logbook.cpp
+  fileutils.cpp
   psk_reporter.cpp
   Modulator.cpp
   Detector.cpp
