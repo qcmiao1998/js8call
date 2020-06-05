@@ -137,19 +137,19 @@ int main(int argc, char *argv[])
 
       if (!parser.parse (a.arguments ()))
         {
-          MessageBox::critical_message (nullptr, a.translate ("main", "Command line error"), parser.errorText ());
+          std::cerr << parser.errorText().toLocal8Bit ().data () << std::endl;
           return -1;
         }
       else
         {
           if (parser.isSet (help_option))
             {
-              MessageBox::information_message (nullptr, a.translate ("main", "Command line help"), parser.helpText ());
+              parser.showHelp (-1);
               return 0;
             }
           else if (parser.isSet (version_option))
             {
-              MessageBox::information_message (nullptr, a.translate ("main", "Application version"), a.applicationVersion ());
+              parser.showVersion();
               return 0;
             }
         }
